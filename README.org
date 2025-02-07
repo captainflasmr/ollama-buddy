@@ -51,7 +51,11 @@ The name is just something a little bit fun and it seems to always remind me of 
 
 #+attr_org: :width 300px
 #+attr_html: :width 100%
-[[file:img/ollama-buddy-video_001.gif]]
+[[file:img/ollama-buddy-screen-recording_001.gif]]
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_002.gif]]
 
 #+attr_org: :width 300px
 #+attr_html: :width 100%
