@@ -287,7 +287,7 @@ Add to your =init.el=:
 | r   | Refactor code      | Get code refactoring suggestions            |
 | g   | Git commit message | Generate commit message for changes         |
 | c   | Describe code      | Get code explanation                        |
-| d   | Dictionary Lookup  | Get dictionary redefinition                  |
+| d   | Dictionary Lookup  | Get dictionary redefinition                 |
 | n   | Word synonym       | Get a synonym for the word                  |
 | p   | Proofread text     | Check text for improvements                 |
 | z   | Make concise       | Reduce wordiness while preserving meaning   |
