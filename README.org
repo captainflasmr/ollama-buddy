@@ -12,6 +12,28 @@
 
 * Overview
 
+A friendly Emacs interface for interacting with Ollama models. This package provides a convenient way to integrate Ollama's local LLM capabilities directly into your Emacs workflow with little or no configuration required.
+
+The name is just something a little bit fun and it seems to always remind me of the "bathroom buddy" from the film Gremlins (although hopefully this will work better than that seemed to!)
+
+* Screenshots
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_001.gif]]
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_002.gif]]
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screenshot_001.png]]
+
+* AI assistant
+
+A simple text information screen will be presented on the first opening of the chat, or when requested through the menu system:
+
 #+begin_src 
 ====================  n_____n  ====================
 ==================== | o Y o | ====================
@@ -46,24 +68,6 @@
 
 -------------------- | @ Y @ | --------------------
 #+end_src
-
-A friendly Emacs interface for interacting with Ollama models. This package provides a convenient way to integrate Ollama's local LLM capabilities directly into your Emacs workflow with little or no configuration required.
-
-The name is just something a little bit fun and it seems to always remind me of the "bathroom buddy" from the film Gremlins (although hopefully this will work better than that seemed to!)
-
-* Screenshots
-
-#+attr_org: :width 300px
-#+attr_html: :width 100%
-[[file:img/ollama-buddy-screen-recording_001.gif]]
-
-#+attr_org: :width 300px
-#+attr_html: :width 100%
-[[file:img/ollama-buddy-screen-recording_002.gif]]
-
-#+attr_org: :width 300px
-#+attr_html: :width 100%
-[[file:img/ollama-buddy-screenshot_001.png]]
 
 * Summary of my design ethos
 
