@@ -13,6 +13,16 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 ** <2025-02-07>
 
+Increase menu columns to 4, add dictionary lookup and save chat options  
+
+- Change `ollama-buddy-menu-columns` from 3 to 4  
+- Rename "Describe code" menu key from `?d` to `?c`  
+- Add dictionary lookup feature (`?d`)  
+- Add synonym lookup feature (`?n`)  
+- Add "Save chat" option (`?s`) to write chat buffer to a file  
+
+** <2025-02-07>
+
 Added query finished message.
 
 ** <2025-02-06>

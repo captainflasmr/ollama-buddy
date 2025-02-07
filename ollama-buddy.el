@@ -6,7 +6,7 @@
   :group 'applications
   :prefix "ollama-buddy-")
 
-(defcustom ollama-buddy-menu-columns 3
+(defcustom ollama-buddy-menu-columns 4
   "Number of columns to display in the Ollama Buddy menu."
   :type 'integer
   :group 'ollama-buddy)
@@ -118,14 +118,35 @@
     (?l . ("Send region" (lambda () (ollama-buddy--send))))
     (?r . ("Refactor code" (lambda () (ollama-buddy--send "refactor the following code:"))))
     (?g . ("Git commit message" (lambda () (ollama-buddy--send "write a concise git commit message for the following:"))))
-    (?d . ("Describe code" (lambda () (ollama-buddy--send "describe the following code:"))))
+    (?c . ("Describe code" (lambda () (ollama-buddy--send "describe the following code:"))))
+    (?d . ("Dictionary Lookup" 
+           (lambda () 
+             (ollama-buddy--send
+              (concat "For the word {"
+                      (buffer-substring-no-properties (region-beginning) (region-end)) "} provide:
+1. Pronunciation (IPA)
+2. Part(s) of speech
+3. Core definition(s)
+4. Etymology
+5. Example usage in sentences
+6. Common collocations
+7. Related forms (if any)
+Please format this like a dictionary entry:")))))
+    (?n . ("Word synonym" (lambda () (ollama-buddy--send "list synonyms for word:"))))
     (?p . ("Proofread text" (lambda () (ollama-buddy--send "proofread the following:"))))
     (?z . ("Make concise" (lambda () (ollama-buddy--send "reduce wordiness while preserving meaning:"))))
-    (?c . ("Custom prompt" 
+    (?e . ("Custom prompt" 
            (lambda ()
              (when-let ((prefix (read-string "Enter prompt prefix: " nil nil nil t)))
                (unless (string-empty-p prefix)
                  (ollama-buddy--send prefix))))))
+    (?s . ("Save chat" 
+           (lambda ()
+             (with-current-buffer ollama-buddy--chat-buffer
+               (write-region (point-min) (point-max) 
+                             (read-file-name "Save conversation to: ")
+                             'append-to-file
+                             nil)))))
     (?x . ("Kill request" 
            (lambda ()
              (if (process-live-p ollama-buddy--active-process)
@@ -190,13 +211,13 @@
            "ollama-buddy--chat" buf
            (format "curl -s -X POST http://localhost:11434/api/chat -H 'Content-Type: application/json' -d '%s'"
                    json-payload)))
-      (set-process-sentinel
-       ollama-buddy--active-process
-       (lambda (proc event)
-         (when (string-match-p "finished\\|exited" event)
-           (with-current-buffer (process-buffer proc)
-             (goto-char (point-max))
-             (insert (format "\n\n[%s: FINISHED]\n\n" ollama-buddy-current-model))))))
+    (set-process-sentinel
+     ollama-buddy--active-process
+     (lambda (proc event)
+       (when (string-match-p "finished\\|exited" event)
+         (with-current-buffer (process-buffer proc)
+           (goto-char (point-max))
+           (insert (format "\n\n[%s: FINISHED]\n\n" ollama-buddy-current-model))))))
     (set-process-filter ollama-buddy--active-process #'ollama-buddy--process-filter)))
 
 (defun ollama-buddy--get-models ()

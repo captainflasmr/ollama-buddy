@@ -186,6 +186,16 @@ A simple text information screen will be presented on the first opening of the c
 
 ** <2025-02-07>
 
+Increase menu columns to 4, add dictionary lookup and save chat options  
+
+- Change `ollama-buddy-menu-columns` from 3 to 4  
+- Rename "Describe code" menu key from `?d` to `?c`  
+- Add dictionary lookup feature (`?d`)  
+- Add synonym lookup feature (`?n`)  
+- Add "Save chat" option (`?s`) to write chat buffer to a file  
+
+** <2025-02-07>
+
 Added query finished message.
 
 ** <2025-02-06>
@@ -272,10 +282,13 @@ Add to your =init.el=:
 | l   | Send region        | Send selected text directly to model        |
 | r   | Refactor code      | Get code refactoring suggestions            |
 | g   | Git commit message | Generate commit message for changes         |
-| d   | Describe code      | Get code explanation                        |
+| c   | Describe code      | Get code explanation                        |
+| d   | Dictionary Lookup  | Get dictionary dedfinition                  |
+| n   | Word synonym       | Get a synonym for the word                  |
 | p   | Proofread text     | Check text for improvements                 |
 | z   | Make concise       | Reduce wordiness while preserving meaning   |
-| c   | Custom Prompt      | Enter bespoke prompt through the minibuffer |
+| e   | Custom Prompt      | Enter bespoke prompt through the minibuffer |
+| s   | Save chat          | Save the chat to a file                     |
 | x   | Kill request       | Cancel current Ollama request               |
 | q   | Quit               | Exit the menu                               |
 
@@ -317,17 +330,13 @@ Add to your =init.el=:
 | ollama-buddy-separator-1   | Separator used for Ollama LLM output, variant 1.       |
 | ollama-buddy-separator-2   | Separator used for Ollama LLM output, variant 2.       |
 
-Customize the package to the default startup using:
+Customize the package in your Emacs init:
 
 #+begin_src elisp
 (setq ollama-buddy-current-model "qwen-4q:latest")
 
 ;; Change number of menu columns
 (setq ollama-buddy-menu-columns 4)
-
-;; Customize separators
-(setq ollama-buddy-separator-1 "Your custom separator here")
-(setq ollama-buddy-separator-2 "Another custom separator")
 #+end_src
 
 Available customization options:
