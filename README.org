@@ -50,6 +50,42 @@ Note that all the demos are in real time.
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screenshot_001.png]]
 
+* Summary of my design ethos
+
+- *Focused Design Philosophy*
+  
+  - Dedicated solely to Ollama integration (unlike general-purpose LLM packages)
+  - Intentionally lightweight and minimal setup
+  - Particularly suitable for air-gapped systems
+  - Avoids complex backends and payload configurations
+
+- *Interface Design Choices*
+  
+  - Flexible, customizable menu through defcustom
+  - Easy-to-extend command system via simple alist modifications
+  - Region-based interaction model across all buffers
+
+- *Buffer Implementation*
+  
+  - Simple, editable chat buffer approach
+  - Avoids complex modes or bespoke functionality
+  - Trying to leverage standard Emacs text editing capabilities
+
+- *User Experience*
+  
+  - "AI assistant" style welcome interface
+  - Zero-config startup possible
+  - Built-in status monitoring and model listing
+  - Simple tutorial-style introduction
+
+- *Technical Simplicity*
+  
+  - REST-based Ollama
+  - Quickly switch between small local LLMs
+  - Backwards compatibility with older Emacs versions
+  - Minimal dependencies
+  - Straightforward configuration options
+
 * AI assistant
 
 A simple text information screen will be presented on the first opening of the chat, or when requested through the menu system:
@@ -88,42 +124,6 @@ A simple text information screen will be presented on the first opening of the c
 
 -------------------- | @ Y @ | --------------------
 #+end_src
-
-* Summary of my design ethos
-
-- *Focused Design Philosophy*
-  
-  - Dedicated solely to Ollama integration (unlike general-purpose LLM packages)
-  - Intentionally lightweight and minimal setup
-  - Particularly suitable for air-gapped systems
-  - Avoids complex backends and payload configurations
-
-- *Interface Design Choices*
-  
-  - Flexible, customizable menu through defcustom
-  - Easy-to-extend command system via simple alist modifications
-  - Region-based interaction model across all buffers
-
-- *Buffer Implementation*
-  
-  - Simple, editable chat buffer approach
-  - Avoids complex modes or bespoke functionality
-  - Trying to leverage standard Emacs text editing capabilities
-
-- *User Experience*
-  
-  - "AI assistant" style welcome interface
-  - Zero-config startup possible
-  - Built-in status monitoring and model listing
-  - Simple tutorial-style introduction
-
-- *Technical Simplicity*
-  
-  - REST-based Ollama
-  - Quickly switch between small local LLMs
-  - Backwards compatibility with older Emacs versions
-  - Minimal dependencies
-  - Straightforward configuration options
 
 * Design ethos expanded / why create this package?
 
