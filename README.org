@@ -8,6 +8,10 @@
 
 * Overview
 
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-banner.jpg]]
+
 #+begin_src 
 ====================  n_____n  ====================
 ==================== | o Y o | ====================
