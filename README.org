@@ -396,7 +396,7 @@ Let's compare ollama-buddy to the existing solutions:
      - More complex configuration
      - Might have overhead from supporting multiple backends
 
-   Our package is more:
+   =ollama-buddy= is more:
    
    - Directly focused on Ollama
    - Lightweight and Ollama-native
@@ -417,7 +417,7 @@ Let's compare ollama-buddy to the existing solutions:
      - Ollama support is experimental
      - More complex architecture
 
-   Our package differentiates by:
+   =ollama-buddy= differentiates by:
    
    - Being purpose-built for Ollama
    - Offering a more flexible, function-oriented approach
@@ -437,7 +437,8 @@ Let's compare ollama-buddy to the existing solutions:
      - Primarily focused on online services
      - More complex setup
 
-   Our package stands out by:
+   =ollama-buddy= stands out by:
+   
    - Being specifically designed for Ollama
    - Offering a simpler, more direct interaction model
    - Providing a quick menu-based interface
