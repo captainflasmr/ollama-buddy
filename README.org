@@ -212,7 +212,7 @@ Added query finished message.
 
 * Kanban
 
-Here is a kanban of the features that will be (hopefully) added in due cours, and visually demonstrating their current status via a kanban board
+Here is a kanban of the features that will be (hopefully) added in due course, and visually demonstrating their current status via a kanban board
 
 #+begin_src emacs-lisp :results table :exports results :tangle no
 (my/kanban-to-table "roadmap" "issues")
