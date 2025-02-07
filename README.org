@@ -6,11 +6,11 @@
 #+todo: TODO DOING | DONE
 #+startup: showall
 
-* Overview
-
 #+attr_org: :width 300px
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-banner.jpg]]
+
+* Overview
 
 #+begin_src 
 ====================  n_____n  ====================
