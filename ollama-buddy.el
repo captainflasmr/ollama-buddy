@@ -169,11 +169,11 @@
   (let* ((prompt (buffer-substring-no-properties (region-beginning) (region-end)))
          (prompt-with-system (if system-prompt (concat system-prompt "\n\n" prompt) prompt))
          (json-payload (replace-regexp-in-string 
-                       "\'" "\\\\\"" 
-                       (json-encode
-                        `(("model" . ,ollama-buddy-current-model)
-                          ("messages" . [(("role" . "user")
-                                        ("content" . ,prompt-with-system))])))))
+                        "\'" "\\\\\"" 
+                        (json-encode
+                         `(("model" . ,ollama-buddy-current-model)
+                           ("messages" . [(("role" . "user")
+                                           ("content" . ,prompt-with-system))])))))
          (buf (get-buffer-create ollama-buddy--chat-buffer)))
     (pop-to-buffer buf)
     (with-current-buffer buf
@@ -190,6 +190,13 @@
            "ollama-buddy--chat" buf
            (format "curl -s -X POST http://localhost:11434/api/chat -H 'Content-Type: application/json' -d '%s'"
                    json-payload)))
+      (set-process-sentinel
+       ollama-buddy--active-process
+       (lambda (proc event)
+         (when (string-match-p "finished\\|exited" event)
+           (with-current-buffer (process-buffer proc)
+             (goto-char (point-max))
+             (insert (format "\n\n[%s: FINISHED]\n\n" ollama-buddy-current-model))))))
     (set-process-filter ollama-buddy--active-process #'ollama-buddy--process-filter)))
 
 (defun ollama-buddy--get-models ()

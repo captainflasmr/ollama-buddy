@@ -152,6 +152,10 @@ Phew! That turned into quite a ramble, maybe I should run this text through =oll
 
 * Whats New
 
+** <2025-02-07>
+
+Added query finished message.
+
 ** <2025-02-06>
 
 - Initial release

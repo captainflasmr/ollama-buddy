@@ -11,6 +11,10 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-02-07>
+
+Added query finished message.
+
 ** <2025-02-06>
 
 - Initial release
