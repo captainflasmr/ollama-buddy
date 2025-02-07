@@ -343,8 +343,6 @@ Customize the package in your Emacs init:
 (setq ollama-buddy-menu-columns 4)
 #+end_src
 
-Available customization options:
-
 * Contributing
 
 Contributions are welcome! Please:
