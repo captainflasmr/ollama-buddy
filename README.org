@@ -133,19 +133,26 @@ Phew! That turned into quite a ramble, maybe I should run this text through =oll
 
 A simple text information screen will be presented on the first opening of the chat, or when requested through the menu system:
 
-#+begin_src 
-====================  n_____n  ====================
-==================== | o Y o | ====================
-
-    ╭──────────────────────────────────────╮
-    │              Welcome to               │
-    │             OLLAMA BUDDY              │
-    │       Your Friendly AI Assistant      │
-    ╰──────────────────────────────────────╯
+#+begin_src
+=========================  n_____n  =========================
+========================= | o Y o | =========================
+         ╭──────────────────────────────────────╮
+         │              Welcome to              │
+         │             OLLAMA BUDDY             │
+         │       Your Friendly AI Assistant     │
+         ╰──────────────────────────────────────╯
 
     Hi there!
 
-    ollama RUNNING
+    ollama RUNNING qwen2.5-coder:7b
+
+    Models available:
+
+      qwen2.5-coder:0.5b
+      qwen:0.5b
+      llama3.2:1b
+      deepseek-r1:7b
+      qwen2.5-coder:7b
 
     I'm here to help you with:
 
@@ -156,16 +163,13 @@ A simple text information screen will be presented on the first opening of the c
 
     Quick Start/Tips:
 
-    - Try typing a prompt in this buffer
-    - Select/mark all prompt text (select region)
-    - M-x ollama-buddy-menu
-    - Select menu item
-    - Now wait for ollama to do its magic!
-    - You can switch models anytime with [m]
-    - Use [x] to cancel a running request
-    - You can send to this chat from any buffer
+    - Type a prompt in this buffer and select/mark it
+    - Run M-x ollama-buddy-menu and pick an option
+    - See ollama response in this buffer
+    - Switch models with [m], cancel with [x]
+    - Send selected/marked text from any buffer
 
--------------------- | @ Y @ | --------------------
+------------------------- | @ Y @ | -------------------------
 #+end_src
 
 * Features

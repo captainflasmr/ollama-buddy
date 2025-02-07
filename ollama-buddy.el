@@ -71,9 +71,9 @@
   (concat
    "\n" ollama-buddy-separator-1 "\n"
    "         ╭──────────────────────────────────────╮\n"
-   "         │              Welcome to               │\n"
-   "         │             OLLAMA BUDDY              │\n"
-   "         │       Your Friendly AI Assistant      │\n"
+   "         │              Welcome to              │\n"
+   "         │             OLLAMA BUDDY             │\n"
+   "         │       Your Friendly AI Assistant     │\n"
    "         ╰──────────────────────────────────────╯\n\n"
    "    Hi there!\n\n"
    (if (not (ollama-buddy--ollama-running))
