@@ -86,45 +86,6 @@ Note that all the demos are in real time.
   - Minimal dependencies
   - Straightforward configuration options
 
-* AI assistant
-
-A simple text information screen will be presented on the first opening of the chat, or when requested through the menu system:
-
-#+begin_src 
-====================  n_____n  ====================
-==================== | o Y o | ====================
-
-    ╭──────────────────────────────────────╮
-    │              Welcome to               │
-    │             OLLAMA BUDDY              │
-    │       Your Friendly AI Assistant      │
-    ╰──────────────────────────────────────╯
-
-    Hi there!
-
-    ollama RUNNING
-
-    I'm here to help you with:
-
-    - Code refactoring and analysis
-    - Writing clear commit messages
-    - Proofreading and text improvements
-    - And much more!
-
-    Quick Start/Tips:
-
-    - Try typing a prompt in this buffer
-    - Select/mark all prompt text (select region)
-    - M-x ollama-buddy-menu
-    - Select menu item
-    - Now wait for ollama to do its magic!
-    - You can switch models anytime with [m]
-    - Use [x] to cancel a running request
-    - You can send to this chat from any buffer
-
--------------------- | @ Y @ | --------------------
-#+end_src
-
 * Design ethos expanded / why create this package?
 
 The Ollama Emacs package ecosystem is still emerging. Although there are some great implementations available, they tend to be LLM jack-of-all-trades, catering to various types of LLM integrations, including, of course, the major online offerings.
@@ -167,6 +128,45 @@ The backend?, well I decided simply to use =curl= to stimulate the =ollama= REST
 I have other thoughts regarding the use of local LLMs versus online AI behemoths. The more I use =ollama= with Emacs through this package, the more I realize the potential of smaller, local LLMs. This package allows for quick switching between these models while maintaining a decent level of performance on a regular home computer. I could, for instance, load up =qwen-coder= for code-related queries (I have found the 7B Q4/5 versions to work particularly well) and switch to a more general model for other queries, such as =llama= or even =deepseek-r1=.
 
 Phew! That turned into quite a ramble, maybe I should run this text through =ollama-buddy= for proofreading! :)
+
+* AI assistant
+
+A simple text information screen will be presented on the first opening of the chat, or when requested through the menu system:
+
+#+begin_src 
+====================  n_____n  ====================
+==================== | o Y o | ====================
+
+    ╭──────────────────────────────────────╮
+    │              Welcome to               │
+    │             OLLAMA BUDDY              │
+    │       Your Friendly AI Assistant      │
+    ╰──────────────────────────────────────╯
+
+    Hi there!
+
+    ollama RUNNING
+
+    I'm here to help you with:
+
+    - Code refactoring and analysis
+    - Writing clear commit messages
+    - Proofreading and text improvements
+    - And much more!
+
+    Quick Start/Tips:
+
+    - Try typing a prompt in this buffer
+    - Select/mark all prompt text (select region)
+    - M-x ollama-buddy-menu
+    - Select menu item
+    - Now wait for ollama to do its magic!
+    - You can switch models anytime with [m]
+    - Use [x] to cancel a running request
+    - You can send to this chat from any buffer
+
+-------------------- | @ Y @ | --------------------
+#+end_src
 
 * Features
 
