@@ -351,7 +351,7 @@ Contributions are welcome! Please:
 
 * Issues
 
-Report issues on the [[https://github.com/yourusername/ollama-buddy/issues][GitHub Issues page]]
+Report issues on the [[https://github.com/captainflasmr/ollama-buddy/issues][GitHub Issues page]]
 
 * Alternative LLM based packages
 
@@ -359,7 +359,7 @@ To the best of my knowledge, there are currently a few Emacs packages related to
 
 1. *llm.el* (by Jacob Hacker)
    - A more general LLM interface package that supports Ollama as one of its backends
-   - GitHub: https://github.com/ahyatt/llm.el
+   - GitHub: https://github.com/ahyatt/llm
    - Provides a more abstracted approach to interacting with language models
    - Supports multiple backends including Ollama, OpenAI, and others
 
