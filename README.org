@@ -255,8 +255,9 @@ git clone https://github.com/captainflasmr/ollama-buddy.git
 Add to your =init.el=:
 
 #+begin_src emacs-lisp
-(add-to-list 'load-path "path/to/ollama-buddy")
-(require 'ollama-buddy)
+  (use-package ollama-buddy
+    :load-path "path/to/ollama-buddy"
+    :bind ("C-c l" . ollama-buddy-menu))
 #+end_src
 
 ** MELPA (Coming Soon)
