@@ -144,30 +144,16 @@ A simple text information screen will be presented on the first opening of the c
 
     Hi there!
 
-    ollama RUNNING qwen2.5-coder:7b
-
     Models available:
 
-      qwen2.5-coder:0.5b
-      qwen:0.5b
-      llama3.2:1b
-      deepseek-r1:7b
-      qwen2.5-coder:7b
+      qwen-4q:latest
+      qwen:latest
+      llama:latest
 
-    I'm here to help you with:
-
-    - Code refactoring and analysis
-    - Writing clear commit messages
-    - Proofreading and text improvements
-    - And much more!
-
-    Quick Start/Tips:
-
-    - Type a prompt in this buffer and select/mark it
-    - Run M-x ollama-buddy-menu and pick an option
-    - See ollama response in this buffer
-    - Switch models with [m], cancel with [x]
-    - Send selected/marked text from any buffer
+    Quick Tips:
+    - Select text and use M-x ollama-buddy-menu
+    - Switch models [m], cancel [x]
+    - Send from any buffer
 
 ------------------------- | @ Y @ | -------------------------
 #+end_src
@@ -183,10 +169,22 @@ A simple text information screen will be presented on the first opening of the c
   - Code description
   - Text proofreading
   - Text summarization
+  - Dictionary
 - Cute ASCII art separators for chat messages
 - Region-based interaction with any buffer
 
 * Whats New
+
+** <2025-02-11>
+
+Significant improvements and refactoring, particularly around connection handling, streaming responses, and status monitoring.
+
+- Replace curl-based requests with native network processes
+- Added customizatble ollama host and port  
+- Added connection monitoring with automatic status updates
+- Added permanently visible status showing connection state and current model
+- Improve error handling for connection failures
+- Refined AI assistant presentation
 
 ** <2025-02-07>
 
@@ -243,7 +241,6 @@ Here is a kanban of the features that will be (hopefully) added in due cours, an
 
 - [[https://ollama.ai/][Ollama]] installed and running locally
 - Emacs 27.1 or later
-- =curl= command-line tool
 
 * Installation
 
@@ -251,24 +248,24 @@ Here is a kanban of the features that will be (hopefully) added in due cours, an
 
 Clone this repository:
 
-#+BEGIN_SRC shell
+#+begin_src shell
 git clone https://github.com/captainflasmr/ollama-buddy.git
-#+END_SRC
+#+end_src
 
 Add to your =init.el=:
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (add-to-list 'load-path "path/to/ollama-buddy")
 (require 'ollama-buddy)
-#+END_SRC
+#+end_src
 
 ** MELPA (Coming Soon)
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (use-package ollama-buddy
   :ensure t
   :bind ("C-c l" . ollama-buddy-menu))
-#+END_SRC
+#+end_src
 
 * Usage
 
@@ -326,21 +323,59 @@ Add to your =init.el=:
 #+end_src
 
 #+RESULTS:
-| Custom variable            | Description                                            |
-|----------------------------+--------------------------------------------------------|
-| ollama-buddy-menu-columns  | Number of columns to display in the Ollama Buddy menu. |
-| ollama-buddy-menu-items    | Menu items definition for Ollama Buddy.                |
-| ollama-buddy-current-model | Default Ollama model to use.                           |
-| ollama-buddy-separator-1   | Separator used for Ollama LLM output, variant 1.       |
-| ollama-buddy-separator-2   | Separator used for Ollama LLM output, variant 2.       |
+| Custom variable                        | Description                                            |
+|----------------------------------------+--------------------------------------------------------|
+| ollama-buddy-menu-columns              | Number of columns to display in the Ollama Buddy menu. |
+| ollama-buddy-menu-items                | Menu items definition for Ollama Buddy.                |
+| ollama-buddy-current-model             | Default Ollama model to use.                           |
+| ollama-buddy-host                      | Host where Ollama server is running.                   |
+| ollama-buddy-port                      | Port where Ollama server is running.                   |
+| ollama-buddy-connection-check-interval | Interval in seconds to check Ollama connection status. |
 
 Customize the package in your Emacs init:
 
+** Simple
+
+Nothing required, select ollama model when run up!
+
+** Normal
+
+Just setting the default model
+
 #+begin_src elisp
 (setq ollama-buddy-current-model "qwen-4q:latest")
+#+end_src
 
-;; Change number of menu columns
+** Fancy
+
+Do you want to change the number of menu columns presented?
+
+#+begin_src elisp
+(setq ollama-buddy-current-model "qwen-4q:latest")
 (setq ollama-buddy-menu-columns 4)
+#+end_src
+
+** Advanced
+
+Ollama is running somewhere!
+
+#+begin_src elisp
+(setq ollama-buddy-current-model "qwen-4q:latest")
+(setq ollama-buddy-menu-columns 4)
+(setq ollama-buddy-host "http://<somewhere>")
+(setq ollama-buddy-port 11400)
+#+end_src
+
+** Super Fiddler
+
+Lets get the ollama status as soon as is humanly perceptable!
+
+#+begin_src elisp
+(setq ollama-buddy-current-model "qwen-4q:latest")
+(setq ollama-buddy-menu-columns 4)
+(setq ollama-buddy-host "http://<somewhere>")
+(setq ollama-buddy-port 11400)
+(setq ollama-buddy-connection-check-interval 1)
 #+end_src
 
 * Contributing

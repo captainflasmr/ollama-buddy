@@ -11,6 +11,17 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-02-11>
+
+Significant improvements and refactoring, particularly around connection handling, streaming responses, and status monitoring.
+
+- Replace curl-based requests with native network processes
+- Added customizatble ollama host and port  
+- Added connection monitoring with automatic status updates
+- Added permanently visible status showing connection state and current model
+- Improve error handling for connection failures
+- Refined AI assistant presentation
+
 ** <2025-02-07>
 
 Increase menu columns to 4, add dictionary lookup and save chat options  
