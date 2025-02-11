@@ -322,4 +322,5 @@
 
 (ollama-buddy--start-connection-monitor)
 
-(global-set-key (kbd "C-c l") #'ollama-buddy-menu)
+(provide 'ollama-buddy)
+;;; ollama-buddy.el ends here
