@@ -24,6 +24,7 @@ The name is just something a little bit fun and it seems to always remind me of 
 - Removed C-c single key user keybinding as part of package definition and in the README gave guidance on defining a user keybinding to activate the ollama buddy menu
 - Added =ellama= comparison description
 - Activating and deactivating the =ollama= monitor process now users responsibility
+- Updated Screenshots / Demos
 
 ** <2025-02-11>
 
@@ -62,35 +63,23 @@ Added query finished message.
 
 Note that all the demos are in real time.
 
-*Switching to a better model*
+*First Steps*
 
 #+attr_org: :width 300px
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_001.gif]]
 
-*More conversational*
+*Swap Model*
 
 #+attr_org: :width 300px
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_002.gif]]
 
-*Describing code with different models*
-
-#+attr_org: :width 300px
-#+attr_html: :width 100%
-[[file:img/ollama-buddy-screen-recording_003.gif]]
-
-*Describing code with a more advanced model*
-
-#+attr_org: :width 300px
-#+attr_html: :width 100%
-[[file:img/ollama-buddy-screen-recording_004.gif]]
-
 *The Menu*
 
 #+attr_org: :width 300px
 #+attr_html: :width 100%
-[[file:img/ollama-buddy-screenshot_001.png]]
+[[file:img/ollama-buddy-screenshot_001.jpg]]
 
 * Summary of my design ethos
 
