@@ -1,3 +1,67 @@
+;;; ollama-buddy.el --- Ollama Buddy: Your Friendly AI Assistant -*- lexical-binding: t; -*-
+;;
+;; Author: James Dyer <captainflasmr@gmail.com>
+;; Version: 0.1.0
+;; Package-Requires: ((emacs "24.3") (json "1.4") (cl-lib "0.5"))
+;; Keywords: applications, tools, convenience
+;; URL: https://github.com/captainflasmr/ollama-buddy
+;;
+;; This file is not part of GNU Emacs.
+;;
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or (at
+;; your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+;;
+;;; Commentary:
+;;
+;; Ollama Buddy is an Emacs package that provides a friendly AI assistant
+;; for various tasks such as code refactoring, generating commit messages,
+;; dictionary lookups, and more. It interacts with the Ollama server to
+;; perform these tasks.
+;;
+;;; Quick Start
+;;
+;; (use-package ollama-buddy
+;;    :load-path "path/to/ollama-buddy"
+;;    :bind ("C-c l" . ollama-buddy-menu)
+;;    :config (ollama-buddy-enable-monitor)
+;;    :custom ollama-buddy-current-model "llama:latest")
+;;
+;; OR
+;;
+;; (add-to-list 'load-path "path/to/ollama-buddy")
+;; (require 'ollama-buddy)
+;; (global-set-key (kbd "C-c l") #'ollama-buddy-menu)
+;; (ollama-buddy-enable-monitor)
+;; (setq ollama-buddy-current-model "llama:latest")
+;;
+;; OR (when added to MELPA)
+;;
+;; (use-package ollama-buddy
+;;    :ensure t
+;;    :bind ("C-c l" . ollama-buddy-menu)
+;;    :config (ollama-buddy-enable-monitor)
+;;    :custom ollama-buddy-current-model "llama:latest")
+;;
+;;; Usage
+;;
+;; M-x ollama-buddy-menu
+;;
+;; OR
+;;
+;; C-c l
+;;
+;;; Code:
+
 (require 'json)
 (require 'subr-x)
 (require 'url)
@@ -72,7 +136,7 @@
   (ollama-buddy--stop-connection-monitor)
   (setq ollama-buddy--connection-timer
         (run-with-timer 0 ollama-buddy-connection-check-interval
-                       #'ollama-buddy--monitor-connection)))
+                        #'ollama-buddy--monitor-connection)))
 
 (defun ollama-buddy--stop-connection-monitor ()
   "Stop the Ollama connection monitoring."
@@ -206,9 +270,9 @@
 (defun ollama-buddy--create-intro-message ()
   "Create welcome message."
   (let ((status (when (ollama-buddy--ollama-running)
-                    (format "    Models available:\n\n%s\n\n"
-                            (mapconcat (lambda (m) (format "      %s" m))
-                                       (ollama-buddy--get-models) "\n")))))
+                  (format "    Models available:\n\n%s\n\n"
+                          (mapconcat (lambda (m) (format "      %s" m))
+                                     (ollama-buddy--get-models) "\n")))))
     (concat
      "\n" (alist-get 'header ollama-buddy--separators) "\n"
      "         ╭──────────────────────────────────────╮\n"
@@ -278,6 +342,7 @@
                                    (function :tag "Action")))
   :group 'ollama-buddy)
 
+;;;###autoload
 (defun ollama-buddy-menu ()
   "Display Ollama Buddy menu."
   (interactive)
@@ -320,6 +385,19 @@
               (cmd (assoc key items)))
     (funcall (caddr cmd))))
 
-(ollama-buddy--start-connection-monitor)
+;;;###autoload
+(defun ollama-buddy-enable-monitor ()
+  "Enable Ollama Buddy connection monitoring."
+  (interactive)
+  (ollama-buddy--start-connection-monitor)
+  (message "Ollama Buddy connection monitoring enabled."))
 
-(global-set-key (kbd "C-c l") #'ollama-buddy-menu)
+;;;###autoload
+(defun ollama-buddy-disable-monitor ()
+  "Disable Ollama Buddy connection monitoring."
+  (interactive)
+  (ollama-buddy--stop-connection-monitor)
+  (message "Ollama Buddy connection monitoring disabled."))
+
+(provide 'ollama-buddy)
+;;; ollama-buddy.el ends here

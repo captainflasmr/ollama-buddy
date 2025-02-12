@@ -16,6 +16,48 @@ A friendly Emacs interface for interacting with Ollama models. This package prov
 
 The name is just something a little bit fun and it seems to always remind me of the "bathroom buddy" from the film Gremlins (although hopefully this will work better than that seemed to!)
 
+* Whats New
+
+** <2025-02-12>
+
+- =ollama-buddy= updated in preparation for MELPA submission
+- Removed C-c single key user keybinding as part of package definition and in the README gave guidance on defining a user keybinding to activate the ollama buddy menu
+- Added =ellama= comparison description
+- Activating and deactivating the =ollama= monitor process now users responsibility
+
+** <2025-02-11>
+
+Significant improvements and refactoring, particularly around connection handling, streaming responses, and status monitoring.
+
+- Replace curl-based requests with native network processes
+- Added customizatble ollama host and port  
+- Added connection monitoring with automatic status updates
+- Added permanently visible status showing connection state and current model
+- Improve error handling for connection failures
+- Refined AI assistant presentation
+
+** <2025-02-07>
+
+Increase menu columns to 4, add dictionary lookup and save chat options  
+
+- Change `ollama-buddy-menu-columns` from 3 to 4  
+- Rename "Describe code" menu key from `?d` to `?c`  
+- Add dictionary lookup feature (`?d`)  
+- Add synonym lookup feature (`?n`)  
+- Add "Save chat" option (`?s`) to write chat buffer to a file  
+
+** <2025-02-07>
+
+Added query finished message.
+
+** <2025-02-06>
+
+- Initial release
+- Basic chat functionality
+- Menu-driven interface
+- Region-based interactions
+- Model switching support
+
 * Screenshots / Demos
 
 Note that all the demos are in real time.
@@ -173,44 +215,9 @@ A simple text information screen will be presented on the first opening of the c
 - Cute ASCII art separators for chat messages
 - Region-based interaction with any buffer
 
-* Whats New
-
-** <2025-02-11>
-
-Significant improvements and refactoring, particularly around connection handling, streaming responses, and status monitoring.
-
-- Replace curl-based requests with native network processes
-- Added customizatble ollama host and port  
-- Added connection monitoring with automatic status updates
-- Added permanently visible status showing connection state and current model
-- Improve error handling for connection failures
-- Refined AI assistant presentation
-
-** <2025-02-07>
-
-Increase menu columns to 4, add dictionary lookup and save chat options  
-
-- Change `ollama-buddy-menu-columns` from 3 to 4  
-- Rename "Describe code" menu key from `?d` to `?c`  
-- Add dictionary lookup feature (`?d`)  
-- Add synonym lookup feature (`?n`)  
-- Add "Save chat" option (`?s`) to write chat buffer to a file  
-
-** <2025-02-07>
-
-Added query finished message.
-
-** <2025-02-06>
-
-- Initial release
-- Basic chat functionality
-- Menu-driven interface
-- Region-based interactions
-- Model switching support
-
 * Kanban
 
-Here is a kanban of the features that will be (hopefully) added in due cours, and visually demonstrating their current status via a kanban board
+Here is a kanban of the features that will be (hopefully) added in due course, and visually demonstrating their current status via a kanban board
 
 #+begin_src emacs-lisp :results table :exports results :tangle no
 (my/kanban-to-table "roadmap" "issues")
@@ -254,9 +261,29 @@ git clone https://github.com/captainflasmr/ollama-buddy.git
 
 Add to your =init.el=:
 
+With the option to add your own user keybinding for the =ollama-buddy-menu=
+
+Also Provided the user with the option to enable the monitor manually rather than starting it automatically. This gives users control over when they want to initiate the monitoring, which can help avoid unnecessary resource usage or unexpected behavior.
+
+Of course the user can disable at any time with:
+#+begin_src
+M-x ollama-buddy-disable-monitor
+#+end_src
+
 #+begin_src emacs-lisp
 (add-to-list 'load-path "path/to/ollama-buddy")
 (require 'ollama-buddy)
+(global-set-key (kbd "C-c l") #'ollama-buddy-menu)
+(ollama-buddy-enable-monitor)
+#+end_src
+
+OR
+
+#+begin_src elisp
+(use-package ollama-buddy
+  :load-path "path/to/ollama-buddy"
+  :bind ("C-c l" . ollama-buddy-menu)
+  :config (ollama-buddy-enable-monitor))
 #+end_src
 
 ** MELPA (Coming Soon)
@@ -264,7 +291,8 @@ Add to your =init.el=:
 #+begin_src emacs-lisp
 (use-package ollama-buddy
   :ensure t
-  :bind ("C-c l" . ollama-buddy-menu))
+  :bind ("C-c l" . ollama-buddy-menu)
+  :config (ollama-buddy-enable-monitor))
 #+end_src
 
 * Usage
@@ -420,9 +448,12 @@ To the best of my knowledge, there are currently a few Emacs packages related to
    - GitHub: https://github.com/xenodium/chatgpt-shell
    - Not specifically Ollama-focused, but interesting for comparison
 
-4. *ellama*
-
-   - TODO
+4. *ellama* (by s-kostyaev)
+   - A comprehensive Emacs package for interacting with local LLMs through Ollama
+   - GitHub: https://github.com/s-kostyaev/ellama
+   - Features deep org-mode integration and extensive prompt templates
+   - Offers streaming responses and structured interaction patterns
+   - More complex but feature-rich approach to local LLM integration
 
 * Alternative package comparison
 
@@ -491,5 +522,21 @@ Let's compare ollama-buddy to the existing solutions:
    - Having minimal dependencies
 
 4. *ellama*
+   
+   - *Pros*:
+     - Tight integration with Emacs org-mode
+     - Extensive built-in prompt templates
+     - Support for streaming responses
+     - Good documentation and examples
+       
+   - *Cons*:
+     - More complex configuration required
+     - Heavier dependency footprint
+     - Less flexible for quick ad-hoc queries
+     - Primarily focused on structured interactions
 
-   - TODO
+   =ollama-buddy= differs by:
+   - Having a simpler, more streamlined setup process
+   - Providing a more lightweight, menu-driven interface
+   - Focusing on quick, direct interactions from any buffer
+   - Having minimal dependencies and configuration requirements
