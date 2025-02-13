@@ -11,6 +11,17 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-02-13>
+
+Models can be assigned to individual commands
+
+- Set menu :model property to associate a command with a model
+- Introduce `ollama-buddy-fallback-model` for automatic fallback if the specified model is unavailable.
+- Improve `ollama-buddy--update-status-overlay` to indicate model substitution.
+- Expand `ollama-buddy-menu` with structured command definitions using properties for improved flexibility.
+- Add `ollama-buddy-show-model-status` to display available and used models.
+- Refactor command execution flow to ensure model selection is handled dynamically.
+
 ** <2025-02-12>
 
 - =ollama-buddy= updated in preparation for MELPA submission
