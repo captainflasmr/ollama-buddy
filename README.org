@@ -131,6 +131,14 @@ Note that all the demos are in real time.
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_002.gif]]
 
+*Code Queries*
+
+Note that I have cancelled some requests, otherwise we could be waiting a while, note I was using the LLM qwen2.5-coder:7b
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_003.gif]]
+
 *The Menu*
 
 #+attr_org: :width 300px
