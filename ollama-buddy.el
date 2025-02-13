@@ -273,30 +273,30 @@ ACTUAL-MODEL is the model being used instead."
     (send-region
      :key ?l
      :description "Send region"
-     :model "llama:latest"
+     :model nil
      :action (lambda () (ollama-buddy--send-with-command 'send-region)))
     (refactor-code
      :key ?r
      :description "Refactor code"
-     :model "mistral:latest"
+     :model nil
      :prompt "refactor the following code:"
      :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
     (git-commit
      :key ?g
      :description "Git commit message"
-     :model "tinyllama:latest"
+     :model nil
      :prompt "write a concise git commit message for the following:"
      :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
     (describe-code
      :key ?c
      :description "Describe code"
-     :model "mistral:latest"
+     :model nil
      :prompt "describe the following code:"
      :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
     (dictionary
      :key ?d
      :description "Dictionary Lookup"
-     :model "tinyllama:latest"
+     :model nil
      :prompt-fn (lambda ()
                   (concat "For the word {"
                           (buffer-substring-no-properties (region-beginning) (region-end))
