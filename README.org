@@ -61,6 +61,36 @@ The name is just something a little bit fun and it seems to always remind me of 
   - Save/export conversation functionality
   - Visual separators for clear conversation flow
 
+* Screenshots / Demos
+
+Note that all the demos are in real time.
+
+*First Steps*
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_001.gif]]
+
+*Swap Model*
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_002.gif]]
+
+*Code Queries*
+
+Note that I have cancelled some requests, otherwise we could be waiting a while, note I was using the LLM qwen2.5-coder:7b
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_003.gif]]
+
+*The Menu*
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screenshot_001.jpg]]
+
 * Whats New
 
 ** <2025-02-13>
@@ -114,36 +144,6 @@ Added query finished message.
 - Menu-driven interface
 - Region-based interactions
 - Model switching support
-
-* Screenshots / Demos
-
-Note that all the demos are in real time.
-
-*First Steps*
-
-#+attr_org: :width 300px
-#+attr_html: :width 100%
-[[file:img/ollama-buddy-screen-recording_001.gif]]
-
-*Swap Model*
-
-#+attr_org: :width 300px
-#+attr_html: :width 100%
-[[file:img/ollama-buddy-screen-recording_002.gif]]
-
-*Code Queries*
-
-Note that I have cancelled some requests, otherwise we could be waiting a while, note I was using the LLM qwen2.5-coder:7b
-
-#+attr_org: :width 300px
-#+attr_html: :width 100%
-[[file:img/ollama-buddy-screen-recording_003.gif]]
-
-*The Menu*
-
-#+attr_org: :width 300px
-#+attr_html: :width 100%
-[[file:img/ollama-buddy-screenshot_001.jpg]]
 
 * Summary of my design ethos
 
