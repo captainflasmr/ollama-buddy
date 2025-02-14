@@ -19,18 +19,27 @@ The name is just something a little bit fun and it seems to always remind me of 
 * Features
 
 - *Minimal Setup*
-  - If desired, the following will get you going!
+  
+  - If desired, the following will get you going! (of course, have =ollama= running with some models loaded).
     
     #+begin_src elisp
-    (use-package ollama-buddy
-      :ensure t
-      :bind ("C-c l" . ollama-buddy-menu)
-      :config (ollama-buddy-enable-monitor))
+     (use-package ollama-buddy
+       :load-path "path/to/ollama-buddy"
+       :bind ("C-c l" . ollama-buddy-menu)
+       :config (ollama-buddy-enable-monitor))
     #+end_src
 
-    Of course, along with =ollama= running with models installed.
+    OR (when on MELPA)
+
+    #+begin_src elisp
+     (use-package ollama-buddy
+       :ensure t
+       :bind ("C-c l" . ollama-buddy-menu)
+       :config (ollama-buddy-enable-monitor))
+    #+end_src
 
 - *Interactive Command Menu*
+  
   - Quick-access menu with single-key commands (=M-x ollama-buddy-menu=)
   - Quickly define your own menu using defcustom with dynamic adaptable menu
   - Quickly switch between LLM models with no configuration required
@@ -38,12 +47,14 @@ The name is just something a little bit fun and it seems to always remind me of 
   - Real-time model availability status
 
 - *Smart Model Management*
+  
   - Models can be assigned to individual commands
   - Intelligent model fallback
   - Real-time model availability monitoring
   - Easy model switching during sessions
 
 - *AI Operations*
+  
   - Code refactoring with context awareness
   - Automatic git commit message generation
   - Code explanation and documentation
@@ -51,11 +62,13 @@ The name is just something a little bit fun and it seems to always remind me of 
   - Custom prompt support for flexibility
 
 - *Lightweight*
+  
   - Single package file
   - Minimal code suitable for an air-gapped system
   - No external dependencies (curl not used)
 
 - *Robust Chat Interface*
+  
   - Dedicated chat buffer with conversation history
   - Stream-based response display
   - Save/export conversation functionality
@@ -123,28 +136,6 @@ Significant improvements and refactoring, particularly around connection handlin
 - Improve error handling for connection failures
 - Refined AI assistant presentation
 
-** <2025-02-07>
-
-Increase menu columns to 4, add dictionary lookup and save chat options  
-
-- Change `ollama-buddy-menu-columns` from 3 to 4  
-- Rename "Describe code" menu key from `?d` to `?c`  
-- Add dictionary lookup feature (`?d`)  
-- Add synonym lookup feature (`?n`)  
-- Add "Save chat" option (`?s`) to write chat buffer to a file  
-
-** <2025-02-07>
-
-Added query finished message.
-
-** <2025-02-06>
-
-- Initial release
-- Basic chat functionality
-- Menu-driven interface
-- Region-based interactions
-- Model switching support
-
 * Summary of my design ethos
 
 - *Focused Design Philosophy*
@@ -176,48 +167,187 @@ Added query finished message.
   - Minimal dependencies
   - Straightforward configuration options
 
-* Design ethos expanded / why create this package?
+* Usage
 
-The Ollama Emacs package ecosystem is still emerging. Although there are some great implementations available, they tend to be LLM jack-of-all-trades, catering to various types of LLM integrations, including, of course, the major online offerings.
+1. Start your Ollama server locally
+2. Use =M-x ollama-buddy-menu= or a user defined keybinding =C-c l= to open the menu
+3. Select your preferred model using the [m] option
+4. Select text in any buffer
+5. Choose an action from the menu:
 
-Recently, I have been experimenting with a local solution using =ollama=. While using =ollama= through the terminal interface with =readline= naturally leans toward Emacs keybindings, there are a few limitations:
+| Key | Action             | Description                                 |
+|-----+--------------------+---------------------------------------------|
+| o   | Open chat buffer   | Opens the main chat interface               |
+| m   | Swap model         | Switch between available Ollama models      |
+| h   | Help assistant     | Display help message                        |
+| l   | Send region        | Send selected text directly to model        |
+| r   | Refactor code      | Get code refactoring suggestions            |
+| g   | Git commit message | Generate commit message for changes         |
+| c   | Describe code      | Get code explanation                        |
+| d   | Dictionary Lookup  | Get dictionary definition                   |
+| n   | Word synonym       | Get a synonym for the word                  |
+| p   | Proofread text     | Check text for improvements                 |
+| z   | Make concise       | Reduce wordiness while preserving meaning   |
+| e   | Custom Prompt      | Enter bespoke prompt through the minibuffer |
+| s   | Save chat          | Save the chat to a file                     |
+| x   | Kill request       | Cancel current Ollama request               |
+| q   | Quit               | Exit the menu                               |
 
-- Copy and paste do not use Emacs keybindings like readline navigation. This is due to the way key codes work in terminals, meaning that copying and pasting into Emacs would require using the mouse!
-- Searching through a terminal with something like Emacs =isearch= can vary depending on the terminal.
-- Workflow disruption occur when copying and pasting between Emacs and =ollama=.
-- There is no easy way to save a session.
-- It is not using Emacs!
+* AI assistant
 
-I guess you can see where this is going. The question is: how do I integrate a basic query-response mechanism to =ollama= into Emacs? This is where existing LLM Emacs packages come in, however, I have always found them to be more geared towards online models with some packages offering experimental implementations of =ollama= integration. In my case, I often work on an air-gapped system where downloading or transferring packages is not straightforward. In such an environment, my only option for LLM interaction is =ollama= anyway. Given the limitations mentioned earlier of interacting with =ollama= through a terminal, why not create a dedicated =ollama= Emacs package that is very simple to set up, very lightweight and leverages Emacs's editing capabilities to provide a basic query response interface to =ollama=?
+A simple text information screen will be presented on the first opening of the chat, or when requested through the menu system, its just a bit of fun, but I wanted a quick start tutorial/assistant type of feel.
 
-I have found that setting up =ollama= within the current crop of LLM Emacs packages can be quite involved. I often struggle with the setup, I get there in the end, but it feels like there's always a long list of payloads, backends, etc., to configure. But what if I just want to integrate Emacs with =ollama=? It has a RESTful interface, so could I create a package with minimal setup, allowing users to define a default model in their init file (or select one each time if they prefer)?  It could also query the current set of loaded models through the =ollama= interface and provide a =completing-read= type of model selection, with potentially no model configuration needed!
+#+begin_src
+=========================  n_____n  =========================
+========================= | o Y o | =========================
+         ╭──────────────────────────────────────╮
+         │              Welcome to               │
+         │             OLLAMA BUDDY              │
+         │       Your Friendly AI Assistant      │
+         ╰──────────────────────────────────────╯
 
-Beyond just being lightweight and easy to configure, I also have another idea: a flexible menu system. For a while, I have been using a simple menu-based interface inspired by transient menus. However, I have chosen not to use =transient= because I want this package to be compatible with older Emacs versions. Additionally, I haven’t found a compelling use case for a complex transient menu and I prefer a simple, opaque top level menu.
+    Hi there!
 
-To achieve this, I have decided to create a flexible =defcustom= menu system. Initially, it will be configured for some common actions, but users can easily modify it through the Emacs customization interface by updating a simple alist.
+    Models available:
 
-For example, to refactor code through an LLM, a prepended text string of something like "Refactor the following code:" is usually applied. To proofread text, "Proofread the following:" could be prepended to the body of the query. So, why not create a flexible menu where users can easily add their own commands? For instance, if someone wanted a command to uppercase some text (even though Emacs can already do this), they could simply add the following entry to the =ollama-buddy-menu-items= alist:
+      qwen-4q:latest
+      qwen:latest
+      llama:latest
 
-#+begin_src elisp
-(?u . ("Upcase" 
-       (lambda () (ollama-buddy--send "convert the following to uppercase:"))))
+    Quick Tips:
+    - Select text and use M-x ollama-buddy-menu
+    - Switch models [m], cancel [x]
+    - Send from any buffer
+
+------------------------- | @ Y @ | -------------------------
 #+end_src
 
-Then the menu would present a menu item "Upcase" with a "u" selection, upcasing the selected region.  You could go nuts with this, and in order to double down on the autogeneration of a menu concept, I have provided a =defcustom= =ollama-buddy-menu-columns= variable so you can flatten out your auto-generated menu as much as you like!
+* Installation
 
-This is getting rambly, but another key design consideration is how prompts should be handled and in fact how do I go about sending text from within Emacs?. Many implementations rely on a chat buffer as the single focal point, which seems natural to me, so I will follow a similar approach.
+** Prerequisites
 
-I've seen different ways of defining a prompt submission mechanism, some using <RET>, others using a dedicated keybinding like C-c <RET>, so, how should I define my prompting mechanism? I have a feeling this could get complicated, so lets use the KISS principle, also, how should text be sent from within Emacs buffers? My solution? simply mark the text and send it, not just from any Emacs buffer, but also within the chat window. It may seem slightly awkward at first (especially in the chat buffer, where you will have to create your prompt and then mark it), but it provides a clear delineation of text and ensures a consistent interface across Emacs. For example, using M-h to mark an element requires minimal effort and greatly simplifies the package implementation. This approach also allows users to use the **scratch** buffer for sending requests if so desired!
+- [[https://ollama.ai/][Ollama]] installed and running locally
+- Emacs 24.3 or later
 
-Many current implementations create a chat buffer with modes for local keybindings and other features. I have decided not to do this and instead, I will provide a simple editable buffer (ASCII text only) where all =ollama= interactions will reside. Users will be able to do anything in that buffer; there will be no bespoke Ollama/LLM functionality involved. It will simply be based on a =special= buffer and to save a session?, just use =save-buffer= to write it to a file, Emacs to the rescue again!
+** Manual Installation
 
-Regarding the minimal setup philosophy of this package, I also want to include a fun AI assistant-style experience. Nothing complicated, just a bit of logic to display welcome text, show the current =ollama= status, and list available models. The idea is that users should be able to jump in immediately. If they know how to install/start =ollama=, they can install the package without any configuration, run `M-x ollama-buddy-menu`, and open the chat. At that point, the "AI assistant" will display the current =ollama= status and provide a simple tutorial to help them get started.
+Clone this repository:
 
-The backend?, well I initially decided simply to use =curl= to stimulate the =ollama= RESTful API but after getting that to work I thought it might be best to completely remove that dependency, so now I am using a native network solution using =make-network-process=.  Yes it is a bit overkill, but it works, and ultimately gives me all the flexibility I could every want without having to depend on an external tool.
+#+begin_src shell
+git clone https://github.com/captainflasmr/ollama-buddy.git
+#+end_src
 
-I have other thoughts regarding the use of local LLMs versus online AI behemoths. The more I use =ollama= with Emacs through this package, the more I realize the potential of smaller, local LLMs. This package allows for quick switching between these models while maintaining a decent level of performance on a regular home computer. I could, for instance, load up =qwen-coder= for code-related queries (I have found the 7B Q4/5 versions to work particularly well) and switch to a more general model for other queries, such as =llama= or even =deepseek-r1=.
+*** init.el
 
-Phew! That turned into quite a ramble, maybe I should run this text through =ollama-buddy= for proofreading! :)
+With the option to add your own user keybinding for the =ollama-buddy-menu=
+
+Also provided the user with the option to enable the monitor manually rather than starting it automatically. This gives users control over when they want to initiate the monitoring, which can help avoid unnecessary resource usage or unexpected behavior.
+
+#+begin_src emacs-lisp
+(add-to-list 'load-path "path/to/ollama-buddy")
+(require 'ollama-buddy)
+(global-set-key (kbd "C-c l") #'ollama-buddy-menu)
+(ollama-buddy-enable-monitor)
+#+end_src
+
+OR
+
+#+begin_src elisp
+ (use-package ollama-buddy
+   :load-path "path/to/ollama-buddy"
+   :bind ("C-c l" . ollama-buddy-menu)
+   :config (ollama-buddy-enable-monitor))
+#+end_src
+
+** OR (when on MELPA)
+
+#+begin_src emacs-lisp
+(use-package ollama-buddy
+  :ensure t
+  :bind ("C-c l" . ollama-buddy-menu)
+  :config (ollama-buddy-enable-monitor))
+#+end_src
+
+* Customization
+
+#+begin_src emacs-lisp :results table :colnames '("Custom variable" "Description") :exports results
+  (let ((rows))
+    (mapatoms
+     (lambda (symbol)
+       (when (and (string-match "^ollama-buddy-"
+                                (symbol-name symbol))
+                  (not (string-match "--" (symbol-name symbol)))
+                  (or (custom-variable-p symbol)
+                      (boundp symbol)))
+         (push `(,symbol
+                 ,(car
+                   (split-string
+                    (or (get (indirect-variable symbol)
+                             'variable-documentation)
+                        (get symbol 'variable-documentation)
+                        "")
+                    "\n")))
+               rows))))
+    rows)
+#+end_src
+
+#+RESULTS:
+| Custom variable                        | Description                                            |
+|----------------------------------------+--------------------------------------------------------|
+| ollama-buddy-menu-columns              | Number of columns to display in the Ollama Buddy menu. |
+| ollama-buddy-host                      | Host where Ollama server is running.                   |
+| ollama-buddy-default-model             | Default Ollama model to use.                           |
+| ollama-buddy-port                      | Port where Ollama server is running.                   |
+| ollama-buddy-connection-check-interval | Interval in seconds to check Ollama connection status. |
+| ollama-buddy-command-definitions       | Comprehensive command definitions for Ollama Buddy.    |
+
+** Emacs Init
+
+Customize the package in your Emacs init:
+
+*** Simple
+
+Nothing else required after Installation above, just run the =ollama-buddy-menu= and select the model when prompted.
+
+*** Normal
+
+Just setting the default fallback model
+
+#+begin_src elisp
+(setq ollama-buddy-default-model "qwen-4q:latest")
+#+end_src
+
+*** Fancy
+
+Do you want to change the number of menu columns presented?
+
+#+begin_src elisp
+(setq ollama-buddy-default-model "qwen-4q:latest")
+(setq ollama-buddy-menu-columns 4)
+#+end_src
+
+*** Advanced
+
+Ollama is running somewhere!
+
+#+begin_src elisp
+(setq ollama-buddy-default-model "qwen-4q:latest")
+(setq ollama-buddy-menu-columns 4)
+(setq ollama-buddy-host "http://<somewhere>")
+(setq ollama-buddy-port 11400)
+#+end_src
+
+** Super Fiddler
+
+Lets get the ollama status as soon as is humanly perceptable!
+
+#+begin_src elisp
+(setq ollama-buddy-default-model "qwen-4q:latest")
+(setq ollama-buddy-menu-columns 4)
+(setq ollama-buddy-host "http://<somewhere>")
+(setq ollama-buddy-port 11400)
+(setq ollama-buddy-connection-check-interval 1)
+#+end_src
 
 * Customizing the Ollama Buddy Menu System
 
@@ -265,7 +395,7 @@ You can add new commands to =ollama-buddy-command-definitions= in your config:
                  :model "mistral:latest"
                  :prompt "Translate the following as if I was a pirate:"
                  :action (lambda () (ollama-buddy--send-with-command 'pirate))))
-  :custom ollama-buddy-current-model "llama:latest")
+  :custom ollama-buddy-default-model "llama:latest")
 
 ;; Add multiple commands at once
 (setq ollama-buddy-command-definitions
@@ -319,10 +449,6 @@ You can create a minimal configuration by defining only the commands you need:
 1. Choose unique keys for menu items
 2. Match models to task complexity (small models for quick tasks)
 3. Use clear, descriptive names
-4. Consider adding a fallback model for unavailable models:
-   #+begin_src elisp
-   (setq ollama-buddy-fallback-model "mistral:latest")
-   #+end_src
 
 ** Command Properties Reference
 
@@ -370,29 +496,22 @@ Commands in =ollama-buddy-command-definitions= can specify preferred models usin
   ...)
 #+end_src
 
-When =:model= is =nil=, the command will use whatever model is currently set as =ollama-buddy-current-model=.
+When =:model= is =nil=, the command will use whatever model is currently set as =ollama-buddy-default-model=.
 
 ** Fallback Chain
 
 When executing a command, the model selection follows this fallback chain:
 
 1. Command-specific model (=:model= property)
-2. Current model (=ollama-buddy-current-model=)
-3. Fallback model (=ollama-buddy-fallback-model=)
-4. User selection from available models
+2. Current model (=ollama-buddy-default-model=)
+3. User selection from available models
 
 ** Configuration Options
 
 *** Setting the Fallback Model
 
 #+begin_src elisp
-(setq ollama-buddy-fallback-model "llama:latest")
-#+end_src
-
-*** Setting the Current Model
-
-#+begin_src elisp
-(setq ollama-buddy-current-model "mistral:latest")
+(setq ollama-buddy-default-model "llama:latest")
 #+end_src
 
 ** User Interface Feedback
@@ -413,14 +532,13 @@ When a fallback occurs, Ollama Buddy provides clear feedback:
 2. *Simple Fallback*: Requested model unavailable
    - Command requests "mistral:latest"
    - Model unavailable
-   - Falls back to =ollama-buddy-current-model=
+   - Falls back to =ollama-buddy-default-model=
 
 3. *Complete Fallback Chain*:
    - Command requests "mistral:latest"
    - Model unavailable
    - Current model ("llama2:latest") unavailable
-   - Falls back to =ollama-buddy-fallback-model=
-   - If that's unavailable, prompts user to select
+   - Falls back to, prompts user to select
 
 ** Error Handling
 
@@ -436,42 +554,55 @@ When a fallback occurs, Ollama Buddy provides clear feedback:
    - Use more capable models for complex tasks (e.g., "mistral/qwen-coder" for code refactoring)
 
 2. *Fallback Configuration*:
-   - Set =ollama-buddy-fallback-model= to a reliable, general-purpose model
-   - Regularly update =ollama-buddy-current-model= to your preferred default
+   - Set =ollama-buddy-default-model= to a reliable, general-purpose model
 
 3. *Model Management*:
    - Use =ollama-buddy-show-model-status= to monitor available models
    - Keep commonly used models pulled locally
-   - Watch for model availability warnings in the header line
+   - Watch for model availability warnings in the header line and chat buffer
 
-* AI assistant
+* Design ethos expanded / why create this package?
 
-A simple text information screen will be presented on the first opening of the chat, or when requested through the menu system, its just a bit of fun, but I wanted a quick start tutorial/assistant type of feel.
+The Ollama Emacs package ecosystem is still emerging. Although there are some great implementations available, they tend to be LLM jack-of-all-trades, catering to various types of LLM integrations, including, of course, the major online offerings.
 
-#+begin_src
-=========================  n_____n  =========================
-========================= | o Y o | =========================
-         ╭──────────────────────────────────────╮
-         │              Welcome to              │
-         │             OLLAMA BUDDY             │
-         │       Your Friendly AI Assistant     │
-         ╰──────────────────────────────────────╯
+Recently, I have been experimenting with a local solution using =ollama=. While using =ollama= through the terminal interface with =readline= naturally leans toward Emacs keybindings, there are a few limitations:
 
-    Hi there!
+- Copy and paste do not use Emacs keybindings like readline navigation. This is due to the way key codes work in terminals, meaning that copying and pasting into Emacs would require using the mouse!
+- Searching through a terminal with something like Emacs =isearch= can vary depending on the terminal.
+- Workflow disruption occur when copying and pasting between Emacs and =ollama=.
+- There is no easy way to save a session.
+- It is not using Emacs!
 
-    Models available:
+I guess you can see where this is going. The question is: how do I integrate a basic query-response mechanism to =ollama= into Emacs? This is where existing LLM Emacs packages come in, however, I have always found them to be more geared towards online models with some packages offering experimental implementations of =ollama= integration. In my case, I often work on an air-gapped system where downloading or transferring packages is not straightforward. In such an environment, my only option for LLM interaction is =ollama= anyway. Given the limitations mentioned earlier of interacting with =ollama= through a terminal, why not create a dedicated =ollama= Emacs package that is very simple to set up, very lightweight and leverages Emacs's editing capabilities to provide a basic query response interface to =ollama=?
 
-      qwen-4q:latest
-      qwen:latest
-      llama:latest
+I have found that setting up =ollama= within the current crop of LLM Emacs packages can be quite involved. I often struggle with the setup, I get there in the end, but it feels like there's always a long list of payloads, backends, etc., to configure. But what if I just want to integrate Emacs with =ollama=? It has a RESTful interface, so could I create a package with minimal setup, allowing users to define a default model in their init file (or select one each time if they prefer)?  It could also query the current set of loaded models through the =ollama= interface and provide a =completing-read= type of model selection, with potentially no model configuration needed!
 
-    Quick Tips:
-    - Select text and use M-x ollama-buddy-menu
-    - Switch models [m], cancel [x]
-    - Send from any buffer
+Beyond just being lightweight and easy to configure, I also have another idea: a flexible menu system. For a while, I have been using a simple menu-based interface inspired by transient menus. However, I have chosen not to use =transient= because I want this package to be compatible with older Emacs versions. Additionally, I haven’t found a compelling use case for a complex transient menu and I prefer a simple, opaque top level menu.
 
-------------------------- | @ Y @ | -------------------------
+To achieve this, I have decided to create a flexible =defcustom= menu system. Initially, it will be configured for some common actions, but users can easily modify it through the Emacs customization interface by updating a simple alist.
+
+For example, to refactor code through an LLM, a prepended text string of something like "Refactor the following code:" is usually applied. To proofread text, "Proofread the following:" could be prepended to the body of the query. So, why not create a flexible menu where users can easily add their own commands? For instance, if someone wanted a command to uppercase some text (even though Emacs can already do this), they could simply add the following entry to the =ollama-buddy-menu-items= alist:
+
+#+begin_src elisp
+(?u . ("Upcase" 
+       (lambda () (ollama-buddy--send "convert the following to uppercase:"))))
 #+end_src
+
+Then the menu would present a menu item "Upcase" with a "u" selection, upcasing the selected region.  You could go nuts with this, and in order to double down on the autogeneration of a menu concept, I have provided a =defcustom= =ollama-buddy-menu-columns= variable so you can flatten out your auto-generated menu as much as you like!
+
+This is getting rambly, but another key design consideration is how prompts should be handled and in fact how do I go about sending text from within Emacs?. Many implementations rely on a chat buffer as the single focal point, which seems natural to me, so I will follow a similar approach.
+
+I've seen different ways of defining a prompt submission mechanism, some using <RET>, others using a dedicated keybinding like C-c <RET>, so, how should I define my prompting mechanism? I have a feeling this could get complicated, so lets use the KISS principle, also, how should text be sent from within Emacs buffers? My solution? simply mark the text and send it, not just from any Emacs buffer, but also within the chat window. It may seem slightly awkward at first (especially in the chat buffer, where you will have to create your prompt and then mark it), but it provides a clear delineation of text and ensures a consistent interface across Emacs. For example, using M-h to mark an element requires minimal effort and greatly simplifies the package implementation. This approach also allows users to use the **scratch** buffer for sending requests if so desired!
+
+Many current implementations create a chat buffer with modes for local keybindings and other features. I have decided not to do this and instead, I will provide a simple editable buffer (ASCII text only) where all =ollama= interactions will reside. Users will be able to do anything in that buffer; there will be no bespoke Ollama/LLM functionality involved. It will simply be based on a =special= buffer and to save a session?, just use =save-buffer= to write it to a file, Emacs to the rescue again!
+
+Regarding the minimal setup philosophy of this package, I also want to include a fun AI assistant-style experience. Nothing complicated, just a bit of logic to display welcome text, show the current =ollama= status, and list available models. The idea is that users should be able to jump in immediately. If they know how to install/start =ollama=, they can install the package without any configuration, run `M-x ollama-buddy-menu`, and open the chat. At that point, the "AI assistant" will display the current =ollama= status and provide a simple tutorial to help them get started.
+
+The backend?, well I initially decided simply to use =curl= to stimulate the =ollama= RESTful API but after getting that to work I thought it might be best to completely remove that dependency, so now I am using a native network solution using =make-network-process=.  Yes it is a bit overkill, but it works, and ultimately gives me all the flexibility I could every want without having to depend on an external tool.
+
+I have other thoughts regarding the use of local LLMs versus online AI behemoths. The more I use =ollama= with Emacs through this package, the more I realize the potential of smaller, local LLMs. This package allows for quick switching between these models while maintaining a decent level of performance on a regular home computer. I could, for instance, load up =qwen-coder= for code-related queries (I have found the 7B Q4/5 versions to work particularly well) and switch to a more general model for other queries, such as =llama= or even =deepseek-r1=.
+
+Phew! That turned into quite a ramble, maybe I should run this text through =ollama-buddy= for proofreading! :)
 
 * Kanban
 
@@ -494,170 +625,6 @@ Here is a kanban of the features that will be (hopefully) added in due course, a
 ** TODO Test on Windows
 
 ** TODO Create more specialized system prompts
-
-* Prerequisites
-
-- [[https://ollama.ai/][Ollama]] installed and running locally
-- Emacs 24.3 or later
-
-* Installation
-
-** Manual Installation
-
-Clone this repository:
-
-#+begin_src shell
-git clone https://github.com/captainflasmr/ollama-buddy.git
-#+end_src
-
-Add to your =init.el=:
-
-With the option to add your own user keybinding for the =ollama-buddy-menu=
-
-Also Provided the user with the option to enable the monitor manually rather than starting it automatically. This gives users control over when they want to initiate the monitoring, which can help avoid unnecessary resource usage or unexpected behavior.
-
-Of course the user can disable at any time with:
-
-#+begin_src
-M-x ollama-buddy-disable-monitor
-#+end_src
-
-#+begin_src emacs-lisp
-(add-to-list 'load-path "path/to/ollama-buddy")
-(require 'ollama-buddy)
-(global-set-key (kbd "C-c l") #'ollama-buddy-menu)
-(ollama-buddy-enable-monitor)
-#+end_src
-
-OR
-
-#+begin_src elisp
-(use-package ollama-buddy
-  :load-path "path/to/ollama-buddy"
-  :bind ("C-c l" . ollama-buddy-menu)
-  :config (ollama-buddy-enable-monitor))
-#+end_src
-
-** MELPA (Coming Soon)
-
-#+begin_src emacs-lisp
-(use-package ollama-buddy
-  :ensure t
-  :bind ("C-c l" . ollama-buddy-menu)
-  :config (ollama-buddy-enable-monitor))
-#+end_src
-
-* Usage
-
-1. Start your Ollama server locally
-2. Use =M-x ollama-buddy-menu= or the default keybinding =C-c l= to open the menu
-3. Select your preferred model using the [m] option
-4. Select text in any buffer
-5. Choose an action from the menu:
-
-| Key | Action             | Description                                 |
-|-----+--------------------+---------------------------------------------|
-| o   | Open chat buffer   | Opens the main chat interface               |
-| m   | Swap model         | Switch between available Ollama models      |
-| h   | Help assistant     | Display help message                        |
-| l   | Send region        | Send selected text directly to model        |
-| r   | Refactor code      | Get code refactoring suggestions            |
-| g   | Git commit message | Generate commit message for changes         |
-| c   | Describe code      | Get code explanation                        |
-| d   | Dictionary Lookup  | Get dictionary definition                   |
-| n   | Word synonym       | Get a synonym for the word                  |
-| p   | Proofread text     | Check text for improvements                 |
-| z   | Make concise       | Reduce wordiness while preserving meaning   |
-| e   | Custom Prompt      | Enter bespoke prompt through the minibuffer |
-| s   | Save chat          | Save the chat to a file                     |
-| x   | Kill request       | Cancel current Ollama request               |
-| q   | Quit               | Exit the menu                               |
-
-* Key Bindings
-
-| Key     | Description            |
-|---------+------------------------|
-| =C-c l= | Open ollama-buddy menu |
-
-* Customization
-
-#+begin_src emacs-lisp :results table :colnames '("Custom variable" "Description") :exports results
-  (let ((rows))
-    (mapatoms
-     (lambda (symbol)
-       (when (and (string-match "^ollama-buddy-"
-                                (symbol-name symbol))
-                  (not (string-match "--" (symbol-name symbol)))
-                  (or (custom-variable-p symbol)
-                      (boundp symbol)))
-         (push `(,symbol
-                 ,(car
-                   (split-string
-                    (or (get (indirect-variable symbol)
-                             'variable-documentation)
-                        (get symbol 'variable-documentation)
-                        "")
-                    "\n")))
-               rows))))
-    rows)
-#+end_src
-
-#+RESULTS:
-| Custom variable                        | Description                                                |
-|----------------------------------------+------------------------------------------------------------|
-| ollama-buddy-menu-columns              | Number of columns to display in the Ollama Buddy menu.     |
-| ollama-buddy-current-model             | Default Ollama model to use.                               |
-| ollama-buddy-host                      | Host where Ollama server is running.                       |
-| ollama-buddy-port                      | Port where Ollama server is running.                       |
-| ollama-buddy-connection-check-interval | Interval in seconds to check Ollama connection status.     |
-| ollama-buddy-command-definitions       | Comprehensive command definitions for Ollama Buddy.        |
-| ollama-buddy-fallback-model            | Fallback model to use when specified model is unavailable. |
-
-Customize the package in your Emacs init:
-
-** Simple
-
-Nothing required, select ollama model when run up!
-
-** Normal
-
-Just setting the default model
-
-#+begin_src elisp
-(setq ollama-buddy-current-model "qwen-4q:latest")
-#+end_src
-
-** Fancy
-
-Do you want to change the number of menu columns presented?
-
-#+begin_src elisp
-(setq ollama-buddy-current-model "qwen-4q:latest")
-(setq ollama-buddy-menu-columns 4)
-#+end_src
-
-** Advanced
-
-Ollama is running somewhere!
-
-#+begin_src elisp
-(setq ollama-buddy-current-model "qwen-4q:latest")
-(setq ollama-buddy-menu-columns 4)
-(setq ollama-buddy-host "http://<somewhere>")
-(setq ollama-buddy-port 11400)
-#+end_src
-
-** Super Fiddler
-
-Lets get the ollama status as soon as is humanly perceptable!
-
-#+begin_src elisp
-(setq ollama-buddy-current-model "qwen-4q:latest")
-(setq ollama-buddy-menu-columns 4)
-(setq ollama-buddy-host "http://<somewhere>")
-(setq ollama-buddy-port 11400)
-(setq ollama-buddy-connection-check-interval 1)
-#+end_src
 
 * Contributing
 
@@ -720,12 +687,6 @@ Let's compare ollama-buddy to the existing solutions:
      - Supports multiple backends
      - More abstracted and potentially more extensible
        
-   - *Cons*:
-     
-     - Less Ollama-specific
-     - More complex configuration
-     - Might have overhead from supporting multiple backends
-
    =ollama-buddy= is more:
    
    - Directly focused on Ollama
@@ -741,12 +702,6 @@ Let's compare ollama-buddy to the existing solutions:
      - Active development
      - Good overall UX
        
-   - *Cons*:
-     
-     - Primarily designed for online services
-     - Ollama support is experimental
-     - More complex architecture
-
    =ollama-buddy= differentiates by:
    
    - Being purpose-built for Ollama
@@ -761,12 +716,6 @@ Let's compare ollama-buddy to the existing solutions:
      - Mature shell-based interaction model
      - Rich interaction capabilities
        
-   - *Cons*:
-     
-     - Not truly Ollama-native
-     - Primarily focused on online services
-     - More complex setup
-
    =ollama-buddy= stands out by:
    
    - Being specifically designed for Ollama
@@ -781,12 +730,6 @@ Let's compare ollama-buddy to the existing solutions:
      - Extensive built-in prompt templates
      - Support for streaming responses
      - Good documentation and examples
-       
-   - *Cons*:
-     - More complex configuration required
-     - Heavier dependency footprint
-     - Less flexible for quick ad-hoc queries
-     - Primarily focused on structured interactions
 
    =ollama-buddy= differs by:
    - Having a simpler, more streamlined setup process
