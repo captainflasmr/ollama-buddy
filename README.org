@@ -44,6 +44,7 @@ The name is just something a little bit fun and it seems to always remind me of 
   - Quickly define your own menu using defcustom with dynamic adaptable menu
   - Quickly switch between LLM models with no configuration required
   - Works on selected text from any buffer
+  - Presets easily definable
   - Real-time model availability status
 
 - *Smart Model Management*
@@ -124,17 +125,6 @@ Models can be assigned to individual commands
 - Added =ellama= comparison description
 - Activating and deactivating the =ollama= monitor process now users responsibility
 - Updated Screenshots / Demos
-
-** <2025-02-11>
-
-Significant improvements and refactoring, particularly around connection handling, streaming responses, and status monitoring.
-
-- Replace curl-based requests with native network processes
-- Added customizatble ollama host and port  
-- Added connection monitoring with automatic status updates
-- Added permanently visible status showing connection state and current model
-- Improve error handling for connection failures
-- Refined AI assistant presentation
 
 * Summary of my design ethos
 
@@ -462,6 +452,98 @@ You can create a minimal configuration by defining only the commands you need:
 | :action      | Function implementing the command   | Yes      |
 
 Remember that at least one of =:prompt= or =:prompt-fn= should be provided for commands that send text to Ollama.
+
+* Defining the menu through presets
+
+Attached currently in this repository is a presets directory which contains the following different menu systems.  To activate, just open up the el file and evaluate and the menu will adapt accordingly!
+
+** default
+
+| Key | Description        | Action Description                                           |
+|-----+--------------------+--------------------------------------------------------------|
+| o   | Open chat buffer   | Opens the chat buffer and inserts an intro message if empty. |
+| v   | View model status  | Displays the current status of available models.             |
+| m   | Swap model         | Allows selecting and switching to a different model.         |
+| h   | Help assistant     | Displays an introduction message in the chat buffer.         |
+| l   | Send region        | Sends the selected region of text for processing.            |
+| r   | Refactor code      | Sends selected code for refactoring.                         |
+| g   | Git commit message | Generates a concise Git commit message.                      |
+| c   | Describe code      | Provides a description of the selected code.                 |
+| d   | Dictionary Lookup  | Retrieves dictionary definitions for a selected word.        |
+| n   | Word synonym       | Lists synonyms for a given word.                             |
+| p   | Proofread text     | Proofreads the selected text.                                |
+| z   | Make concise       | Reduces wordiness while preserving meaning.                  |
+| e   | Custom prompt      | Prompts the user to enter a custom query for processing.     |
+| s   | Save chat          | Saves the current chat buffer to a file.                     |
+| x   | Kill request       | Terminates the active processing request.                    |
+| q   | Quit               | Exits the Ollama Shell menu with a message.                  |
+
+** academic
+
+| Key | Description            | Action Description                                            |
+|-----+------------------------+---------------------------------------------------------------|
+| o   | Open chat buffer       | Opens the chat buffer and inserts an intro message if empty.  |
+| v   | View model status      | Displays the current status of available models.              |
+| m   | Swap model             | Allows selecting and switching to a different model.          |
+| h   | Help assistant         | Displays an introduction message in the chat buffer.          |
+| l   | Send region            | Sends the selected text region for processing.                |
+| l   | Literature review help | Suggests related papers and research directions.              |
+| m   | Review methodology     | Reviews a research methodology and suggests improvements.     |
+| s   | Academic style check   | Reviews text for academic writing style improvements.         |
+| c   | Citation suggestions   | Identifies statements needing citations and suggests sources. |
+| a   | Analyze arguments      | Analyzes the logical structure and strength of arguments.     |
+| e   | Custom prompt          | Prompts the user to enter a custom query for processing.      |
+| s   | Save chat              | Saves the current chat buffer to a file.                      |
+| x   | Kill request           | Terminates the active processing request.                     |
+| q   | Quit                   | Exits the Ollama Shell menu with a message.                   |
+
+** developer
+
+| Key | Description             | Action Description                                             |
+|-----+-------------------------+----------------------------------------------------------------|
+| o   | Open chat buffer        | Opens the chat buffer and inserts an intro message if empty.   |
+| v   | View model status       | Displays the current status of available models.               |
+| m   | Swap model              | Allows selecting and switching to a different model.           |
+| h   | Help assistant          | Displays an introduction message in the chat buffer.           |
+| l   | Send region             | Sends the selected text region for processing.                 |
+| e   | Explain code            | Explains the purpose and functionality of the selected code.   |
+| r   | Code review             | Reviews the code for potential issues, bugs, and improvements. |
+| o   | Optimize code           | Suggests optimizations for performance and readability.        |
+| t   | Generate tests          | Generates test cases for the selected code.                    |
+| d   | Generate documentation  | Produces detailed documentation for the provided code.         |
+| p   | Suggest design patterns | Recommends design patterns applicable to the provided code.    |
+| c   | Custom prompt           | Allows the user to enter a custom query.                       |
+| s   | Save chat               | Saves the current chat buffer to a file.                       |
+| x   | Kill request            | Terminates the active processing request.                      |
+| q   | Quit                    | Exits the Ollama Shell menu with a message.                    |
+
+** writer
+
+| Key | Description               | Action Description                                                                |
+|-----+---------------------------+-----------------------------------------------------------------------------------|
+| o   | Open chat buffer          | Opens the chat buffer and inserts an intro message if empty.                      |
+| v   | View model status         | Displays the current status of available models.                                  |
+| m   | Swap model                | Allows selecting and switching to a different model.                              |
+| h   | Help assistant            | Displays an introduction message in the chat buffer.                              |
+| l   | Send region               | Sends the selected text region for processing.                                    |
+| b   | Brainstorm ideas          | Generates creative ideas on a given topic.                                        |
+| u   | Generate outline          | Creates a structured outline for the provided content.                            |
+| s   | Enhance writing style     | Improves the writing style while maintaining meaning.                             |
+| p   | Detailed proofreading     | Conducts comprehensive proofreading for grammar, style, and clarity.              |
+| f   | Improve flow              | Enhances text coherence and transition between ideas.                             |
+| d   | Polish dialogue           | Enhances dialogue to make it more natural and engaging.                           |
+| n   | Enhance scene description | Adds vivid and sensory details to a scene description.                            |
+| c   | Analyze character         | Analyzes a character's development and motivations.                               |
+| l   | Analyze plot              | Examines the structure, pacing, and coherence of the plot.                        |
+| r   | Research expansion        | Suggests additional research directions and sources.                              |
+| k   | Fact checking suggestions | Identifies statements needing verification and suggests fact-checking strategies. |
+| v   | Convert format            | Converts text to another format while maintaining content meaning.                |
+| w   | Word choice suggestions   | Recommends alternative word choices for better clarity and precision.             |
+| z   | Summarize text            | Generates a concise summary while retaining key information.                      |
+| e   | Custom writing prompt     | Prompts the user to enter a custom query for processing.                          |
+| a   | Save chat                 | Saves the current chat buffer to a file.                                          |
+| x   | Kill request              | Terminates the active processing request.                                         |
+| q   | Quit                      | Exits the Ollama Shell menu with a message.                                       |
 
 * Model Selection and Fallback Logic in Ollama Buddy
 
