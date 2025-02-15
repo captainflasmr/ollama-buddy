@@ -2,7 +2,7 @@
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
 ;; Version: 0.1.0
-;; Package-Requires: ((emacs "24.3") (json "1.4") (cl-lib "0.5"))
+;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
 ;;
@@ -25,7 +25,7 @@
 ;;
 ;; Ollama Buddy is an Emacs package that provides a friendly AI assistant
 ;; for various tasks such as code refactoring, generating commit messages,
-;; dictionary lookups, and more. It interacts with the Ollama server to
+;; dictionary lookups, and more.  It interacts with the Ollama server to
 ;; perform these tasks.
 ;;
 ;;; Quick Start
@@ -131,7 +131,7 @@
         (cons valid-model specified-model)
       (let ((models (ollama-buddy--get-models)))
         (if models
-            (let ((selected (completing-read 
+            (let ((selected (completing-read
                              (format "Model %s not available. Select model: "
                                      (or specified-model ""))
                              models nil t)))
@@ -172,7 +172,7 @@ ACTUAL-MODEL is the model being used instead."
              (propertize (format " [Using %s instead of %s]" actual-model original-model)
                          'face '(:foreground "orange" :weight bold)))))))
 
-(defun ollama-buddy--stream-filter (proc output)
+(defun ollama-buddy--stream-filter (_proc output)
   "Process stream OUTPUT from PROC while preserving cursor position."
   (ollama-buddy--update-status "Processing...")
   (when-let* ((json-str (replace-regexp-in-string "^[^\{]*" "" output))
@@ -197,7 +197,7 @@ ACTUAL-MODEL is the model being used instead."
             (set-window-point window old-point))
           (set-window-start window old-window-start t))))))
 
-(defun ollama-buddy--stream-sentinel (proc event)
+(defun ollama-buddy--stream-sentinel (_proc event)
   "Handle stream completion for PROC with EVENT status."
   (when-let* ((status (cond ((string-match-p "finished" event) "Completed")
                             ((string-match-p "\\(?:deleted\\|connection broken\\)" event) "Interrupted")))
@@ -232,7 +232,7 @@ ACTUAL-MODEL is the model being used instead."
      :model nil
      :action (lambda ()
                (if (not (ollama-buddy--ollama-running))
-                   (error "!!WARNING!! ollama server not running.")
+                   (error "!!WARNING!! ollama server not running")
                  (let ((new-model
                         (completing-read "Model: " (ollama-buddy--get-models) nil t)))
                    (setq ollama-buddy-default-model new-model)
@@ -275,7 +275,7 @@ ACTUAL-MODEL is the model being used instead."
      :prompt "describe the following code:"
      :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
     
-    (dictionary
+    (dictionary-lookup
      :key ?d
      :description "Dictionary Lookup"
      :model nil
@@ -283,7 +283,7 @@ ACTUAL-MODEL is the model being used instead."
                   (concat "For the word {"
                           (buffer-substring-no-properties (region-beginning) (region-end))
                           "} provide a typical dictionary definition:"))
-     :action (lambda () (ollama-buddy--send-with-command 'dictionary)))
+     :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup)))
     
     (synonym
      :key ?n
@@ -321,7 +321,7 @@ ACTUAL-MODEL is the model being used instead."
      :model nil
      :action (lambda ()
                (with-current-buffer ollama-buddy--chat-buffer
-                 (write-region (point-min) (point-max) 
+                 (write-region (point-min) (point-max)
                                (read-file-name "Save conversation to: ")
                                'append-to-file
                                nil))))
@@ -360,8 +360,7 @@ Each command is defined with:
 
 (defun ollama-buddy--send-with-command (command-name)
   "Send request using configuration from COMMAND-NAME."
-  (let* ((cmd-def (ollama-buddy--get-command-def command-name))
-         (prompt (or (ollama-buddy--get-command-prop command-name :prompt)
+  (let* ((prompt (or (ollama-buddy--get-command-prop command-name :prompt)
                      (when-let ((fn (ollama-buddy--get-command-prop
                                      command-name :prompt-fn)))
                        (funcall fn))))
@@ -399,7 +398,7 @@ Each command is defined with:
                       (propertize (concat "[" model ": RESPONSE]") 'face '(:inherit bold))))
       (when (and original-model model (not (string= original-model model)))
         (insert (propertize (format "[Using %s instead of %s]" model original-model)
-                                   'face '(:inherit error :weight bold)) "\n\n"))
+                            'face '(:inherit error :weight bold)) "\n\n"))
       (visual-line-mode 1))
 
     (ollama-buddy--update-status "Sending request..." original-model model)
@@ -414,7 +413,7 @@ Each command is defined with:
            :filter #'ollama-buddy--stream-filter
            :sentinel #'ollama-buddy--stream-sentinel))
     
-    (process-send-string 
+    (process-send-string
      ollama-buddy--active-process
      (concat "POST /api/chat HTTP/1.1\r\n"
              (format "Host: %s:%d\r\n" ollama-buddy-host ollama-buddy-port)
@@ -486,8 +485,8 @@ Each command is defined with:
                                      (list (plist-get (cdr cmd-def) :description)
                                            (plist-get (cdr cmd-def) :action))))
                              ollama-buddy-command-definitions))
-              (formatted-items 
-               (mapcar (lambda (item) 
+              (formatted-items
+               (mapcar (lambda (item)
                          (format "[%c] %s" (car item) (cadr item)))
                        items))
               (total (length formatted-items))
@@ -546,7 +545,7 @@ Each command is defined with:
         (insert (format "Default Model: %s\n\n" ollama-buddy-default-model))
         (insert "Models used in commands:\n")
         (dolist (model used-models)
-          (insert (format "  %s: %s\n" 
+          (insert (format "  %s: %s\n"
                           model
                           (if (member model available-models)
                               "Available ✓"
