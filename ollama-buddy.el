@@ -125,15 +125,25 @@
 
 (defvar ollama-buddy-roles--current-role "default"
   "The currently active ollama-buddy role.")
+
 (defun ollama-buddy-roles--get-available-roles ()
   "Scan the preset directory and extract role names from filenames."
-  (when (file-directory-p ollama-buddy-roles-directory)
+  (if (not (file-directory-p ollama-buddy-roles-directory))
+      (progn
+        (message "Error: Ollama Buddy roles directory does not exist: %s" 
+                 ollama-buddy-roles-directory)
+        nil)
     (let ((files (directory-files ollama-buddy-roles-directory nil "^ollama-buddy--preset__.*\\.el$"))
           roles)
-      (dolist (file files)
-        (when (string-match "ollama-buddy--preset__\\(.*\\)\\.el$" file)
-          (push (match-string 1 file) roles)))
-      (sort roles #'string<))))
+      (if (null files)
+          (progn
+            (message "No role preset files found in directory: %s" 
+                     ollama-buddy-roles-directory)
+            nil)
+        (dolist (file files)
+          (when (string-match "ollama-buddy--preset__\\(.*\\)\\.el$" file)
+            (push (match-string 1 file) roles)))
+        (sort roles #'string<)))))
 
 (defun ollama-buddy-roles--load-role-preset (role)
   "Load the preset file for ROLE."
@@ -147,29 +157,50 @@
           (message "Loaded Ollama Buddy role: %s" role))
       (message "Role preset file not found: %s" preset-file))))
 
+
 (defun ollama-buddy-roles-switch-role ()
   "Switch to a different ollama-buddy role."
   (interactive)
-  (let* ((roles (ollama-buddy-roles--get-available-roles))
-         (role (completing-read 
-                (format "Select role (current: %s): " ollama-buddy-roles--current-role)
-                roles nil t)))
-    (ollama-buddy-roles--load-role-preset role))
-  ;; Add role switching command to the main menu
-  (cl-pushnew
-   '(switch-role
-     :key ?R
-     :description "Switch roles"
-     :model nil
-     :action ollama-buddy-roles-switch-role)
-   ollama-buddy-command-definitions))
+  (let ((roles (ollama-buddy-roles--get-available-roles)))
+    (if (null roles)
+        (message "No role presets available. Create some files in %s first." 
+                 ollama-buddy-roles-directory)
+      (let ((role (completing-read 
+                  (format "Select role (current: %s): " ollama-buddy-roles--current-role)
+                  roles nil t)))
+        (ollama-buddy-roles--load-role-preset role))))
+    
+    ;; Add role switching command to the main menu
+    (cl-pushnew
+     '(switch-role
+       :key ?R
+       :description "Switch roles"
+       :model nil
+       :action ollama-buddy-roles-switch-role)
+     ollama-buddy-command-definitions))
 
 ;; Initialize with default role if it exists
 (defun ollama-buddy-roles-initialize ()
   "Initialize the roles system and load the default role if available."
   (let ((roles (ollama-buddy-roles--get-available-roles)))
-    (when (member "default" roles)
+    (when (and roles (member "default" roles))
       (ollama-buddy-roles--load-role-preset "default"))))
+
+;; Helper function to create the roles directory
+(defun ollama-buddy-roles-create-directory ()
+  "Create the ollama-buddy roles directory if it doesn't exist."
+  (interactive)
+  (if (file-exists-p ollama-buddy-roles-directory)
+      (message "Ollama Buddy roles directory already exists: %s" 
+               ollama-buddy-roles-directory)
+    (if (yes-or-no-p 
+         (format "Create Ollama Buddy roles directory at %s? " 
+                 ollama-buddy-roles-directory))
+        (progn
+          (make-directory ollama-buddy-roles-directory t)
+          (message "Created Ollama Buddy roles directory: %s" 
+                   ollama-buddy-roles-directory))
+      (message "Directory creation cancelled."))))
 
 (defun ollama-buddy--validate-model (model)
   "Validate MODEL availability."
