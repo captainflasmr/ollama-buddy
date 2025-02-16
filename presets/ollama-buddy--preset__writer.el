@@ -1,46 +1,19 @@
-(setq ollama-buddy-command-definitions
-      '((open-chat
-         :key ?o
-         :description "Open chat buffer"
-         :model nil
-         :action (lambda ()
-                   (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
-                   (when (= (buffer-size) 0)
-                     (insert (ollama-buddy--create-intro-message)))
-                   (goto-char (point-max))))
+;; ollama-buddy preset for role: writer
+;; Generated manually
 
-        (show-models
-         :key ?v  ; 'v' for view models
-         :description "View model status"
-         :model nil
-         :action ollama-buddy-show-model-status)
-        
-        (swap-model
-         :key ?m
-         :description "Swap model"
-         :model nil
-         :action (lambda ()
-                   (if (not (ollama-buddy--ollama-running))
-                       (error "!!WARNING!! ollama server not running.")
-                     (progn
-                       (setq ollama-buddy-current-model 
-                             (completing-read "Model: " (ollama-buddy--get-models) nil t))
-                       (ollama-buddy--update-status "Idle")))))
-        
-        (help
-         :key ?h
-         :description "Help assistant"
-         :model nil
-         :action (lambda ()
-                   (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
-                   (goto-char (point-max))
-                   (insert (ollama-buddy--create-intro-message))))
-        
-        (send-region
-         :key ?l
-         :description "Send region"
-         :model nil
-         :action (lambda () (ollama-buddy--send-with-command 'send-region)))
+(setq ollama-buddy-command-definitions
+      '(
+        ;; Standard commands
+        (open-chat :key 111 :description "Open chat buffer" :model nil :action (lambda nil (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer)) (when (= (buffer-size) 0) (insert (ollama-buddy--create-intro-message))) (goto-char (point-max))))
+        (show-models :key 118 :description "View model status" :model nil :action ollama-buddy-show-model-status)
+        (switch-role :key 82 :description "Switch roles" :model nil :action ollama-buddy-roles-switch-role)
+        (create-role :key 78 :description "Create new role" :model nil :action ollama-buddy-role-creator-create-new-role)
+        (open-roles-directory :key 68 :description "Open roles directory" :model nil :action ollama-buddy-roles-open-directory)
+        (swap-model :key 109 :description "Swap model" :model nil :action (lambda nil (if (not (ollama-buddy--ollama-running)) (error "!!WARNING!! ollama server not running") (let ((new-model (completing-read "Model: " (ollama-buddy--get-models) nil t))) (setq ollama-buddy-default-model new-model) (setq ollama-buddy--current-model new-model) (ollama-buddy--update-status "Idle")))))
+        (help :key 104 :description "Help assistant" :model nil :action (lambda nil (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer)) (goto-char (point-max)) (insert (ollama-buddy--create-intro-message))))
+        (send-region :key 108 :description "Send region" :model nil :action (lambda nil (ollama-buddy--send-with-command 'send-region)))
+
+        ;; Custom commands for this role
         
         ;; Core Writing Assistance
         (brainstorm
@@ -179,4 +152,5 @@
          :key ?q
          :description "Quit"
          :model nil
-         :action (lambda () (message "Quit Ollama Shell menu.")))))
+         :action (lambda () (message "Quit Ollama Shell menu.")))
+        ))

@@ -66,6 +66,7 @@
 (require 'subr-x)
 (require 'url)
 (require 'cl-lib)
+(require 'dired)
 
 (defgroup ollama-buddy nil
   "Customization group for Ollama Buddy."
@@ -175,21 +176,7 @@
       (let ((role (completing-read 
                    (format "Select role (current: %s): " ollama-buddy-roles--current-role)
                    roles nil t)))
-        (ollama-buddy-roles--load-role-preset role))))
-  (cl-pushnew
-   '(create-role
-     :key ?N
-     :description "Create new role"
-     :model nil
-     :action ollama-buddy-role-creator-create-new-role)
-   ollama-buddy-command-definitions)
-  (cl-pushnew
-   '(switch-role
-     :key ?R
-     :description "Switch roles"
-     :model nil
-     :action ollama-buddy-roles-switch-role)
-   ollama-buddy-command-definitions))
+        (ollama-buddy-roles--load-role-preset role)))))
 
 (defun ollama-buddy-role-creator--create-command ()
   "Create a new command interactively."
@@ -231,20 +218,13 @@
       (insert "  '(\n")
       ;; Insert the standard commands first
       (insert "    ;; Standard commands\n")
-      (dolist (cmd '(open-chat show-models swap-model help send-region))
+      (dolist (cmd '(open-chat show-models switch-role create-role open-roles-directory swap-model help send-region))
         (when-let ((cmd-def (ollama-buddy--get-command-def cmd)))
           (insert (format "    %S\n" cmd-def))))
       ;; Insert custom commands
       (insert "\n    ;; Custom commands for this role\n")
       (dolist (cmd commands)
         (insert (format "    %S\n" cmd)))
-      ;; Insert the role switcher command
-      (insert "\n    ;; Role switcher command\n")
-      (insert "    (switch-role\n")
-      (insert "     :key ?R\n")
-      (insert "     :description \"Switch roles\"\n")
-      (insert "     :model nil\n")
-      (insert "     :action ollama-buddy-roles-switch-role)\n")
       ;; Close the list and provide call
       (insert "    ))\n\n"))
     ;; Return the file path
@@ -293,6 +273,20 @@
           (message "Created Ollama Buddy roles directory: %s" 
                    ollama-buddy-roles-directory))
       (message "Directory creation cancelled."))))
+
+;; Function to open the roles directory in dired
+(defun ollama-buddy-roles-open-directory ()
+  "Open the ollama-buddy roles directory in Dired."
+  (interactive)
+  (if (not (file-directory-p ollama-buddy-roles-directory))
+      (if (yes-or-no-p 
+           (format "Roles directory doesn't exist. Create it at %s? " 
+                   ollama-buddy-roles-directory))
+          (progn
+            (make-directory ollama-buddy-roles-directory t)
+            (dired ollama-buddy-roles-directory))
+        (message "Directory not created."))
+    (dired ollama-buddy-roles-directory)))
 
 (defun ollama-buddy--validate-model (model)
   "Validate MODEL availability."
@@ -397,6 +391,12 @@ ACTUAL-MODEL is the model being used instead."
                  (insert (ollama-buddy--create-intro-message)))
                (goto-char (point-max))))
 
+    (show-models
+     :key ?v  ; 'v' for view models
+     :description "View model status"
+     :model nil
+     :action ollama-buddy-show-model-status)
+
     (switch-role
      :key ?R
      :description "Switch roles"
@@ -408,12 +408,12 @@ ACTUAL-MODEL is the model being used instead."
      :description "Create new role"
      :model nil
      :action ollama-buddy-role-creator-create-new-role)
-    
-    (show-models
-     :key ?v  ; 'v' for view models
-     :description "View model status"
+
+    (open-roles-directory
+     :key ?D
+     :description "Open roles directory"
      :model nil
-     :action ollama-buddy-show-model-status)
+     :action ollama-buddy-roles-open-directory)
     
     (swap-model
      :key ?m
@@ -742,13 +742,6 @@ Each command is defined with:
         (insert "\nAvailable Models:\n  ")
         (insert (string-join available-models "\n  "))))
     (display-buffer buf)))
-
-(add-to-list 'ollama-buddy-command-definitions
-             '(show-models
-               :key ?v  ; 'v' for view models
-               :description "View model status"
-               :model nil
-               :action ollama-buddy-show-model-status))
 
 ;;;###autoload
 (defun ollama-buddy-enable-monitor ()
