@@ -201,11 +201,11 @@ ACTUAL-MODEL is the model being used instead."
   "Handle stream completion for PROC with EVENT status."
   (when-let* ((status (cond ((string-match-p "finished" event) "Completed")
                             ((string-match-p "\\(?:deleted\\|connection broken\\)" event) "Interrupted")))
-              (message (format "\n\n[Stream %s]\n\n" status)))
+              (msg (format "\n\n[Stream %s]\n\n" status)))
     (with-current-buffer ollama-buddy--chat-buffer
       (let ((inhibit-read-only t))
         (goto-char (point-max))
-        (insert (propertize message 'face '(:weight bold)))
+        (insert (propertize msg 'face '(:weight bold)))
         (insert (alist-get 'response ollama-buddy--separators) "\n")))
     (ollama-buddy--update-status (concat "Stream " status))))
 
@@ -515,7 +515,7 @@ Each command is defined with:
                        (mapconcat
                         (lambda (row)
                           (if format-string
-                              (apply 'format (concat format-string "%s") row)
+                              (apply #'format (concat format-string "%s") row)
                             (car row)))
                         (cl-loop for row below rows collect
                                  (cl-loop for col below ollama-buddy-menu-columns
