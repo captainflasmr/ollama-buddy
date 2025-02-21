@@ -188,8 +188,6 @@ ACTUAL-MODEL is the model being used instead."
           (goto-char (point-max))
           (insert text)
           (when (eq (alist-get 'done json-data) t)
-            (delete-process ollama-buddy--active-process)
-            (setq ollama-buddy--active-process nil)
             (insert "\n\n")
             (insert (propertize "[" 'face '(:inherit bold)))
             (insert (propertize ollama-buddy--current-model 'face `(:inherit bold)))
@@ -438,6 +436,12 @@ Each command is defined with:
       (visual-line-mode 1))
 
     (ollama-buddy--update-status "Sending request..." original-model model)
+
+    (when (and ollama-buddy--active-process
+               (process-live-p ollama-buddy--active-process))
+      (set-process-sentinel ollama-buddy--active-process nil)
+      (delete-process ollama-buddy--active-process)
+      (setq ollama-buddy--active-process nil))
     
     (setq ollama-buddy--active-process
           (make-network-process
