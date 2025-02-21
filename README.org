@@ -25,7 +25,7 @@ The name is just something a little bit fun and it seems to always remind me of 
     #+begin_src elisp
      (use-package ollama-buddy
        :load-path "path/to/ollama-buddy"
-       :bind ("C-c l" . ollama-buddy-menu)
+       :bind ("C-c o" . ollama-buddy-menu)
        :config (ollama-buddy-enable-monitor))
     #+end_src
 
@@ -34,7 +34,7 @@ The name is just something a little bit fun and it seems to always remind me of 
     #+begin_src elisp
      (use-package ollama-buddy
        :ensure t
-       :bind ("C-c l" . ollama-buddy-menu)
+       :bind ("C-c o" . ollama-buddy-menu)
        :config (ollama-buddy-enable-monitor))
     #+end_src
 
@@ -107,6 +107,15 @@ Note that I have cancelled some requests, otherwise we could be waiting a while,
 
 * Whats New
 
+** <2025-02-19>
+
+Improved prompt handling in chat buffer - using C-c C-c to send
+
+- Chat buffer now more prompt based rather than ad-hoc
+- Refactored =ollama-buddy--send= to handle content more flexibly
+- Simplified chat separators for better readability  
+- Updated intro message with ascii logo
+
 ** <2025-02-13>
 
 Models can be assigned to individual commands
@@ -117,14 +126,6 @@ Models can be assigned to individual commands
 - Expand `ollama-buddy-menu` with structured command definitions using properties for improved flexibility.
 - Add `ollama-buddy-show-model-status` to display available and used models.
 - Refactor command execution flow to ensure model selection is handled dynamically.
-
-** <2025-02-12>
-
-- =ollama-buddy= updated in preparation for MELPA submission
-- Removed C-c single key user keybinding as part of package definition and in the README gave guidance on defining a user keybinding to activate the ollama buddy menu
-- Added =ellama= comparison description
-- Activating and deactivating the =ollama= monitor process now users responsibility
-- Updated Screenshots / Demos
 
 * Summary of my design ethos
 
@@ -160,7 +161,7 @@ Models can be assigned to individual commands
 * Usage
 
 1. Start your Ollama server locally
-2. Use =M-x ollama-buddy-menu= or a user defined keybinding =C-c l= to open the menu
+2. Use =M-x ollama-buddy-menu= or a user defined keybinding =C-c o= to open the menu
 3. Select your preferred model using the [m] option
 4. Select text in any buffer
 5. Choose an action from the menu:
@@ -236,7 +237,7 @@ Also provided the user with the option to enable the monitor manually rather tha
 #+begin_src emacs-lisp
 (add-to-list 'load-path "path/to/ollama-buddy")
 (require 'ollama-buddy)
-(global-set-key (kbd "C-c l") #'ollama-buddy-menu)
+(global-set-key (kbd "C-c o") #'ollama-buddy-menu)
 (ollama-buddy-enable-monitor)
 #+end_src
 
@@ -245,7 +246,7 @@ OR
 #+begin_src elisp
  (use-package ollama-buddy
    :load-path "path/to/ollama-buddy"
-   :bind ("C-c l" . ollama-buddy-menu)
+   :bind ("C-c o" . ollama-buddy-menu)
    :config (ollama-buddy-enable-monitor))
 #+end_src
 
@@ -254,7 +255,7 @@ OR
 #+begin_src emacs-lisp
 (use-package ollama-buddy
   :ensure t
-  :bind ("C-c l" . ollama-buddy-menu)
+  :bind ("C-c o" . ollama-buddy-menu)
   :config (ollama-buddy-enable-monitor))
 #+end_src
 
@@ -376,7 +377,7 @@ You can add new commands to =ollama-buddy-command-definitions= in your config:
 ;; Incorporate into a use-package
 (use-package ollama-buddy
   :load-path "path/to/ollama-buddy"
-  :bind ("C-c l" . ollama-buddy-menu)
+  :bind ("C-c o" . ollama-buddy-menu)
   :config (ollama-buddy-enable-monitor)
   (add-to-list 'ollama-buddy-command-definitions
                '(pirate

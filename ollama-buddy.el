@@ -32,7 +32,7 @@
 ;;
 ;; (use-package ollama-buddy
 ;;    :load-path "path/to/ollama-buddy"
-;;    :bind ("C-c l" . ollama-buddy-menu)
+;;    :bind ("C-c o" . ollama-buddy-menu)
 ;;    :config (ollama-buddy-enable-monitor)
 ;;    :custom ollama-buddy-default-model "llama:latest")
 ;;
@@ -40,7 +40,7 @@
 ;;
 ;; (add-to-list 'load-path "path/to/ollama-buddy")
 ;; (require 'ollama-buddy)
-;; (global-set-key (kbd "C-c l") #'ollama-buddy-menu)
+;; (global-set-key (kbd "C-c o") #'ollama-buddy-menu)
 ;; (ollama-buddy-enable-monitor)
 ;; (setq ollama-buddy-default-model "llama:latest")
 ;;
@@ -48,7 +48,7 @@
 ;;
 ;; (use-package ollama-buddy
 ;;    :ensure t
-;;    :bind ("C-c l" . ollama-buddy-menu)
+;;    :bind ("C-c o" . ollama-buddy-menu)
 ;;    :config (ollama-buddy-enable-monitor)
 ;;    :custom ollama-buddy-default-model "llama:latest")
 ;;
@@ -58,7 +58,7 @@
 ;;
 ;; OR
 ;;
-;; C-c l
+;; C-c o
 ;;
 ;;; Code:
 
@@ -93,8 +93,8 @@
   :group 'ollama-buddy)
 
 (defconst ollama-buddy--separators
-  '((header . "========================= | o Y o | =========================")
-    (response . "------------------------- | @ Y @ | -------------------------"))
+  '((header . "------------------ o( Y )o ------------------")
+    (response . "------------------ @( Y )@ ------------------"))
   "Separators for chat display.")
 
 (defcustom ollama-buddy-connection-check-interval 5
@@ -149,7 +149,7 @@
       (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
         (let ((inhibit-read-only t))
           (goto-char (point-max))
-          (insert "\n\n[Connection Lost - Request Interrupted]\n\n")))))
+          (insert "\n\n[Connection Lost - Request Interrupted]")))))
   (ollama-buddy--update-status ollama-buddy--status))
 
 (defun ollama-buddy--update-status (status &optional original-model actual-model)
@@ -188,8 +188,11 @@ ACTUAL-MODEL is the model being used instead."
           (goto-char (point-max))
           (insert text)
           (when (eq (alist-get 'done json-data) t)
-            (insert (format (propertize "\n\n[%s: FINISHED]\n\n" 'face '(:weight bold)) ollama-buddy--current-model))
-            (insert (alist-get 'response ollama-buddy--separators) "\n")
+            (insert "\n\n")
+            (insert (propertize "[" 'face '(:inherit bold)))
+            (insert (propertize ollama-buddy--current-model 'face `(:inherit bold)))
+            (insert (propertize ": FINISHED]" 'face '(:inherit bold)))
+            (ollama-buddy--show-prompt)
             (ollama-buddy--update-status "Finished")))
         (when window
           (if at-end
@@ -201,44 +204,45 @@ ACTUAL-MODEL is the model being used instead."
   "Handle stream completion for PROC with EVENT status."
   (when-let* ((status (cond ((string-match-p "finished" event) "Completed")
                             ((string-match-p "\\(?:deleted\\|connection broken\\)" event) "Interrupted")))
-              (msg (format "\n\n[Stream %s]\n\n" status)))
+              (msg (format "\n\n[Stream %s]" status)))
     (with-current-buffer ollama-buddy--chat-buffer
       (let ((inhibit-read-only t))
         (goto-char (point-max))
         (insert (propertize msg 'face '(:weight bold)))
-        (insert (alist-get 'response ollama-buddy--separators) "\n")))
+        (ollama-buddy--show-prompt)))
     (ollama-buddy--update-status (concat "Stream " status))))
+
+(defun ollama-buddy--swap-model ()
+  "Swap ollama model."
+  (if (not (ollama-buddy--ollama-running))
+      (error "!!WARNING!! ollama server not running")
+    (let ((new-model
+           (completing-read "Model: " (ollama-buddy--get-models) nil t)))
+      (setq ollama-buddy-default-model new-model)
+      (setq ollama-buddy--current-model new-model)
+      (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
+      (ollama-buddy--show-prompt)
+      (goto-char (point-max))
+      (ollama-buddy--update-status "Idle"))))
 
 (defcustom ollama-buddy-command-definitions
   '((open-chat
      :key ?o
      :description "Open chat buffer"
-     :model nil
      :action (lambda ()
                (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
                (when (= (buffer-size) 0)
-                 (insert (ollama-buddy--create-intro-message)))
+                 (insert (ollama-buddy--create-intro-message))
+                 (ollama-buddy--show-prompt))
                (goto-char (point-max))))
-    
     (show-models
      :key ?v  ; 'v' for view models
      :description "View model status"
-     :model nil
      :action ollama-buddy-show-model-status)
-    
     (swap-model
      :key ?m
      :description "Swap model"
-     :model nil
-     :action (lambda ()
-               (if (not (ollama-buddy--ollama-running))
-                   (error "!!WARNING!! ollama server not running")
-                 (let ((new-model
-                        (completing-read "Model: " (ollama-buddy--get-models) nil t)))
-                   (setq ollama-buddy-default-model new-model)
-                   (setq ollama-buddy--current-model new-model)
-                   (ollama-buddy--update-status "Idle")))))
-    
+     :action ollama-buddy--swap-model)
     (help
      :key ?h
      :description "Help assistant"
@@ -246,97 +250,74 @@ ACTUAL-MODEL is the model being used instead."
      :action (lambda ()
                (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
                (goto-char (point-max))
-               (insert (ollama-buddy--create-intro-message))))
-    
+               (insert (ollama-buddy--create-intro-message))
+               (ollama-buddy--show-prompt)))
     (send-region
      :key ?l
      :description "Send region"
-     :model nil
      :action (lambda () (ollama-buddy--send-with-command 'send-region)))
-    
     (refactor-code
      :key ?r
      :description "Refactor code"
-     :model nil
      :prompt "refactor the following code:"
      :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
-    
     (git-commit
      :key ?g
      :description "Git commit message"
-     :model nil
      :prompt "write a concise git commit message for the following:"
      :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
-    
     (describe-code
      :key ?c
      :description "Describe code"
-     :model nil
      :prompt "describe the following code:"
      :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
-    
     (dictionary-lookup
      :key ?d
      :description "Dictionary Lookup"
-     :model nil
      :prompt-fn (lambda ()
                   (concat "For the word {"
                           (buffer-substring-no-properties (region-beginning) (region-end))
                           "} provide a typical dictionary definition:"))
      :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup)))
-    
     (synonym
      :key ?n
      :description "Word synonym"
-     :model nil
      :prompt "list synonyms for word:"
      :action (lambda () (ollama-buddy--send-with-command 'synonym)))
-    
     (proofread
      :key ?p
      :description "Proofread text"
-     :model nil
      :prompt "proofread the following:"
      :action (lambda () (ollama-buddy--send-with-command 'proofread)))
-    
     (make-concise
      :key ?z
      :description "Make concise"
-     :model nil
      :prompt "reduce wordiness while preserving meaning:"
      :action (lambda () (ollama-buddy--send-with-command 'make-concise)))
-    
     (custom-prompt
      :key ?e
      :description "Custom prompt"
-     :model nil
      :action (lambda ()
                (when-let ((prefix (read-string "Enter prompt prefix: " nil nil nil t)))
                  (unless (string-empty-p prefix)
                    (ollama-buddy--send prefix)))))
-    
     (save-chat
      :key ?s
      :description "Save chat"
-     :model nil
      :action (lambda ()
                (with-current-buffer ollama-buddy--chat-buffer
                  (write-region (point-min) (point-max)
                                (read-file-name "Save conversation to: ")
                                'append-to-file
                                nil))))
-    
     (kill-request
      :key ?x
      :description "Kill request"
-     :model nil
      :action (lambda ()
                (delete-process ollama-buddy--active-process)))
-    
     (quit
      :key ?q
      :description "Quit"
-     :model nil
      :action (lambda () (message "Quit Ollama Shell menu."))))
   "Comprehensive command definitions for Ollama Buddy.
 Each command is defined with:
@@ -358,31 +339,66 @@ Each command is defined with:
   "Get property PROP from command COMMAND-NAME."
   (plist-get (cdr (ollama-buddy--get-command-def command-name)) prop))
 
+(defun ollama-buddy--show-prompt ()
+  "Show the prompt with optionally a MODEL."
+  (interactive)
+  (let* ((model (or ollama-buddy--current-model 
+                    ollama-buddy-default-model 
+                    "No model selected")))
+    (insert (format "\n\n%s\n\n%s %s" 
+                    (propertize (alist-get 'header ollama-buddy--separators) 'face '(:inherit bold))
+                    (propertize model 'face `(:weight bold))
+                    (propertize ">> PROMPT: " 'face '(:inherit bold))))
+    (local-set-key (kbd "C-c C-c") 
+                   (lambda ()
+                     (interactive)
+                     (let* ((bounds (save-excursion
+                                      (search-backward ">> PROMPT:")
+                                      (search-forward ":")
+                                      (point)))
+                            (query-text (string-trim (buffer-substring-no-properties bounds (point)))))
+                       (ollama-buddy--send query-text model))))
+    (local-set-key (kbd "C-c C-k") 
+                   (lambda ()
+                     (interactive)
+                     (delete-process ollama-buddy--active-process)))
+    (local-set-key (kbd "C-c C-m") 
+                   (lambda ()
+                     (interactive)
+                     (ollama-buddy--swap-model)))))
+
 (defun ollama-buddy--send-with-command (command-name)
   "Send request using configuration from COMMAND-NAME."
   (let* ((prompt (or (ollama-buddy--get-command-prop command-name :prompt)
                      (when-let ((fn (ollama-buddy--get-command-prop
                                      command-name :prompt-fn)))
-                       (funcall fn))))
-         (model (ollama-buddy--get-command-prop command-name :model)))
-    (ollama-buddy--send prompt model)))
+                       (funcall fn)))))
+    (when (and prompt (not (use-region-p)))
+      (user-error "No region selected. Select text to use with prompt"))
+    (let* ((prompt-with-selection (concat
+                                  (when prompt (concat prompt "\n\n"))
+                                  (if (use-region-p)
+                                      (buffer-substring-no-properties 
+                                       (region-beginning) (region-end))
+                                    "")))
+           (model (ollama-buddy--get-command-prop command-name :model)))
+      (ollama-buddy--send (string-trim prompt-with-selection) model))))
 
-(defun ollama-buddy--send (&optional system-prompt specified-model)
-  "Send CONTENT with optional SYSTEM-PROMPT and SPECIFIED-MODEL."
-  (unless (and (ollama-buddy--ollama-running) (use-region-p))
-    (user-error "Ensure Ollama is running and text is selected"))
-  (let* ((prompt (buffer-substring-no-properties (region-beginning) (region-end)))
-         (content (if system-prompt (concat system-prompt "\n\n" prompt) prompt))
-         (model-info (ollama-buddy--get-valid-model specified-model))
+(defun ollama-buddy--send (&optional prompt specified-model)
+  "Send PROMPT with optional SYSTEM-PROMPT and SPECIFIED-MODEL."
+  (unless (ollama-buddy--ollama-running)
+    (user-error "Ensure Ollama is running"))
+
+  (unless (> (length prompt) 0)
+    (user-error "Ensure text is selected"))
+
+  (let* ((model-info (ollama-buddy--get-valid-model specified-model))
          (model (car model-info))
          (original-model (cdr model-info))
          (payload (json-encode
                    `((model . ,model)
                      (messages . [((role . "user")
-                                   (content
-                                    . ,(if system-prompt
-                                           (concat system-prompt "\n\n" content)
-                                         content)))])
+                                   (content . ,prompt))])
                      (stream . t)))))
     (setq ollama-buddy--current-model model)
     
@@ -394,7 +410,7 @@ Each command is defined with:
       (insert (format "\n\n%s\n\n%s %s\n\n%s\n\n"
                       (propertize (alist-get 'header ollama-buddy--separators) 'face '(:inherit bold))
                       (propertize "[User: PROMPT]" 'face '(:inherit bold))
-                      content
+                      prompt
                       (propertize (concat "[" model ": RESPONSE]") 'face '(:inherit bold))))
       (when (and original-model model (not (string= original-model model)))
         (insert (propertize (format "[Using %s instead of %s]" model original-model)
@@ -456,26 +472,32 @@ Each command is defined with:
 
 (defun ollama-buddy--create-intro-message ()
   "Create welcome message."
-  (let ((status (when (ollama-buddy--ollama-running)
-                  (format "    Models available:\n\n%s\n\n"
-                          (mapconcat (lambda (m) (format "      %s" m))
-                                     (ollama-buddy--get-models) "\n")))))
-    (propertize
-     (concat
-      "\n" (alist-get 'header ollama-buddy--separators) "\n"
-      "         ╭──────────────────────────────────────╮\n"
-      "         │              Welcome to               │\n"
-      "         │             OLLAMA BUDDY              │\n"
-      "         │       Your Friendly AI Assistant      │\n"
-      "         ╰──────────────────────────────────────╯\n\n"
-      "    Hi there!\n\n" status
-      "    Quick Tips:\n"
-      "    - Select text and use M-x ollama-buddy-menu\n"
-      "    - Switch models [m], cancel [x]\n"
-      "    - Send from any buffer\n\n"
-      (alist-get 'response ollama-buddy--separators) "\n\n")
-     'face '(:inherit bold))))
+  (let* ((models-section (when (ollama-buddy--ollama-running)
+                  (format "Models available:\n\n%s\n\n"
+                          (mapconcat (lambda (m) (format "  %s" m))
+                                     (ollama-buddy--get-models) "\n"))))
+         (message-text
+          (concat
+           "\n\n"
+           (alist-get 'header ollama-buddy--separators)
+           "\n"
+           " ___ _ _      n _ n      ___       _   _\n"
+           "|   | | |__._|o(Y)o|__._| - |_ _ _| |_| |_ _ \n"
+           "| | | | | .  |     | .  |   / | | . | . | | |\n"
+           "| | |_|_|__/_|_|_|_|__/_| | |___|___|___|__ |\n"
+           "|___|                   |___|           |___|\n\n"
+           "Hi there!, Welcome to OLLAMA BUDDY\n\n"
+           models-section
+           "Quick Tips:\n\n"
+           "- Ask me anything! C-c C-c to send\n"
+           "- Change your mind? C-c C-k to cancel\n"
+           "- Change your model? C-c C-m\n"
+           "- In another buffer? M-x ollama-buddy-menu")))
 
+    ;; Make the header and response sections bold without overriding other properties
+    (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
+    message-text))
+  
 ;;;###autoload
 (defun ollama-buddy-menu ()
   "Display Ollama Buddy menu."

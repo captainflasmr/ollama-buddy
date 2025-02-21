@@ -111,7 +111,7 @@
 
 (use-package ollama-buddy
   :load-path "~/source/repos/ollama-buddy"
-  :bind ("C-c l" . ollama-buddy-menu)
+  :bind ("C-c o" . ollama-buddy-menu)
   :config (ollama-buddy-enable-monitor)
   :custom ollama-buddy-current-model "qwen2.5-coder:7b")
 

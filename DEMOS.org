@@ -6,7 +6,7 @@
 
 * First Steps
 
-Show menu activation C-c l =ollama-buddy-menu=
+Show menu activation C-c o =ollama-buddy-menu=
 
 [o] Open chat buffer
 
