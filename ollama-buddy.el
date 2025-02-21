@@ -246,7 +246,6 @@ ACTUAL-MODEL is the model being used instead."
     (help
      :key ?h
      :description "Help assistant"
-     :model nil
      :action (lambda ()
                (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
                (goto-char (point-max))
@@ -312,8 +311,7 @@ ACTUAL-MODEL is the model being used instead."
                  (unless (not (string-empty-p prefix))
                    (user-error "Input string is empty"))
                  (ollama-buddy--send prefix))))
-                 
-    (save-chat
+      (save-chat
      :key ?s
      :description "Save chat"
      :action (lambda ()
