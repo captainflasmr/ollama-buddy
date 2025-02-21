@@ -500,11 +500,11 @@ Each command is defined with:
            (alist-get 'header ollama-buddy--separators)
            "\n"
            " ___ _ _      n _ n      ___       _   _\n"
-           "|   | | |__._|o(Y)o|__._| - |_ _ _| |_| |_ _ \n"
+           "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| |_ _ \n"
            "| | | | | .  |     | .  |   / | | . | . | | |\n"
            "| | |_|_|__/_|_|_|_|__/_| | |___|___|___|__ |\n"
            "|___|                   |___|           |___|\n\n"
-           "Hi there!, Welcome to OLLAMA BUDDY\n\n"
+           "Hi there! and welcome to OLLAMA BUDDY!\n\n"
            models-section
            "Quick Tips:\n\n"
            "- Ask me anything! C-c C-c to send\n"

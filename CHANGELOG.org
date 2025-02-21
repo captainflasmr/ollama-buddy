@@ -19,6 +19,8 @@ Improved prompt handling in chat buffer - using C-c C-c to send
 - Refactored =ollama-buddy--send= to handle content more flexibly
 - Simplified chat separators for better readability  
 - Updated intro message with ascii logo
+- Suggested default "C-c o" for =ollama-buddy-menu=
+- defcustom ollama-buddy-command-definitions now will work in the customization interface.
 
 ** <2025-02-13>
 
