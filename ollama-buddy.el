@@ -274,10 +274,7 @@ ACTUAL-MODEL is the model being used instead."
     (dictionary-lookup
      :key ?d
      :description "Dictionary Lookup"
-     :prompt-fn (lambda ()
-                  (concat "For the word {"
-                          (buffer-substring-no-properties (region-beginning) (region-end))
-                          "} provide a typical dictionary definition:"))
+     :prompt-fn-string "(lambda () (concat \"For the word {\" (buffer-substring-no-properties (region-beginning) (region-end)) \"} provide a typical dictionary definition:\"))"
      :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup)))
     (synonym
      :key ?n
@@ -341,10 +338,45 @@ Each command is defined with:
   :model - Specific Ollama model to use (nil means use default)
   :prompt - Optional system prompt
   :prompt-fn - Optional function to generate prompt
+  :prompt-fn-string - String representation of prompt function
   :action - Function to execute"
-  :type '(repeat (list symbol
-                       (plist :key-type keyword :value-type sexp)))
+  :type '(repeat
+          (list :tag "Command Definition"
+                (symbol :tag "Command Name")
+                (plist :inline t
+                       :options
+                       ((:key (character :tag "Menu Key Character"))
+                        (:description (string :tag "Command Description"))
+                        (:model (choice :tag "Specific Model"
+                                       (const :tag "Use Default" nil)
+                                       (string :tag "Model Name")))
+                        (:prompt (string :tag "Static Prompt Text"))
+                        (:prompt-fn-string (string :tag "Prompt Function (as string)"))
+                        (:action (choice :tag "Action"
+                                        (function :tag "Existing Function")
+                                        (sexp :tag "Lambda Expression")))))))
   :group 'ollama-buddy)
+
+(defun ollama-buddy--process-command-definitions ()
+  "Process command definitions to evaluate prompt-fn-string properties."
+  (setq ollama-buddy-command-definitions
+        (mapcar (lambda (cmd-def)
+                  (let* ((cmd-name (car cmd-def))
+                         (props (cdr cmd-def))
+                         (prompt-fn-string (plist-get props :prompt-fn-string)))
+                    
+                    ;; If there's a prompt-fn-string, evaluate it to create prompt-fn
+                    (when prompt-fn-string
+                      (condition-case err
+                          (let ((fn (eval (read prompt-fn-string))))
+                            (setq props (plist-put props :prompt-fn fn)))
+                        (error
+                         (message "Error evaluating prompt-fn-string for %s: %s"
+                                  cmd-name (error-message-string err)))))
+                    
+                    ;; Return the processed command definition
+                    (cons cmd-name props)))
+                ollama-buddy-command-definitions)))
 
 (defun ollama-buddy--get-command-def (command-name)
   "Get command definition for COMMAND-NAME."
@@ -614,6 +646,24 @@ Each command is defined with:
   (when ollama-buddy--connection-timer
     (cancel-timer ollama-buddy--connection-timer)
     (setq ollama-buddy--connection-timer nil)))
+
+;; Add advice to ensure definitions are processed after customization
+(defun ollama-buddy--after-customization-change (&rest _)
+  "Update command definitions after customization changes."
+  (ollama-buddy--process-command-definitions))
+
+(advice-add 'customize-save-variable :after 
+            (lambda (symbol value &rest _)
+              (when (eq symbol 'ollama-buddy-command-definitions)
+                (ollama-buddy--process-command-definitions))))
+
+(advice-add 'customize-set-variable :after 
+            (lambda (symbol value &rest _)
+              (when (eq symbol 'ollama-buddy-command-definitions)
+                (ollama-buddy--process-command-definitions))))
+
+;; Process commands on initial load
+(ollama-buddy--process-command-definitions)
 
 (provide 'ollama-buddy)
 ;;; ollama-buddy.el ends here
