@@ -563,7 +563,7 @@ Each command is defined with:
                                           when (< idx (length padded-items))
                                           collect (nth idx padded-items)))
                         "\n")))
-              (key (read-key (propertize prompt 'face 'minibuffer-prompt)))
+              (key (read-key prompt))
               (cmd (assoc key items)))
     (funcall (caddr cmd))))
 
