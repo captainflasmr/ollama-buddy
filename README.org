@@ -81,19 +81,41 @@ Note that all the demos are in real time.
 
 *First Steps*
 
+- Starting with model : llama3.2:1b
+
+- Show menu activation C-c o =ollama-buddy-menu=
+
+- [o] Open chat buffer
+
+- PROMPT>> why is the sky blue?
+
+- C-c C-c to send from chat buffer
+
+- From scratch, select the text and send to chat buffer
+
 #+attr_org: :width 300px
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_001.gif]]
 
-*Swap Model*
+*Swap Models*
+
+- C-c C-m to swap to differing models from chat buffer
+
+- PROMPT>> how many fingers do I have?
 
 #+attr_org: :width 300px
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_002.gif]]
 
-*Code Queries*
+*From Other Buffers*
 
-Note that I have cancelled some requests, otherwise we could be waiting a while, note I was using the LLM qwen2.5-coder:7b
+- Open this file with :
+
+  the quick brown fox jumps over the lazy dog
+
+- Select individual words for dictionary menu items
+
+- Select whole sentence and convert to uppercase
 
 #+attr_org: :width 300px
 #+attr_html: :width 100%

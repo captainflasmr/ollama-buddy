@@ -4,22 +4,6 @@
 #+options: ':t toc:nil author:nil email:nil num:nil title:nil
 #+startup: showall
 
-* First Steps
-
-Show menu activation C-c o =ollama-buddy-menu=
-
-[o] Open chat buffer
-
-why is the sky blue?
-
-[l] Send region
-
-* Swap Model
-
-[m] Swap model
-
-why is the sky blue?
-
 * Code queries
 
 Taken from the examples in : https://learn.adacore.com/labs/intro-to-ada/chapters/generics.html#generic-list
