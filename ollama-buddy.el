@@ -620,10 +620,5 @@ Each command is defined with:
     (cancel-timer ollama-buddy--connection-timer)
     (setq ollama-buddy--connection-timer nil)))
 
-;; Add advice to ensure definitions are processed after customization
-(defun ollama-buddy--after-customization-change (&rest _)
-  "Update command definitions after customization changes."
-  (ollama-buddy--process-command-definitions))
-
 (provide 'ollama-buddy)
 ;;; ollama-buddy.el ends here
