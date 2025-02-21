@@ -594,13 +594,6 @@ Each command is defined with:
         (insert (string-join available-models "\n  "))))
     (display-buffer buf)))
 
-(add-to-list 'ollama-buddy-command-definitions
-             '(show-models
-               :key ?v  ; 'v' for view models
-               :description "View model status"
-               :model nil
-               :action ollama-buddy-show-model-status))
-
 ;;;###autoload
 (defun ollama-buddy-enable-monitor ()
   "Enable connection monitoring."
