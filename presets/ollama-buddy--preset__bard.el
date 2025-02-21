@@ -12,7 +12,7 @@
                    (goto-char (point-max))))
         
         (show-models
-         :key ?v  ; 'v' for view models
+         :key ?v
          :description "View model status"
          :action ollama-buddy-show-model-status)
         
@@ -35,7 +35,7 @@
          :description "Send region"
          :action (lambda () (ollama-buddy--send-with-command 'send-region)))
         
-                ;; Custom text transformation commands
+        ;; Custom text transformation commands
         
         (bardify-text
          :key ?b

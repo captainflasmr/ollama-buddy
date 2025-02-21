@@ -12,7 +12,7 @@
                    (goto-char (point-max))))
         
         (show-models
-         :key ?v  ; 'v' for view models
+         :key ?v
          :description "View model status"
          :action ollama-buddy-show-model-status)
         

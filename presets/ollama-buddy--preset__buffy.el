@@ -38,19 +38,39 @@
         ;; Custom supernatural text transformations
         
         (slayer-sass
-         :key ?b
+         :key ?f
          :description "Add witty comebacks"
          :model nil
          :prompt "Rewrite this text with a sarcastic, quippy tone inspired by Buffy Summers herself:"
          :action (lambda () (ollama-buddy--send-with-command 'slayer-sass)))
 
-        (grr-argh-ify
-         :key ?g
-         :description "grr-argh-ify"
+        (scooby-speak
+         :key ?y
+         :description "Scooby Gang Dialogue"
          :model nil
-         :prompt "Rewrite this text as if a monster was growling with vocabulary of only grr-argh:"
-         :action (lambda () (ollama-buddy--send-with-command 'grr-argh-ify)))
+         :prompt "Rewrite the text as if spoken by the Scooby Gang from Buffy the Vampire Slayer, with humour, pop culture references, and some Willow-style rambling:"
+         :action (lambda () (ollama-buddy--send-with-command 'scooby-speak)))
 
+        (big-bad-monologue
+         :key ?b
+         :description "Big Bad"
+         :model nil
+         :prompt "Rewrite this text as a speech given by a classic Big Bad villain from Buffy the Vampire Slayer, full of dramatic pauses, arrogance, and ominous threats:"
+         :action (lambda () (ollama-buddy--send-with-command 'big-bad-monologue)))
+
+        (cordelia-burn
+         :key ?a
+         :description "Cordelia-style insults"
+         :model nil
+         :prompt "Rewrite this text as if Cordelia Chase from Buffy the Vampire Slayer were delivering it, complete with biting sarcasm, brutal honesty, and fashion critique:"
+         :action (lambda () (ollama-buddy--send-with-command 'cordelia-burn)))
+
+        (giles-exposition
+         :key ?u
+         :description "Giles... yawn"
+         :model nil :prompt "Rework this text into a scholarly explanation as if delivered by Rupert Giles from Buffy the Vampire Slayer, complete with British formality and historical references:"
+         :action (lambda () (ollama-buddy--send-with-command 'giles-exposition)))
+        
         (vampirify-text
          :key ?r
          :description "A brooding vampire..."
@@ -67,7 +87,7 @@
 
         (rewrite-as-monster-manual
          :key ?n
-         :description "Generate monster manual"
+         :description "Monster manual"
          :model nil
          :prompt "Transform the selected text as if it were an entry in a supernatural creature manual, detailing its weaknesses and powers:"
          :action (lambda () (ollama-buddy--send-with-command 'rewrite-as-monster-manual)))
@@ -85,6 +105,13 @@
          :model nil
          :prompt "Transform this text into a formal Watcher's Council report documenting supernatural events and Slayer activity:"
          :action (lambda () (ollama-buddy--send-with-command 'rewrite-as-watcher-report)))
+
+        (grr-argh-ify
+         :key ?g
+         :description "Grr-argh-ify"
+         :model nil
+         :prompt "Rewrite this text as if a monster was growling with vocabulary of only grr-argh:"
+         :action (lambda () (ollama-buddy--send-with-command 'grr-argh-ify)))
 
         ;; System Commands
         (custom-prompt

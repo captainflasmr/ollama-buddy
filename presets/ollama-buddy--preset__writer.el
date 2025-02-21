@@ -12,7 +12,7 @@
                    (goto-char (point-max))))
         
         (show-models
-         :key ?v  ; 'v' for view models
+         :key ?v
          :description "View model status"
          :action ollama-buddy-show-model-status)
         
@@ -52,7 +52,7 @@
         
         ;; Editorial Functions
         (style-enhance
-         :key ?s
+         :key ?y
          :description "Enhance writing style"
          :model nil
          :prompt "enhance the writing style of this text while maintaining its meaning. Make it more engaging and professional:"
@@ -96,7 +96,7 @@
          :action (lambda () (ollama-buddy--send-with-command 'character-analysis)))
         
         (plot-analysis
-         :key ?l
+         :key ?a
          :description "Analyze plot"
          :model nil
          :prompt "analyze this plot segment for structure, pacing, and coherence:"
@@ -116,14 +116,6 @@
          :model nil
          :prompt "identify statements that should be fact-checked and suggest verification approaches:"
          :action (lambda () (ollama-buddy--send-with-command 'fact-check)))
-        
-        ;; Format Conversion
-        (format-convert
-         :key ?v
-         :description "Convert format"
-         :model nil
-         :prompt "convert this text to a different format while preserving content (specify desired format in text):"
-         :action (lambda () (ollama-buddy--send-with-command 'format-convert)))
         
         ;; Utility Functions
         (word-choice

@@ -37,7 +37,7 @@
         
         ;; Code Analysis
         (explain-code
-         :key ?e
+         :key ?a
          :description "Explain code"
          :model nil
          :prompt "explain this code in detail, including its purpose and how it works:"
@@ -51,7 +51,7 @@
          :action (lambda () (ollama-buddy--send-with-command 'review-code)))
         
         (optimize-code
-         :key ?o
+         :key ?z
          :description "Optimize code"
          :model nil
          :prompt "suggest optimizations for this code considering performance and readability:"
