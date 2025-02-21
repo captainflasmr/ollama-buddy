@@ -788,6 +788,8 @@ Report issues on the [[https://github.com/captainflasmr/ollama-buddy/issues][Git
 
 * Bugs
 
+** TODO What if we make a request during a request is the current process cleard down?
+
 ** TODO Sometimes the current request can't be cancelled
 
 * Alternative LLM based packages
