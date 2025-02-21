@@ -236,7 +236,7 @@ ACTUAL-MODEL is the model being used instead."
                  (ollama-buddy--show-prompt))
                (goto-char (point-max))))
     (show-models
-     :key ?v  ; 'v' for view models
+     :key ?v
      :description "View model status"
      :action ollama-buddy-show-model-status)
     (swap-model
