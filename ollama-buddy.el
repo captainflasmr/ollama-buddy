@@ -274,7 +274,7 @@ ACTUAL-MODEL is the model being used instead."
     (dictionary-lookup
      :key ?d
      :description "Dictionary Lookup"
-     :prompt-fn-string "(lambda () (concat \"For the word {\" (buffer-substring-no-properties (region-beginning) (region-end)) \"} provide a typical dictionary definition:\"))"
+     :prompt "For the following word provide a typical dictionary definition:"
      :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup)))
     (synonym
      :key ?n
@@ -337,8 +337,6 @@ Each command is defined with:
   :description - String describing the action
   :model - Specific Ollama model to use (nil means use default)
   :prompt - Optional system prompt
-  :prompt-fn - Optional function to generate prompt
-  :prompt-fn-string - String representation of prompt function
   :action - Function to execute"
   :type '(repeat
           (list :tag "Command Definition"
@@ -351,32 +349,10 @@ Each command is defined with:
                                        (const :tag "Use Default" nil)
                                        (string :tag "Model Name")))
                         (:prompt (string :tag "Static Prompt Text"))
-                        (:prompt-fn-string (string :tag "Prompt Function (as string)"))
                         (:action (choice :tag "Action"
                                         (function :tag "Existing Function")
                                         (sexp :tag "Lambda Expression")))))))
   :group 'ollama-buddy)
-
-(defun ollama-buddy--process-command-definitions ()
-  "Process command definitions to evaluate prompt-fn-string properties."
-  (setq ollama-buddy-command-definitions
-        (mapcar (lambda (cmd-def)
-                  (let* ((cmd-name (car cmd-def))
-                         (props (cdr cmd-def))
-                         (prompt-fn-string (plist-get props :prompt-fn-string)))
-                    
-                    ;; If there's a prompt-fn-string, evaluate it to create prompt-fn
-                    (when prompt-fn-string
-                      (condition-case err
-                          (let ((fn (eval (read prompt-fn-string))))
-                            (setq props (plist-put props :prompt-fn fn)))
-                        (error
-                         (message "Error evaluating prompt-fn-string for %s: %s"
-                                  cmd-name (error-message-string err)))))
-                    
-                    ;; Return the processed command definition
-                    (cons cmd-name props)))
-                ollama-buddy-command-definitions)))
 
 (defun ollama-buddy--get-command-def (command-name)
   "Get command definition for COMMAND-NAME."
@@ -416,10 +392,7 @@ Each command is defined with:
 
 (defun ollama-buddy--send-with-command (command-name)
   "Send request using configuration from COMMAND-NAME."
-  (let* ((prompt (or (ollama-buddy--get-command-prop command-name :prompt)
-                     (when-let ((fn (ollama-buddy--get-command-prop
-                                     command-name :prompt-fn)))
-                       (funcall fn)))))
+  (let* ((prompt (or (ollama-buddy--get-command-prop command-name :prompt))))
     (when (and prompt (not (use-region-p)))
       (user-error "No region selected. Select text to use with prompt"))
     (let* ((prompt-with-selection (concat
@@ -651,19 +624,6 @@ Each command is defined with:
 (defun ollama-buddy--after-customization-change (&rest _)
   "Update command definitions after customization changes."
   (ollama-buddy--process-command-definitions))
-
-(advice-add 'customize-save-variable :after 
-            (lambda (symbol value &rest _)
-              (when (eq symbol 'ollama-buddy-command-definitions)
-                (ollama-buddy--process-command-definitions))))
-
-(advice-add 'customize-set-variable :after 
-            (lambda (symbol value &rest _)
-              (when (eq symbol 'ollama-buddy-command-definitions)
-                (ollama-buddy--process-command-definitions))))
-
-;; Process commands on initial load
-(ollama-buddy--process-command-definitions)
 
 (provide 'ollama-buddy)
 ;;; ollama-buddy.el ends here
