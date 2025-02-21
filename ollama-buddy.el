@@ -299,8 +299,23 @@ ACTUAL-MODEL is the model being used instead."
      :description "Custom prompt"
      :action (lambda ()
                (when-let ((prefix (read-string "Enter prompt prefix: " nil nil nil t)))
-                 (unless (string-empty-p prefix)
-                   (ollama-buddy--send prefix)))))
+                 (unless (use-region-p)
+                   (user-error "No region selected. Select text to use with prompt"))
+                 (unless (not (string-empty-p prefix))
+                   (user-error "Input string is empty"))
+                 (ollama-buddy--send
+                  (concat prefix "\n\n"
+                          (buffer-substring-no-properties 
+                           (region-beginning) (region-end)))))))
+    (minibuffer-prompt
+     :key ?i
+     :description "Minibuffer Prompt"
+     :action (lambda ()
+               (when-let ((prefix (read-string "Enter prompt: " nil nil nil t)))
+                 (unless (not (string-empty-p prefix))
+                   (user-error "Input string is empty"))
+                 (ollama-buddy--send prefix))))
+                 
     (save-chat
      :key ?s
      :description "Save chat"
@@ -390,7 +405,7 @@ Each command is defined with:
     (user-error "Ensure Ollama is running"))
 
   (unless (> (length prompt) 0)
-    (user-error "Ensure text is selected"))
+    (user-error "Ensure prompt is defined"))
 
   (let* ((model-info (ollama-buddy--get-valid-model specified-model))
          (model (car model-info))
