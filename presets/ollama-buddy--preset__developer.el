@@ -10,14 +10,17 @@
                      (insert (ollama-buddy--create-intro-message))
                      (ollama-buddy--show-prompt))
                    (goto-char (point-max))))
+        
         (show-models
          :key ?v
          :description "View model status"
          :action ollama-buddy-show-model-status)
+        
         (swap-model
          :key ?m
          :description "Swap model"
          :action ollama-buddy--swap-model)
+        
         (help
          :key ?h
          :description "Help assistant"
@@ -26,6 +29,7 @@
                    (goto-char (point-max))
                    (insert (ollama-buddy--create-intro-message))
                    (ollama-buddy--show-prompt)))
+        
         (send-region
          :key ?l
          :description "Send region"
@@ -38,12 +42,14 @@
          :model nil
          :prompt "explain this code in detail, including its purpose and how it works:"
          :action (lambda () (ollama-buddy--send-with-command 'explain-code)))
+        
         (review-code
          :key ?r
          :description "Code review"
          :model nil
          :prompt "review this code for potential issues, bugs, and improvements:"
          :action (lambda () (ollama-buddy--send-with-command 'review-code)))
+        
         (optimize-code
          :key ?o
          :description "Optimize code"

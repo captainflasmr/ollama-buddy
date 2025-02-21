@@ -35,48 +35,28 @@
          :description "Send region"
          :action (lambda () (ollama-buddy--send-with-command 'send-region)))
         
-        ;; Specialized commands
-        (refactor-code
-         :key ?r
-         :description "Refactor code"
-         :prompt "refactor the following code:"
-         :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
+                ;; Custom text transformation commands
         
-        (git-commit
-         :key ?g
-         :description "Git commit message"
-         :prompt "write a concise git commit message for the following:"
-         :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
-        
-        (describe-code
-         :key ?c
-         :description "Describe code"
-         :prompt "describe the following code:"
-         :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
-        
-        (dictionary-lookup
+        (bardify-text
+         :key ?b
+         :description "Turn text into Shakespearean prose"
+         :model nil
+         :prompt "Rewrite the following text in Shakespearean language, using poetic and dramatic phrasing:"
+         :action (lambda () (ollama-buddy--send-with-command 'bardify-text)))
+
+        (write-sonnet
+         :key ?t
+         :description "Convert text into a sonnet"
+         :model nil
+         :prompt "Transform the selected text into a 14-line Shakespearean sonnet:"
+         :action (lambda () (ollama-buddy--send-with-command 'write-sonnet)))
+
+        (translate-olde-english
          :key ?d
-         :description "Dictionary Lookup"
-         :prompt "For the following word provide a typical dictionary definition:"
-         :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup)))
-        
-        (synonym
-         :key ?n
-         :description "Word synonym"
-         :prompt "list synonyms for word:"
-         :action (lambda () (ollama-buddy--send-with-command 'synonym)))
-        
-        (proofread
-         :key ?p
-         :description "Proofread text"
-         :prompt "proofread the following:"
-         :action (lambda () (ollama-buddy--send-with-command 'proofread)))
-        
-        (make-concise
-         :key ?z
-         :description "Make concise"
-         :prompt "reduce wordiness while preserving meaning:"
-         :action (lambda () (ollama-buddy--send-with-command 'make-concise)))
+         :description "Ye Olde English"
+         :model nil
+         :prompt "Convert this modern text into Olde English style:"
+         :action (lambda () (ollama-buddy--send-with-command 'translate-olde-english)))
         
         ;; System Commands
         (custom-prompt
@@ -92,6 +72,7 @@
                       (concat prefix "\n\n"
                               (buffer-substring-no-properties 
                                (region-beginning) (region-end)))))))
+        
         (minibuffer-prompt
          :key ?i
          :description "Minibuffer Prompt"
@@ -100,6 +81,7 @@
                      (unless (not (string-empty-p prefix))
                        (user-error "Input string is empty"))
                      (ollama-buddy--send prefix))))
+        
         (save-chat
          :key ?s
          :description "Save chat"
@@ -109,11 +91,13 @@
                                    (read-file-name "Save conversation to: ")
                                    'append-to-file
                                    nil))))
+        
         (kill-request
          :key ?x
          :description "Kill request"
          :action (lambda ()
                    (delete-process ollama-buddy--active-process)))
+        
         (quit
          :key ?q
          :description "Quit"

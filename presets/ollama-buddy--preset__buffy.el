@@ -12,7 +12,7 @@
                    (goto-char (point-max))))
         
         (show-models
-         :key ?v  ; 'v' for view models
+         :key ?v
          :description "View model status"
          :action ollama-buddy-show-model-status)
         
@@ -34,50 +34,58 @@
          :key ?l
          :description "Send region"
          :action (lambda () (ollama-buddy--send-with-command 'send-region)))
+
+        ;; Custom supernatural text transformations
         
-        ;; Specialized commands
-        (refactor-code
-         :key ?r
-         :description "Refactor code"
-         :prompt "refactor the following code:"
-         :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
-        
-        (git-commit
+        (slayer-sass
+         :key ?b
+         :description "Add witty comebacks"
+         :model nil
+         :prompt "Rewrite this text with a sarcastic, quippy tone inspired by Buffy Summers herself:"
+         :action (lambda () (ollama-buddy--send-with-command 'slayer-sass)))
+
+        (grr-argh-ify
          :key ?g
-         :description "Git commit message"
-         :prompt "write a concise git commit message for the following:"
-         :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
-        
-        (describe-code
-         :key ?c
-         :description "Describe code"
-         :prompt "describe the following code:"
-         :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
-        
-        (dictionary-lookup
+         :description "grr-argh-ify"
+         :model nil
+         :prompt "Rewrite this text as if a monster was growling with vocabulary of only grr-argh:"
+         :action (lambda () (ollama-buddy--send-with-command 'grr-argh-ify)))
+
+        (vampirify-text
+         :key ?r
+         :description "A brooding vampire..."
+         :model nil
+         :prompt "Rewrite the following text as if it were spoken by a brooding, ancient vampire with dramatic flair:"
+         :action (lambda () (ollama-buddy--send-with-command 'vampirify-text)))
+
+        (demon-grimoire
          :key ?d
-         :description "Dictionary Lookup"
-         :prompt "For the following word provide a typical dictionary definition:"
-         :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup)))
-        
-        (synonym
+         :description "Its an ancient prophecy"
+         :model nil
+         :prompt "Rework the text to sound like it came from an ancient grimoire, full of cryptic warnings and ominous prophecies:"
+         :action (lambda () (ollama-buddy--send-with-command 'demon-grimoire)))
+
+        (rewrite-as-monster-manual
          :key ?n
-         :description "Word synonym"
-         :prompt "list synonyms for word:"
-         :action (lambda () (ollama-buddy--send-with-command 'synonym)))
-        
-        (proofread
-         :key ?p
-         :description "Proofread text"
-         :prompt "proofread the following:"
-         :action (lambda () (ollama-buddy--send-with-command 'proofread)))
-        
-        (make-concise
-         :key ?z
-         :description "Make concise"
-         :prompt "reduce wordiness while preserving meaning:"
-         :action (lambda () (ollama-buddy--send-with-command 'make-concise)))
-        
+         :description "Generate monster manual"
+         :model nil
+         :prompt "Transform the selected text as if it were an entry in a supernatural creature manual, detailing its weaknesses and powers:"
+         :action (lambda () (ollama-buddy--send-with-command 'rewrite-as-monster-manual)))
+
+        (spellcasting
+         :key ?c
+         :description "Cast a spell"
+         :model nil
+         :prompt "Rework the text to sound as if a spell was being cast, the liberal use of pseudo/pig latin is allowed:"
+         :action (lambda () (ollama-buddy--send-with-command 'spellcasting)))
+
+        (rewrite-as-watcher-report
+         :key ?w
+         :description "Make it a Watcher's report"
+         :model nil
+         :prompt "Transform this text into a formal Watcher's Council report documenting supernatural events and Slayer activity:"
+         :action (lambda () (ollama-buddy--send-with-command 'rewrite-as-watcher-report)))
+
         ;; System Commands
         (custom-prompt
          :key ?e

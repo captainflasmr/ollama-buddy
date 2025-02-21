@@ -527,6 +527,12 @@ Attached currently in this repository is a presets directory which contains the 
 | x   | Kill request              | Terminates the active processing request.                                         |
 | q   | Quit                      | Exits the Ollama Shell menu with a message.                                       |
 
+My ideas are to also add in some fun presets something like:
+
+- buffy
+- shakespeare
+- Janeway - starfleet captain
+
 * Model Selection and Fallback Logic in Ollama Buddy
 
 ** Overview
@@ -726,6 +732,10 @@ Contributions are welcome! Please:
 * Issues
 
 Report issues on the [[https://github.com/captainflasmr/ollama-buddy/issues][GitHub Issues page]]
+
+* Bugs
+
+** TODO Sometimes the current request can't be cancelled
 
 * Alternative LLM based packages
 
