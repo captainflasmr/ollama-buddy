@@ -121,6 +121,20 @@ Note that all the demos are in real time.
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_003.gif]]
 
+*Coding - Writing a Hello World! program with more and more advanced models*
+
+- PROMPT>> can you write a hello world program in Ada?
+
+- switch models to the following and check differeng output:
+
+  - qwen2.5-coder:0.5b
+  - qwen2.5-coder:3b
+  - qwen2.5-coder:7b
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_004.gif]]
+
 *The Menu*
 
 #+attr_org: :width 300px
@@ -239,6 +253,23 @@ Quick Tips:
 
 qwen2.5-coder:7b >> PROMPT: 
 #+end_src
+
+* Banners
+
+ #+begin_src 
+ ___ _ _      n _ n      ___       _   _
+|   | | |__._|o(Y)o|__._| . |_ _ _| |_| |_ _ 
+| | | | | .  |     | .  |   < | | . | . | | |
+| | |_|_|__/_|_|_|_|__/_| | |___|___|___|__ |
+|___|                   |___|           |___|
+ #+end_src
+
+ #+begin_src 
+ ___ _ _      n _ n      ___       _   _ _ _
+|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |
+| | | | | .  |     | .  | . | | | . | . |__ |
+|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|
+ #+end_src
 
 * Installation
 
