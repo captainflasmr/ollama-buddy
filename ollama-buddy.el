@@ -188,6 +188,8 @@ ACTUAL-MODEL is the model being used instead."
           (goto-char (point-max))
           (insert text)
           (when (eq (alist-get 'done json-data) t)
+            (delete-process ollama-buddy--active-process)
+            (setq ollama-buddy--active-process nil)
             (insert "\n\n")
             (insert (propertize "[" 'face '(:inherit bold)))
             (insert (propertize ollama-buddy--current-model 'face `(:inherit bold)))
