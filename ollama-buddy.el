@@ -611,7 +611,8 @@ Each command is defined with:
                 (prompt
                  (format "%s %s%s\nAvailable: %s\n%s"
                          (if ollama-status "RUNNING" "NOT RUNNING")
-                         (or ollama-buddy--current-model "NONE")
+                         (or ollama-buddy--current-model
+                             ollama-buddy-default-model "NONE")
                          (if (use-region-p) "" " (NO SELECTION)")
                          (mapconcat #'identity (ollama-buddy--get-models) " ")
                          (mapconcat
