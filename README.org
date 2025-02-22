@@ -26,7 +26,6 @@ The name is just something a little bit fun and it seems to always remind me of 
      (use-package ollama-buddy
        :load-path "path/to/ollama-buddy"
        :bind ("C-c o" . ollama-buddy-menu)
-       :config (ollama-buddy-enable-monitor))
     #+end_src
 
     OR (when on MELPA)
@@ -35,7 +34,6 @@ The name is just something a little bit fun and it seems to always remind me of 
      (use-package ollama-buddy
        :ensure t
        :bind ("C-c o" . ollama-buddy-menu)
-       :config (ollama-buddy-enable-monitor))
     #+end_src
 
 - *Interactive Command Menu*
@@ -143,13 +141,13 @@ Note that all the demos are in real time.
 
 * Whats New
 
-** <2025-02-19>
+** <2025-02-19> *0.2.0*
 
-Improved prompt handling in chat buffer - using C-c C-c to send
+Improved prompt handling in chat buffer and simplified setup
 
-- Chat buffer now more prompt based rather than ad-hoc
-- Refactored =ollama-buddy--send= to handle content more flexibly
-- Simplified chat separators for better readability  
+- Connection monitor now optional, ollama status visibility now maintained by strategic status checks simplifying setup.
+- Chat buffer now more prompt based rather than ad-hoc using C-c C-c to send and C-c C-k to cancel
+- Can now change models from chat buffer using C-c C-k
 - Updated intro message with ascii logo
 - Suggested default "C-c o" for =ollama-buddy-menu=
 - defcustom ollama-buddy-command-definitions now will work in the customization interface.
@@ -164,6 +162,49 @@ Models can be assigned to individual commands
 - Expand `ollama-buddy-menu` with structured command definitions using properties for improved flexibility.
 - Add `ollama-buddy-show-model-status` to display available and used models.
 - Refactor command execution flow to ensure model selection is handled dynamically.
+
+* Installation
+
+** Prerequisites
+
+- [[https://ollama.ai/][Ollama]] installed and running locally
+- Emacs 26.1 or later
+
+** Manual Installation
+
+Clone this repository:
+
+#+begin_src shell
+git clone https://github.com/captainflasmr/ollama-buddy.git
+#+end_src
+
+*** init.el
+
+With the option to add your own user keybinding for the =ollama-buddy-menu=
+
+Also provided the user with the option to enable the monitor manually rather than starting it automatically. This gives users control over when they want to initiate the monitoring, which can help avoid unnecessary resource usage or unexpected behavior.
+
+#+begin_src emacs-lisp
+(add-to-list 'load-path "path/to/ollama-buddy")
+(require 'ollama-buddy)
+(global-set-key (kbd "C-c o") #'ollama-buddy-menu)
+#+end_src
+
+OR
+
+#+begin_src elisp
+ (use-package ollama-buddy
+   :load-path "path/to/ollama-buddy"
+   :bind ("C-c o" . ollama-buddy-menu)
+#+end_src
+
+** OR (when on MELPA)
+
+#+begin_src emacs-lisp
+(use-package ollama-buddy
+  :ensure t
+  :bind ("C-c o" . ollama-buddy-menu)
+#+end_src
 
 * Summary of my design ethos
 
@@ -271,50 +312,50 @@ qwen2.5-coder:7b >> PROMPT:
 |___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|
  #+end_src
 
-* Installation
+* Connection monitoring
 
-** Prerequisites
+Good ollama connection status visibility is maintained by the following:
 
-- [[https://ollama.ai/][Ollama]] installed and running locally
-- Emacs 24.3 or later
+1. Introduced status caching:
+   - Added =ollama-buddy--status-cache= and =ollama-buddy--last-status-check= to store cached status
+   - Created =ollama-buddy--check-status= function that implements caching with TTL
+   - This reduces the need for frequent status checks
 
-** Manual Installation
+2. Made background monitoring optional:
+   - Added =ollama-buddy-enable-background-monitor= custom variable
+   - Kept monitor functions but made them optional
+   - Users can still enable monitoring if they want continuous status updates
 
-Clone this repository:
+3. Added strategic status checks:
+   - When chat buffer is initialized
+   - Before sending requests
+   - When opening the menu
+   - When performing critical operations
 
-#+begin_src shell
-git clone https://github.com/captainflasmr/ollama-buddy.git
-#+end_src
+4. Improved error handling:
+   - Added =ollama-buddy--ensure-running= function
+   - Better error messages when Ollama is not running
+   - Send now catches errors when ollama not running and updates status accordingly
 
-*** init.el
+5. Reorganized buffer initialization:
+   - Created =ollama-buddy--initialize-chat-buffer= function
+   - Performs status check when buffer is created
+   - Updates status display immediately
 
-With the option to add your own user keybinding for the =ollama-buddy-menu=
+These changes achieve:
+- Reduced background processes
+- Status information available when needed
+- Better user experience without requiring constant monitoring
+- Optional background monitoring for users who want it
+- More efficient status checking through caching
 
-Also provided the user with the option to enable the monitor manually rather than starting it automatically. This gives users control over when they want to initiate the monitoring, which can help avoid unnecessary resource usage or unexpected behavior.
-
-#+begin_src emacs-lisp
-(add-to-list 'load-path "path/to/ollama-buddy")
-(require 'ollama-buddy)
-(global-set-key (kbd "C-c o") #'ollama-buddy-menu)
-(ollama-buddy-enable-monitor)
-#+end_src
-
-OR
+If monitoring is desired, so for example it will consistently pick up ollama going online and office set the following:
 
 #+begin_src elisp
- (use-package ollama-buddy
-   :load-path "path/to/ollama-buddy"
-   :bind ("C-c o" . ollama-buddy-menu)
-   :config (ollama-buddy-enable-monitor))
-#+end_src
-
-** OR (when on MELPA)
-
-#+begin_src emacs-lisp
 (use-package ollama-buddy
-  :ensure t
-  :bind ("C-c o" . ollama-buddy-menu)
-  :config (ollama-buddy-enable-monitor))
+   :bind ("C-c o" . ollama-buddy-menu)
+   :config (ollama-buddy-enable-monitor)
+   :custom (ollama-buddy-default-model "llama:latest"))
 #+end_src
 
 * Customization
@@ -435,7 +476,6 @@ You can add new commands to =ollama-buddy-command-definitions= in your config:
 (use-package ollama-buddy
   :load-path "path/to/ollama-buddy"
   :bind ("C-c o" . ollama-buddy-menu)
-  :config (ollama-buddy-enable-monitor)
   (add-to-list 'ollama-buddy-command-definitions
                '(pirate
                  :key ?i

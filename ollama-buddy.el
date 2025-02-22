@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama Buddy: Your Friendly AI Assistant -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.1.0
+;; Version: 0.2.0
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -33,7 +33,6 @@
 ;; (use-package ollama-buddy
 ;;    :load-path "path/to/ollama-buddy"
 ;;    :bind ("C-c o" . ollama-buddy-menu)
-;;    :config (ollama-buddy-enable-monitor)
 ;;    :custom ollama-buddy-default-model "llama:latest")
 ;;
 ;; OR
@@ -41,7 +40,6 @@
 ;; (add-to-list 'load-path "path/to/ollama-buddy")
 ;; (require 'ollama-buddy)
 ;; (global-set-key (kbd "C-c o") #'ollama-buddy-menu)
-;; (ollama-buddy-enable-monitor)
 ;; (setq ollama-buddy-default-model "llama:latest")
 ;;
 ;; OR (when added to MELPA)
@@ -49,7 +47,6 @@
 ;; (use-package ollama-buddy
 ;;    :ensure t
 ;;    :bind ("C-c o" . ollama-buddy-menu)
-;;    :config (ollama-buddy-enable-monitor)
 ;;    :custom ollama-buddy-default-model "llama:latest")
 ;;
 ;;; Usage
@@ -71,6 +68,12 @@
   "Customization group for Ollama Buddy."
   :group 'applications
   :prefix "ollama-buddy-")
+
+(defcustom ollama-buddy-enable-background-monitor nil
+  "Whether to enable background monitoring of Ollama connection.
+When nil, status checks only occur during user interactions."
+  :type 'boolean
+  :group 'ollama-buddy)
 
 (defcustom ollama-buddy-host "localhost"
   "Host where Ollama server is running."
@@ -102,6 +105,15 @@
   :type 'integer
   :group 'ollama-buddy)
 
+(defvar ollama-buddy--last-status-check nil
+  "Timestamp of last Ollama status check.")
+
+(defvar ollama-buddy--status-cache nil
+  "Cached status of Ollama connection.")
+
+(defvar ollama-buddy--status-cache-ttl 5
+  "Time in seconds before status cache expires.")
+
 (defvar ollama-buddy--current-model nil
   "Timer for checking Ollama connection status.")
 
@@ -116,6 +128,16 @@
 
 (defvar ollama-buddy--status "Idle"
   "Current status of the Ollama request.")
+
+(defun ollama-buddy--check-status ()
+  "Check Ollama status with caching for better performance."
+  (let ((current-time (float-time)))
+    (when (or (null ollama-buddy--last-status-check)
+              (> (- current-time ollama-buddy--last-status-check)
+                 ollama-buddy--status-cache-ttl))
+      (setq ollama-buddy--status-cache (ollama-buddy--ollama-running)
+            ollama-buddy--last-status-check current-time))
+    ollama-buddy--status-cache))
 
 (defun ollama-buddy--validate-model (model)
   "Validate MODEL availability."
@@ -162,15 +184,29 @@ ACTUAL-MODEL is the model being used instead."
     (setq header-line-format
           (concat
            (propertize (format " [%s %s: %s]"
-                               (if (ollama-buddy--ollama-running) "RUNNING" "OFFLINE")
-                               (or ollama-buddy--current-model
-                                   ollama-buddy-default-model
-                                   "No Model")
-                               status)
-                       'face '(:inherit bold))
+                              (if (ollama-buddy--check-status) "RUNNING" "OFFLINE")
+                              (or ollama-buddy--current-model
+                                  ollama-buddy-default-model
+                                  "No Model")
+                              status)
+                      'face '(:inherit bold))
            (when (and original-model actual-model (not (string= original-model actual-model)))
              (propertize (format " [Using %s instead of %s]" actual-model original-model)
-                         'face '(:foreground "orange" :weight bold)))))))
+                        'face '(:foreground "orange" :weight bold)))))))
+
+(defun ollama-buddy--ensure-running ()
+  "Ensure Ollama is running and update status accordingly."
+  (unless (ollama-buddy--check-status)
+    (user-error "Ollama is not running. Please start Ollama server")))
+
+(defun ollama-buddy--initialize-chat-buffer ()
+  "Initialize the chat buffer and check Ollama status."
+  (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+    (when (= (buffer-size) 0)
+      (ollama-buddy--check-status) ; Initial status check
+      (insert (ollama-buddy--create-intro-message))
+      (ollama-buddy--show-prompt))
+    (ollama-buddy--update-status "Idle")))
 
 (defun ollama-buddy--stream-filter (_proc output)
   "Process stream OUTPUT from PROC while preserving cursor position."
@@ -225,16 +261,19 @@ ACTUAL-MODEL is the model being used instead."
       (goto-char (point-max))
       (ollama-buddy--update-status "Idle"))))
 
+;; Update buffer initialization to check status
+(defun ollama-buddy--open-chat ()
+  "Open chat buffer and initialize if needed."
+  (interactive)
+  (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
+  (ollama-buddy--initialize-chat-buffer)
+  (goto-char (point-max)))
+
 (defcustom ollama-buddy-command-definitions
   '((open-chat
      :key ?o
      :description "Open chat buffer"
-     :action (lambda ()
-               (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
-               (when (= (buffer-size) 0)
-                 (insert (ollama-buddy--create-intro-message))
-                 (ollama-buddy--show-prompt))
-               (goto-char (point-max))))
+     :action ollama-buddy--open-chat)
     (show-models
      :key ?v
      :description "View model status"
@@ -404,7 +443,9 @@ Each command is defined with:
 
 (defun ollama-buddy--send (&optional prompt specified-model)
   "Send PROMPT with optional SYSTEM-PROMPT and SPECIFIED-MODEL."
-  (unless (ollama-buddy--ollama-running)
+  ;; Check status and update UI if offline
+  (unless (ollama-buddy--check-status)
+    (ollama-buddy--update-status "OFFLINE")
     (user-error "Ensure Ollama is running"))
 
   (unless (> (length prompt) 0)
@@ -443,23 +484,35 @@ Each command is defined with:
       (delete-process ollama-buddy--active-process)
       (setq ollama-buddy--active-process nil))
     
-    (setq ollama-buddy--active-process
-          (make-network-process
-           :name "ollama-chat-stream"
-           :buffer nil
-           :host ollama-buddy-host
-           :service ollama-buddy-port
-           :coding 'utf-8
-           :filter #'ollama-buddy--stream-filter
-           :sentinel #'ollama-buddy--stream-sentinel))
+    ;; Add error handling for network process creation
+    (condition-case err
+        (setq ollama-buddy--active-process
+              (make-network-process
+               :name "ollama-chat-stream"
+               :buffer nil
+               :host ollama-buddy-host
+               :service ollama-buddy-port
+               :coding 'utf-8
+               :filter #'ollama-buddy--stream-filter
+               :sentinel #'ollama-buddy--stream-sentinel))
+      (error
+       (ollama-buddy--update-status "OFFLINE - Connection failed")
+       (error "Failed to connect to Ollama: %s" (error-message-string err))))
     
-    (process-send-string
-     ollama-buddy--active-process
-     (concat "POST /api/chat HTTP/1.1\r\n"
-             (format "Host: %s:%d\r\n" ollama-buddy-host ollama-buddy-port)
-             "Content-Type: application/json\r\n"
-             (format "Content-Length: %d\r\n\r\n" (string-bytes payload))
-             payload))))
+    (condition-case err
+        (process-send-string
+         ollama-buddy--active-process
+         (concat "POST /api/chat HTTP/1.1\r\n"
+                 (format "Host: %s:%d\r\n" ollama-buddy-host ollama-buddy-port)
+                 "Content-Type: application/json\r\n"
+                 (format "Content-Length: %d\r\n\r\n" (string-bytes payload))
+                 payload))
+      (error
+       (ollama-buddy--update-status "OFFLINE - Send failed")
+       (when (and ollama-buddy--active-process
+                  (process-live-p ollama-buddy--active-process))
+         (delete-process ollama-buddy--active-process))
+       (error "Failed to send request to Ollama: %s" (error-message-string err))))))
 
 (defun ollama-buddy--make-request (endpoint method &optional payload)
   "Generic request function for ENDPOINT with METHOD and optional PAYLOAD."
@@ -522,55 +575,59 @@ Each command is defined with:
     message-text))
   
 ;;;###autoload
+;;;###autoload
 (defun ollama-buddy-menu ()
   "Display Ollama Buddy menu."
   (interactive)
-  (when-let* ((items (mapcar (lambda (cmd-def)
-                               (cons (plist-get (cdr cmd-def) :key)
-                                     (list (plist-get (cdr cmd-def) :description)
-                                           (plist-get (cdr cmd-def) :action))))
-                             ollama-buddy-command-definitions))
-              (formatted-items
-               (mapcar (lambda (item)
-                         (format "[%c] %s" (car item) (cadr item)))
-                       items))
-              (total (length formatted-items))
-              (rows (ceiling (/ total (float ollama-buddy-menu-columns))))
-              (padded-items (append formatted-items
-                                    (make-list (- (* rows
+  (let ((ollama-status (ollama-buddy--check-status)))  ; Store the status check result
+    (ollama-buddy--update-status 
+     (if ollama-status "Menu opened - Ready" "Menu opened - Ollama offline"))
+    (when-let* ((items (mapcar (lambda (cmd-def)
+                                (cons (plist-get (cdr cmd-def) :key)
+                                      (list (plist-get (cdr cmd-def) :description)
+                                            (plist-get (cdr cmd-def) :action))))
+                              ollama-buddy-command-definitions))
+                (formatted-items
+                 (mapcar (lambda (item)
+                          (format "[%c] %s" (car item) (cadr item)))
+                        items))
+                (total (length formatted-items))
+                (rows (ceiling (/ total (float ollama-buddy-menu-columns))))
+                (padded-items (append formatted-items
+                                     (make-list (- (* rows
                                                      ollama-buddy-menu-columns)
                                                   total)
-                                               "")))
-              (format-string
-               (mapconcat
-                (lambda (width) (format "%%-%ds" (+ width 2)))
-                (butlast
-                 (cl-loop for col below ollama-buddy-menu-columns collect
-                          (cl-loop for row below rows
-                                   for idx = (+ (* col rows) row)
-                                   when (< idx total)
-                                   maximize (length (nth idx padded-items)))))
-                ""))
-              (prompt
-               (format "%s %s%s\nAvailable: %s\n%s"
-                       (if (ollama-buddy--ollama-running) "RUNNING" "NOT RUNNING")
-                       (or ollama-buddy--current-model "NONE")
-                       (if (use-region-p) "" " (NO SELECTION)")
-                       (mapconcat #'identity (ollama-buddy--get-models) " ")
-                       (mapconcat
-                        (lambda (row)
-                          (if format-string
-                              (apply #'format (concat format-string "%s") row)
-                            (car row)))
-                        (cl-loop for row below rows collect
-                                 (cl-loop for col below ollama-buddy-menu-columns
-                                          for idx = (+ (* col rows) row)
-                                          when (< idx (length padded-items))
-                                          collect (nth idx padded-items)))
-                        "\n")))
-              (key (read-key prompt))
-              (cmd (assoc key items)))
-    (funcall (caddr cmd))))
+                                              "")))
+                (format-string
+                 (mapconcat
+                  (lambda (width) (format "%%-%ds" (+ width 2)))
+                  (butlast
+                   (cl-loop for col below ollama-buddy-menu-columns collect
+                            (cl-loop for row below rows
+                                    for idx = (+ (* col rows) row)
+                                    when (< idx total)
+                                    maximize (length (nth idx padded-items)))))
+                  ""))
+                (prompt
+                 (format "%s %s%s\nAvailable: %s\n%s"
+                         (if ollama-status "RUNNING" "NOT RUNNING")
+                         (or ollama-buddy--current-model "NONE")
+                         (if (use-region-p) "" " (NO SELECTION)")
+                         (mapconcat #'identity (ollama-buddy--get-models) " ")
+                         (mapconcat
+                          (lambda (row)
+                            (if format-string
+                                (apply #'format (concat format-string "%s") row)
+                              (car row)))
+                          (cl-loop for row below rows collect
+                                   (cl-loop for col below ollama-buddy-menu-columns
+                                            for idx = (+ (* col rows) row)
+                                            when (< idx (length padded-items))
+                                            collect (nth idx padded-items)))
+                          "\n")))
+                (key (read-key prompt))
+                (cmd (assoc key items)))
+      (funcall (caddr cmd)))))
 
 (defun ollama-buddy-show-model-status ()
   "Display status of models referenced in command definitions."
@@ -601,17 +658,19 @@ Each command is defined with:
 
 ;;;###autoload
 (defun ollama-buddy-enable-monitor ()
-  "Enable connection monitoring."
+  "Enable background connection monitoring."
   (interactive)
+  (setq ollama-buddy-enable-background-monitor t)
   (unless ollama-buddy--connection-timer
     (setq ollama-buddy--connection-timer
           (run-with-timer 0 ollama-buddy-connection-check-interval
-                          #'ollama-buddy--monitor-connection))))
+                         #'ollama-buddy--monitor-connection))))
 
 ;;;###autoload
 (defun ollama-buddy-disable-monitor ()
-  "Disable connection monitoring."
+  "Disable background connection monitoring."
   (interactive)
+  (setq ollama-buddy-enable-background-monitor nil)
   (when ollama-buddy--connection-timer
     (cancel-timer ollama-buddy--connection-timer)
     (setq ollama-buddy--connection-timer nil)))

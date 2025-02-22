@@ -11,13 +11,13 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
-** <2025-02-19>
+** <2025-02-19> *0.2.0*
 
-Improved prompt handling in chat buffer - using C-c C-c to send
+Improved prompt handling in chat buffer and simplified setup
 
-- Chat buffer now more prompt based rather than ad-hoc
-- Refactored =ollama-buddy--send= to handle content more flexibly
-- Simplified chat separators for better readability  
+- Connection monitor now optional, ollama status visibility now maintained by strategic status checks simplifying setup.
+- Chat buffer now more prompt based rather than ad-hoc using C-c C-c to send and C-c C-k to cancel
+- Can now change models from chat buffer using C-c C-k
 - Updated intro message with ascii logo
 - Suggested default "C-c o" for =ollama-buddy-menu=
 - defcustom ollama-buddy-command-definitions now will work in the customization interface.
