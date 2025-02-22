@@ -133,6 +133,22 @@ Note that all the demos are in real time.
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_004.gif]]
 
+*From 20,000 Leagues under the Sea to Buffy! using a custom menu - just for fun!*
+
+Open up 20,000 Leagues from Project Gutenberg, select a paragraph, load a custom menu from presets called Buffy and lets see what fun we can have!
+
+- *Cordelia burn*
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_005.gif]]
+
+- *Buffy!*
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_006.gif]]
+
 *The Menu*
 
 #+attr_org: :width 300px
