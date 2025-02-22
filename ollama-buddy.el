@@ -184,15 +184,15 @@ ACTUAL-MODEL is the model being used instead."
     (setq header-line-format
           (concat
            (propertize (format " [%s %s: %s]"
-                              (if (ollama-buddy--check-status) "RUNNING" "OFFLINE")
-                              (or ollama-buddy--current-model
-                                  ollama-buddy-default-model
-                                  "No Model")
-                              status)
-                      'face '(:inherit bold))
+                               (if (ollama-buddy--check-status) "RUNNING" "OFFLINE")
+                               (or ollama-buddy--current-model
+                                   ollama-buddy-default-model
+                                   "No Model")
+                               status)
+                       'face '(:inherit bold))
            (when (and original-model actual-model (not (string= original-model actual-model)))
              (propertize (format " [Using %s instead of %s]" actual-model original-model)
-                        'face '(:foreground "orange" :weight bold)))))))
+                         'face '(:foreground "orange" :weight bold)))))))
 
 (defun ollama-buddy--ensure-running ()
   "Ensure Ollama is running and update status accordingly."
@@ -350,7 +350,7 @@ ACTUAL-MODEL is the model being used instead."
                  (unless (not (string-empty-p prefix))
                    (user-error "Input string is empty"))
                  (ollama-buddy--send prefix))))
-      (save-chat
+    (save-chat
      :key ?s
      :description "Save chat"
      :action (lambda ()
@@ -383,12 +383,12 @@ Each command is defined with:
                        ((:key (character :tag "Menu Key Character"))
                         (:description (string :tag "Command Description"))
                         (:model (choice :tag "Specific Model"
-                                       (const :tag "Use Default" nil)
-                                       (string :tag "Model Name")))
+                                        (const :tag "Use Default" nil)
+                                        (string :tag "Model Name")))
                         (:prompt (string :tag "Static Prompt Text"))
                         (:action (choice :tag "Action"
-                                        (function :tag "Existing Function")
-                                        (sexp :tag "Lambda Expression")))))))
+                                         (function :tag "Existing Function")
+                                         (sexp :tag "Lambda Expression")))))))
   :group 'ollama-buddy)
 
 (defun ollama-buddy--get-command-def (command-name)
@@ -433,11 +433,11 @@ Each command is defined with:
     (when (and prompt (not (use-region-p)))
       (user-error "No region selected. Select text to use with prompt"))
     (let* ((prompt-with-selection (concat
-                                  (when prompt (concat prompt "\n\n"))
-                                  (if (use-region-p)
-                                      (buffer-substring-no-properties 
-                                       (region-beginning) (region-end))
-                                    "")))
+                                   (when prompt (concat prompt "\n\n"))
+                                   (if (use-region-p)
+                                       (buffer-substring-no-properties 
+                                        (region-beginning) (region-end))
+                                     "")))
            (model (ollama-buddy--get-command-prop command-name :model)))
       (ollama-buddy--send (string-trim prompt-with-selection) model))))
 
@@ -550,9 +550,9 @@ Each command is defined with:
 (defun ollama-buddy--create-intro-message ()
   "Create welcome message."
   (let* ((models-section (when (ollama-buddy--ollama-running)
-                  (format "Models available:\n\n%s\n\n"
-                          (mapconcat (lambda (m) (format "  %s" m))
-                                     (ollama-buddy--get-models) "\n"))))
+                           (format "Models available:\n\n%s\n\n"
+                                   (mapconcat (lambda (m) (format "  %s" m))
+                                              (ollama-buddy--get-models) "\n"))))
          (message-text
           (concat
            "\n\n"
@@ -573,7 +573,7 @@ Each command is defined with:
     ;; Make the header and response sections bold without overriding other properties
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
-  
+
 ;;;###autoload
 ;;;###autoload
 (defun ollama-buddy-menu ()
@@ -583,30 +583,30 @@ Each command is defined with:
     (ollama-buddy--update-status 
      (if ollama-status "Menu opened - Ready" "Menu opened - Ollama offline"))
     (when-let* ((items (mapcar (lambda (cmd-def)
-                                (cons (plist-get (cdr cmd-def) :key)
-                                      (list (plist-get (cdr cmd-def) :description)
-                                            (plist-get (cdr cmd-def) :action))))
-                              ollama-buddy-command-definitions))
+                                 (cons (plist-get (cdr cmd-def) :key)
+                                       (list (plist-get (cdr cmd-def) :description)
+                                             (plist-get (cdr cmd-def) :action))))
+                               ollama-buddy-command-definitions))
                 (formatted-items
                  (mapcar (lambda (item)
-                          (format "[%c] %s" (car item) (cadr item)))
-                        items))
+                           (format "[%c] %s" (car item) (cadr item)))
+                         items))
                 (total (length formatted-items))
                 (rows (ceiling (/ total (float ollama-buddy-menu-columns))))
                 (padded-items (append formatted-items
-                                     (make-list (- (* rows
-                                                     ollama-buddy-menu-columns)
-                                                  total)
-                                              "")))
+                                      (make-list (- (* rows
+                                                       ollama-buddy-menu-columns)
+                                                    total)
+                                                 "")))
                 (format-string
                  (mapconcat
                   (lambda (width) (format "%%-%ds" (+ width 2)))
                   (butlast
                    (cl-loop for col below ollama-buddy-menu-columns collect
                             (cl-loop for row below rows
-                                    for idx = (+ (* col rows) row)
-                                    when (< idx total)
-                                    maximize (length (nth idx padded-items)))))
+                                     for idx = (+ (* col rows) row)
+                                     when (< idx total)
+                                     maximize (length (nth idx padded-items)))))
                   ""))
                 (prompt
                  (format "%s %s%s\nAvailable: %s\n%s"
@@ -664,7 +664,7 @@ Each command is defined with:
   (unless ollama-buddy--connection-timer
     (setq ollama-buddy--connection-timer
           (run-with-timer 0 ollama-buddy-connection-check-interval
-                         #'ollama-buddy--monitor-connection))))
+                          #'ollama-buddy--monitor-connection))))
 
 ;;;###autoload
 (defun ollama-buddy-disable-monitor ()
