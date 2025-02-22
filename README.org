@@ -119,11 +119,11 @@ Note that all the demos are in real time.
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_003.gif]]
 
-*Coding - Writing a Hello World! program with more and more advanced models*
+*Coding - Writing a Hello World! program with increasingly advanced models*
 
 - PROMPT>> can you write a hello world program in Ada?
 
-- switch models to the following and check differeng output:
+- switch models to the following and check differing output:
 
   - qwen2.5-coder:0.5b
   - qwen2.5-coder:3b
@@ -161,9 +161,9 @@ Open up 20,000 Leagues from Project Gutenberg, select a paragraph, load a custom
 
 Improved prompt handling in chat buffer and simplified setup
 
-- Connection monitor now optional, ollama status visibility now maintained by strategic status checks simplifying setup.
 - Chat buffer now more prompt based rather than ad-hoc using C-c C-c to send and C-c C-k to cancel
-- Can now change models from chat buffer using C-c C-k
+- Connection monitor now optional, ollama status visibility now maintained by strategic status checks simplifying setup.
+- Can now change models from chat buffer using C-c C-m
 - Updated intro message with ascii logo
 - Suggested default "C-c o" for =ollama-buddy-menu=
 - defcustom ollama-buddy-command-definitions now will work in the customization interface.
@@ -198,8 +198,6 @@ git clone https://github.com/captainflasmr/ollama-buddy.git
 
 With the option to add your own user keybinding for the =ollama-buddy-menu=
 
-Also provided the user with the option to enable the monitor manually rather than starting it automatically. This gives users control over when they want to initiate the monitoring, which can help avoid unnecessary resource usage or unexpected behavior.
-
 #+begin_src emacs-lisp
 (add-to-list 'load-path "path/to/ollama-buddy")
 (require 'ollama-buddy)
@@ -221,6 +219,32 @@ OR
   :ensure t
   :bind ("C-c o" . ollama-buddy-menu)
 #+end_src
+
+* Usage
+
+1. Start your Ollama server locally
+2. Use =M-x ollama-buddy-menu= or a user defined keybinding =C-c o= to open the menu
+3. Select your preferred model using the [m] option
+4. Select text in any buffer or use the chat buffer
+5. Choose an action from the menu:
+
+| Key | Action             | Description                                 |
+|-----+--------------------+---------------------------------------------|
+| o   | Open chat buffer   | Opens the main chat interface               |
+| m   | Swap model         | Switch between available Ollama models      |
+| h   | Help assistant     | Display help message                        |
+| l   | Send region        | Send selected text directly to model        |
+| r   | Refactor code      | Get code refactoring suggestions            |
+| g   | Git commit message | Generate commit message for changes         |
+| c   | Describe code      | Get code explanation                        |
+| d   | Dictionary Lookup  | Get dictionary definition                   |
+| n   | Word synonym       | Get a synonym for the word                  |
+| p   | Proofread text     | Check text for improvements                 |
+| z   | Make concise       | Reduce wordiness while preserving meaning   |
+| e   | Custom Prompt      | Enter bespoke prompt through the minibuffer |
+| s   | Save chat          | Save the chat to a file                     |
+| x   | Kill request       | Cancel current Ollama request               |
+| q   | Quit               | Exit the menu                               |
 
 * Summary of my design ethos
 
@@ -252,32 +276,6 @@ OR
   - Backwards compatibility with older Emacs versions
   - Minimal dependencies
   - Straightforward configuration options
-
-* Usage
-
-1. Start your Ollama server locally
-2. Use =M-x ollama-buddy-menu= or a user defined keybinding =C-c o= to open the menu
-3. Select your preferred model using the [m] option
-4. Select text in any buffer
-5. Choose an action from the menu:
-
-| Key | Action             | Description                                 |
-|-----+--------------------+---------------------------------------------|
-| o   | Open chat buffer   | Opens the main chat interface               |
-| m   | Swap model         | Switch between available Ollama models      |
-| h   | Help assistant     | Display help message                        |
-| l   | Send region        | Send selected text directly to model        |
-| r   | Refactor code      | Get code refactoring suggestions            |
-| g   | Git commit message | Generate commit message for changes         |
-| c   | Describe code      | Get code explanation                        |
-| d   | Dictionary Lookup  | Get dictionary definition                   |
-| n   | Word synonym       | Get a synonym for the word                  |
-| p   | Proofread text     | Check text for improvements                 |
-| z   | Make concise       | Reduce wordiness while preserving meaning   |
-| e   | Custom Prompt      | Enter bespoke prompt through the minibuffer |
-| s   | Save chat          | Save the chat to a file                     |
-| x   | Kill request       | Cancel current Ollama request               |
-| q   | Quit               | Exit the menu                               |
 
 * AI assistant
 
@@ -330,9 +328,18 @@ qwen2.5-coder:7b >> PROMPT:
 
 * Connection monitoring
 
-Good ollama connection status visibility is maintained by the following:
+Good ollama connection status visibility is maintained either by default using basic coding logic or if monitoring is desired then configure as thus:
 
-1. Introduced status caching:
+#+begin_src elisp
+(use-package ollama-buddy
+   :bind ("C-c o" . ollama-buddy-menu)
+   :config (ollama-buddy-enable-monitor)
+   :custom (ollama-buddy-default-model "llama:latest"))
+#+end_src
+
+By default, strategic status checks should be enough to indicate a good consistent ollama running state.
+
+1. Status caching:
    - Added =ollama-buddy--status-cache= and =ollama-buddy--last-status-check= to store cached status
    - Created =ollama-buddy--check-status= function that implements caching with TTL
    - This reduces the need for frequent status checks
@@ -364,15 +371,6 @@ These changes achieve:
 - Better user experience without requiring constant monitoring
 - Optional background monitoring for users who want it
 - More efficient status checking through caching
-
-If monitoring is desired, so for example it will consistently pick up ollama going online and office set the following:
-
-#+begin_src elisp
-(use-package ollama-buddy
-   :bind ("C-c o" . ollama-buddy-menu)
-   :config (ollama-buddy-enable-monitor)
-   :custom (ollama-buddy-default-model "llama:latest"))
-#+end_src
 
 * Customization
 
@@ -445,7 +443,7 @@ Ollama is running somewhere!
 
 ** Super Fiddler
 
-Lets get the ollama status as soon as is humanly perceptable!
+Lets get the ollama status as soon as is humanly perceptible!
 
 #+begin_src elisp
 (setq ollama-buddy-default-model "qwen-4q:latest")
@@ -833,7 +831,7 @@ Contributions are welcome! Please:
 
 [[https://opensource.org/licenses/MIT][MIT License]]
 
-* Acknowledgments
+* Acknowledgements
 
 - [[https://ollama.ai/][Ollama]] for making local LLM inference accessible
 - Emacs community for continuous inspiration
@@ -844,9 +842,9 @@ Report issues on the [[https://github.com/captainflasmr/ollama-buddy/issues][Git
 
 * Bugs
 
-** TODO What if we make a request during a request is the current process cleard down?
+** DOING What if we make a request during a request is the current process cleared down?
 
-** TODO Sometimes the current request can't be cancelled
+** DOING Sometimes the current request can't be cancelled
 
 * Alternative LLM based packages
 
