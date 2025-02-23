@@ -327,52 +327,6 @@ qwen2.5-coder:7b >> PROMPT:
 |___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|
  #+end_src
 
-* Connection monitoring
-
-Good ollama connection status visibility is maintained either by default using basic coding logic or if monitoring is desired then configure as thus:
-
-#+begin_src elisp
-(use-package ollama-buddy
-   :bind ("C-c o" . ollama-buddy-menu)
-   :config (ollama-buddy-enable-monitor)
-   :custom (ollama-buddy-default-model "llama:latest"))
-#+end_src
-
-By default, strategic status checks should be enough to indicate a good consistent ollama running state.
-
-1. Status caching:
-   - Added =ollama-buddy--status-cache= and =ollama-buddy--last-status-check= to store cached status
-   - Created =ollama-buddy--check-status= function that implements caching with TTL
-   - This reduces the need for frequent status checks
-
-2. Made background monitoring optional:
-   - Added =ollama-buddy-enable-background-monitor= custom variable
-   - Kept monitor functions but made them optional
-   - Users can still enable monitoring if they want continuous status updates
-
-3. Added strategic status checks:
-   - When chat buffer is initialized
-   - Before sending requests
-   - When opening the menu
-   - When performing critical operations
-
-4. Improved error handling:
-   - Added =ollama-buddy--ensure-running= function
-   - Better error messages when Ollama is not running
-   - Send now catches errors when ollama not running and updates status accordingly
-
-5. Reorganized buffer initialization:
-   - Created =ollama-buddy--initialize-chat-buffer= function
-   - Performs status check when buffer is created
-   - Updates status display immediately
-
-These changes achieve:
-- Reduced background processes
-- Status information available when needed
-- Better user experience without requiring constant monitoring
-- Optional background monitoring for users who want it
-- More efficient status checking through caching
-
 * Customization
 
 #+begin_src emacs-lisp :results table :colnames '("Custom variable" "Description") :exports results
@@ -551,6 +505,11 @@ You can create a minimal configuration by defining only the commands you need:
 See below for how I have currently set up the default preset with specific models to achieve as much of a fast/accurate response:
 
 #+begin_src elisp
+(use-package ollama-buddy
+  :load-path "~/source/repos/ollama-buddy"
+  :bind ("C-c o" . ollama-buddy-menu)
+  :custom ollama-buddy-default-model "llama3.2:1b")
+
 (setq ollama-buddy-command-definitions
       '(
         ;; Geneal Commands
@@ -869,6 +828,52 @@ When a fallback occurs, Ollama Buddy provides clear feedback:
    - Use =ollama-buddy-show-model-status= to monitor available models
    - Keep commonly used models pulled locally
    - Watch for model availability warnings in the header line and chat buffer
+
+* Connection monitoring
+
+Good ollama connection status visibility is maintained either by default using basic coding logic or if monitoring is desired then configure as thus:
+
+#+begin_src elisp
+(use-package ollama-buddy
+   :bind ("C-c o" . ollama-buddy-menu)
+   :config (ollama-buddy-enable-monitor)
+   :custom (ollama-buddy-default-model "llama:latest"))
+#+end_src
+
+By default, strategic status checks should be enough to indicate a good consistent ollama running state.
+
+1. Status caching:
+   - Added =ollama-buddy--status-cache= and =ollama-buddy--last-status-check= to store cached status
+   - Created =ollama-buddy--check-status= function that implements caching with TTL
+   - This reduces the need for frequent status checks
+
+2. Made background monitoring optional:
+   - Added =ollama-buddy-enable-background-monitor= custom variable
+   - Kept monitor functions but made them optional
+   - Users can still enable monitoring if they want continuous status updates
+
+3. Added strategic status checks:
+   - When chat buffer is initialized
+   - Before sending requests
+   - When opening the menu
+   - When performing critical operations
+
+4. Improved error handling:
+   - Added =ollama-buddy--ensure-running= function
+   - Better error messages when Ollama is not running
+   - Send now catches errors when ollama not running and updates status accordingly
+
+5. Reorganized buffer initialization:
+   - Created =ollama-buddy--initialize-chat-buffer= function
+   - Performs status check when buffer is created
+   - Updates status display immediately
+
+These changes achieve:
+- Reduced background processes
+- Status information available when needed
+- Better user experience without requiring constant monitoring
+- Optional background monitoring for users who want it
+- More efficient status checking through caching
 
 * Design ethos expanded / why create this package?
 
