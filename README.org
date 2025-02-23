@@ -154,6 +154,7 @@ Open up 20,000 Leagues from Project Gutenberg, select a paragraph, load a custom
 
 Taken from the examples in : https://learn.adacore.com/labs/intro-to-ada/chapters/generics.html#generic-list
 
+#+begin_src ada
 generic
    type Item is private;
    type Items is array (Positive range <>) of Item;
@@ -167,6 +168,7 @@ package Gen_List is
                   Status : out Boolean);
    procedure Display;
 end Gen_List;
+#+end_src
 
 [c] Describe code
 
@@ -781,8 +783,8 @@ Attached currently in this repository is a presets directory which contains the 
 
 My ideas are to also add in some fun presets something like:
 
-- buffy
-- shakespeare
+- Buffy
+- Shakespeare
 - Janeway - starfleet captain
 
 * Model Selection and Fallback Logic
@@ -1010,18 +1012,6 @@ Here is a kanban of the features that will be (hopefully) added in due course, a
 
 ** TODO Create more specialized system prompts
 
-* Contributing
-
-Contributions are welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Open a pull request
-
-* License
-
-[[https://opensource.org/licenses/MIT][MIT License]]
-
 * Testing
 
 ** elisp structure to org-table
@@ -1030,6 +1020,7 @@ Contributions are welcome! Please:
 
 Given the following elisp data structure can you extract out an org table that contains the following columns : key : description : model
 
+#+begin_src elisp
 (setq ollama-buddy-command-definitions
       '(
         ;; General Commands
@@ -1112,6 +1103,7 @@ Given the following elisp data structure can you extract out an org table that c
          :action (lambda () (message "Quit Ollama Shell menu.")))
         )
       )
+#+end_src
 
 *** expected output
 
@@ -1129,21 +1121,6 @@ Given the following elisp data structure can you extract out an org table that c
 | x   | Kill request       |                  |
 | q   | Quit               |                  |
       
-* Acknowledgements
-
-- [[https://ollama.ai/][Ollama]] for making local LLM inference accessible
-- Emacs community for continuous inspiration
-
-* Issues
-
-Report issues on the [[https://github.com/captainflasmr/ollama-buddy/issues][GitHub Issues page]]
-
-* Bugs
-
-** DOING What if we make a request during a request is the current process cleared down?
-
-** DOING Sometimes the current request can't be cancelled
-
 * Alternative LLM based packages
 
 To the best of my knowledge, there are currently a few Emacs packages related to Ollama, though the ecosystem is still relatively young:
@@ -1233,3 +1210,31 @@ Let's compare ollama-buddy to the existing solutions:
    - Providing a more lightweight, menu-driven interface
    - Focusing on quick, direct interactions from any buffer
    - Having minimal dependencies and configuration requirements
+
+* Issues
+
+Report issues on the [[https://github.com/captainflasmr/ollama-buddy/issues][GitHub Issues page]]
+
+* Bugs
+
+** DOING What if we make a request during a request is the current process cleared down?
+
+** DOING Sometimes the current request can't be cancelled
+
+* Contributing
+
+Contributions are welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Open a pull request
+
+* License
+
+[[https://opensource.org/licenses/MIT][MIT License]]
+
+* Acknowledgements
+
+- [[https://ollama.ai/][Ollama]] for making local LLM inference accessible
+- Emacs community for continuous inspiration
+
