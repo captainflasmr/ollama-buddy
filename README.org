@@ -77,7 +77,7 @@ The name is just something a little bit fun and it seems to always remind me of 
 
 Note that all the demos are in real time.
 
-*First Steps*
+** First Steps
 
 - Starting with model : llama3.2:1b
 
@@ -95,7 +95,7 @@ Note that all the demos are in real time.
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_001.gif]]
 
-*Swap Models*
+** Swap Models
 
 - C-c C-m to swap to differing models from chat buffer
 
@@ -105,7 +105,7 @@ Note that all the demos are in real time.
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_002.gif]]
 
-*From Other Buffers*
+** From Other Buffers
 
 - Open this file with :
 
@@ -119,7 +119,7 @@ Note that all the demos are in real time.
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_003.gif]]
 
-*Coding - Writing a Hello World! program with increasingly advanced models*
+** Coding - Writing a Hello World! program with increasingly advanced models
 
 - PROMPT>> can you write a hello world program in Ada?
 
@@ -133,9 +133,10 @@ Note that all the demos are in real time.
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_004.gif]]
 
-*From 20,000 Leagues under the Sea to Buffy! using a custom menu - just for fun!*
+** From 20,000 Leagues under the Sea to Buffy! using a custom menu - just for fun!
 
 Open up 20,000 Leagues from Project Gutenberg, select a paragraph, load a custom menu from presets called Buffy and lets see what fun we can have!
+
 
 - *Cordelia burn*
 
@@ -149,7 +150,39 @@ Open up 20,000 Leagues from Project Gutenberg, select a paragraph, load a custom
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_006.gif]]
 
-*The Menu*
+** *TODO* Code queries
+
+Taken from the examples in : https://learn.adacore.com/labs/intro-to-ada/chapters/generics.html#generic-list
+
+generic
+   type Item is private;
+   type Items is array (Positive range <>) of Item;
+   Name       : String;
+   List_Array : in out Items;
+   Last       : in out Natural;
+   with procedure Put (I : Item) is <>;
+package Gen_List is
+   procedure Init;
+   procedure Add (I      :     Item;
+                  Status : out Boolean);
+   procedure Display;
+end Gen_List;
+
+[c] Describe code
+
+[e] Custom prompt
+
+Can you generate the body for this specification?
+
+[e] Custom prompt
+    
+Can you convert this Ada code into [C#/C++/elisp]?
+
+[e] Custom prompt
+     
+Can you write unit tests for the generated code
+
+* The Menu
 
 #+attr_org: :width 300px
 #+attr_html: :width 100%
@@ -504,6 +537,27 @@ You can create a minimal configuration by defining only the commands you need:
 
 See below for how I have currently set up the default preset with specific models to achieve as much of a fast/accurate response:
 
+
+| Key | Description        | Model            |
+|-----+--------------------+------------------|
+| o   | Open chat buffer   |                  |
+| v   | View model status  |                  |
+| m   | Swap model         |                  |
+| h   | Help assistant     |                  |
+| l   | Send region        |                  |
+| r   | Refactor code      | qwen2.5-coder:7b |
+| g   | Git commit message | qwen2.5-coder:3b |
+| c   | Describe code      | qwen2.5-coder:3b |
+| d   | Dictionary Lookup  | llama3.2:1b      |
+| n   | Word synonym       | llama3.2:1b      |
+| p   | Proofread text     | deepseek-r1:7b   |
+| z   | Make concise       |                  |
+| e   | Custom prompt      | deepseek-r1:7b   |
+| i   | Minibuffer Prompt  |                  |
+| s   | Save chat          |                  |
+| x   | Kill request       |                  |
+| q   | Quit               |                  |
+
 #+begin_src elisp
 (use-package ollama-buddy
   :load-path "~/source/repos/ollama-buddy"
@@ -512,7 +566,7 @@ See below for how I have currently set up the default preset with specific model
 
 (setq ollama-buddy-command-definitions
       '(
-        ;; Geneal Commands
+        ;; General Commands
         (open-chat
          :key ?o
          :description "Open chat buffer"
@@ -968,6 +1022,113 @@ Contributions are welcome! Please:
 
 [[https://opensource.org/licenses/MIT][MIT License]]
 
+* Testing
+
+** elisp structure to org-table
+
+*** prompt
+
+Given the following elisp data structure can you extract out an org table that contains the following columns : key : description : model
+
+(setq ollama-buddy-command-definitions
+      '(
+        ;; General Commands
+        (open-chat
+         :key ?o
+         :description "Open chat buffer"
+         :action ollama-buddy--open-chat)
+        
+        (swap-model
+         :key ?m
+         :description "Swap model"
+         :action ollama-buddy--swap-model)
+        
+        (send-region
+         :key ?l
+         :description "Send region"
+         :action (lambda () (ollama-buddy--send-with-command 'send-region)))
+        
+        ;; Specialized commands
+        (refactor-code
+         :key ?r
+         :description "Refactor code"
+         :model "qwen2.5-coder:7b"
+         :prompt "refactor the following code:"
+         :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
+        
+        (git-commit
+         :key ?g
+         :description "Git commit message"
+         :model "qwen2.5-coder:3b"
+         :prompt "write a concise git commit message for the following:"
+         :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+        
+        (describe-code
+         :key ?c
+         :description "Describe code"
+         :model "qwen2.5-coder:3b"
+         :prompt "describe the following code:"
+         :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
+        
+        (dictionary-lookup
+         :key ?d
+         :description "Dictionary Lookup"
+         :model "llama3.2:1b"
+         :prompt "For the following word provide a typical dictionary definition:"
+         :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup)))
+        
+        ;; System Commands
+        (custom-prompt
+         :key ?e
+         :description "Custom prompt"
+         :model "deepseek-r1:7b"
+         :action (lambda ()
+                   (when-let ((prefix (read-string "Enter prompt prefix: " nil nil nil t)))
+                     (unless (use-region-p)
+                       (user-error "No region selected. Select text to use with prompt"))
+                     (unless (not (string-empty-p prefix))
+                       (user-error "Input string is empty"))
+                     (ollama-buddy--send
+                      (concat prefix "\n\n"
+                              (buffer-substring-no-properties 
+                               (region-beginning) (region-end)))))))
+        (minibuffer-prompt
+         :key ?i
+         :description "Minibuffer Prompt"
+         :action (lambda ()
+                   (when-let ((prefix (read-string "Enter prompt: " nil nil nil t)))
+                     (unless (not (string-empty-p prefix))
+                       (user-error "Input string is empty"))
+                     (ollama-buddy--send prefix))))
+        
+        (kill-request
+         :key ?x
+         :description "Kill request"
+         :action (lambda ()
+                   (delete-process ollama-buddy--active-process)))
+        (quit
+         :key ?q
+         :description "Quit"
+         :action (lambda () (message "Quit Ollama Shell menu.")))
+        )
+      )
+
+*** expected output
+
+| Key | Description        | Model            |
+|-----+--------------------+------------------|
+| o   | Open chat buffer   |                  |
+| m   | Swap model         |                  |
+| l   | Send region        |                  |
+| r   | Refactor code      | qwen2.5-coder:7b |
+| g   | Git commit message | qwen2.5-coder:3b |
+| c   | Describe code      | qwen2.5-coder:3b |
+| d   | Dictionary Lookup  | llama3.2:1b      |
+| e   | Custom prompt      | deepseek-r1:7b   |
+| i   | Minibuffer Prompt  |                  |
+| x   | Kill request       |                  |
+| q   | Quit               |                  |
+      
 * Acknowledgements
 
 - [[https://ollama.ai/][Ollama]] for making local LLM inference accessible
