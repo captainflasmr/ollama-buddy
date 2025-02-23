@@ -228,23 +228,24 @@ OR
 4. Select text in any buffer or use the chat buffer
 5. Choose an action from the menu:
 
-| Key | Action             | Description                                 |
-|-----+--------------------+---------------------------------------------|
-| o   | Open chat buffer   | Opens the main chat interface               |
-| m   | Swap model         | Switch between available Ollama models      |
-| h   | Help assistant     | Display help message                        |
-| l   | Send region        | Send selected text directly to model        |
-| r   | Refactor code      | Get code refactoring suggestions            |
-| g   | Git commit message | Generate commit message for changes         |
-| c   | Describe code      | Get code explanation                        |
-| d   | Dictionary Lookup  | Get dictionary definition                   |
-| n   | Word synonym       | Get a synonym for the word                  |
-| p   | Proofread text     | Check text for improvements                 |
-| z   | Make concise       | Reduce wordiness while preserving meaning   |
-| e   | Custom Prompt      | Enter bespoke prompt through the minibuffer |
-| s   | Save chat          | Save the chat to a file                     |
-| x   | Kill request       | Cancel current Ollama request               |
-| q   | Quit               | Exit the menu                               |
+| Key | Action             | Description                               |
+|-----+--------------------+-------------------------------------------|
+| o   | Open chat buffer   | Opens the main chat interface             |
+| m   | Swap model         | Switch between available Ollama models    |
+| h   | Help assistant     | Display help message                      |
+| l   | Send region        | Send selected text directly to model      |
+| r   | Refactor code      | Get code refactoring suggestions          |
+| g   | Git commit message | Generate commit message for changes       |
+| c   | Describe code      | Get code explanation                      |
+| d   | Dictionary Lookup  | Get dictionary definition                 |
+| n   | Word synonym       | Get a synonym for the word                |
+| p   | Proofread text     | Check text for improvements               |
+| z   | Make concise       | Reduce wordiness while preserving meaning |
+| e   | Custom Prompt      | Prompt through minibuffer with selection  |
+| i   | Minibuffer Prompt  | Prompt through minibuffer                 |
+| s   | Save chat          | Save the chat to a file                   |
+| x   | Kill request       | Cancel current Ollama request             |
+| q   | Quit               | Exit the menu                             |
 
 * Summary of my design ethos
 
