@@ -1,6 +1,6 @@
 (setq ollama-buddy-command-definitions
       '(
-        ;; Geneal Commands
+        ;; General Commands
         (open-chat
          :key ?o
          :description "Open chat buffer"
@@ -99,12 +99,12 @@
          :prompt "Rework the text to sound as if a spell was being cast, the liberal use of pseudo/pig latin is allowed:"
          :action (lambda () (ollama-buddy--send-with-command 'spellcasting)))
 
-        (rewrite-as-watcher-report
+        (rewrite-as-watcher-handbook
          :key ?w
-         :description "Make it a Watcher's report"
+         :description "Make it from the Watcher's handbook"
          :model nil
-         :prompt "Transform this text into a formal Watcher's Council report documenting supernatural events and Slayer activity:"
-         :action (lambda () (ollama-buddy--send-with-command 'rewrite-as-watcher-report)))
+         :prompt "Transform this text into a reference found in the Watcher's handbook which is a Watcher's training manual:"
+         :action (lambda () (ollama-buddy--send-with-command 'rewrite-as-watcher-handbook)))
 
         (grr-argh-ify
          :key ?g

@@ -1,6 +1,6 @@
 (setq ollama-buddy-command-definitions
       '(
-        ;; Geneal Commands
+        ;; Genreal Commands
         (open-chat
          :key ?o
          :description "Open chat buffer"
