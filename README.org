@@ -548,7 +548,7 @@ You can create a minimal configuration by defining only the commands you need:
 
 ** My current setup
 
-See below for how I have currently set up the default preset with specific models to achieve as much of a fast/accurate enough response:
+See below for how I have currently set up the default preset with specific models to achieve as much of a fast/accurate response:
 
 #+begin_src elisp
 (setq ollama-buddy-command-definitions
