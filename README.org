@@ -1014,6 +1014,18 @@ Here is a kanban of the features that will be (hopefully) added in due course, a
 
 * Testing
 
+** Models
+
+These are the models I currently have loaded and are testing:
+
+- qwen2.5-coder:7b
+- deepseek-r1:7b
+- qwen2.5-coder:3b
+- starcoder2:3b
+- deepseek-r1:1.5b
+- llama3.2:1b
+- tinyllama:latest
+
 ** elisp structure to org-table
 
 *** prompt
