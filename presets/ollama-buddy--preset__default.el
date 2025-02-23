@@ -4,12 +4,7 @@
         (open-chat
          :key ?o
          :description "Open chat buffer"
-         :action (lambda ()
-                   (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
-                   (when (= (buffer-size) 0)
-                     (insert (ollama-buddy--create-intro-message))
-                     (ollama-buddy--show-prompt))
-                   (goto-char (point-max))))
+         :action ollama-buddy--open-chat)
         
         (show-models
          :key ?v
