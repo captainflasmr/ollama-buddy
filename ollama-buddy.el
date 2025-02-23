@@ -564,10 +564,30 @@ Each command is defined with:
 
 (defun ollama-buddy--create-intro-message ()
   "Create welcome message."
-  (let* ((models-section (when (ollama-buddy--ollama-running)
-                           (format "Models available:\n\n%s\n\n"
-                                   (mapconcat (lambda (m) (format "  %s" m))
-                                              (ollama-buddy--get-models) "\n"))))
+  (let* ((models-section
+          (when (ollama-buddy--ollama-running)
+            (let* ((models (ollama-buddy--get-models))
+                   (total (length models))
+                   (rows (ceiling (/ total 2.0)))  ; 2 columns, so divide by 2
+                   (formatted-models
+                    (cl-loop for row below rows
+                            collect
+                            (cl-loop for col below 2
+                                    for idx = (+ (* col rows) row)
+                                    when (< idx total)
+                                    collect (nth idx models))))
+                   (max-width (apply #'max
+                                   (mapcar #'length models)))
+                   (format-str (format "  %%-%ds  %%s" max-width)))  ; Create format string with fixed width
+              (concat "Models available:\n\n"
+                     (mapconcat
+                      (lambda (row)
+                        (format format-str
+                                (or (car row) "")
+                                (or (cadr row) "")))
+                      formatted-models
+                      "\n")
+                     "\n\n"))))
          (message-text
           (concat
            "\n\n"
