@@ -731,7 +731,7 @@ My ideas are to also add in some fun presets something like:
 - shakespeare
 - Janeway - starfleet captain
 
-* Model Selection and Fallback Logic in Ollama Buddy
+* Model Selection and Fallback Logic
 
 ** Overview
 
