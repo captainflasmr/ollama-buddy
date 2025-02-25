@@ -25,7 +25,7 @@ The name is just something a little bit fun and it seems to always remind me of 
     #+begin_src elisp
      (use-package ollama-buddy
        :load-path "path/to/ollama-buddy"
-       :bind ("C-c o" . ollama-buddy-menu)
+       :bind ("C-c o" . ollama-buddy-menu))
     #+end_src
 
     OR (when on MELPA)
@@ -33,7 +33,7 @@ The name is just something a little bit fun and it seems to always remind me of 
     #+begin_src elisp
      (use-package ollama-buddy
        :ensure t
-       :bind ("C-c o" . ollama-buddy-menu)
+       :bind ("C-c o" . ollama-buddy-menu))
     #+end_src
 
 - *Interactive Command Menu*
@@ -244,7 +244,7 @@ OR
 #+begin_src elisp
  (use-package ollama-buddy
    :load-path "path/to/ollama-buddy"
-   :bind ("C-c o" . ollama-buddy-menu)
+   :bind ("C-c o" . ollama-buddy-menu))
 #+end_src
 
 ** OR (when on MELPA)
@@ -252,7 +252,7 @@ OR
 #+begin_src emacs-lisp
 (use-package ollama-buddy
   :ensure t
-  :bind ("C-c o" . ollama-buddy-menu)
+  :bind ("C-c o" . ollama-buddy-menu))
 #+end_src
 
 * Usage
