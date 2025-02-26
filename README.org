@@ -1137,7 +1137,7 @@ Given the following elisp data structure can you extract out an org table that c
 
 To the best of my knowledge, there are currently a few Emacs packages related to Ollama, though the ecosystem is still relatively young:
 
-1. *llm.el* (by Jacob Hacker)
+1. *llm.el* (by Andrew Hyatt)
    - A more general LLM interface package that supports Ollama as one of its backends
    - GitHub: https://github.com/ahyatt/llm
    - Provides a more abstracted approach to interacting with language models
