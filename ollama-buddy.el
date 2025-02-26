@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama Buddy: Your Friendly AI Assistant -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.2.0
+;; Version: 0.2.1
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -129,6 +129,55 @@ When nil, status checks only occur during user interactions."
 (defvar ollama-buddy--status "Idle"
   "Current status of the Ollama request.")
 
+(defvar ollama-buddy--model-letters nil
+  "Alist mapping letters to model names.")
+
+(defvar ollama-buddy--multishot-sequence nil
+  "Current sequence of models for multishot execution.")
+
+(defvar ollama-buddy--multishot-progress 0
+  "Progress through current multishot sequence.")
+
+(defvar ollama-buddy--multishot-prompt nil
+  "The prompt being used for the current multishot sequence.")
+
+(defun ollama-buddy--assign-model-letters ()
+  "Assign letters to available models and update the intro message."
+  (setq ollama-buddy--model-letters
+        (cl-loop for model in (ollama-buddy--get-models)
+                 for letter across "abcdefghijklmnopqrstuvwxyz"
+                 collect (cons letter model))))
+
+(defun ollama-buddy--format-models-with-letters ()
+  "Format models with letter assignments for display."
+  (when-let* ((models-alist ollama-buddy--model-letters)
+              (total (length models-alist))
+              (rows (ceiling (/ total 2.0))))
+    (let* ((formatted-pairs
+            (cl-loop for row below rows
+                     collect
+                     (cl-loop for col below 2
+                              for idx = (+ (* col rows) row)
+                              when (< idx total)
+                              collect (nth idx models-alist))))
+           (max-width (apply #'max
+                             (mapcar (lambda (pair)
+                                       (length (cdr pair)))
+                                     models-alist)))
+           (format-str (format "  (%%c) %%-%ds  %%s" max-width)))
+      (concat "Models available:\n\n"
+              (mapconcat
+               (lambda (row)
+                 (format format-str
+                         (caar row)
+                         (or (cdar row) "")
+                         (if (cdr row)
+                             (format "(%c) %s" (caadr row) (cdadr row))
+                           "")))
+               formatted-pairs
+               "\n")
+              "\n\n"))))
+
 (defun ollama-buddy--check-status ()
   "Check Ollama status with caching for better performance."
   (let ((current-time (float-time)))
@@ -190,6 +239,7 @@ ACTUAL-MODEL is the model being used instead."
                                    "No Model")
                                status)
                        'face '(:inherit bold))
+           (ollama-buddy--update-multishot-status)
            (when (and original-model actual-model (not (string= original-model actual-model)))
              (propertize (format " [Using %s instead of %s]" actual-model original-model)
                          'face '(:foreground "orange" :weight bold)))))))
@@ -203,17 +253,18 @@ ACTUAL-MODEL is the model being used instead."
   "Initialize the chat buffer and check Ollama status."
   (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
     (when (= (buffer-size) 0)
-      (ollama-buddy--check-status) ; Initial status check
+      (ollama-buddy--check-status)
       (insert (ollama-buddy--create-intro-message))
       (ollama-buddy--show-prompt))
+    (local-set-key (kbd "C-c C-l") #'ollama-buddy--multishot-prompt)
     (ollama-buddy--update-status "Idle")))
 
 (defun ollama-buddy--stream-filter (_proc output)
-  "Process stream OUTPUT from PROC while preserving cursor position."
+  "Process stream OUTPUT while preserving cursor position."
   (ollama-buddy--update-status "Processing...")
   (when-let* ((json-str (replace-regexp-in-string "^[^\{]*" "" output))
               (json-data (and (> (length json-str) 0) (json-read-from-string json-str)))
-              (text (alist-get 'content  (alist-get 'message json-data))))
+              (text (alist-get 'content (alist-get 'message json-data))))
     (with-current-buffer ollama-buddy--chat-buffer
       (let* ((inhibit-read-only t)
              (window (get-buffer-window ollama-buddy--chat-buffer t))
@@ -223,13 +274,51 @@ ACTUAL-MODEL is the model being used instead."
         (save-excursion
           (goto-char (point-max))
           (insert text)
+
+          ;; lets push to a register if multishot is enabled
+          (when ollama-buddy--multishot-sequence
+            (let* ((reg-char
+                    (aref ollama-buddy--multishot-sequence 
+                          ollama-buddy--multishot-progress))
+                   (current (get-register reg-char))
+                   (new-content (concat (if (stringp current) current "") text)))
+              (set-register reg-char new-content)))
+          
+          ;; Check if this response is complete
           (when (eq (alist-get 'done json-data) t)
             (insert "\n\n")
             (insert (propertize "[" 'face '(:inherit bold)))
             (insert (propertize ollama-buddy--current-model 'face `(:inherit bold)))
             (insert (propertize ": FINISHED]" 'face '(:inherit bold)))
-            (ollama-buddy--show-prompt)
-            (ollama-buddy--update-status "Finished")))
+            
+            ;; Handle multishot progression here
+            (if ollama-buddy--multishot-sequence
+                (progn
+                  ;; Increment progress
+                  (setq ollama-buddy--multishot-progress 
+                        (1+ ollama-buddy--multishot-progress))
+                  ;; Check if there are more models to process
+                  (if (< ollama-buddy--multishot-progress 
+                         (length ollama-buddy--multishot-sequence))
+                      ;; Process next model after a short delay
+                      (run-with-timer 0.5 nil 
+                                      (lambda ()
+                                        (let* ((current-letter 
+                                                (aref ollama-buddy--multishot-sequence 
+                                                      ollama-buddy--multishot-progress))
+                                               (next-model 
+                                                (cdr (assoc current-letter 
+                                                            ollama-buddy--model-letters))))
+                                          (when next-model
+                                            (ollama-buddy--send 
+                                             ollama-buddy--multishot-prompt 
+                                             next-model)))))
+                    ;; End of sequence
+                    (progn
+                      (ollama-buddy--update-status "Multi Finished")
+                      (ollama-buddy--show-prompt))))
+              ;; Not in multishot mode, just show the prompt
+              (ollama-buddy--show-prompt))))
         (when window
           (if at-end
               (set-window-point window (point-max))
@@ -237,10 +326,12 @@ ACTUAL-MODEL is the model being used instead."
           (set-window-start window old-window-start t))))))
 
 (defun ollama-buddy--stream-sentinel (_proc event)
-  "Handle stream completion for PROC with EVENT status."
+  "Handle stream completion EVENT."
   (when-let* ((status (cond ((string-match-p "finished" event) "Completed")
                             ((string-match-p "\\(?:deleted\\|connection broken\\)" event) "Interrupted")))
               (msg (format "\n\n[Stream %s]" status)))
+    (setq ollama-buddy--multishot-sequence nil
+          ollama-buddy--multishot-prompt nil)
     (with-current-buffer ollama-buddy--chat-buffer
       (let ((inhibit-read-only t))
         (goto-char (point-max))
@@ -432,6 +523,8 @@ Each command is defined with:
                                       (search-forward ":")
                                       (point)))
                             (query-text (string-trim (buffer-substring-no-properties bounds (point)))))
+                       (setq ollama-buddy--multishot-sequence nil
+                             ollama-buddy--multishot-prompt nil)
                        (ollama-buddy--send query-text model))))
     (local-set-key (kbd "C-c C-k") 
                    (lambda ()
@@ -563,31 +656,11 @@ Each command is defined with:
     (error nil)))
 
 (defun ollama-buddy--create-intro-message ()
-  "Create welcome message."
+  "Create welcome message with lettered model assignments."
+  (ollama-buddy--assign-model-letters)
   (let* ((models-section
           (when (ollama-buddy--ollama-running)
-            (let* ((models (ollama-buddy--get-models))
-                   (total (length models))
-                   (rows (ceiling (/ total 2.0)))  ; 2 columns, so divide by 2
-                   (formatted-models
-                    (cl-loop for row below rows
-                            collect
-                            (cl-loop for col below 2
-                                    for idx = (+ (* col rows) row)
-                                    when (< idx total)
-                                    collect (nth idx models))))
-                   (max-width (apply #'max
-                                   (mapcar #'length models)))
-                   (format-str (format "  %%-%ds  %%s" max-width)))  ; Create format string with fixed width
-              (concat "Models available:\n\n"
-                     (mapconcat
-                      (lambda (row)
-                        (format format-str
-                                (or (car row) "")
-                                (or (cadr row) "")))
-                      formatted-models
-                      "\n")
-                     "\n\n"))))
+            (ollama-buddy--format-models-with-letters)))
          (message-text
           (concat
            "\n\n"
@@ -601,13 +674,81 @@ Each command is defined with:
            models-section
            "Quick Tips:\n\n"
            "- Ask me anything! C-c C-c to send\n"
+           "- Multi-model shot? C-c C-l\n"
            "- Change your mind? C-c C-k to cancel\n"
            "- Change your model? C-c C-m\n"
            "- In another buffer? M-x ollama-buddy-menu")))
-
-    ;; Make the header and response sections bold without overriding other properties
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
+
+(defun ollama-buddy--update-multishot-status ()
+  "Update status line to show multishot progress."
+  (when ollama-buddy--multishot-sequence
+    (let* ((sequence-str ollama-buddy--multishot-sequence)
+           (progress ollama-buddy--multishot-progress)
+           (completed (substring sequence-str 0 progress))
+           (remaining (substring sequence-str progress)))
+      (concat (propertize "[Multishot: " 'face '(:weight bold))
+              (propertize completed 'face '(:weight bold))
+              (propertize remaining 'face '(:weight normal))
+              "]"))))
+
+
+(defun ollama-buddy--multishot-send (prompt sequence)
+  "Send PROMPT to multiple models specified by SEQUENCE of letters."
+  ;; Store sequence and prompt for use across multiple calls
+  (setq ollama-buddy--multishot-sequence sequence
+        ollama-buddy--multishot-prompt prompt
+        ollama-buddy--multishot-progress 0)
+  ;; reset registers
+  (mapc (lambda (ch)
+          (set-register ch ""))
+        sequence)
+    ;; Start with the first model in sequence
+  (ollama-buddy--send-next-in-sequence))
+
+(defun ollama-buddy--send-next-in-sequence ()
+  "Send prompt to next model in the multishot sequence."
+  (prin1 ollama-buddy--multishot-sequence)
+  (prin1 ollama-buddy--multishot-prompt)
+  (when (and ollama-buddy--multishot-sequence
+             ollama-buddy--multishot-prompt
+             (< ollama-buddy--multishot-progress 
+                (length ollama-buddy--multishot-sequence)))
+    (let* ((current-letter (aref ollama-buddy--multishot-sequence 
+                                 ollama-buddy--multishot-progress))
+           (model (cdr (assoc current-letter ollama-buddy--model-letters))))
+      (when model
+        (ollama-buddy--update-status "Multi Start")
+        (ollama-buddy--send ollama-buddy--multishot-prompt model)))))
+
+(defun ollama-buddy--multishot-prompt ()
+  "Prompt for and execute multishot sequence."
+  (interactive)
+  (let* ((available-letters (mapcar #'car ollama-buddy--model-letters))
+         (prompt (concat
+                  "Enter model sequence - available ["
+                  available-letters "]"))
+         (input-chars nil)
+         char)
+    (while (progn
+             (setq char (read-key prompt))
+             (and char
+                  (not (eq char ?\r))
+                  (not (eq char ?\n))
+                  (memq char available-letters)))
+      (push char input-chars)
+      (setq prompt (concat "Enter model sequence: " 
+                           (concat (reverse input-chars)))))
+    (when input-chars
+      (let* ((sequence (concat (reverse input-chars)))
+             (bounds (save-excursion
+                       (search-backward ">> PROMPT:")
+                       (forward-char 10)
+                       (point)))
+             (query-text (string-trim 
+                          (buffer-substring-no-properties bounds (point)))))
+        (ollama-buddy--multishot-send query-text sequence)))))
 
 ;;;###autoload
 ;;;###autoload

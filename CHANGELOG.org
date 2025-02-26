@@ -11,6 +11,16 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-02-26> *0.2.1*
+
+added multishot execution with model selection
+
+- Assign letters to models for quick selection
+- Implement multishot mode for sequential requests to multiple models
+- Store responses per model in registers named after assigned letters
+- Display multishot progress in status
+- Bind `C-c C-l` to trigger multishot prompt
+
 ** <2025-02-19> *0.2.0*
 
 Improved prompt handling in chat buffer and simplified setup

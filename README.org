@@ -150,6 +150,16 @@ Open up 20,000 Leagues from Project Gutenberg, select a paragraph, load a custom
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_006.gif]]
 
+** Multishot
+
+- PROMPT>> how many fingers do I have?
+
+  send to multiple models, any difference in output?
+
+  Also they are now available in the equivalent letter named registers
+
+  
+
 ** *TODO* Code queries
 
 Taken from the examples in : https://learn.adacore.com/labs/intro-to-ada/chapters/generics.html#generic-list
@@ -192,6 +202,45 @@ Can you write unit tests for the generated code
 
 * Whats New
 
+** <2025-02-26> *0.2.1*
+
+added multishot execution with model selection  (See multishot section for description of new feature!)
+
+- Assign letters to models for quick selection
+- Implement multishot mode for sequential requests to multiple models
+- Store responses per model in registers named after assigned letters
+- Display multishot progress in status
+- Bind `C-c C-l` to trigger multishot prompt
+
+With the new *multishot execution*, you can now send a prompt to multiple models in sequence, compare their responses, and easily navigate between them.  
+
+*Letter-Based Model Shortcuts*
+
+Instead of manually selecting models, each available model is now assigned a *letter* (e.g., =(a) mistral=, =(b) gemini=). This allows for quick model selection when sending prompts or initiating a *multishot sequence*.
+
+*Multishot Execution (=C-c C-l=)*
+
+Ever wondered how different models would answer the same question? With *Multishot Mode*, you can:
+
+- Send your prompt to a sequence of models in one shot.  
+- Track progress as responses come in.  
+- Store each model’s response in a *register*, making it easy to reference later, each assigned model letter corresponds to the named register.
+
+*Status Updates*
+
+When running a multishot execution, the status now updates dynamically:
+
+- *"Multi Start"* when the sequence begins.  
+- *"Processing..."* during responses.  
+- *"Multi Finished"* when all models have responded.  
+
+*How It Works*
+
+1. Press *=C-c C-l=* to start a multishot session.  
+2. Type a sequence of model letters (e.g., =abc= to use models =mistral=, =gemini=, and =llama=).  
+3. The selected models will process the prompt *one by one*.  
+4. The responses will be saved to registers of the same letter names for recalling later.
+  
 ** <2025-02-19> *0.2.0*
 
 Improved prompt handling in chat buffer and simplified setup
