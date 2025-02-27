@@ -247,7 +247,7 @@ ACTUAL-MODEL is the model being used instead."
 (defun ollama-buddy--ensure-running ()
   "Ensure Ollama is running and update status accordingly."
   (unless (ollama-buddy--check-status)
-    (user-error "Ollama is not running. Please start Ollama server")))
+    (user-error "Ollama is not running.  Please start Ollama server")))
 
 (defun ollama-buddy--initialize-chat-buffer ()
   "Initialize the chat buffer and check Ollama status."
@@ -278,7 +278,7 @@ ACTUAL-MODEL is the model being used instead."
           ;; lets push to a register if multishot is enabled
           (when ollama-buddy--multishot-sequence
             (let* ((reg-char
-                    (aref ollama-buddy--multishot-sequence 
+                    (aref ollama-buddy--multishot-sequence
                           ollama-buddy--multishot-progress))
                    (current (get-register reg-char))
                    (new-content (concat (if (stringp current) current "") text)))
@@ -295,23 +295,23 @@ ACTUAL-MODEL is the model being used instead."
             (if ollama-buddy--multishot-sequence
                 (progn
                   ;; Increment progress
-                  (setq ollama-buddy--multishot-progress 
+                  (setq ollama-buddy--multishot-progress
                         (1+ ollama-buddy--multishot-progress))
                   ;; Check if there are more models to process
-                  (if (< ollama-buddy--multishot-progress 
+                  (if (< ollama-buddy--multishot-progress
                          (length ollama-buddy--multishot-sequence))
                       ;; Process next model after a short delay
-                      (run-with-timer 0.5 nil 
+                      (run-with-timer 0.5 nil
                                       (lambda ()
-                                        (let* ((current-letter 
-                                                (aref ollama-buddy--multishot-sequence 
+                                        (let* ((current-letter
+                                                (aref ollama-buddy--multishot-sequence
                                                       ollama-buddy--multishot-progress))
-                                               (next-model 
-                                                (cdr (assoc current-letter 
+                                               (next-model
+                                                (cdr (assoc current-letter
                                                             ollama-buddy--model-letters))))
                                           (when next-model
-                                            (ollama-buddy--send 
-                                             ollama-buddy--multishot-prompt 
+                                            (ollama-buddy--send
+                                             ollama-buddy--multishot-prompt
                                              next-model)))))
                     ;; End of sequence
                     (progn
@@ -440,12 +440,12 @@ ACTUAL-MODEL is the model being used instead."
      :action (lambda ()
                (when-let ((prefix (read-string "Enter prompt prefix: " nil nil nil t)))
                  (unless (use-region-p)
-                   (user-error "No region selected. Select text to use with prompt"))
+                   (user-error "No region selected.  Select text to use with prompt"))
                  (unless (not (string-empty-p prefix))
                    (user-error "Input string is empty"))
                  (ollama-buddy--send
                   (concat prefix "\n\n"
-                          (buffer-substring-no-properties 
+                          (buffer-substring-no-properties
                            (region-beginning) (region-end)))))))
     
     (minibuffer-prompt
@@ -510,14 +510,14 @@ Each command is defined with:
 (defun ollama-buddy--show-prompt ()
   "Show the prompt with optionally a MODEL."
   (interactive)
-  (let* ((model (or ollama-buddy--current-model 
-                    ollama-buddy-default-model 
+  (let* ((model (or ollama-buddy--current-model
+                    ollama-buddy-default-model
                     "No model selected")))
-    (insert (format "\n\n%s\n\n%s %s" 
+    (insert (format "\n\n%s\n\n%s %s"
                     (propertize (alist-get 'header ollama-buddy--separators) 'face '(:inherit bold))
                     (propertize model 'face `(:weight bold))
                     (propertize ">> PROMPT: " 'face '(:inherit bold))))
-    (local-set-key (kbd "C-c C-c") 
+    (local-set-key (kbd "C-c C-c")
                    (lambda ()
                      (interactive)
                      (let* ((bounds (save-excursion
@@ -528,11 +528,11 @@ Each command is defined with:
                        (setq ollama-buddy--multishot-sequence nil
                              ollama-buddy--multishot-prompt nil)
                        (ollama-buddy--send query-text model))))
-    (local-set-key (kbd "C-c C-k") 
+    (local-set-key (kbd "C-c C-k")
                    (lambda ()
                      (interactive)
                      (delete-process ollama-buddy--active-process)))
-    (local-set-key (kbd "C-c C-m") 
+    (local-set-key (kbd "C-c C-m")
                    (lambda ()
                      (interactive)
                      (ollama-buddy--swap-model)))))
@@ -541,11 +541,11 @@ Each command is defined with:
   "Send request using configuration from COMMAND-NAME."
   (let* ((prompt (or (ollama-buddy--get-command-prop command-name :prompt))))
     (when (and prompt (not (use-region-p)))
-      (user-error "No region selected. Select text to use with prompt"))
+      (user-error "No region selected.  Select text to use with prompt"))
     (let* ((prompt-with-selection (concat
                                    (when prompt (concat prompt "\n\n"))
                                    (if (use-region-p)
-                                       (buffer-substring-no-properties 
+                                       (buffer-substring-no-properties
                                         (region-beginning) (region-end))
                                      "")))
            (model (ollama-buddy--get-command-prop command-name :model)))
@@ -706,7 +706,7 @@ Each command is defined with:
   (mapc (lambda (ch)
           (set-register ch ""))
         sequence)
-    ;; Start with the first model in sequence
+  ;; Start with the first model in sequence
   (ollama-buddy--send-next-in-sequence))
 
 (defun ollama-buddy--send-next-in-sequence ()
@@ -715,9 +715,9 @@ Each command is defined with:
   (prin1 ollama-buddy--multishot-prompt)
   (when (and ollama-buddy--multishot-sequence
              ollama-buddy--multishot-prompt
-             (< ollama-buddy--multishot-progress 
+             (< ollama-buddy--multishot-progress
                 (length ollama-buddy--multishot-sequence)))
-    (let* ((current-letter (aref ollama-buddy--multishot-sequence 
+    (let* ((current-letter (aref ollama-buddy--multishot-sequence
                                  ollama-buddy--multishot-progress))
            (model (cdr (assoc current-letter ollama-buddy--model-letters))))
       (when model
@@ -740,7 +740,7 @@ Each command is defined with:
                   (not (eq char ?\n))
                   (memq char available-letters)))
       (push char input-chars)
-      (setq prompt (concat "Enter model sequence: " 
+      (setq prompt (concat "Enter model sequence: "
                            (concat (reverse input-chars)))))
     (when input-chars
       (let* ((sequence (concat (reverse input-chars)))
@@ -748,7 +748,7 @@ Each command is defined with:
                        (search-backward ">> PROMPT:")
                        (forward-char 10)
                        (point)))
-             (query-text (string-trim 
+             (query-text (string-trim
                           (buffer-substring-no-properties bounds (point)))))
         (ollama-buddy--multishot-send query-text sequence)))))
 
@@ -758,7 +758,7 @@ Each command is defined with:
   "Display Ollama Buddy menu."
   (interactive)
   (let ((ollama-status (ollama-buddy--check-status)))  ; Store the status check result
-    (ollama-buddy--update-status 
+    (ollama-buddy--update-status
      (if ollama-status "Menu opened - Ready" "Menu opened - Ollama offline"))
     (when-let* ((items (mapcar (lambda (cmd-def)
                                  (cons (plist-get (cdr cmd-def) :key)
