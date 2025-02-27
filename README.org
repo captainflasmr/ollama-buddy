@@ -156,9 +156,11 @@ Open up 20,000 Leagues from Project Gutenberg, select a paragraph, load a custom
 
   send to multiple models, any difference in output?
 
-  Also they are now available in the equivalent letter named registers
+  Also they are now available in the equivalent letter named registers, so lets pull those registers!
 
-  
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_007.gif]]  
 
 ** *TODO* Code queries
 
@@ -212,7 +214,7 @@ added multishot execution with model selection  (See multishot section for descr
 - Display multishot progress in status
 - Bind `C-c C-l` to trigger multishot prompt
 
-With the new *multishot execution*, you can now send a prompt to multiple models in sequence, compare their responses, and easily navigate between them.  
+With the new *multishot mode*, you can now send a prompt to multiple models in sequence, and compare their responses, the results are also available in named registers.
 
 *Letter-Based Model Shortcuts*
 
@@ -236,10 +238,10 @@ When running a multishot execution, the status now updates dynamically:
 
 *How It Works*
 
-1. Press *=C-c C-l=* to start a multishot session.  
+1. *=C-c C-l=* to start a multishot session in the chat buffer.
 2. Type a sequence of model letters (e.g., =abc= to use models =mistral=, =gemini=, and =llama=).  
 3. The selected models will process the prompt *one by one*.  
-4. The responses will be saved to registers of the same letter names for recalling later.
+4. The responses will be saved to registers of the same named letter for recalling later.
   
 ** <2025-02-19> *0.2.0*
 

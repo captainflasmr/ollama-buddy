@@ -318,7 +318,9 @@ ACTUAL-MODEL is the model being used instead."
                       (ollama-buddy--update-status "Multi Finished")
                       (ollama-buddy--show-prompt))))
               ;; Not in multishot mode, just show the prompt
-              (ollama-buddy--show-prompt))))
+              (progn
+                (ollama-buddy--show-prompt)
+                (ollama-buddy--update-status "Finished")))))
         (when window
           (if at-end
               (set-window-point window (point-max))
