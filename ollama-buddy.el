@@ -942,7 +942,6 @@ Each command is defined with:
         (ollama-buddy--multishot-send query-text sequence)))))
 
 ;;;###autoload
-;;;###autoload
 (defun ollama-buddy-menu ()
   "Display Ollama Buddy menu."
   (interactive)

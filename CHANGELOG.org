@@ -11,6 +11,18 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-02-27> *0.2.2*
+
+Added support for role-based presets
+
+- Introduced `ollama-buddy-roles-directory` for storing role preset files.
+- Implemented interactive functions to manage roles:
+  - `ollama-buddy-roles-switch-role`
+  - `ollama-buddy-role-creator-create-new-role`
+  - `ollama-buddy-roles-open-directory`
+- Added ability to create and switch between role-specific commands.
+- Updated menu commands to include role management options.
+
 ** <2025-02-26> *0.2.1*
 
 added multishot execution with model selection

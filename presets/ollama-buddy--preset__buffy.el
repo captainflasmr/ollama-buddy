@@ -1,15 +1,15 @@
+;; ollama-buddy preset for role: buffy
+;; Generated manually
+
+(require 'ollama-buddy)
+
 (setq ollama-buddy-command-definitions
       '(
         ;; General Commands
         (open-chat
          :key ?o
          :description "Open chat buffer"
-         :action (lambda ()
-                   (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
-                   (when (= (buffer-size) 0)
-                     (insert (ollama-buddy--create-intro-message))
-                     (ollama-buddy--show-prompt))
-                   (goto-char (point-max))))
+         :action ollama-buddy--open-chat)
         
         (show-models
          :key ?v
@@ -35,8 +35,26 @@
          :description "Send region"
          :action (lambda () (ollama-buddy--send-with-command 'send-region)))
 
-        ;; Custom supernatural text transformations
+        (switch-role
+         :key ?R
+         :description "Switch roles"
+         :model nil
+         :action ollama-buddy-roles-switch-role)
         
+        (create-role
+         :key ?N
+         :description
+         "Create new role"
+         :model nil
+         :action ollama-buddy-role-creator-create-new-role)
+        
+        (open-roles-directory
+         :key ?D
+         :description "Open roles directory"
+         :model nil
+         :action ollama-buddy-roles-open-directory)
+
+        ;; Custom supernatural text transformations
         (slayer-sass
          :key ?f
          :description "Add witty comebacks"

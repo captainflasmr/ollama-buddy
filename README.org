@@ -162,6 +162,18 @@ Open up 20,000 Leagues from Project Gutenberg, select a paragraph, load a custom
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_007.gif]]  
 
+** Role Switching
+
+Add some text to the scratch buffer:
+
+The quick brown fox jumps over the lazy dog
+
+Show the changing of roles and how they affect the menu and hence the commands available.
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_008.gif]]  
+
 ** *TODO* Code queries
 
 Taken from the examples in : https://learn.adacore.com/labs/intro-to-ada/chapters/generics.html#generic-list
@@ -204,9 +216,75 @@ Can you write unit tests for the generated code
 
 * Whats New
 
+** <2025-02-27> *0.2.2*
+
+Added support for role-based presets
+
+- Introduced `ollama-buddy-roles-directory` for storing role preset files.
+- Implemented interactive functions to manage roles:
+  - `ollama-buddy-roles-switch-role`
+  - `ollama-buddy-role-creator-create-new-role`
+  - `ollama-buddy-roles-open-directory`
+- Added ability to create and switch between role-specific commands.
+- Updated menu commands to include role management options.
+
+This enhancement allows you to create, switch, and manage role-specific command configurations, which basically generates differing menu layouts and hence command options based on your context, making your workflow more personalized and efficient.  
+
+*What Are Role-Based Presets?*
+
+Roles in Ollama Buddy are essentially *profiles* tailored to specific tasks. Imagine you're using Ollama Buddy for:  
+
+- *Coding assistance* with one set of prompts
+- *Creative writing* with a different tone and response style
+- *Generating Buffy Style Quips* - just a fun one!
+
+With this update, you can now create presets for each of these contexts and switch between them seamlessly without manually reconfiguring settings every time. On each switch of context and hence role, a new ollama buddy menu will be generated with the associated keybinding attached to the relevant context commands.
+
+*Key Features*
+
+*1. Store Your Custom Roles*
+
+A new directory =ollama-buddy-roles-directory= (defaulting to =~/.emacs.d/ollama-buddy-presets/=) now holds your role presets. Each role is saved as an =.el= file containing predefined *commands*, *shortcuts*, and *model preferences*.  
+
+*2. Easily Switch Between Roles*
+
+With =M-x ollama-buddy-roles-switch-role= you can pick from available role presets and swap effortlessly between them (or use the menu item from =ollama-buddy-menu=)
+
+*3. Create Custom Roles with Unique Commands*
+
+You can now define *custom commands* for each role with =M-x ollama-buddy-role-creator-create-new-role= (or the menu item from =ollama-buddy-menu=)
+
+This interactive function allows you to:  
+
+- Assign menu shortcuts to commands  
+- Describe command behaviour  
+- Set a default AI model  
+- Define a system prompt for guiding responses  
+
+Once saved, your new role is ready to load anytime!  
+
+*4. Open Role Directory in Dired*
+
+Need to tweak a role manually? A simple, run =M-x ollama-buddy-roles-open-directory= or of course also from the =ollama-buddy-menu= which opens the presets folder in *dired*, where you can quickly edit, copy, or delete role configurations.
+
+*5. Preconfigured presets are available if you'd like to use a ready-made setup.*
+
+- ollama-buddy--preset__buffy.el
+- ollama-buddy--preset__default.el
+- ollama-buddy--preset__developer.el
+- ollama-buddy--preset__janeway.el
+- ollama-buddy--preset__translator.el
+- ollama-buddy--preset__writer.el
+
+If these files are put in the =ollama-buddy-roles-directory= then the role selection menu will pass through completing-read, and prsent the following:
+
+{buffy | default | developer | janeway | translator | writer}
+
+With the selection regenerating the =ollama-buddy-menu= accordingly, and off you go.
+
 ** <2025-02-26> *0.2.1*
 
-added multishot execution with model selection  (See multishot section for description of new feature!)
+Added multishot execution with model selection  (See multishot section for description of new feature!)
 
 - Assign letters to models for quick selection
 - Implement multishot mode for sequential requests to multiple models
@@ -413,6 +491,36 @@ qwen2.5-coder:7b >> PROMPT:
 |___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|
  #+end_src
 
+* Interactive functions
+
+#+begin_src emacs-lisp :results table :colnames '("Command" "Description") :exports results
+  (let ((rows))
+    (mapatoms
+     (lambda (symbol)
+       (when (and (string-match "^ollama-buddy-" (symbol-name symbol))
+                  (commandp symbol))  ;; Check if it's an interactive command
+         (push `(,symbol
+                 ,(car
+                   (split-string
+                    (or (documentation symbol)
+                        "")
+                    "\n")))
+               rows))))
+    rows)
+#+end_src
+
+#+RESULTS:
+| Command                                   | Description                                                  |
+|-------------------------------------------+--------------------------------------------------------------|
+| ollama-buddy-roles-switch-role            | Switch to a different ollama-buddy role.                     |
+| ollama-buddy-disable-monitor              | Disable background connection monitoring.                    |
+| ollama-buddy-enable-monitor               | Enable background connection monitoring.                     |
+| ollama-buddy-role-creator-create-new-role | Create a new role interactively.                             |
+| ollama-buddy-roles-open-directory         | Open the ollama-buddy roles directory in Dired.              |
+| ollama-buddy-menu                         | Display Ollama Buddy menu.                                   |
+| ollama-buddy-roles-create-directory       | Create the ollama-buddy roles directory if it doesn’t exist. |
+| ollama-buddy-show-model-status            | Display status of models referenced in command definitions.  |
+ 
 * Customization
 
 #+begin_src emacs-lisp :results table :colnames '("Custom variable" "Description") :exports results
@@ -437,14 +545,16 @@ qwen2.5-coder:7b >> PROMPT:
 #+end_src
 
 #+RESULTS:
-| Custom variable                        | Description                                            |
-|----------------------------------------+--------------------------------------------------------|
-| ollama-buddy-menu-columns              | Number of columns to display in the Ollama Buddy menu. |
-| ollama-buddy-host                      | Host where Ollama server is running.                   |
-| ollama-buddy-default-model             | Default Ollama model to use.                           |
-| ollama-buddy-port                      | Port where Ollama server is running.                   |
-| ollama-buddy-connection-check-interval | Interval in seconds to check Ollama connection status. |
-| ollama-buddy-command-definitions       | Comprehensive command definitions for Ollama Buddy.    |
+| Custom variable                        | Description                                                   |
+|----------------------------------------+---------------------------------------------------------------|
+| ollama-buddy-command-definitions       | Comprehensive command definitions for Ollama Buddy.           |
+| ollama-buddy-menu-columns              | Number of columns to display in the Ollama Buddy menu.        |
+| ollama-buddy-enable-background-monitor | Whether to enable background monitoring of Ollama connection. |
+| ollama-buddy-roles-directory           | Directory containing ollama-buddy role preset files.          |
+| ollama-buddy-host                      | Host where Ollama server is running.                          |
+| ollama-buddy-default-model             | Default Ollama model to use.                                  |
+| ollama-buddy-port                      | Port where Ollama server is running.                          |
+| ollama-buddy-connection-check-interval | Interval in seconds to check Ollama connection status.        |
 
 ** Emacs Init
 
@@ -832,7 +942,7 @@ Attached currently in this repository is a presets directory which contains the 
 | x   | Kill request              | Terminates the active processing request.                                         |
 | q   | Quit                      | Exits the Ollama Shell menu with a message.                                       |
 
-My ideas are to also add in some fun presets something like:
+Also added are the following presets:
 
 - Buffy
 - Shakespeare

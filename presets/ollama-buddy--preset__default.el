@@ -35,9 +35,24 @@
          :description "Send region"
          :action (lambda () (ollama-buddy--send-with-command 'send-region)))
 
-        (switch-role :key 82 :description "Switch roles" :model nil :action ollama-buddy-roles-switch-role)
-        (create-role :key 78 :description "Create new role" :model nil :action ollama-buddy-role-creator-create-new-role)
-        (open-roles-directory :key 68 :description "Open roles directory" :model nil :action ollama-buddy-roles-open-directory)
+        (switch-role
+         :key ?R
+         :description "Switch roles"
+         :model nil
+         :action ollama-buddy-roles-switch-role)
+        
+        (create-role
+         :key ?N
+         :description
+         "Create new role"
+         :model nil
+         :action ollama-buddy-role-creator-create-new-role)
+        
+        (open-roles-directory
+         :key ?D
+         :description "Open roles directory"
+         :model nil
+         :action ollama-buddy-roles-open-directory)
         
         ;; Specialized commands
         (refactor-code

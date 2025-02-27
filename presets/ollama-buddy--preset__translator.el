@@ -5,15 +5,54 @@
 
 (setq ollama-buddy-command-definitions
       '(
-        ;; Standard commands
-        (open-chat :key 111 :description "Open chat buffer" :model nil :action (lambda nil (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer)) (when (= (buffer-size) 0) (insert (ollama-buddy--create-intro-message))) (goto-char (point-max))))
-        (show-models :key 118 :description "View model status" :model nil :action ollama-buddy-show-model-status)
-        (switch-role :key 82 :description "Switch roles" :model nil :action ollama-buddy-roles-switch-role)
-        (create-role :key 78 :description "Create new role" :model nil :action ollama-buddy-role-creator-create-new-role)
-        (open-roles-directory :key 68 :description "Open roles directory" :model nil :action ollama-buddy-roles-open-directory)
-        (swap-model :key 109 :description "Swap model" :model nil :action (lambda nil (if (not (ollama-buddy--ollama-running)) (error "!!WARNING!! ollama server not running") (let ((new-model (completing-read "Model: " (ollama-buddy--get-models) nil t))) (setq ollama-buddy-default-model new-model) (setq ollama-buddy--current-model new-model) (ollama-buddy--update-status "Idle")))))
-        (help :key 104 :description "Help assistant" :model nil :action (lambda nil (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer)) (goto-char (point-max)) (insert (ollama-buddy--create-intro-message))))
-        (send-region :key 108 :description "Send region" :model nil :action (lambda nil (ollama-buddy--send-with-command 'send-region)))
+        ;; General Commands
+        (open-chat
+         :key ?o
+         :description "Open chat buffer"
+         :action ollama-buddy--open-chat)
+        
+        (show-models
+         :key ?v
+         :description "View model status"
+         :action ollama-buddy-show-model-status)
+        
+        (swap-model
+         :key ?m
+         :description "Swap model"
+         :action ollama-buddy--swap-model)
+        
+        (help
+         :key ?h
+         :description "Help assistant"
+         :action (lambda ()
+                   (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
+                   (goto-char (point-max))
+                   (insert (ollama-buddy--create-intro-message))
+                   (ollama-buddy--show-prompt)))
+        
+        (send-region
+         :key ?l
+         :description "Send region"
+         :action (lambda () (ollama-buddy--send-with-command 'send-region)))
+
+        (switch-role
+         :key ?R
+         :description "Switch roles"
+         :model nil
+         :action ollama-buddy-roles-switch-role)
+        
+        (create-role
+         :key ?N
+         :description
+         "Create new role"
+         :model nil
+         :action ollama-buddy-role-creator-create-new-role)
+        
+        (open-roles-directory
+         :key ?D
+         :description "Open roles directory"
+         :model nil
+         :action ollama-buddy-roles-open-directory)
 
         ;; Custom commands for this role
         (translate-to-english
