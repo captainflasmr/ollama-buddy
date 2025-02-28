@@ -174,6 +174,14 @@ Show the changing of roles and how they affect the menu and hence the commands a
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_008.gif]]  
 
+** Prompt History
+
+Just put in some queries and show that we can step back through previously input, swap models and resubmit
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_009.gif]]  
+
 ** *TODO* Code queries
 
 Taken from the examples in : https://learn.adacore.com/labs/intro-to-ada/chapters/generics.html#generic-list
@@ -215,6 +223,20 @@ Can you write unit tests for the generated code
 [[file:img/ollama-buddy-screenshot_001.jpg]]
 
 * Whats New
+
+** <2025-02-28> *0.2.3*
+
+Added Prompt History Support
+
+- Prompts are now integrated into the Emacs history mechanism which means they persist across sessions.  
+- Use =M-p= to navigate prompt history, and =M-p= / =M-n= within the minibuffer to insert previous prompts.  
+
+*Key Features*
+
+- Persistent prompt history
+- A new variable, =ollama-buddy--prompt-history=, now keeps track of past prompts. This means you can quickly recall and reuse previous queries instead of retyping them from scratch.
+- =M-p= - recall a previous prompt in the buffer which will bring up the minibuffer for prompt history selection.
+- Minibuffer =M-p= / =M-n= - Navigate through past prompts when prompted for input.
 
 ** <2025-02-27> *0.2.2*
 
@@ -1389,10 +1411,6 @@ Let's compare ollama-buddy to the existing solutions:
 Report issues on the [[https://github.com/captainflasmr/ollama-buddy/issues][GitHub Issues page]]
 
 * Bugs
-
-** DOING What if we make a request during a request is the current process cleared down?
-
-** DOING Sometimes the current request can't be cancelled
 
 * Contributing
 

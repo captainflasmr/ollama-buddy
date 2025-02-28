@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama Buddy: Your Friendly AI Assistant -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.2.1
+;; Version: 0.2.3
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -111,6 +111,9 @@ When nil, status checks only occur during user interactions."
   "Interval in seconds to check Ollama connection status."
   :type 'integer
   :group 'ollama-buddy)
+
+(defvar ollama-buddy--prompt-history nil
+  "History of prompts used in ollama-buddy.")
 
 (defvar ollama-buddy--last-status-check nil
   "Timestamp of last Ollama status check.")
@@ -403,14 +406,17 @@ ACTUAL-MODEL is the model being used instead."
   (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
     (setq header-line-format
           (concat
-           (propertize (format " [%s %s: %s]"
-                               (if (ollama-buddy--check-status) "RUNNING" "OFFLINE")
-                               (or ollama-buddy--current-model
+           (format (if (string-empty-p (ollama-buddy--update-multishot-status))
+                       " [%s%s %s: %s]"
+                     " [%s %s %s: %s]")
+                   (ollama-buddy--update-multishot-status)
+                   (propertize (if (ollama-buddy--check-status) "RUNNING" "OFFLINE")
+                               'face '(:weight bold))
+                   (propertize (or ollama-buddy--current-model
                                    ollama-buddy-default-model
                                    "No Model")
-                               status)
-                       'face '(:inherit bold))
-           (ollama-buddy--update-multishot-status)
+                               'face '(:weight bold))
+                   (propertize status 'face '(:weight bold)))
            (when (and original-model actual-model (not (string= original-model actual-model)))
              (propertize (format " [Using %s instead of %s]" actual-model original-model)
                          'face '(:foreground "orange" :weight bold)))))))
@@ -432,10 +438,13 @@ ACTUAL-MODEL is the model being used instead."
 
 (defun ollama-buddy--stream-filter (_proc output)
   "Process stream OUTPUT while preserving cursor position."
-  (ollama-buddy--update-status "Processing...")
   (when-let* ((json-str (replace-regexp-in-string "^[^\{]*" "" output))
               (json-data (and (> (length json-str) 0) (json-read-from-string json-str)))
               (text (alist-get 'content (alist-get 'message json-data))))
+    
+    (if (not (string-empty-p text))
+        (ollama-buddy--update-status "Processing..."))
+    
     (with-current-buffer ollama-buddy--chat-buffer
       (let* ((inhibit-read-only t)
              (window (get-buffer-window ollama-buddy--chat-buffer t))
@@ -696,6 +705,22 @@ Each command is defined with:
   "Get property PROP from command COMMAND-NAME."
   (plist-get (cdr (ollama-buddy--get-command-def command-name)) prop))
 
+(defun ollama-buddy--get-prompt-history-element ()
+  "Through the minibuffer, bring up the prompt history."
+  (interactive)
+  (when ollama-buddy--prompt-history
+    (let* ((bounds (save-excursion
+                     (search-backward ">> PROMPT:")
+                     (search-forward ": ")
+                     (point)))
+           (current-input (buffer-substring-no-properties bounds (point)))
+           (input
+            (read-from-minibuffer
+             "Ollama Buddy: " nil nil nil 'ollama-buddy--prompt-history)))
+      (when input
+        (delete-region bounds (point))
+        (insert input)))))
+
 (defun ollama-buddy--show-prompt ()
   "Show the prompt with optionally a MODEL."
   (interactive)
@@ -706,6 +731,8 @@ Each command is defined with:
                     (propertize (alist-get 'header ollama-buddy--separators) 'face '(:inherit bold))
                     (propertize model 'face `(:weight bold))
                     (propertize ">> PROMPT: " 'face '(:inherit bold))))
+    
+    ;; Setup command submission with history tracking
     (local-set-key (kbd "C-c C-c")
                    (lambda ()
                      (interactive)
@@ -714,9 +741,18 @@ Each command is defined with:
                                       (search-forward ":")
                                       (point)))
                             (query-text (string-trim (buffer-substring-no-properties bounds (point)))))
+                       
+                       ;; Add to history if non-empty
+                       (when (and query-text (not (string-empty-p query-text)))
+                         (add-to-history 'ollama-buddy--prompt-history query-text))
+                       
                        (setq ollama-buddy--multishot-sequence nil
                              ollama-buddy--multishot-prompt nil)
                        (ollama-buddy--send query-text model))))
+    
+    ;; Setup history navigation keys
+    (local-set-key (kbd "M-p") #'ollama-buddy--get-prompt-history-element)
+    
     (local-set-key (kbd "C-c C-k")
                    (lambda ()
                      (interactive)
@@ -864,26 +900,26 @@ Each command is defined with:
            "Hi there! and welcome to OLLAMA BUDDY!\n\n"
            models-section
            "Quick Tips:\n\n"
-           "- Ask me anything! C-c C-c to send\n"
-           "- Multi-model shot? C-c C-l\n"
-           "- Change your mind? C-c C-k to cancel\n"
+           "- Ask me anything!   C-c C-c to send\n"
+           "- Multi-model shot?  C-c C-l\n"
+           "- Change your mind?  C-c C-k to cancel\n"
            "- Change your model? C-c C-m\n"
+           "- Prompt history?    M-p, minibuffer M-p/M-n\n"
            "- In another buffer? M-x ollama-buddy-menu")))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
 
 (defun ollama-buddy--update-multishot-status ()
   "Update status line to show multishot progress."
-  (when ollama-buddy--multishot-sequence
-    (let* ((sequence-str ollama-buddy--multishot-sequence)
-           (progress ollama-buddy--multishot-progress)
-           (completed (substring sequence-str 0 progress))
-           (remaining (substring sequence-str progress)))
-      (concat (propertize "[Multishot: " 'face '(:weight bold))
+  (if ollama-buddy--multishot-sequence
+    (let* ((completed (substring ollama-buddy--multishot-sequence
+                                 0 ollama-buddy--multishot-progress))
+           (remaining (substring ollama-buddy--multishot-sequence
+                                 ollama-buddy--multishot-progress)))
+      (concat (propertize "Multishot: " 'face '(:weight bold))
               (propertize completed 'face '(:weight bold))
-              (propertize remaining 'face '(:weight normal))
-              "]"))))
-
+              (propertize remaining 'face '(:weight normal))))
+    ""))
 
 (defun ollama-buddy--multishot-send (prompt sequence)
   "Send PROMPT to multiple models specified by SEQUENCE of letters."
