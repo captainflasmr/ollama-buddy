@@ -224,6 +224,17 @@ Can you write unit tests for the generated code
 
 * Whats New
 
+** <2025-02-28> *0.2.4*
+
+Added model-specific color highlighting (experimental)
+
+- Introduce `ollama-buddy-enable-model-colors` (default: nil) to toggle model-based color highlighting.
+- Assign consistent colors to models based on string hashing.
+- Apply colors to model names in the menu, status, headers, and responses.
+- Add `ollama-buddy-toggle-model-colors` command to toggle this feature.
+
+This feature improves UI clarity, making it easier to visually distinguish models.
+
 ** <2025-02-28> *0.2.3*
 
 Added Prompt History Support
