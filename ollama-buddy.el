@@ -70,6 +70,11 @@
   :group 'applications
   :prefix "ollama-buddy-")
 
+(defcustom ollama-buddy-enable-model-colors nil
+  "Whether to show model colors. EXPERIMNTAL."
+  :type 'boolean
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-enable-background-monitor nil
   "Whether to enable background monitoring of Ollama connection.
 When nil, status checks only occur during user interactions."
@@ -151,6 +156,53 @@ When nil, status checks only occur during user interactions."
 (defvar ollama-buddy--multishot-prompt nil
   "The prompt being used for the current multishot sequence.")
 
+;; Keep track of model colors
+(defvar ollama-buddy--model-colors (make-hash-table :test 'equal)
+  "Hash table mapping model names to their colors.")
+
+;; Function to update and retrieve model colors
+(defun ollama-buddy--update-model-colors ()
+  "Update the model colors hash table and return it."
+  (let ((models-with-colors (ollama-buddy--get-models-with-colors)))
+    (dolist (pair models-with-colors)
+      (puthash (car pair) (cdr pair) ollama-buddy--model-colors))
+    ollama-buddy--model-colors))
+
+;; Get color for a specific model
+(defun ollama-buddy--get-model-color (model)
+  "Get the color associated with MODEL, or return the default foreground color if disabled."
+  (if ollama-buddy-enable-model-colors
+      (or (gethash model ollama-buddy--model-colors)
+          (ollama-buddy--hash-string-to-color model))
+    (face-foreground 'default)))  ;; Returns the default foreground color
+
+(defun ollama-buddy-toggle-model-colors ()
+  "Toggle the use of model-specific colors in ollama-buddy."
+  (interactive)
+  (setq ollama-buddy-enable-model-colors (not ollama-buddy-enable-model-colors))
+  (message "Ollama Buddy Model Colors: %s"
+           (if ollama-buddy-enable-model-colors "Enabled" "Disabled")))
+
+(defun ollama-buddy--hash-string-to-color (str)
+  "Generate a consistent color based on the hash of STR."
+  (let* ((hash (abs (sxhash str)))
+         ;; Generate HSL values - keeping saturation and lightness fixed for readability
+         (hue (mod hash 360))
+         (saturation 70)
+         (lightness 60))
+    ;; Convert HSL to hex color
+    (apply #'color-rgb-to-hex
+           (color-hsl-to-rgb (/ hue 360.0) (/ saturation 100.0) (/ lightness 100.0)))))
+
+;; Modify the model retrieval function to include colors
+(defun ollama-buddy--get-models-with-colors ()
+  "Get available Ollama models with their associated colors."
+  (when-let ((response (ollama-buddy--make-request "/api/tags" "GET")))
+    (mapcar (lambda (m)
+              (let ((name (alist-get 'name m)))
+                (cons name (ollama-buddy--hash-string-to-color name))))
+          (alist-get 'models response))))
+
 (defun ollama-buddy--assign-model-letters ()
   "Assign letters to available models and update the intro message."
   (setq ollama-buddy--model-letters
@@ -180,9 +232,14 @@ When nil, status checks only occur during user interactions."
                (lambda (row)
                  (format format-str
                          (caar row)
-                         (or (cdar row) "")
+                         (if (cdar row)
+                             (let ((color (ollama-buddy--get-model-color (cdar row))))
+                               (propertize (cdar row) 'face `(:foreground ,color)))
+                           "")
                          (if (cdr row)
-                             (format "(%c) %s" (caadr row) (cdadr row))
+                             (let ((color (ollama-buddy--get-model-color (cdadr row))))
+                               (format "(%c) %s" (caadr row)
+                                       (propertize (cdadr row) 'face `(:foreground ,color))))
                            "")))
                formatted-pairs
                "\n")
@@ -404,22 +461,25 @@ ORIGINAL-MODEL is the model that was requested.
 ACTUAL-MODEL is the model being used instead."
   (setq ollama-buddy--status status)
   (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-    (setq header-line-format
-          (concat
-           (format (if (string-empty-p (ollama-buddy--update-multishot-status))
-                       " [%s%s %s: %s]"
-                     " [%s %s %s: %s]")
-                   (ollama-buddy--update-multishot-status)
-                   (propertize (if (ollama-buddy--check-status) "RUNNING" "OFFLINE")
-                               'face '(:weight bold))
-                   (propertize (or ollama-buddy--current-model
-                                   ollama-buddy-default-model
-                                   "No Model")
-                               'face '(:weight bold))
-                   (propertize status 'face '(:weight bold)))
-           (when (and original-model actual-model (not (string= original-model actual-model)))
-             (propertize (format " [Using %s instead of %s]" actual-model original-model)
-                         'face '(:foreground "orange" :weight bold)))))))
+    (let ((model (or ollama-buddy--current-model
+                     ollama-buddy-default-model
+                     "No Model")))
+      (setq header-line-format
+            (concat
+             (format (if (string-empty-p (ollama-buddy--update-multishot-status))
+                         " [%s%s %s: %s]"
+                       " [%s %s %s: %s]")
+                     (ollama-buddy--update-multishot-status)
+                     (propertize (if (ollama-buddy--check-status) "RUNNING" "OFFLINE")
+                                 'face '(:weight bold))
+                     (propertize model 'face
+                                 `(:weight bold
+                                           :foreground ,(ollama-buddy--get-model-color
+                                                         model)))
+                     (propertize status 'face '(:weight bold)))
+             (when (and original-model actual-model (not (string= original-model actual-model)))
+               (propertize (format " [Using %s instead of %s]" actual-model original-model)
+                           'face '(:foreground "orange" :weight bold))))))))
 
 (defun ollama-buddy--ensure-running ()
   "Ensure Ollama is running and update status accordingly."
@@ -669,6 +729,11 @@ ACTUAL-MODEL is the model being used instead."
      :description "Kill request"
      :action (lambda ()
                (delete-process ollama-buddy--active-process)))
+
+    (toggle-colors
+     :key ?C
+     :description "Toggle Colors"
+     :action ollama-buddy-toggle-model-colors)
     
     (quit
      :key ?q
@@ -726,10 +791,11 @@ Each command is defined with:
   (interactive)
   (let* ((model (or ollama-buddy--current-model
                     ollama-buddy-default-model
-                    "No model selected")))
+                    "No model selected"))
+         (color (ollama-buddy--get-model-color model)))
     (insert (format "\n\n%s\n\n%s %s"
                     (propertize (alist-get 'header ollama-buddy--separators) 'face '(:inherit bold))
-                    (propertize model 'face `(:weight bold))
+                    (propertize model 'face `(:foreground ,color :weight bold))
                     (propertize ">> PROMPT: " 'face '(:inherit bold))))
     
     ;; Setup command submission with history tracking
@@ -805,7 +871,9 @@ Each command is defined with:
                       (propertize (alist-get 'header ollama-buddy--separators) 'face '(:inherit bold))
                       (propertize "[User: PROMPT]" 'face '(:inherit bold))
                       prompt
-                      (propertize (concat "[" model ": RESPONSE]") 'face '(:inherit bold))))
+                      (propertize (concat "[" model ": RESPONSE]") 'face
+                                  `(:inherit bold :foreground ,(ollama-buddy--get-model-color 
+                                                                model)))))
       (when (and original-model model (not (string= original-model model)))
         (insert (propertize (format "[Using %s instead of %s]" model original-model)
                             'face '(:inherit error :weight bold)) "\n\n"))
@@ -867,7 +935,7 @@ Each command is defined with:
 (defun ollama-buddy--get-models ()
   "Get available Ollama models."
   (when-let ((response (ollama-buddy--make-request "/api/tags" "GET")))
-    (mapcar (lambda (m) (alist-get 'name m)) (alist-get 'models response))))
+  (mapcar #'car (ollama-buddy--get-models-with-colors))))
 
 (defun ollama-buddy--ollama-running ()
   "Check if Ollama server is running."
@@ -936,8 +1004,6 @@ Each command is defined with:
 
 (defun ollama-buddy--send-next-in-sequence ()
   "Send prompt to next model in the multishot sequence."
-  (prin1 ollama-buddy--multishot-sequence)
-  (prin1 ollama-buddy--multishot-prompt)
   (when (and ollama-buddy--multishot-sequence
              ollama-buddy--multishot-prompt
              (< ollama-buddy--multishot-progress
@@ -985,10 +1051,20 @@ Each command is defined with:
     (ollama-buddy--update-status
      (if ollama-status "Menu opened - Ready" "Menu opened - Ollama offline"))
     (when-let* ((items (mapcar (lambda (cmd-def)
-                                 (cons (plist-get (cdr cmd-def) :key)
-                                       (list (plist-get (cdr cmd-def) :description)
-                                             (plist-get (cdr cmd-def) :action))))
-                               ollama-buddy-command-definitions))
+                                 (let* ((key (plist-get (cdr cmd-def) :key))
+                                        (desc (plist-get (cdr cmd-def) :description))
+                                        (model (plist-get (cdr cmd-def) :model))
+                                        (action (plist-get (cdr cmd-def) :action))
+                                        ;; Add model indicator if a specific model is used
+                                        (desc-with-model
+                                         (if model
+                                             (let ((color (ollama-buddy--get-model-color model)))
+                                               (concat desc " "
+                                                       (propertize (concat "[" model "]") 
+                                                                   'face `(:inherit bold :foreground ,color))))
+                                           desc)))
+                                    (cons key (list desc-with-model action))))
+                                ollama-buddy-command-definitions))
                 (formatted-items
                  (mapcar (lambda (item)
                            (format "[%c] %s" (car item) (cadr item)))
@@ -1010,13 +1086,30 @@ Each command is defined with:
                                      when (< idx total)
                                      maximize (length (nth idx padded-items)))))
                   ""))
+                
+                (model (or ollama-buddy--current-model
+                           ollama-buddy-default-model "NONE"))
+                
+                (available-models-text
+                 (if (ollama-buddy--ollama-running)
+                     (mapconcat (lambda (model)
+                                  (propertize model 'face
+                                              `(:inherit bold :foreground
+                                                         ,(ollama-buddy--get-model-color model))))
+                                (ollama-buddy--get-models) " ")
+                   "No models available"))
+                
+                (colored-current-model
+                 (propertize model 'face `(:foreground
+                                           ,(ollama-buddy--get-model-color 
+                                             model)
+                                           :weight bold)))
                 (prompt
                  (format "%s %s%s\nAvailable: %s\n%s"
                          (if ollama-status "RUNNING" "NOT RUNNING")
-                         (or ollama-buddy--current-model
-                             ollama-buddy-default-model "NONE")
+                         colored-current-model
                          (if (use-region-p) "" " (NO SELECTION)")
-                         (mapconcat #'identity (ollama-buddy--get-models) " ")
+                         available-models-text
                          (mapconcat
                           (lambda (row)
                             (if format-string
@@ -1033,7 +1126,7 @@ Each command is defined with:
       (funcall (caddr cmd)))))
 
 (defun ollama-buddy-show-model-status ()
-  "Display status of models referenced in command definitions."
+  "Display status of models referenced in command definitions with color coding."
   (interactive)
   (let* ((used-models (delete-dups
                        (delq nil
@@ -1042,21 +1135,48 @@ Each command is defined with:
                                      ollama-buddy-command-definitions))))
          (available-models (ollama-buddy--get-models))
          (buf (get-buffer-create "*Ollama Model Status*")))
+    ;; Update model colors
+    (when (ollama-buddy--ollama-running)
+      (ollama-buddy--update-model-colors))
+    
     (with-current-buffer buf
       (let ((inhibit-read-only t))
         (erase-buffer)
         (insert "Ollama Model Status:\n\n")
-        (insert (format "Current Model: %s\n" ollama-buddy--current-model))
-        (insert (format "Default Model: %s\n\n" ollama-buddy-default-model))
+        
+        ;; Display current model with color
+        (when ollama-buddy--current-model
+          (let ((color (ollama-buddy--get-model-color ollama-buddy--current-model)))
+            (insert "Current Model: ")
+            (insert (propertize ollama-buddy--current-model 'face `(:foreground ,color :weight bold)))
+            (insert "\n")))
+        
+        ;; Display default model with color
+        (when ollama-buddy-default-model
+          (let ((color (ollama-buddy--get-model-color ollama-buddy-default-model)))
+            (insert "Default Model: ")
+            (insert (propertize ollama-buddy-default-model 'face `(:foreground ,color :weight bold)))
+            (insert "\n\n")))
+        
+        ;; Display models used in commands with colors
         (insert "Models used in commands:\n")
         (dolist (model used-models)
-          (insert (format "  %s: %s\n"
-                          model
-                          (if (member model available-models)
-                              "Available ✓"
-                            "Not Available ✗"))))
-        (insert "\nAvailable Models:\n  ")
-        (insert (string-join available-models "\n  "))))
+          (when model
+            (let ((color (ollama-buddy--get-model-color model)))
+              (insert "  ")
+              (insert (propertize model 'face `(:foreground ,color)))
+              (insert (format ": %s\n"
+                            (if (member model available-models)
+                                "Available ✓"
+                              "Not Available ✗"))))))
+        
+        ;; List available models with colors
+        (insert "\nAvailable Models:\n")
+        (dolist (model available-models)
+          (let ((color (ollama-buddy--get-model-color model)))
+            (insert "  ")
+            (insert (propertize model 'face `(:foreground ,color)))
+            (insert "\n")))))
     (display-buffer buf)))
 
 ;;;###autoload
