@@ -176,7 +176,7 @@ Show the changing of roles and how they affect the menu and hence the commands a
 
 ** Prompt History
 
-Just put in some queries and show that we can step back through previously input, swap models and resubmit
+Enter a few queries to test the system, then navigate back through your previous inputs, switch models, and resubmit to compare results.
 
 #+attr_org: :width 300px
 #+attr_html: :width 100%
@@ -298,7 +298,7 @@ Need to tweak a role manually? A simple, run =M-x ollama-buddy-roles-open-direct
 - ollama-buddy--preset__translator.el
 - ollama-buddy--preset__writer.el
 
-If these files are put in the =ollama-buddy-roles-directory= then the role selection menu will pass through completing-read, and prsent the following:
+If these files are put in the =ollama-buddy-roles-directory= then the role selection menu will pass through completing-read, and present the following:
 
 {buffy | default | developer | janeway | translator | writer}
 
