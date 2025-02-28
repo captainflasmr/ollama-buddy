@@ -490,10 +490,10 @@ ACTUAL-MODEL is the model being used instead."
   "Initialize the chat buffer and check Ollama status."
   (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
     (when (= (buffer-size) 0)
+      (ollama-buddy-mode 1)
       (ollama-buddy--check-status)
       (insert (ollama-buddy--create-intro-message))
       (ollama-buddy--show-prompt))
-    (local-set-key (kbd "C-c C-l") #'ollama-buddy--multishot-prompt)
     (ollama-buddy--update-status "Idle")))
 
 (defun ollama-buddy--stream-filter (_proc output)
@@ -583,6 +583,7 @@ ACTUAL-MODEL is the model being used instead."
 
 (defun ollama-buddy--swap-model ()
   "Swap ollama model."
+  (interactive)
   (if (not (ollama-buddy--ollama-running))
       (error "!!WARNING!! ollama server not running")
     (let ((new-model
@@ -796,37 +797,7 @@ Each command is defined with:
     (insert (format "\n\n%s\n\n%s %s"
                     (propertize (alist-get 'header ollama-buddy--separators) 'face '(:inherit bold))
                     (propertize model 'face `(:foreground ,color :weight bold))
-                    (propertize ">> PROMPT: " 'face '(:inherit bold))))
-    
-    ;; Setup command submission with history tracking
-    (local-set-key (kbd "C-c C-c")
-                   (lambda ()
-                     (interactive)
-                     (let* ((bounds (save-excursion
-                                      (search-backward ">> PROMPT:")
-                                      (search-forward ":")
-                                      (point)))
-                            (query-text (string-trim (buffer-substring-no-properties bounds (point)))))
-                       
-                       ;; Add to history if non-empty
-                       (when (and query-text (not (string-empty-p query-text)))
-                         (add-to-history 'ollama-buddy--prompt-history query-text))
-                       
-                       (setq ollama-buddy--multishot-sequence nil
-                             ollama-buddy--multishot-prompt nil)
-                       (ollama-buddy--send query-text model))))
-    
-    ;; Setup history navigation keys
-    (local-set-key (kbd "M-p") #'ollama-buddy--get-prompt-history-element)
-    
-    (local-set-key (kbd "C-c C-k")
-                   (lambda ()
-                     (interactive)
-                     (delete-process ollama-buddy--active-process)))
-    (local-set-key (kbd "C-c C-m")
-                   (lambda ()
-                     (interactive)
-                     (ollama-buddy--swap-model)))))
+                    (propertize ">> PROMPT: " 'face '(:inherit bold))))))
 
 (defun ollama-buddy--send-with-command (command-name)
   "Send request using configuration from COMMAND-NAME."
@@ -1198,7 +1169,53 @@ Each command is defined with:
     (cancel-timer ollama-buddy--connection-timer)
     (setq ollama-buddy--connection-timer nil)))
 
-;; (ollama-buddy-roles-initialize)
+(defun ollama-buddy-pull-model ()
+  "Pull a model from Ollama interactively."
+  (interactive)
+  (let ((model (read-string "Enter model name to pull (e.g., llama2:latest): ")))
+    (ollama-buddy--make-request "/api/pull" "POST"
+                                (json-encode `((name . ,model))))
+    (message "Pulling model %s... Check server logs for progress." model)))
+
+(defun ollama-buddy--send-prompt ()
+  "Send the current prompt to a LLM.."
+  (interactive)
+  (let* ((bounds (save-excursion
+                   (search-backward ">> PROMPT:")
+                   (search-forward ":")
+                   (point)))
+         (model (or ollama-buddy--current-model
+                    ollama-buddy-default-model
+                    "Default:latest"))
+         (query-text (string-trim (buffer-substring-no-properties bounds (point)))))
+    
+    ;; Add to history if non-empty
+    (when (and query-text (not (string-empty-p query-text)))
+      (add-to-history 'ollama-buddy--prompt-history query-text))
+    
+    (setq ollama-buddy--multishot-sequence nil
+          ollama-buddy--multishot-prompt nil)
+    (ollama-buddy--send query-text model)))
+
+(defun ollama-buddy--cancel-request ()
+  "Cancel the current request."
+  (interactive)
+  (delete-process ollama-buddy--active-process))
+
+(defvar ollama-buddy-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-c") #'ollama-buddy--send-prompt)
+    (define-key map (kbd "C-c C-l") #'ollama-buddy--multishot-prompt)
+    (define-key map (kbd "C-c C-k") #'ollama-buddy--cancel-request)
+    (define-key map (kbd "C-c C-m") #'ollama-buddy--swap-model)
+    (define-key map (kbd "M-p") #'ollama-buddy--get-prompt-history-element)
+    map)
+  "Keymap for ollama-buddy mode.")
+
+(define-minor-mode ollama-buddy-mode
+  "Minor mode for ollama-buddy keybindings."
+  :lighter " OB"
+  :keymap ollama-buddy-mode-map)
 
 (provide 'ollama-buddy)
 ;;; ollama-buddy.el ends here
