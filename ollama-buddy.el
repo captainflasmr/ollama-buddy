@@ -1169,14 +1169,6 @@ Each command is defined with:
     (cancel-timer ollama-buddy--connection-timer)
     (setq ollama-buddy--connection-timer nil)))
 
-(defun ollama-buddy-pull-model ()
-  "Pull a model from Ollama interactively."
-  (interactive)
-  (let ((model (read-string "Enter model name to pull (e.g., llama2:latest): ")))
-    (ollama-buddy--make-request "/api/pull" "POST"
-                                (json-encode `((name . ,model))))
-    (message "Pulling model %s... Check server logs for progress." model)))
-
 (defun ollama-buddy--send-prompt ()
   "Send the current prompt to a LLM.."
   (interactive)
