@@ -45,6 +45,10 @@ The name is just something a little bit fun and it seems to always remind me of 
   - Presets easily definable
   - Real-time model availability status
 
+- *Role Switching*
+
+  - create, switch, and manage role-specific command menu configurations
+
 - *Smart Model Management*
   
   - Models can be assigned to individual commands
@@ -70,6 +74,7 @@ The name is just something a little bit fun and it seems to always remind me of 
   
   - Dedicated chat buffer with conversation history
   - Stream-based response display
+  - Prompt based input
   - Save/export conversation functionality
   - Visual separators for clear conversation flow
 
@@ -226,14 +231,35 @@ Can you write unit tests for the generated code
 
 ** <2025-02-28> *0.2.4*
 
-Added model-specific color highlighting (experimental)
+Added model-specific color highlighting (experimental - off by default)
 
 - Introduce `ollama-buddy-enable-model-colors` (default: nil) to toggle model-based color highlighting.
 - Assign consistent colors to models based on string hashing.
 - Apply colors to model names in the menu, status, headers, and responses.
 - Add `ollama-buddy-toggle-model-colors` command to toggle this feature.
 
-This feature improves UI clarity, making it easier to visually distinguish models.
+This enhancement aims to improve user experience by visually distinguishing different AI models within the interface.
+
+Note: I am likely to use both *colour* and *color* interchangeably in the following text! :)
+
+*Key Features*
+
+1. *Model-Specific Colors (Experimental)*
+   - A new customizable variable, =ollama-buddy-enable-model-colors=, allows users to enable or disable model-specific colors.
+   - Colors are generated based on a model's name using a hashing function that produces consistent and visually distinguishable hues.
+   - However there could be an improvement regarding ensuring the contrast is sufficient and hence visibility maintained with differing themes.
+
+2. *Interactive Color Toggle*
+   - Users can toggle model-specific colors with the command =ollama-buddy-toggle-model-colors=, providing flexibility in interface customization.
+
+4. *Colored Model Listings*
+   - Model names are now displayed with their respective colors in various parts of the interface, including:
+     - The status line
+     - Model selection menus
+     - Command definitions
+     - Chat history headers
+   
+This feature is currently *experimental*, and feedback is welcome to refine its implementation further!
 
 ** <2025-02-28> *0.2.3*
 
@@ -543,16 +569,17 @@ qwen2.5-coder:7b >> PROMPT:
 #+end_src
 
 #+RESULTS:
-| Command                                   | Description                                                  |
-|-------------------------------------------+--------------------------------------------------------------|
-| ollama-buddy-roles-switch-role            | Switch to a different ollama-buddy role.                     |
-| ollama-buddy-disable-monitor              | Disable background connection monitoring.                    |
-| ollama-buddy-enable-monitor               | Enable background connection monitoring.                     |
-| ollama-buddy-role-creator-create-new-role | Create a new role interactively.                             |
-| ollama-buddy-roles-open-directory         | Open the ollama-buddy roles directory in Dired.              |
-| ollama-buddy-menu                         | Display Ollama Buddy menu.                                   |
-| ollama-buddy-roles-create-directory       | Create the ollama-buddy roles directory if it doesn’t exist. |
-| ollama-buddy-show-model-status            | Display status of models referenced in command definitions.  |
+| Command                                   | Description                                                                   |
+|-------------------------------------------+-------------------------------------------------------------------------------|
+| ollama-buddy-roles-switch-role            | Switch to a different ollama-buddy role.                                      |
+| ollama-buddy-disable-monitor              | Disable background connection monitoring.                                     |
+| ollama-buddy-toggle-model-colors          | Toggle the use of model-specific colors in ollama-buddy.                      |
+| ollama-buddy-enable-monitor               | Enable background connection monitoring.                                      |
+| ollama-buddy-role-creator-create-new-role | Create a new role interactively.                                              |
+| ollama-buddy-roles-open-directory         | Open the ollama-buddy roles directory in Dired.                               |
+| ollama-buddy-menu                         | Display Ollama Buddy menu.                                                    |
+| ollama-buddy-roles-create-directory       | Create the ollama-buddy roles directory if it doesn’t exist.                  |
+| ollama-buddy-show-model-status            | Display status of models referenced in command definitions with color coding. |
  
 * Customization
 
@@ -581,6 +608,7 @@ qwen2.5-coder:7b >> PROMPT:
 | Custom variable                        | Description                                                   |
 |----------------------------------------+---------------------------------------------------------------|
 | ollama-buddy-command-definitions       | Comprehensive command definitions for Ollama Buddy.           |
+| ollama-buddy-enable-model-colors       | Whether to show model colors. EXPERIMNTAL.                    |
 | ollama-buddy-menu-columns              | Number of columns to display in the Ollama Buddy menu.        |
 | ollama-buddy-enable-background-monitor | Whether to enable background monitoring of Ollama connection. |
 | ollama-buddy-roles-directory           | Directory containing ollama-buddy role preset files.          |
@@ -1423,6 +1451,8 @@ Report issues on the [[https://github.com/captainflasmr/ollama-buddy/issues][Git
 
 * Bugs
 
+** TODO Model hash colouring algorithm to ensure the contrast is sufficient and hence visibility maintained with differing themes.
+
 * Contributing
 
 Contributions are welcome! Please:
@@ -1439,4 +1469,3 @@ Contributions are welcome! Please:
 
 - [[https://ollama.ai/][Ollama]] for making local LLM inference accessible
 - Emacs community for continuous inspiration
-

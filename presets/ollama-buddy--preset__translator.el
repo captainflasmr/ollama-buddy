@@ -110,4 +110,55 @@
          :model nil
          :prompt "Explain the meaning and cultural context of this idiom or phrase:"
          :action (lambda () (ollama-buddy--send-with-command 'explain-idiom)))
-        ))
+
+        ;; System Commands
+        (custom-prompt
+         :key ?e
+         :description "Custom prompt"
+         :action (lambda ()
+                   (when-let ((prefix (read-string "Enter prompt prefix: " nil nil nil t)))
+                     (unless (use-region-p)
+                       (user-error "No region selected. Select text to use with prompt"))
+                     (unless (not (string-empty-p prefix))
+                       (user-error "Input string is empty"))
+                     (ollama-buddy--send
+                      (concat prefix "\n\n"
+                              (buffer-substring-no-properties 
+                               (region-beginning) (region-end)))))))
+        
+        (minibuffer-prompt
+         :key ?i
+         :description "Minibuffer Prompt"
+         :action (lambda ()
+                   (when-let ((prefix (read-string "Enter prompt: " nil nil nil t)))
+                     (unless (not (string-empty-p prefix))
+                       (user-error "Input string is empty"))
+                     (ollama-buddy--send prefix))))
+        
+        (save-chat
+         :key ?s
+         :description "Save chat"
+         :action (lambda ()
+                   (with-current-buffer ollama-buddy--chat-buffer
+                     (write-region (point-min) (point-max)
+                                   (read-file-name "Save conversation to: ")
+                                   'append-to-file
+                                   nil))))
+        
+        (kill-request
+         :key ?x
+         :description "Kill request"
+         :action (lambda ()
+                   (delete-process ollama-buddy--active-process)))
+
+        (toggle-colors
+         :key ?C
+         :description "Toggle Colors"
+         :action ollama-buddy-toggle-model-colors)
+        
+        (quit
+         :key ?q
+         :description "Quit"
+         :action (lambda () (message "Quit Ollama Shell menu.")))
+        )
+      )

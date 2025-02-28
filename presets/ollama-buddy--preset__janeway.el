@@ -140,6 +140,12 @@
          :description "Kill request"
          :action (lambda ()
                    (delete-process ollama-buddy--active-process)))
+
+        (toggle-colors
+         :key ?C
+         :description "Toggle Colors"
+         :action ollama-buddy-toggle-model-colors)
+        
         (quit
          :key ?q
          :description "Quit"

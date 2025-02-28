@@ -434,7 +434,7 @@ When nil, status checks only occur during user interactions."
       (let ((models (ollama-buddy--get-models)))
         (if models
             (let ((selected (completing-read
-                             (format "Model %s not available. Select model: "
+                             (format "%s not available. Select model: "
                                      (or specified-model ""))
                              models nil t)))
               (setq ollama-buddy--current-model selected)
@@ -791,7 +791,7 @@ Each command is defined with:
   (interactive)
   (let* ((model (or ollama-buddy--current-model
                     ollama-buddy-default-model
-                    "No model selected"))
+                    "Default:latest"))
          (color (ollama-buddy--get-model-color model)))
     (insert (format "\n\n%s\n\n%s %s"
                     (propertize (alist-get 'header ollama-buddy--separators) 'face '(:inherit bold))
