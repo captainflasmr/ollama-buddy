@@ -677,7 +677,7 @@ ACTUAL-MODEL is the model being used instead."
               
               ;; Display token info if enabled
               (when ollama-buddy-display-token-stats
-                (insert (format "\n[%d tokens in %.1fs, %.1f tokens/sec]" 
+                (insert (format "\n\n[%d tokens in %.1fs, %.1f tokens/sec]" 
                                 ollama-buddy--current-token-count
                                 elapsed-time
                                 token-rate)))
@@ -730,19 +730,38 @@ ACTUAL-MODEL is the model being used instead."
               (set-window-point window (point-max))
             (set-window-point window old-point))
           (set-window-start window old-window-start t))))))
+
 (defun ollama-buddy--stream-sentinel (_proc event)
   "Handle stream completion EVENT."
   (when-let* ((status (cond ((string-match-p "finished" event) "Completed")
                             ((string-match-p "\\(?:deleted\\|connection broken\\)" event) "Interrupted")))
               (msg (format "\n\n[Stream %s]" status)))
+    ;; Clean up multishot variables
     (setq ollama-buddy--multishot-sequence nil
           ollama-buddy--multishot-prompt nil)
+    
+    ;; Clean up token tracking
+    (when ollama-buddy--token-update-timer
+      (cancel-timer ollama-buddy--token-update-timer)
+      (setq ollama-buddy--token-update-timer nil))
+    
     (with-current-buffer ollama-buddy--chat-buffer
       (let ((inhibit-read-only t))
         (goto-char (point-max))
         (insert (propertize msg 'face '(:weight bold)))
         (ollama-buddy--show-prompt)))
-    (ollama-buddy--update-status (concat "Stream " status))))
+    
+    ;; Only show token stats in status if we completed successfully
+    (if (string= status "Completed")
+        (let ((last-info (car ollama-buddy--token-usage-history)))
+          (if last-info
+              (ollama-buddy--update-status 
+               (format "Stream %s [%d tokens, %.1f t/s]" 
+                       status
+                       (plist-get last-info :tokens)
+                       (plist-get last-info :rate)))
+            (ollama-buddy--update-status (concat "Stream " status))))
+      (ollama-buddy--update-status (concat "Stream " status)))))
 
 (defun ollama-buddy--swap-model ()
   "Swap ollama model."
@@ -1359,9 +1378,25 @@ Each command is defined with:
     (ollama-buddy--send query-text model)))
 
 (defun ollama-buddy--cancel-request ()
-  "Cancel the current request."
+  "Cancel the current request and clean up resources."
   (interactive)
-  (delete-process ollama-buddy--active-process))
+  (when ollama-buddy--active-process
+    (delete-process ollama-buddy--active-process)
+    (setq ollama-buddy--active-process nil))
+  
+  ;; Clean up token tracking
+  (when ollama-buddy--token-update-timer
+    (cancel-timer ollama-buddy--token-update-timer)
+    (setq ollama-buddy--token-update-timer nil))
+  
+  ;; Reset token tracking variables
+  (setq ollama-buddy--current-token-count 0
+        ollama-buddy--current-token-start-time nil
+        ollama-buddy--last-token-count 0
+        ollama-buddy--last-update-time nil)
+  
+  ;; Update status to show cancelled
+  (ollama-buddy--update-status "Cancelled"))
 
 (defvar ollama-buddy-mode-map
   (let ((map (make-sparse-keymap)))
