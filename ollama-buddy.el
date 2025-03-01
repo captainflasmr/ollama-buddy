@@ -131,6 +131,18 @@ When nil, status checks only occur during user interactions."
   :type 'boolean
   :group 'ollama-buddy)
 
+(defvar ollama-buddy--token-update-interval 0.5
+  "How often to update the token rate display, in seconds.")
+
+(defvar ollama-buddy--token-update-timer nil
+  "Timer for updating token rate display.")
+
+(defvar ollama-buddy--last-token-count 0
+  "Token count at last update interval.")
+
+(defvar ollama-buddy--last-update-time nil
+  "Timestamp of last token rate update.")
+
 (defvar ollama-buddy--prompt-history nil
   "History of prompts used in ollama-buddy.")
 
@@ -173,6 +185,33 @@ When nil, status checks only occur during user interactions."
 ;; Keep track of model colors
 (defvar ollama-buddy--model-colors (make-hash-table :test 'equal)
   "Hash table mapping model names to their colors.")
+
+(defun ollama-buddy--update-token-rate-display ()
+  "Update the token rate display in real-time."
+  (when (and ollama-buddy--current-token-start-time
+             (> ollama-buddy--current-token-count 0))
+    (let* ((current-time (float-time))
+           (interval-tokens (- ollama-buddy--current-token-count 
+                              ollama-buddy--last-token-count))
+           (interval-time (- current-time 
+                            (or ollama-buddy--last-update-time 
+                                ollama-buddy--current-token-start-time)))
+           (current-rate (if (> interval-time 0)
+                             (/ interval-tokens interval-time)
+                           0))
+           (total-rate (if (> (- current-time ollama-buddy--current-token-start-time) 0)
+                          (/ ollama-buddy--current-token-count 
+                             (- current-time ollama-buddy--current-token-start-time))
+                        0)))
+      
+      ;; Update status with token information
+      (ollama-buddy--update-status 
+       (format "Processing... [%d tokens, %.1f t/s]" 
+               ollama-buddy--current-token-count total-rate))
+      
+      ;; Update tracking variables
+      (setq ollama-buddy--last-token-count ollama-buddy--current-token-count
+            ollama-buddy--last-update-time current-time))))
 
 (defun ollama-buddy-display-token-stats ()
   "Display token usage statistics."
@@ -579,14 +618,22 @@ ACTUAL-MODEL is the model being used instead."
               (json-data (and (> (length json-str) 0) (json-read-from-string json-str)))
               (text (alist-get 'content (alist-get 'message json-data))))
     
-    ;; Set start time if this is the first token
+    ;; Set start time if this is the first token and start the update timer
     (unless ollama-buddy--current-token-start-time
-      (setq ollama-buddy--current-token-start-time (float-time)))
+      (setq ollama-buddy--current-token-start-time (float-time)
+            ollama-buddy--last-token-count 0
+            ollama-buddy--last-update-time nil)
+      
+      ;; Start the real-time update timer
+      (when ollama-buddy--token-update-timer
+        (cancel-timer ollama-buddy--token-update-timer))
+      (setq ollama-buddy--token-update-timer
+            (run-with-timer 0 ollama-buddy--token-update-interval
+                           #'ollama-buddy--update-token-rate-display)))
     
     ;; Increment token count when text is received
     (when (not (string-empty-p text))
-      (setq ollama-buddy--current-token-count (1+ ollama-buddy--current-token-count))
-      (ollama-buddy--update-status "Processing..."))
+      (setq ollama-buddy--current-token-count (1+ ollama-buddy--current-token-count)))
     
     (with-current-buffer ollama-buddy--chat-buffer
       (let* ((inhibit-read-only t)
@@ -609,29 +656,37 @@ ACTUAL-MODEL is the model being used instead."
           
           ;; Check if this response is complete
           (when (eq (alist-get 'done json-data) t)
-            ;; Calculate token rate when finished
+            ;; Cancel the update timer
+            (when ollama-buddy--token-update-timer
+              (cancel-timer ollama-buddy--token-update-timer)
+              (setq ollama-buddy--token-update-timer nil))
+            
+            ;; Calculate final statistics
             (let* ((elapsed-time (- (float-time) ollama-buddy--current-token-start-time))
                    (token-rate (if (> elapsed-time 0)
                                   (/ ollama-buddy--current-token-count elapsed-time)
                                 0))
                    (token-info (list :model ollama-buddy--current-model
-                                     :tokens ollama-buddy--current-token-count
-                                     :elapsed elapsed-time
-                                     :rate token-rate
-                                     :timestamp (current-time))))
+                                    :tokens ollama-buddy--current-token-count
+                                    :elapsed elapsed-time
+                                    :rate token-rate
+                                    :timestamp (current-time))))
               
               ;; Add to history
               (push token-info ollama-buddy--token-usage-history)
               
               ;; Display token info if enabled
               (when ollama-buddy-display-token-stats
-                (insert (format "\n[%d tokens, %.2f tokens/sec]" 
+                (insert (format "\n[%d tokens in %.1fs, %.1f tokens/sec]" 
                                 ollama-buddy--current-token-count
+                                elapsed-time
                                 token-rate)))
               
               ;; Reset tracking variables
               (setq ollama-buddy--current-token-count 0
-                    ollama-buddy--current-token-start-time nil))
+                    ollama-buddy--current-token-start-time nil
+                    ollama-buddy--last-token-count 0
+                    ollama-buddy--last-update-time nil))
             
             (insert "\n\n")
             (insert (propertize "[" 'face '(:inherit bold)))
@@ -667,13 +722,14 @@ ACTUAL-MODEL is the model being used instead."
               ;; Not in multishot mode, just show the prompt
               (progn
                 (ollama-buddy--show-prompt)
-                (ollama-buddy--update-status "Finished")))))
+                (ollama-buddy--update-status (format "Finished [%d tokens, %.1f t/s]" 
+                                                    (plist-get (car ollama-buddy--token-usage-history) :tokens)
+                                                    (plist-get (car ollama-buddy--token-usage-history) :rate)))))))
         (when window
           (if at-end
               (set-window-point window (point-max))
             (set-window-point window old-point))
           (set-window-start window old-window-start t))))))
-
 (defun ollama-buddy--stream-sentinel (_proc event)
   "Handle stream completion EVENT."
   (when-let* ((status (cond ((string-match-p "finished" event) "Completed")
