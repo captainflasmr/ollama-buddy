@@ -117,6 +117,20 @@ When nil, status checks only occur during user interactions."
   :type 'integer
   :group 'ollama-buddy)
 
+(defvar ollama-buddy--token-usage-history nil
+  "History of token usage for ollama-buddy interactions.")
+
+(defvar ollama-buddy--current-token-count 0
+  "Counter for tokens in the current response.")
+
+(defvar ollama-buddy--current-token-start-time nil
+  "Timestamp when the current response started.")
+
+(defcustom ollama-buddy-display-token-stats nil
+  "Whether to display token usage statistics in responses."
+  :type 'boolean
+  :group 'ollama-buddy)
+
 (defvar ollama-buddy--prompt-history nil
   "History of prompts used in ollama-buddy.")
 
@@ -159,6 +173,69 @@ When nil, status checks only occur during user interactions."
 ;; Keep track of model colors
 (defvar ollama-buddy--model-colors (make-hash-table :test 'equal)
   "Hash table mapping model names to their colors.")
+
+(defun ollama-buddy-display-token-stats ()
+  "Display token usage statistics."
+  (interactive)
+  (let ((buf (get-buffer-create "*Ollama Token Stats*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert "Ollama Token Usage Statistics:\n\n")
+        
+        (if (null ollama-buddy--token-usage-history)
+            (insert "No token usage data available yet.")
+          (let* ((total-tokens (apply #'+ (mapcar (lambda (info) (plist-get info :tokens)) 
+                                                 ollama-buddy--token-usage-history)))
+                 (avg-rate (/ (apply #'+ (mapcar (lambda (info) (plist-get info :rate)) 
+                                                 ollama-buddy--token-usage-history))
+                              (float (length ollama-buddy--token-usage-history)))))
+            
+            ;; Summary stats
+            (insert (format "Total tokens generated: %d\n" total-tokens))
+            (insert (format "Average token rate: %.2f tokens/sec\n\n" avg-rate))
+            
+            ;; Model breakdown
+            (insert "Tokens by model:\n")
+            (let ((model-stats (make-hash-table :test 'equal)))
+              (dolist (info ollama-buddy--token-usage-history)
+                (let* ((model (plist-get info :model))
+                       (tokens (plist-get info :tokens))
+                       (current (gethash model model-stats '(0 0))))
+                  (puthash model 
+                           (list (+ (car current) tokens) (1+ (cadr current)))
+                           model-stats)))
+              
+              (maphash (lambda (model stats)
+                         (let ((model-color (ollama-buddy--get-model-color model)))
+                           (insert "  ")
+                           (insert (propertize model 'face `(:foreground ,model-color)))
+                           (insert (format ": %d tokens in %d responses\n" 
+                                          (car stats) (cadr stats)))))
+                       model-stats))
+            
+            ;; Recent history (last 10)
+            (insert "\nRecent interactions:\n")
+            (let ((recent (seq-take ollama-buddy--token-usage-history 10)))
+              (dolist (info recent)
+                (let ((model (plist-get info :model))
+                      (tokens (plist-get info :tokens))
+                      (rate (plist-get info :rate))
+                      (time (format-time-string "%Y-%m-%d %H:%M:%S" 
+                                               (plist-get info :timestamp))))
+                  (insert (format "  %s: %d tokens (%.2f t/s) at %s\n" 
+                                  model tokens rate time))))))
+        
+        (insert "\n\nUse M-x ollama-buddy-toggle-token-display to toggle display of token stats in responses")
+        (view-mode 1))))
+    (display-buffer buf)))
+
+(defun ollama-buddy-toggle-token-display ()
+  "Toggle display of token statistics after each response."
+  (interactive)
+  (setq ollama-buddy-display-token-stats (not ollama-buddy-display-token-stats))
+  (message "Ollama token statistics display: %s"
+           (if ollama-buddy-display-token-stats "enabled" "disabled")))
 
 ;; Function to update and retrieve model colors
 (defun ollama-buddy--update-model-colors ()
@@ -502,8 +579,14 @@ ACTUAL-MODEL is the model being used instead."
               (json-data (and (> (length json-str) 0) (json-read-from-string json-str)))
               (text (alist-get 'content (alist-get 'message json-data))))
     
-    (if (not (string-empty-p text))
-        (ollama-buddy--update-status "Processing..."))
+    ;; Set start time if this is the first token
+    (unless ollama-buddy--current-token-start-time
+      (setq ollama-buddy--current-token-start-time (float-time)))
+    
+    ;; Increment token count when text is received
+    (when (not (string-empty-p text))
+      (setq ollama-buddy--current-token-count (1+ ollama-buddy--current-token-count))
+      (ollama-buddy--update-status "Processing..."))
     
     (with-current-buffer ollama-buddy--chat-buffer
       (let* ((inhibit-read-only t)
@@ -526,6 +609,30 @@ ACTUAL-MODEL is the model being used instead."
           
           ;; Check if this response is complete
           (when (eq (alist-get 'done json-data) t)
+            ;; Calculate token rate when finished
+            (let* ((elapsed-time (- (float-time) ollama-buddy--current-token-start-time))
+                   (token-rate (if (> elapsed-time 0)
+                                  (/ ollama-buddy--current-token-count elapsed-time)
+                                0))
+                   (token-info (list :model ollama-buddy--current-model
+                                     :tokens ollama-buddy--current-token-count
+                                     :elapsed elapsed-time
+                                     :rate token-rate
+                                     :timestamp (current-time))))
+              
+              ;; Add to history
+              (push token-info ollama-buddy--token-usage-history)
+              
+              ;; Display token info if enabled
+              (when ollama-buddy-display-token-stats
+                (insert (format "\n[%d tokens, %.2f tokens/sec]" 
+                                ollama-buddy--current-token-count
+                                token-rate)))
+              
+              ;; Reset tracking variables
+              (setq ollama-buddy--current-token-count 0
+                    ollama-buddy--current-token-start-time nil))
+            
             (insert "\n\n")
             (insert (propertize "[" 'face '(:inherit bold)))
             (insert (propertize ollama-buddy--current-model 'face `(:inherit bold)))
@@ -604,7 +711,13 @@ ACTUAL-MODEL is the model being used instead."
   (goto-char (point-max)))
 
 (defcustom ollama-buddy-command-definitions
-  '((open-chat
+  '(
+    (token-stats
+     :key ?t
+     :description "Token Usage Stats"
+     :action ollama-buddy-display-token-stats)
+    
+    (open-chat
      :key ?o
      :description "Open chat buffer"
      :action ollama-buddy--open-chat)
