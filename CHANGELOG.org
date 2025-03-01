@@ -11,6 +11,17 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-03-01> *0.3.0*
+
+Added real-time token usage tracking and display
+
+- Introduce variables to track token counts, rates, and usage history
+- Implement real-time token rate updates with a timer
+- Add a function to display token usage statistics in a dedicated buffer
+- Allow toggling of token stats display after responses
+- Integrate token tracking into response processing and status updates
+- Ensure cleanup of timers and tracking variables on completion or cancellation
+
 ** <2025-02-28> *0.2.4*
 
 Added model-specific color highlighting (experimental)

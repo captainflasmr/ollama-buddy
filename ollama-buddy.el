@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama Buddy: Your Friendly AI Assistant -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.2.4
+;; Version: 0.3.0
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy

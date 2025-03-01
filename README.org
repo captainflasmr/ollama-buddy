@@ -237,6 +237,46 @@ Can you write unit tests for the generated code
 
 * Whats New
 
+** <2025-03-01> *0.3.0*
+
+Added real-time token usage tracking and display
+
+- Introduce variables to track token counts, rates, and usage history
+- Implement real-time token rate updates with a timer
+- Add a function to display token usage statistics in a dedicated buffer
+- Allow toggling of token stats display after responses
+- Integrate token tracking into response processing and status updates
+- Ensure cleanup of timers and tracking variables on completion or cancellation
+
+*** Key Features
+
+- *Real-time token counting:* As responses are streamed, the system tracks the number of tokens generated.
+- *Token rate calculation:* The average tokens per second are computed dynamically.
+- *Background updates:* A timer updates the token count and rate periodically.
+- *Detailed token history:* A history of token usage across interactions is maintained.
+- *User-configurable display:* Users can enable or disable token statistics in responses.
+- *Statistics view:* A new command shows an overview of token usage over time.
+
+*** How It Works
+
+When a response starts, Ollama Buddy initializes tracking variables and starts a timer. As tokens are received, the counter updates, and the current rate is computed. Once the response completes, the total token count and rate are added to a history log. If enabled, token statistics are displayed at the end of responses.
+
+A new command, ~M-x ollama-buddy-display-token-stats~, provides a summary of token usage, including per-model breakdowns and recent history.
+
+*** Enabling and Disabling Token Display
+
+Users can toggle automatic token statistics display by calling:
+
+#+BEGIN_SRC emacs-lisp
+M-x ollama-buddy-toggle-token-display
+#+END_SRC
+
+This setting persists during the session, allowing users to view or hide token details as needed.
+
+*** Improving Your Workflow
+
+This feature provides better insights into model performance and helps users optimize their interactions with Ollama Buddy. Whether monitoring efficiency or benchmarking responses, real-time token tracking enhances usability.
+
 ** <2025-02-28> *0.2.4*
 
 Added model-specific color highlighting (experimental - off by default)
@@ -579,10 +619,13 @@ qwen2.5-coder:7b >> PROMPT:
 #+RESULTS:
 | Command                                   | Description                                                                   |
 |-------------------------------------------+-------------------------------------------------------------------------------|
+| ollama-buddy-mode                         | Minor mode for ollama-buddy keybindings.                                      |
 | ollama-buddy-roles-switch-role            | Switch to a different ollama-buddy role.                                      |
 | ollama-buddy-disable-monitor              | Disable background connection monitoring.                                     |
+| ollama-buddy-toggle-token-display         | Toggle display of token statistics after each response.                       |
 | ollama-buddy-toggle-model-colors          | Toggle the use of model-specific colors in ollama-buddy.                      |
 | ollama-buddy-enable-monitor               | Enable background connection monitoring.                                      |
+| ollama-buddy-display-token-stats          | Display token usage statistics.                                               |
 | ollama-buddy-role-creator-create-new-role | Create a new role interactively.                                              |
 | ollama-buddy-roles-open-directory         | Open the ollama-buddy roles directory in Dired.                               |
 | ollama-buddy-menu                         | Display Ollama Buddy menu.                                                    |
@@ -617,13 +660,17 @@ qwen2.5-coder:7b >> PROMPT:
 |----------------------------------------+---------------------------------------------------------------|
 | ollama-buddy-command-definitions       | Comprehensive command definitions for Ollama Buddy.           |
 | ollama-buddy-enable-model-colors       | Whether to show model colors. EXPERIMNTAL.                    |
+| ollama-buddy-mode                      | Non-nil if Ollama-Buddy mode is enabled.                      |
 | ollama-buddy-menu-columns              | Number of columns to display in the Ollama Buddy menu.        |
 | ollama-buddy-enable-background-monitor | Whether to enable background monitoring of Ollama connection. |
 | ollama-buddy-roles-directory           | Directory containing ollama-buddy role preset files.          |
+| ollama-buddy-mode-map                  | Keymap for ollama-buddy mode.                                 |
 | ollama-buddy-host                      | Host where Ollama server is running.                          |
 | ollama-buddy-default-model             | Default Ollama model to use.                                  |
+| ollama-buddy-display-token-stats       | Whether to display token usage statistics in responses.       |
 | ollama-buddy-port                      | Port where Ollama server is running.                          |
 | ollama-buddy-connection-check-interval | Interval in seconds to check Ollama connection status.        |
+| ollama-buddy-mode-hook                 | Hook run after entering or leaving `ollama-buddy-mode'.       |
 
 ** Emacs Init
 
