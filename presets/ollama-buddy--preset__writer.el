@@ -192,6 +192,11 @@
          :key ?C
          :description "Toggle Colors"
          :action ollama-buddy-toggle-model-colors)
+
+        (token-stats
+         :key ?t
+         :description "Token Usage Stats"
+         :action ollama-buddy-display-token-stats)
                 
         (quit
          :key ?q

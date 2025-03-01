@@ -786,12 +786,7 @@ ACTUAL-MODEL is the model being used instead."
   (goto-char (point-max)))
 
 (defcustom ollama-buddy-command-definitions
-  '(
-    (token-stats
-     :key ?t
-     :description "Token Usage Stats"
-     :action ollama-buddy-display-token-stats)
-    
+  '(    
     (open-chat
      :key ?o
      :description "Open chat buffer"
@@ -923,6 +918,11 @@ ACTUAL-MODEL is the model being used instead."
      :key ?C
      :description "Toggle Colors"
      :action ollama-buddy-toggle-model-colors)
+
+    (token-stats
+     :key ?t
+     :description "Token Usage Stats"
+     :action ollama-buddy-display-token-stats)
     
     (quit
      :key ?q

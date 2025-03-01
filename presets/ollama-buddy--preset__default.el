@@ -5,7 +5,7 @@
 
 (setq ollama-buddy-command-definitions
       '(
-        ;; General Commands
+        ;; General Commands        
         (open-chat
          :key ?o
          :description "Open chat buffer"
@@ -139,6 +139,11 @@
          :description "Toggle Colors"
          :action ollama-buddy-toggle-model-colors)
 
+        (token-stats
+         :key ?t
+         :description "Token Usage Stats"
+         :action ollama-buddy-display-token-stats)
+                
         (quit
          :key ?q
          :description "Quit"
