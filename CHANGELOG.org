@@ -11,6 +11,10 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-03-02> *0.3.1*
+
+Enhanced model colour contrast with themes, allowing =ollama-buddy-enable-model-colors= to be enabled by default.
+
 ** <2025-03-01> *0.3.0*
 
 Added real-time token usage tracking and display

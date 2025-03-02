@@ -70,8 +70,8 @@
   :group 'applications
   :prefix "ollama-buddy-")
 
-(defcustom ollama-buddy-enable-model-colors nil
-  "Whether to show model colors. EXPERIMNTAL."
+(defcustom ollama-buddy-enable-model-colors t
+  "Whether to show model colors. EXPERIMENTAL."
   :type 'boolean
   :group 'ollama-buddy)
 
@@ -299,16 +299,85 @@ When nil, status checks only occur during user interactions."
   (message "Ollama Buddy Model Colors: %s"
            (if ollama-buddy-enable-model-colors "Enabled" "Disabled")))
 
+(defun ollama-buddy--color-contrast (color1 color2)
+  "Calculate contrast ratio between COLOR1 and COLOR2.
+Returns a value between 1 and 21, where higher values indicate better contrast.
+Based on WCAG 2.0 contrast algorithm."
+  (let* ((rgb1 (color-name-to-rgb color1))
+         (rgb2 (color-name-to-rgb color2))
+         ;; Calculate relative luminance for each color
+         (l1 (ollama-buddy--relative-luminance rgb1))
+         (l2 (ollama-buddy--relative-luminance rgb2))
+         ;; Ensure lighter color is l1
+         (light (max l1 l2))
+         (dark (min l1 l2)))
+    ;; Contrast ratio formula
+    (/ (+ light 0.05) (+ dark 0.05))))
+
+(defun ollama-buddy--relative-luminance (rgb)
+  "Calculate the relative luminance of RGB.
+RGB should be a list of (r g b) values between 0 and 1."
+  (let* ((r (nth 0 rgb))
+         (g (nth 1 rgb))
+         (b (nth 2 rgb))
+         ;; Convert RGB to linear values (gamma correction)
+         (r-linear (if (<= r 0.03928)
+                       (/ r 12.92)
+                     (expt (/ (+ r 0.055) 1.055) 2.4)))
+         (g-linear (if (<= g 0.03928)
+                       (/ g 12.92)
+                     (expt (/ (+ g 0.055) 1.055) 2.4)))
+         (b-linear (if (<= b 0.03928)
+                       (/ b 12.92)
+                     (expt (/ (+ b 0.055) 1.055) 2.4))))
+    ;; Calculate luminance with RGB coefficients
+    (+ (* 0.2126 r-linear)
+       (* 0.7152 g-linear)
+       (* 0.0722 b-linear))))
+
 (defun ollama-buddy--hash-string-to-color (str)
-  "Generate a consistent color based on the hash of STR."
+  "Generate a consistent color based on the hash of STR with good contrast.
+Adapts the color to the current theme (light or dark) for better visibility."
   (let* ((hash (abs (sxhash str)))
-         ;; Generate HSL values - keeping saturation and lightness fixed for readability
+         ;; Generate HSL values - keeping saturation high for readability
          (hue (mod hash 360))
-         (saturation 70)
-         (lightness 60))
-    ;; Convert HSL to hex color
-    (apply #'color-rgb-to-hex
-           (color-hsl-to-rgb (/ hue 360.0) (/ saturation 100.0) (/ lightness 100.0)))))
+         (saturation 85)
+         ;; Determine if background is light or dark
+         (is-dark-background (eq (frame-parameter nil 'background-mode) 'dark))
+         ;; Adjust lightness based on background (darker for light bg, lighter for dark bg)
+         (base-lightness (if is-dark-background 65 45))
+         ;; Avoid problematic hue ranges for visibility (e.g., yellows on white background)
+         ;; Adjust lightness for problematic hues
+         (lightness (cond
+                     ;; Yellows (40-70) - make darker on light backgrounds
+                     ((and (>= hue 40) (<= hue 70) (not is-dark-background))
+                      (max 20 (- base-lightness 20)))
+                     ;; Blues (180-240) - make lighter on dark backgrounds
+                     ((and (>= hue 180) (<= hue 240) is-dark-background)
+                      (min 80 (+ base-lightness 15)))
+                     ;; Default lightness
+                     (t base-lightness)))
+         ;; Convert HSL to RGB
+         (rgb-values (color-hsl-to-rgb (/ hue 360.0) (/ saturation 100.0) (/ lightness 100.0)))
+         ;; Convert RGB to hex color
+         (color (apply #'color-rgb-to-hex rgb-values))
+         ;; Get foreground/background colors for contrast check
+         (bg-color (face-background 'default))
+         (target-color color))
+    
+    ;; Adjust saturation for better contrast if needed (fallback approach)
+    (when (and bg-color
+               (< (ollama-buddy--color-contrast bg-color target-color) 4.5))
+      (let* ((adjusted-saturation (min 100 (+ saturation 10)))
+             (adjusted-lightness (if is-dark-background
+                                     (min 85 (+ lightness 10))
+                                   (max 15 (- lightness 10))))
+             (adjusted-rgb (color-hsl-to-rgb (/ hue 360.0) 
+                                            (/ adjusted-saturation 100.0) 
+                                            (/ adjusted-lightness 100.0))))
+        (setq target-color (apply #'color-rgb-to-hex adjusted-rgb))))
+    
+    target-color))
 
 ;; Modify the model retrieval function to include colors
 (defun ollama-buddy--get-models-with-colors ()
