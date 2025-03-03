@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama Buddy: Your Friendly AI Assistant -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.3.0
+;; Version: 0.4.0
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -117,6 +117,24 @@ When nil, status checks only occur during user interactions."
   :type 'integer
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-history-enabled t
+  "Whether to use conversation history in Ollama requests."
+  :type 'boolean
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-max-history-length 10
+  "Maximum number of message pairs to keep in conversation history."
+  :type 'integer
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-show-history-indicator t
+  "Whether to show the history indicator in the header line."
+  :type 'boolean
+  :group 'ollama-buddy)
+
+(defvar ollama-buddy--conversation-history nil
+  "History of messages for the current conversation.")
+
 (defvar ollama-buddy--token-usage-history nil
   "History of token usage for ollama-buddy interactions.")
 
@@ -185,6 +203,198 @@ When nil, status checks only occur during user interactions."
 ;; Keep track of model colors
 (defvar ollama-buddy--model-colors (make-hash-table :test 'equal)
   "Hash table mapping model names to their colors.")
+
+(defun ollama-buddy--find-prompt-positions ()
+  "Find all prompt positions in the current buffer.
+Returns a list of positions where prompts start."
+  (let ((positions '())
+        (case-fold-search nil))
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "\\[User: PROMPT\\]" nil t)
+        (push (match-beginning 0) positions)))
+    (nreverse positions)))
+
+(defun ollama-buddy--find-response-positions ()
+  "Find all response positions in the current buffer.
+Returns a list of positions where responses start."
+  (let ((positions '())
+        (case-fold-search nil))
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "\\[.*: RESPONSE\\]" nil t)
+        (push (match-beginning 0) positions)))
+    (nreverse positions)))
+
+(defun ollama-buddy--find-all-conversation-markers ()
+  "Find all prompt and response markers in chronological order.
+Returns a list of cons cells with position and type ('prompt or 'response)."
+  (let ((markers '()))
+    (save-excursion
+      ;; Find all prompts
+      (goto-char (point-min))
+      (while (re-search-forward "\\[User: PROMPT\\]" nil t)
+        (push (cons (match-beginning 0) 'prompt) markers))
+      
+      ;; Find all responses
+      (goto-char (point-min))
+      (while (re-search-forward "\\[.*: RESPONSE\\]" nil t)
+        (push (cons (match-beginning 0) 'response) markers)))
+    
+    ;; Sort by position and return
+    (sort markers (lambda (a b) (< (car a) (car b))))))
+
+(defun ollama-buddy-previous-prompt ()
+  "Navigate to the previous prompt."
+  (interactive)
+  (let ((positions (ollama-buddy--find-prompt-positions)))
+    (if (null positions)
+        (message "No prompts found")
+      (let ((prev-pos (car (last (seq-filter (lambda (pos) (< pos (point))) positions)))))
+        (if prev-pos
+            (progn
+              (goto-char prev-pos)
+              (recenter))
+          (message "No previous prompt"))))))
+
+(defun ollama-buddy-next-prompt ()
+  "Navigate to the next prompt."
+  (interactive)
+  (let ((positions (ollama-buddy--find-prompt-positions)))
+    (if (null positions)
+        (message "No prompts found")
+      (let ((next-pos (car (seq-filter (lambda (pos) (> pos (point))) positions))))
+        (if next-pos
+            (progn
+              (goto-char next-pos)
+              (recenter))
+          (message "No next prompt"))))))
+
+(defun ollama-buddy-previous-response ()
+  "Navigate to the previous response."
+  (interactive)
+  (let ((positions (ollama-buddy--find-response-positions)))
+    (if (null positions)
+        (message "No responses found")
+      (let ((prev-pos (car (last (seq-filter (lambda (pos) (< pos (point))) positions)))))
+        (if prev-pos
+            (progn
+              (goto-char prev-pos)
+              (recenter))
+          (message "No previous response"))))))
+
+(defun ollama-buddy-next-response ()
+  "Navigate to the next response."
+  (interactive)
+  (let ((positions (ollama-buddy--find-response-positions)))
+    (if (null positions)
+        (message "No responses found")
+      (let ((next-pos (car (seq-filter (lambda (pos) (> pos (point))) positions))))
+        (if next-pos
+            (progn
+              (goto-char next-pos)
+              (recenter))
+          (message "No next response"))))))
+
+(defun ollama-buddy-previous-conversation-item ()
+  "Navigate to the previous item (prompt or response) in the conversation."
+  (interactive)
+  (let ((markers (ollama-buddy--find-all-conversation-markers)))
+    (if (null markers)
+        (message "No conversation items found")
+      (let ((prev-marker (car (last (seq-filter (lambda (marker) 
+                                                  (< (car marker) (point))) 
+                                                markers)))))
+        (if prev-marker
+            (progn
+              (goto-char (car prev-marker))
+              (recenter)
+              (message "Previous %s" (if (eq (cdr prev-marker) 'prompt) 
+                                         "prompt" 
+                                       "response")))
+          (message "No previous conversation item"))))))
+
+(defun ollama-buddy-next-conversation-item ()
+  "Navigate to the next item (prompt or response) in the conversation."
+  (interactive)
+  (let ((markers (ollama-buddy--find-all-conversation-markers)))
+    (if (null markers)
+        (message "No conversation items found")
+      (let ((next-marker (car (seq-filter (lambda (marker) 
+                                            (> (car marker) (point))) 
+                                          markers))))
+        (if next-marker
+            (progn
+              (goto-char (car next-marker))
+              (recenter)
+              (message "Next %s" (if (eq (cdr next-marker) 'prompt) 
+                                     "prompt" 
+                                   "response")))
+          (message "No next conversation item"))))))
+
+(defun ollama-buddy--add-to-history (role content)
+  "Add message with ROLE and CONTENT to conversation history."
+  (when ollama-buddy-history-enabled
+    (push `((role . ,role)
+            (content . ,content))
+          ollama-buddy--conversation-history)
+    ;; Truncate history if needed
+    (when (> (length ollama-buddy--conversation-history) 
+             (* 2 ollama-buddy-max-history-length))
+      (setq ollama-buddy--conversation-history 
+            (seq-take ollama-buddy--conversation-history 
+                      (* 2 ollama-buddy-max-history-length))))))
+
+(defun ollama-buddy--get-history-for-request ()
+  "Format conversation history for inclusion in an Ollama request."
+  (if ollama-buddy-history-enabled
+      (reverse ollama-buddy--conversation-history)
+    nil))
+
+(defun ollama-buddy-clear-history ()
+  "Clear the current conversation history."
+  (interactive)
+  (setq ollama-buddy--conversation-history nil)
+  (ollama-buddy--update-status "History cleared")
+  (message "Ollama conversation history cleared"))
+
+(defun ollama-buddy-toggle-history ()
+  "Toggle conversation history on/off."
+  (interactive)
+  (setq ollama-buddy-history-enabled (not ollama-buddy-history-enabled))
+  (ollama-buddy--update-status 
+   (if ollama-buddy-history-enabled "History enabled" "History disabled"))
+  (message "Ollama conversation history %s" 
+           (if ollama-buddy-history-enabled "enabled" "disabled")))
+
+(defun ollama-buddy--display-history ()
+  "Display the current conversation history in a buffer."
+  (interactive)
+  (let ((buf (get-buffer-create "*Ollama Conversation History*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert "Ollama Conversation History:\n\n")
+        
+        (if (null ollama-buddy--conversation-history)
+            (insert "No conversation history available.")
+          (let ((history-count (/ (length ollama-buddy--conversation-history) 2)))
+            (insert (format "Current history: %d message pairs\n\n" history-count))
+            
+            ;; Display the history in chronological order
+            (dolist (msg (reverse ollama-buddy--conversation-history))
+              (let* ((role (alist-get 'role msg))
+                     (content (alist-get 'content msg))
+                     (role-face (if (string= role "user") 
+                                    '(:inherit bold :foreground "green") 
+                                  '(:inherit bold :foreground "blue"))))
+                (insert (propertize (format "[%s]: " (upcase role)) 'face role-face))
+                (insert (format "%s\n\n" content))))))
+        
+        (insert "\nUse M-x ollama-buddy-toggle-history to toggle history")
+        (insert "\nUse M-x ollama-buddy-clear-history to clear history")
+        (view-mode 1)))
+    (display-buffer buf)))
 
 (defun ollama-buddy--update-token-rate-display ()
   "Update the token rate display in real-time."
@@ -646,14 +856,18 @@ ORIGINAL-MODEL is the model that was requested.
 ACTUAL-MODEL is the model being used instead."
   (setq ollama-buddy--status status)
   (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-    (let ((model (or ollama-buddy--current-model
-                     ollama-buddy-default-model
-                     "No Model")))
+    (let* ((model (or ollama-buddy--current-model
+                      ollama-buddy-default-model
+                      "No Model"))
+           (history-msg (when (and ollama-buddy-show-history-indicator 
+                                   ollama-buddy-history-enabled)
+                          (format " [Hist:%d]" 
+                                  (/ (length ollama-buddy--conversation-history) 2)))))
       (setq header-line-format
             (concat
              (format (if (string-empty-p (ollama-buddy--update-multishot-status))
-                         " [%s%s %s: %s]"
-                       " [%s %s %s: %s]")
+                         " [%s%s %s: %s%s]"
+                       " [%s %s %s: %s%s]")
                      (ollama-buddy--update-multishot-status)
                      (propertize (if (ollama-buddy--check-status) "RUNNING" "OFFLINE")
                                  'face '(:weight bold))
@@ -661,7 +875,8 @@ ACTUAL-MODEL is the model being used instead."
                                  `(:weight bold
                                            :foreground ,(ollama-buddy--get-model-color
                                                          model)))
-                     (propertize status 'face '(:weight bold)))
+                     (propertize status 'face '(:weight bold))
+                     (or history-msg ""))
              (when (and original-model actual-model (not (string= original-model actual-model)))
                (propertize (format " [Using %s instead of %s]" actual-model original-model)
                            'face '(:foreground "orange" :weight bold))))))))
@@ -714,6 +929,13 @@ ACTUAL-MODEL is the model being used instead."
           (goto-char (point-max))
           (insert text)
 
+          ;; Track the complete response for history
+          (when (boundp 'ollama-buddy--current-response)
+            (setq ollama-buddy--current-response 
+                  (concat (or ollama-buddy--current-response "") text)))
+          (unless (boundp 'ollama-buddy--current-response)
+            (setq ollama-buddy--current-response text))
+
           ;; lets push to a register if multishot is enabled
           (when ollama-buddy--multishot-sequence
             (let* ((reg-char
@@ -725,6 +947,10 @@ ACTUAL-MODEL is the model being used instead."
           
           ;; Check if this response is complete
           (when (eq (alist-get 'done json-data) t)
+            ;; Add the complete response to history
+            (ollama-buddy--add-to-history "assistant" ollama-buddy--current-response)
+            (makunbound 'ollama-buddy--current-response)
+            
             ;; Cancel the update timer
             (when ollama-buddy--token-update-timer
               (cancel-timer ollama-buddy--token-update-timer)
@@ -1039,7 +1265,8 @@ Each command is defined with:
            (current-input (buffer-substring-no-properties bounds (point)))
            (input
             (read-from-minibuffer
-             "Ollama Buddy: " nil nil nil 'ollama-buddy--prompt-history)))
+             "Ollama Buddy: " (nth 0 ollama-buddy--prompt-history)
+             nil nil '(ollama-buddy--prompt-history . 1))))
       (when input
         (delete-region bounds (point))
         (insert input)))))
@@ -1083,12 +1310,18 @@ Each command is defined with:
   (let* ((model-info (ollama-buddy--get-valid-model specified-model))
          (model (car model-info))
          (original-model (cdr model-info))
+         (messages (ollama-buddy--get-history-for-request))
+         ;; Add the current prompt to the messages
+         (messages (append messages `(((role . "user")
+                                       (content . ,prompt)))))
          (payload (json-encode
                    `((model . ,model)
-                     (messages . [((role . "user")
-                                   (content . ,prompt))])
+                     (messages . ,(vconcat [] messages))
                      (stream . t)))))
     (setq ollama-buddy--current-model model)
+    
+    ;; Add the user message to history
+    (ollama-buddy--add-to-history "user" prompt)
     
     (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
       (pop-to-buffer (current-buffer))
@@ -1196,20 +1429,21 @@ Each command is defined with:
            "Hi there! and welcome to OLLAMA BUDDY!\n\n"
            models-section
            "Quick Tips:\n\n"
-           "- Ask me anything!   C-c C-c to send\n"
-           "- Multi-model shot?  C-c C-l\n"
-           "- Change your mind?  C-c C-k to cancel\n"
-           "- Change your model? C-c C-m\n"
-           "- Prompt history?    M-p, minibuffer M-p/M-n\n"
-           "- In another buffer? M-x ollama-buddy-menu")))
+           "- Ask me anything!      C-c C-c\n"
+           "- Multi-model shot?     C-c l\n"
+           "- Change your mind?     C-c k\n"
+           "- Change your model?    C-c m\n"
+           "- Prompt history?       M-p/M-n\n"
+           "- Jump to User prompts? C-c C-p/C-n\n"
+           "- In another buffer?    M-x ollama-buddy-menu")))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
 
 (defun ollama-buddy--update-multishot-status ()
   "Update status line to show multishot progress."
   (if ollama-buddy--multishot-sequence
-    (let* ((completed (substring ollama-buddy--multishot-sequence
-                                 0 ollama-buddy--multishot-progress))
+    (let* ((completed (upcase (substring ollama-buddy--multishot-sequence
+                                 0 ollama-buddy--multishot-progress)))
            (remaining (substring ollama-buddy--multishot-sequence
                                  ollama-buddy--multishot-progress)))
       (concat (propertize "Multishot: " 'face '(:weight bold))
@@ -1470,9 +1704,15 @@ Each command is defined with:
 (defvar ollama-buddy-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-c") #'ollama-buddy--send-prompt)
-    (define-key map (kbd "C-c C-l") #'ollama-buddy--multishot-prompt)
-    (define-key map (kbd "C-c C-k") #'ollama-buddy--cancel-request)
-    (define-key map (kbd "C-c C-m") #'ollama-buddy--swap-model)
+    (define-key map (kbd "C-c l") #'ollama-buddy--multishot-prompt)
+    (define-key map (kbd "C-c k") #'ollama-buddy--cancel-request)
+    (define-key map (kbd "C-c m") #'ollama-buddy--swap-model)
+    (define-key map (kbd "C-c p") #'ollama-buddy-previous-conversation-item)
+    (define-key map (kbd "C-c n") #'ollama-buddy-next-conversation-item)
+    (define-key map (kbd "C-c C-p") #'ollama-buddy-previous-prompt)
+    (define-key map (kbd "C-c C-n") #'ollama-buddy-next-prompt)
+    (define-key map (kbd "C-c M-p") #'ollama-buddy-previous-response)
+    (define-key map (kbd "C-c M-n") #'ollama-buddy-next-response)
     (define-key map (kbd "M-p") #'ollama-buddy--get-prompt-history-element)
     map)
   "Keymap for ollama-buddy mode.")
@@ -1481,6 +1721,37 @@ Each command is defined with:
   "Minor mode for ollama-buddy keybindings."
   :lighter " OB"
   :keymap ollama-buddy-mode-map)
+
+;; Add to command definitions
+(add-to-list 'ollama-buddy-command-definitions
+             '(toggle-history
+               :key ?H
+               :description "Toggle conversation history"
+               :action ollama-buddy-toggle-history))
+
+(add-to-list 'ollama-buddy-command-definitions
+             '(clear-history
+               :key ?X
+               :description "Clear conversation history"
+               :action ollama-buddy-clear-history))
+
+(add-to-list 'ollama-buddy-command-definitions
+             '(show-history
+               :key ?V
+               :description "View conversation history"
+               :action ollama-buddy--display-history))
+
+(add-to-list 'ollama-buddy-command-definitions
+             '(previous-item
+               :key ?P
+               :description "Go to previous prompt/response"
+               :action ollama-buddy-previous-conversation-item))
+
+(add-to-list 'ollama-buddy-command-definitions
+             '(next-item
+               :key ?N
+               :description "Go to next prompt/response"
+               :action ollama-buddy-next-conversation-item))
 
 (provide 'ollama-buddy)
 ;;; ollama-buddy.el ends here

@@ -255,6 +255,59 @@ Can you write unit tests for the generated code
 
 * Whats New
 
+** <2025-03-03> *0.4.0*
+
+Added conversation history support and navigation functions
+
+- Implemented conversation history tracking between prompts and responses
+- Added configurable history length limits and visual indicators
+- Created navigation functions to move between prompts/responses in buffer
+
+*Key Features*
+
+1. *Conversation History*
+
+Ollama Buddy now maintains context between your interactions by:
+
+- Tracking conversation history between prompts and responses
+- Sending previous messages to Ollama for improved contextual responses
+- Displaying a history counter in the status line showing conversation length
+- Providing configurable history length limits to control memory usage
+
+You can control this feature with:
+
+#+begin_src elisp
+;; Enable/disable conversation history (default: t)
+(setq ollama-buddy-history-enabled t)
+
+;; Set maximum conversation pairs to remember (default: 10)
+(setq ollama-buddy-max-history-length 10)
+
+;; Show/hide the history counter in the header line (default: t)
+(setq ollama-buddy-show-history-indicator t)
+#+end_src
+
+2. *Enhanced Navigation*
+
+Moving through longer conversations is now much easier with:
+
+- Navigation functions to jump between prompts and responses using C-c C-n/C-p and variants
+- Keybindings
+
+| Keybinding            | Function                        | Description                          |
+|-----------------------+---------------------------------+--------------------------------------|
+| =C-c p= / =C-c n=     | Previous/next conversation item | Jump to either prompt or response    |
+| =C-c C-p= / =C-c C-n= | Previous/next prompt            | Jump specifically to user prompts    |
+| =C-c M-p= / =C-c M-n= | Previous/next response          | Jump specifically to model responses |
+
+. *Menu Commands*
+
+Three new menu commands have been added:
+
+- =H=: Toggle history tracking on/off
+- =X=: Clear the current conversation history
+- =V=: View the full conversation history in a dedicated buffer
+
 ** <2025-03-02> *0.3.1*
 
 Enhanced model colour contrast with themes, allowing =ollama-buddy-enable-model-colors= to be enabled by default.
@@ -270,34 +323,6 @@ Added real-time token usage tracking and display
 - Integrate token tracking into response processing and status updates
 - Ensure cleanup of timers and tracking variables on completion or cancellation
 
-*** Key Features
-
-- *Real-time token counting:* As responses are streamed, the system tracks the number of tokens generated.
-- *Token rate calculation:* The average tokens per second are computed dynamically.
-- *Background updates:* A timer updates the token count and rate periodically.
-- *Detailed token history:* A history of token usage across interactions is maintained.
-- *User-configurable display:* Users can enable or disable token statistics in responses.
-- *Statistics view:* A new command shows an overview of token usage over time.
-
-*** How It Works
-
-When a response starts, Ollama Buddy initializes tracking variables and starts a timer. As tokens are received, the counter updates, and the current rate is computed. Once the response completes, the total token count and rate are added to a history log. If enabled, token statistics are displayed at the end of responses.
-
-A new command, ~M-x ollama-buddy-display-token-stats~, provides a summary of token usage, including per-model breakdowns and recent history.
-
-*** Enabling and Disabling Token Display
-
-Users can toggle automatic token statistics display by calling:
-
-#+BEGIN_SRC emacs-lisp
-M-x ollama-buddy-toggle-token-display
-#+END_SRC
-
-This setting persists during the session, allowing users to view or hide token details as needed.
-
-*** Improving Your Workflow
-
-This feature provides better insights into model performance and helps users optimize their interactions with Ollama Buddy. Whether monitoring efficiency or benchmarking responses, real-time token tracking enhances usability.
 
 ** <2025-02-28> *0.2.4*
 
