@@ -255,6 +255,10 @@ Can you write unit tests for the generated code
 
 * Whats New
 
+** <2025-03-04> *0.4.1*
+
+Added a sparse version of =ollama-buddy= called =ollama-buddy-mini=, see the github repository for the elisp file and a description in =README-mini.org=
+
 ** <2025-03-03> *0.4.0*
 
 Added conversation history support and navigation functions

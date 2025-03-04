@@ -1,0 +1,57 @@
+#+title: Ollama Buddy: Local LLM Integration for Emacs
+#+author: James Dyer
+#+email: captainflasmr@gmail.com
+#+language: en
+#+options: ':t toc:nil author:nil email:nil num:nil title:nil
+#+todo: TODO DOING | DONE
+#+startup: showall
+
+* Ollama Buddy Mini: Leveraging Emacs for LLM Interactions
+
+*Ollama Buddy Mini*, is a streamlined version of the original Ollama Buddy package that maintains the core functionality while eliminating unnecessary complexity. This minimalist approach allows users to harness the full editing capabilities of Emacs when interacting with local LLMs through Ollama and is a sixth of the size of the original implementation.
+
+The original Ollama Buddy package is feature-rich, with support for multiple models, conversation history management, token statistics, color coding, and a complex menu system. While these features are useful for power users, they add complexity and cognitive overhead for those who simply want to interact with their local LLMs effectively.
+
+Since simplicity and a lightweight design were the original goals of this project, I plan to revisit that vision by offering this streamlined option.
+
+Ollama Buddy Mini strips away the extras while preserving the essential functionality:
+
+- Connecting to a local Ollama server
+- Sending prompts to various models
+- Streaming responses in real-time
+- Basic conversation history management
+- Simple and intuitive keybindings
+
+By reducing the codebase from almost 2000 lines to just around 300 lines, Ollama Buddy Mini becomes easier to understand, modify, and maintain.
+
+** Core Features of Ollama Buddy Mini
+
+*** Simple Chat Interface
+
+The mini version maintains a clean chat interface with clear delineation between user prompts and model responses. The header separator (=o( Y )o=) provides visual context without overwhelming the display.
+
+*** Conversation History
+
+Despite its simplicity, Ollama Buddy Mini still maintains conversation history, allowing for contextual interactions with your LLM. The history management is transparent and configurable, with options to clear history when needed.
+
+*** Multi-Model Support
+
+The package retains the ability to switch between different Ollama models, making it easy to compare responses or use specialized models for different tasks.
+
+*** Real-Time Streaming
+
+One of the key features preserved is the real-time streaming of responses, providing immediate feedback as the LLM generates content.
+
+** Conclusion
+
+Note: To get started with Ollama Buddy Mini just download the elisp file =ollama-buddy-mini.el= from =https://github.com/captainflasmr/ollama-buddy=
+
+Add it to your load path and configure some basic settings:
+
+#+begin_src elisp
+(use-package ollama-buddy
+  ;; :load-path "/path/to/ollama-buddy"
+  :load-path "/path/to/ollama-buddy-mini"
+  :bind ("C-c o" . ollama-buddy-menu)
+  :custom ollama-buddy-default-model "llama:latest")
+#+end_src
