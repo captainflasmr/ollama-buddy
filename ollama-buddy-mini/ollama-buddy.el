@@ -10,69 +10,18 @@
 
 ;;; Code:
 
-(defgroup ollama-buddy nil
-  "Customization group for Ollama Buddy."
-  :group 'applications
-  :prefix "ollama-buddy-")
-
-(defcustom ollama-buddy-host "localhost"
-  "Host where Ollama server is running."
-  :type 'string
-  :group 'ollama-buddy)
-
-(defcustom ollama-buddy-port 11434
-  "Port where Ollama server is running."
-  :type 'integer
-  :group 'ollama-buddy)
-
-(defcustom ollama-buddy-default-model nil
-  "Default Ollama model to use."
-  :type 'string
-  :group 'ollama-buddy)
-
-(defconst ollama-buddy--separators
-  '((header . "------------------ o( Y )o ------------------")
-    (response . "------------------ @( Y )@ ------------------"))
-  "Separators for chat display.")
-
-(defvar ollama-buddy--conversation-history nil
-  "History of messages for the current conversation.")
-
-(defcustom ollama-buddy-history-enabled t
-  "Whether to use conversation history in Ollama requests."
-  :type 'boolean
-  :group 'ollama-buddy)
-
-(defcustom ollama-buddy-max-history-length 10
-  "Maximum number of message pairs to keep in conversation history."
-  :type 'integer
-  :group 'ollama-buddy)
-
-(defvar ollama-buddy--current-model nil
-  "Timer for checking Ollama connection status.")
-
-(defvar ollama-buddy--chat-buffer "*Ollama Buddy Chat*"
-  "Chat interaction buffer.")
-
-(defvar ollama-buddy--active-process nil
-  "Active Ollama process.")
+(defgroup ollama-buddy nil "Customization group for Ollama Buddy." :group 'applications :prefix "ollama-buddy-")
+(defcustom ollama-buddy-host "localhost" "Host where Ollama server is running." :type 'string :group 'ollama-buddy)
+(defcustom ollama-buddy-port 11434 "Port where Ollama server is running." :type 'integer :group 'ollama-buddy)
+(defcustom ollama-buddy-default-model nil "Default Ollama model to use." :type 'string :group 'ollama-buddy)
+(defvar ollama-buddy--conversation-history nil "History of messages for the current conversation.")
+(defvar ollama-buddy--current-model nil "Timer for checking Ollama connection status.")
+(defvar ollama-buddy--chat-buffer "*Ollama Buddy Chat*" "Chat interaction buffer.")
+(defvar ollama-buddy--active-process nil "Active Ollama process.")
 
 (defun ollama-buddy--add-to-history (role content)
   "Add message with ROLE and CONTENT to conversation history."
-  (when ollama-buddy-history-enabled
-    (push `((role . ,role)
-            (content . ,content))
-          ollama-buddy--conversation-history)
-    (when (> (length ollama-buddy--conversation-history)
-             (* 2 ollama-buddy-max-history-length))
-      (setq ollama-buddy--conversation-history
-            (seq-take ollama-buddy--conversation-history
-                      (* 2 ollama-buddy-max-history-length))))))
-
-(defun ollama-buddy--get-history-for-request ()
-  "Format conversation history for inclusion in an Ollama request."
-  (if ollama-buddy-history-enabled
-      (reverse ollama-buddy--conversation-history) nil))
+  (push `((role . ,role)(content . ,content)) ollama-buddy--conversation-history))
 
 (defun ollama-buddy-clear-history ()
   "Clear the current conversation history."
@@ -83,21 +32,9 @@
 (defun ollama-buddy--update-status (status &optional model)
   "Update the status with STATUS text and MODEL in the header-line."
   (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-    (let* ((model (or ollama-buddy--current-model
-                      ollama-buddy-default-model
-                      "No Model")))
+    (let* ((model (or ollama-buddy--current-model ollama-buddy-default-model "No Model")))
       (setq header-line-format
-            (concat (propertize (format " %s : %s" model status)
-                                'face
-                                `(:weight bold)))))))
-
-(defun ollama-buddy--initialize-chat-buffer ()
-  "Initialize the chat buffer and check Ollama status."
-  (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-    (when (= (buffer-size) 0)
-      (ollama-buddy-mode 1)
-      (ollama-buddy--show-prompt))
-    (ollama-buddy--update-status "Idle")))
+            (concat (propertize (format " %s : %s" model status) 'face `(:weight bold)))))))
 
 (defun ollama-buddy--stream-filter (_proc output)
   "Process stream OUTPUT while preserving cursor position."
@@ -122,10 +59,8 @@
           (when (eq (alist-get 'done json-data) t)
             (ollama-buddy--add-to-history "assistant" ollama-buddy--current-response)
             (makunbound 'ollama-buddy--current-response)
-            (insert "\n\n")
-            (insert (propertize "[" 'face '(:inherit bold)))
-            (insert (propertize ollama-buddy--current-model 'face `(:inherit bold)))
-            (insert (propertize ": FINISHED]" 'face '(:inherit bold)))
+            (insert "\n\n" (propertize (concat "[" ollama-buddy--current-model ": FINISHED]")
+                                       'face '(:inherit bold)))
             (ollama-buddy--show-prompt)
             (ollama-buddy--update-status "Finished")))
         (when window
@@ -149,10 +84,8 @@
 (defun ollama-buddy--swap-model ()
   "Swap ollama model."
   (interactive)
-  (let ((new-model
-         (completing-read "Model: " (ollama-buddy--get-models) nil t)))
-    (setq ollama-buddy-default-model new-model)
-    (setq ollama-buddy--current-model new-model)
+  (let ((new-model (completing-read "Model: " (ollama-buddy--get-models) nil t)))
+    (setq ollama-buddy-default-model new-model ollama-buddy--current-model new-model)
     (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
     (ollama-buddy--show-prompt)
     (goto-char (point-max))
@@ -162,17 +95,21 @@
   "Open chat buffer and initialize if needed."
   (interactive)
   (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
-  (ollama-buddy--initialize-chat-buffer)
+  (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+    (when (= (buffer-size) 0)
+      (ollama-buddy-mode 1)
+      (insert "Commands:\n\nSend   : C-c C-c\nCancel : C-c k\nModel  : C-c m\n\n")
+      (insert "Models Available:\n\n" (mapconcat 'identity (ollama-buddy--get-models) "\n"))
+      (ollama-buddy--show-prompt))
+    (ollama-buddy--update-status "Idle"))
   (goto-char (point-max)))
 
 (defun ollama-buddy--show-prompt ()
   "Show the prompt with optionally a MODEL."
   (interactive)
-  (let* ((model (or ollama-buddy--current-model
-                    ollama-buddy-default-model
-                    "Default:latest")))
+  (let* ((model (or ollama-buddy--current-model ollama-buddy-default-model "Default:latest")))
     (insert (format "\n\n%s\n\n%s %s"
-                    (propertize (alist-get 'header ollama-buddy--separators) 'face '(:inherit bold))
+                    (propertize "------------------" 'face '(:inherit bold))
                     (propertize model 'face `(:weight bold))
                     (propertize ">> PROMPT: " 'face '(:inherit bold))))))
 
@@ -180,7 +117,7 @@
   "Send PROMPT with optional MODEL"
   (unless (> (length prompt) 0)
     (user-error "Ensure prompt is defined"))
-  (let* ((messages (ollama-buddy--get-history-for-request))
+  (let* ((messages (reverse ollama-buddy--conversation-history))
          (messages (append messages `(((role . "user")
                                        (content . ,prompt)))))
          (payload (json-encode
@@ -193,11 +130,10 @@
       (pop-to-buffer (current-buffer))
       (goto-char (point-max))
       (insert (format "\n\n%s\n\n%s %s\n\n%s\n\n"
-                      (propertize (alist-get 'header ollama-buddy--separators) 'face '(:inherit bold))
+                      (propertize "------------------" 'face '(:inherit bold))
                       (propertize "[User: PROMPT]" 'face '(:inherit bold))
                       prompt
-                      (propertize (concat "[" model ": RESPONSE]") 'face
-                                  `(:inherit bold))))
+                      (propertize (concat "[" model ": RESPONSE]") 'face `(:inherit bold))))
       (visual-line-mode 1))
     (ollama-buddy--update-status "Sending request..." model)
     (when (and ollama-buddy--active-process
@@ -235,8 +171,7 @@
 
 (defun ollama-buddy--make-request (endpoint method &optional payload)
   "Generic request function for ENDPOINT with METHOD and optional PAYLOAD."
-  (let* ((url (format "http://%s:%d%s"
-                      ollama-buddy-host ollama-buddy-port endpoint))
+  (let* ((url (format "http://%s:%d%s" ollama-buddy-host ollama-buddy-port endpoint))
          (url-request-method method)
          (url-request-extra-headers '(("Content-Type" . "application/json")
                                       ("Connection" . "close")))
@@ -249,8 +184,7 @@
 (defun ollama-buddy--get-models ()
   "Get available Ollama models."
   (when-let ((response (ollama-buddy--make-request "/api/tags" "GET")))
-    (mapcar (lambda (m) (alist-get 'name m))
-            (alist-get 'models response))))
+    (mapcar (lambda (m) (alist-get 'name m))(alist-get 'models response))))
 
 (defun ollama-buddy--send-prompt ()
   "Send the current prompt to a LLM.."
@@ -259,9 +193,7 @@
                    (search-backward ">> PROMPT:")
                    (search-forward ":")
                    (point)))
-         (model (or ollama-buddy--current-model
-                    ollama-buddy-default-model
-                    "Default:latest"))
+         (model (or ollama-buddy--current-model ollama-buddy-default-model "Default:latest"))
          (query-text (string-trim (buffer-substring-no-properties bounds (point)))))
     (when (and query-text (not (string-empty-p query-text)))
       (add-to-history 'ollama-buddy--prompt-history query-text))
@@ -285,8 +217,7 @@
 
 (define-minor-mode ollama-buddy-mode
   "Minor mode for ollama-buddy keybindings."
-  :lighter " OB"
-  :keymap ollama-buddy-mode-map)
+  :lighter " OB" :keymap ollama-buddy-mode-map)
 
 (provide 'ollama-buddy)
 
