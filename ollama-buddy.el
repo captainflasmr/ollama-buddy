@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama Buddy: Your Friendly AI Assistant -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.4.0
+;; Version: 0.5.0
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -70,8 +70,224 @@
   :group 'applications
   :prefix "ollama-buddy-")
 
+(defcustom ollama-buddy-command-definitions
+  '(
+    ;; General Commands
+    (open-chat
+     :key ?o
+     :description "Open chat buffer"
+     :action ollama-buddy--open-chat)
+    
+    (swap-model
+     :key ?m
+     :description "Swap model"
+     :action ollama-buddy--swap-model)
+    
+    (show-models
+     :key ?v
+     :description "View model status"
+     :action ollama-buddy-show-model-status)
+
+    (send-region
+     :key ?l
+     :description "Send region"
+     :action (lambda () (ollama-buddy--send-with-command 'send-region)))
+
+    (help
+     :key ?h
+     :description "Help assistant"
+     :action (lambda ()
+               (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
+               (goto-char (point-max))
+               (insert (ollama-buddy--create-intro-message))
+               (ollama-buddy--show-prompt)))
+
+    (switch-role
+     :key ?R
+     :description "Switch roles"
+     :model nil
+     :action ollama-buddy-roles-switch-role)
+
+    (create-role
+     :key ?N
+     :description "Create new role"
+     :model nil
+     :action ollama-buddy-role-creator-create-new-role)
+
+    (open-roles-directory
+     :key ?D
+     :description "Open roles directory"
+     :model nil
+     :action ollama-buddy-roles-open-directory)
+
+    ;; Custom commands
+    (refactor-code
+     :key ?r
+     :description "Refactor code"
+     :prompt "refactor the following code:"
+     :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
+    
+    (git-commit
+     :key ?g
+     :description "Git commit message"
+     :prompt "write a concise git commit message for the following:"
+     :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+    
+    (describe-code
+     :key ?c
+     :description "Describe code"
+     :prompt "describe the following code:"
+     :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
+    
+    (dictionary-lookup
+     :key ?d
+     :description "Dictionary Lookup"
+     :prompt "For the following word provide a typical dictionary definition:"
+     :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup)))
+    
+    (synonym
+     :key ?n
+     :description "Word synonym"
+     :prompt "list synonyms for word:"
+     :action (lambda () (ollama-buddy--send-with-command 'synonym)))
+    
+    (proofread
+     :key ?p
+     :description "Proofread text"
+     :prompt "proofread the following:"
+     :action (lambda () (ollama-buddy--send-with-command 'proofread)))
+    
+    (make-concise
+     :key ?z
+     :description "Make concise"
+     :prompt "reduce wordiness while preserving meaning:"
+     :action (lambda () (ollama-buddy--send-with-command 'make-concise)))
+
+    ;; System Commands
+    (custom-prompt
+     :key ?e
+     :description "Custom prompt"
+     :action (lambda ()
+               (when-let ((prefix (read-string "Enter prompt prefix: " nil nil nil t)))
+                 (unless (use-region-p)
+                   (user-error "No region selected.  Select text to use with prompt"))
+                 (unless (not (string-empty-p prefix))
+                   (user-error "Input string is empty"))
+                 (ollama-buddy--send
+                  (concat prefix "\n\n"
+                          (buffer-substring-no-properties
+                           (region-beginning) (region-end)))))))
+    
+    (minibuffer-prompt
+     :key ?i
+     :description "Minibuffer Prompt"
+     :action (lambda ()
+               (when-let ((prefix (read-string "Enter prompt: " nil nil nil t)))
+                 (unless (not (string-empty-p prefix))
+                   (user-error "Input string is empty"))
+                 (ollama-buddy--send prefix))))
+    
+    (save-chat
+     :key ?s
+     :description "Save chat"
+     :action (lambda ()
+               (with-current-buffer ollama-buddy--chat-buffer
+                 (write-region (point-min) (point-max)
+                               (read-file-name "Save conversation to: ")
+                               'append-to-file
+                               nil))))
+    (kill-request
+     :key ?x
+     :description "Kill request"
+     :action (lambda ()
+               (delete-process ollama-buddy--active-process)))
+
+    (toggle-colors
+     :key ?C
+     :description "Toggle Colors"
+     :action ollama-buddy-toggle-model-colors)
+
+    (token-stats
+     :key ?t
+     :description "Token Usage Stats"
+     :action ollama-buddy-display-token-stats)
+
+    (toggle-history
+     :key ?H
+     :description "Toggle conversation history"
+     :action ollama-buddy-toggle-history)
+
+    (clear-history
+     :key ?X
+     :description "Clear conversation history"
+     :action (lambda () (ollama-buddy-clear-history 1)))
+
+    (show-history
+     :key ?V
+     :description "View conversation history"
+     :action (lambda () (ollama-buddy--display-history 1)))
+
+    (new-session
+     :key ?E
+     :description "New session"
+     :action ollama-buddy-sessions-new)
+
+    (load-session
+     :key ?L
+     :description "Load session"
+     :action ollama-buddy-sessions-load)
+
+    (save-session
+     :key ?S
+     :description "Save session"
+     :action ollama-buddy-sessions-save)
+
+    (list-sessions
+     :key ?Y
+     :description "List sessions"
+     :action ollama-buddy-sessions-list)
+
+    (delete-sessions
+     :key ?K
+     :description "Delete session"
+     :action ollama-buddy-sessions-delete)
+    
+    (quit
+     :key ?q
+     :description "Quit"
+     :action (lambda () (message "Quit Ollama Shell menu.")))
+    )
+  "Comprehensive command definitions for Ollama Buddy.
+Each command is defined with:
+  :key - Character for menu selection
+  :description - String describing the action
+  :model - Specific Ollama model to use (nil means use default)
+  :prompt - Optional system prompt
+  :action - Function to execute"
+  :type '(repeat
+          (list :tag "Command Definition"
+                (symbol :tag "Command Name")
+                (plist :inline t
+                       :options
+                       ((:key (character :tag "Menu Key Character"))
+                        (:description (string :tag "Command Description"))
+                        (:model (choice :tag "Specific Model"
+                                        (const :tag "Use Default" nil)
+                                        (string :tag "Model Name")))
+                        (:prompt (string :tag "Static Prompt Text"))
+                        (:action (choice :tag "Action"
+                                         (function :tag "Existing Function")
+                                         (sexp :tag "Lambda Expression")))))))
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-sessions-directory
+  (expand-file-name "ollama-buddy-sessions" user-emacs-directory)
+  "Directory containing ollama-buddy session files."
+  :type 'directory
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-enable-model-colors t
-  "Whether to show model colors. EXPERIMENTAL."
+  "Whether to show model colors."
   :type 'boolean
   :group 'ollama-buddy)
 
@@ -91,7 +307,7 @@ When nil, status checks only occur during user interactions."
   :type 'integer
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-menu-columns 4
+(defcustom ollama-buddy-menu-columns 5
   "Number of columns to display in the Ollama Buddy menu."
   :type 'integer
   :group 'ollama-buddy)
@@ -132,8 +348,14 @@ When nil, status checks only occur during user interactions."
   :type 'boolean
   :group 'ollama-buddy)
 
+(defvar ollama-buddy--current-session nil
+  "Name of the currently active session, or nil if none.")
+
+(defvar ollama-buddy--conversation-history-by-model (make-hash-table :test 'equal)
+  "Hash table mapping model names to their conversation histories.")
+
 (defvar ollama-buddy--conversation-history nil
-  "History of messages for the current conversation.")
+  "Current model's conversation history (alias for backward compatibility).")
 
 (defvar ollama-buddy--token-usage-history nil
   "History of token usage for ollama-buddy interactions.")
@@ -204,6 +426,323 @@ When nil, status checks only occur during user interactions."
 (defvar ollama-buddy--model-colors (make-hash-table :test 'equal)
   "Hash table mapping model names to their colors.")
 
+(defun ollama-buddy--ensure-sessions-directory ()
+  "Create the ollama-buddy sessions directory if it doesn't exist."
+  (unless (file-directory-p ollama-buddy-sessions-directory)
+    (make-directory ollama-buddy-sessions-directory t)))
+
+(defun ollama-buddy-sessions-save (&optional session-name)
+  "Save the current conversation state to a session file.
+If SESSION-NAME is not provided, prompt for a name."
+  (interactive)
+  (ollama-buddy--ensure-sessions-directory)
+  
+  (let* ((current-name (or ollama-buddy--current-session ""))
+         (default-name (if (string-empty-p current-name) 
+                           "default-session" 
+                         current-name))
+         (session-name (or session-name 
+                           (read-string 
+                            (format "Session name (default: %s): " default-name)
+                            nil nil default-name)))
+         (session-file (expand-file-name 
+                        (format "ollama-buddy-session--%s.el" session-name) 
+                        ollama-buddy-sessions-directory)))
+    
+    ;; Write the session file
+    (with-temp-file session-file
+      (insert ";; ollama-buddy session file\n")
+      (insert (format ";; Session: %s\n" session-name))
+      (insert (format ";; Created: %s\n\n" (format-time-string "%Y-%m-%d %H:%M:%S")))
+      
+      ;; Save current model
+      (insert (format "(setq ollama-buddy--current-model %S)\n\n" 
+                      (or ollama-buddy--current-model 
+                          ollama-buddy-default-model)))
+      
+      ;; Save conversation history by model
+      (insert "(setq ollama-buddy--conversation-history-by-model\n")
+      (insert "      (let ((table (make-hash-table :test 'equal)))\n")
+      
+      ;; For each model with history
+      (maphash 
+       (lambda (model history)
+         (when history  ;; Only include non-empty histories
+           (insert (format "        (puthash %S\n" model))
+           (insert (format "                 '%S\n" history))
+           (insert "                 table)\n")))
+       ollama-buddy--conversation-history-by-model)
+      
+      (insert "        table))\n\n")
+      
+      ;; Set the current history variable for backward compatibility
+      (insert "(setq ollama-buddy--conversation-history\n")
+      (insert (format "      (gethash %S ollama-buddy--conversation-history-by-model nil))\n\n" 
+                      (or ollama-buddy--current-model 
+                          ollama-buddy-default-model)))
+      
+      ;; Set current session name
+      (insert (format "(setq ollama-buddy--current-session %S)\n" session-name)))
+    
+    ;; Update current session name
+    (setq ollama-buddy--current-session session-name)
+    
+    ;; Provide feedback
+    (message "Session saved as '%s'" session-name)
+    session-file))
+
+(defun ollama-buddy-sessions-load (&optional session-name)
+  "Load a saved conversation session.
+If SESSION-NAME is not provided, prompt for a name."
+  (interactive)
+  (ollama-buddy--ensure-sessions-directory)
+  
+  (let* ((session-files (directory-files 
+                         ollama-buddy-sessions-directory nil 
+                         "^ollama-buddy-session--.*\\.el$"))
+         (session-names (mapcar 
+                         (lambda (file)
+                           (when (string-match "ollama-buddy-session--\\(.*\\)\\.el$" file)
+                             (match-string 1 file)))
+                         session-files)))
+    
+    ;; Check if we have any sessions
+    (if (null session-names)
+        (message "No saved sessions found in %s" ollama-buddy-sessions-directory)
+      
+      (let* ((chosen-name (or session-name
+                              (completing-read 
+                               "Load session: " 
+                               session-names nil t)))
+             (session-file (expand-file-name 
+                            (format "ollama-buddy-session--%s.el" chosen-name) 
+                            ollama-buddy-sessions-directory)))
+        
+        ;; Check if file exists
+        (if (not (file-exists-p session-file))
+            (message "Session file not found: %s" session-file)
+          (progn
+            ;; Load the session
+            (load-file session-file)
+            
+            ;; Update the chat buffer to reflect restored state
+            (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+              (let ((inhibit-read-only t))
+                (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
+                (visual-line-mode 1)
+                ;; Clear the buffer and reinitialize
+                (erase-buffer)
+                (ollama-buddy-mode 1)
+                
+                ;; Add session header
+                (insert (ollama-buddy--create-intro-message))
+                (insert (format "\n\n[Session '%s' restored]\n" chosen-name))
+                
+                ;; Collect all messages from all models into a single timeline
+                (let* ((all-messages '()))
+                  ;; Gather messages from all models
+                  (maphash
+                   (lambda (model history)
+                     (dolist (msg history)
+                       ;; Add model information to each message for display
+                       (let ((msg-with-model (copy-alist msg)))
+                         (setq msg-with-model (cons (cons 'model model) msg-with-model))
+                         ;; Add timestamp if available, or use a counter for ordering
+                         (unless (assoc 'timestamp msg-with-model)
+                           (setq msg-with-model (cons (cons 'timestamp 0) msg-with-model)))
+                         ;; (push msg-with-model all-messages)
+                         (setq all-messages (append all-messages (list msg-with-model)))
+                         )))
+                   ollama-buddy--conversation-history-by-model)
+                  
+                  ;; (setq all-messages (nreverse all-messages))
+                  
+                  ;; Display all messages in order
+                  (dolist (msg all-messages)
+                    (let* ((role (alist-get 'role msg))
+                           (model (alist-get 'model msg))
+                           (content (alist-get 'content msg)))
+                      
+                      (when (string= role "user")
+                        (insert (format "\n\n%s\n\n%s %s\n\n"
+                                        (propertize (alist-get 'header ollama-buddy--separators) 
+                                                    'face '(:inherit bold))
+                                        (propertize "[User: PROMPT]" 'face '(:inherit bold))
+                                        content)))
+                      
+                      (when (string= role "assistant")
+                        (insert (format "%s\n\n%s %s\n\n"
+                                        (propertize (alist-get 'response ollama-buddy--separators) 
+                                                    'face '(:inherit bold))
+                                        (propertize (concat "[" model ": RESPONSE]") 
+                                                    'face `(:inherit bold 
+                                                                     :foreground ,(ollama-buddy--get-model-color model)))
+                                        content))))))
+                
+                ;; Show a prompt at the end
+                (ollama-buddy--show-prompt)))))
+        
+        ;; Update status
+        (ollama-buddy--update-status (format "Session '%s' loaded" chosen-name))
+        (message "Loaded session: %s" chosen-name)))))
+
+(defun ollama-buddy-sessions-list ()
+  "Display a list of saved sessions."
+  (interactive)
+  (ollama-buddy--ensure-sessions-directory)
+  
+  (let* ((session-files (directory-files 
+                         ollama-buddy-sessions-directory nil 
+                         "^ollama-buddy-session--.*\\.el$"))
+         (buf (get-buffer-create "*Ollama Buddy Sessions*")))
+    
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert "Ollama Buddy Saved Sessions:\n\n")
+        
+        (if (null session-files)
+            (insert "No saved sessions found.\n")
+          (dolist (file session-files)
+            (when (string-match "ollama-buddy-session--\\(.*\\)\\.el$" file)
+              (let* ((session-name (match-string 1 file))
+                     (file-path (expand-file-name file ollama-buddy-sessions-directory))
+                     (attrs (file-attributes file-path))
+                     (mod-time (format-time-string 
+                                "%Y-%m-%d %H:%M:%S"
+                                (file-attribute-modification-time attrs)))
+                     (size (file-attribute-size attrs))
+                     (models '()))
+                
+                ;; Attempt to extract model information by reading the file
+                (with-temp-buffer
+                  (insert-file-contents file-path)
+                  (goto-char (point-min))
+                  (while (re-search-forward "puthash\\s-+\"\\([^\"]+\\)\"" nil t)
+                    (push (match-string 1) models)))
+                
+                ;; Display session info
+                (insert (propertize (format "- %s%s\n" 
+                                            session-name
+                                            (if (string= session-name ollama-buddy--current-session)
+                                                " (current)" ""))
+                                    'face '(:weight bold)))
+                (insert (format "  Modified: %s\n" mod-time))
+                (insert (format "  Size: %d bytes\n" size))
+                (when models
+                  (insert "  Models: ")
+                  (insert (mapconcat 
+                           (lambda (model)
+                             (propertize model 
+                                         'face `(:foreground ,(ollama-buddy--get-model-color model))))
+                           (delete-dups models)
+                           ", "))
+                  (insert "\n"))
+                (insert "\n")))))
+        
+        (insert "\nUse M-x ollama-buddy-sessions-load to load a session")
+        (insert "\nUse M-x ollama-buddy-sessions-save to save the current session")
+        (insert "\nUse M-x ollama-buddy-sessions-delete to delete a session")
+        (view-mode 1)))
+    
+    (display-buffer buf)))
+
+(defun ollama-buddy-sessions-delete (&optional session-name)
+  "Delete a saved session.
+If SESSION-NAME is not provided, prompt for a name."
+  (interactive)
+  (ollama-buddy--ensure-sessions-directory)
+  
+  (let* ((session-files (directory-files 
+                         ollama-buddy-sessions-directory nil 
+                         "^ollama-buddy-session--.*\\.el$"))
+         (session-names (mapcar 
+                         (lambda (file)
+                           (when (string-match "ollama-buddy-session--\\(.*\\)\\.el$" file)
+                             (match-string 1 file)))
+                         session-files)))
+    
+    ;; Check if we have any sessions
+    (if (null session-names)
+        (message "No saved sessions found in %s" ollama-buddy-sessions-directory)
+      
+      (let* ((chosen-name (or session-name
+                              (completing-read 
+                               "Delete session: " 
+                               session-names nil t)))
+             (session-file (expand-file-name 
+                            (format "ollama-buddy-session--%s.el" chosen-name) 
+                            ollama-buddy-sessions-directory)))
+        
+        ;; Check if file exists
+        (if (not (file-exists-p session-file))
+            (message "Session file not found: %s" session-file)
+          
+          ;; Confirm deletion
+          (when (yes-or-no-p (format "Really delete session '%s'? " chosen-name))
+            (delete-file session-file)
+            
+            ;; Reset current session if we just deleted it
+            (when (string= chosen-name ollama-buddy--current-session)
+              (setq ollama-buddy--current-session nil))
+            
+            (message "Deleted session: %s" chosen-name)))))))
+
+(defun ollama-buddy-sessions-new ()
+  "Start a new session by clearing history and buffer."
+  (interactive)
+
+  (when (y-or-n-p "Are you sure? ")
+    ;; Confirm if we have a current session
+    (when (and ollama-buddy--current-session
+               (not (yes-or-no-p 
+                     (format "Start new session? Current session '%s' will be discarded unless saved. " 
+                             ollama-buddy--current-session))))
+      (user-error "Operation cancelled"))
+    
+    ;; Clear current session
+    (setq ollama-buddy--current-session nil)
+    
+    ;; Clear all model histories
+    (clrhash ollama-buddy--conversation-history-by-model)
+    (setq ollama-buddy--conversation-history nil)
+    
+    ;; Clear the chat buffer
+    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+      (let ((inhibit-read-only t))
+        (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
+        (erase-buffer)
+        (ollama-buddy-mode 1)
+        (insert (ollama-buddy--create-intro-message))
+        (ollama-buddy--show-prompt)))
+    
+    ;; Update status
+    (ollama-buddy--update-status "New session started")
+    (message "Started new session")))
+
+(defun ollama-buddy-sessions-open-directory ()
+  "Open the ollama-buddy sessions directory in Dired."
+  (interactive)
+  (ollama-buddy--ensure-sessions-directory)
+  (dired ollama-buddy-sessions-directory))
+
+;; Auto-save session functionality
+(defcustom ollama-buddy-auto-save-session nil
+  "Whether to automatically save session on exit."
+  :type 'boolean
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-auto-save-session-name "autosave"
+  "Name to use for auto-saved sessions."
+  :type 'string
+  :group 'ollama-buddy)
+
+(defun ollama-buddy-sessions-maybe-auto-save ()
+  "Auto-save session if enabled and there's content to save."
+  (when (and ollama-buddy-auto-save-session
+             (> (hash-table-count ollama-buddy--conversation-history-by-model) 0))
+    (ollama-buddy-sessions-save ollama-buddy-auto-save-session-name)))
+
 (defun ollama-buddy--find-prompt-positions ()
   "Find all prompt positions in the current buffer.
 Returns a list of positions where prompts start."
@@ -214,35 +753,6 @@ Returns a list of positions where prompts start."
       (while (re-search-forward "\\[User: PROMPT\\]" nil t)
         (push (match-beginning 0) positions)))
     (nreverse positions)))
-
-(defun ollama-buddy--find-response-positions ()
-  "Find all response positions in the current buffer.
-Returns a list of positions where responses start."
-  (let ((positions '())
-        (case-fold-search nil))
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward "\\[.*: RESPONSE\\]" nil t)
-        (push (match-beginning 0) positions)))
-    (nreverse positions)))
-
-(defun ollama-buddy--find-all-conversation-markers ()
-  "Find all prompt and response markers in chronological order.
-Returns a list of cons cells with position and type ('prompt or 'response)."
-  (let ((markers '()))
-    (save-excursion
-      ;; Find all prompts
-      (goto-char (point-min))
-      (while (re-search-forward "\\[User: PROMPT\\]" nil t)
-        (push (cons (match-beginning 0) 'prompt) markers))
-      
-      ;; Find all responses
-      (goto-char (point-min))
-      (while (re-search-forward "\\[.*: RESPONSE\\]" nil t)
-        (push (cons (match-beginning 0) 'response) markers)))
-    
-    ;; Sort by position and return
-    (sort markers (lambda (a b) (< (car a) (car b))))))
 
 (defun ollama-buddy-previous-prompt ()
   "Navigate to the previous prompt."
@@ -268,95 +778,58 @@ Returns a list of cons cells with position and type ('prompt or 'response)."
             (progn
               (goto-char next-pos)
               (recenter))
-          (message "No next prompt"))))))
-
-(defun ollama-buddy-previous-response ()
-  "Navigate to the previous response."
-  (interactive)
-  (let ((positions (ollama-buddy--find-response-positions)))
-    (if (null positions)
-        (message "No responses found")
-      (let ((prev-pos (car (last (seq-filter (lambda (pos) (< pos (point))) positions)))))
-        (if prev-pos
-            (progn
-              (goto-char prev-pos)
-              (recenter))
-          (message "No previous response"))))))
-
-(defun ollama-buddy-next-response ()
-  "Navigate to the next response."
-  (interactive)
-  (let ((positions (ollama-buddy--find-response-positions)))
-    (if (null positions)
-        (message "No responses found")
-      (let ((next-pos (car (seq-filter (lambda (pos) (> pos (point))) positions))))
-        (if next-pos
-            (progn
-              (goto-char next-pos)
-              (recenter))
-          (message "No next response"))))))
-
-(defun ollama-buddy-previous-conversation-item ()
-  "Navigate to the previous item (prompt or response) in the conversation."
-  (interactive)
-  (let ((markers (ollama-buddy--find-all-conversation-markers)))
-    (if (null markers)
-        (message "No conversation items found")
-      (let ((prev-marker (car (last (seq-filter (lambda (marker) 
-                                                  (< (car marker) (point))) 
-                                                markers)))))
-        (if prev-marker
-            (progn
-              (goto-char (car prev-marker))
-              (recenter)
-              (message "Previous %s" (if (eq (cdr prev-marker) 'prompt) 
-                                         "prompt" 
-                                       "response")))
-          (message "No previous conversation item"))))))
-
-(defun ollama-buddy-next-conversation-item ()
-  "Navigate to the next item (prompt or response) in the conversation."
-  (interactive)
-  (let ((markers (ollama-buddy--find-all-conversation-markers)))
-    (if (null markers)
-        (message "No conversation items found")
-      (let ((next-marker (car (seq-filter (lambda (marker) 
-                                            (> (car marker) (point))) 
-                                          markers))))
-        (if next-marker
-            (progn
-              (goto-char (car next-marker))
-              (recenter)
-              (message "Next %s" (if (eq (cdr next-marker) 'prompt) 
-                                     "prompt" 
-                                   "response")))
-          (message "No next conversation item"))))))
+          (goto-char  (point-max)))))))
 
 (defun ollama-buddy--add-to-history (role content)
-  "Add message with ROLE and CONTENT to conversation history."
+  "Add message with ROLE and CONTENT to conversation history for current model."
   (when ollama-buddy-history-enabled
-    (push `((role . ,role)
-            (content . ,content))
-          ollama-buddy--conversation-history)
-    ;; Truncate history if needed
-    (when (> (length ollama-buddy--conversation-history) 
-             (* 2 ollama-buddy-max-history-length))
-      (setq ollama-buddy--conversation-history 
-            (seq-take ollama-buddy--conversation-history 
-                      (* 2 ollama-buddy-max-history-length))))))
+    (let* ((model ollama-buddy--current-model)
+           (history (gethash model ollama-buddy--conversation-history-by-model nil)))
+      
+      ;; Create new history entry for this model if it doesn't exist
+      (unless history
+        (setq history nil))
+      
+      ;; Add the new message to this model's history
+      ;; and put it at the end
+      (setq history
+            (append history
+                    (list `((role . ,role)
+                            (content . ,content)))))
+      
+      ;; Truncate history if needed
+      (when (> (length history) (* 2 ollama-buddy-max-history-length))
+        (setq history (seq-take history (* 2 ollama-buddy-max-history-length))))
+      
+      ;; Update the hash table with the modified history
+      (puthash model history ollama-buddy--conversation-history-by-model)
+      
+      ;; Update the current history variable for backward compatibility
+      (setq ollama-buddy--conversation-history history))))
 
 (defun ollama-buddy--get-history-for-request ()
-  "Format conversation history for inclusion in an Ollama request."
+  "Format conversation history for the current model for inclusion in an Ollama request."
   (if ollama-buddy-history-enabled
-      (reverse ollama-buddy--conversation-history)
+      (let* ((model ollama-buddy--current-model)
+             (history (gethash model ollama-buddy--conversation-history-by-model nil)))
+        history)
     nil))
 
-(defun ollama-buddy-clear-history ()
-  "Clear the current conversation history."
-  (interactive)
-  (setq ollama-buddy--conversation-history nil)
-  (ollama-buddy--update-status "History cleared")
-  (message "Ollama conversation history cleared"))
+(defun ollama-buddy-clear-history (&optional all-models)
+  "Clear the conversation history.
+With prefix argument ALL-MODELS, clear history for all models."
+  (interactive "P")
+  (if all-models
+      (progn
+        (clrhash ollama-buddy--conversation-history-by-model)
+        (setq ollama-buddy--conversation-history nil)
+        (ollama-buddy--update-status "All models' history cleared")
+        (message "Ollama conversation history cleared for all models"))
+    (let ((model ollama-buddy--current-model))
+      (remhash model ollama-buddy--conversation-history-by-model)
+      (setq ollama-buddy--conversation-history nil)
+      (ollama-buddy--update-status (format "History cleared for %s" model))
+      (message "Ollama conversation history cleared for %s" model))))
 
 (defun ollama-buddy-toggle-history ()
   "Toggle conversation history on/off."
@@ -367,32 +840,60 @@ Returns a list of cons cells with position and type ('prompt or 'response)."
   (message "Ollama conversation history %s" 
            (if ollama-buddy-history-enabled "enabled" "disabled")))
 
-(defun ollama-buddy--display-history ()
-  "Display the current conversation history in a buffer."
-  (interactive)
+(defun ollama-buddy--display-history (&optional all-models)
+  "Display the conversation history in a buffer.
+With prefix argument ALL-MODELS, show history for all models."
+  (interactive "P")
   (let ((buf (get-buffer-create "*Ollama Conversation History*")))
     (with-current-buffer buf
       (let ((inhibit-read-only t))
+        (visual-line-mode 1)
         (erase-buffer)
         (insert "Ollama Conversation History:\n\n")
         
-        (if (null ollama-buddy--conversation-history)
-            (insert "No conversation history available.")
-          (let ((history-count (/ (length ollama-buddy--conversation-history) 2)))
-            (insert (format "Current history: %d message pairs\n\n" history-count))
-            
-            ;; Display the history in chronological order
-            (dolist (msg (reverse ollama-buddy--conversation-history))
-              (let* ((role (alist-get 'role msg))
-                     (content (alist-get 'content msg))
-                     (role-face (if (string= role "user") 
-                                    '(:inherit bold :foreground "green") 
-                                  '(:inherit bold :foreground "blue"))))
-                (insert (propertize (format "[%s]: " (upcase role)) 'face role-face))
-                (insert (format "%s\n\n" content))))))
+        (if all-models
+            ;; Display history for all models
+            (progn
+              (if (= (hash-table-count ollama-buddy--conversation-history-by-model) 0)
+                  (insert "No conversation history available for any model.")
+                (maphash
+                 (lambda (model history)
+                   (let ((history-count (/ (length history) 2)))
+                     (insert (format "== Model: %s (%d message pairs) ==\n\n" 
+                                     model history-count))
+                     (dolist (msg history)
+                       (let* ((role (alist-get 'role msg))
+                              (content (alist-get 'content msg))
+                              (role-face (if (string= role "user") 
+                                             '(:inherit bold :foreground "green") 
+                                           '(:inherit bold :foreground "blue"))))
+                         (insert (propertize (format "[%s]: " (upcase role)) 'face role-face))
+                         (insert (format "%s\n\n" content))))
+                     (insert "\n")))
+                 ollama-buddy--conversation-history-by-model)))
+          
+          ;; Display history for current model only
+          (let* ((model ollama-buddy--current-model)
+                 (history (gethash model ollama-buddy--conversation-history-by-model nil)))
+            (if (null history)
+                (insert (format "No conversation history available for model %s." model))
+              (let ((history-count (/ (length history) 2)))
+                (insert (format "Current history for %s: %d message pairs\n\n" 
+                                model history-count))
+                
+                ;; Display the history in chronological order
+                (dolist (msg history)
+                  (let* ((role (alist-get 'role msg))
+                         (content (alist-get 'content msg))
+                         (role-face (if (string= role "user") 
+                                        '(:inherit bold :foreground "green") 
+                                      '(:inherit bold :foreground "blue"))))
+                    (insert (propertize (format "[%s]: " (upcase role)) 'face role-face))
+                    (insert (format "%s\n\n" content))))))))
         
         (insert "\nUse M-x ollama-buddy-toggle-history to toggle history")
-        (insert "\nUse M-x ollama-buddy-clear-history to clear history")
+        (insert "\nUse M-x ollama-buddy-clear-history to clear history for current model")
+        (insert "\nUse C-u M-x ollama-buddy-clear-history to clear history for all models")
         (view-mode 1)))
     (display-buffer buf)))
 
@@ -402,17 +903,17 @@ Returns a list of cons cells with position and type ('prompt or 'response)."
              (> ollama-buddy--current-token-count 0))
     (let* ((current-time (float-time))
            (interval-tokens (- ollama-buddy--current-token-count 
-                              ollama-buddy--last-token-count))
+                               ollama-buddy--last-token-count))
            (interval-time (- current-time 
-                            (or ollama-buddy--last-update-time 
-                                ollama-buddy--current-token-start-time)))
+                             (or ollama-buddy--last-update-time 
+                                 ollama-buddy--current-token-start-time)))
            (current-rate (if (> interval-time 0)
                              (/ interval-tokens interval-time)
                            0))
            (total-rate (if (> (- current-time ollama-buddy--current-token-start-time) 0)
-                          (/ ollama-buddy--current-token-count 
-                             (- current-time ollama-buddy--current-token-start-time))
-                        0)))
+                           (/ ollama-buddy--current-token-count 
+                              (- current-time ollama-buddy--current-token-start-time))
+                         0)))
       
       ;; Update status with token information
       (ollama-buddy--update-status 
@@ -435,7 +936,7 @@ Returns a list of cons cells with position and type ('prompt or 'response)."
         (if (null ollama-buddy--token-usage-history)
             (insert "No token usage data available yet.")
           (let* ((total-tokens (apply #'+ (mapcar (lambda (info) (plist-get info :tokens)) 
-                                                 ollama-buddy--token-usage-history)))
+                                                  ollama-buddy--token-usage-history)))
                  (avg-rate (/ (apply #'+ (mapcar (lambda (info) (plist-get info :rate)) 
                                                  ollama-buddy--token-usage-history))
                               (float (length ollama-buddy--token-usage-history)))))
@@ -460,7 +961,7 @@ Returns a list of cons cells with position and type ('prompt or 'response)."
                            (insert "  ")
                            (insert (propertize model 'face `(:foreground ,model-color)))
                            (insert (format ": %d tokens in %d responses\n" 
-                                          (car stats) (cadr stats)))))
+                                           (car stats) (cadr stats)))))
                        model-stats))
             
             ;; Recent history (last 10)
@@ -471,12 +972,12 @@ Returns a list of cons cells with position and type ('prompt or 'response)."
                       (tokens (plist-get info :tokens))
                       (rate (plist-get info :rate))
                       (time (format-time-string "%Y-%m-%d %H:%M:%S" 
-                                               (plist-get info :timestamp))))
+                                                (plist-get info :timestamp))))
                   (insert (format "  %s: %d tokens (%.2f t/s) at %s\n" 
                                   model tokens rate time))))))
-        
-        (insert "\n\nUse M-x ollama-buddy-toggle-token-display to toggle display of token stats in responses")
-        (view-mode 1))))
+          
+          (insert "\n\nUse M-x ollama-buddy-toggle-token-display to toggle display of token stats in responses")
+          (view-mode 1))))
     (display-buffer buf)))
 
 (defun ollama-buddy-toggle-token-display ()
@@ -583,8 +1084,8 @@ Adapts the color to the current theme (light or dark) for better visibility."
                                      (min 85 (+ lightness 10))
                                    (max 15 (- lightness 10))))
              (adjusted-rgb (color-hsl-to-rgb (/ hue 360.0) 
-                                            (/ adjusted-saturation 100.0) 
-                                            (/ adjusted-lightness 100.0))))
+                                             (/ adjusted-saturation 100.0) 
+                                             (/ adjusted-lightness 100.0))))
         (setq target-color (apply #'color-rgb-to-hex adjusted-rgb))))
     
     target-color))
@@ -596,7 +1097,7 @@ Adapts the color to the current theme (light or dark) for better visibility."
     (mapcar (lambda (m)
               (let ((name (alist-get 'name m)))
                 (cons name (ollama-buddy--hash-string-to-color name))))
-          (alist-get 'models response))))
+            (alist-get 'models response))))
 
 (defun ollama-buddy--assign-model-letters ()
   "Assign letters to available models and update the intro message."
@@ -682,8 +1183,8 @@ Adapts the color to the current theme (light or dark) for better visibility."
 (defun ollama-buddy-roles--load-role-preset (role)
   "Load the preset file for ROLE."
   (let ((preset-file (expand-file-name 
-                     (format "ollama-buddy--preset__%s.el" role) 
-                     ollama-buddy-roles-directory)))
+                      (format "ollama-buddy--preset__%s.el" role) 
+                      ollama-buddy-roles-directory)))
     (if (file-exists-p preset-file)
         (progn
           (load-file preset-file)
@@ -730,8 +1231,8 @@ Adapts the color to the current theme (light or dark) for better visibility."
 (defun ollama-buddy-role-creator-generate-role-file (role-name commands)
   "Generate a role file for ROLE-NAME with COMMANDS."
   (let ((file-path (expand-file-name 
-                   (format "ollama-buddy--preset__%s.el" role-name)
-                   ollama-buddy-roles-directory)))
+                    (format "ollama-buddy--preset__%s.el" role-name)
+                    ollama-buddy-roles-directory)))
     ;; Create directory if it doesn't exist
     (unless (file-directory-p ollama-buddy-roles-directory)
       (make-directory ollama-buddy-roles-directory t))
@@ -754,7 +1255,7 @@ Adapts the color to the current theme (light or dark) for better visibility."
       ;; Close the list and provide call
       (insert "    ))\n\n"))
     ;; Return the file path
-  file-path))
+    file-path))
 
 ;;;###autoload
 (defun ollama-buddy-role-creator-create-new-role ()
@@ -859,24 +1360,25 @@ ACTUAL-MODEL is the model being used instead."
     (let* ((model (or ollama-buddy--current-model
                       ollama-buddy-default-model
                       "No Model"))
-           (history-msg (when (and ollama-buddy-show-history-indicator 
-                                   ollama-buddy-history-enabled)
-                          (format " [Hist:%d]" 
-                                  (/ (length ollama-buddy--conversation-history) 2)))))
+           (history (when (and ollama-buddy-show-history-indicator 
+                               ollama-buddy-history-enabled)
+                      (let ((history-count (/ (length 
+                                               (gethash model 
+                                                        ollama-buddy--conversation-history-by-model 
+                                                        nil)) 
+                                              2)))
+                        (format " [H:%d]" history-count)))))
       (setq header-line-format
             (concat
              (format (if (string-empty-p (ollama-buddy--update-multishot-status))
-                         " [%s%s %s: %s%s]"
-                       " [%s %s %s: %s%s]")
+                         " %s%s %s %s%s"
+                       " %s %s %s %s%s")
                      (ollama-buddy--update-multishot-status)
                      (propertize (if (ollama-buddy--check-status) "RUNNING" "OFFLINE")
                                  'face '(:weight bold))
-                     (propertize model 'face
-                                 `(:weight bold
-                                           :foreground ,(ollama-buddy--get-model-color
-                                                         model)))
+                     (propertize model 'face `(:weight bold :box (:line-width 4 :style pressed-button)))
                      (propertize status 'face '(:weight bold))
-                     (or history-msg ""))
+                     (or history ""))
              (when (and original-model actual-model (not (string= original-model actual-model)))
                (propertize (format " [Using %s instead of %s]" actual-model original-model)
                            'face '(:foreground "orange" :weight bold))))))))
@@ -913,7 +1415,7 @@ ACTUAL-MODEL is the model being used instead."
         (cancel-timer ollama-buddy--token-update-timer))
       (setq ollama-buddy--token-update-timer
             (run-with-timer 0 ollama-buddy--token-update-interval
-                           #'ollama-buddy--update-token-rate-display)))
+                            #'ollama-buddy--update-token-rate-display)))
     
     ;; Increment token count when text is received
     (when (not (string-empty-p text))
@@ -959,13 +1461,13 @@ ACTUAL-MODEL is the model being used instead."
             ;; Calculate final statistics
             (let* ((elapsed-time (- (float-time) ollama-buddy--current-token-start-time))
                    (token-rate (if (> elapsed-time 0)
-                                  (/ ollama-buddy--current-token-count elapsed-time)
-                                0))
+                                   (/ ollama-buddy--current-token-count elapsed-time)
+                                 0))
                    (token-info (list :model ollama-buddy--current-model
-                                    :tokens ollama-buddy--current-token-count
-                                    :elapsed elapsed-time
-                                    :rate token-rate
-                                    :timestamp (current-time))))
+                                     :tokens ollama-buddy--current-token-count
+                                     :elapsed elapsed-time
+                                     :rate token-rate
+                                     :timestamp (current-time))))
               
               ;; Add to history
               (push token-info ollama-buddy--token-usage-history)
@@ -1018,8 +1520,8 @@ ACTUAL-MODEL is the model being used instead."
               (progn
                 (ollama-buddy--show-prompt)
                 (ollama-buddy--update-status (format "Finished [%d tokens, %.1f t/s]" 
-                                                    (plist-get (car ollama-buddy--token-usage-history) :tokens)
-                                                    (plist-get (car ollama-buddy--token-usage-history) :rate)))))))
+                                                     (plist-get (car ollama-buddy--token-usage-history) :tokens)
+                                                     (plist-get (car ollama-buddy--token-usage-history) :rate)))))))
         (when window
           (if at-end
               (set-window-point window (point-max))
@@ -1079,172 +1581,6 @@ ACTUAL-MODEL is the model being used instead."
   (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
   (ollama-buddy--initialize-chat-buffer)
   (goto-char (point-max)))
-
-(defcustom ollama-buddy-command-definitions
-  '(    
-    (open-chat
-     :key ?o
-     :description "Open chat buffer"
-     :action ollama-buddy--open-chat)
-    
-    (show-models
-     :key ?v
-     :description "View model status"
-     :action ollama-buddy-show-model-status)
-
-    (switch-role
-     :key ?R
-     :description "Switch roles"
-     :model nil
-     :action ollama-buddy-roles-switch-role)
-
-    (create-role
-     :key ?N
-     :description "Create new role"
-     :model nil
-     :action ollama-buddy-role-creator-create-new-role)
-
-    (open-roles-directory
-     :key ?D
-     :description "Open roles directory"
-     :model nil
-     :action ollama-buddy-roles-open-directory)
-    
-    (swap-model
-     :key ?m
-     :description "Swap model"
-     :action ollama-buddy--swap-model)
-    
-    (help
-     :key ?h
-     :description "Help assistant"
-     :action (lambda ()
-               (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
-               (goto-char (point-max))
-               (insert (ollama-buddy--create-intro-message))
-               (ollama-buddy--show-prompt)))
-    
-    (send-region
-     :key ?l
-     :description "Send region"
-     :action (lambda () (ollama-buddy--send-with-command 'send-region)))
-    
-    (refactor-code
-     :key ?r
-     :description "Refactor code"
-     :prompt "refactor the following code:"
-     :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
-    
-    (git-commit
-     :key ?g
-     :description "Git commit message"
-     :prompt "write a concise git commit message for the following:"
-     :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
-    
-    (describe-code
-     :key ?c
-     :description "Describe code"
-     :prompt "describe the following code:"
-     :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
-    
-    (dictionary-lookup
-     :key ?d
-     :description "Dictionary Lookup"
-     :prompt "For the following word provide a typical dictionary definition:"
-     :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup)))
-    
-    (synonym
-     :key ?n
-     :description "Word synonym"
-     :prompt "list synonyms for word:"
-     :action (lambda () (ollama-buddy--send-with-command 'synonym)))
-    
-    (proofread
-     :key ?p
-     :description "Proofread text"
-     :prompt "proofread the following:"
-     :action (lambda () (ollama-buddy--send-with-command 'proofread)))
-    
-    (make-concise
-     :key ?z
-     :description "Make concise"
-     :prompt "reduce wordiness while preserving meaning:"
-     :action (lambda () (ollama-buddy--send-with-command 'make-concise)))
-    
-    (custom-prompt
-     :key ?e
-     :description "Custom prompt"
-     :action (lambda ()
-               (when-let ((prefix (read-string "Enter prompt prefix: " nil nil nil t)))
-                 (unless (use-region-p)
-                   (user-error "No region selected.  Select text to use with prompt"))
-                 (unless (not (string-empty-p prefix))
-                   (user-error "Input string is empty"))
-                 (ollama-buddy--send
-                  (concat prefix "\n\n"
-                          (buffer-substring-no-properties
-                           (region-beginning) (region-end)))))))
-    
-    (minibuffer-prompt
-     :key ?i
-     :description "Minibuffer Prompt"
-     :action (lambda ()
-               (when-let ((prefix (read-string "Enter prompt: " nil nil nil t)))
-                 (unless (not (string-empty-p prefix))
-                   (user-error "Input string is empty"))
-                 (ollama-buddy--send prefix))))
-    
-    (save-chat
-     :key ?s
-     :description "Save chat"
-     :action (lambda ()
-               (with-current-buffer ollama-buddy--chat-buffer
-                 (write-region (point-min) (point-max)
-                               (read-file-name "Save conversation to: ")
-                               'append-to-file
-                               nil))))
-    (kill-request
-     :key ?x
-     :description "Kill request"
-     :action (lambda ()
-               (delete-process ollama-buddy--active-process)))
-
-    (toggle-colors
-     :key ?C
-     :description "Toggle Colors"
-     :action ollama-buddy-toggle-model-colors)
-
-    (token-stats
-     :key ?t
-     :description "Token Usage Stats"
-     :action ollama-buddy-display-token-stats)
-    
-    (quit
-     :key ?q
-     :description "Quit"
-     :action (lambda () (message "Quit Ollama Shell menu."))))
-  "Comprehensive command definitions for Ollama Buddy.
-Each command is defined with:
-  :key - Character for menu selection
-  :description - String describing the action
-  :model - Specific Ollama model to use (nil means use default)
-  :prompt - Optional system prompt
-  :action - Function to execute"
-  :type '(repeat
-          (list :tag "Command Definition"
-                (symbol :tag "Command Name")
-                (plist :inline t
-                       :options
-                       ((:key (character :tag "Menu Key Character"))
-                        (:description (string :tag "Command Description"))
-                        (:model (choice :tag "Specific Model"
-                                        (const :tag "Use Default" nil)
-                                        (string :tag "Model Name")))
-                        (:prompt (string :tag "Static Prompt Text"))
-                        (:action (choice :tag "Action"
-                                         (function :tag "Existing Function")
-                                         (sexp :tag "Lambda Expression")))))))
-  :group 'ollama-buddy)
 
 (defun ollama-buddy--get-command-def (command-name)
   "Get command definition for COMMAND-NAME."
@@ -1396,7 +1732,7 @@ Each command is defined with:
 (defun ollama-buddy--get-models ()
   "Get available Ollama models."
   (when-let ((response (ollama-buddy--make-request "/api/tags" "GET")))
-  (mapcar #'car (ollama-buddy--get-models-with-colors))))
+    (mapcar #'car (ollama-buddy--get-models-with-colors))))
 
 (defun ollama-buddy--ollama-running ()
   "Check if Ollama server is running."
@@ -1434,7 +1770,7 @@ Each command is defined with:
            "- Change your mind?     C-c k\n"
            "- Change your model?    C-c m\n"
            "- Prompt history?       M-p/M-n\n"
-           "- Jump to User prompts? C-c C-p/C-n\n"
+           "- Jump to User prompts? C-c p/n\n"
            "- In another buffer?    M-x ollama-buddy-menu")))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
@@ -1442,13 +1778,13 @@ Each command is defined with:
 (defun ollama-buddy--update-multishot-status ()
   "Update status line to show multishot progress."
   (if ollama-buddy--multishot-sequence
-    (let* ((completed (upcase (substring ollama-buddy--multishot-sequence
-                                 0 ollama-buddy--multishot-progress)))
-           (remaining (substring ollama-buddy--multishot-sequence
-                                 ollama-buddy--multishot-progress)))
-      (concat (propertize "Multishot: " 'face '(:weight bold))
-              (propertize completed 'face '(:weight bold))
-              (propertize remaining 'face '(:weight normal))))
+      (let* ((completed (upcase (substring ollama-buddy--multishot-sequence
+                                           0 ollama-buddy--multishot-progress)))
+             (remaining (substring ollama-buddy--multishot-sequence
+                                   ollama-buddy--multishot-progress)))
+        (concat (propertize "Multishot: " 'face '(:weight bold))
+                (propertize completed 'face '(:weight bold))
+                (propertize remaining 'face '(:weight normal))))
     ""))
 
 (defun ollama-buddy--multishot-send (prompt sequence)
@@ -1525,8 +1861,8 @@ Each command is defined with:
                                                        (propertize (concat "[" model "]") 
                                                                    'face `(:inherit bold :foreground ,color))))
                                            desc)))
-                                    (cons key (list desc-with-model action))))
-                                ollama-buddy-command-definitions))
+                                   (cons key (list desc-with-model action))))
+                               ollama-buddy-command-definitions))
                 (formatted-items
                  (mapcar (lambda (item)
                            (format "[%c] %s" (car item) (cadr item)))
@@ -1628,9 +1964,9 @@ Each command is defined with:
               (insert "  ")
               (insert (propertize model 'face `(:foreground ,color)))
               (insert (format ": %s\n"
-                            (if (member model available-models)
-                                "Available ✓"
-                              "Not Available ✗"))))))
+                              (if (member model available-models)
+                                  "Available ✓"
+                                "Not Available ✗"))))))
         
         ;; List available models with colors
         (insert "\nAvailable Models:\n")
@@ -1707,12 +2043,8 @@ Each command is defined with:
     (define-key map (kbd "C-c l") #'ollama-buddy--multishot-prompt)
     (define-key map (kbd "C-c k") #'ollama-buddy--cancel-request)
     (define-key map (kbd "C-c m") #'ollama-buddy--swap-model)
-    (define-key map (kbd "C-c p") #'ollama-buddy-previous-conversation-item)
-    (define-key map (kbd "C-c n") #'ollama-buddy-next-conversation-item)
-    (define-key map (kbd "C-c C-p") #'ollama-buddy-previous-prompt)
-    (define-key map (kbd "C-c C-n") #'ollama-buddy-next-prompt)
-    (define-key map (kbd "C-c M-p") #'ollama-buddy-previous-response)
-    (define-key map (kbd "C-c M-n") #'ollama-buddy-next-response)
+    (define-key map (kbd "C-c p") #'ollama-buddy-previous-prompt)
+    (define-key map (kbd "C-c n") #'ollama-buddy-next-prompt)
     (define-key map (kbd "M-p") #'ollama-buddy--get-prompt-history-element)
     map)
   "Keymap for ollama-buddy mode.")
@@ -1721,37 +2053,6 @@ Each command is defined with:
   "Minor mode for ollama-buddy keybindings."
   :lighter " OB"
   :keymap ollama-buddy-mode-map)
-
-;; Add to command definitions
-(add-to-list 'ollama-buddy-command-definitions
-             '(toggle-history
-               :key ?H
-               :description "Toggle conversation history"
-               :action ollama-buddy-toggle-history))
-
-(add-to-list 'ollama-buddy-command-definitions
-             '(clear-history
-               :key ?X
-               :description "Clear conversation history"
-               :action ollama-buddy-clear-history))
-
-(add-to-list 'ollama-buddy-command-definitions
-             '(show-history
-               :key ?V
-               :description "View conversation history"
-               :action ollama-buddy--display-history))
-
-(add-to-list 'ollama-buddy-command-definitions
-             '(previous-item
-               :key ?P
-               :description "Go to previous prompt/response"
-               :action ollama-buddy-previous-conversation-item))
-
-(add-to-list 'ollama-buddy-command-definitions
-             '(next-item
-               :key ?N
-               :description "Go to next prompt/response"
-               :action ollama-buddy-next-conversation-item))
 
 (provide 'ollama-buddy)
 ;;; ollama-buddy.el ends here

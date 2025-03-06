@@ -5,22 +5,27 @@
 
 (setq ollama-buddy-command-definitions
       '(
-        ;; General Commands        
+        ;; General Commands
         (open-chat
          :key ?o
          :description "Open chat buffer"
          :action ollama-buddy--open-chat)
-        
-        (show-models
-         :key ?v
-         :description "View model status"
-         :action ollama-buddy-show-model-status)
         
         (swap-model
          :key ?m
          :description "Swap model"
          :action ollama-buddy--swap-model)
         
+        (show-models
+         :key ?v
+         :description "View model status"
+         :action ollama-buddy-show-model-status)
+
+        (send-region
+         :key ?l
+         :description "Send region"
+         :action (lambda () (ollama-buddy--send-with-command 'send-region)))
+
         (help
          :key ?h
          :description "Help assistant"
@@ -29,25 +34,19 @@
                    (goto-char (point-max))
                    (insert (ollama-buddy--create-intro-message))
                    (ollama-buddy--show-prompt)))
-        
-        (send-region
-         :key ?l
-         :description "Send region"
-         :action (lambda () (ollama-buddy--send-with-command 'send-region)))
 
         (switch-role
          :key ?R
          :description "Switch roles"
          :model nil
          :action ollama-buddy-roles-switch-role)
-        
+
         (create-role
          :key ?N
-         :description
-         "Create new role"
+         :description "Create new role"
          :model nil
          :action ollama-buddy-role-creator-create-new-role)
-        
+
         (open-roles-directory
          :key ?D
          :description "Open roles directory"
@@ -111,13 +110,14 @@
          :action (lambda ()
                    (when-let ((prefix (read-string "Enter prompt prefix: " nil nil nil t)))
                      (unless (use-region-p)
-                       (user-error "No region selected. Select text to use with prompt"))
+                       (user-error "No region selected.  Select text to use with prompt"))
                      (unless (not (string-empty-p prefix))
                        (user-error "Input string is empty"))
                      (ollama-buddy--send
                       (concat prefix "\n\n"
-                              (buffer-substring-no-properties 
+                              (buffer-substring-no-properties
                                (region-beginning) (region-end)))))))
+        
         (minibuffer-prompt
          :key ?i
          :description "Minibuffer Prompt"
@@ -126,6 +126,7 @@
                      (unless (not (string-empty-p prefix))
                        (user-error "Input string is empty"))
                      (ollama-buddy--send prefix))))
+        
         (save-chat
          :key ?s
          :description "Save chat"
@@ -150,10 +151,51 @@
          :key ?t
          :description "Token Usage Stats"
          :action ollama-buddy-display-token-stats)
-                
+
+        (toggle-history
+         :key ?H
+         :description "Toggle conversation history"
+         :action ollama-buddy-toggle-history)
+
+        (clear-history
+         :key ?X
+         :description "Clear conversation history"
+         :action (lambda () (ollama-buddy-clear-history 1)))
+
+        (show-history
+         :key ?V
+         :description "View conversation history"
+         :action (lambda () (ollama-buddy--display-history 1)))
+
+        (new-session
+         :key ?E
+         :description "New session"
+         :action ollama-buddy-sessions-new)
+
+        (load-session
+         :key ?L
+         :description "Load session"
+         :action ollama-buddy-sessions-load)
+
+        (save-session
+         :key ?S
+         :description "Save session"
+         :action ollama-buddy-sessions-save)
+
+        (list-sessions
+         :key ?Y
+         :description "List sessions"
+         :action ollama-buddy-sessions-list)
+
+        (delete-sessions
+         :key ?K
+         :description "Delete session"
+         :action ollama-buddy-sessions-delete)
+        
         (quit
          :key ?q
          :description "Quit"
          :action (lambda () (message "Quit Ollama Shell menu.")))
+
         )
       )

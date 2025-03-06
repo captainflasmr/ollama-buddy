@@ -20,38 +20,32 @@ The name is just something a little bit fun and it seems to always remind me of 
 
 - *Minimal Setup*
   
-  - If desired, the following will get you going! (of course, have =ollama= running with some models loaded).
+If desired, the following will get you going! (of course, have =ollama= running with some models loaded).
     
-    #+begin_src elisp
-     (use-package ollama-buddy
-       :load-path "path/to/ollama-buddy"
-       :bind ("C-c o" . ollama-buddy-menu))
-    #+end_src
-
-    OR (when on MELPA)
-
-    #+begin_src elisp
-     (use-package ollama-buddy
-       :ensure t
-       :bind ("C-c o" . ollama-buddy-menu))
-    #+end_src
+  #+begin_src elisp
+   (use-package ollama-buddy
+     :ensure t
+     :bind ("C-c o" . ollama-buddy-menu))
+  #+end_src
 
 - *Interactive Command Menu*
   
   - Quick-access menu with single-key commands (=M-x ollama-buddy-menu=)
-  - Quickly define your own menu using defcustom with dynamic adaptable menu
+  - Quickly define your own menu using =defcustom= with dynamic adaptable menu
+  - Menu Presets easily definable in text files
   - Quickly switch between LLM models with no configuration required
-  - Works on selected text from any buffer
-  - Presets easily definable
-  - Real-time model availability status
+  - Send text from any Emacs buffer
+  - Each model is uniquely colored to enhance visual feedback
 
-- *Role Switching*
+- *Role and Session Switching*
 
-  - create, switch, and manage role-specific command menu configurations
+  - create, switch, save and manage role-specific command menu configurations
+  - create, switch, save and manage sessions to provide chat/model based context
+  - prompt history/context with the ability to clear, turn on and off and save as part of a session file
 
 - *Smart Model Management*
   
-  - Models can be assigned to individual commands
+  - Models can be assigned to individual menu commands
   - Intelligent model fallback
   - Real-time model availability monitoring
   - Easy model switching during sessions
@@ -67,16 +61,22 @@ The name is just something a little bit fun and it seems to always remind me of 
 - *Lightweight*
   
   - Single package file
-  - Minimal code suitable for an air-gapped system
+  - A minified version =ollama-buddy-mini= (200 lines) is available
   - No external dependencies (curl not used)
 
 - *Robust Chat Interface*
   
   - Dedicated chat buffer with conversation history
   - Stream-based response display
+  - Status bar in header-line
+  - Model token rate statistics and real-time display
   - Prompt based input
-  - Save/export conversation functionality
+  - Save/export conversation
   - Visual separators for clear conversation flow
+  - AI Assistant welcome menu
+  - Send the same prompt to multiple LLMs
+  - Step through prompt chat history
+  - Easily navigate between prompts with a keybinding
 
 * Screenshots / Demos
 
@@ -247,13 +247,47 @@ Can you convert this Ada code into [C#/C++/elisp]?
      
 Can you write unit tests for the generated code
 
-* The Menu
-
-#+attr_org: :width 300px
-#+attr_html: :width 100%
-[[file:img/ollama-buddy-screenshot_001.jpg]]
-
 * Whats New
+
+** <2025-03-06> *0.5.0*
+
+Implemented session management, so you can now save your conversations and bring them back with the relevant context and chat history!
+
+- Chat history is now maintained separately for each model
+- Added session new/load/save/delete/list functionality
+- A switch in context can now be achieved by any of the following methods:
+  - Loading a previous session
+  - Creating a new session
+  - Clearing history on the current session
+  - Toggling history on and off
+
+*Key Benefits*
+
+- More relevant responses when switching between models
+- Prevents context contamination across different models
+- Clearer session management and organization
+
+*Key Features*
+
+1. *Session Management*
+
+With session management, you can now:
+
+- *Save session* with =ollama-buddy-sessions-save= (or through the ollama-buddy-menu) Preserve your current conversation with a custom name
+- *Load session* with =ollama-buddy-sessions-load= (or through the ollama-buddy-menu) Return to previous conversations exactly where you left off
+- *List all sessions* with =ollama-buddy-sessions-list= (or through the ollama-buddy-menu) View all saved sessions with metadata including timestamps and models used
+- *Delete session* with =ollama-buddy-sessions-delete= (or through the ollama-buddy-menu) Clean up sessions you no longer need
+- *New session* with =ollama-buddy-sessions-new=  (or through the ollama-buddy-menu) Begin a clean slate without losing your saved sessions
+
+2. *Menu Commands*
+
+The following commands have been added to the =ollama-buddy-menu=:
+
+- =E= New session
+- =L= Load session
+- =S= Save session
+- =Y= List sessions
+- =K= Delete session
 
 ** <2025-03-04> *0.4.1*
 
@@ -295,16 +329,9 @@ You can control this feature with:
 
 Moving through longer conversations is now much easier with:
 
-- Navigation functions to jump between prompts and responses using C-c C-n/C-p and variants
-- Keybindings
+- Navigation functions to jump between prompts using C-c n/p
 
-| Keybinding            | Function                        | Description                          |
-|-----------------------+---------------------------------+--------------------------------------|
-| =C-c p= / =C-c n=     | Previous/next conversation item | Jump to either prompt or response    |
-| =C-c C-p= / =C-c C-n= | Previous/next prompt            | Jump specifically to user prompts    |
-| =C-c M-p= / =C-c M-n= | Previous/next response          | Jump specifically to model responses |
-
-. *Menu Commands*
+3. *Menu Commands*
 
 Three new menu commands have been added:
 
@@ -327,10 +354,18 @@ Added real-time token usage tracking and display
 - Integrate token tracking into response processing and status updates
 - Ensure cleanup of timers and tracking variables on completion or cancellation
 
+*Key Features*
+
+1. *Menu Commands*
+
+   The following command has been added to the =ollama-buddy-menu=:
+
+   - =t= Show a summary of token model usage stats
+
 
 ** <2025-02-28> *0.2.4*
 
-Added model-specific color highlighting (experimental - off by default)
+Added model-specific color highlighting
 
 - Introduce `ollama-buddy-enable-model-colors` (default: nil) to toggle model-based color highlighting.
 - Assign consistent colors to models based on string hashing.
@@ -343,7 +378,8 @@ Note: I am likely to use both *colour* and *color* interchangeably in the follow
 
 *Key Features*
 
-1. *Model-Specific Colors (Experimental)*
+1. *Model-Specific Colors*
+   
    - A new customizable variable, =ollama-buddy-enable-model-colors=, allows users to enable or disable model-specific colors.
    - Colors are generated based on a model's name using a hashing function that produces consistent and visually distinguishable hues.
    - However there could be an improvement regarding ensuring the contrast is sufficient and hence visibility maintained with differing themes.
@@ -357,9 +393,13 @@ Note: I am likely to use both *colour* and *color* interchangeably in the follow
      - Model selection menus
      - Command definitions
      - Chat history headers
-   
-This feature is currently *experimental*, and feedback is welcome to refine its implementation further!
 
+5. *Menu Commands*
+
+The following command hashing been added to the =ollama-buddy-menu=:
+
+- =C= Toggle colors
+   
 ** <2025-02-28> *0.2.3*
 
 Added Prompt History Support
@@ -396,7 +436,7 @@ Roles in Ollama Buddy are essentially *profiles* tailored to specific tasks. Ima
 - *Creative writing* with a different tone and response style
 - *Generating Buffy Style Quips* - just a fun one!
 
-With this update, you can now create presets for each of these contexts and switch between them seamlessly without manually reconfiguring settings every time. On each switch of context and hence role, a new ollama buddy menu will be generated with the associated keybinding attached to the relevant context commands.
+With this update, you can now create presets for each of these contexts and switch between them seamlessly without manually re-configuring settings every time. On each switch of context and hence role, a new ollama buddy menu will be generated with the associated keybinding attached to the relevant context commands.
 
 *Key Features*
 
@@ -440,6 +480,14 @@ If these files are put in the =ollama-buddy-roles-directory= then the role selec
 
 With the selection regenerating the =ollama-buddy-menu= accordingly, and off you go.
 
+*6. Menu commands*
+
+The following commands have been added to the =ollama-buddy-menu=:
+
+- =R= Switch Role
+- =N= Create New Role
+- =D= Open Roles Directory
+
 ** <2025-02-26> *0.2.1*
 
 Added multishot execution with model selection  (See multishot section for description of new feature!)
@@ -452,11 +500,13 @@ Added multishot execution with model selection  (See multishot section for descr
 
 With the new *multishot mode*, you can now send a prompt to multiple models in sequence, and compare their responses, the results are also available in named registers.
 
-*Letter-Based Model Shortcuts*
+*Key Features*
+
+*1. Letter-Based Model Shortcuts*
 
 Instead of manually selecting models, each available model is now assigned a *letter* (e.g., =(a) mistral=, =(b) gemini=). This allows for quick model selection when sending prompts or initiating a *multishot sequence*.
 
-*Multishot Execution (=C-c C-l=)*
+*2. Multishot Execution (=C-c C-l=)*
 
 Ever wondered how different models would answer the same question? With *Multishot Mode*, you can:
 
@@ -464,7 +514,7 @@ Ever wondered how different models would answer the same question? With *Multish
 - Track progress as responses come in.  
 - Store each model’s response in a *register*, making it easy to reference later, each assigned model letter corresponds to the named register.
 
-*Status Updates*
+*3. Status Updates*
 
 When running a multishot execution, the status now updates dynamically:
 
@@ -472,7 +522,7 @@ When running a multishot execution, the status now updates dynamically:
 - *"Processing..."* during responses.  
 - *"Multi Finished"* when all models have responded.  
 
-*How It Works*
+*4. How It Works*
 
 1. *=C-c C-l=* to start a multishot session in the chat buffer.
 2. Type a sequence of model letters (e.g., =abc= to use models =mistral=, =gemini=, and =llama=).  
@@ -508,6 +558,14 @@ Models can be assigned to individual commands
 - [[https://ollama.ai/][Ollama]] installed and running locally
 - Emacs 26.1 or later
 
+** MELPA
+
+#+begin_src emacs-lisp
+(use-package ollama-buddy
+  :ensure t
+  :bind ("C-c o" . ollama-buddy-menu))
+#+end_src
+
 ** Manual Installation
 
 Clone this repository:
@@ -534,66 +592,78 @@ OR
    :bind ("C-c o" . ollama-buddy-menu))
 #+end_src
 
-** OR (when on MELPA)
-
-#+begin_src emacs-lisp
-(use-package ollama-buddy
-  :ensure t
-  :bind ("C-c o" . ollama-buddy-menu))
-#+end_src
-
 * Usage
 
-1. Start your Ollama server locally
-2. Use =M-x ollama-buddy-menu= or a user defined keybinding =C-c o= to open the menu
-3. Select your preferred model using the [m] option
-4. Select text in any buffer or use the chat buffer
-5. Choose an action from the menu:
+1. Start your Ollama server locally with =ollama serve=
+2. In Emacs, =M-x ollama-buddy-menu= or a user defined keybinding =C-c o= to open up the ollama buddy menu
+3. Select [o] to open and jump to the chat buffer
+4. Read the AI assistants greeting and off you go!
 
-| Key | Action             | Description                               |
-|-----+--------------------+-------------------------------------------|
-| o   | Open chat buffer   | Opens the main chat interface             |
-| m   | Swap model         | Switch between available Ollama models    |
-| h   | Help assistant     | Display help message                      |
-| l   | Send region        | Send selected text directly to model      |
-| r   | Refactor code      | Get code refactoring suggestions          |
-| g   | Git commit message | Generate commit message for changes       |
-| c   | Describe code      | Get code explanation                      |
-| d   | Dictionary Lookup  | Get dictionary definition                 |
-| n   | Word synonym       | Get a synonym for the word                |
-| p   | Proofread text     | Check text for improvements               |
-| z   | Make concise       | Reduce wordiness while preserving meaning |
-| e   | Custom Prompt      | Prompt through minibuffer with selection  |
-| i   | Minibuffer Prompt  | Prompt through minibuffer                 |
-| s   | Save chat          | Save the chat to a file                   |
-| x   | Kill request       | Cancel current Ollama request             |
-| q   | Quit               | Exit the menu                             |
+The default menu offers the following menu items:
+
+| Key | Action                      | Description                 |
+|-----+-----------------------------+-----------------------------|
+| o   | Open chat buffer            | Open chat buffer            |
+| m   | Swap model                  | Swap model                  |
+| v   | View model status           | View model status           |
+| l   | Send region                 | Send region                 |
+| h   | Help assistant              | Help assistant              |
+| R   | Switch roles                | Switch roles                |
+| N   | Create new role             | Create new role             |
+| D   | Open roles directory        | Open roles directory        |
+| r   | Refactor code               | Refactor code               |
+| g   | Git commit message          | Git commit message          |
+| c   | Describe code               | Describe code               |
+| d   | Dictionary Lookup           | Dictionary Lookup           |
+| n   | Word synonym                | Word synonym                |
+| p   | Proofread text              | Proofread text              |
+| z   | Make concise                | Make concise                |
+| e   | Custom prompt               | Custom prompt               |
+| i   | Minibuffer Prompt           | Minibuffer Prompt           |
+| s   | Save chat                   | Save chat                   |
+| x   | Kill request                | Kill request                |
+| C   | Toggle Colors               | Toggle Colors               |
+| t   | Token Usage Stats           | Token Usage Stats           |
+| H   | Toggle conversation history | Toggle conversation history |
+| X   | Clear conversation history  | Clear conversation history  |
+| V   | View conversation history   | View conversation history   |
+| E   | New session                 | New session                 |
+| L   | Load session                | Load session                |
+| S   | Save session                | Save session                |
+| Y   | List sessions               | List sessions               |
+| K   | Delete session              | Delete session              |
+| q   | Quit                        | Quit                        |
 
 * Summary of my design ethos
 
 - *Focused Design Philosophy*
+  
   - Dedicated solely to Ollama integration (unlike general-purpose LLM packages)
   - Intentionally lightweight and minimal setup
   - Particularly suitable for air-gapped systems
   - Avoids complex backends and payload configurations
 
 - *Interface Design Choices*
+  
   - Flexible, customizable menu through defcustom
   - Easy-to-extend command system via simple alist modifications
   - Region-based interaction model across all buffers
 
 - *Buffer Implementation*
+  
   - Simple, editable chat buffer approach
   - Avoids complex modes or bespoke functionality
   - Trying to leverage standard Emacs text editing capabilities
 
 - *User Experience*
+  
   - "AI assistant" style welcome interface
   - Zero-config startup possible
   - Built-in status monitoring and model listing
   - Simple tutorial-style introduction
 
 - *Technical Simplicity*
+  
   - REST-based Ollama
   - Quickly switch between small local LLMs
   - Backwards compatibility with older Emacs versions
@@ -606,30 +676,30 @@ A simple text information screen will be presented on the first opening of the c
 
 #+begin_src
 ------------------ o( Y )o ------------------
- ___ _ _      n _ n      ___       _   _
-|   | | |__._|o(Y)o|__._| . |_ _ _| |_| |_ _ 
-| | | | | .  |     | .  |   / | | . | . | | |
-| | |_|_|__/_|_|_|_|__/_| | |___|___|___|__ |
-|___|                   |___|           |___|
+ ___ _ _      n _ n      ___       _   _ _ _
+|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |
+| | | | | .  |     | .  | . | | | . | . |__ |
+|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|
 
 Hi there! and welcome to OLLAMA BUDDY!
 
 Models available:
 
-
-  tinyllama:latest
-  qwen2.5-coder:7b
+  (a) tinyllama:latest  (b) llama:latest
 
 Quick Tips:
 
-- Ask me anything! C-c C-c to send
-- Change your mind? C-c C-k to cancel
-- Change your model? C-c C-m
-- In another buffer? M-x ollama-buddy-menu
+- Ask me anything!      C-c C-c
+- Multi-model shot?     C-c l
+- Change your mind?     C-c k
+- Change your model?    C-c m
+- Prompt history?       M-p/M-n
+- Jump to User prompts? C-c p/n
+- In another buffer?    M-x ollama-buddy-menu
 
 ------------------ o( Y )o ------------------
 
-qwen2.5-coder:7b >> PROMPT: 
+tinyllama:latest >> PROMPT: 
 #+end_src
 
 * Banners
@@ -656,6 +726,7 @@ qwen2.5-coder:7b >> PROMPT:
     (mapatoms
      (lambda (symbol)
        (when (and (string-match "^ollama-buddy-" (symbol-name symbol))
+                  (not (string-match "--" (symbol-name symbol)))
                   (commandp symbol))  ;; Check if it's an interactive command
          (push `(,symbol
                  ,(car
@@ -673,15 +744,25 @@ qwen2.5-coder:7b >> PROMPT:
 | ollama-buddy-mode                         | Minor mode for ollama-buddy keybindings.                                      |
 | ollama-buddy-roles-switch-role            | Switch to a different ollama-buddy role.                                      |
 | ollama-buddy-disable-monitor              | Disable background connection monitoring.                                     |
+| ollama-buddy-sessions-open-directory      | Open the ollama-buddy sessions directory in Dired.                            |
 | ollama-buddy-toggle-token-display         | Toggle display of token statistics after each response.                       |
+| ollama-buddy-sessions-load                | Load a saved conversation session.                                            |
+| ollama-buddy-sessions-list                | Display a list of saved sessions.                                             |
+| ollama-buddy-sessions-new                 | Start a new session by clearing history and buffer.                           |
+| ollama-buddy-previous-prompt              | Navigate to the previous prompt.                                              |
 | ollama-buddy-toggle-model-colors          | Toggle the use of model-specific colors in ollama-buddy.                      |
 | ollama-buddy-enable-monitor               | Enable background connection monitoring.                                      |
+| ollama-buddy-toggle-history               | Toggle conversation history on/off.                                           |
 | ollama-buddy-display-token-stats          | Display token usage statistics.                                               |
 | ollama-buddy-role-creator-create-new-role | Create a new role interactively.                                              |
 | ollama-buddy-roles-open-directory         | Open the ollama-buddy roles directory in Dired.                               |
 | ollama-buddy-menu                         | Display Ollama Buddy menu.                                                    |
 | ollama-buddy-roles-create-directory       | Create the ollama-buddy roles directory if it doesn’t exist.                  |
 | ollama-buddy-show-model-status            | Display status of models referenced in command definitions with color coding. |
+| ollama-buddy-clear-history                | Clear the conversation history.                                               |
+| ollama-buddy-sessions-delete              | Delete a saved session.                                                       |
+| ollama-buddy-sessions-save                | Save the current conversation state to a session file.                        |
+| ollama-buddy-next-prompt                  | Navigate to the next prompt.                                                  |
  
 * Customization
 
@@ -689,8 +770,7 @@ qwen2.5-coder:7b >> PROMPT:
   (let ((rows))
     (mapatoms
      (lambda (symbol)
-       (when (and (string-match "^ollama-buddy-"
-                                (symbol-name symbol))
+       (when (and (string-match "^ollama-buddy-" (symbol-name symbol))
                   (not (string-match "--" (symbol-name symbol)))
                   (or (custom-variable-p symbol)
                       (boundp symbol)))
@@ -707,21 +787,27 @@ qwen2.5-coder:7b >> PROMPT:
 #+end_src
 
 #+RESULTS:
-| Custom variable                        | Description                                                   |
-|----------------------------------------+---------------------------------------------------------------|
-| ollama-buddy-command-definitions       | Comprehensive command definitions for Ollama Buddy.           |
-| ollama-buddy-enable-model-colors       | Whether to show model colors. EXPERIMNTAL.                    |
-| ollama-buddy-mode                      | Non-nil if Ollama-Buddy mode is enabled.                      |
-| ollama-buddy-menu-columns              | Number of columns to display in the Ollama Buddy menu.        |
-| ollama-buddy-enable-background-monitor | Whether to enable background monitoring of Ollama connection. |
-| ollama-buddy-roles-directory           | Directory containing ollama-buddy role preset files.          |
-| ollama-buddy-mode-map                  | Keymap for ollama-buddy mode.                                 |
-| ollama-buddy-host                      | Host where Ollama server is running.                          |
-| ollama-buddy-default-model             | Default Ollama model to use.                                  |
-| ollama-buddy-display-token-stats       | Whether to display token usage statistics in responses.       |
-| ollama-buddy-port                      | Port where Ollama server is running.                          |
-| ollama-buddy-connection-check-interval | Interval in seconds to check Ollama connection status.        |
-| ollama-buddy-mode-hook                 | Hook run after entering or leaving `ollama-buddy-mode'.       |
+| Custom variable                        | Description                                                      |
+|----------------------------------------+------------------------------------------------------------------|
+| ollama-buddy-command-definitions       | Comprehensive command definitions for Ollama Buddy.              |
+| ollama-buddy-enable-model-colors       | Whether to show model colors.                                    |
+| ollama-buddy-auto-save-session-name    | Name to use for auto-saved sessions.                             |
+| ollama-buddy-mode                      | Non-nil if Ollama-Buddy mode is enabled.                         |
+| ollama-buddy-sessions-directory        | Directory containing ollama-buddy session files.                 |
+| ollama-buddy-menu-columns              | Number of columns to display in the Ollama Buddy menu.           |
+| ollama-buddy-enable-background-monitor | Whether to enable background monitoring of Ollama connection.    |
+| ollama-buddy-history-enabled           | Whether to use conversation history in Ollama requests.          |
+| ollama-buddy-roles-directory           | Directory containing ollama-buddy role preset files.             |
+| ollama-buddy-show-history-indicator    | Whether to show the history indicator in the header line.        |
+| ollama-buddy-mode-map                  | Keymap for ollama-buddy mode.                                    |
+| ollama-buddy-host                      | Host where Ollama server is running.                             |
+| ollama-buddy-auto-save-session         | Whether to automatically save session on exit.                   |
+| ollama-buddy-max-history-length        | Maximum number of message pairs to keep in conversation history. |
+| ollama-buddy-default-model             | Default Ollama model to use.                                     |
+| ollama-buddy-display-token-stats       | Whether to display token usage statistics in responses.          |
+| ollama-buddy-port                      | Port where Ollama server is running.                             |
+| ollama-buddy-connection-check-interval | Interval in seconds to check Ollama connection status.           |
+| ollama-buddy-mode-hook                 | Hook run after entering or leaving `ollama-buddy-mode'.          |
 
 ** Emacs Init
 
@@ -729,46 +815,34 @@ Customize the package in your Emacs init:
 
 *** Simple
 
-Nothing else required after Installation above, just run the =ollama-buddy-menu= and select the model when prompted.
+Nothing else required after Installation above, just run the =M-x ollama-buddy-menu=, open the chat and select the model when prompted.
 
 *** Normal
 
-Just setting the default fallback model
+Just setting the default model so an initial model switch will not be required.
 
 #+begin_src elisp
-(setq ollama-buddy-default-model "qwen-4q:latest")
+(setq ollama-buddy-default-model "llama:latest")
 #+end_src
 
-*** Fancy
+*** Lets change the number of columns in the menu
 
 Do you want to change the number of menu columns presented?
 
 #+begin_src elisp
-(setq ollama-buddy-default-model "qwen-4q:latest")
+(setq ollama-buddy-default-model "llama:latest")
 (setq ollama-buddy-menu-columns 4)
 #+end_src
 
-*** Advanced
+*** Ollama is running remotely
 
-Ollama is running somewhere!
+Ollama is running somewhere, lets find it!
 
 #+begin_src elisp
-(setq ollama-buddy-default-model "qwen-4q:latest")
+(setq ollama-buddy-default-model "llama:latest")
 (setq ollama-buddy-menu-columns 4)
 (setq ollama-buddy-host "http://<somewhere>")
 (setq ollama-buddy-port 11400)
-#+end_src
-
-** Super Fiddler
-
-Lets get the ollama status as soon as is humanly perceptible!
-
-#+begin_src elisp
-(setq ollama-buddy-default-model "qwen-4q:latest")
-(setq ollama-buddy-menu-columns 4)
-(setq ollama-buddy-host "http://<somewhere>")
-(setq ollama-buddy-port 11400)
-(setq ollama-buddy-connection-check-interval 1)
 #+end_src
 
 * Customizing the Ollama Buddy Menu System
@@ -863,163 +937,6 @@ You can create a minimal configuration by defining only the commands you need:
                   (message "Quit Ollama Shell menu.")))))
 #+end_src
 
-** My current setup
-
-See below for how I have currently set up the default preset with specific models to achieve as much of a fast/accurate response:
-
-
-| Key | Description        | Model            |
-|-----+--------------------+------------------|
-| o   | Open chat buffer   |                  |
-| v   | View model status  |                  |
-| m   | Swap model         |                  |
-| h   | Help assistant     |                  |
-| l   | Send region        |                  |
-| r   | Refactor code      | qwen2.5-coder:7b |
-| g   | Git commit message | qwen2.5-coder:3b |
-| c   | Describe code      | qwen2.5-coder:3b |
-| d   | Dictionary Lookup  | llama3.2:1b      |
-| n   | Word synonym       | llama3.2:1b      |
-| p   | Proofread text     | deepseek-r1:7b   |
-| z   | Make concise       |                  |
-| e   | Custom prompt      | deepseek-r1:7b   |
-| i   | Minibuffer Prompt  |                  |
-| s   | Save chat          |                  |
-| x   | Kill request       |                  |
-| q   | Quit               |                  |
-
-#+begin_src elisp
-(use-package ollama-buddy
-  :load-path "~/source/repos/ollama-buddy"
-  :bind ("C-c o" . ollama-buddy-menu)
-  :custom ollama-buddy-default-model "llama3.2:1b")
-
-(setq ollama-buddy-command-definitions
-      '(
-        ;; General Commands
-        (open-chat
-         :key ?o
-         :description "Open chat buffer"
-         :action ollama-buddy--open-chat)
-        
-        (show-models
-         :key ?v
-         :description "View model status"
-         :action ollama-buddy-show-model-status)
-        
-        (swap-model
-         :key ?m
-         :description "Swap model"
-         :action ollama-buddy--swap-model)
-        
-        (help
-         :key ?h
-         :description "Help assistant"
-         :action (lambda ()
-                   (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
-                   (goto-char (point-max))
-                   (insert (ollama-buddy--create-intro-message))
-                   (ollama-buddy--show-prompt)))
-        
-        (send-region
-         :key ?l
-         :description "Send region"
-         :action (lambda () (ollama-buddy--send-with-command 'send-region)))
-        
-        ;; Specialized commands
-        (refactor-code
-         :key ?r
-         :description "Refactor code"
-         :model "qwen2.5-coder:7b"
-         :prompt "refactor the following code:"
-         :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
-        
-        (git-commit
-         :key ?g
-         :description "Git commit message"
-         :model "qwen2.5-coder:3b"
-         :prompt "write a concise git commit message for the following:"
-         :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
-        
-        (describe-code
-         :key ?c
-         :description "Describe code"
-         :model "qwen2.5-coder:3b"
-         :prompt "describe the following code:"
-         :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
-        
-        (dictionary-lookup
-         :key ?d
-         :description "Dictionary Lookup"
-         :model "llama3.2:1b"
-         :prompt "For the following word provide a typical dictionary definition:"
-         :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup)))
-        
-        (synonym
-         :key ?n
-         :description "Word synonym"
-         :model "llama3.2:1b"
-         :prompt "list synonyms for word:"
-         :action (lambda () (ollama-buddy--send-with-command 'synonym)))
-        
-        (proofread
-         :key ?p
-         :description "Proofread text"
-         :model "deepseek-r1:7b"
-         :prompt "proofread the following:"
-         :action (lambda () (ollama-buddy--send-with-command 'proofread)))
-        
-        (make-concise
-         :key ?z
-         :description "Make concise"
-         :prompt "reduce wordiness while preserving meaning:"
-         :action (lambda () (ollama-buddy--send-with-command 'make-concise)))
-        
-        ;; System Commands
-        (custom-prompt
-         :key ?e
-         :description "Custom prompt"
-         :model "deepseek-r1:7b"
-         :action (lambda ()
-                   (when-let ((prefix (read-string "Enter prompt prefix: " nil nil nil t)))
-                     (unless (use-region-p)
-                       (user-error "No region selected. Select text to use with prompt"))
-                     (unless (not (string-empty-p prefix))
-                       (user-error "Input string is empty"))
-                     (ollama-buddy--send
-                      (concat prefix "\n\n"
-                              (buffer-substring-no-properties 
-                               (region-beginning) (region-end)))))))
-        (minibuffer-prompt
-         :key ?i
-         :description "Minibuffer Prompt"
-         :action (lambda ()
-                   (when-let ((prefix (read-string "Enter prompt: " nil nil nil t)))
-                     (unless (not (string-empty-p prefix))
-                       (user-error "Input string is empty"))
-                     (ollama-buddy--send prefix))))
-        (save-chat
-         :key ?s
-         :description "Save chat"
-         :action (lambda ()
-                   (with-current-buffer ollama-buddy--chat-buffer
-                     (write-region (point-min) (point-max)
-                                   (read-file-name "Save conversation to: ")
-                                   'append-to-file
-                                   nil))))
-        (kill-request
-         :key ?x
-         :description "Kill request"
-         :action (lambda ()
-                   (delete-process ollama-buddy--active-process)))
-        (quit
-         :key ?q
-         :description "Quit"
-         :action (lambda () (message "Quit Ollama Shell menu.")))
-        )
-      )
-#+end_src
-
 ** Tips for Custom Commands
 
 1. Choose unique keys for menu items
@@ -1038,82 +955,15 @@ See below for how I have currently set up the default preset with specific model
 
 * Defining the menu through presets
 
-Attached currently in this repository is a presets directory which contains the following different menu systems.  To activate, just open up the el file and evaluate and the menu will adapt accordingly!
+Attached currently in this repository is a presets directory which contains the following different menu systems, copy them into the =ollama-buddy-roles-directory= and switch between them using =ollama-buddy-menu= [R]
 
-** default
-
-| Key | Description        | Action Description                                           |
-|-----+--------------------+--------------------------------------------------------------|
-| o   | Open chat buffer   | Opens the chat buffer and inserts an intro message if empty. |
-| v   | View model status  | Displays the current status of available models.             |
-| m   | Swap model         | Allows selecting and switching to a different model.         |
-| h   | Help assistant     | Displays an introduction message in the chat buffer.         |
-| l   | Send region        | Sends the selected region of text for processing.            |
-| r   | Refactor code      | Sends selected code for refactoring.                         |
-| g   | Git commit message | Generates a concise Git commit message.                      |
-| c   | Describe code      | Provides a description of the selected code.                 |
-| d   | Dictionary Lookup  | Retrieves dictionary definitions for a selected word.        |
-| n   | Word synonym       | Lists synonyms for a given word.                             |
-| p   | Proofread text     | Proofreads the selected text.                                |
-| z   | Make concise       | Reduces wordiness while preserving meaning.                  |
-| e   | Custom prompt      | Prompts the user to enter a custom query for processing.     |
-| s   | Save chat          | Saves the current chat buffer to a file.                     |
-| x   | Kill request       | Terminates the active processing request.                    |
-| q   | Quit               | Exits the Ollama Shell menu with a message.                  |
-
-** developer
-
-| Key | Description             | Action Description                                             |
-|-----+-------------------------+----------------------------------------------------------------|
-| o   | Open chat buffer        | Opens the chat buffer and inserts an intro message if empty.   |
-| v   | View model status       | Displays the current status of available models.               |
-| m   | Swap model              | Allows selecting and switching to a different model.           |
-| h   | Help assistant          | Displays an introduction message in the chat buffer.           |
-| l   | Send region             | Sends the selected text region for processing.                 |
-| e   | Explain code            | Explains the purpose and functionality of the selected code.   |
-| r   | Code review             | Reviews the code for potential issues, bugs, and improvements. |
-| o   | Optimize code           | Suggests optimizations for performance and readability.        |
-| t   | Generate tests          | Generates test cases for the selected code.                    |
-| d   | Generate documentation  | Produces detailed documentation for the provided code.         |
-| p   | Suggest design patterns | Recommends design patterns applicable to the provided code.    |
-| c   | Custom prompt           | Allows the user to enter a custom query.                       |
-| s   | Save chat               | Saves the current chat buffer to a file.                       |
-| x   | Kill request            | Terminates the active processing request.                      |
-| q   | Quit                    | Exits the Ollama Shell menu with a message.                    |
-
-** writer
-
-| Key | Description               | Action Description                                                                |
-|-----+---------------------------+-----------------------------------------------------------------------------------|
-| o   | Open chat buffer          | Opens the chat buffer and inserts an intro message if empty.                      |
-| v   | View model status         | Displays the current status of available models.                                  |
-| m   | Swap model                | Allows selecting and switching to a different model.                              |
-| h   | Help assistant            | Displays an introduction message in the chat buffer.                              |
-| l   | Send region               | Sends the selected text region for processing.                                    |
-| b   | Brainstorm ideas          | Generates creative ideas on a given topic.                                        |
-| u   | Generate outline          | Creates a structured outline for the provided content.                            |
-| s   | Enhance writing style     | Improves the writing style while maintaining meaning.                             |
-| p   | Detailed proofreading     | Conducts comprehensive proofreading for grammar, style, and clarity.              |
-| f   | Improve flow              | Enhances text coherence and transition between ideas.                             |
-| d   | Polish dialogue           | Enhances dialogue to make it more natural and engaging.                           |
-| n   | Enhance scene description | Adds vivid and sensory details to a scene description.                            |
-| c   | Analyze character         | Analyzes a character's development and motivations.                               |
-| l   | Analyze plot              | Examines the structure, pacing, and coherence of the plot.                        |
-| r   | Research expansion        | Suggests additional research directions and sources.                              |
-| k   | Fact checking suggestions | Identifies statements needing verification and suggests fact-checking strategies. |
-| v   | Convert format            | Converts text to another format while maintaining content meaning.                |
-| w   | Word choice suggestions   | Recommends alternative word choices for better clarity and precision.             |
-| z   | Summarize text            | Generates a concise summary while retaining key information.                      |
-| e   | Custom writing prompt     | Prompts the user to enter a custom query for processing.                          |
-| a   | Save chat                 | Saves the current chat buffer to a file.                                          |
-| x   | Kill request              | Terminates the active processing request.                                         |
-| q   | Quit                      | Exits the Ollama Shell menu with a message.                                       |
-
-Also added are the following presets:
-
-- Buffy
-- Shakespeare
-- Janeway - starfleet captain
+- bard
+- buffy
+- default
+- developer
+- janeway
+- translator
+- writer
 
 * Model Selection and Fallback Logic
 
@@ -1213,6 +1063,49 @@ When a fallback occurs, Ollama Buddy provides clear feedback:
    - Keep commonly used models pulled locally
    - Watch for model availability warnings in the header line and chat buffer
 
+* Design ethos expanded / why create this package?
+
+The Ollama Emacs package ecosystem is still emerging. Although there are some great implementations available, they tend to be LLM jack-of-all-trades, catering to various types of LLM integrations, including, of course, the major online offerings.
+
+Recently, I have been experimenting with a local solution using =ollama=. While using =ollama= through the terminal interface with =readline= naturally leans toward Emacs keybindings, there are a few limitations:
+
+- Copy and paste do not use Emacs keybindings like readline navigation. This is due to the way key codes work in terminals, meaning that copying and pasting into Emacs would require using the mouse!
+- Searching through a terminal with something like Emacs =isearch= can vary depending on the terminal.
+- Workflow disruption occur when copying and pasting between Emacs and =ollama=.
+- There is no easy way to save a session.
+- It is not using Emacs!
+
+I guess you can see where this is going. The question is: how do I integrate a basic query-response mechanism to =ollama= into Emacs? This is where existing LLM Emacs packages come in, however, I have always found them to be more geared towards online models with some packages offering experimental implementations of =ollama= integration. In my case, I often work on an air-gapped system where downloading or transferring packages is not straightforward. In such an environment, my only option for LLM interaction is =ollama= anyway. Given the limitations mentioned earlier of interacting with =ollama= through a terminal, why not create a dedicated =ollama= Emacs package that is very simple to set up, very lightweight and leverages Emacs's editing capabilities to provide a basic query response interface to =ollama=?
+
+I have found that setting up =ollama= within the current crop of LLM Emacs packages can be quite involved. I often struggle with the setup, I get there in the end, but it feels like there's always a long list of payloads, backends, etc., to configure. But what if I just want to integrate Emacs with =ollama=? It has a RESTful interface, so could I create a package with minimal setup, allowing users to define a default model in their init file (or select one each time if they prefer)?  It could also query the current set of loaded models through the =ollama= interface and provide a =completing-read= type of model selection, with potentially no model configuration needed!
+
+Beyond just being lightweight and easy to configure, I also have another idea: a flexible menu system. For a while, I have been using a simple menu-based interface inspired by transient menus. However, I have chosen not to use =transient= because I want this package to be compatible with older Emacs versions. Additionally, I haven’t found a compelling use case for a complex transient menu and I prefer a simple, opaque top level menu.
+
+To achieve this, I have decided to create a flexible =defcustom= menu system. Initially, it will be configured for some common actions, but users can easily modify it through the Emacs customization interface by updating a simple alist.
+
+For example, to refactor code through an LLM, a prepended text string of something like "Refactor the following code:" is usually applied. To proofread text, "Proofread the following:" could be prepended to the body of the query. So, why not create a flexible menu where users can easily add their own commands? For instance, if someone wanted a command to uppercase some text (even though Emacs can already do this), they could simply add the following entry to the =ollama-buddy-menu-items= alist:
+
+#+begin_src elisp
+(?u . ("Upcase" 
+       (lambda () (ollama-buddy--send "convert the following to uppercase:"))))
+#+end_src
+
+Then the menu would present a menu item "Upcase" with a "u" selection, upcasing the selected region.  You could go nuts with this, and in order to double down on the autogeneration of a menu concept, I have provided a =defcustom= =ollama-buddy-menu-columns= variable so you can flatten out your auto-generated menu as much as you like!
+
+This is getting rambly, but another key design consideration is how prompts should be handled and in fact how do I go about sending text from within Emacs?. Many implementations rely on a chat buffer as the single focal point, which seems natural to me, so I will follow a similar approach.
+
+I've seen different ways of defining a prompt submission mechanism, some using <RET>, others using a dedicated keybinding like C-c <RET>, so, how should I define my prompting mechanism? I have a feeling this could get complicated, so lets use the KISS principle, also, how should text be sent from within Emacs buffers? My solution? simply mark the text and send it, not just from any Emacs buffer, but also within the chat window. It may seem slightly awkward at first (especially in the chat buffer, where you will have to create your prompt and then mark it), but it provides a clear delineation of text and ensures a consistent interface across Emacs. For example, using M-h to mark an element requires minimal effort and greatly simplifies the package implementation. This approach also allows users to use the **scratch** buffer for sending requests if so desired!
+
+Many current implementations create a chat buffer with modes for local keybindings and other features. I have decided not to do this and instead, I will provide a simple editable buffer (ASCII text only) where all =ollama= interactions will reside. Users will be able to do anything in that buffer; there will be no bespoke Ollama/LLM functionality involved. It will simply be based on a =special= buffer and to save a session?, just use =save-buffer= to write it to a file, Emacs to the rescue again!
+
+Regarding the minimal setup philosophy of this package, I also want to include a fun AI assistant-style experience. Nothing complicated, just a bit of logic to display welcome text, show the current =ollama= status, and list available models. The idea is that users should be able to jump in immediately. If they know how to install/start =ollama=, they can install the package without any configuration, run `M-x ollama-buddy-menu`, and open the chat. At that point, the "AI assistant" will display the current =ollama= status and provide a simple tutorial to help them get started.
+
+The backend?, well I initially decided simply to use =curl= to stimulate the =ollama= RESTful API but after getting that to work I thought it might be best to completely remove that dependency, so now I am using a native network solution using =make-network-process=.  Yes it is a bit overkill, but it works, and ultimately gives me all the flexibility I could every want without having to depend on an external tool.
+
+I have other thoughts regarding the use of local LLMs versus online AI behemoths. The more I use =ollama= with Emacs through this package, the more I realize the potential of smaller, local LLMs. This package allows for quick switching between these models while maintaining a decent level of performance on a regular home computer. I could, for instance, load up =qwen-coder= for code-related queries (I have found the 7B Q4/5 versions to work particularly well) and switch to a more general model for other queries, such as =llama= or even =deepseek-r1=.
+
+Phew! That turned into quite a ramble, maybe I should run this text through =ollama-buddy= for proofreading! :)
+
 * Connection monitoring
 
 Good ollama connection status visibility is maintained either by default using basic coding logic or if monitoring is desired then configure as thus:
@@ -1259,86 +1152,50 @@ These changes achieve:
 - Optional background monitoring for users who want it
 - More efficient status checking through caching
 
-* Design ethos expanded / why create this package?
-
-The Ollama Emacs package ecosystem is still emerging. Although there are some great implementations available, they tend to be LLM jack-of-all-trades, catering to various types of LLM integrations, including, of course, the major online offerings.
-
-Recently, I have been experimenting with a local solution using =ollama=. While using =ollama= through the terminal interface with =readline= naturally leans toward Emacs keybindings, there are a few limitations:
-
-- Copy and paste do not use Emacs keybindings like readline navigation. This is due to the way key codes work in terminals, meaning that copying and pasting into Emacs would require using the mouse!
-- Searching through a terminal with something like Emacs =isearch= can vary depending on the terminal.
-- Workflow disruption occur when copying and pasting between Emacs and =ollama=.
-- There is no easy way to save a session.
-- It is not using Emacs!
-
-I guess you can see where this is going. The question is: how do I integrate a basic query-response mechanism to =ollama= into Emacs? This is where existing LLM Emacs packages come in, however, I have always found them to be more geared towards online models with some packages offering experimental implementations of =ollama= integration. In my case, I often work on an air-gapped system where downloading or transferring packages is not straightforward. In such an environment, my only option for LLM interaction is =ollama= anyway. Given the limitations mentioned earlier of interacting with =ollama= through a terminal, why not create a dedicated =ollama= Emacs package that is very simple to set up, very lightweight and leverages Emacs's editing capabilities to provide a basic query response interface to =ollama=?
-
-I have found that setting up =ollama= within the current crop of LLM Emacs packages can be quite involved. I often struggle with the setup, I get there in the end, but it feels like there's always a long list of payloads, backends, etc., to configure. But what if I just want to integrate Emacs with =ollama=? It has a RESTful interface, so could I create a package with minimal setup, allowing users to define a default model in their init file (or select one each time if they prefer)?  It could also query the current set of loaded models through the =ollama= interface and provide a =completing-read= type of model selection, with potentially no model configuration needed!
-
-Beyond just being lightweight and easy to configure, I also have another idea: a flexible menu system. For a while, I have been using a simple menu-based interface inspired by transient menus. However, I have chosen not to use =transient= because I want this package to be compatible with older Emacs versions. Additionally, I haven’t found a compelling use case for a complex transient menu and I prefer a simple, opaque top level menu.
-
-To achieve this, I have decided to create a flexible =defcustom= menu system. Initially, it will be configured for some common actions, but users can easily modify it through the Emacs customization interface by updating a simple alist.
-
-For example, to refactor code through an LLM, a prepended text string of something like "Refactor the following code:" is usually applied. To proofread text, "Proofread the following:" could be prepended to the body of the query. So, why not create a flexible menu where users can easily add their own commands? For instance, if someone wanted a command to uppercase some text (even though Emacs can already do this), they could simply add the following entry to the =ollama-buddy-menu-items= alist:
-
-#+begin_src elisp
-(?u . ("Upcase" 
-       (lambda () (ollama-buddy--send "convert the following to uppercase:"))))
-#+end_src
-
-Then the menu would present a menu item "Upcase" with a "u" selection, upcasing the selected region.  You could go nuts with this, and in order to double down on the autogeneration of a menu concept, I have provided a =defcustom= =ollama-buddy-menu-columns= variable so you can flatten out your auto-generated menu as much as you like!
-
-This is getting rambly, but another key design consideration is how prompts should be handled and in fact how do I go about sending text from within Emacs?. Many implementations rely on a chat buffer as the single focal point, which seems natural to me, so I will follow a similar approach.
-
-I've seen different ways of defining a prompt submission mechanism, some using <RET>, others using a dedicated keybinding like C-c <RET>, so, how should I define my prompting mechanism? I have a feeling this could get complicated, so lets use the KISS principle, also, how should text be sent from within Emacs buffers? My solution? simply mark the text and send it, not just from any Emacs buffer, but also within the chat window. It may seem slightly awkward at first (especially in the chat buffer, where you will have to create your prompt and then mark it), but it provides a clear delineation of text and ensures a consistent interface across Emacs. For example, using M-h to mark an element requires minimal effort and greatly simplifies the package implementation. This approach also allows users to use the **scratch** buffer for sending requests if so desired!
-
-Many current implementations create a chat buffer with modes for local keybindings and other features. I have decided not to do this and instead, I will provide a simple editable buffer (ASCII text only) where all =ollama= interactions will reside. Users will be able to do anything in that buffer; there will be no bespoke Ollama/LLM functionality involved. It will simply be based on a =special= buffer and to save a session?, just use =save-buffer= to write it to a file, Emacs to the rescue again!
-
-Regarding the minimal setup philosophy of this package, I also want to include a fun AI assistant-style experience. Nothing complicated, just a bit of logic to display welcome text, show the current =ollama= status, and list available models. The idea is that users should be able to jump in immediately. If they know how to install/start =ollama=, they can install the package without any configuration, run `M-x ollama-buddy-menu`, and open the chat. At that point, the "AI assistant" will display the current =ollama= status and provide a simple tutorial to help them get started.
-
-The backend?, well I initially decided simply to use =curl= to stimulate the =ollama= RESTful API but after getting that to work I thought it might be best to completely remove that dependency, so now I am using a native network solution using =make-network-process=.  Yes it is a bit overkill, but it works, and ultimately gives me all the flexibility I could every want without having to depend on an external tool.
-
-I have other thoughts regarding the use of local LLMs versus online AI behemoths. The more I use =ollama= with Emacs through this package, the more I realize the potential of smaller, local LLMs. This package allows for quick switching between these models while maintaining a decent level of performance on a regular home computer. I could, for instance, load up =qwen-coder= for code-related queries (I have found the 7B Q4/5 versions to work particularly well) and switch to a more general model for other queries, such as =llama= or even =deepseek-r1=.
-
-Phew! That turned into quite a ramble, maybe I should run this text through =ollama-buddy= for proofreading! :)
-
 * Kanban
 
-Here is a kanban of the features that will be (hopefully) added in due course, and visually demonstrating their current status via a kanban board
+Here is a kanban of the features that I plan on (hopefully) adding in due course.
 
 #+begin_src emacs-lisp :results table :exports results :tangle no
 (my/kanban-to-table "roadmap" "issues")
 #+end_src
 
 #+RESULTS:
-| TODO                                                                                                                      | DOING                                                   |
-|---------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------|
-| Chat export options - Provide various export formats (markdown, org-mode, HTML, PDF) for saving conversations.            | Add to MELPA                                            |
-| Better integration with org-mode, magit, dired, and other Emacs packages? - I'm nore really sure what I mean by this yet! | Customizable Role-Based Menus Preset System             |
-| Are there any more ollama commands within the API that I could leverage?                                                  | Enhancing Menu Clarity: Distinguishing LLMs Effectively |
-| Test on Windows                                                                                                           |                                                         |
-| Enhance interaction with Ollama by incorporating more advanced parameters, such as context settings and temperature?      |                                                         |
-| Create more specialized system prompts                                                                                    |                                                         |
+| TODO                                                 | DONE                                                    |
+|------------------------------------------------------+---------------------------------------------------------|
+| Create more specialized system prompts               | Managing Sessions                                       |
+| Chat export options - Provide various export formats | Create a very sparse minified version of =ollama-buddy= |
+| Fully leverage the ollama API                        | Customizable Role-Based Menus Preset System             |
+| Test on Windows                                      | Add to MELPA                                            |
+| Advanced parameters, and temperature and others?     | Enhancing Menu Clarity: Distinguishing LLMs Effectively |
+|                                                      | Add real time token tracking and usage summary          |
+|                                                      | Managing chat history and context                       |
 
 * Roadmap                                                           :roadmap:
 
-** DOING Add to MELPA
+** DONE Managing Sessions
 
-** DOING Customizable Role-Based Menus Preset System
+** DONE Create a very sparse minified version of =ollama-buddy=
 
-** DOING Enhancing Menu Clarity: Distinguishing LLMs Effectively
+** DONE Customizable Role-Based Menus Preset System
 
-** TODO Chat export options - Provide various export formats (markdown, org-mode, HTML, PDF) for saving conversations.
+** DONE Add to MELPA
 
-** TODO Better integration with org-mode, magit, dired, and other Emacs packages? - I'm nore really sure what I mean by this yet!
+** DONE Enhancing Menu Clarity: Distinguishing LLMs Effectively
 
-** TODO Are there any more ollama commands within the API that I could leverage?
+** DONE Add real time token tracking and usage summary
+
+** DONE Managing chat history and context
+
+** TODO Create more specialized system prompts
+
+** TODO Chat export options - Provide various export formats
+
+** TODO Fully leverage the ollama API
 
 ** TODO Test on Windows
 
-** TODO Enhance interaction with Ollama by incorporating more advanced parameters, such as context settings and temperature?
-
-** TODO Create more specialized system prompts
+** TODO Advanced parameters, and temperature and others?
 
 * Testing
 
@@ -1556,8 +1413,6 @@ Let's compare ollama-buddy to the existing solutions:
 Report issues on the [[https://github.com/captainflasmr/ollama-buddy/issues][GitHub Issues page]]
 
 * Bugs
-
-** TODO Model hash colouring algorithm to ensure the contrast is sufficient and hence visibility maintained with differing themes.
 
 * Contributing
 

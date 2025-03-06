@@ -11,6 +11,22 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-03-06> *0.5.0*
+
+Implemented session management, so you can now save your conversations and bring them back with the relevant context and chat history!
+
+- Chat history is now maintained separately for each model
+- Added session new/load/save/delete/list functionality
+- A switch in context can now be achieved by any of the following methods:
+  - Loading a previous session
+  - Creating a new session
+  - Clearing history on the current session
+  - Toggling history on and off
+
+** <2025-03-04> *0.4.1*
+
+Added a sparse version of =ollama-buddy= called =ollama-buddy-mini=, see the github repository for the elisp file and a description in =README-mini.org=
+
 ** <2025-03-03> *0.4.0*
 
 Added conversation history support and navigation functions
