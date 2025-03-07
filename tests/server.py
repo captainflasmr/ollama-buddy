@@ -4,7 +4,7 @@ import json
 # Sample model list (simulating Ollama's `/api/tags` route)
 available_models = [
     {"name": "llama3.2:3b", "size": "3B"},
-    {"name": "llama3.2:3b", "size": "1B"}
+    {"name": "llama3.2:1b", "size": "1B"}
 ]
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
