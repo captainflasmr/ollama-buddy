@@ -208,6 +208,34 @@ Toggle on =ollama-buddy-toggle-token-display=
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_011.gif]]
 
+** Sessions/History and recall
+
+- Ask:
+
+What is the capital of France?
+
+and of Italy?
+
+- Turn off history
+
+and of Germany?
+
+- Turn on history
+
+and of Germany?
+
+- Save Session
+
+- Restart Emacs
+
+- Load Session
+
+and of Sweden?
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_012.gif]]
+
 ** *TODO* Code queries
 
 Taken from the examples in : https://learn.adacore.com/labs/intro-to-ada/chapters/generics.html#generic-list
