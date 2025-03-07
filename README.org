@@ -130,7 +130,7 @@ the quick brown fox jumps over the lazy dog
 
 - switch models to the following and check differing output:
 
-  - qwen2.5-coder:0.5b
+  - tinyllama:latest
   - qwen2.5-coder:3b
   - qwen2.5-coder:7b
 
@@ -141,7 +141,6 @@ the quick brown fox jumps over the lazy dog
 ** From 20,000 Leagues under the Sea to Buffy! using a custom menu - just for fun!
 
 Open up 20,000 Leagues from Project Gutenberg, select a paragraph, load a custom menu from presets called Buffy and lets see what fun we can have!
-
 
 - *Cordelia burn*
 
