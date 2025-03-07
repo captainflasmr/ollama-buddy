@@ -366,6 +366,9 @@ Higher values (0.7-1.0+) increase randomness and creativity."
   :type 'float
   :group 'ollama-buddy)
 
+(defvar ollama-buddy--current-prompt nil
+  "The current prompt.")
+
 (defvar ollama-buddy--current-temperature ollama-buddy-default-temperature
   "The currently active temperature value.")
 
@@ -1539,6 +1542,8 @@ ACTUAL-MODEL is the model being used instead."
           
           ;; Check if this response is complete
           (when (eq (alist-get 'done json-data) t)
+            ;; Add the user message to history
+            (ollama-buddy--add-to-history "user" ollama-buddy--current-prompt)
             ;; Add the complete response to history
             (ollama-buddy--add-to-history "assistant" ollama-buddy--current-response)
             (makunbound 'ollama-buddy--current-response)
@@ -1747,10 +1752,9 @@ ACTUAL-MODEL is the model being used instead."
                      (messages . ,(vconcat [] messages))
                      (stream . t)
                      (options . ((temperature . ,ollama-buddy--current-temperature)))))))
-    (setq ollama-buddy--current-model model)
     
-    ;; Add the user message to history
-    (ollama-buddy--add-to-history "user" prompt)
+    (setq ollama-buddy--current-model model)
+    (setq ollama-buddy--current-prompt prompt)
     
     (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
       (pop-to-buffer (current-buffer))
@@ -2104,10 +2108,6 @@ ACTUAL-MODEL is the model being used instead."
                     ollama-buddy-default-model
                     "Default:latest"))
          (query-text (string-trim (buffer-substring-no-properties bounds (point)))))
-    
-    ;; Add to history if non-empty
-    (when (and query-text (not (string-empty-p query-text)))
-      (add-to-history 'ollama-buddy--prompt-history query-text))
     
     (setq ollama-buddy--multishot-sequence nil
           ollama-buddy--multishot-prompt nil)
