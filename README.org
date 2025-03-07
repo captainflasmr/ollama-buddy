@@ -94,7 +94,9 @@ Note that all the demos are in real time.
 
 - C-c C-c to send from chat buffer
 
-- From scratch, select the text and send to chat buffer
+- From this demo README file, select the following text and send to chat buffer:
+
+  What is the capital of France?
 
 #+attr_org: :width 300px
 #+attr_html: :width 100%
@@ -112,9 +114,7 @@ Note that all the demos are in real time.
 
 ** From Other Buffers
 
-- Open this file with :
-
-  the quick brown fox jumps over the lazy dog
+the quick brown fox jumps over the lazy dog
 
 - Select individual words for dictionary menu items
 
