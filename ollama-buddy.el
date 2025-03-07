@@ -251,6 +251,17 @@
      :key ?K
      :description "Delete session"
      :action ollama-buddy-sessions-delete)
+
+    ;; Temperature Commands
+    (set-temperature
+     :key ?T
+     :description "Set temperature"
+     :action ollama-buddy-set-temperature)
+     
+    (reset-temperature
+     :key ?0
+     :description "Reset temperature"
+     :action ollama-buddy-reset-temperature)
     
     (quit
      :key ?q
@@ -348,6 +359,16 @@ When nil, status checks only occur during user interactions."
   :type 'boolean
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-default-temperature 0.7
+  "Default temperature setting for Ollama requests.
+Lower values (0.0-0.5) make responses more deterministic and focused.
+Higher values (0.7-1.0+) increase randomness and creativity."
+  :type 'float
+  :group 'ollama-buddy)
+
+(defvar ollama-buddy--current-temperature ollama-buddy-default-temperature
+  "The currently active temperature value.")
+
 (defvar ollama-buddy--current-session nil
   "Name of the currently active session, or nil if none.")
 
@@ -425,6 +446,73 @@ When nil, status checks only occur during user interactions."
 ;; Keep track of model colors
 (defvar ollama-buddy--model-colors (make-hash-table :test 'equal)
   "Hash table mapping model names to their colors.")
+
+(defun ollama-buddy-temperature-preset (preset)
+  "Set temperature to a PRESET value.
+PRESET should be one of the following symbols:
+- 'creative (0.9) - for more creative responses
+- 'balanced (0.7) - default balanced setting
+- 'focused (0.3) - for more deterministic, focused responses
+- 'precise (0.1) - for highly precise responses"
+  (interactive 
+   (list (intern (completing-read 
+                  "Temperature preset: " 
+                  '("creative" "balanced" "focused" "precise") 
+                  nil t))))
+  (let ((temp (pcase preset
+                ('creative 0.9)
+                ('balanced 0.7)
+                ('focused 0.3)
+                ('precise 0.1)
+                (_ ollama-buddy-default-temperature))))
+    (setq ollama-buddy--current-temperature temp)
+    (ollama-buddy--show-prompt)
+    (message "Temperature set to %.2f (%s)" temp preset)
+    (ollama-buddy--update-status 
+     (format "Temperature: %.2f (%s)" temp preset))))
+
+(defun ollama-buddy-set-temperature ()
+  "Set the temperature for Ollama requests.
+Temperature should be a float value, typically between 0.0 and 1.0."
+  (interactive)
+  (let ((temp (read-number "Temperature (0.0-1.0, default 0.7): " 
+                           ollama-buddy--current-temperature)))
+    ;; Validate input and set limits
+    (setq temp (min 2.0 (max 0.0 temp)))
+    (setq ollama-buddy--current-temperature temp)
+    (message "Ollama temperature set to %.2f" temp)
+    (ollama-buddy--show-prompt)
+    ;; Update the status to show the new temperature
+    (ollama-buddy--update-status 
+     (format "Temperature: %.2f" ollama-buddy--current-temperature))))
+
+(defun ollama-buddy-reset-temperature ()
+  "Reset the temperature to the default value."
+  (interactive)
+  (setq ollama-buddy--current-temperature ollama-buddy-default-temperature)
+  (message "Ollama temperature reset to default: %.2f" 
+           ollama-buddy-default-temperature)
+  (ollama-buddy--show-prompt)
+  ;; Update the status to show the new temperature
+  (ollama-buddy--update-status 
+   (format "Temperature reset to %.2f" ollama-buddy--current-temperature)))
+
+(defun ollama-buddy-adjust-temperature ()
+  "Adjust the temperature interactively with a slider."
+  (interactive)
+  (let* ((initial (round (* 100 ollama-buddy--current-temperature)))
+         (value (widget-create 'slider
+                               :size 20
+                               :min 0
+                               :max 100
+                               :tag "Temperature"
+                               :format "%t: %v%%"
+                               :value initial
+                               :step 5))
+         (temp (/ (float (widget-value value)) 100.0)))
+    (ollama-buddy--show-prompt)
+    (setq ollama-buddy--current-temperature temp)
+    (message "Temperature set to %.2f" temp)))
 
 (defun ollama-buddy--ensure-sessions-directory ()
   "Create the ollama-buddy sessions directory if it doesn't exist."
@@ -1367,18 +1455,20 @@ ACTUAL-MODEL is the model being used instead."
                                                         ollama-buddy--conversation-history-by-model 
                                                         nil)) 
                                               2)))
-                        (format " [H:%d]" history-count)))))
+                        (format " [H:%d]" history-count))))
+           (temp-info (format " [T:%.1f]" ollama-buddy--current-temperature)))
       (setq header-line-format
             (concat
              (format (if (string-empty-p (ollama-buddy--update-multishot-status))
-                         " %s%s %s %s%s"
-                       " %s %s %s %s%s")
+                         " %s%s %s %s%s%s"
+                       " %s %s %s %s%s%s")
                      (ollama-buddy--update-multishot-status)
                      (propertize (if (ollama-buddy--check-status) "RUNNING" "OFFLINE")
                                  'face '(:weight bold))
                      (propertize model 'face `(:weight bold :box (:line-width 4 :style pressed-button)))
                      (propertize status 'face '(:weight bold))
-                     (or history ""))
+                     (or history "")
+                     temp-info)
              (when (and original-model actual-model (not (string= original-model actual-model)))
                (propertize (format " [Using %s instead of %s]" actual-model original-model)
                            'face '(:foreground "orange" :weight bold))))))))
@@ -1614,9 +1704,10 @@ ACTUAL-MODEL is the model being used instead."
                     ollama-buddy-default-model
                     "Default:latest"))
          (color (ollama-buddy--get-model-color model)))
-    (insert (format "\n\n%s\n\n%s %s"
+    (insert (format "\n\n%s\n\n%s [T:%.1f] %s"
                     (propertize (alist-get 'header ollama-buddy--separators) 'face '(:inherit bold))
                     (propertize model 'face `(:foreground ,color :weight bold))
+                    ollama-buddy--current-temperature
                     (propertize ">> PROMPT: " 'face '(:inherit bold))))))
 
 (defun ollama-buddy--send-with-command (command-name)
@@ -1650,9 +1741,11 @@ ACTUAL-MODEL is the model being used instead."
          ;; Add the current prompt to the messages
          (messages (append messages `(((role . "user")
                                        (content . ,prompt)))))
+         ;; Include temperature in the payload
          (payload (json-encode
                    `((model . ,model)
                      (messages . ,(vconcat [] messages))
+                     (temperature . ,ollama-buddy--current-temperature)
                      (stream . t)))))
     (setq ollama-buddy--current-model model)
     
@@ -1674,6 +1767,9 @@ ACTUAL-MODEL is the model being used instead."
       (when (and original-model model (not (string= original-model model)))
         (insert (propertize (format "[Using %s instead of %s]" model original-model)
                             'face '(:inherit error :weight bold)) "\n\n"))
+      ;; Add temperature info to the response header
+      (insert (propertize (format "[Temperature: %.2f]" ollama-buddy--current-temperature)
+                          'face '(:inherit italic)) "\n\n")
       (visual-line-mode 1))
 
     (ollama-buddy--update-status "Sending request..." original-model model)
@@ -1766,9 +1862,10 @@ ACTUAL-MODEL is the model being used instead."
            models-section
            "Quick Tips:\n\n"
            "- Ask me anything!      C-c C-c\n"
-           "- Multi-model shot?     C-c l\n"
            "- Change your mind?     C-c k\n"
            "- Change your model?    C-c m\n"
+           "- Adjust temperature?   C-c t/T/0\n"
+           "    [0.0 precise - creative 1.0+]\n" 
            "- Prompt history?       M-p/M-n\n"
            "- Jump to User prompts? C-c p/n\n"
            "- In another buffer?    M-x ollama-buddy-menu")))
@@ -2046,6 +2143,10 @@ ACTUAL-MODEL is the model being used instead."
     (define-key map (kbd "C-c p") #'ollama-buddy-previous-prompt)
     (define-key map (kbd "C-c n") #'ollama-buddy-next-prompt)
     (define-key map (kbd "M-p") #'ollama-buddy--get-prompt-history-element)
+    ;; Add temperature control
+    (define-key map (kbd "C-c t") #'ollama-buddy-set-temperature)
+    (define-key map (kbd "C-c T") #'ollama-buddy-temperature-preset)
+    (define-key map (kbd "C-c 0") #'ollama-buddy-reset-temperature)
     map)
   "Keymap for ollama-buddy mode.")
 

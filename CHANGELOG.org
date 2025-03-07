@@ -11,6 +11,16 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-03-07> *0.5.1*
+
+Added temperature control
+
+- Implemented temperature control parameter
+- Added menu commands for setting (T), resetting (0)
+- Added keybindings (C-c t/T/0) for quick temperature adjustments
+- Updated header line and prompt displays to show current temperature
+- Included temperature info in welcome screen with usage guidance
+
 ** <2025-03-06> *0.5.0*
 
 Implemented session management, so you can now save your conversations and bring them back with the relevant context and chat history!

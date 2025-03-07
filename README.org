@@ -249,6 +249,34 @@ Can you write unit tests for the generated code
 
 * Whats New
 
+** <2025-03-07> *0.5.1*
+
+Added temperature control
+
+- Implemented temperature control parameter
+- Added menu commands for setting (T), resetting (0)
+- Added keybindings (C-c t/T/0) for quick temperature adjustments
+- Updated header line and prompt displays to show current temperature
+- Included temperature info in welcome screen with usage guidance
+
+This addition gives users fine-grained control over the creativity and randomness of their AI responses through a new temperature variable.
+
+This update adds several convenient ways to control temperature in Ollama-Buddy:
+
+*Key Features*
+
+1. *Direct Temperature Setting*: Use =C-c t= from the chat buffer or the menu command =[T]= to set an exact temperature value between 0.0 and 2.0.
+
+2. *Preset Temperatures*: Quickly switch between common temperature presets with =C-c T= from the chat buffer:
+   - Precise (0.1) - For factual responses
+   - Focused (0.3) - For deterministic, coherent outputs
+   - Balanced (0.7) - Default setting
+   - Creative (0.9) - For more varied, creative responses
+
+3. *Reset to Default*: Return to the default temperature (0.7) with =C-c 0= or the menu command =[0]=.
+
+4. *Visual Feedback*: The current temperature is displayed in the header line and before each response, so you always know what setting you're using.
+
 ** <2025-03-06> *0.5.0*
 
 Implemented session management, so you can now save your conversations and bring them back with the relevant context and chat history!
