@@ -1267,6 +1267,18 @@ Temperature to 0.0 gives a very pricise proofreading, typically only a single co
 
 Temperature to 2.0 is generally more casual, with a slangish alternative given.
 
+** History/context
+
+By default with history turned on
+
+What is the capital of the UK?
+
+and of France
+
+Now turn off History
+
+and of Germany
+
 ** elisp structure to org-table
 
 *** prompt
