@@ -64,6 +64,7 @@
 (require 'url)
 (require 'cl-lib)
 (require 'dired)
+(require 'org)
 
 (defgroup ollama-buddy nil
   "Customization group for Ollama Buddy."
@@ -72,6 +73,16 @@
 
 (defcustom ollama-buddy-command-definitions
   '(
+    (export-org
+     :key ?E
+     :description "Export chat (org-export)"
+     :action ollama-buddy-export)
+    
+    (toggle-markdown-conversion
+     :key ?M
+     :description "Toggle Markdown to Org conversion"
+     :action ollama-buddy-toggle-markdown-conversion)
+    
     ;; General Commands
     (open-chat
      :key ?o
@@ -291,6 +302,11 @@ Each command is defined with:
                                          (sexp :tag "Lambda Expression")))))))
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-convert-markdown-to-org t
+  "Whether to automatically convert markdown to org-mode format in responses."
+  :type 'boolean
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-sessions-directory
   (expand-file-name "ollama-buddy-sessions" user-emacs-directory)
   "Directory containing ollama-buddy session files."
@@ -335,9 +351,9 @@ When nil, status checks only occur during user interactions."
   :group 'ollama-buddy)
 
 (defconst ollama-buddy--separators
-  '((header . "------------------ o( Y )o ------------------")
-    (response . "------------------ @( Y )@ ------------------"))
-  "Separators for chat display.")
+  '((header . "* User Input")
+    (response . "** Response"))
+  "Separators for chat display in org-mode format.")
 
 (defcustom ollama-buddy-connection-check-interval 5
   "Interval in seconds to check Ollama connection status."
@@ -449,6 +465,71 @@ Higher values (0.7-1.0+) increase randomness and creativity."
 ;; Keep track of model colors
 (defvar ollama-buddy--model-colors (make-hash-table :test 'equal)
   "Hash table mapping model names to their colors.")
+
+(defun ollama-buddy-toggle-markdown-conversion ()
+  "Toggle automatic conversion of markdown to org-mode format."
+  (interactive)
+  (setq ollama-buddy-convert-markdown-to-org 
+        (not ollama-buddy-convert-markdown-to-org))
+  (message "Markdown to Org conversion: %s"
+           (if ollama-buddy-convert-markdown-to-org "enabled" "disabled")))
+
+(defun ollama-buddy-export ()
+  "Export the current chat buffer using org-mode export facilities."
+  (interactive)
+  (unless (eq major-mode 'org-mode)
+    (user-error "Buffer must be in org-mode to export"))
+  (call-interactively 'org-export-dispatch))
+
+(defun ollama-buddy--process-markdown-to-org (text)
+  "Convert markdown-formatted TEXT to org-mode format."
+  ;; This is a basic implementation that handles common markdown elements
+  ;; Implement your custom conversion logic here instead of using pandoc
+  (let ((processed-text text))
+    ;; Convert code blocks (```language ... ```) to org code blocks (#+BEGIN_SRC language ... #+END_SRC)
+    (setq processed-text 
+          (replace-regexp-in-string 
+           "```\\([a-zA-Z0-9]*\\)\\([^`]+\\)```" 
+           "#+BEGIN_SRC \\1\\2#+END_SRC" 
+           processed-text))
+    
+    ;; Convert inline code (`code`) to org verbatim (=code=)
+    (setq processed-text 
+          (replace-regexp-in-string 
+           "`\\([^`\n]+\\)`" 
+           "=\\1=" 
+           processed-text))
+    
+    ;; Convert headings (## Heading) to org headings (*** Heading)
+    (setq processed-text 
+          (replace-regexp-in-string 
+           "^\\(#+\\) \\(.*\\)$" 
+           (lambda (match)
+             (let* ((hash-marks (match-string 1 match))
+                    (heading-text (match-string 2 match))
+                    (level (+ 2 (length hash-marks))))  ;; Start at level 3 since we already use levels 1-2
+               (format "%s %s" (make-string level ?*) heading-text)))
+           processed-text))
+    
+    ;; Convert bold (**text**) to org bold (*text*)
+    (setq processed-text 
+          (replace-regexp-in-string 
+           "\\*\\*\\([^*]+\\)\\*\\*" 
+           "*\\1*" 
+           processed-text))
+    
+    ;; Convert italic (*text*) to org italic (/text/)
+    (setq processed-text 
+          (replace-regexp-in-string 
+           "\\*\\([^*]+\\)\\*" 
+           "/\\1/" 
+           processed-text))
+    
+    processed-text))
+
+(defun ollama-buddy--apply-properties (text face)
+  "Apply FACE to TEXT while preserving org-mode formatting."
+  (propertize text 'face face))
 
 (defun ollama-buddy-temperature-preset (preset)
   "Set temperature to a PRESET value.
@@ -623,11 +704,12 @@ If SESSION-NAME is not provided, prompt for a name."
                 (visual-line-mode 1)
                 ;; Clear the buffer and reinitialize
                 (erase-buffer)
+                (org-mode) ;; Use org-mode
                 (ollama-buddy-mode 1)
                 
                 ;; Add session header
                 (insert (ollama-buddy--create-intro-message))
-                (insert (format "\n\n[Session '%s' restored]\n" chosen-name))
+                (insert (format "\n\n** Session '%s' restored\n" chosen-name))
                 
                 ;; Collect all messages from all models into a single timeline
                 (let* ((all-messages '()))
@@ -641,34 +723,30 @@ If SESSION-NAME is not provided, prompt for a name."
                          ;; Add timestamp if available, or use a counter for ordering
                          (unless (assoc 'timestamp msg-with-model)
                            (setq msg-with-model (cons (cons 'timestamp 0) msg-with-model)))
-                         ;; (push msg-with-model all-messages)
                          (setq all-messages (append all-messages (list msg-with-model)))
                          )))
                    ollama-buddy--conversation-history-by-model)
                   
-                  ;; (setq all-messages (nreverse all-messages))
-                  
-                  ;; Display all messages in order
+                  ;; Display all messages in order with org-mode formatting
                   (dolist (msg all-messages)
                     (let* ((role (alist-get 'role msg))
                            (model (alist-get 'model msg))
                            (content (alist-get 'content msg)))
                       
                       (when (string= role "user")
-                        (insert (format "\n\n%s\n\n%s %s\n\n"
-                                        (propertize (alist-get 'header ollama-buddy--separators) 
-                                                    'face '(:inherit bold))
+                        (insert (format "\n\n%s\n%s %s\n\n"
+                                        (propertize (alist-get 'header ollama-buddy--separators) 'face '(:inherit bold))
                                         (propertize "[User: PROMPT]" 'face '(:inherit bold))
                                         content)))
                       
                       (when (string= role "assistant")
-                        (insert (format "%s\n\n%s %s\n\n"
-                                        (propertize (alist-get 'response ollama-buddy--separators) 
-                                                    'face '(:inherit bold))
+                        (insert (format "%s\n%s\n\n%s\n\n"
+                                        (propertize (alist-get 'response ollama-buddy--separators) 'face '(:inherit bold))
                                         (propertize (concat "[" model ": RESPONSE]") 
                                                     'face `(:inherit bold 
                                                                      :foreground ,(ollama-buddy--get-model-color model)))
-                                        content))))))
+                                        ;; Convert content to org-mode format if needed
+                                        (ollama-buddy--process-markdown-to-org content)))))))
                 
                 ;; Show a prompt at the end
                 (ollama-buddy--show-prompt)))))
@@ -835,13 +913,14 @@ If SESSION-NAME is not provided, prompt for a name."
     (ollama-buddy-sessions-save ollama-buddy-auto-save-session-name)))
 
 (defun ollama-buddy--find-prompt-positions ()
-  "Find all prompt positions in the current buffer.
+  "Find all prompt positions in the current org-mode buffer.
 Returns a list of positions where prompts start."
   (let ((positions '())
         (case-fold-search nil))
     (save-excursion
       (goto-char (point-min))
-      (while (re-search-forward "\\[User: PROMPT\\]" nil t)
+      ;; Find headings with "User Input" or "* User Input"
+      (while (re-search-forward "^\\* User Input" nil t)
         (push (match-beginning 0) positions)))
     (nreverse positions)))
 
@@ -1485,6 +1564,7 @@ ACTUAL-MODEL is the model being used instead."
   "Initialize the chat buffer and check Ollama status."
   (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
     (when (= (buffer-size) 0)
+      (org-mode)  ;; Use org-mode instead of fundamental mode
       (ollama-buddy-mode 1)
       (ollama-buddy--check-status)
       (insert (ollama-buddy--create-intro-message))
@@ -1522,7 +1602,9 @@ ACTUAL-MODEL is the model being used instead."
              (old-window-start (and window (window-start window))))
         (save-excursion
           (goto-char (point-max))
-          (insert text)
+          ;; Process text for org-mode markdown conversion if needed
+          (let ((processed-text (ollama-buddy--process-markdown-to-org text)))
+            (insert processed-text))
 
           ;; Track the complete response for history
           (when (boundp 'ollama-buddy--current-response)
@@ -1569,7 +1651,7 @@ ACTUAL-MODEL is the model being used instead."
               
               ;; Display token info if enabled
               (when ollama-buddy-display-token-stats
-                (insert (format "\n\n[%d tokens in %.1fs, %.1f tokens/sec]" 
+                (insert (format "\n\n*** Token Stats\n[%d tokens in %.1fs, %.1f tokens/sec]" 
                                 ollama-buddy--current-token-count
                                 elapsed-time
                                 token-rate)))
@@ -1580,7 +1662,7 @@ ACTUAL-MODEL is the model being used instead."
                     ollama-buddy--last-token-count 0
                     ollama-buddy--last-update-time nil))
             
-            (insert "\n\n")
+            (insert "\n\n*** Completed\n")
             (insert (propertize "[" 'face '(:inherit bold)))
             (insert (propertize ollama-buddy--current-model 'face `(:inherit bold)))
             (insert (propertize ": FINISHED]" 'face '(:inherit bold)))
@@ -1703,7 +1785,7 @@ ACTUAL-MODEL is the model being used instead."
         (insert input)))))
 
 (defun ollama-buddy--show-prompt ()
-  "Show the prompt with optionally a MODEL."
+  "Show the prompt with optionally a MODEL in org-mode format."
   (interactive)
   (let* ((model (or ollama-buddy--current-model
                     ollama-buddy-default-model
@@ -1761,19 +1843,26 @@ ACTUAL-MODEL is the model being used instead."
       (goto-char (point-max))
       (unless (> (buffer-size) 0)
         (insert (ollama-buddy--create-intro-message)))
-      (insert (format "\n\n%s\n\n%s %s\n\n%s\n\n"
+      
+      ;; Insert in org-mode format
+      (insert (format "\n\n%s\n%s\n\n%s\n\n"
                       (propertize (alist-get 'header ollama-buddy--separators) 'face '(:inherit bold))
-                      (propertize "[User: PROMPT]" 'face '(:inherit bold))
-                      prompt
-                      (propertize (concat "[" model ": RESPONSE]") 'face
-                                  `(:inherit bold :foreground ,(ollama-buddy--get-model-color 
-                                                                model)))))
+                      (propertize (format "[User: PROMPT] %s" prompt) 'face '(:inherit bold))
+                      (propertize (alist-get 'response ollama-buddy--separators) 'face '(:inherit bold))))
+      
+      ;; Add model info to response header
+      (insert (propertize (format "[%s: RESPONSE]" model) 'face 
+                          `(:inherit bold :foreground ,(ollama-buddy--get-model-color model))) "\n\n")
+      
       (when (and original-model model (not (string= original-model model)))
         (insert (propertize (format "[Using %s instead of %s]" model original-model)
                             'face '(:inherit error :weight bold)) "\n\n"))
+      
       ;; Add temperature info to the response header
       (insert (propertize (format "[Temperature: %.2f]" ollama-buddy--current-temperature)
                           'face '(:inherit italic)) "\n\n")
+      
+      ;; Enable visual-line-mode for better text wrapping
       (visual-line-mode 1))
 
     (ollama-buddy--update-status "Sending request..." original-model model)
@@ -1848,23 +1937,23 @@ ACTUAL-MODEL is the model being used instead."
     (error nil)))
 
 (defun ollama-buddy--create-intro-message ()
-  "Create welcome message with lettered model assignments."
+  "Create welcome message with lettered model assignments in org format."
   (ollama-buddy--assign-model-letters)
   (let* ((models-section
           (when (ollama-buddy--ollama-running)
             (ollama-buddy--format-models-with-letters)))
          (message-text
           (concat
-           "\n\n"
-           (alist-get 'header ollama-buddy--separators)
-           "\n"
+           "#+TITLE: Ollama Buddy Chat\n\n"
+           "* Welcome to OLLAMA BUDDY\n"
            " ___ _ _      n _ n      ___       _   _ _ _\n"
            "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |\n"
            "| | | | | .  |     | .  | . | | | . | . |__ |\n"
            "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n\n"
            "Hi there! and welcome to OLLAMA BUDDY!\n\n"
+           "** Available Models\n"
            models-section
-           "Quick Tips:\n\n"
+           "** Quick Tips\n\n"
            "- Ask me anything!      C-c C-c\n"
            "- Change your mind?     C-c k\n"
            "- Change your model?    C-c m\n"
@@ -2151,6 +2240,9 @@ ACTUAL-MODEL is the model being used instead."
     (define-key map (kbd "C-c t") #'ollama-buddy-set-temperature)
     (define-key map (kbd "C-c T") #'ollama-buddy-temperature-preset)
     (define-key map (kbd "C-c 0") #'ollama-buddy-reset-temperature)
+    ;; Add org-mode specific keys
+    (define-key map (kbd "C-c C-e") #'ollama-buddy-export)
+    (define-key map (kbd "C-c C-o") #'ollama-buddy-toggle-markdown-conversion)
     map)
   "Keymap for ollama-buddy mode.")
 
