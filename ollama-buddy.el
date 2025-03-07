@@ -2108,6 +2108,10 @@ ACTUAL-MODEL is the model being used instead."
                     ollama-buddy-default-model
                     "Default:latest"))
          (query-text (string-trim (buffer-substring-no-properties bounds (point)))))
+
+    ;; Add to history if non-empty
+    (when (and query-text (not (string-empty-p query-text)))
+      (add-to-history 'ollama-buddy--prompt-history query-text))
     
     (setq ollama-buddy--multishot-sequence nil
           ollama-buddy--multishot-prompt nil)
