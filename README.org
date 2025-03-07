@@ -168,10 +168,6 @@ Open up 20,000 Leagues from Project Gutenberg, select a paragraph, load a custom
 
 ** Role Switching
 
-Add some text to the scratch buffer:
-
-The quick brown fox jumps over the lazy dog
-
 Show the changing of roles and how they affect the menu and hence the commands available.
 
 #+attr_org: :width 300px
