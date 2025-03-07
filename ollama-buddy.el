@@ -1745,8 +1745,8 @@ ACTUAL-MODEL is the model being used instead."
          (payload (json-encode
                    `((model . ,model)
                      (messages . ,(vconcat [] messages))
-                     (temperature . ,ollama-buddy--current-temperature)
-                     (stream . t)))))
+                     (stream . t)
+                     (options . ((temperature . ,ollama-buddy--current-temperature)))))))
     (setq ollama-buddy--current-model model)
     
     ;; Add the user message to history
