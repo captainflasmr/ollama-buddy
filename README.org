@@ -1239,6 +1239,34 @@ These are the models I currently have loaded and are testing:
 - llama3.2:1b
 - tinyllama:latest
 
+** Bad Sentence
+
+This aint a good sentence, pleez rewrite!
+
+llama3.2:3b generates something like:
+
+[Temperature: 0.70]
+
+I'll correct this informal and colloquial text.
+
+Here's the proofread version of your sentence:
+
+"This isn't a very good sentence; could you please rephrase it?"
+
+I corrected the following:
+
+- "ain't" to "isn't", which is the standard spelling for the negation of "to be".
+- "pleez" to "please", which is the standard spelling in English.
+- Replaced "rewrite" with "rephrase", as "rewrite" implies making a complete new version, whereas "rephrase" means rewording or expressing something in different words.
+
+** Temperature
+
+Given the bad sentence above
+
+Temperature to 0.0 gives a very pricise proofreading, typically only a single concise sentence.
+
+Temperature to 2.0 is generally more casual, with a slangish alternative given.
+
 ** elisp structure to org-table
 
 *** prompt
