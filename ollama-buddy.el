@@ -461,11 +461,59 @@ Higher values (0.7-1.0+) increase randomness and creativity."
 (defvar ollama-buddy--model-colors (make-hash-table :test 'equal)
   "Hash table mapping model names to their colors.")
 
+(defun ollama-buddy--md-to-org-convert-region (start end)
+  "Convert the region from START to END from Markdown to Org-mode format"
+  (save-excursion
+    (save-restriction
+      (narrow-to-region start end)
+      ;; Lists: Translate `-`, `*`, or `+` lists to Org-mode lists
+      (goto-char (point-min))
+      (while (re-search-forward "^\\([ \t]*\\)[*-+] \\(.*\\)$" nil t)
+        (replace-match (concat (match-string 1) "- \\2")))
+      ;; Bold: `**bold**` -> `*bold*` only if directly adjacent
+      (goto-char (point-min))
+      (while (re-search-forward "\\*\\*\\([^ ]\\(.*?\\)[^ ]\\)\\*\\*" nil t)
+        (replace-match "*\\1*"))
+      ;; Italics: `_italic_` -> `/italic/`
+      (goto-char (point-min))
+      (while (re-search-forward "\\([ \n]\\)_\\([^ ].*?[^ ]\\)_\\([ \n]\\)" nil t)
+        (replace-match "\\1/\\2/\\3"))
+      ;; Links: `[text](url)` -> `[[url][text]]`
+      (goto-char (point-min))
+      (while (re-search-forward "\\[\\(.*?\\)\\](\\(.*?\\))" nil t)
+        (replace-match "[[\\2][\\1]]"))
+      ;; Code blocks: Markdown ```lang ... ``` to Org #+begin_src ... #+end_src
+      (goto-char (point-min))
+      (while (re-search-forward "```\\(.*?\\)\\(?:\n\\|\\s-\\)\\(\\(?:.\\|\n\\)*?\\)```" nil t)
+        (replace-match "#+begin_src \\1\n\\2#+end_src"))
+      ;; Inline code: `code` -> =code=
+      (goto-char (point-min))
+      (while (re-search-forward "`\\(.*?\\)`" nil t)
+        (replace-match "=\\1="))
+      ;; Horizontal rules: `---` or `***` -> `-----`
+      (goto-char (point-min))
+      (while (re-search-forward "^\\(-{3,}\\|\\*{3,}\\)$" nil t)
+        (replace-match "-----"))
+      ;; Images: `![alt text](url)` -> `[[url]]`
+      (goto-char (point-min))
+      (while (re-search-forward "!\\[.*?\\](\\(.*?\\))" nil t)
+        (replace-match "[[\\1]]"))
+      (goto-char (point-min))
+      ;; Headers: Adjust '#'
+      (while (re-search-forward "^\\(#+\\) " nil t)
+        (replace-match (make-string (length (match-string 1)) ?*) nil nil nil 1))
+      (goto-char (point-min))
+      ;; any extra characters
+      (while (re-search-forward "—" nil t)
+        (replace-match ", ")))))
+
 (defun ollama-buddy-toggle-markdown-conversion ()
   "Toggle automatic conversion of markdown to org-mode format."
   (interactive)
   (setq ollama-buddy-convert-markdown-to-org 
         (not ollama-buddy-convert-markdown-to-org))
+  (ollama-buddy--update-status
+       (if ollama-buddy-convert-markdown-to-org "MD conversion enabled" "MD conversion disabled"))
   (message "Markdown to Org conversion: %s"
            (if ollama-buddy-convert-markdown-to-org "enabled" "disabled")))
 
@@ -685,15 +733,15 @@ If SESSION-NAME is not provided, prompt for a name."
             (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
               (let ((inhibit-read-only t))
                 (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
+                (org-mode)
                 (visual-line-mode 1)
                 ;; Clear the buffer and reinitialize
                 (erase-buffer)
-                (org-mode) ;; Use org-mode
                 (ollama-buddy-mode 1)
                 
                 ;; Add session header
                 (insert (ollama-buddy--create-intro-message))
-                (insert (format "\n\n** Session '%s' restored\n" chosen-name))
+                (insert (format "\n\n[Session '%s' restored]" chosen-name))
                 
                 ;; Collect all messages from all models into a single timeline
                 (let* ((all-messages '()))
@@ -707,32 +755,43 @@ If SESSION-NAME is not provided, prompt for a name."
                          ;; Add timestamp if available, or use a counter for ordering
                          (unless (assoc 'timestamp msg-with-model)
                            (setq msg-with-model (cons (cons 'timestamp 0) msg-with-model)))
+                         ;; (push msg-with-model all-messages)
                          (setq all-messages (append all-messages (list msg-with-model)))
                          )))
                    ollama-buddy--conversation-history-by-model)
                   
-                  ;; Display all messages in order with org-mode formatting
+                  ;; (setq all-messages (nreverse all-messages))
+                  
+                  ;; Display all messages in order
                   (dolist (msg all-messages)
                     (let* ((role (alist-get 'role msg))
                            (model (alist-get 'model msg))
-                           (content (alist-get 'content msg)))
-                      
+                           (content (alist-get 'content msg))
+                           (color (ollama-buddy--get-model-color model)))
+                  
                       (when (string= role "user")
-                        (insert (format "\n\n%s\n%s %s\n\n"
-                                        (propertize "[User: PROMPT]" 'face '(:inherit bold))
+                        (let ((start (point)))
+                          (insert (format "\n\n* %s %s %s"
+                                          model
+                                          ">> PROMPT: "
+                                          content))
+                          (let ((overlay (make-overlay start (+ start 4 (length model)))))
+                            (overlay-put overlay 'face `(:foreground ,color :weight bold))))
+                        
+                        (insert (format "\n\n%s %s\n\n"
+                                        (propertize "** [User: PROMPT]" 'face '(:inherit bold))
                                         content)))
                       
                       (when (string= role "assistant")
-                        (insert (format "%s\n%s\n\n%s\n\n"
-                                        (propertize (concat "[" model ": RESPONSE]") 
-                                                    'face `(:inherit bold 
-                                                                     :foreground ,(ollama-buddy--get-model-color model)))
-                                        ;; Convert content to org-mode format if needed
-                                        (ollama-buddy--process-markdown-to-org content)))))))
-                
+                        (let ((start-pos (point-max)))
+                          (insert (format "%s\n\n%s"
+                                          (concat "** [" model ": RESPONSE]")
+                                          content))
+                          ;; Now convert from markdown to org if enabled
+                          (when ollama-buddy-convert-markdown-to-org
+                            (ollama-buddy--md-to-org-convert-region start-pos (point-max))))))))
                 ;; Show a prompt at the end
                 (ollama-buddy--show-prompt)))))
-        
         ;; Update status
         (ollama-buddy--update-status (format "Session '%s' loaded" chosen-name))
         (message "Loaded session: %s" chosen-name)))))
@@ -1484,6 +1543,7 @@ ACTUAL-MODEL is the model being used instead."
            (temp-info (format " [T:%.1f]" ollama-buddy--current-temperature)))
       (setq header-line-format
             (concat
+             (if ollama-buddy-convert-markdown-to-org "ORG" "MD")
              (format (if (string-empty-p (ollama-buddy--update-multishot-status))
                          " %s%s %s %s%s%s"
                        " %s %s %s %s%s%s")
@@ -1507,7 +1567,8 @@ ACTUAL-MODEL is the model being used instead."
   "Initialize the chat buffer and check Ollama status."
   (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
     (when (= (buffer-size) 0)
-      (org-mode)  ;; Use org-mode instead of fundamental mode
+      (org-mode)
+      (visual-line-mode 1)
       (ollama-buddy-mode 1)
       (ollama-buddy--check-status)
       (insert (ollama-buddy--create-intro-message))
@@ -1524,7 +1585,10 @@ ACTUAL-MODEL is the model being used instead."
     (unless ollama-buddy--current-token-start-time
       (setq ollama-buddy--current-token-start-time (float-time)
             ollama-buddy--last-token-count 0
-            ollama-buddy--last-update-time nil)
+            ollama-buddy--last-update-time nil
+            
+            ;; Add a marker for the response start position
+            ollama-buddy--response-start-position (with-current-buffer ollama-buddy--chat-buffer (point-max)))
       
       ;; Start the real-time update timer
       (when ollama-buddy--token-update-timer
@@ -1545,9 +1609,8 @@ ACTUAL-MODEL is the model being used instead."
              (old-window-start (and window (window-start window))))
         (save-excursion
           (goto-char (point-max))
-          ;; Process text for org-mode markdown conversion if needed
-          (let ((processed-text (ollama-buddy--process-markdown-to-org text)))
-            (insert processed-text))
+          ;; Insert the text directly - we'll convert it at the end of the response
+          (insert text)
 
           ;; Track the complete response for history
           (when (boundp 'ollama-buddy--current-response)
@@ -1567,6 +1630,17 @@ ACTUAL-MODEL is the model being used instead."
           
           ;; Check if this response is complete
           (when (eq (alist-get 'done json-data) t)
+            ;; Convert the response from markdown to org format if enabled
+            (when ollama-buddy-convert-markdown-to-org
+              (let ((response-end (point-max)))
+                (when (and (boundp 'ollama-buddy--response-start-position)
+                           ollama-buddy--response-start-position)
+                  (ollama-buddy--md-to-org-convert-region 
+                   ollama-buddy--response-start-position 
+                   response-end)
+                  ;; Reset the marker after conversion
+                  (makunbound 'ollama-buddy--response-start-position))))
+            
             ;; Add the user message to history
             (ollama-buddy--add-to-history "user" ollama-buddy--current-prompt)
             ;; Add the complete response to history
@@ -1605,10 +1679,7 @@ ACTUAL-MODEL is the model being used instead."
                     ollama-buddy--last-token-count 0
                     ollama-buddy--last-update-time nil))
             
-            (insert "\n\n*** Completed\n")
-            (insert (propertize "[" 'face '(:inherit bold)))
-            (insert (propertize ollama-buddy--current-model 'face `(:inherit bold)))
-            (insert (propertize ": FINISHED]" 'face '(:inherit bold)))
+            (insert "\n\n*** FINISHED")
             
             ;; Handle multishot progression here
             (if ollama-buddy--multishot-sequence
@@ -1756,6 +1827,10 @@ ACTUAL-MODEL is the model being used instead."
                                         (region-beginning) (region-end))
                                      "")))
            (model (ollama-buddy--get-command-prop command-name :model)))
+      (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+        (pop-to-buffer (current-buffer))
+        (goto-char (point-max))
+        (insert (string-trim prompt-with-selection)))
       (ollama-buddy--send (string-trim prompt-with-selection) model))))
 
 (defun ollama-buddy--send (&optional prompt specified-model)
@@ -1899,13 +1974,14 @@ ACTUAL-MODEL is the model being used instead."
            "** Available Models\n\n"
            models-section
            "** Quick Tips\n\n"
-           "- Ask me anything!      C-c C-c\n"
-           "- Change your mind?     C-c k\n"
-           "- Change your model?    C-c m\n"
-           "- Adjust temperature?   C-c t/T/0\n"
+           "- Ask me anything!          C-c C-c\n"
+           "- Change your model?        C-c m\n"
+           "- Change your mind?         C-c k\n"
+           "- Convert response to org?  C-c C-o\n"
+           "- Adjust temperature?       C-c t/T/0\n"
            "    [0.0 precise - creative 1.0+]\n" 
-           "- Prompt history?       M-p/M-n\n"
-           "- In another buffer?    M-x ollama-buddy-menu")))
+           "- Prompt history?           M-p/M-n\n"
+           "- In another buffer?        M-x ollama-buddy-menu")))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
 
