@@ -272,6 +272,28 @@ Can you write unit tests for the generated code
 
 * Whats New
 
+** <2025-03-08> *0.6.0*
+
+Chat buffer now in org-mode
+
+- Enabled =org-mode= in chat buffer for better text structure
+- Implemented =ollama-buddy--md-to-org-convert-region= for Markdown to Org conversion
+- Turn org conversion on and off
+- Updated keybindings =C-c C-o= to toggle Markdown to Org conversion
+
+*Key Features*  
+
+1. The chat buffer is now in =org-mode= which gives the buffer enhanced readability and structure. Now, conversations automatically format user prompts and AI responses with *org-mode headings*, making them easier to navigate.
+
+2. Of course with org-mode you will now get the additional benefits for free, such as:
+
+   - outlining
+   - org export
+   - heading navigation
+   - source code fontification
+
+3. Previously, responses in *Ollama Buddy* were displayed in markdown formatting, which wasn’t always ideal for *org-mode users*. Now, you can automatically convert Markdown elements, such as bold/italic text, code blocks, and lists, into proper org-mode formatting.  This gives you the flexibility to work with markdown or org-mode as needed.  
+
 ** <2025-03-07> *0.5.1*
 
 Added temperature control

@@ -11,6 +11,15 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-03-08> *0.6.0*
+
+Chat buffer now in org-mode
+
+- Enabled =org-mode= in chat buffer for better text structure
+- Implemented =ollama-buddy--md-to-org-convert-region= for Markdown to Org conversion
+- Turn org conversion on and off
+- Updated keybindings =C-c C-o= to toggle Markdown to Org conversion
+
 ** <2025-03-07> *0.5.1*
 
 Added temperature control

@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama Buddy: Your Friendly AI Assistant -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.5.1
+;; Version: 0.6.0
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -72,17 +72,7 @@
   :prefix "ollama-buddy-")
 
 (defcustom ollama-buddy-command-definitions
-  '(
-    (export-org
-     :key ?E
-     :description "Export chat (org-export)"
-     :action ollama-buddy-export)
-    
-    (toggle-markdown-conversion
-     :key ?M
-     :description "Toggle Markdown to Org conversion"
-     :action ollama-buddy-toggle-markdown-conversion)
-    
+  '(    
     ;; General Commands
     (open-chat
      :key ?o
