@@ -1868,10 +1868,6 @@ ACTUAL-MODEL is the model being used instead."
         (insert (propertize (format "[Using %s instead of %s]" model original-model)
                             'face '(:inherit error :weight bold)) "\n\n"))
       
-      ;; Add temperature info to the response header
-      (insert (propertize (format "[Temperature: %.2f]" ollama-buddy--current-temperature)
-                          'face '(:inherit italic)) "\n\n")
-      
       ;; Enable visual-line-mode for better text wrapping
       (visual-line-mode 1))
 
