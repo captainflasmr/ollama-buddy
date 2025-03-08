@@ -1731,13 +1731,18 @@ ACTUAL-MODEL is the model being used instead."
   "Show the prompt with optionally a MODEL in org-mode format."
   (interactive)
   (let* ((model (or ollama-buddy--current-model
-                    ollama-buddy-default-model
-                    "Default:latest"))
+                   ollama-buddy-default-model
+                   "Default:latest"))
          (color (ollama-buddy--get-model-color model)))
-    (insert (format "\n\n%s [T:%.1f] %s"
-                    (propertize (concat "* " model) 'face `(:foreground ,color :weight bold))
-                    ollama-buddy--current-temperature
-                    (propertize ">> PROMPT: " 'face '(:inherit bold))))))
+    ;; Use overlay instead of text properties for more reliable color display
+    (let ((start (point)))
+      (insert (format "\n\n* %s [T:%.1f] %s"
+                     model
+                     ollama-buddy--current-temperature
+                     ">> PROMPT: "))
+      ;; Apply overlay for the model name
+      (let ((overlay (make-overlay start (+ start 4 (length model)))))
+        (overlay-put overlay 'face `(:foreground ,color :weight bold))))))
 
 (defun ollama-buddy--send-with-command (command-name)
   "Send request using configuration from COMMAND-NAME."
