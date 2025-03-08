@@ -350,11 +350,6 @@ When nil, status checks only occur during user interactions."
   :type 'directory
   :group 'ollama-buddy)
 
-(defconst ollama-buddy--separators
-  '((header . "* User Input")
-    (response . "** Response"))
-  "Separators for chat display in org-mode format.")
-
 (defcustom ollama-buddy-connection-check-interval 5
   "Interval in seconds to check Ollama connection status."
   :type 'integer
@@ -474,13 +469,6 @@ Higher values (0.7-1.0+) increase randomness and creativity."
   (message "Markdown to Org conversion: %s"
            (if ollama-buddy-convert-markdown-to-org "enabled" "disabled")))
 
-(defun ollama-buddy-export ()
-  "Export the current chat buffer using org-mode export facilities."
-  (interactive)
-  (unless (eq major-mode 'org-mode)
-    (user-error "Buffer must be in org-mode to export"))
-  (call-interactively 'org-export-dispatch))
-
 (defun ollama-buddy--process-markdown-to-org (text)
   "Convert markdown-formatted TEXT to org-mode format."
   ;; This is a basic implementation that handles common markdown elements
@@ -526,10 +514,6 @@ Higher values (0.7-1.0+) increase randomness and creativity."
            processed-text))
     
     processed-text))
-
-(defun ollama-buddy--apply-properties (text face)
-  "Apply FACE to TEXT while preserving org-mode formatting."
-  (propertize text 'face face))
 
 (defun ollama-buddy-temperature-preset (preset)
   "Set temperature to a PRESET value.
@@ -735,13 +719,11 @@ If SESSION-NAME is not provided, prompt for a name."
                       
                       (when (string= role "user")
                         (insert (format "\n\n%s\n%s %s\n\n"
-                                        (propertize (alist-get 'header ollama-buddy--separators) 'face '(:inherit bold))
                                         (propertize "[User: PROMPT]" 'face '(:inherit bold))
                                         content)))
                       
                       (when (string= role "assistant")
                         (insert (format "%s\n%s\n\n%s\n\n"
-                                        (propertize (alist-get 'response ollama-buddy--separators) 'face '(:inherit bold))
                                         (propertize (concat "[" model ": RESPONSE]") 
                                                     'face `(:inherit bold 
                                                                      :foreground ,(ollama-buddy--get-model-color model)))
@@ -911,44 +893,6 @@ If SESSION-NAME is not provided, prompt for a name."
   (when (and ollama-buddy-auto-save-session
              (> (hash-table-count ollama-buddy--conversation-history-by-model) 0))
     (ollama-buddy-sessions-save ollama-buddy-auto-save-session-name)))
-
-(defun ollama-buddy--find-prompt-positions ()
-  "Find all prompt positions in the current org-mode buffer.
-Returns a list of positions where prompts start."
-  (let ((positions '())
-        (case-fold-search nil))
-    (save-excursion
-      (goto-char (point-min))
-      ;; Find headings with "User Input" or "* User Input"
-      (while (re-search-forward "^\\* User Input" nil t)
-        (push (match-beginning 0) positions)))
-    (nreverse positions)))
-
-(defun ollama-buddy-previous-prompt ()
-  "Navigate to the previous prompt."
-  (interactive)
-  (let ((positions (ollama-buddy--find-prompt-positions)))
-    (if (null positions)
-        (message "No prompts found")
-      (let ((prev-pos (car (last (seq-filter (lambda (pos) (< pos (point))) positions)))))
-        (if prev-pos
-            (progn
-              (goto-char prev-pos)
-              (recenter))
-          (message "No previous prompt"))))))
-
-(defun ollama-buddy-next-prompt ()
-  "Navigate to the next prompt."
-  (interactive)
-  (let ((positions (ollama-buddy--find-prompt-positions)))
-    (if (null positions)
-        (message "No prompts found")
-      (let ((next-pos (car (seq-filter (lambda (pos) (> pos (point))) positions))))
-        (if next-pos
-            (progn
-              (goto-char next-pos)
-              (recenter))
-          (goto-char  (point-max)))))))
 
 (defun ollama-buddy--add-to-history (role content)
   "Add message with ROLE and CONTENT to conversation history for current model."
@@ -1293,8 +1237,7 @@ Adapts the color to the current theme (light or dark) for better visibility."
                                        (length (cdr pair)))
                                      models-alist)))
            (format-str (format "  (%%c) %%-%ds  %%s" max-width)))
-      (concat "Models available:\n\n"
-              (mapconcat
+      (concat (mapconcat
                (lambda (row)
                  (format format-str
                          (caar row)
@@ -1791,9 +1734,8 @@ ACTUAL-MODEL is the model being used instead."
                     ollama-buddy-default-model
                     "Default:latest"))
          (color (ollama-buddy--get-model-color model)))
-    (insert (format "\n\n%s\n\n%s [T:%.1f] %s"
-                    (propertize (alist-get 'header ollama-buddy--separators) 'face '(:inherit bold))
-                    (propertize model 'face `(:foreground ,color :weight bold))
+    (insert (format "\n\n%s [T:%.1f] %s"
+                    (propertize (concat "* " model) 'face `(:foreground ,color :weight bold))
                     ollama-buddy--current-temperature
                     (propertize ">> PROMPT: " 'face '(:inherit bold))))))
 
@@ -1845,13 +1787,11 @@ ACTUAL-MODEL is the model being used instead."
         (insert (ollama-buddy--create-intro-message)))
       
       ;; Insert in org-mode format
-      (insert (format "\n\n%s\n%s\n\n%s\n\n"
-                      (propertize (alist-get 'header ollama-buddy--separators) 'face '(:inherit bold))
-                      (propertize (format "[User: PROMPT] %s" prompt) 'face '(:inherit bold))
-                      (propertize (alist-get 'response ollama-buddy--separators) 'face '(:inherit bold))))
+      (insert (format "\n\n%s\n\n"
+                      (propertize (format "** [User: PROMPT] %s" prompt) 'face '(:inherit bold))))
       
       ;; Add model info to response header
-      (insert (propertize (format "[%s: RESPONSE]" model) 'face 
+      (insert (propertize (format "** [%s: RESPONSE]" model) 'face 
                           `(:inherit bold :foreground ,(ollama-buddy--get-model-color model))) "\n\n")
       
       (when (and original-model model (not (string= original-model model)))
@@ -1944,14 +1884,14 @@ ACTUAL-MODEL is the model being used instead."
             (ollama-buddy--format-models-with-letters)))
          (message-text
           (concat
-           "#+TITLE: Ollama Buddy Chat\n\n"
+           "#+TITLE: Ollama Buddy Chat\n"
+           "#+STARTUP: content\n\n"
            "* Welcome to OLLAMA BUDDY\n"
            " ___ _ _      n _ n      ___       _   _ _ _\n"
            "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |\n"
            "| | | | | .  |     | .  | . | | | . | . |__ |\n"
            "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n\n"
-           "Hi there! and welcome to OLLAMA BUDDY!\n\n"
-           "** Available Models\n"
+           "** Available Models\n\n"
            models-section
            "** Quick Tips\n\n"
            "- Ask me anything!      C-c C-c\n"
@@ -1960,7 +1900,6 @@ ACTUAL-MODEL is the model being used instead."
            "- Adjust temperature?   C-c t/T/0\n"
            "    [0.0 precise - creative 1.0+]\n" 
            "- Prompt history?       M-p/M-n\n"
-           "- Jump to User prompts? C-c p/n\n"
            "- In another buffer?    M-x ollama-buddy-menu")))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
@@ -2233,15 +2172,11 @@ ACTUAL-MODEL is the model being used instead."
     (define-key map (kbd "C-c l") #'ollama-buddy--multishot-prompt)
     (define-key map (kbd "C-c k") #'ollama-buddy--cancel-request)
     (define-key map (kbd "C-c m") #'ollama-buddy--swap-model)
-    (define-key map (kbd "C-c p") #'ollama-buddy-previous-prompt)
-    (define-key map (kbd "C-c n") #'ollama-buddy-next-prompt)
     (define-key map (kbd "M-p") #'ollama-buddy--get-prompt-history-element)
     ;; Add temperature control
     (define-key map (kbd "C-c t") #'ollama-buddy-set-temperature)
     (define-key map (kbd "C-c T") #'ollama-buddy-temperature-preset)
     (define-key map (kbd "C-c 0") #'ollama-buddy-reset-temperature)
-    ;; Add org-mode specific keys
-    (define-key map (kbd "C-c C-e") #'ollama-buddy-export)
     (define-key map (kbd "C-c C-o") #'ollama-buddy-toggle-markdown-conversion)
     map)
   "Keymap for ollama-buddy mode.")
