@@ -258,7 +258,7 @@
      :key ?T
      :description "Set temperature"
      :action ollama-buddy-set-temperature)
-     
+    
     (reset-temperature
      :key ?0
      :description "Reset temperature"
@@ -366,6 +366,15 @@ Lower values (0.0-0.5) make responses more deterministic and focused.
 Higher values (0.7-1.0+) increase randomness and creativity."
   :type 'float
   :group 'ollama-buddy)
+
+(defvar ollama-buddy--response-start-position nil
+  "Marker for the start position of the current response.")
+
+(defvar ollama-buddy--current-response nil
+  "The current response text being accumulated.")
+
+(defvar-local ollama-buddy--response-start-position nil
+  "Buffer-local marker for the start position of the current response.")
 
 (defvar ollama-buddy--current-prompt nil
   "The current prompt.")
@@ -503,7 +512,7 @@ Higher values (0.7-1.0+) increase randomness and creativity."
   (setq ollama-buddy-convert-markdown-to-org 
         (not ollama-buddy-convert-markdown-to-org))
   (ollama-buddy--update-status
-       (if ollama-buddy-convert-markdown-to-org "MD conversion enabled" "MD conversion disabled"))
+   (if ollama-buddy-convert-markdown-to-org "MD conversion enabled" "MD conversion disabled"))
   (message "Markdown to Org conversion: %s"
            (if ollama-buddy-convert-markdown-to-org "enabled" "disabled")))
 
@@ -554,12 +563,7 @@ Higher values (0.7-1.0+) increase randomness and creativity."
     processed-text))
 
 (defun ollama-buddy-temperature-preset (preset)
-  "Set temperature to a PRESET value.
-PRESET should be one of the following symbols:
-- 'creative (0.9) - for more creative responses
-- 'balanced (0.7) - default balanced setting
-- 'focused (0.3) - for more deterministic, focused responses
-- 'precise (0.1) - for highly precise responses"
+  "Set temperature to a PRESET value."
   (interactive 
    (list (intern (completing-read 
                   "Temperature preset: " 
@@ -758,7 +762,7 @@ If SESSION-NAME is not provided, prompt for a name."
                            (model (alist-get 'model msg))
                            (content (alist-get 'content msg))
                            (color (ollama-buddy--get-model-color model)))
-                  
+                      
                       (when (string= role "user")
                         (let ((start (point)))
                           (insert (format "\n\n* %s %s %s"
@@ -971,7 +975,7 @@ If SESSION-NAME is not provided, prompt for a name."
       (setq ollama-buddy--conversation-history history))))
 
 (defun ollama-buddy--get-history-for-request ()
-  "Format conversation history for the current model for inclusion in an Ollama request."
+  "Get history for the current request."
   (if ollama-buddy-history-enabled
       (let* ((model ollama-buddy--current-model)
              (history (gethash model ollama-buddy--conversation-history-by-model nil)))
@@ -1065,14 +1069,6 @@ With prefix argument ALL-MODELS, show history for all models."
   (when (and ollama-buddy--current-token-start-time
              (> ollama-buddy--current-token-count 0))
     (let* ((current-time (float-time))
-           (interval-tokens (- ollama-buddy--current-token-count 
-                               ollama-buddy--last-token-count))
-           (interval-time (- current-time 
-                             (or ollama-buddy--last-update-time 
-                                 ollama-buddy--current-token-start-time)))
-           (current-rate (if (> interval-time 0)
-                             (/ interval-tokens interval-time)
-                           0))
            (total-rate (if (> (- current-time ollama-buddy--current-token-start-time) 0)
                            (/ ollama-buddy--current-token-count 
                               (- current-time ollama-buddy--current-token-start-time))
@@ -1160,7 +1156,7 @@ With prefix argument ALL-MODELS, show history for all models."
 
 ;; Get color for a specific model
 (defun ollama-buddy--get-model-color (model)
-  "Get the color associated with MODEL, or return the default foreground color if disabled."
+  "Get the color associated with MODEL."
   (if ollama-buddy-enable-model-colors
       (or (gethash model ollama-buddy--model-colors)
           (ollama-buddy--hash-string-to-color model))
@@ -1779,7 +1775,6 @@ ACTUAL-MODEL is the model being used instead."
                      (search-backward ">> PROMPT:")
                      (search-forward ": ")
                      (point)))
-           (current-input (buffer-substring-no-properties bounds (point)))
            (input
             (read-from-minibuffer
              "Ollama Buddy: " (nth 0 ollama-buddy--prompt-history)
@@ -1792,15 +1787,15 @@ ACTUAL-MODEL is the model being used instead."
   "Show the prompt with optionally a MODEL in org-mode format."
   (interactive)
   (let* ((model (or ollama-buddy--current-model
-                   ollama-buddy-default-model
-                   "Default:latest"))
+                    ollama-buddy-default-model
+                    "Default:latest"))
          (color (ollama-buddy--get-model-color model)))
     ;; Use overlay instead of text properties for more reliable color display
     (let ((start (point)))
       (insert (format "\n\n* %s [T:%.1f] %s"
-                     model
-                     ollama-buddy--current-temperature
-                     ">> PROMPT: "))
+                      model
+                      ollama-buddy--current-temperature
+                      ">> PROMPT: "))
       ;; Apply overlay for the model name
       (let ((overlay (make-overlay start (+ start 4 (length model)))))
         (overlay-put overlay 'face `(:foreground ,color :weight bold))))))
