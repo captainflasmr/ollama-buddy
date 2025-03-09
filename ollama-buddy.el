@@ -347,6 +347,9 @@ Higher values (0.7-1.0+) increase randomness and creativity."
   :type 'float
   :group 'ollama-buddy)
 
+(defvar ollama-buddy--current-request-from-menu nil
+  "If the current request is from the menu then don't make current model permanent.")
+
 (defvar ollama-buddy--response-start-position nil
   "Marker for the start position of the current response.")
 
@@ -1640,6 +1643,11 @@ ACTUAL-MODEL is the model being used instead."
                     ollama-buddy--current-token-start-time nil
                     ollama-buddy--last-token-count 0
                     ollama-buddy--last-update-time nil))
+
+            ;; reset the current model if from external
+            (when ollama-buddy--current-request-from-menu
+              (setq ollama-buddy--current-model ollama-buddy--current-request-from-menu)
+              (setq ollama-buddy--current-request-from-menu nil))
             
             (insert "\n\n*** FINISHED")
             
@@ -1694,7 +1702,12 @@ ACTUAL-MODEL is the model being used instead."
     (when ollama-buddy--token-update-timer
       (cancel-timer ollama-buddy--token-update-timer)
       (setq ollama-buddy--token-update-timer nil))
-    
+
+    ;; reset the current model if from external
+    (when ollama-buddy--current-request-from-menu
+      (setq ollama-buddy--current-model ollama-buddy--current-request-from-menu)
+      (setq ollama-buddy--current-request-from-menu nil))
+      
     (with-current-buffer ollama-buddy--chat-buffer
       (let ((inhibit-read-only t))
         (goto-char (point-max))
@@ -1790,6 +1803,9 @@ ACTUAL-MODEL is the model being used instead."
            (model (ollama-buddy--get-command-prop command-name :model)))
       (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
         (pop-to-buffer (current-buffer))
+        (setq ollama-buddy--current-request-from-menu ollama-buddy--current-model)
+        (setq ollama-buddy--current-model model)
+        (ollama-buddy--show-prompt)
         (goto-char (point-max))
         (insert (string-trim prompt-with-selection)))
       (ollama-buddy--send (string-trim prompt-with-selection) model))))
@@ -2189,7 +2205,7 @@ ACTUAL-MODEL is the model being used instead."
   (when ollama-buddy--token-update-timer
     (cancel-timer ollama-buddy--token-update-timer)
     (setq ollama-buddy--token-update-timer nil))
-  
+
   ;; Reset token tracking variables
   (setq ollama-buddy--current-token-count 0
         ollama-buddy--current-token-start-time nil
