@@ -512,7 +512,7 @@ Higher values (0.7-1.0+) increase randomness and creativity."
   (setq ollama-buddy-convert-markdown-to-org 
         (not ollama-buddy-convert-markdown-to-org))
   (ollama-buddy--update-status
-   (if ollama-buddy-convert-markdown-to-org "MD conversion enabled" "MD conversion disabled"))
+   (if ollama-buddy-convert-markdown-to-org "Markdown conversion enabled" "Markdown conversion disabled"))
   (message "Markdown to Org conversion: %s"
            (if ollama-buddy-convert-markdown-to-org "enabled" "disabled")))
 
@@ -1525,7 +1525,7 @@ ACTUAL-MODEL is the model being used instead."
            (temp-info (format " [T:%.1f]" ollama-buddy--current-temperature)))
       (setq header-line-format
             (concat
-             (if ollama-buddy-convert-markdown-to-org "ORG" "MD")
+             (if ollama-buddy-convert-markdown-to-org "ORG" "Markdown")
              (format (if (string-empty-p (ollama-buddy--update-multishot-status))
                          " %s%s %s %s%s%s"
                        " %s %s %s %s%s%s")
