@@ -1508,7 +1508,7 @@ ACTUAL-MODEL is the model being used instead."
            (temp-info (format " [T:%.1f]" ollama-buddy--current-temperature)))
       (setq header-line-format
             (concat
-             (if ollama-buddy-convert-markdown-to-org "ORG" "Markdown")
+             (if ollama-buddy-convert-markdown-to-org " ORG" " Markdown")
              (format (if (string-empty-p (ollama-buddy--update-multishot-status))
                          " %s%s %s %s%s%s"
                        " %s %s %s %s%s%s")
