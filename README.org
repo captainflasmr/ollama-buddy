@@ -1234,17 +1234,28 @@ Here is a kanban of the features that I plan on (hopefully) adding in due course
 #+end_src
 
 #+RESULTS:
-| TODO                                                 | DONE                                                    |
-|------------------------------------------------------+---------------------------------------------------------|
-| Create more specialized system prompts               | Managing Sessions                                       |
-| Chat export options - Provide various export formats | Create a very sparse minified version of =ollama-buddy= |
-| Fully leverage the ollama API                        | Customizable Role-Based Menus Preset System             |
-| Test on Windows                                      | Add to MELPA                                            |
-| Advanced parameters, and temperature and others?     | Enhancing Menu Clarity: Distinguishing LLMs Effectively |
-|                                                      | Add real time token tracking and usage summary          |
-|                                                      | Managing chat history and context                       |
+| TODO                                                   | DONE                                                    |
+|--------------------------------------------------------+---------------------------------------------------------|
+| Create more specialized system prompts                 | Chat buffer to use org-mode                             |
+| Fully leverage the ollama API with advanced parameters | Chat export options - Provide various export formats    |
+| Test on Windows                                        | Add temperature                                         |
+|                                                        | Managing Sessions                                       |
+|                                                        | Create a very sparse minified version of =ollama-buddy= |
+|                                                        | Customizable Role-Based Menus Preset System             |
+|                                                        | Add to MELPA                                            |
+|                                                        | Enhancing Menu Clarity: Distinguishing LLMs Effectively |
+|                                                        | Add real time token tracking and usage summary          |
+|                                                        | Managing chat history and context                       |
 
 * Roadmap                                                           :roadmap:
+
+** DONE Chat buffer to use org-mode
+
+** DONE Chat export options - Provide various export formats
+
+See conversion of the chat buffer to org-mode meaning that the ox export functionality now becomes available!
+
+** DONE Add temperature
 
 ** DONE Managing Sessions
 
@@ -1262,13 +1273,9 @@ Here is a kanban of the features that I plan on (hopefully) adding in due course
 
 ** TODO Create more specialized system prompts
 
-** TODO Chat export options - Provide various export formats
-
-** TODO Fully leverage the ollama API
+** TODO Fully leverage the ollama API with advanced parameters
 
 ** TODO Test on Windows
-
-** TODO Advanced parameters, and temperature and others?
 
 * Testing
 
