@@ -78,6 +78,15 @@
      :key ?o
      :description "Open chat buffer"
      :action ollama-buddy--open-chat)
+
+    (help
+     :key ?h
+     :description "Help assistant"
+     :action (lambda ()
+               (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
+               (goto-char (point-max))
+               (insert (ollama-buddy--create-intro-message))
+               (ollama-buddy--show-prompt)))
     
     (swap-model
      :key ?m
@@ -94,14 +103,11 @@
      :description "Send region"
      :action (lambda () (ollama-buddy--send-with-command 'send-region)))
 
-    (help
-     :key ?h
-     :description "Help assistant"
+    (kill-request
+     :key ?x
+     :description "Kill request"
      :action (lambda ()
-               (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
-               (goto-char (point-max))
-               (insert (ollama-buddy--create-intro-message))
-               (ollama-buddy--show-prompt)))
+               (delete-process ollama-buddy--active-process)))
 
     (switch-role
      :key ?R
@@ -187,22 +193,7 @@
                  (unless (not (string-empty-p prefix))
                    (user-error "Input string is empty"))
                  (ollama-buddy--send prefix))))
-    
-    (save-chat
-     :key ?s
-     :description "Save chat"
-     :action (lambda ()
-               (with-current-buffer ollama-buddy--chat-buffer
-                 (write-region (point-min) (point-max)
-                               (read-file-name "Save conversation to: ")
-                               'append-to-file
-                               nil))))
-    (kill-request
-     :key ?x
-     :description "Kill request"
-     :action (lambda ()
-               (delete-process ollama-buddy--active-process)))
-
+ 
     (toggle-colors
      :key ?C
      :description "Toggle Colors"
@@ -252,17 +243,6 @@
      :key ?K
      :description "Delete session"
      :action ollama-buddy-sessions-delete)
-
-    ;; Temperature Commands
-    (set-temperature
-     :key ?T
-     :description "Set temperature"
-     :action ollama-buddy-set-temperature)
-    
-    (reset-temperature
-     :key ?0
-     :description "Reset temperature"
-     :action ollama-buddy-reset-temperature)
     
     (quit
      :key ?q
