@@ -770,15 +770,11 @@ If SESSION-NAME is not provided, prompt for a name."
                                           ">> PROMPT: "
                                           content))
                           (let ((overlay (make-overlay start (+ start 4 (length model)))))
-                            (overlay-put overlay 'face `(:foreground ,color :weight bold))))
-                        
-                        (insert (format "\n\n%s %s\n\n"
-                                        (propertize "** [User: PROMPT]" 'face '(:inherit bold))
-                                        content)))
+                            (overlay-put overlay 'face `(:foreground ,color :weight bold)))))
                       
                       (when (string= role "assistant")
                         (let ((start-pos (point-max)))
-                          (insert (format "%s\n\n%s"
+                          (insert (format "\n\n%s\n\n%s"
                                           (concat "** [" model ": RESPONSE]")
                                           content))
                           ;; Now convert from markdown to org if enabled
@@ -1850,13 +1846,9 @@ ACTUAL-MODEL is the model being used instead."
       (goto-char (point-max))
       (unless (> (buffer-size) 0)
         (insert (ollama-buddy--create-intro-message)))
-      
-      ;; Insert in org-mode format
-      (insert (format "\n\n%s\n\n"
-                      (propertize (format "** [User: PROMPT] %s" prompt) 'face '(:inherit bold))))
-      
+            
       ;; Add model info to response header
-      (insert (propertize (format "** [%s: RESPONSE]" model) 'face 
+      (insert (propertize (format "\n\n** [%s: RESPONSE]" model) 'face 
                           `(:inherit bold :foreground ,(ollama-buddy--get-model-color model))) "\n\n")
       
       (when (and original-model model (not (string= original-model model)))
