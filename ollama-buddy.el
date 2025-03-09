@@ -1806,6 +1806,25 @@ ACTUAL-MODEL is the model being used instead."
         (pop-to-buffer (current-buffer))
         (setq ollama-buddy--current-request-from-menu ollama-buddy--current-model)
         (setq ollama-buddy--current-model model)
+        
+        ;; Check if there's already an empty prompt and delete it
+        (save-excursion
+          (goto-char (point-max))
+          (when (re-search-backward ">> PROMPT:\\s-*$" nil t)
+            (let ((prompt-end (point-max)))
+              ;; Find the actual start of the prompt section, including preceding newlines
+              (beginning-of-line)
+              (let ((prompt-line-start (point)))
+                ;; Go back to find preceding blank lines
+                (skip-chars-backward "\n")
+                ;; If we found blank lines, use that as the starting point
+                ;; Otherwise use the start of the prompt line
+                (let ((prompt-start (if (= (point) prompt-line-start)
+                                        prompt-line-start
+                                      (1+ (point)))))
+                  (delete-region prompt-start prompt-end))))))
+        
+        ;; Now add the new prompt
         (ollama-buddy--show-prompt)
         (goto-char (point-max))
         (insert (string-trim prompt-with-selection)))
