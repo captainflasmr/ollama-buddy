@@ -1950,9 +1950,8 @@ ACTUAL-MODEL is the model being used instead."
            "- Ask me anything!          C-c C-c\n"
            "- Change your model?        C-c m\n"
            "- Change your mind?         C-c k\n"
-           "- Convert response to org?  C-c C-o\n"
            "- Adjust temperature?       C-c t/T/0\n"
-           "    [0.0 precise - creative 1.0+]\n" 
+           "    - 0.0 (precise) to 1.0+ (creative)\n" 
            "- Prompt history?           M-p/M-n\n"
            "- In another buffer?        M-x ollama-buddy-menu")))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
