@@ -1011,8 +1011,8 @@ With prefix argument ALL-MODELS, show history for all models."
                        (let* ((role (alist-get 'role msg))
                               (content (alist-get 'content msg))
                               (role-face (if (string= role "user") 
-                                             '(:inherit bold :foreground "green") 
-                                           '(:inherit bold :foreground "blue"))))
+                                             '(:inherit bold) 
+                                           '(:inherit bold))))
                          (insert (propertize (format "[%s]: " (upcase role)) 'face role-face))
                          (insert (format "%s\n\n" content))))
                      (insert "\n")))
@@ -1036,10 +1036,11 @@ With prefix argument ALL-MODELS, show history for all models."
                                       '(:inherit bold :foreground "blue"))))
                     (insert (propertize (format "[%s]: " (upcase role)) 'face role-face))
                     (insert (format "%s\n\n" content))))))))
-        
-        (insert "\nUse M-x ollama-buddy-toggle-history to toggle history")
-        (insert "\nUse M-x ollama-buddy-clear-history to clear history for current model")
-        (insert "\nUse C-u M-x ollama-buddy-clear-history to clear history for all models")
+
+        (insert "\n==================================================")
+        (insert "\nM-x ollama-buddy-toggle-history to toggle history")
+        (insert "\nM-x ollama-buddy-clear-history to clear history for current model")
+        (insert "\nC-u M-x ollama-buddy-clear-history to clear history for all models")
         (view-mode 1)))
     (display-buffer buf)))
 
