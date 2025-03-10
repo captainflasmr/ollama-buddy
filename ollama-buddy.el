@@ -1183,6 +1183,7 @@ With prefix argument ALL-MODELS, show history for all models."
   "Toggle display of token statistics after each response."
   (interactive)
   (setq ollama-buddy-display-token-stats (not ollama-buddy-display-token-stats))
+  (ollama-buddy--update-status (concat "Stats in chat " (if ollama-buddy-display-token-stats "enabled" "disabled")))
   (message "Ollama token statistics display: %s"
            (if ollama-buddy-display-token-stats "enabled" "disabled")))
 
@@ -1570,6 +1571,7 @@ ACTUAL-MODEL is the model being used instead."
       (setq header-line-format
             (concat
              (if ollama-buddy-convert-markdown-to-org " ORG" " Markdown")
+             (if ollama-buddy-display-token-stats " T" "")
              (format (if (string-empty-p (ollama-buddy--update-multishot-status))
                          " %s%s %s %s%s%s"
                        " %s %s %s %s%s%s")
@@ -2025,8 +2027,8 @@ ACTUAL-MODEL is the model being used instead."
            "- Ask me anything!          C-c C-c\n"
            "- Change your model?        C-c m\n"
            "- Change your mind?         C-c k\n"
-           "- Adjust temperature?       C-c t/T/0\n"
-           "    - 0.0 (precise) to 1.0+ (creative)\n" 
+           "- Adjust temperature?       C-c t\n"
+           "- Toggle token stats?       C-c T\n"
            "- Prompt history?           M-p/M-n\n"
            "- In another buffer?        M-x ollama-buddy-menu")))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
@@ -2345,8 +2347,7 @@ ACTUAL-MODEL is the model being used instead."
     (define-key map (kbd "M-n") #'ollama-buddy-next-history)
     ;; Temperature controls
     (define-key map (kbd "C-c t") #'ollama-buddy-set-temperature)
-    (define-key map (kbd "C-c T") #'ollama-buddy-temperature-preset)
-    (define-key map (kbd "C-c 0") #'ollama-buddy-reset-temperature)
+    (define-key map (kbd "C-c T") #'ollama-buddy-toggle-token-display)
     (define-key map (kbd "C-c C-o") #'ollama-buddy-toggle-markdown-conversion)
     map)
   "Keymap for ollama-buddy mode.")
