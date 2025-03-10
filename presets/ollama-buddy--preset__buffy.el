@@ -29,11 +29,7 @@
         (help
          :key ?h
          :description "Help assistant"
-         :action (lambda ()
-                   (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
-                   (goto-char (point-max))
-                   (insert (ollama-buddy--create-intro-message))
-                   (ollama-buddy--show-prompt)))
+         :action ollama-buddy--menu-help-assistant)
 
         (switch-role
          :key ?R
@@ -134,35 +130,13 @@
         (custom-prompt
          :key ?e
          :description "Custom prompt"
-         :action (lambda ()
-                   (when-let ((prefix (read-string "Enter prompt prefix: " nil nil nil t)))
-                     (unless (use-region-p)
-                       (user-error "No region selected.  Select text to use with prompt"))
-                     (unless (not (string-empty-p prefix))
-                       (user-error "Input string is empty"))
-                     (ollama-buddy--send
-                      (concat prefix "\n\n"
-                              (buffer-substring-no-properties
-                               (region-beginning) (region-end)))))))
-        
+         :action ollama-buddy--menu-custom-prompt)
+
         (minibuffer-prompt
          :key ?i
          :description "Minibuffer Prompt"
-         :action (lambda ()
-                   (when-let ((prefix (read-string "Enter prompt: " nil nil nil t)))
-                     (unless (not (string-empty-p prefix))
-                       (user-error "Input string is empty"))
-                     (ollama-buddy--send prefix))))
+         :action ollama-buddy--menu-minibuffer-prompt)
         
-        (save-chat
-         :key ?s
-         :description "Save chat"
-         :action (lambda ()
-                   (with-current-buffer ollama-buddy--chat-buffer
-                     (write-region (point-min) (point-max)
-                                   (read-file-name "Save conversation to: ")
-                                   'append-to-file
-                                   nil))))
         (kill-request
          :key ?x
          :description "Kill request"
