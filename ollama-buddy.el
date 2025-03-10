@@ -84,11 +84,6 @@
      :description "Help assistant"
      :action ollama-buddy--menu-help-assistant)
     
-    (swap-model
-     :key ?m
-     :description "Swap model"
-     :action ollama-buddy--swap-model)
-    
     (show-models
      :key ?v
      :description "View model status"
@@ -100,7 +95,7 @@
      :action (lambda () (ollama-buddy--send-with-command 'send-region)))
 
     (kill-request
-     :key ?x
+     :key ?k
      :description "Kill request"
      :action (lambda ()
                (delete-process ollama-buddy--active-process)))
@@ -177,45 +172,15 @@
      :description "Minibuffer Prompt"
      :action ollama-buddy--menu-minibuffer-prompt)
     
-    (toggle-colors
-     :key ?C
-     :description "Toggle Colors"
-     :action ollama-buddy-toggle-model-colors)
-
     (token-stats
-     :key ?t
+     :key ?U
      :description "Token Usage Stats"
      :action ollama-buddy-display-token-stats)
-
-    (toggle-history
-     :key ?H
-     :description "Toggle conversation history"
-     :action ollama-buddy-toggle-history)
-
-    (clear-history
-     :key ?X
-     :description "Clear conversation history"
-     :action (lambda () (ollama-buddy-clear-history 1)))
 
     (show-history
      :key ?V
      :description "View conversation history"
      :action (lambda () (ollama-buddy--display-history 1)))
-
-    (new-session
-     :key ?E
-     :description "New session"
-     :action ollama-buddy-sessions-new)
-
-    (load-session
-     :key ?L
-     :description "Load session"
-     :action ollama-buddy-sessions-load)
-
-    (save-session
-     :key ?S
-     :description "Save session"
-     :action ollama-buddy-sessions-save)
 
     (list-sessions
      :key ?Y
@@ -2027,8 +1992,10 @@ ACTUAL-MODEL is the model being used instead."
            "- Ask me anything!          C-c C-c\n"
            "- Change your model?        C-c m\n"
            "- Change your mind?         C-c k\n"
+           "- New/Load/Save Session?    C-c E/L/S\n"
            "- Adjust temperature?       C-c t\n"
            "- Toggle token stats?       C-c T\n"
+           "- Toggle/Clear history?     C-c H/X\n"
            "- Prompt history?           M-p/M-n\n"
            "- In another buffer?        M-x ollama-buddy-menu")))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
@@ -2347,7 +2314,12 @@ ACTUAL-MODEL is the model being used instead."
     (define-key map (kbd "M-n") #'ollama-buddy-next-history)
     ;; Temperature controls
     (define-key map (kbd "C-c t") #'ollama-buddy-set-temperature)
+    (define-key map (kbd "C-c H") #'ollama-buddy-toggle-history)
+    (define-key map (kbd "C-c X") #'ollama-buddy-clear-history)
     (define-key map (kbd "C-c T") #'ollama-buddy-toggle-token-display)
+    (define-key map (kbd "C-c E") #'ollama-buddy-sessions-new)
+    (define-key map (kbd "C-c L") #'ollama-buddy-sessions-load)
+    (define-key map (kbd "C-c S") #'ollama-buddy-sessions-save)
     (define-key map (kbd "C-c C-o") #'ollama-buddy-toggle-markdown-conversion)
     map)
   "Keymap for ollama-buddy mode.")
