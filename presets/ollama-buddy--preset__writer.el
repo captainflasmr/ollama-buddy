@@ -10,11 +10,11 @@
          :key ?o
          :description "Open chat buffer"
          :action ollama-buddy--open-chat)
-        
-        (swap-model
-         :key ?m
-         :description "Swap model"
-         :action ollama-buddy--swap-model)
+
+        (help
+         :key ?h
+         :description "Help assistant"
+         :action ollama-buddy--menu-help-assistant)
         
         (show-models
          :key ?v
@@ -26,10 +26,11 @@
          :description "Send region"
          :action (lambda () (ollama-buddy--send-with-command 'send-region)))
 
-        (help
-         :key ?h
-         :description "Help assistant"
-         :action ollama-buddy--menu-help-assistant)
+        (kill-request
+         :key ?k
+         :description "Kill request"
+         :action (lambda ()
+                   (delete-process ollama-buddy--active-process)))
 
         (switch-role
          :key ?R
@@ -151,57 +152,21 @@
          :key ?e
          :description "Custom prompt"
          :action ollama-buddy--menu-custom-prompt)
-
+        
         (minibuffer-prompt
          :key ?i
          :description "Minibuffer Prompt"
          :action ollama-buddy--menu-minibuffer-prompt)
         
-        (kill-request
-         :key ?x
-         :description "Kill request"
-         :action (lambda ()
-                   (delete-process ollama-buddy--active-process)))
-
-        (toggle-colors
-         :key ?C
-         :description "Toggle Colors"
-         :action ollama-buddy-toggle-model-colors)
-
         (token-stats
-         :key ?t
+         :key ?U
          :description "Token Usage Stats"
          :action ollama-buddy-display-token-stats)
-
-        (toggle-history
-         :key ?H
-         :description "Toggle conversation history"
-         :action ollama-buddy-toggle-history)
-
-        (clear-history
-         :key ?X
-         :description "Clear conversation history"
-         :action (lambda () (ollama-buddy-clear-history 1)))
 
         (show-history
          :key ?V
          :description "View conversation history"
          :action (lambda () (ollama-buddy--display-history 1)))
-
-        (new-session
-         :key ?E
-         :description "New session"
-         :action ollama-buddy-sessions-new)
-
-        (load-session
-         :key ?L
-         :description "Load session"
-         :action ollama-buddy-sessions-load)
-
-        (save-session
-         :key ?S
-         :description "Save session"
-         :action ollama-buddy-sessions-save)
 
         (list-sessions
          :key ?Y
@@ -217,6 +182,5 @@
          :key ?q
          :description "Quit"
          :action (lambda () (message "Quit Ollama Shell menu.")))
-
         )
       )
