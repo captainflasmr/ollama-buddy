@@ -10,11 +10,11 @@
          :key ?o
          :description "Open chat buffer"
          :action ollama-buddy--open-chat)
-        
-        (swap-model
-         :key ?m
-         :description "Swap model"
-         :action ollama-buddy--swap-model)
+
+        (help
+         :key ?h
+         :description "Help assistant"
+         :action ollama-buddy--menu-help-assistant)
         
         (show-models
          :key ?v
@@ -26,10 +26,11 @@
          :description "Send region"
          :action (lambda () (ollama-buddy--send-with-command 'send-region)))
 
-        (help
-         :key ?h
-         :description "Help assistant"
-         :action ollama-buddy--menu-help-assistant)
+        (kill-request
+         :key ?k
+         :description "Kill request"
+         :action (lambda ()
+                   (delete-process ollama-buddy--active-process)))
 
         (switch-role
          :key ?R
@@ -93,62 +94,69 @@
          :prompt "suggest applicable design patterns for this code and explain why:"
          :action (lambda () (ollama-buddy--send-with-command 'design-patterns)))
         
+        ;; Custom commands
+        (refactor-code
+         :key ?r
+         :description "Refactor code"
+         :prompt "refactor the following code:"
+         :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
+        
+        (git-commit
+         :key ?g
+         :description "Git commit message"
+         :prompt "write a concise git commit message for the following:"
+         :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+        
+        (describe-code
+         :key ?c
+         :description "Describe code"
+         :prompt "describe the following code:"
+         :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
+        
+        (dictionary-lookup
+         :key ?d
+         :description "Dictionary Lookup"
+         :prompt "For the following word provide a typical dictionary definition:"
+         :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup)))
+        
+        (synonym
+         :key ?n
+         :description "Word synonym"
+         :prompt "list synonyms for word:"
+         :action (lambda () (ollama-buddy--send-with-command 'synonym)))
+        
+        (proofread
+         :key ?p
+         :description "Proofread text"
+         :prompt "proofread the following:"
+         :action (lambda () (ollama-buddy--send-with-command 'proofread)))
+        
+        (make-concise
+         :key ?z
+         :description "Make concise"
+         :prompt "reduce wordiness while preserving meaning:"
+         :action (lambda () (ollama-buddy--send-with-command 'make-concise)))
+
         ;; System Commands
         (custom-prompt
          :key ?e
          :description "Custom prompt"
          :action ollama-buddy--menu-custom-prompt)
-
+        
         (minibuffer-prompt
          :key ?i
          :description "Minibuffer Prompt"
          :action ollama-buddy--menu-minibuffer-prompt)
         
-        (kill-request
-         :key ?x
-         :description "Kill request"
-         :action (lambda ()
-                   (delete-process ollama-buddy--active-process)))
-
-        (toggle-colors
-         :key ?C
-         :description "Toggle Colors"
-         :action ollama-buddy-toggle-model-colors)
-
         (token-stats
-         :key ?t
+         :key ?U
          :description "Token Usage Stats"
          :action ollama-buddy-display-token-stats)
-
-        (toggle-history
-         :key ?H
-         :description "Toggle conversation history"
-         :action ollama-buddy-toggle-history)
-
-        (clear-history
-         :key ?X
-         :description "Clear conversation history"
-         :action (lambda () (ollama-buddy-clear-history 1)))
 
         (show-history
          :key ?V
          :description "View conversation history"
          :action (lambda () (ollama-buddy--display-history 1)))
-
-        (new-session
-         :key ?E
-         :description "New session"
-         :action ollama-buddy-sessions-new)
-
-        (load-session
-         :key ?L
-         :description "Load session"
-         :action ollama-buddy-sessions-load)
-
-        (save-session
-         :key ?S
-         :description "Save session"
-         :action ollama-buddy-sessions-save)
 
         (list-sessions
          :key ?Y
