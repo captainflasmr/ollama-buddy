@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama Buddy: Your Friendly AI Assistant -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.6.0
+;; Version: 0.6.1
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -82,11 +82,7 @@
     (help
      :key ?h
      :description "Help assistant"
-     :action (lambda ()
-               (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
-               (goto-char (point-max))
-               (insert (ollama-buddy--create-intro-message))
-               (ollama-buddy--show-prompt)))
+     :action ollama-buddy--menu-help-assistant)
     
     (swap-model
      :key ?m
@@ -174,26 +170,13 @@
     (custom-prompt
      :key ?e
      :description "Custom prompt"
-     :action (lambda ()
-               (when-let ((prefix (read-string "Enter prompt prefix: " nil nil nil t)))
-                 (unless (use-region-p)
-                   (user-error "No region selected.  Select text to use with prompt"))
-                 (unless (not (string-empty-p prefix))
-                   (user-error "Input string is empty"))
-                 (ollama-buddy--send
-                  (concat prefix "\n\n"
-                          (buffer-substring-no-properties
-                           (region-beginning) (region-end)))))))
+     :action ollama-buddy--menu-custom-prompt)
     
     (minibuffer-prompt
      :key ?i
      :description "Minibuffer Prompt"
-     :action (lambda ()
-               (when-let ((prefix (read-string "Enter prompt: " nil nil nil t)))
-                 (unless (not (string-empty-p prefix))
-                   (user-error "Input string is empty"))
-                 (ollama-buddy--send prefix))))
- 
+     :action ollama-buddy--menu-minibuffer-prompt)
+    
     (toggle-colors
      :key ?C
      :description "Toggle Colors"
@@ -347,8 +330,8 @@ Higher values (0.7-1.0+) increase randomness and creativity."
   :type 'float
   :group 'ollama-buddy)
 
-(defvar ollama-buddy--current-request-from-menu nil
-  "If the current request is from the menu then don't make current model permanent.")
+(defvar ollama-buddy--current-request-temporary-model nil
+  "For the current request don't make current model permanent.")
 
 (defvar ollama-buddy--response-start-position nil
   "Marker for the start position of the current response.")
@@ -1537,6 +1520,13 @@ ACTUAL-MODEL is the model being used instead."
       (visual-line-mode 1)
       (ollama-buddy-mode 1)
       (ollama-buddy--check-status)
+      ;; now set up default model if none exist
+      (when (not ollama-buddy-default-model)
+        ;; just get the first model
+        (let ((model (car (ollama-buddy--get-models))))
+          (setq ollama-buddy--current-model model)
+          (setq ollama-buddy-default-model model)
+          (insert "NO DEFAULT MODEL : Using best guess : " model)))
       (insert (ollama-buddy--create-intro-message))
       (ollama-buddy--show-prompt))
     (ollama-buddy--update-status "Idle")))
@@ -1578,7 +1568,7 @@ ACTUAL-MODEL is the model being used instead."
           ;; Insert the text directly - we'll convert it at the end of the response
           (insert text)
 
-          ;; Track the complete response for history
+         ;; Track the complete response for history
           (when (boundp 'ollama-buddy--current-response)
             (setq ollama-buddy--current-response 
                   (concat (or ollama-buddy--current-response "") text)))
@@ -1646,9 +1636,9 @@ ACTUAL-MODEL is the model being used instead."
                     ollama-buddy--last-update-time nil))
 
             ;; reset the current model if from external
-            (when ollama-buddy--current-request-from-menu
-              (setq ollama-buddy--current-model ollama-buddy--current-request-from-menu)
-              (setq ollama-buddy--current-request-from-menu nil))
+            (when ollama-buddy--current-request-temporary-model
+              (setq ollama-buddy--current-model ollama-buddy--current-request-temporary-model)
+              (setq ollama-buddy--current-request-temporary-model nil))
             
             (insert "\n\n*** FINISHED")
             
@@ -1661,20 +1651,9 @@ ACTUAL-MODEL is the model being used instead."
                   ;; Check if there are more models to process
                   (if (< ollama-buddy--multishot-progress
                          (length ollama-buddy--multishot-sequence))
-                      ;; Process next model after a short delay
-                      (run-with-timer 0.5 nil
-                                      (lambda ()
-                                        (let* ((current-letter
-                                                (aref ollama-buddy--multishot-sequence
-                                                      ollama-buddy--multishot-progress))
-                                               (next-model
-                                                (cdr (assoc current-letter
-                                                            ollama-buddy--model-letters))))
-                                          (when next-model
-                                            (ollama-buddy--send
-                                             ollama-buddy--multishot-prompt
-                                             next-model)))))
-                    ;; End of sequence
+                      (progn
+                        ;; Process next model after a short delay
+                        (run-with-timer 0.5 nil #'ollama-buddy--send-next-in-sequence))
                     (progn
                       (ollama-buddy--update-status "Multi Finished")
                       (ollama-buddy--show-prompt))))
@@ -1705,10 +1684,10 @@ ACTUAL-MODEL is the model being used instead."
       (setq ollama-buddy--token-update-timer nil))
 
     ;; reset the current model if from external
-    (when ollama-buddy--current-request-from-menu
-      (setq ollama-buddy--current-model ollama-buddy--current-request-from-menu)
-      (setq ollama-buddy--current-request-from-menu nil))
-      
+    (when ollama-buddy--current-request-temporary-model
+      (setq ollama-buddy--current-model ollama-buddy--current-request-temporary-model)
+      (setq ollama-buddy--current-request-temporary-model nil))
+    
     (with-current-buffer ollama-buddy--chat-buffer
       (let ((inhibit-read-only t))
         (goto-char (point-max))
@@ -1749,6 +1728,50 @@ ACTUAL-MODEL is the model being used instead."
   (ollama-buddy--initialize-chat-buffer)
   (goto-char (point-max)))
 
+(defun ollama-buddy--menu-help-assistant ()
+  "Show the help assistant."
+  (interactive)
+  (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
+  (goto-char (point-max))
+  (when (re-search-backward ">> PROMPT:\\s-*" nil t)
+    (beginning-of-line)
+    (skip-chars-backward "\n")
+    (delete-region (point) (point-max)))
+  (insert (ollama-buddy--create-intro-message))
+  (ollama-buddy--show-prompt))
+
+(defun ollama-buddy--menu-custom-prompt ()
+  "Show the custom prompt."
+  (interactive)
+  (when-let ((prompt (read-string "Enter prompt prefix on selection: " nil nil nil t)))
+    (unless (use-region-p)
+      (user-error "No region selected.  Select text to use with prompt"))
+    (unless (not (string-empty-p prompt))
+      (user-error "Input string is empty"))
+    (let* ((prompt-with-selection (concat
+                                   (when prompt (concat prompt "\n\n"))
+                                   (buffer-substring-no-properties
+                                    (region-beginning) (region-end)))))
+      (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+        (pop-to-buffer (current-buffer))
+        (ollama-buddy--show-prompt)
+        (goto-char (point-max))
+        (insert (string-trim prompt-with-selection)))
+      (ollama-buddy--send (string-trim prompt-with-selection)))))
+
+(defun ollama-buddy--menu-minibuffer-prompt ()
+  "Show the custom minibuffer prompt."
+  (interactive)
+  (when-let ((prompt (read-string "Enter prompt: " nil nil nil t)))
+    (unless (not (string-empty-p prompt))
+      (user-error "Input string is empty"))
+    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+      (pop-to-buffer (current-buffer))
+      (ollama-buddy--show-prompt)
+      (goto-char (point-max))
+      (insert (string-trim prompt)))
+    (ollama-buddy--send (string-trim prompt))))
+
 (defun ollama-buddy--get-command-def (command-name)
   "Get command definition for COMMAND-NAME."
   (assoc command-name ollama-buddy-command-definitions))
@@ -1773,19 +1796,51 @@ ACTUAL-MODEL is the model being used instead."
         (delete-region bounds (point))
         (insert input)))))
 
-(defun ollama-buddy--show-prompt ()
+(defun ollama-buddy--text-after-prompt ()
+  "Get the text after the prompt:"
+  (interactive)
+  (save-excursion
+    (goto-char (point-max))
+    (if (re-search-backward ">> PROMPT:\\s-*" nil t)
+        (progn
+          (search-forward ":")
+          (string-trim (buffer-substring-no-properties
+                        (point) (point-max))))
+      "")))
+
+(defun ollama-buddy--show-prompt (&optional replace-prompt keep-text)
   "Show the prompt with optionally a MODEL in org-mode format."
   (interactive)
   (let* ((model (or ollama-buddy--current-model
                     ollama-buddy-default-model
                     "Default:latest"))
-         (color (ollama-buddy--get-model-color model)))
+         (color (ollama-buddy--get-model-color model))
+         (text-after-prompt (ollama-buddy--text-after-prompt)))
+    ;; first lets tidy up the latest prompts
+    (goto-char (point-max))
+    (when (re-search-backward ">> PROMPT:\\s-*" nil t)
+      (search-forward ":")
+      (if (or (not (string-match "[[:alnum:]]" text-after-prompt))
+              replace-prompt)
+          (progn
+            ;; delete the entire prompt
+            (goto-char (point-max))
+            (when (re-search-backward ">> PROMPT:\\s-*" nil t)
+              (beginning-of-line)
+              (skip-chars-backward "\n")
+              (delete-region (point) (point-max))))
+        (progn
+          ;; keep the prompt
+          (goto-char (point-max))
+          (skip-chars-backward "\n"))))
+
     ;; Use overlay instead of text properties for more reliable color display
     (let ((start (point)))
       (insert (format "\n\n* %s [T:%.1f] %s"
                       model
                       ollama-buddy--current-temperature
                       ">> PROMPT: "))
+      (when keep-text (insert text-after-prompt))
       ;; Apply overlay for the model name
       (let ((overlay (make-overlay start (+ start 4 (length model)))))
         (overlay-put overlay 'face `(:foreground ,color :weight bold))))))
@@ -1804,27 +1859,8 @@ ACTUAL-MODEL is the model being used instead."
            (model (ollama-buddy--get-command-prop command-name :model)))
       (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
         (pop-to-buffer (current-buffer))
-        (setq ollama-buddy--current-request-from-menu ollama-buddy--current-model)
+        (setq ollama-buddy--current-request-temporary-model ollama-buddy--current-model)
         (setq ollama-buddy--current-model model)
-        
-        ;; Check if there's already an empty prompt and delete it
-        (save-excursion
-          (goto-char (point-max))
-          (when (re-search-backward ">> PROMPT:\\s-*$" nil t)
-            (let ((prompt-end (point-max)))
-              ;; Find the actual start of the prompt section, including preceding newlines
-              (beginning-of-line)
-              (let ((prompt-line-start (point)))
-                ;; Go back to find preceding blank lines
-                (skip-chars-backward "\n")
-                ;; If we found blank lines, use that as the starting point
-                ;; Otherwise use the start of the prompt line
-                (let ((prompt-start (if (= (point) prompt-line-start)
-                                        prompt-line-start
-                                      (1+ (point)))))
-                  (delete-region prompt-start prompt-end))))))
-        
-        ;; Now add the new prompt
         (ollama-buddy--show-prompt)
         (goto-char (point-max))
         (insert (string-trim prompt-with-selection)))
@@ -1862,7 +1898,7 @@ ACTUAL-MODEL is the model being used instead."
       (goto-char (point-max))
       (unless (> (buffer-size) 0)
         (insert (ollama-buddy--create-intro-message)))
-            
+      
       ;; Add model info to response header
       (insert (propertize (format "\n\n** [%s: RESPONSE]" model) 'face 
                           `(:inherit bold :foreground ,(ollama-buddy--get-model-color model))) "\n\n")
@@ -1953,9 +1989,10 @@ ACTUAL-MODEL is the model being used instead."
             (ollama-buddy--format-models-with-letters)))
          (message-text
           (concat
-           "#+TITLE: Ollama Buddy Chat\n"
-           "#+STARTUP: content\n\n"
-           "* Welcome to OLLAMA BUDDY\n"
+           (when (= (buffer-size) 0)
+             (concat "#+TITLE: Ollama Buddy Chat\n"
+                     "#+STARTUP: content"))
+           "\n\n* Welcome to OLLAMA BUDDY\n"
            " ___ _ _      n _ n      ___       _   _ _ _\n"
            "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |\n"
            "| | | | | .  |     | .  | . | | | . | . |__ |\n"
@@ -1995,7 +2032,7 @@ ACTUAL-MODEL is the model being used instead."
   (mapc (lambda (ch)
           (set-register ch ""))
         sequence)
-  ;; Start with the first model in sequence
+  (setq ollama-buddy--current-request-temporary-model ollama-buddy--current-model)
   (ollama-buddy--send-next-in-sequence))
 
 (defun ollama-buddy--send-next-in-sequence ()
@@ -2008,7 +2045,12 @@ ACTUAL-MODEL is the model being used instead."
                                  ollama-buddy--multishot-progress))
            (model (cdr (assoc current-letter ollama-buddy--model-letters))))
       (when model
-        (ollama-buddy--update-status "Multi Start")
+        (setq ollama-buddy--current-model model)
+        (if (eq ollama-buddy--multishot-progress 0)
+            (ollama-buddy--show-prompt t t)
+          (progn
+            (ollama-buddy--show-prompt)
+            (insert ollama-buddy--multishot-prompt)))
         (ollama-buddy--send ollama-buddy--multishot-prompt model)))))
 
 (defun ollama-buddy--multishot-prompt ()
