@@ -1564,14 +1564,14 @@ ACTUAL-MODEL is the model being used instead."
       (visual-line-mode 1)
       (ollama-buddy-mode 1)
       (ollama-buddy--check-status)
+      (insert (ollama-buddy--create-intro-message))
       ;; now set up default model if none exist
       (when (not ollama-buddy-default-model)
         ;; just get the first model
         (let ((model (car (ollama-buddy--get-models))))
           (setq ollama-buddy--current-model model)
           (setq ollama-buddy-default-model model)
-          (insert "NO DEFAULT MODEL : Using best guess : " model)))
-      (insert (ollama-buddy--create-intro-message))
+          (insert (format "\n\n* NO DEFAULT MODEL : Using best guess : %s" model))))
       (ollama-buddy--prepare-prompt-area)
       (put 'ollama-buddy--cycle-prompt-history 'history-position -1))
     (ollama-buddy--update-status "Idle")))
