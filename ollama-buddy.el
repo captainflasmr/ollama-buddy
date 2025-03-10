@@ -472,6 +472,83 @@ Higher values (0.7-1.0+) increase randomness and creativity."
       (while (re-search-forward "—" nil t)
         (replace-match ", ")))))
 
+
+(defun ollama-buddy--prepare-prompt-area (&optional new-prompt keep-content)
+  "Prepare the prompt area in the buffer.
+When NEW-PROMPT is non-nil, replace the existing prompt area.
+When KEEP-CONTENT is non-nil, preserve the existing prompt content."
+  (let* ((model (or ollama-buddy--current-model
+                   ollama-buddy-default-model
+                   "Default:latest"))
+         (color (ollama-buddy--get-model-color model))
+         (existing-content (when keep-content (ollama-buddy--text-after-prompt))))
+    
+    ;; Clean up existing prompt
+    (goto-char (point-max))
+    (when (re-search-backward "\\* .*>> PROMPT:" nil t)
+      (beginning-of-line)
+      (if (or new-prompt
+              (not (string-match-p "[[:alnum:]]" (ollama-buddy--text-after-prompt))))
+          ;; Either replacing prompt or current prompt is empty
+          (progn
+            (skip-chars-backward "\n")
+            (delete-region (point) (point-max))
+            (goto-char (point-max)))
+        ;; Keeping prompt with content
+        (goto-char (point-max))))
+    
+    ;; Insert new prompt header
+    (let ((start (point)))
+      (insert (format "\n\n* %s [T:%.1f] %s"
+                     model
+                     ollama-buddy--current-temperature
+                     ">> PROMPT: "))
+      
+      ;; Apply overlay for model name
+      (let ((overlay (make-overlay start (+ start 4 (length model)))))
+        (overlay-put overlay 'face `(:foreground ,color :weight bold))))
+    
+    ;; Restore content if requested
+    (when (and keep-content existing-content)
+      (insert existing-content))))
+
+(defun ollama-buddy--get-prompt-content ()
+  "Extract the current prompt content from the buffer.
+Returns a cons cell (TEXT . POINT) with the prompt text and point position."
+  (save-excursion
+    (goto-char (point-max))
+    (if (re-search-backward ">> PROMPT:\\s-*" nil t)
+        (let ((start-point (point)))
+          (search-forward ":")
+          (cons (string-trim (buffer-substring-no-properties
+                             (point) (point-max)))
+                start-point))
+      (cons "" nil))))
+
+(defun ollama-buddy--prepare-command-prompt (command-name &optional selected-text)
+  "Prepare prompt for COMMAND-NAME with optional SELECTED-TEXT.
+Returns the full prompt text ready to be sent."
+  (let* ((cmd-prompt (ollama-buddy--get-command-prop command-name :prompt))
+         (model (ollama-buddy--get-command-prop command-name :model))
+         (content (or selected-text ""))
+         (full-prompt (if cmd-prompt
+                         (concat cmd-prompt "\n\n" content)
+                       content)))
+    
+    ;; Temporarily switch model if command has its own model
+    (when model
+      (setq ollama-buddy--current-request-temporary-model ollama-buddy--current-model)
+      (setq ollama-buddy--current-model model))
+    
+    ;; Prepare the chat buffer
+    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+      (pop-to-buffer (current-buffer))
+      (ollama-buddy--prepare-prompt-area t nil)  ;; New prompt, no content
+      (goto-char (point-max))
+      (insert (string-trim full-prompt)))
+    
+    full-prompt))
+
 (defun ollama-buddy-toggle-markdown-conversion ()
   "Toggle automatic conversion of markdown to org-mode format."
   (interactive)
@@ -542,7 +619,7 @@ Higher values (0.7-1.0+) increase randomness and creativity."
                 ('precise 0.1)
                 (_ ollama-buddy-default-temperature))))
     (setq ollama-buddy--current-temperature temp)
-    (ollama-buddy--show-prompt)
+    (ollama-buddy--prepare-prompt-area)
     (message "Temperature set to %.2f (%s)" temp preset)
     (ollama-buddy--update-status 
      (format "Temperature: %.2f (%s)" temp preset))))
@@ -557,7 +634,7 @@ Temperature should be a float value, typically between 0.0 and 1.0."
     (setq temp (min 2.0 (max 0.0 temp)))
     (setq ollama-buddy--current-temperature temp)
     (message "Ollama temperature set to %.2f" temp)
-    (ollama-buddy--show-prompt)
+    (ollama-buddy--prepare-prompt-area)
     ;; Update the status to show the new temperature
     (ollama-buddy--update-status 
      (format "Temperature: %.2f" ollama-buddy--current-temperature))))
@@ -568,7 +645,7 @@ Temperature should be a float value, typically between 0.0 and 1.0."
   (setq ollama-buddy--current-temperature ollama-buddy-default-temperature)
   (message "Ollama temperature reset to default: %.2f" 
            ollama-buddy-default-temperature)
-  (ollama-buddy--show-prompt)
+  (ollama-buddy--prepare-prompt-area)
   ;; Update the status to show the new temperature
   (ollama-buddy--update-status 
    (format "Temperature reset to %.2f" ollama-buddy--current-temperature)))
@@ -586,7 +663,7 @@ Temperature should be a float value, typically between 0.0 and 1.0."
                                :value initial
                                :step 5))
          (temp (/ (float (widget-value value)) 100.0)))
-    (ollama-buddy--show-prompt)
+    (ollama-buddy--prepare-prompt-area)
     (setq ollama-buddy--current-temperature temp)
     (message "Temperature set to %.2f" temp)))
 
@@ -747,7 +824,7 @@ If SESSION-NAME is not provided, prompt for a name."
                           (when ollama-buddy-convert-markdown-to-org
                             (ollama-buddy--md-to-org-convert-region start-pos (point-max))))))))
                 ;; Show a prompt at the end
-                (ollama-buddy--show-prompt)))))
+                (ollama-buddy--prepare-prompt-area)))))
         ;; Update status
         (ollama-buddy--update-status (format "Session '%s' loaded" chosen-name))
         (message "Loaded session: %s" chosen-name)))))
@@ -880,7 +957,7 @@ If SESSION-NAME is not provided, prompt for a name."
         (erase-buffer)
         (ollama-buddy-mode 1)
         (insert (ollama-buddy--create-intro-message))
-        (ollama-buddy--show-prompt)))
+        (ollama-buddy--prepare-prompt-area)))
     
     ;; Update status
     (ollama-buddy--update-status "New session started")
@@ -1528,7 +1605,8 @@ ACTUAL-MODEL is the model being used instead."
           (setq ollama-buddy-default-model model)
           (insert "NO DEFAULT MODEL : Using best guess : " model)))
       (insert (ollama-buddy--create-intro-message))
-      (ollama-buddy--show-prompt))
+      (ollama-buddy--prepare-prompt-area)
+      (put 'ollama-buddy--cycle-prompt-history 'history-position -1))
     (ollama-buddy--update-status "Idle")))
 
 (defun ollama-buddy--stream-filter (_proc output)
@@ -1656,10 +1734,10 @@ ACTUAL-MODEL is the model being used instead."
                         (run-with-timer 0.5 nil #'ollama-buddy--send-next-in-sequence))
                     (progn
                       (ollama-buddy--update-status "Multi Finished")
-                      (ollama-buddy--show-prompt))))
+                      (ollama-buddy--prepare-prompt-area))))
               ;; Not in multishot mode, just show the prompt
               (progn
-                (ollama-buddy--show-prompt)
+                (ollama-buddy--prepare-prompt-area)
                 (ollama-buddy--update-status (format "Finished [%d tokens, %.1f t/s]" 
                                                      (plist-get (car ollama-buddy--token-usage-history) :tokens)
                                                      (plist-get (car ollama-buddy--token-usage-history) :rate)))))))
@@ -1692,7 +1770,7 @@ ACTUAL-MODEL is the model being used instead."
       (let ((inhibit-read-only t))
         (goto-char (point-max))
         (insert (propertize msg 'face '(:weight bold)))
-        (ollama-buddy--show-prompt)))
+        (ollama-buddy--prepare-prompt-area)))
     
     ;; Only show token stats in status if we completed successfully
     (if (string= status "Completed")
@@ -1716,7 +1794,7 @@ ACTUAL-MODEL is the model being used instead."
       (setq ollama-buddy-default-model new-model)
       (setq ollama-buddy--current-model new-model)
       (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
-      (ollama-buddy--show-prompt)
+      (ollama-buddy--prepare-prompt-area)
       (goto-char (point-max))
       (ollama-buddy--update-status "Idle"))))
 
@@ -1738,7 +1816,7 @@ ACTUAL-MODEL is the model being used instead."
     (skip-chars-backward "\n")
     (delete-region (point) (point-max)))
   (insert (ollama-buddy--create-intro-message))
-  (ollama-buddy--show-prompt))
+  (ollama-buddy--prepare-prompt-area))
 
 (defun ollama-buddy--menu-custom-prompt ()
   "Show the custom prompt."
@@ -1754,7 +1832,7 @@ ACTUAL-MODEL is the model being used instead."
                                     (region-beginning) (region-end)))))
       (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
         (pop-to-buffer (current-buffer))
-        (ollama-buddy--show-prompt)
+        (ollama-buddy--prepare-prompt-area)
         (goto-char (point-max))
         (insert (string-trim prompt-with-selection)))
       (ollama-buddy--send (string-trim prompt-with-selection)))))
@@ -1767,7 +1845,7 @@ ACTUAL-MODEL is the model being used instead."
       (user-error "Input string is empty"))
     (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
       (pop-to-buffer (current-buffer))
-      (ollama-buddy--show-prompt)
+      (ollama-buddy--prepare-prompt-area)
       (goto-char (point-max))
       (insert (string-trim prompt)))
     (ollama-buddy--send (string-trim prompt))))
@@ -1779,22 +1857,6 @@ ACTUAL-MODEL is the model being used instead."
 (defun ollama-buddy--get-command-prop (command-name prop)
   "Get property PROP from command COMMAND-NAME."
   (plist-get (cdr (ollama-buddy--get-command-def command-name)) prop))
-
-(defun ollama-buddy--get-prompt-history-element ()
-  "Through the minibuffer, bring up the prompt history."
-  (interactive)
-  (when ollama-buddy--prompt-history
-    (let* ((bounds (save-excursion
-                     (search-backward ">> PROMPT:")
-                     (search-forward ": ")
-                     (point)))
-           (input
-            (read-from-minibuffer
-             "Ollama Buddy: " (nth 0 ollama-buddy--prompt-history)
-             nil nil '(ollama-buddy--prompt-history . 1))))
-      (when input
-        (delete-region bounds (point))
-        (insert input)))))
 
 (defun ollama-buddy--text-after-prompt ()
   "Get the text after the prompt:"
@@ -1808,63 +1870,21 @@ ACTUAL-MODEL is the model being used instead."
                         (point) (point-max))))
       "")))
 
-(defun ollama-buddy--show-prompt (&optional replace-prompt keep-text)
-  "Show the prompt with optionally a MODEL in org-mode format."
-  (interactive)
-  (let* ((model (or ollama-buddy--current-model
-                    ollama-buddy-default-model
-                    "Default:latest"))
-         (color (ollama-buddy--get-model-color model))
-         (text-after-prompt (ollama-buddy--text-after-prompt)))
-    ;; first lets tidy up the latest prompts
-    (goto-char (point-max))
-    (when (re-search-backward ">> PROMPT:\\s-*" nil t)
-      (search-forward ":")
-      (if (or (not (string-match "[[:alnum:]]" text-after-prompt))
-              replace-prompt)
-          (progn
-            ;; delete the entire prompt
-            (goto-char (point-max))
-            (when (re-search-backward ">> PROMPT:\\s-*" nil t)
-              (beginning-of-line)
-              (skip-chars-backward "\n")
-              (delete-region (point) (point-max))))
-        (progn
-          ;; keep the prompt
-          (goto-char (point-max))
-          (skip-chars-backward "\n"))))
-
-    ;; Use overlay instead of text properties for more reliable color display
-    (let ((start (point)))
-      (insert (format "\n\n* %s [T:%.1f] %s"
-                      model
-                      ollama-buddy--current-temperature
-                      ">> PROMPT: "))
-      (when keep-text (insert text-after-prompt))
-      ;; Apply overlay for the model name
-      (let ((overlay (make-overlay start (+ start 4 (length model)))))
-        (overlay-put overlay 'face `(:foreground ,color :weight bold))))))
-
 (defun ollama-buddy--send-with-command (command-name)
   "Send request using configuration from COMMAND-NAME."
-  (let* ((prompt (or (ollama-buddy--get-command-prop command-name :prompt))))
-    (when (and prompt (not (use-region-p)))
-      (user-error "No region selected.  Select text to use with prompt"))
-    (let* ((prompt-with-selection (concat
-                                   (when prompt (concat prompt "\n\n"))
-                                   (if (use-region-p)
-                                       (buffer-substring-no-properties
-                                        (region-beginning) (region-end))
-                                     "")))
-           (model (ollama-buddy--get-command-prop command-name :model)))
-      (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-        (pop-to-buffer (current-buffer))
-        (setq ollama-buddy--current-request-temporary-model ollama-buddy--current-model)
-        (setq ollama-buddy--current-model model)
-        (ollama-buddy--show-prompt)
-        (goto-char (point-max))
-        (insert (string-trim prompt-with-selection)))
-      (ollama-buddy--send (string-trim prompt-with-selection) model))))
+  (let* ((prompt-text (ollama-buddy--get-command-prop command-name :prompt))
+         (selected-text (when (use-region-p)
+                          (buffer-substring-no-properties
+                           (region-beginning) (region-end))))
+         (model (ollama-buddy--get-command-prop command-name :model)))
+    
+    ;; Verify requirements
+    (when (and prompt-text (not selected-text))
+      (user-error "This command requires selected text"))
+    
+    ;; Prepare and send the prompt
+    (let ((full-prompt (ollama-buddy--prepare-command-prompt command-name selected-text)))
+      (ollama-buddy--send (string-trim full-prompt) model))))
 
 (defun ollama-buddy--send (&optional prompt specified-model)
   "Send PROMPT with optional SYSTEM-PROMPT and SPECIFIED-MODEL."
@@ -2047,39 +2067,74 @@ ACTUAL-MODEL is the model being used instead."
       (when model
         (setq ollama-buddy--current-model model)
         (if (eq ollama-buddy--multishot-progress 0)
-            (ollama-buddy--show-prompt t t)
+            (ollama-buddy--prepare-prompt-area t t)
           (progn
-            (ollama-buddy--show-prompt)
+            (ollama-buddy--prepare-prompt-area)
             (insert ollama-buddy--multishot-prompt)))
         (ollama-buddy--send ollama-buddy--multishot-prompt model)))))
+
+(defun ollama-buddy--multishot-prepare ()
+  "Prepare for a multishot sequence and return the prompt text."
+  (interactive)
+  (let* ((prompt-data (ollama-buddy--get-prompt-content))
+         (prompt-text (car prompt-data)))
+    
+    ;; Ensure we have content
+    (when (string-empty-p prompt-text)
+      (user-error "Please enter a prompt before starting multishot"))
+    
+    prompt-text))
 
 (defun ollama-buddy--multishot-prompt ()
   "Prompt for and execute multishot sequence."
   (interactive)
-  (let* ((available-letters (mapcar #'car ollama-buddy--model-letters))
-         (prompt (concat
-                  "Enter model sequence - available ["
-                  available-letters "]"))
-         (input-chars nil)
-         char)
-    (while (progn
-             (setq char (read-key prompt))
-             (and char
-                  (not (eq char ?\r))
-                  (not (eq char ?\n))
-                  (memq char available-letters)))
-      (push char input-chars)
-      (setq prompt (concat "Enter model sequence: "
-                           (concat (reverse input-chars)))))
-    (when input-chars
-      (let* ((sequence (concat (reverse input-chars)))
-             (bounds (save-excursion
-                       (search-backward ">> PROMPT:")
-                       (forward-char 10)
-                       (point)))
-             (query-text (string-trim
-                          (buffer-substring-no-properties bounds (point)))))
-        (ollama-buddy--multishot-send query-text sequence)))))
+  (let* ((prompt-text (ollama-buddy--multishot-prepare))
+         (available-letters (mapcar #'car ollama-buddy--model-letters))
+         (prompt (concat "Enter model sequence - available ["
+                        (apply #'string available-letters) "]: "))
+         (sequence (read-string prompt))
+         (valid-sequence (cl-remove-if-not 
+                         (lambda (c) (memq c available-letters))
+                         (string-to-list sequence))))
+    
+    (when valid-sequence
+      (let ((sequence-str (apply #'string valid-sequence)))
+        (message "Running multishot with %d models: %s" 
+                (length valid-sequence) sequence-str)
+        (ollama-buddy--multishot-send prompt-text sequence-str)))))
+
+(defun ollama-buddy--cycle-prompt-history (direction)
+  "Cycle through prompt history in DIRECTION (1=forward, -1=backward)."
+  (interactive)
+  (when ollama-buddy--prompt-history
+    (let* ((prompt-data (ollama-buddy--get-prompt-content))
+           (prompt-point (cdr prompt-data))
+           (current-pos (or (get 'ollama-buddy--cycle-prompt-history 'history-position) 0))
+           (new-pos (+ current-pos direction))
+           (new-pos (if (< new-pos 0) 
+                        0 
+                      (min new-pos (1- (length ollama-buddy--prompt-history)))))
+           (new-content (nth new-pos ollama-buddy--prompt-history)))
+      
+      ;; Store position for next cycle
+      (put 'ollama-buddy--cycle-prompt-history 'history-position new-pos)
+      
+      (when prompt-point
+        (save-excursion
+          (goto-char prompt-point)
+          (search-forward ":")
+          (delete-region (point) (point-max))
+          (insert " " new-content))))))
+
+(defun ollama-buddy-previous-history ()
+  "Navigate to previous item in prompt history."
+  (interactive)
+  (ollama-buddy--cycle-prompt-history 1))
+
+(defun ollama-buddy-next-history ()
+  "Navigate to next item in prompt history."
+  (interactive)
+  (ollama-buddy--cycle-prompt-history -1))
 
 ;;;###autoload
 (defun ollama-buddy-menu ()
@@ -2237,24 +2292,24 @@ ACTUAL-MODEL is the model being used instead."
     (setq ollama-buddy--connection-timer nil)))
 
 (defun ollama-buddy--send-prompt ()
-  "Send the current prompt to a LLM.."
+  "Send the current prompt to a LLM."
   (interactive)
-  (let* ((bounds (save-excursion
-                   (search-backward ">> PROMPT:")
-                   (search-forward ":")
-                   (point)))
+  (let* ((prompt-data (ollama-buddy--get-prompt-content))
+         (prompt-text (car prompt-data))
          (model (or ollama-buddy--current-model
-                    ollama-buddy-default-model
-                    "Default:latest"))
-         (query-text (string-trim (buffer-substring-no-properties bounds (point)))))
-
-    ;; Add to history if non-empty
-    (when (and query-text (not (string-empty-p query-text)))
-      (add-to-history 'ollama-buddy--prompt-history query-text))
+                   ollama-buddy-default-model
+                   "Default:latest")))
     
+    ;; Add to history if non-empty
+    (when (and prompt-text (not (string-empty-p prompt-text)))
+      (put 'ollama-buddy--cycle-prompt-history 'history-position -1)
+      (add-to-history 'ollama-buddy--prompt-history prompt-text))
+    
+    ;; Reset multishot variables
     (setq ollama-buddy--multishot-sequence nil
           ollama-buddy--multishot-prompt nil)
-    (ollama-buddy--send query-text model)))
+    
+    (ollama-buddy--send prompt-text model)))
 
 (defun ollama-buddy--cancel-request ()
   "Cancel the current request and clean up resources."
@@ -2283,8 +2338,10 @@ ACTUAL-MODEL is the model being used instead."
     (define-key map (kbd "C-c l") #'ollama-buddy--multishot-prompt)
     (define-key map (kbd "C-c k") #'ollama-buddy--cancel-request)
     (define-key map (kbd "C-c m") #'ollama-buddy--swap-model)
-    (define-key map (kbd "M-p") #'ollama-buddy--get-prompt-history-element)
-    ;; Add temperature control
+    ;; Improved history navigation
+    (define-key map (kbd "M-p") #'ollama-buddy-previous-history)
+    (define-key map (kbd "M-n") #'ollama-buddy-next-history)
+    ;; Temperature controls
     (define-key map (kbd "C-c t") #'ollama-buddy-set-temperature)
     (define-key map (kbd "C-c T") #'ollama-buddy-temperature-preset)
     (define-key map (kbd "C-c 0") #'ollama-buddy-reset-temperature)
@@ -2296,6 +2353,8 @@ ACTUAL-MODEL is the model being used instead."
   "Minor mode for ollama-buddy keybindings."
   :lighter " OB"
   :keymap ollama-buddy-mode-map)
+
+(push 'ollama-buddy--prompt-history savehist-additional-variables)
 
 (provide 'ollama-buddy)
 ;;; ollama-buddy.el ends here
