@@ -2012,11 +2012,13 @@ ACTUAL-MODEL is the model being used instead."
            (when (= (buffer-size) 0)
              (concat "#+TITLE: Ollama Buddy Chat\n"
                      "#+STARTUP: content"))
-           "\n\n* Welcome to OLLAMA BUDDY\n"
+           "\n\n* Welcome to OLLAMA BUDDY\n\n"
+           "#+begin_example\n"
            " ___ _ _      n _ n      ___       _   _ _ _\n"
            "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |\n"
            "| | | | | .  |     | .  | . | | | . | . |__ |\n"
-           "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n\n"
+           "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n"
+           "#+end_example\n\n"
            "** Available Models\n\n"
            models-section
            "** Quick Tips\n\n"
