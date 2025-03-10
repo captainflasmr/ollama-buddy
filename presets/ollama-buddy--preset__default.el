@@ -16,11 +16,6 @@
          :description "Help assistant"
          :action ollama-buddy--menu-help-assistant)
         
-        (swap-model
-         :key ?m
-         :description "Swap model"
-         :action ollama-buddy--swap-model)
-        
         (show-models
          :key ?v
          :description "View model status"
@@ -32,7 +27,7 @@
          :action (lambda () (ollama-buddy--send-with-command 'send-region)))
 
         (kill-request
-         :key ?x
+         :key ?k
          :description "Kill request"
          :action (lambda ()
                    (delete-process ollama-buddy--active-process)))
@@ -109,45 +104,15 @@
          :description "Minibuffer Prompt"
          :action ollama-buddy--menu-minibuffer-prompt)
         
-        (toggle-colors
-         :key ?C
-         :description "Toggle Colors"
-         :action ollama-buddy-toggle-model-colors)
-
         (token-stats
-         :key ?t
+         :key ?U
          :description "Token Usage Stats"
          :action ollama-buddy-display-token-stats)
-
-        (toggle-history
-         :key ?H
-         :description "Toggle conversation history"
-         :action ollama-buddy-toggle-history)
-
-        (clear-history
-         :key ?X
-         :description "Clear conversation history"
-         :action (lambda () (ollama-buddy-clear-history 1)))
 
         (show-history
          :key ?V
          :description "View conversation history"
          :action (lambda () (ollama-buddy--display-history 1)))
-
-        (new-session
-         :key ?E
-         :description "New session"
-         :action ollama-buddy-sessions-new)
-
-        (load-session
-         :key ?L
-         :description "Load session"
-         :action ollama-buddy-sessions-load)
-
-        (save-session
-         :key ?S
-         :description "Save session"
-         :action ollama-buddy-sessions-save)
 
         (list-sessions
          :key ?Y
