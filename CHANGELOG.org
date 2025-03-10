@@ -11,6 +11,14 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-03-10> *0.6.1*
+
+Refactored prompt handling so each org header line should now always have a prompt for better export
+
+- Added functionality to properly handle prompt text when showing/replacing prompts
+- Extracted inline lambdas in menu actions into named functions
+- Added fallback for when no default model is set
+
 ** <2025-03-08> *0.6.0*
 
 Chat buffer now in org-mode
