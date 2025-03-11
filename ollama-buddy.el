@@ -76,6 +76,11 @@
   :group 'ollama-buddy
   :prefix "ollama-buddy-param-")
 
+(defcustom ollama-buddy-debug-mode nil
+  "When non-nil, show raw JSON messages in a debug buffer."
+  :type 'boolean
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-show-params-in-header t
   "Whether to show modified parameters in the header line."
   :type 'boolean
@@ -553,6 +558,9 @@ When nil, status checks only occur during user interactions."
   :type 'boolean
   :group 'ollama-buddy)
 
+(defvar ollama-buddy--debug-buffer "*Ollama Debug*"
+  "Buffer for showing raw JSON messages.")
+
 (defvar ollama-buddy--current-request-temporary-model nil
   "For the current request don't make current model permanent.")
 
@@ -645,6 +653,23 @@ When nil, status checks only occur during user interactions."
 ;; Keep track of model colors
 (defvar ollama-buddy--model-colors (make-hash-table :test 'equal)
   "Hash table mapping model names to their colors.")
+
+(defun ollama-buddy-toggle-debug-mode ()
+  "Toggle display of raw JSON messages in a debug buffer."
+  (interactive)
+  (setq ollama-buddy-debug-mode (not ollama-buddy-debug-mode))
+  (if ollama-buddy-debug-mode
+      (progn
+        (with-current-buffer (get-buffer-create ollama-buddy--debug-buffer)
+          (erase-buffer)
+          (insert "=== Ollama Buddy Debug Mode ===\n")
+          (insert "Raw JSON messages will appear here.\n\n")
+          (special-mode))
+        (display-buffer ollama-buddy--debug-buffer)
+        (message "Debug mode enabled - raw JSON will be shown"))
+    (when (get-buffer ollama-buddy--debug-buffer)
+      (kill-buffer ollama-buddy--debug-buffer))
+    (message "Debug mode disabled")))
 
 (defun ollama-buddy--md-to-org-convert-region (start end)
   "Convert the region from START to END from Markdown to Org-mode format"
@@ -1794,6 +1819,25 @@ ACTUAL-MODEL is the model being used instead."
 
 (defun ollama-buddy--stream-filter (_proc output)
   "Process stream OUTPUT while preserving cursor position."
+
+  ;; Log raw output to debug buffer if enabled
+  (when ollama-buddy-debug-mode
+    (with-current-buffer (get-buffer-create ollama-buddy--debug-buffer)
+      (goto-char (point-max))
+      (let ((inhibit-read-only t)
+            (start-point (point)))
+        (insert (format "\n=== MESSAGE %s ===\n" 
+                        (format-time-string "%H:%M:%S.%3N")))
+        (insert output "\n")
+        (save-excursion
+          (goto-char start-point)
+          (when (search-forward "{" nil t)
+            (goto-char (match-beginning 0))
+            (let ((json-start (point)))
+              (when (ignore-errors (forward-sexp) t)
+                (let ((json-end (point)))
+                  (json-pretty-print json-start json-end)))))))))
+
   (when-let* ((json-str (replace-regexp-in-string "^[^\{]*" "" output))
               (json-data (and (> (length json-str) 0) (json-read-from-string json-str)))
               (text (alist-get 'content (alist-get 'message json-data))))
@@ -2218,6 +2262,7 @@ ACTUAL-MODEL is the model being used instead."
            "- New/Load/Save Session       C-c N/L/S\n"
            "- Toggle/Clear history        C-c H/X\n"
            "- Same prompt to multi-models C-c l\n"
+           "- Toggle debug received JSON  C-c D\n"
            "- Param Edit/Show/Help/Reset  C-c P/G/I/K\n"
            "- In another buffer           M-x ollama-buddy-menu")))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
@@ -2591,6 +2636,7 @@ ACTUAL-MODEL is the model being used instead."
     (define-key map (kbd "C-c G") #'ollama-buddy-params-display)
     (define-key map (kbd "C-c K") #'ollama-buddy-params-reset)
     (define-key map (kbd "C-c Z") #'ollama-buddy-toggle-params-in-header)
+    (define-key map (kbd "C-c D") #'ollama-buddy-toggle-debug-mode)
     (define-key map (kbd "C-c C-o") #'ollama-buddy-toggle-markdown-conversion)
     map)
   "Keymap for ollama-buddy mode.")
