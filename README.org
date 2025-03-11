@@ -18,6 +18,16 @@ The name is just something a little bit fun and it seems to always remind me of 
 
 * Whats New
 
+** <2025-03-11> *0.7.1*
+
+Added debug mode to display raw JSON messages in a debug buffer
+
+- Created new debug buffer to show raw JSON messages from Ollama API
+- Added toggle function to enable/disable debug mode (ollama-buddy-toggle-debug-mode)
+- Modified stream filter to log and pretty-print incoming JSON messages
+- Added keybinding C-c D to toggle debug mode
+- Updated documentation in welcome message
+
 ** <2025-03-11> *0.7.0*
 
 Added comprehensive Ollama parameter management
