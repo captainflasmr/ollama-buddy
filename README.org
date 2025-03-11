@@ -627,6 +627,14 @@ and of Sweden?
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_012.gif]]
 
+** Advanced parameter options
+
+*** Get the same response each time using *seed*
+
+Set the seed using edit parameters to 50
+
+Send the same prompt and see the same response!!
+
 ** *TODO* Code queries
 
 Taken from the examples in : https://learn.adacore.com/labs/intro-to-ada/chapters/generics.html#generic-list
@@ -1273,24 +1281,23 @@ Here is a kanban of the features that I plan on (hopefully) adding in due course
 #+RESULTS:
 | TODO                                                   | DONE                                                    |
 |--------------------------------------------------------+---------------------------------------------------------|
-| Create more specialized system prompts                 | Chat buffer to use org-mode                             |
-| Fully leverage the ollama API with advanced parameters | Chat export options - Provide various export formats    |
-| Test on Windows                                        | Add temperature                                         |
-|                                                        | Managing Sessions                                       |
-|                                                        | Create a very sparse minified version of =ollama-buddy= |
-|                                                        | Customizable Role-Based Menus Preset System             |
-|                                                        | Add to MELPA                                            |
-|                                                        | Enhancing Menu Clarity: Distinguishing LLMs Effectively |
-|                                                        | Add real time token tracking and usage summary          |
-|                                                        | Managing chat history and context                       |
+| Create a model from a GGUF file                        | Chat buffer to use org-mode                             |
+| Show incoming ollama messages                          | Chat export options - Provide various export formats    |
+| Maybe allowing the pulling of a model through ollama?  | Add temperature                                         |
+| Fully leverage the ollama API with advanced parameters | Managing Sessions                                       |
+| API - show model information                           | Create a very sparse minified version of =ollama-buddy= |
+| API - generate full response in one go if desired?     | Customizable Role-Based Menus Preset System             |
+| API - images?                                          | Add to MELPA                                            |
+| API - suffix                                           | Enhancing Menu Clarity: Distinguishing LLMs Effectively |
+| API - system prompt?                                   | Add real time token tracking and usage summary          |
+| Embeddings?                                            | Managing chat history and context                       |
+| Test on Windows                                        |                                                         |
 
 * Roadmap                                                           :roadmap:
 
 ** DONE Chat buffer to use org-mode
 
 ** DONE Chat export options - Provide various export formats
-
-See conversion of the chat buffer to org-mode meaning that the ox export functionality now becomes available!
 
 ** DONE Add temperature
 
@@ -1308,9 +1315,25 @@ See conversion of the chat buffer to org-mode meaning that the ox export functio
 
 ** DONE Managing chat history and context
 
-** TODO Create more specialized system prompts
+** TODO Create a model from a GGUF file
+
+** TODO Show incoming ollama messages
+
+** TODO Maybe allowing the pulling of a model through ollama?
 
 ** TODO Fully leverage the ollama API with advanced parameters
+
+*** TODO API - show model information
+
+*** TODO API - generate full response in one go if desired?
+
+*** TODO API - images?
+
+*** TODO API - suffix
+
+*** TODO API - system prompt?
+
+** TODO Embeddings?
 
 ** TODO Test on Windows
 
