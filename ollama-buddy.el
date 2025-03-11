@@ -2169,16 +2169,15 @@ ACTUAL-MODEL is the model being used instead."
            "** Available Models\n\n"
            models-section
            "** Quick Tips\n\n"
-           "- Ask me anything!           C-c C-c\n"
-           "- Change your model?         C-c m\n"
-           "- Change your mind?          C-c k\n"
-           "- Prompt history?            M-p/M-n\n"
-           "- New/Load/Save Session?     C-c N/L/S\n"
-           "- Toggle token stats?        C-c T\n"
-           "- Toggle/Clear history?      C-c H/X\n"
-           "- Same prompt to multiple?   C-c l\n"
-           "- Param Edit/Show/Help/Reset C-c P/G/I/K\n"
-           "- In another buffer?         M-x ollama-buddy-menu")))
+           "- Ask me anything!            C-c C-c\n"
+           "- Change model                C-c m\n"
+           "- Cancel request              C-c k\n"
+           "- Prompt history              M-p/M-n\n"
+           "- New/Load/Save Session       C-c N/L/S\n"
+           "- Toggle/Clear history        C-c H/X\n"
+           "- Same prompt to multi-models C-c l\n"
+           "- Param Edit/Show/Help/Reset  C-c P/G/I/K\n"
+           "- In another buffer           M-x ollama-buddy-menu")))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
 
