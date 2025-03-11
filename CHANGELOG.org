@@ -11,6 +11,16 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-03-11> *0.7.0*
+
+Added comprehensive Ollama parameter management
+
+- Added customization for all Ollama option API parameters with defaults
+- Only send modified parameters to preserve Ollama defaults
+- Display active parameters with visual indicators for modified values
+- Add keybindings and help system for parameter management
+- Remove redundant temperature controls in favor of unified parameters
+
 ** <2025-03-10> *0.6.1*
 
 Refactored prompt handling so each org header line should now always have a prompt for better export
