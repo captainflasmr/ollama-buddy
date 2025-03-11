@@ -76,6 +76,11 @@
   :group 'ollama-buddy
   :prefix "ollama-buddy-param-")
 
+(defcustom ollama-buddy-show-params-in-header t
+  "Whether to show modified parameters in the header line."
+  :type 'boolean
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-params-modified
   nil
   "Set of parameters that have been explicitly modified by the user.
@@ -282,6 +287,15 @@ Each command is defined with:
   :type '(alist :key-type string :value-type (alist :key-type symbol :value-type sexp))
   :group 'ollama-buddy-params)
 
+(defun ollama-buddy-toggle-params-in-header ()
+  "Toggle display of modified parameters in the header line."
+  (interactive)
+  (setq ollama-buddy-show-params-in-header 
+        (not ollama-buddy-show-params-in-header))
+  (ollama-buddy--update-status ollama-buddy--status)
+  (message "Parameters in header: %s" 
+           (if ollama-buddy-show-params-in-header "enabled" "disabled")))
+
 (defun ollama-buddy-params-reset-param (param)
   "Reset a specific parameter PARAM to its default value."
   (interactive
@@ -301,6 +315,7 @@ Each command is defined with:
   (interactive)
   (setq ollama-buddy-params-active (copy-tree ollama-buddy-params-defaults)
         ollama-buddy-params-modified nil)
+  (ollama-buddy--update-status "Params Reset")
   (message "Ollama parameters reset to defaults"))
 
 (defun ollama-buddy-params-apply-profile (profile-name)
@@ -398,6 +413,7 @@ Each command is defined with:
     
     ;; Update the parameter value
     (setf (alist-get param ollama-buddy-params-active) new-value)
+    (ollama-buddy--update-status "Params changed")
     (message "Updated %s to %s%s" 
              param 
              new-value
@@ -1690,6 +1706,16 @@ Adapts the color to the current theme (light or dark) for better visibility."
           (insert "\n\n[Connection Lost - Request Interrupted]")))))
   (ollama-buddy--update-status ollama-buddy--status))
 
+(defun ollama-buddy--param-shortname (param)
+  "Create a 4-character shortened name for PARAM by using first 2 and last 2 chars.
+For parameters with 4 or fewer characters, returns the full name."
+  (let* ((param-name (symbol-name param))
+         (param-len (length param-name)))
+    (if (<= param-len 4)
+        param-name
+      (concat (substring param-name 0 2)
+              (substring param-name (- param-len 2) param-len)))))
+
 (defun ollama-buddy--update-status (status &optional original-model actual-model)
   "Update the Ollama status and refresh the display.
 STATUS is the current operation status.
@@ -1707,20 +1733,36 @@ ACTUAL-MODEL is the model being used instead."
                                                         ollama-buddy--conversation-history-by-model 
                                                         nil)) 
                                               2)))
-                        (format " [H:%d]" history-count)))))
+                        (format " [H:%d]" history-count))))
+           (params (when ollama-buddy-show-params-in-header
+                     (let ((param-str
+                            (mapconcat 
+                             (lambda (param)
+                               (let ((value (alist-get param ollama-buddy-params-active)))
+                                 (format "%s:%s" 
+                                         (ollama-buddy--param-shortname param)
+                                         (cond
+                                          ((floatp value) (format "%.1f" value))
+                                          ((vectorp value) "...")
+                                          (t value)))))
+                             ollama-buddy-params-modified " ")))
+                       (if (string-empty-p param-str)
+                           ""
+                         (format " [%s]" param-str))))))
       (setq header-line-format
             (concat
              (if ollama-buddy-convert-markdown-to-org " ORG" " Markdown")
              (if ollama-buddy-display-token-stats " T" "")
              (format (if (string-empty-p (ollama-buddy--update-multishot-status))
-                         " %s%s %s %s%s"
-                       " %s %s %s %s%s")
+                         " %s%s %s %s%s%s"
+                       " %s %s %s %s%s%s")
                      (ollama-buddy--update-multishot-status)
                      (propertize (if (ollama-buddy--check-status) "RUNNING" "OFFLINE")
                                  'face '(:weight bold))
                      (propertize model 'face `(:weight bold :box (:line-width 4 :style pressed-button)))
                      (propertize status 'face '(:weight bold))
-                     (or history ""))
+                     (or history "")
+                     (or params ""))
              (when (and original-model actual-model (not (string= original-model actual-model)))
                (propertize (format " [Using %s instead of %s]" actual-model original-model)
                            'face '(:foreground "orange" :weight bold))))))))
@@ -2548,6 +2590,7 @@ ACTUAL-MODEL is the model being used instead."
     (define-key map (kbd "C-c I") #'ollama-buddy-params-help)
     (define-key map (kbd "C-c G") #'ollama-buddy-params-display)
     (define-key map (kbd "C-c K") #'ollama-buddy-params-reset)
+    (define-key map (kbd "C-c Z") #'ollama-buddy-toggle-params-in-header)
     (define-key map (kbd "C-c C-o") #'ollama-buddy-toggle-markdown-conversion)
     map)
   "Keymap for ollama-buddy mode.")
