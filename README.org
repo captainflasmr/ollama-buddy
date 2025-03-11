@@ -18,6 +18,35 @@ The name is just something a little bit fun and it seems to always remind me of 
 
 * Whats New
 
+** <2025-03-11> *0.7.0*
+
+Added comprehensive Ollama parameter management
+
+- Added customization for all Ollama option API parameters with defaults
+- Only send modified parameters to preserve Ollama defaults
+- Display active parameters with visual indicators for modified values
+- Add keybindings and help system for parameter management
+- Remove redundant temperature controls in favor of unified parameters
+
+Introduced parameter management capabilities that give you complete control over your Ollama model's behavior through the options in the ollamas API.
+
+Ollama's API supports a rich set of parameters for fine-tuning text generation, from controlling creativity with =temperature= to managing token selection with =top_p= and =top_k=. Until now, Ollama Buddy only exposed the =temperature= parameter, but this update unlocks the full potential of Ollama's parameter system!
+
+*** Key Features:
+
+- *All Parameters* - set all custom options for the ollama LLM at runtime
+- *Smart Parameter Management*: Only modified parameters are sent to Ollama, preserving the model's built-in defaults for optimal performance
+- *Visual Parameter Interface*: Clear display showing which parameters are active with highlighting for modified values
+
+** Keyboard Shortcuts
+
+Parameter management is accessible through simple keyboard shortcuts from the chat buffer:
+
+- =C-c P= - Edit a parameter
+- =C-c G= - Display current parameters
+- =C-c I= - Show parameter help
+- =C-c K= - Reset parameters to defaults
+
 ** <2025-03-10> *0.6.1*
 
 Refactored prompt handling so each org header line should now always have a prompt for better export
