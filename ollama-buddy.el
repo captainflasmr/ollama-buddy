@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama Buddy: Your Friendly AI Assistant -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.6.1
+;; Version: 0.7.0
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -71,8 +71,52 @@
   :group 'applications
   :prefix "ollama-buddy-")
 
+(defgroup ollama-buddy-params nil
+  "Customization group for Ollama API parameters."
+  :group 'ollama-buddy
+  :prefix "ollama-buddy-param-")
+
+(defcustom ollama-buddy-params-modified
+  nil
+  "Set of parameters that have been explicitly modified by the user.
+These are the only parameters that will be sent to Ollama."
+  :type '(set symbol)
+  :group 'ollama-buddy-params)
+
+(defcustom ollama-buddy-params-defaults
+  '((num_keep . 5)
+    (seed . 42)
+    (num_predict . 100)
+    (top_k . 20)
+    (top_p . 0.9)
+    (min_p . 0.0)
+    (typical_p . 0.7)
+    (repeat_last_n . 33)
+    (temperature . 0.8)
+    (repeat_penalty . 1.2)
+    (presence_penalty . 1.5)
+    (frequency_penalty . 1.0)
+    (mirostat . 1)
+    (mirostat_tau . 0.8)
+    (mirostat_eta . 0.6)
+    (penalize_newline . t)
+    (stop . ["\n" "user:"])
+    (numa . nil)
+    (num_ctx . 1024)
+    (num_batch . 2)
+    (num_gpu . 1)
+    (main_gpu . 0)
+    (low_vram . nil)
+    (vocab_only . nil)
+    (use_mmap . t)
+    (use_mlock . nil)
+    (num_thread . 8))
+  "Default values for Ollama API parameters."
+  :type '(alist :key-type symbol :value-type sexp)
+  :group 'ollama-buddy-params)
+
 (defcustom ollama-buddy-command-definitions
-  '(    
+  '(
     ;; General Commands
     (open-chat
      :key ?o
@@ -220,6 +264,211 @@ Each command is defined with:
                                          (sexp :tag "Lambda Expression")))))))
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-params-active
+  (copy-tree ollama-buddy-params-defaults)
+  "Currently active values for Ollama API parameters."
+  :type '(alist :key-type symbol :value-type sexp)
+  :group 'ollama-buddy-params)
+
+(defcustom ollama-buddy-params-profiles
+  '(("Default" . nil)
+    ("Creative" . ((temperature . 1.0)
+                   (top_p . 0.95)
+                   (repeat_penalty . 1.0)))
+    ("Precise" . ((temperature . 0.2)
+                  (top_p . 0.5)
+                  (repeat_penalty . 1.5))))
+  "Predefined parameter profiles for different usage scenarios."
+  :type '(alist :key-type string :value-type (alist :key-type symbol :value-type sexp))
+  :group 'ollama-buddy-params)
+
+(defun ollama-buddy-params-reset-param (param)
+  "Reset a specific parameter PARAM to its default value."
+  (interactive
+   (list (intern (completing-read "Select parameter to reset: "
+                                  (mapcar #'symbol-name ollama-buddy-params-modified)
+                                  nil t))))
+  (when (memq param ollama-buddy-params-modified)
+    (setf (alist-get param ollama-buddy-params-active)
+          (alist-get param ollama-buddy-params-defaults))
+    (setq ollama-buddy-params-modified 
+          (delete param ollama-buddy-params-modified))
+    (message "Reset %s to default value: %s" 
+             param (alist-get param ollama-buddy-params-defaults))))
+
+(defun ollama-buddy-params-reset ()
+  "Reset all parameters to default values and clear modification tracking."
+  (interactive)
+  (setq ollama-buddy-params-active (copy-tree ollama-buddy-params-defaults)
+        ollama-buddy-params-modified nil)
+  (message "Ollama parameters reset to defaults"))
+
+(defun ollama-buddy-params-apply-profile (profile-name)
+  "Apply a parameter profile by PROFILE-NAME."
+  (interactive
+   (list (completing-read "Select parameter profile: "
+                          (mapcar #'car ollama-buddy-params-profiles)
+                          nil t)))
+  (let ((profile-params (cdr (assoc profile-name ollama-buddy-params-profiles))))
+    (if profile-params
+        (progn
+          ;; Reset everything to defaults first
+          (setq ollama-buddy-params-active (copy-tree ollama-buddy-params-defaults)
+                ollama-buddy-params-modified nil)
+          
+          ;; Apply profile values and track modifications
+          (dolist (param profile-params)
+            (setf (alist-get (car param) ollama-buddy-params-active) (cdr param))
+            (add-to-list 'ollama-buddy-params-modified (car param)))
+          
+          (message "Applied parameter profile: %s" profile-name))
+      (message "Profile not found: %s" profile-name))))
+
+(defun ollama-buddy-params-get-for-request ()
+  "Get only the modified parameters formatted for the Ollama API request."
+  (let ((params (make-hash-table)))
+    ;; Only include explicitly modified parameters
+    (dolist (param ollama-buddy-params-modified)
+      (puthash param (alist-get param ollama-buddy-params-active)
+               params))
+    
+    ;; Convert to an alist for the JSON encoding
+    (let ((params-alist nil))
+      (maphash (lambda (k v) (push (cons k v) params-alist)) params)
+      params-alist)))
+
+(defun ollama-buddy-params-save-profile (profile-name)
+  "Save current parameters as a new profile with PROFILE-NAME."
+  (interactive "sEnter profile name: ")
+  (if (assoc profile-name ollama-buddy-params-profiles)
+      (when (yes-or-no-p (format "Profile '%s' already exists. Overwrite? " profile-name))
+        (setf (alist-get profile-name ollama-buddy-params-profiles nil nil #'string=)
+              (copy-tree ollama-buddy-params-active))
+        (message "Updated profile: %s" profile-name))
+    (push (cons profile-name (copy-tree ollama-buddy-params-active))
+          ollama-buddy-params-profiles)
+    (message "Created new profile: %s" profile-name)))
+
+(defun ollama-buddy-params-delete-profile (profile-name)
+  "Delete a parameter profile by PROFILE-NAME."
+  (interactive
+   (list (completing-read "Select profile to delete: "
+                          (remove "Default" (mapcar #'car ollama-buddy-params-profiles))
+                          nil t)))
+  (if (string= profile-name "Default")
+      (message "Cannot delete the Default profile")
+    (setq ollama-buddy-params-profiles
+          (assoc-delete-all profile-name ollama-buddy-params-profiles #'string=))
+    (message "Deleted profile: %s" profile-name)))
+
+(defun ollama-buddy-params-edit (param)
+  "Edit a specific parameter PARAM interactively."
+  (interactive
+   (list (intern (completing-read "Select parameter to edit: "
+                                  (mapcar (lambda (pair) (symbol-name (car pair)))
+                                          ollama-buddy-params-active)
+                                  nil t))))
+  (let* ((current-value (alist-get param ollama-buddy-params-active))
+         (default-value (alist-get param ollama-buddy-params-defaults))
+         (param-type (type-of current-value))
+         (prompt (format "Set %s (%s, default: %s): " param param-type default-value))
+         (new-value
+          (cond
+           ((eq param-type 'integer)
+            (read-number prompt current-value))
+           ((eq param-type 'float)
+            (read-number prompt current-value))
+           ((eq param-type 'boolean)
+            (y-or-n-p (format "Enable %s? " param)))
+           ((vectorp current-value)
+            (let ((items (split-string
+                          (read-string
+                           (format "Enter stop sequences (comma-separated): %s"
+                                   (mapconcat #'identity current-value ","))
+                           nil nil (mapconcat #'identity current-value ","))
+                          "," t "\\s-*")))
+              (vconcat [] items)))
+           (t (read-string prompt (format "%s" current-value))))))
+    
+    ;; Track whether this parameter is being modified or reset to default
+    (if (equal new-value default-value)
+        (setq ollama-buddy-params-modified 
+              (delete param ollama-buddy-params-modified))
+      (add-to-list 'ollama-buddy-params-modified param))
+    
+    ;; Update the parameter value
+    (setf (alist-get param ollama-buddy-params-active) new-value)
+    (message "Updated %s to %s%s" 
+             param 
+             new-value
+             (if (equal new-value default-value)
+                 " (default value)" 
+               ""))))
+
+(defun ollama-buddy-params-display ()
+  "Display the current Ollama parameter settings."
+  (interactive)
+  (let ((buf (get-buffer-create "*Ollama Parameters*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert "Ollama API Parameters:\n\n")
+        
+        ;; Group parameters into categories for better organization
+        (let ((generation-params '(temperature top_k top_p min_p typical_p
+                                               repeat_last_n repeat_penalty presence_penalty
+                                               frequency_penalty mirostat mirostat_tau mirostat_eta
+                                               penalize_newline stop))
+              (resource-params '(num_keep seed num_predict numa num_ctx num_batch
+                                          num_gpu main_gpu low_vram vocab_only use_mmap
+                                          use_mlock num_thread)))
+          
+          ;; Display generation parameters
+          (insert "Generation Parameters:\n")
+          (insert "=====================\n")
+          (dolist (param generation-params)
+            (when-let ((value (alist-get param ollama-buddy-params-active))
+                       (default-value (alist-get param ollama-buddy-params-defaults)))
+              (let ((modified-marker (if (memq param ollama-buddy-params-modified) 
+                                         (propertize "* " 'face '(:foreground "red")) 
+                                       "  "))
+                    (value-display (cond
+                                    ((vectorp value) (format "[%s]"
+                                                             (mapconcat #'identity value ", ")))
+                                    (t value))))
+                (insert (format "%s%-20s: %s%s\n" 
+                                modified-marker
+                                param 
+                                value-display
+                                (if (equal value default-value) 
+                                    "" 
+                                  (format " (default: %s)" default-value)))))))
+          
+          ;; Display resource parameters
+          (insert "\nResource Parameters:\n")
+          (insert "===================\n")
+          (dolist (param resource-params)
+            (when-let ((value (alist-get param ollama-buddy-params-active))
+                       (default-value (alist-get param ollama-buddy-params-defaults)))
+              (let ((modified-marker (if (memq param ollama-buddy-params-modified) 
+                                         (propertize "* " 'face '(:foreground "red")) 
+                                       "  ")))
+                (insert (format "%s%-20s: %s%s\n" 
+                                modified-marker
+                                param 
+                                value
+                                (if (equal value default-value) 
+                                    "" 
+                                  (format " (default: %s)" default-value)))))))))
+      
+      ;; Display modified parameter count
+      (insert (format "\n%d parameters will be sent to Ollama%s\n" 
+                      (length ollama-buddy-params-modified)
+                      (if (zerop (length ollama-buddy-params-modified))
+                          " (all default values)"
+                        (format ": %s" (mapcar #'symbol-name ollama-buddy-params-modified))))))
+    (display-buffer buf)))
+
 (defcustom ollama-buddy-convert-markdown-to-org t
   "Whether to automatically convert markdown to org-mode format in responses."
   :type 'boolean
@@ -288,13 +537,6 @@ When nil, status checks only occur during user interactions."
   :type 'boolean
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-default-temperature 0.7
-  "Default temperature setting for Ollama requests.
-Lower values (0.0-0.5) make responses more deterministic and focused.
-Higher values (0.7-1.0+) increase randomness and creativity."
-  :type 'float
-  :group 'ollama-buddy)
-
 (defvar ollama-buddy--current-request-temporary-model nil
   "For the current request don't make current model permanent.")
 
@@ -309,9 +551,6 @@ Higher values (0.7-1.0+) increase randomness and creativity."
 
 (defvar ollama-buddy--current-prompt nil
   "The current prompt.")
-
-(defvar ollama-buddy--current-temperature ollama-buddy-default-temperature
-  "The currently active temperature value.")
 
 (defvar ollama-buddy--current-session nil
   "Name of the currently active session, or nil if none.")
@@ -443,8 +682,8 @@ Higher values (0.7-1.0+) increase randomness and creativity."
 When NEW-PROMPT is non-nil, replace the existing prompt area.
 When KEEP-CONTENT is non-nil, preserve the existing prompt content."
   (let* ((model (or ollama-buddy--current-model
-                   ollama-buddy-default-model
-                   "Default:latest"))
+                    ollama-buddy-default-model
+                    "Default:latest"))
          (color (ollama-buddy--get-model-color model))
          (existing-content (when keep-content (ollama-buddy--text-after-prompt))))
     
@@ -464,10 +703,9 @@ When KEEP-CONTENT is non-nil, preserve the existing prompt content."
     
     ;; Insert new prompt header
     (let ((start (point)))
-      (insert (format "\n\n* %s [T:%.1f] %s"
-                     model
-                     ollama-buddy--current-temperature
-                     ">> PROMPT: "))
+      (insert (format "\n\n* %s %s"
+                      model
+                      ">> PROMPT: "))
       
       ;; Apply overlay for model name
       (let ((overlay (make-overlay start (+ start 4 (length model)))))
@@ -486,7 +724,7 @@ Returns a cons cell (TEXT . POINT) with the prompt text and point position."
         (let ((start-point (point)))
           (search-forward ":")
           (cons (string-trim (buffer-substring-no-properties
-                             (point) (point-max)))
+                              (point) (point-max)))
                 start-point))
       (cons "" nil))))
 
@@ -497,8 +735,8 @@ Returns the full prompt text ready to be sent."
          (model (ollama-buddy--get-command-prop command-name :model))
          (content (or selected-text ""))
          (full-prompt (if cmd-prompt
-                         (concat cmd-prompt "\n\n" content)
-                       content)))
+                          (concat cmd-prompt "\n\n" content)
+                        content)))
     
     ;; Temporarily switch model if command has its own model
     (when model
@@ -569,68 +807,6 @@ Returns the full prompt text ready to be sent."
            processed-text))
     
     processed-text))
-
-(defun ollama-buddy-temperature-preset (preset)
-  "Set temperature to a PRESET value."
-  (interactive 
-   (list (intern (completing-read 
-                  "Temperature preset: " 
-                  '("creative" "balanced" "focused" "precise") 
-                  nil t))))
-  (let ((temp (pcase preset
-                ('creative 0.9)
-                ('balanced 0.7)
-                ('focused 0.3)
-                ('precise 0.1)
-                (_ ollama-buddy-default-temperature))))
-    (setq ollama-buddy--current-temperature temp)
-    (ollama-buddy--prepare-prompt-area)
-    (message "Temperature set to %.2f (%s)" temp preset)
-    (ollama-buddy--update-status 
-     (format "Temperature: %.2f (%s)" temp preset))))
-
-(defun ollama-buddy-set-temperature ()
-  "Set the temperature for Ollama requests.
-Temperature should be a float value, typically between 0.0 and 1.0."
-  (interactive)
-  (let ((temp (read-number "Temperature (0.0-1.0, default 0.7): " 
-                           ollama-buddy--current-temperature)))
-    ;; Validate input and set limits
-    (setq temp (min 2.0 (max 0.0 temp)))
-    (setq ollama-buddy--current-temperature temp)
-    (message "Ollama temperature set to %.2f" temp)
-    (ollama-buddy--prepare-prompt-area)
-    ;; Update the status to show the new temperature
-    (ollama-buddy--update-status 
-     (format "Temperature: %.2f" ollama-buddy--current-temperature))))
-
-(defun ollama-buddy-reset-temperature ()
-  "Reset the temperature to the default value."
-  (interactive)
-  (setq ollama-buddy--current-temperature ollama-buddy-default-temperature)
-  (message "Ollama temperature reset to default: %.2f" 
-           ollama-buddy-default-temperature)
-  (ollama-buddy--prepare-prompt-area)
-  ;; Update the status to show the new temperature
-  (ollama-buddy--update-status 
-   (format "Temperature reset to %.2f" ollama-buddy--current-temperature)))
-
-(defun ollama-buddy-adjust-temperature ()
-  "Adjust the temperature interactively with a slider."
-  (interactive)
-  (let* ((initial (round (* 100 ollama-buddy--current-temperature)))
-         (value (widget-create 'slider
-                               :size 20
-                               :min 0
-                               :max 100
-                               :tag "Temperature"
-                               :format "%t: %v%%"
-                               :value initial
-                               :step 5))
-         (temp (/ (float (widget-value value)) 100.0)))
-    (ollama-buddy--prepare-prompt-area)
-    (setq ollama-buddy--current-temperature temp)
-    (message "Temperature set to %.2f" temp)))
 
 (defun ollama-buddy--ensure-sessions-directory ()
   "Create the ollama-buddy sessions directory if it doesn't exist."
@@ -1531,22 +1707,20 @@ ACTUAL-MODEL is the model being used instead."
                                                         ollama-buddy--conversation-history-by-model 
                                                         nil)) 
                                               2)))
-                        (format " [H:%d]" history-count))))
-           (temp-info (format " [T:%.1f]" ollama-buddy--current-temperature)))
+                        (format " [H:%d]" history-count)))))
       (setq header-line-format
             (concat
              (if ollama-buddy-convert-markdown-to-org " ORG" " Markdown")
              (if ollama-buddy-display-token-stats " T" "")
              (format (if (string-empty-p (ollama-buddy--update-multishot-status))
-                         " %s%s %s %s%s%s"
-                       " %s %s %s %s%s%s")
+                         " %s%s %s %s%s"
+                       " %s %s %s %s%s")
                      (ollama-buddy--update-multishot-status)
                      (propertize (if (ollama-buddy--check-status) "RUNNING" "OFFLINE")
                                  'face '(:weight bold))
                      (propertize model 'face `(:weight bold :box (:line-width 4 :style pressed-button)))
                      (propertize status 'face '(:weight bold))
-                     (or history "")
-                     temp-info)
+                     (or history ""))
              (when (and original-model actual-model (not (string= original-model actual-model)))
                (propertize (format " [Using %s instead of %s]" actual-model original-model)
                            'face '(:foreground "orange" :weight bold))))))))
@@ -1613,7 +1787,7 @@ ACTUAL-MODEL is the model being used instead."
           ;; Insert the text directly - we'll convert it at the end of the response
           (insert text)
 
-         ;; Track the complete response for history
+          ;; Track the complete response for history
           (when (boundp 'ollama-buddy--current-response)
             (setq ollama-buddy--current-response 
                   (concat (or ollama-buddy--current-response "") text)))
@@ -1870,12 +2044,18 @@ ACTUAL-MODEL is the model being used instead."
          ;; Add the current prompt to the messages
          (messages (append messages `(((role . "user")
                                        (content . ,prompt)))))
-         ;; Include temperature in the payload
+         ;; Get only the modified parameters
+         (modified-options (ollama-buddy-params-get-for-request))
+         ;; Build the payload based on whether we have modified parameters
          (payload (json-encode
-                   `((model . ,model)
-                     (messages . ,(vconcat [] messages))
-                     (stream . t)
-                     (options . ((temperature . ,ollama-buddy--current-temperature)))))))
+                   (if modified-options
+                       `((model . ,model)
+                         (messages . ,(vconcat [] messages))
+                         (stream . t)
+                         (options . ,modified-options))
+                     `((model . ,model)
+                       (messages . ,(vconcat [] messages))
+                       (stream . t))))))
     
     (setq ollama-buddy--current-model model)
     (setq ollama-buddy--current-prompt prompt)
@@ -1989,15 +2169,16 @@ ACTUAL-MODEL is the model being used instead."
            "** Available Models\n\n"
            models-section
            "** Quick Tips\n\n"
-           "- Ask me anything!          C-c C-c\n"
-           "- Change your model?        C-c m\n"
-           "- Change your mind?         C-c k\n"
-           "- New/Load/Save Session?    C-c E/L/S\n"
-           "- Adjust temperature?       C-c t\n"
-           "- Toggle token stats?       C-c T\n"
-           "- Toggle/Clear history?     C-c H/X\n"
-           "- Prompt history?           M-p/M-n\n"
-           "- In another buffer?        M-x ollama-buddy-menu")))
+           "- Ask me anything!           C-c C-c\n"
+           "- Change your model?         C-c m\n"
+           "- Change your mind?          C-c k\n"
+           "- Prompt history?            M-p/M-n\n"
+           "- New/Load/Save Session?     C-c N/L/S\n"
+           "- Toggle token stats?        C-c T\n"
+           "- Toggle/Clear history?      C-c H/X\n"
+           "- Same prompt to multiple?   C-c l\n"
+           "- Param Edit/Show/Help/Reset C-c P/G/I/K\n"
+           "- In another buffer?         M-x ollama-buddy-menu")))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
 
@@ -2062,16 +2243,16 @@ ACTUAL-MODEL is the model being used instead."
   (let* ((prompt-text (ollama-buddy--multishot-prepare))
          (available-letters (mapcar #'car ollama-buddy--model-letters))
          (prompt (concat "Enter model sequence - available ["
-                        (apply #'string available-letters) "]: "))
+                         (apply #'string available-letters) "]: "))
          (sequence (read-string prompt))
          (valid-sequence (cl-remove-if-not 
-                         (lambda (c) (memq c available-letters))
-                         (string-to-list sequence))))
+                          (lambda (c) (memq c available-letters))
+                          (string-to-list sequence))))
     
     (when valid-sequence
       (let ((sequence-str (apply #'string valid-sequence)))
         (message "Running multishot with %d models: %s" 
-                (length valid-sequence) sequence-str)
+                 (length valid-sequence) sequence-str)
         (ollama-buddy--multishot-send prompt-text sequence-str)))))
 
 (defun ollama-buddy--cycle-prompt-history (direction)
@@ -2268,8 +2449,8 @@ ACTUAL-MODEL is the model being used instead."
   (let* ((prompt-data (ollama-buddy--get-prompt-content))
          (prompt-text (car prompt-data))
          (model (or ollama-buddy--current-model
-                   ollama-buddy-default-model
-                   "Default:latest")))
+                    ollama-buddy-default-model
+                    "Default:latest")))
     
     ;; Add to history if non-empty
     (when (and prompt-text (not (string-empty-p prompt-text)))
@@ -2303,23 +2484,71 @@ ACTUAL-MODEL is the model being used instead."
   ;; Update status to show cancelled
   (ollama-buddy--update-status "Cancelled"))
 
+(defun ollama-buddy-params-help ()
+  "Display help for Ollama parameters."
+  (interactive)
+  (let ((buf (get-buffer-create "*Ollama Parameters Help*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert "Ollama Parameters Help\n")
+        (insert "====================\n\n")
+        
+        (insert "Generation Parameters:\n")
+        (insert "---------------------\n")
+        (insert "temperature: Controls randomness (0.0-1.0+), higher = more creative\n")
+        (insert "top_k: Limits token selection to top K most probable tokens\n")
+        (insert "top_p: Nucleus sampling threshold (0.0-1.0)\n")
+        (insert "min_p: Minimum probability threshold for token selection\n")
+        (insert "typical_p: Controls how 'typical' responses are\n")
+        (insert "repeat_last_n: Number of tokens to consider for repetition penalties\n")
+        (insert "repeat_penalty: Penalty for repeating tokens (higher = less repetition)\n")
+        (insert "presence_penalty: Penalizes tokens already in the text\n")
+        (insert "frequency_penalty: Penalizes frequent tokens\n")
+        (insert "mirostat: Enable adaptive sampling (0=off, 1=Mirostat, 2=Mirostat 2.0)\n")
+        (insert "mirostat_tau: Target entropy for Mirostat\n")
+        (insert "mirostat_eta: Learning rate for Mirostat\n")
+        (insert "penalize_newline: Whether to penalize newline tokens\n")
+        (insert "stop: Sequences that will stop generation when produced\n\n")
+        
+        (insert "Resource Parameters:\n")
+        (insert "------------------\n")
+        (insert "num_keep: Number of tokens to keep from prompt\n")
+        (insert "seed: Random seed for deterministic generation\n")
+        (insert "num_predict: Maximum tokens to generate\n")
+        (insert "numa: Enable Non-Uniform Memory Access optimization\n")
+        (insert "num_ctx: Context window size in tokens\n")
+        (insert "num_batch: Batch size for processing\n")
+        (insert "num_gpu: Number of GPUs to use\n")
+        (insert "main_gpu: Primary GPU for computation\n")
+        (insert "low_vram: Optimize for systems with limited VRAM\n")
+        (insert "vocab_only: Load only vocabulary, not weights\n")
+        (insert "use_mmap: Use memory-mapped files\n")
+        (insert "use_mlock: Lock model weights in memory\n")
+        (insert "num_thread: Number of CPU threads to use\n")
+        
+        (view-mode 1)))
+    (display-buffer buf)))
+
 (defvar ollama-buddy-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-c") #'ollama-buddy--send-prompt)
     (define-key map (kbd "C-c l") #'ollama-buddy--multishot-prompt)
     (define-key map (kbd "C-c k") #'ollama-buddy--cancel-request)
     (define-key map (kbd "C-c m") #'ollama-buddy--swap-model)
-    ;; Improved history navigation
     (define-key map (kbd "M-p") #'ollama-buddy-previous-history)
     (define-key map (kbd "M-n") #'ollama-buddy-next-history)
-    ;; Temperature controls
-    (define-key map (kbd "C-c t") #'ollama-buddy-set-temperature)
     (define-key map (kbd "C-c H") #'ollama-buddy-toggle-history)
     (define-key map (kbd "C-c X") #'ollama-buddy-clear-history)
     (define-key map (kbd "C-c T") #'ollama-buddy-toggle-token-display)
-    (define-key map (kbd "C-c E") #'ollama-buddy-sessions-new)
+    (define-key map (kbd "C-c N") #'ollama-buddy-sessions-new)
     (define-key map (kbd "C-c L") #'ollama-buddy-sessions-load)
     (define-key map (kbd "C-c S") #'ollama-buddy-sessions-save)
+    (define-key map (kbd "C-c P") 
+                (lambda () (interactive) (call-interactively #'ollama-buddy-params-edit)))
+    (define-key map (kbd "C-c I") #'ollama-buddy-params-help)
+    (define-key map (kbd "C-c G") #'ollama-buddy-params-display)
+    (define-key map (kbd "C-c K") #'ollama-buddy-params-reset)
     (define-key map (kbd "C-c C-o") #'ollama-buddy-toggle-markdown-conversion)
     map)
   "Keymap for ollama-buddy mode.")
