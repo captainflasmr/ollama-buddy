@@ -18,6 +18,10 @@ The name is just something a little bit fun and it seems to always remind me of 
 
 * Whats New
 
+** <2025-03-12> *0.7.2*
+
+Added menu model colours back in and removed some redundant code
+
 ** <2025-03-11> *0.7.1*
 
 Added debug mode to display raw JSON messages in a debug buffer
