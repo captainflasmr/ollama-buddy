@@ -18,6 +18,25 @@ The name is just something a little bit fun and it seems to always remind me of 
 
 * Whats New
 
+** <2025-03-12> *0.7.3*
+
+Added function to associate models with menu commands
+
+- Added =ollama-buddy-add-model-to-menu-entry= autoload function
+- Enabled dynamic modification of command-model associations
+
+This is a helper function that allows you to associate specific models with individual menu commands.
+
+Configuration to apply a model to a menu entry is now straightforward, in your Emacs init file, add something like:
+
+#+begin_src elisp
+(with-eval-after-load 'ollama-buddy
+  (ollama-buddy-add-model-to-menu-entry 'dictionary-lookup "tinyllama:latest")
+  (ollama-buddy-add-model-to-menu-entry 'synonym "tinyllama:latest"))
+#+end_src
+
+This configures simpler tasks like dictionary lookups and synonym searches to use the more efficient TinyLlama model, while your default model will still be used for more complex operations.
+
 ** <2025-03-12> *0.7.2*
 
 Added menu model colours back in and removed some redundant code
@@ -1293,225 +1312,59 @@ Here is a kanban of the features that I plan on (hopefully) adding in due course
 #+end_src
 
 #+RESULTS:
-| TODO                                                   | DONE                                                    |
-|--------------------------------------------------------+---------------------------------------------------------|
-| Create a model from a GGUF file                        | Chat buffer to use org-mode                             |
-| Show incoming ollama messages                          | Chat export options - Provide various export formats    |
-| Maybe allowing the pulling of a model through ollama?  | Add temperature                                         |
-| Fully leverage the ollama API with advanced parameters | Managing Sessions                                       |
-| API - show model information                           | Create a very sparse minified version of =ollama-buddy= |
-| API - generate full response in one go if desired?     | Customizable Role-Based Menus Preset System             |
-| API - images?                                          | Add to MELPA                                            |
-| API - suffix                                           | Enhancing Menu Clarity: Distinguishing LLMs Effectively |
-| API - system prompt?                                   | Add real time token tracking and usage summary          |
-| Embeddings?                                            | Managing chat history and context                       |
-| Test on Windows                                        |                                                         |
+| TODO                            | DOING                         | DONE                              |
+|---------------------------------+-------------------------------+-----------------------------------|
+| Create a model from a GGUF file | Show incoming ollama messages | Chat buffer to use org-mode       |
+| API - Pulling a model           |                               | Chat export options               |
+| API - show model information    |                               | Add temperature                   |
+| API - images                    |                               | Managing Sessions                 |
+| API - suffix                    |                               | Sparse minified version           |
+| API - system prompt             |                               | Role-Based Menu Preset System     |
+| Embeddings?                     |                               | Add to MELPA                      |
+| Test on Windows                 |                               | Enhancing Menu Clarity            |
+|                                 |                               | Real time token tracking          |
+|                                 |                               | Managing chat history and context |
 
 * Roadmap                                                           :roadmap:
 
-** DONE Chat buffer to use org-mode
-
-** DONE Chat export options - Provide various export formats
-
-** DONE Add temperature
-
-** DONE Managing Sessions
-
-** DONE Create a very sparse minified version of =ollama-buddy=
-
-** DONE Customizable Role-Based Menus Preset System
-
-** DONE Add to MELPA
-
-** DONE Enhancing Menu Clarity: Distinguishing LLMs Effectively
-
-** DONE Add real time token tracking and usage summary
-
-** DONE Managing chat history and context
-
 ** TODO Create a model from a GGUF file
 
-** TODO Show incoming ollama messages
+** TODO API - Pulling a model
 
-** TODO Maybe allowing the pulling of a model through ollama?
+** TODO API - show model information
 
-** TODO Fully leverage the ollama API with advanced parameters
+** TODO API - images
 
-*** TODO API - show model information
+** TODO API - suffix
 
-*** TODO API - generate full response in one go if desired?
-
-*** TODO API - images?
-
-*** TODO API - suffix
-
-*** TODO API - system prompt?
+** TODO API - system prompt
 
 ** TODO Embeddings?
 
 ** TODO Test on Windows
 
-* Testing
+** DOING Show incoming ollama messages
 
-** Models
+** DONE Chat buffer to use org-mode
 
-These are the models I currently have loaded and are testing:
+** DONE Chat export options
 
-- qwen2.5-coder:7b
-- deepseek-r1:7b
-- qwen2.5-coder:3b
-- starcoder2:3b
-- deepseek-r1:1.5b
-- llama3.2:1b
-- tinyllama:latest
+** DONE Add temperature
 
-** Bad Sentence
+** DONE Managing Sessions
 
-This aint a good sentence, pleez rewrite!
+** DONE Sparse minified version
 
-llama3.2:3b generates something like:
+** DONE Role-Based Menu Preset System
 
-[Temperature: 0.70]
+** DONE Add to MELPA
 
-I'll correct this informal and colloquial text.
+** DONE Enhancing Menu Clarity
 
-Here's the proofread version of your sentence:
+** DONE Real time token tracking
 
-"This isn't a very good sentence; could you please rephrase it?"
+** DONE Managing chat history and context
 
-I corrected the following:
-
-- "ain't" to "isn't", which is the standard spelling for the negation of "to be".
-- "pleez" to "please", which is the standard spelling in English.
-- Replaced "rewrite" with "rephrase", as "rewrite" implies making a complete new version, whereas "rephrase" means rewording or expressing something in different words.
-
-** Temperature
-
-Given the bad sentence above
-
-Temperature to 0.0 gives a very pricise proofreading, typically only a single concise sentence.
-
-Temperature to 2.0 is generally more casual, with a slangish alternative given.
-
-** History/context
-
-By default with history turned on
-
-What is the capital of the UK?
-
-and of France
-
-Now turn off History
-
-and of Germany
-
-** elisp structure to org-table
-
-*** prompt
-
-Given the following elisp data structure can you extract out an org table that contains the following columns : key : description : model
-
-#+begin_src elisp
-(setq ollama-buddy-command-definitions
-      '(
-        ;; General Commands
-        (open-chat
-         :key ?o
-         :description "Open chat buffer"
-         :action ollama-buddy--open-chat)
-        
-        (swap-model
-         :key ?m
-         :description "Swap model"
-         :action ollama-buddy--swap-model)
-        
-        (send-region
-         :key ?l
-         :description "Send region"
-         :action (lambda () (ollama-buddy--send-with-command 'send-region)))
-        
-        ;; Specialized commands
-        (refactor-code
-         :key ?r
-         :description "Refactor code"
-         :model "qwen2.5-coder:7b"
-         :prompt "refactor the following code:"
-         :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
-        
-        (git-commit
-         :key ?g
-         :description "Git commit message"
-         :model "qwen2.5-coder:3b"
-         :prompt "write a concise git commit message for the following:"
-         :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
-        
-        (describe-code
-         :key ?c
-         :description "Describe code"
-         :model "qwen2.5-coder:3b"
-         :prompt "describe the following code:"
-         :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
-        
-        (dictionary-lookup
-         :key ?d
-         :description "Dictionary Lookup"
-         :model "llama3.2:1b"
-         :prompt "For the following word provide a typical dictionary definition:"
-         :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup)))
-        
-        ;; System Commands
-        (custom-prompt
-         :key ?e
-         :description "Custom prompt"
-         :model "deepseek-r1:7b"
-         :action (lambda ()
-                   (when-let ((prefix (read-string "Enter prompt prefix: " nil nil nil t)))
-                     (unless (use-region-p)
-                       (user-error "No region selected. Select text to use with prompt"))
-                     (unless (not (string-empty-p prefix))
-                       (user-error "Input string is empty"))
-                     (ollama-buddy--send
-                      (concat prefix "\n\n"
-                              (buffer-substring-no-properties 
-                               (region-beginning) (region-end)))))))
-        (minibuffer-prompt
-         :key ?i
-         :description "Minibuffer Prompt"
-         :action (lambda ()
-                   (when-let ((prefix (read-string "Enter prompt: " nil nil nil t)))
-                     (unless (not (string-empty-p prefix))
-                       (user-error "Input string is empty"))
-                     (ollama-buddy--send prefix))))
-        
-        (kill-request
-         :key ?x
-         :description "Kill request"
-         :action (lambda ()
-                   (delete-process ollama-buddy--active-process)))
-        (quit
-         :key ?q
-         :description "Quit"
-         :action (lambda () (message "Quit Ollama Shell menu.")))
-        )
-      )
-#+end_src
-
-*** expected output
-
-| Key | Description        | Model            |
-|-----+--------------------+------------------|
-| o   | Open chat buffer   |                  |
-| m   | Swap model         |                  |
-| l   | Send region        |                  |
-| r   | Refactor code      | qwen2.5-coder:7b |
-| g   | Git commit message | qwen2.5-coder:3b |
-| c   | Describe code      | qwen2.5-coder:3b |
-| d   | Dictionary Lookup  | llama3.2:1b      |
-| e   | Custom prompt      | deepseek-r1:7b   |
-| i   | Minibuffer Prompt  |                  |
-| x   | Kill request       |                  |
-| q   | Quit               |                  |
-      
 * Alternative LLM based packages
 
 To the best of my knowledge, there are currently a few Emacs packages related to Ollama, though the ecosystem is still relatively young:
