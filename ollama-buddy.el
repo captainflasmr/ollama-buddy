@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama Buddy: Your Friendly AI Assistant -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.7.1
+;; Version: 0.7.2
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -31,31 +31,35 @@
 ;;; Quick Start
 ;;
 ;; (use-package ollama-buddy
-;;    :load-path "path/to/ollama-buddy"
-;;    :bind ("C-c o" . ollama-buddy-menu)
-;;    :custom ollama-buddy-default-model "llama:latest")
+;;    :ensure t
+;;    :bind ("C-c o" . ollama-buddy-menu))
 ;;
-;; OR
-;;
-;; (add-to-list 'load-path "path/to/ollama-buddy")
-;; (require 'ollama-buddy)
-;; (global-set-key (kbd "C-c o") #'ollama-buddy-menu)
-;; (setq ollama-buddy-default-model "llama:latest")
-;;
-;; OR (when added to MELPA)
+;; OR (to select the default model)
 ;;
 ;; (use-package ollama-buddy
 ;;    :ensure t
 ;;    :bind ("C-c o" . ollama-buddy-menu)
 ;;    :custom ollama-buddy-default-model "llama:latest")
 ;;
+;; OR (use-package local)
+;;
+;; (use-package ollama-buddy
+;;    :load-path "path/to/ollama-buddy"
+;;    :bind ("C-c o" . ollama-buddy-menu)
+;;    :custom ollama-buddy-default-model "llama:latest")
+;;
+;; OR (the old way)
+;;
+;; (add-to-list 'load-path "path/to/ollama-buddy")
+;; (require 'ollama-buddy)
+;; (global-set-key (kbd "C-c o") #'ollama-buddy-menu)
+;; (setq ollama-buddy-default-model "llama:latest")
+;;
 ;;; Usage
 ;;
-;; M-x ollama-buddy-menu
+;; M-x ollama-buddy-menu / C-c o
 ;;
-;; OR
-;;
-;; C-c o
+;; and the chat assistant buffer is presented and off you go!
 ;;
 ;;; Code:
 
@@ -161,7 +165,7 @@ These are the only parameters that will be sent to Ollama."
      :action ollama-buddy-roles-switch-role)
 
     (create-role
-     :key ?N
+     :key ?E
      :description "Create new role"
      :model nil
      :action ollama-buddy-role-creator-create-new-role)
@@ -295,25 +299,11 @@ Each command is defined with:
 (defun ollama-buddy-toggle-params-in-header ()
   "Toggle display of modified parameters in the header line."
   (interactive)
-  (setq ollama-buddy-show-params-in-header 
+  (setq ollama-buddy-show-params-in-header
         (not ollama-buddy-show-params-in-header))
   (ollama-buddy--update-status ollama-buddy--status)
-  (message "Parameters in header: %s" 
+  (message "Parameters in header: %s"
            (if ollama-buddy-show-params-in-header "enabled" "disabled")))
-
-(defun ollama-buddy-params-reset-param (param)
-  "Reset a specific parameter PARAM to its default value."
-  (interactive
-   (list (intern (completing-read "Select parameter to reset: "
-                                  (mapcar #'symbol-name ollama-buddy-params-modified)
-                                  nil t))))
-  (when (memq param ollama-buddy-params-modified)
-    (setf (alist-get param ollama-buddy-params-active)
-          (alist-get param ollama-buddy-params-defaults))
-    (setq ollama-buddy-params-modified 
-          (delete param ollama-buddy-params-modified))
-    (message "Reset %s to default value: %s" 
-             param (alist-get param ollama-buddy-params-defaults))))
 
 (defun ollama-buddy-params-reset ()
   "Reset all parameters to default values and clear modification tracking."
@@ -322,27 +312,6 @@ Each command is defined with:
         ollama-buddy-params-modified nil)
   (ollama-buddy--update-status "Params Reset")
   (message "Ollama parameters reset to defaults"))
-
-(defun ollama-buddy-params-apply-profile (profile-name)
-  "Apply a parameter profile by PROFILE-NAME."
-  (interactive
-   (list (completing-read "Select parameter profile: "
-                          (mapcar #'car ollama-buddy-params-profiles)
-                          nil t)))
-  (let ((profile-params (cdr (assoc profile-name ollama-buddy-params-profiles))))
-    (if profile-params
-        (progn
-          ;; Reset everything to defaults first
-          (setq ollama-buddy-params-active (copy-tree ollama-buddy-params-defaults)
-                ollama-buddy-params-modified nil)
-          
-          ;; Apply profile values and track modifications
-          (dolist (param profile-params)
-            (setf (alist-get (car param) ollama-buddy-params-active) (cdr param))
-            (add-to-list 'ollama-buddy-params-modified (car param)))
-          
-          (message "Applied parameter profile: %s" profile-name))
-      (message "Profile not found: %s" profile-name))))
 
 (defun ollama-buddy-params-get-for-request ()
   "Get only the modified parameters formatted for the Ollama API request."
@@ -356,30 +325,6 @@ Each command is defined with:
     (let ((params-alist nil))
       (maphash (lambda (k v) (push (cons k v) params-alist)) params)
       params-alist)))
-
-(defun ollama-buddy-params-save-profile (profile-name)
-  "Save current parameters as a new profile with PROFILE-NAME."
-  (interactive "sEnter profile name: ")
-  (if (assoc profile-name ollama-buddy-params-profiles)
-      (when (yes-or-no-p (format "Profile '%s' already exists. Overwrite? " profile-name))
-        (setf (alist-get profile-name ollama-buddy-params-profiles nil nil #'string=)
-              (copy-tree ollama-buddy-params-active))
-        (message "Updated profile: %s" profile-name))
-    (push (cons profile-name (copy-tree ollama-buddy-params-active))
-          ollama-buddy-params-profiles)
-    (message "Created new profile: %s" profile-name)))
-
-(defun ollama-buddy-params-delete-profile (profile-name)
-  "Delete a parameter profile by PROFILE-NAME."
-  (interactive
-   (list (completing-read "Select profile to delete: "
-                          (remove "Default" (mapcar #'car ollama-buddy-params-profiles))
-                          nil t)))
-  (if (string= profile-name "Default")
-      (message "Cannot delete the Default profile")
-    (setq ollama-buddy-params-profiles
-          (assoc-delete-all profile-name ollama-buddy-params-profiles #'string=))
-    (message "Deleted profile: %s" profile-name)))
 
 (defun ollama-buddy-params-edit (param)
   "Edit a specific parameter PARAM interactively."
@@ -412,18 +357,18 @@ Each command is defined with:
     
     ;; Track whether this parameter is being modified or reset to default
     (if (equal new-value default-value)
-        (setq ollama-buddy-params-modified 
+        (setq ollama-buddy-params-modified
               (delete param ollama-buddy-params-modified))
       (add-to-list 'ollama-buddy-params-modified param))
     
     ;; Update the parameter value
     (setf (alist-get param ollama-buddy-params-active) new-value)
     (ollama-buddy--update-status "Params changed")
-    (message "Updated %s to %s%s" 
-             param 
+    (message "Updated %s to %s%s"
+             param
              new-value
              (if (equal new-value default-value)
-                 " (default value)" 
+                 " (default value)"
                ""))))
 
 (defun ollama-buddy-params-display ()
@@ -450,19 +395,19 @@ Each command is defined with:
           (dolist (param generation-params)
             (when-let ((value (alist-get param ollama-buddy-params-active))
                        (default-value (alist-get param ollama-buddy-params-defaults)))
-              (let ((modified-marker (if (memq param ollama-buddy-params-modified) 
-                                         (propertize "* " 'face '(:foreground "red")) 
+              (let ((modified-marker (if (memq param ollama-buddy-params-modified)
+                                         (propertize "* " 'face '(:foreground "red"))
                                        "  "))
                     (value-display (cond
                                     ((vectorp value) (format "[%s]"
                                                              (mapconcat #'identity value ", ")))
                                     (t value))))
-                (insert (format "%s%-20s: %s%s\n" 
+                (insert (format "%s%-20s: %s%s\n"
                                 modified-marker
-                                param 
+                                param
                                 value-display
-                                (if (equal value default-value) 
-                                    "" 
+                                (if (equal value default-value)
+                                    ""
                                   (format " (default: %s)" default-value)))))))
           
           ;; Display resource parameters
@@ -471,19 +416,19 @@ Each command is defined with:
           (dolist (param resource-params)
             (when-let ((value (alist-get param ollama-buddy-params-active))
                        (default-value (alist-get param ollama-buddy-params-defaults)))
-              (let ((modified-marker (if (memq param ollama-buddy-params-modified) 
-                                         (propertize "* " 'face '(:foreground "red")) 
+              (let ((modified-marker (if (memq param ollama-buddy-params-modified)
+                                         (propertize "* " 'face '(:foreground "red"))
                                        "  ")))
-                (insert (format "%s%-20s: %s%s\n" 
+                (insert (format "%s%-20s: %s%s\n"
                                 modified-marker
-                                param 
+                                param
                                 value
-                                (if (equal value default-value) 
-                                    "" 
+                                (if (equal value default-value)
+                                    ""
                                   (format " (default: %s)" default-value)))))))))
       
       ;; Display modified parameter count
-      (insert (format "\n%d parameters will be sent to Ollama%s\n" 
+      (insert (format "\n%d parameters will be sent to Ollama%s\n"
                       (length ollama-buddy-params-modified)
                       (if (zerop (length ollama-buddy-params-modified))
                           " (all default values)"
@@ -491,7 +436,7 @@ Each command is defined with:
     (display-buffer buf)))
 
 (defcustom ollama-buddy-convert-markdown-to-org t
-  "Whether to automatically convert markdown to org-mode format in responses."
+  "Whether to automatically convert markdown to `org-mode' format in responses."
   :type 'boolean
   :group 'ollama-buddy)
 
@@ -503,12 +448,6 @@ Each command is defined with:
 
 (defcustom ollama-buddy-enable-model-colors t
   "Whether to show model colors."
-  :type 'boolean
-  :group 'ollama-buddy)
-
-(defcustom ollama-buddy-enable-background-monitor nil
-  "Whether to enable background monitoring of Ollama connection.
-When nil, status checks only occur during user interactions."
   :type 'boolean
   :group 'ollama-buddy)
 
@@ -672,7 +611,7 @@ When nil, status checks only occur during user interactions."
     (message "Debug mode disabled")))
 
 (defun ollama-buddy--md-to-org-convert-region (start end)
-  "Convert the region from START to END from Markdown to Org-mode format"
+  "Convert the region from START to END from Markdown to Org-mode format."
   (save-excursion
     (save-restriction
       (narrow-to-region start end)
@@ -794,60 +733,14 @@ Returns the full prompt text ready to be sent."
     full-prompt))
 
 (defun ollama-buddy-toggle-markdown-conversion ()
-  "Toggle automatic conversion of markdown to org-mode format."
+  "Toggle automatic conversion of markdown to `org-mode' format."
   (interactive)
-  (setq ollama-buddy-convert-markdown-to-org 
+  (setq ollama-buddy-convert-markdown-to-org
         (not ollama-buddy-convert-markdown-to-org))
   (ollama-buddy--update-status
    (if ollama-buddy-convert-markdown-to-org "Markdown conversion enabled" "Markdown conversion disabled"))
   (message "Markdown to Org conversion: %s"
            (if ollama-buddy-convert-markdown-to-org "enabled" "disabled")))
-
-(defun ollama-buddy--process-markdown-to-org (text)
-  "Convert markdown-formatted TEXT to org-mode format."
-  ;; This is a basic implementation that handles common markdown elements
-  ;; Implement your custom conversion logic here instead of using pandoc
-  (let ((processed-text text))
-    ;; Convert code blocks (```language ... ```) to org code blocks (#+BEGIN_SRC language ... #+END_SRC)
-    (setq processed-text 
-          (replace-regexp-in-string 
-           "```\\([a-zA-Z0-9]*\\)\\([^`]+\\)```" 
-           "#+BEGIN_SRC \\1\\2#+END_SRC" 
-           processed-text))
-    
-    ;; Convert inline code (`code`) to org verbatim (=code=)
-    (setq processed-text 
-          (replace-regexp-in-string 
-           "`\\([^`\n]+\\)`" 
-           "=\\1=" 
-           processed-text))
-    
-    ;; Convert headings (## Heading) to org headings (*** Heading)
-    (setq processed-text 
-          (replace-regexp-in-string 
-           "^\\(#+\\) \\(.*\\)$" 
-           (lambda (match)
-             (let* ((hash-marks (match-string 1 match))
-                    (heading-text (match-string 2 match))
-                    (level (+ 2 (length hash-marks))))  ;; Start at level 3 since we already use levels 1-2
-               (format "%s %s" (make-string level ?*) heading-text)))
-           processed-text))
-    
-    ;; Convert bold (**text**) to org bold (*text*)
-    (setq processed-text 
-          (replace-regexp-in-string 
-           "\\*\\*\\([^*]+\\)\\*\\*" 
-           "*\\1*" 
-           processed-text))
-    
-    ;; Convert italic (*text*) to org italic (/text/)
-    (setq processed-text 
-          (replace-regexp-in-string 
-           "\\*\\([^*]+\\)\\*" 
-           "/\\1/" 
-           processed-text))
-    
-    processed-text))
 
 (defun ollama-buddy--ensure-sessions-directory ()
   "Create the ollama-buddy sessions directory if it doesn't exist."
@@ -861,15 +754,15 @@ If SESSION-NAME is not provided, prompt for a name."
   (ollama-buddy--ensure-sessions-directory)
   
   (let* ((current-name (or ollama-buddy--current-session ""))
-         (default-name (if (string-empty-p current-name) 
-                           "default-session" 
+         (default-name (if (string-empty-p current-name)
+                           "default-session"
                          current-name))
-         (session-name (or session-name 
-                           (read-string 
+         (session-name (or session-name
+                           (read-string
                             (format "Session name (default: %s): " default-name)
                             nil nil default-name)))
-         (session-file (expand-file-name 
-                        (format "ollama-buddy-session--%s.el" session-name) 
+         (session-file (expand-file-name
+                        (format "ollama-buddy-session--%s.el" session-name)
                         ollama-buddy-sessions-directory)))
     
     ;; Write the session file
@@ -879,8 +772,8 @@ If SESSION-NAME is not provided, prompt for a name."
       (insert (format ";; Created: %s\n\n" (format-time-string "%Y-%m-%d %H:%M:%S")))
       
       ;; Save current model
-      (insert (format "(setq ollama-buddy--current-model %S)\n\n" 
-                      (or ollama-buddy--current-model 
+      (insert (format "(setq ollama-buddy--current-model %S)\n\n"
+                      (or ollama-buddy--current-model
                           ollama-buddy-default-model)))
       
       ;; Save conversation history by model
@@ -888,7 +781,7 @@ If SESSION-NAME is not provided, prompt for a name."
       (insert "      (let ((table (make-hash-table :test 'equal)))\n")
       
       ;; For each model with history
-      (maphash 
+      (maphash
        (lambda (model history)
          (when history  ;; Only include non-empty histories
            (insert (format "        (puthash %S\n" model))
@@ -900,8 +793,8 @@ If SESSION-NAME is not provided, prompt for a name."
       
       ;; Set the current history variable for backward compatibility
       (insert "(setq ollama-buddy--conversation-history\n")
-      (insert (format "      (gethash %S ollama-buddy--conversation-history-by-model nil))\n\n" 
-                      (or ollama-buddy--current-model 
+      (insert (format "      (gethash %S ollama-buddy--conversation-history-by-model nil))\n\n"
+                      (or ollama-buddy--current-model
                           ollama-buddy-default-model)))
       
       ;; Set current session name
@@ -920,10 +813,10 @@ If SESSION-NAME is not provided, prompt for a name."
   (interactive)
   (ollama-buddy--ensure-sessions-directory)
   
-  (let* ((session-files (directory-files 
-                         ollama-buddy-sessions-directory nil 
+  (let* ((session-files (directory-files
+                         ollama-buddy-sessions-directory nil
                          "^ollama-buddy-session--.*\\.el$"))
-         (session-names (mapcar 
+         (session-names (mapcar
                          (lambda (file)
                            (when (string-match "ollama-buddy-session--\\(.*\\)\\.el$" file)
                              (match-string 1 file)))
@@ -934,11 +827,11 @@ If SESSION-NAME is not provided, prompt for a name."
         (message "No saved sessions found in %s" ollama-buddy-sessions-directory)
       
       (let* ((chosen-name (or session-name
-                              (completing-read 
-                               "Load session: " 
+                              (completing-read
+                               "Load session: "
                                session-names nil t)))
-             (session-file (expand-file-name 
-                            (format "ollama-buddy-session--%s.el" chosen-name) 
+             (session-file (expand-file-name
+                            (format "ollama-buddy-session--%s.el" chosen-name)
                             ollama-buddy-sessions-directory)))
         
         ;; Check if file exists
@@ -1016,8 +909,8 @@ If SESSION-NAME is not provided, prompt for a name."
   (interactive)
   (ollama-buddy--ensure-sessions-directory)
   
-  (let* ((session-files (directory-files 
-                         ollama-buddy-sessions-directory nil 
+  (let* ((session-files (directory-files
+                         ollama-buddy-sessions-directory nil
                          "^ollama-buddy-session--.*\\.el$"))
          (buf (get-buffer-create "*Ollama Buddy Sessions*")))
     
@@ -1033,7 +926,7 @@ If SESSION-NAME is not provided, prompt for a name."
               (let* ((session-name (match-string 1 file))
                      (file-path (expand-file-name file ollama-buddy-sessions-directory))
                      (attrs (file-attributes file-path))
-                     (mod-time (format-time-string 
+                     (mod-time (format-time-string
                                 "%Y-%m-%d %H:%M:%S"
                                 (file-attribute-modification-time attrs)))
                      (size (file-attribute-size attrs))
@@ -1047,7 +940,7 @@ If SESSION-NAME is not provided, prompt for a name."
                     (push (match-string 1) models)))
                 
                 ;; Display session info
-                (insert (propertize (format "- %s%s\n" 
+                (insert (propertize (format "- %s%s\n"
                                             session-name
                                             (if (string= session-name ollama-buddy--current-session)
                                                 " (current)" ""))
@@ -1056,9 +949,9 @@ If SESSION-NAME is not provided, prompt for a name."
                 (insert (format "  Size: %d bytes\n" size))
                 (when models
                   (insert "  Models: ")
-                  (insert (mapconcat 
+                  (insert (mapconcat
                            (lambda (model)
-                             (propertize model 
+                             (propertize model
                                          'face `(:foreground ,(ollama-buddy--get-model-color model))))
                            (delete-dups models)
                            ", "))
@@ -1078,10 +971,10 @@ If SESSION-NAME is not provided, prompt for a name."
   (interactive)
   (ollama-buddy--ensure-sessions-directory)
   
-  (let* ((session-files (directory-files 
-                         ollama-buddy-sessions-directory nil 
+  (let* ((session-files (directory-files
+                         ollama-buddy-sessions-directory nil
                          "^ollama-buddy-session--.*\\.el$"))
-         (session-names (mapcar 
+         (session-names (mapcar
                          (lambda (file)
                            (when (string-match "ollama-buddy-session--\\(.*\\)\\.el$" file)
                              (match-string 1 file)))
@@ -1092,11 +985,11 @@ If SESSION-NAME is not provided, prompt for a name."
         (message "No saved sessions found in %s" ollama-buddy-sessions-directory)
       
       (let* ((chosen-name (or session-name
-                              (completing-read 
-                               "Delete session: " 
+                              (completing-read
+                               "Delete session: "
                                session-names nil t)))
-             (session-file (expand-file-name 
-                            (format "ollama-buddy-session--%s.el" chosen-name) 
+             (session-file (expand-file-name
+                            (format "ollama-buddy-session--%s.el" chosen-name)
                             ollama-buddy-sessions-directory)))
         
         ;; Check if file exists
@@ -1120,8 +1013,8 @@ If SESSION-NAME is not provided, prompt for a name."
   (when (y-or-n-p "Are you sure? ")
     ;; Confirm if we have a current session
     (when (and ollama-buddy--current-session
-               (not (yes-or-no-p 
-                     (format "Start new session? Current session '%s' will be discarded unless saved. " 
+               (not (yes-or-no-p
+                     (format "Start new session? Current session '%s' will be discarded unless saved.  ?"
                              ollama-buddy--current-session))))
       (user-error "Operation cancelled"))
     
@@ -1139,17 +1032,12 @@ If SESSION-NAME is not provided, prompt for a name."
         (erase-buffer)
         (ollama-buddy-mode 1)
         (insert (ollama-buddy--create-intro-message))
+        (ollama-buddy--apply-model-colors-to-buffer)
         (ollama-buddy--prepare-prompt-area)))
     
     ;; Update status
     (ollama-buddy--update-status "New session started")
     (message "Started new session")))
-
-(defun ollama-buddy-sessions-open-directory ()
-  "Open the ollama-buddy sessions directory in Dired."
-  (interactive)
-  (ollama-buddy--ensure-sessions-directory)
-  (dired ollama-buddy-sessions-directory))
 
 ;; Auto-save session functionality
 (defcustom ollama-buddy-auto-save-session nil
@@ -1161,12 +1049,6 @@ If SESSION-NAME is not provided, prompt for a name."
   "Name to use for auto-saved sessions."
   :type 'string
   :group 'ollama-buddy)
-
-(defun ollama-buddy-sessions-maybe-auto-save ()
-  "Auto-save session if enabled and there's content to save."
-  (when (and ollama-buddy-auto-save-session
-             (> (hash-table-count ollama-buddy--conversation-history-by-model) 0))
-    (ollama-buddy-sessions-save ollama-buddy-auto-save-session-name)))
 
 (defun ollama-buddy--add-to-history (role content)
   "Add message with ROLE and CONTENT to conversation history for current model."
@@ -1223,9 +1105,9 @@ With prefix argument ALL-MODELS, clear history for all models."
   "Toggle conversation history on/off."
   (interactive)
   (setq ollama-buddy-history-enabled (not ollama-buddy-history-enabled))
-  (ollama-buddy--update-status 
+  (ollama-buddy--update-status
    (if ollama-buddy-history-enabled "History enabled" "History disabled"))
-  (message "Ollama conversation history %s" 
+  (message "Ollama conversation history %s"
            (if ollama-buddy-history-enabled "enabled" "disabled")))
 
 (defun ollama-buddy--display-history (&optional all-models)
@@ -1247,13 +1129,13 @@ With prefix argument ALL-MODELS, show history for all models."
                 (maphash
                  (lambda (model history)
                    (let ((history-count (/ (length history) 2)))
-                     (insert (format "== Model: %s (%d message pairs) ==\n\n" 
+                     (insert (format "== Model: %s (%d message pairs) ==\n\n"
                                      model history-count))
                      (dolist (msg history)
                        (let* ((role (alist-get 'role msg))
                               (content (alist-get 'content msg))
-                              (role-face (if (string= role "user") 
-                                             '(:inherit bold) 
+                              (role-face (if (string= role "user")
+                                             '(:inherit bold)
                                            '(:inherit bold))))
                          (insert (propertize (format "[%s]: " (upcase role)) 'face role-face))
                          (insert (format "%s\n\n" content))))
@@ -1266,15 +1148,15 @@ With prefix argument ALL-MODELS, show history for all models."
             (if (null history)
                 (insert (format "No conversation history available for model %s." model))
               (let ((history-count (/ (length history) 2)))
-                (insert (format "Current history for %s: %d message pairs\n\n" 
+                (insert (format "Current history for %s: %d message pairs\n\n"
                                 model history-count))
                 
                 ;; Display the history in chronological order
                 (dolist (msg history)
                   (let* ((role (alist-get 'role msg))
                          (content (alist-get 'content msg))
-                         (role-face (if (string= role "user") 
-                                        '(:inherit bold :foreground "green") 
+                         (role-face (if (string= role "user")
+                                        '(:inherit bold :foreground "green")
                                       '(:inherit bold :foreground "blue"))))
                     (insert (propertize (format "[%s]: " (upcase role)) 'face role-face))
                     (insert (format "%s\n\n" content))))))))
@@ -1292,13 +1174,13 @@ With prefix argument ALL-MODELS, show history for all models."
              (> ollama-buddy--current-token-count 0))
     (let* ((current-time (float-time))
            (total-rate (if (> (- current-time ollama-buddy--current-token-start-time) 0)
-                           (/ ollama-buddy--current-token-count 
+                           (/ ollama-buddy--current-token-count
                               (- current-time ollama-buddy--current-token-start-time))
                          0)))
       
       ;; Update status with token information
-      (ollama-buddy--update-status 
-       (format "Processing... [%d tokens, %.1f t/s]" 
+      (ollama-buddy--update-status
+       (format "Processing... [%d tokens, %.1f t/s]"
                ollama-buddy--current-token-count total-rate))
       
       ;; Update tracking variables
@@ -1316,9 +1198,9 @@ With prefix argument ALL-MODELS, show history for all models."
         
         (if (null ollama-buddy--token-usage-history)
             (insert "No token usage data available yet.")
-          (let* ((total-tokens (apply #'+ (mapcar (lambda (info) (plist-get info :tokens)) 
+          (let* ((total-tokens (apply #'+ (mapcar (lambda (info) (plist-get info :tokens))
                                                   ollama-buddy--token-usage-history)))
-                 (avg-rate (/ (apply #'+ (mapcar (lambda (info) (plist-get info :rate)) 
+                 (avg-rate (/ (apply #'+ (mapcar (lambda (info) (plist-get info :rate))
                                                  ollama-buddy--token-usage-history))
                               (float (length ollama-buddy--token-usage-history)))))
             
@@ -1333,7 +1215,7 @@ With prefix argument ALL-MODELS, show history for all models."
                 (let* ((model (plist-get info :model))
                        (tokens (plist-get info :tokens))
                        (current (gethash model model-stats '(0 0))))
-                  (puthash model 
+                  (puthash model
                            (list (+ (car current) tokens) (1+ (cadr current)))
                            model-stats)))
               
@@ -1341,7 +1223,7 @@ With prefix argument ALL-MODELS, show history for all models."
                          (let ((model-color (ollama-buddy--get-model-color model)))
                            (insert "  ")
                            (insert (propertize model 'face `(:foreground ,model-color)))
-                           (insert (format ": %d tokens in %d responses\n" 
+                           (insert (format ": %d tokens in %d responses\n"
                                            (car stats) (cadr stats)))))
                        model-stats))
             
@@ -1352,9 +1234,9 @@ With prefix argument ALL-MODELS, show history for all models."
                 (let ((model (plist-get info :model))
                       (tokens (plist-get info :tokens))
                       (rate (plist-get info :rate))
-                      (time (format-time-string "%Y-%m-%d %H:%M:%S" 
+                      (time (format-time-string "%Y-%m-%d %H:%M:%S"
                                                 (plist-get info :timestamp))))
-                  (insert (format "  %s: %d tokens (%.2f t/s) at %s\n" 
+                  (insert (format "  %s: %d tokens (%.2f t/s) at %s\n"
                                   model tokens rate time))))))
           
           (insert "\n\nUse M-x ollama-buddy-toggle-token-display to toggle display of token stats in responses")
@@ -1465,8 +1347,8 @@ Adapts the color to the current theme (light or dark) for better visibility."
              (adjusted-lightness (if is-dark-background
                                      (min 85 (+ lightness 10))
                                    (max 15 (- lightness 10))))
-             (adjusted-rgb (color-hsl-to-rgb (/ hue 360.0) 
-                                             (/ adjusted-saturation 100.0) 
+             (adjusted-rgb (color-hsl-to-rgb (/ hue 360.0)
+                                             (/ adjusted-saturation 100.0)
                                              (/ adjusted-lightness 100.0))))
         (setq target-color (apply #'color-rgb-to-hex adjusted-rgb))))
     
@@ -1487,6 +1369,79 @@ Adapts the color to the current theme (light or dark) for better visibility."
         (cl-loop for model in (ollama-buddy--get-models)
                  for letter across "abcdefghijklmnopqrstuvwxyz"
                  collect (cons letter model))))
+
+(defun ollama-buddy--format-models-with-letters-plain ()
+  "Format models with letter assignments for display without color properties."
+  (when-let* ((models-alist ollama-buddy--model-letters)
+              (total (length models-alist))
+              (rows (ceiling (/ total 2.0))))
+    (let* ((formatted-pairs
+            (cl-loop for row below rows
+                     collect
+                     (cl-loop for col below 2
+                              for idx = (+ (* col rows) row)
+                              when (< idx total)
+                              collect (nth idx models-alist))))
+           (max-width (apply #'max
+                             (mapcar (lambda (pair)
+                                       (length (cdr pair)))
+                                     models-alist)))
+           (format-str (format "  (%%c) %%-%ds  %%s" max-width)))
+      (concat (mapconcat
+               (lambda (row)
+                 (format format-str
+                         (caar row)
+                         (if (cdar row) (cdar row) "")
+                         (if (cdr row)
+                             (format "(%c) %s"
+                                     (caadr row)
+                                     (if (cdadr row) (cdadr row) ""))
+                           "")))
+               formatted-pairs
+               "\n")
+              "\n\n"))))
+
+(defun ollama-buddy--apply-model-colors-to-buffer ()
+  "Apply color overlays to models in the buffer after text insertion."
+  (save-excursion
+    ;; First, find the Available Models section
+    (goto-char (point-max))
+    (when (search-backward "** Available Models" nil t)
+      (forward-line 2) ;; Skip the header and empty line
+      
+      ;; Now we're at the start of the model list
+      (let ((models-end (save-excursion
+                          (if (search-forward "** Quick Tips" nil t)
+                              (progn (forward-line -1) (point))
+                            (point-max)))))
+        
+        ;; Iterate through the model letters section
+        (while (< (point) models-end)
+          ;; Look for a pattern that captures both columns in one regex
+          ;; Format: (a) model1  (b) model2
+          (when (looking-at "\\s-*(\\([a-z]\\)) \\([^ \t\n]+\\)\\(.*?(\\([a-z]\\)) \\([^ \t\n]+\\)\\)?")
+            ;; First column
+            (let* ((model1 (match-string 2))
+                   (model1-start (match-beginning 2))
+                   (model1-end (match-end 2))
+                   (color1 (ollama-buddy--get-model-color model1)))
+              
+              ;; Create overlay for first model
+              (let ((overlay (make-overlay model1-start model1-end)))
+                (overlay-put overlay 'face `(:foreground ,color1 :weight bold))))
+            
+            ;; Second column (if it exists)
+            (when (match-string 3) ;; Check if we have a second column
+              (let* ((model2 (match-string 5))
+                     (model2-start (match-beginning 5))
+                     (model2-end (match-end 5))
+                     (color2 (ollama-buddy--get-model-color model2)))
+                
+                ;; Create overlay for second model
+                (let ((overlay (make-overlay model2-start model2-end)))
+                  (overlay-put overlay 'face `(:foreground ,color2 :weight bold))))))
+          
+          (forward-line 1))))))
 
 (defun ollama-buddy--format-models-with-letters ()
   "Format models with letter assignments for display."
@@ -1546,14 +1501,14 @@ Adapts the color to the current theme (light or dark) for better visibility."
   "Scan the preset directory and extract role names from filenames."
   (if (not (file-directory-p ollama-buddy-roles-directory))
       (progn
-        (message "Error: Ollama Buddy roles directory does not exist: %s" 
+        (message "Error: Ollama Buddy roles directory does not exist: %s"
                  ollama-buddy-roles-directory)
         nil)
     (let ((files (directory-files ollama-buddy-roles-directory nil "^ollama-buddy--preset__.*\\.el$"))
           roles)
       (if (null files)
           (progn
-            (message "No role preset files found in directory: %s" 
+            (message "No role preset files found in directory: %s"
                      ollama-buddy-roles-directory)
             nil)
         (dolist (file files)
@@ -1563,8 +1518,8 @@ Adapts the color to the current theme (light or dark) for better visibility."
 
 (defun ollama-buddy-roles--load-role-preset (role)
   "Load the preset file for ROLE."
-  (let ((preset-file (expand-file-name 
-                      (format "ollama-buddy--preset__%s.el" role) 
+  (let ((preset-file (expand-file-name
+                      (format "ollama-buddy--preset__%s.el" role)
                       ollama-buddy-roles-directory)))
     (if (file-exists-p preset-file)
         (progn
@@ -1579,9 +1534,9 @@ Adapts the color to the current theme (light or dark) for better visibility."
   (interactive)
   (let ((roles (ollama-buddy-roles--get-available-roles)))
     (if (null roles)
-        (message "No role presets available. Create some files in %s first." 
+        (message "No role presets available. Create some files in %s first."
                  ollama-buddy-roles-directory)
-      (let ((role (completing-read 
+      (let ((role (completing-read
                    (format "Select role (current: %s): " ollama-buddy-roles--current-role)
                    roles nil t)))
         (ollama-buddy-roles--load-role-preset role)))))
@@ -1606,12 +1561,12 @@ Adapts the color to the current theme (light or dark) for better visibility."
           :description description
           :model model
           :prompt prompt
-          :action `(lambda () 
+          :action `(lambda ()
                      (ollama-buddy--send-with-command ',symbol)))))
 
 (defun ollama-buddy-role-creator-generate-role-file (role-name commands)
   "Generate a role file for ROLE-NAME with COMMANDS."
-  (let ((file-path (expand-file-name 
+  (let ((file-path (expand-file-name
                     (format "ollama-buddy--preset__%s.el" role-name)
                     ollama-buddy-roles-directory)))
     ;; Create directory if it doesn't exist
@@ -1659,26 +1614,19 @@ Adapts the color to the current theme (light or dark) for better visibility."
       (when (y-or-n-p "Load this role now? ")
         (ollama-buddy-roles--load-role-preset role-name)))))
 
-;; Initialize with default role if it exists
-(defun ollama-buddy-roles-initialize ()
-  "Initialize the roles system and load the default role if available."
-  (let ((roles (ollama-buddy-roles--get-available-roles)))
-    (when (and roles (member "default" roles))
-      (ollama-buddy-roles--load-role-preset "default"))))
-
 ;; Helper function to create the roles directory
 (defun ollama-buddy-roles-create-directory ()
   "Create the ollama-buddy roles directory if it doesn't exist."
   (interactive)
   (if (file-exists-p ollama-buddy-roles-directory)
-      (message "Ollama Buddy roles directory already exists: %s" 
+      (message "Ollama Buddy roles directory already exists: %s"
                ollama-buddy-roles-directory)
-    (if (yes-or-no-p 
-         (format "Create Ollama Buddy roles directory at %s? " 
+    (if (yes-or-no-p
+         (format "Create Ollama Buddy roles directory at %s? "
                  ollama-buddy-roles-directory))
         (progn
           (make-directory ollama-buddy-roles-directory t)
-          (message "Created Ollama Buddy roles directory: %s" 
+          (message "Created Ollama Buddy roles directory: %s"
                    ollama-buddy-roles-directory))
       (message "Directory creation cancelled."))))
 
@@ -1687,8 +1635,8 @@ Adapts the color to the current theme (light or dark) for better visibility."
   "Open the ollama-buddy roles directory in Dired."
   (interactive)
   (if (not (file-directory-p ollama-buddy-roles-directory))
-      (if (yes-or-no-p 
-           (format "Roles directory doesn't exist. Create it at %s? " 
+      (if (yes-or-no-p
+           (format "Roles directory doesn't exist.  Create it at %s? "
                    ollama-buddy-roles-directory))
           (progn
             (make-directory ollama-buddy-roles-directory t)
@@ -1751,20 +1699,20 @@ ACTUAL-MODEL is the model being used instead."
     (let* ((model (or ollama-buddy--current-model
                       ollama-buddy-default-model
                       "No Model"))
-           (history (when (and ollama-buddy-show-history-indicator 
+           (history (when (and ollama-buddy-show-history-indicator
                                ollama-buddy-history-enabled)
-                      (let ((history-count (/ (length 
-                                               (gethash model 
-                                                        ollama-buddy--conversation-history-by-model 
-                                                        nil)) 
+                      (let ((history-count (/ (length
+                                               (gethash model
+                                                        ollama-buddy--conversation-history-by-model
+                                                        nil))
                                               2)))
                         (format " [H:%d]" history-count))))
            (params (when ollama-buddy-show-params-in-header
                      (let ((param-str
-                            (mapconcat 
+                            (mapconcat
                              (lambda (param)
                                (let ((value (alist-get param ollama-buddy-params-active)))
-                                 (format "%s:%s" 
+                                 (format "%s:%s"
                                          (ollama-buddy--param-shortname param)
                                          (cond
                                           ((floatp value) (format "%.1f" value))
@@ -1792,11 +1740,6 @@ ACTUAL-MODEL is the model being used instead."
                (propertize (format " [Using %s instead of %s]" actual-model original-model)
                            'face '(:foreground "orange" :weight bold))))))))
 
-(defun ollama-buddy--ensure-running ()
-  "Ensure Ollama is running and update status accordingly."
-  (unless (ollama-buddy--check-status)
-    (user-error "Ollama is not running.  Please start Ollama server")))
-
 (defun ollama-buddy--initialize-chat-buffer ()
   "Initialize the chat buffer and check Ollama status."
   (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
@@ -1806,6 +1749,8 @@ ACTUAL-MODEL is the model being used instead."
       (ollama-buddy-mode 1)
       (ollama-buddy--check-status)
       (insert (ollama-buddy--create-intro-message))
+      ;; Apply color overlays to the inserted text
+      (ollama-buddy--apply-model-colors-to-buffer)
       ;; now set up default model if none exist
       (when (not ollama-buddy-default-model)
         ;; just get the first model
@@ -1826,7 +1771,7 @@ ACTUAL-MODEL is the model being used instead."
       (goto-char (point-max))
       (let ((inhibit-read-only t)
             (start-point (point)))
-        (insert (format "\n=== MESSAGE %s ===\n" 
+        (insert (format "\n=== MESSAGE %s ===\n"
                         (format-time-string "%H:%M:%S.%3N")))
         (insert output "\n")
         (save-excursion
@@ -1875,7 +1820,7 @@ ACTUAL-MODEL is the model being used instead."
 
           ;; Track the complete response for history
           (when (boundp 'ollama-buddy--current-response)
-            (setq ollama-buddy--current-response 
+            (setq ollama-buddy--current-response
                   (concat (or ollama-buddy--current-response "") text)))
           (unless (boundp 'ollama-buddy--current-response)
             (setq ollama-buddy--current-response text))
@@ -1896,8 +1841,8 @@ ACTUAL-MODEL is the model being used instead."
               (let ((response-end (point-max)))
                 (when (and (boundp 'ollama-buddy--response-start-position)
                            ollama-buddy--response-start-position)
-                  (ollama-buddy--md-to-org-convert-region 
-                   ollama-buddy--response-start-position 
+                  (ollama-buddy--md-to-org-convert-region
+                   ollama-buddy--response-start-position
                    response-end)
                   ;; Reset the marker after conversion
                   (makunbound 'ollama-buddy--response-start-position))))
@@ -1929,7 +1874,7 @@ ACTUAL-MODEL is the model being used instead."
               
               ;; Display token info if enabled
               (when ollama-buddy-display-token-stats
-                (insert (format "\n\n*** Token Stats\n[%d tokens in %.1fs, %.1f tokens/sec]" 
+                (insert (format "\n\n*** Token Stats\n[%d tokens in %.1fs, %.1f tokens/sec]"
                                 ollama-buddy--current-token-count
                                 elapsed-time
                                 token-rate)))
@@ -1965,7 +1910,7 @@ ACTUAL-MODEL is the model being used instead."
               ;; Not in multishot mode, just show the prompt
               (progn
                 (ollama-buddy--prepare-prompt-area)
-                (ollama-buddy--update-status (format "Finished [%d tokens, %.1f t/s]" 
+                (ollama-buddy--update-status (format "Finished [%d tokens, %.1f t/s]"
                                                      (plist-get (car ollama-buddy--token-usage-history) :tokens)
                                                      (plist-get (car ollama-buddy--token-usage-history) :rate)))))))
         (when window
@@ -2003,8 +1948,8 @@ ACTUAL-MODEL is the model being used instead."
     (if (string= status "Completed")
         (let ((last-info (car ollama-buddy--token-usage-history)))
           (if last-info
-              (ollama-buddy--update-status 
-               (format "Stream %s [%d tokens, %.1f t/s]" 
+              (ollama-buddy--update-status
+               (format "Stream %s [%d tokens, %.1f t/s]"
                        status
                        (plist-get last-info :tokens)
                        (plist-get last-info :rate)))
@@ -2043,6 +1988,8 @@ ACTUAL-MODEL is the model being used instead."
     (skip-chars-backward "\n")
     (delete-region (point) (point-max)))
   (insert (ollama-buddy--create-intro-message))
+  ;; Apply color overlays to the inserted text
+  (ollama-buddy--apply-model-colors-to-buffer)
   (ollama-buddy--prepare-prompt-area))
 
 (defun ollama-buddy--menu-custom-prompt ()
@@ -2086,7 +2033,7 @@ ACTUAL-MODEL is the model being used instead."
   (plist-get (cdr (ollama-buddy--get-command-def command-name)) prop))
 
 (defun ollama-buddy--text-after-prompt ()
-  "Get the text after the prompt:"
+  "Get the text after the prompt:."
   (interactive)
   (save-excursion
     (goto-char (point-max))
@@ -2153,7 +2100,7 @@ ACTUAL-MODEL is the model being used instead."
         (insert (ollama-buddy--create-intro-message)))
       
       ;; Add model info to response header
-      (insert (propertize (format "\n\n** [%s: RESPONSE]" model) 'face 
+      (insert (propertize (format "\n\n** [%s: RESPONSE]" model) 'face
                           `(:inherit bold :foreground ,(ollama-buddy--get-model-color model))) "\n\n")
       
       (when (and original-model model (not (string= original-model model)))
@@ -2239,7 +2186,7 @@ ACTUAL-MODEL is the model being used instead."
   (ollama-buddy--assign-model-letters)
   (let* ((models-section
           (when (ollama-buddy--ollama-running)
-            (ollama-buddy--format-models-with-letters)))
+            (ollama-buddy--format-models-with-letters-plain)))
          (message-text
           (concat
            (when (= (buffer-size) 0)
@@ -2331,13 +2278,13 @@ ACTUAL-MODEL is the model being used instead."
          (prompt (concat "Enter model sequence - available ["
                          (apply #'string available-letters) "]: "))
          (sequence (read-string prompt))
-         (valid-sequence (cl-remove-if-not 
+         (valid-sequence (cl-remove-if-not
                           (lambda (c) (memq c available-letters))
                           (string-to-list sequence))))
     
     (when valid-sequence
       (let ((sequence-str (apply #'string valid-sequence)))
-        (message "Running multishot with %d models: %s" 
+        (message "Running multishot with %d models: %s"
                  (length valid-sequence) sequence-str)
         (ollama-buddy--multishot-send prompt-text sequence-str)))))
 
@@ -2349,8 +2296,8 @@ ACTUAL-MODEL is the model being used instead."
            (prompt-point (cdr prompt-data))
            (current-pos (or (get 'ollama-buddy--cycle-prompt-history 'history-position) 0))
            (new-pos (+ current-pos direction))
-           (new-pos (if (< new-pos 0) 
-                        0 
+           (new-pos (if (< new-pos 0)
+                        0
                       (min new-pos (1- (length ollama-buddy--prompt-history)))))
            (new-content (nth new-pos ollama-buddy--prompt-history)))
       
@@ -2391,7 +2338,7 @@ ACTUAL-MODEL is the model being used instead."
                                          (if model
                                              (let ((color (ollama-buddy--get-model-color model)))
                                                (concat desc " "
-                                                       (propertize (concat "[" model "]") 
+                                                       (propertize (concat "[" model "]")
                                                                    'face `(:inherit bold :foreground ,color))))
                                            desc)))
                                    (cons key (list desc-with-model action))))
@@ -2432,7 +2379,7 @@ ACTUAL-MODEL is the model being used instead."
                 
                 (colored-current-model
                  (propertize model 'face `(:foreground
-                                           ,(ollama-buddy--get-model-color 
+                                           ,(ollama-buddy--get-model-color
                                              model)
                                            :weight bold)))
                 (prompt
@@ -2509,25 +2456,6 @@ ACTUAL-MODEL is the model being used instead."
             (insert (propertize model 'face `(:foreground ,color)))
             (insert "\n")))))
     (display-buffer buf)))
-
-;;;###autoload
-(defun ollama-buddy-enable-monitor ()
-  "Enable background connection monitoring."
-  (interactive)
-  (setq ollama-buddy-enable-background-monitor t)
-  (unless ollama-buddy--connection-timer
-    (setq ollama-buddy--connection-timer
-          (run-with-timer 0 ollama-buddy-connection-check-interval
-                          #'ollama-buddy--monitor-connection))))
-
-;;;###autoload
-(defun ollama-buddy-disable-monitor ()
-  "Disable background connection monitoring."
-  (interactive)
-  (setq ollama-buddy-enable-background-monitor nil)
-  (when ollama-buddy--connection-timer
-    (cancel-timer ollama-buddy--connection-timer)
-    (setq ollama-buddy--connection-timer nil)))
 
 (defun ollama-buddy--send-prompt ()
   "Send the current prompt to a LLM."
@@ -2630,7 +2558,7 @@ ACTUAL-MODEL is the model being used instead."
     (define-key map (kbd "C-c N") #'ollama-buddy-sessions-new)
     (define-key map (kbd "C-c L") #'ollama-buddy-sessions-load)
     (define-key map (kbd "C-c S") #'ollama-buddy-sessions-save)
-    (define-key map (kbd "C-c P") 
+    (define-key map (kbd "C-c P")
                 (lambda () (interactive) (call-interactively #'ollama-buddy-params-edit)))
     (define-key map (kbd "C-c I") #'ollama-buddy-params-help)
     (define-key map (kbd "C-c G") #'ollama-buddy-params-display)
