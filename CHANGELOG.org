@@ -286,3 +286,23 @@ This test text src includes:
 - URLs and file paths
 - Mixed language content
 - JSON-like structures
+
+** Testing process
+
+Generally I run the following before I push out to github and hence MELPA:
+
+- Run ollama-buddy locally for all Emacs versions supported (see below)
+- Run =checkdoc=
+- =byte-compile= on ollama-buddy.el
+- =flycheck= on ollama-buddy.el
+- =package-lint= on ollama-buddy.el
+- Possibly =melpazoid= if I can be bothered!
+
+Also, remember to tag a stable main branch every now and then.
+
+** Previous Emacs versions tested and supported
+
+- [X] emacs-28.1
+- [X] emacs-29.3
+- [X] emacs-29.4
+- [X] emacs-30.1
