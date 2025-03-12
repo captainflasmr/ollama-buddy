@@ -11,6 +11,13 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-03-12> *0.7.3*
+
+Added function to associate models with menu commands
+
+- Added =ollama-buddy-add-model-to-menu-entry= autoload function
+- Enabled dynamic modification of command-model associations
+
 ** <2025-03-12> *0.7.2*
 
 Added menu model colours back in and removed some redundant code
@@ -202,107 +209,3 @@ Added query finished message.
 - Menu-driven interface
 - Region-based interactions
 - Model switching support
-
-* Testing
-
-Developing locally and running through and evaluating elisp code.
-
-Sending text below with various edge cases and challenging content to test =ollama-buddy= text handling capabilities.
-
-#+begin_src text
-=== Test Case 1: Special Characters and Symbols ===
-§ ¶ † ‡ ± ÷ × ≠ ≈ ~ ≤ ≥ µ ¢ £ € ¥ © ® ™
-⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ ⁿ ∞ ∑ ∏ √ ∂ ∆ ∇ ∫ ∮
-
-=== Test Case 2: Quotation Marks and Apostrophes ===
-"Smart quotes" vs "straight quotes"
-Don't mix up 'single' and 'curly' quotes
-She said: "I'm not sure about the 'nested quotes' here."
-
-=== Test Case 3: JSON-like Content ===
-{
-  "key": "value with \"quotes\"",
-  'problem': 'mixing quote types',
-  nested: {
-    "escape\\chars": "testing\nNewlines",
-    "numbers": 123.456
-  }
-}
-
-=== Test Case 4: Code Snippets with Mixed Syntax ===
-#+end_srcpython
-def test_func(x='test'):
-    return f"Value is {x}\n"
-#+begin_src 
-
-<!-- HTML Comment -->
-<div class="test">
-    'Mixed content' && "quotes"
-    =backticks= and $variables
-</div>
-
-=== Test Case 5: Unicode Characters ===
-🌟 Stars and 🌙 moons
-👨‍👩‍👧‍👦 Family emoji
-🏳️‍🌈 Complex emoji
-→ ← ↑ ↓ ↔ ↕ ⇄ ⇅
-
-=== Test Case 6: Whitespace and Line Endings ===
-Text with trailing spaces    
-Text with tabs		between
-Line with mixed endings\r\n
-No ending on last line without newline
-
-=== Test Case 7: Shell Special Characters ===
-echo "Testing $(command substitution)"
-grep -r "pattern" | awk '{print $1}' > output.txt
-PATH=$PATH:/new/path; export PATH
-
-=== Test Case 8: SQL-like Queries ===
-SELECT * FROM "users" WHERE name LIKE '%O''Brien%';
-INSERT INTO =table= ('column') VALUES ("mixed 'quotes'");
-
-=== Test Case 9: URLs and Paths ===
-https://example.com/path?param=value&special=%20space
-C:\Program Files\Test\path with spaces\file.txt
-/usr/local/bin/program\ with\ spaces
-
-=== Test Case 10: Mixed Languages ===
-English with español
-日本語 mixed with English
-Русский текст with 한글 and عربي
-
-#+end_src
-
-This test text src includes:
-
-- Various Unicode and special characters
-- Different types of quotation marks
-- Mixed programming syntax
-- Emojis and complex Unicode symbols
-- Different line endings
-- Shell commands with special characters
-- SQL queries with mixed quotes
-- URLs and file paths
-- Mixed language content
-- JSON-like structures
-
-** Testing process
-
-Generally I run the following before I push out to github and hence MELPA:
-
-- Run ollama-buddy locally for all Emacs versions supported (see below)
-- Run =checkdoc=
-- =byte-compile= on ollama-buddy.el
-- =flycheck= on ollama-buddy.el
-- =package-lint= on ollama-buddy.el
-- Possibly =melpazoid= if I can be bothered!
-
-Also, remember to tag a stable main branch every now and then.
-
-** Previous Emacs versions tested and supported
-
-- [X] emacs-28.1
-- [X] emacs-29.3
-- [X] emacs-29.4
-- [X] emacs-30.1
