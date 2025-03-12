@@ -12,6 +12,8 @@ This directory contains unit tests for the Ollama Buddy Emacs package.
 
 Developing locally and running through and evaluating elisp code.
 
+** NOTE: ALWAYS BE RUNNING ON VANILLA EMACS WITH NO OTHER CONFIG TO TRULLY TEST!!!
+
 ** Testing process
 
 Generally I run the following before I push out to github and hence MELPA:
