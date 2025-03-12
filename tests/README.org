@@ -1,0 +1,318 @@
+#+title: Ollama Buddy: Testing
+#+author: James Dyer
+#+email: captainflasmr@gmail.com
+#+language: en
+#+options: ':t toc:nil author:nil email:nil num:nil title:nil
+#+todo: TODO DOING | DONE
+#+startup: showall
+
+* Ollama Buddy Tests
+
+This directory contains unit tests for the Ollama Buddy Emacs package.
+
+Developing locally and running through and evaluating elisp code.
+
+** Testing process
+
+Generally I run the following before I push out to github and hence MELPA:
+
+- Run ollama-buddy locally for all Emacs versions supported (see below)
+- Run =checkdoc=
+- =byte-compile= on ollama-buddy.el
+- =flycheck= on ollama-buddy.el
+- =package-lint= on ollama-buddy.el
+- Possibly =melpazoid= if I can be bothered!
+
+Also, remember to tag a stable main branch every now and then.
+
+** Prompt Text Edge Cases
+
+Sending text below with various edge cases and challenging content to test =ollama-buddy= text handling capabilities.
+
+#+begin_src text
+=== Test Case 1: Special Characters and Symbols ===
+§ ¶ † ‡ ± ÷ × ≠ ≈ ~ ≤ ≥ µ ¢ £ € ¥ © ® ™
+⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ ⁿ ∞ ∑ ∏ √ ∂ ∆ ∇ ∫ ∮
+
+=== Test Case 2: Quotation Marks and Apostrophes ===
+"Smart quotes" vs "straight quotes"
+Don't mix up 'single' and 'curly' quotes
+She said: "I'm not sure about the 'nested quotes' here."
+
+=== Test Case 3: JSON-like Content ===
+{
+  "key": "value with \"quotes\"",
+  'problem': 'mixing quote types',
+  nested: {
+    "escape\\chars": "testing\nNewlines",
+    "numbers": 123.456
+  }
+}
+
+=== Test Case 4: Code Snippets with Mixed Syntax ===
+#+end_srcpython
+def test_func(x='test'):
+    return f"Value is {x}\n"
+#+begin_src 
+
+<!-- HTML Comment -->
+<div class="test">
+    'Mixed content' && "quotes"
+    =backticks= and $variables
+</div>
+
+=== Test Case 5: Unicode Characters ===
+🌟 Stars and 🌙 moons
+👨‍👩‍👧‍👦 Family emoji
+🏳️‍🌈 Complex emoji
+→ ← ↑ ↓ ↔ ↕ ⇄ ⇅
+
+=== Test Case 6: Whitespace and Line Endings ===
+Text with trailing spaces    
+Text with tabs		between
+Line with mixed endings\r\n
+No ending on last line without newline
+
+=== Test Case 7: Shell Special Characters ===
+echo "Testing $(command substitution)"
+grep -r "pattern" | awk '{print $1}' > output.txt
+PATH=$PATH:/new/path; export PATH
+
+=== Test Case 8: SQL-like Queries ===
+SELECT * FROM "users" WHERE name LIKE '%O''Brien%';
+INSERT INTO =table= ('column') VALUES ("mixed 'quotes'");
+
+=== Test Case 9: URLs and Paths ===
+https://example.com/path?param=value&special=%20space
+C:\Program Files\Test\path with spaces\file.txt
+/usr/local/bin/program\ with\ spaces
+
+=== Test Case 10: Mixed Languages ===
+English with español
+日本語 mixed with English
+Русский текст with 한글 and عربي
+
+#+end_src
+
+This test text src includes:
+
+- Various Unicode and special characters
+- Different types of quotation marks
+- Mixed programming syntax
+- Emojis and complex Unicode symbols
+- Different line endings
+- Shell commands with special characters
+- SQL queries with mixed quotes
+- URLs and file paths
+- Mixed language content
+- JSON-like structures
+
+** Prompting
+
+These are the models I currently have loaded and are testing:
+
+- qwen2.5-coder:7b
+- deepseek-r1:7b
+- qwen2.5-coder:3b
+- starcoder2:3b
+- deepseek-r1:1.5b
+- llama3.2:1b
+- tinyllama:latest
+
+*** Bad Sentence
+
+This aint a good sentence, pleez rewrite!
+
+llama3.2:3b generates something like:
+
+[Temperature: 0.70]
+
+I'll correct this informal and colloquial text.
+
+Here's the proofread version of your sentence:
+
+"This isn't a very good sentence; could you please rephrase it?"
+
+I corrected the following:
+
+- "ain't" to "isn't", which is the standard spelling for the negation of "to be".
+- "pleez" to "please", which is the standard spelling in English.
+- Replaced "rewrite" with "rephrase", as "rewrite" implies making a complete new version, whereas "rephrase" means rewording or expressing something in different words.
+
+*** Temperature
+
+Given the bad sentence above
+
+Temperature to 0.0 gives a very pricise proofreading, typically only a single concise sentence.
+
+Temperature to 2.0 is generally more casual, with a slangish alternative given.
+
+*** History/context
+
+By default with history turned on
+
+What is the capital of the UK?
+
+and of France
+
+Now turn off History
+
+and of Germany
+
+*** elisp structure to org-table
+
+**** prompt
+
+Given the following elisp data structure can you extract out an org table that contains the following columns : key : description : model
+
+#+begin_src elisp
+(setq ollama-buddy-command-definitions
+      '(
+        ;; General Commands
+        (open-chat
+         :key ?o
+         :description "Open chat buffer"
+         :action ollama-buddy--open-chat)
+        
+        (swap-model
+         :key ?m
+         :description "Swap model"
+         :action ollama-buddy--swap-model)
+        
+        (send-region
+         :key ?l
+         :description "Send region"
+         :action (lambda () (ollama-buddy--send-with-command 'send-region)))
+        
+        ;; Specialized commands
+        (refactor-code
+         :key ?r
+         :description "Refactor code"
+         :model "qwen2.5-coder:7b"
+         :prompt "refactor the following code:"
+         :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
+        
+        (git-commit
+         :key ?g
+         :description "Git commit message"
+         :model "qwen2.5-coder:3b"
+         :prompt "write a concise git commit message for the following:"
+         :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+        
+        (describe-code
+         :key ?c
+         :description "Describe code"
+         :model "qwen2.5-coder:3b"
+         :prompt "describe the following code:"
+         :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
+        
+        (dictionary-lookup
+         :key ?d
+         :description "Dictionary Lookup"
+         :model "llama3.2:1b"
+         :prompt "For the following word provide a typical dictionary definition:"
+         :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup)))
+        
+        ;; System Commands
+        (custom-prompt
+         :key ?e
+         :description "Custom prompt"
+         :model "deepseek-r1:7b"
+         :action (lambda ()
+                   (when-let ((prefix (read-string "Enter prompt prefix: " nil nil nil t)))
+                     (unless (use-region-p)
+                       (user-error "No region selected. Select text to use with prompt"))
+                     (unless (not (string-empty-p prefix))
+                       (user-error "Input string is empty"))
+                     (ollama-buddy--send
+                      (concat prefix "\n\n"
+                              (buffer-substring-no-properties 
+                               (region-beginning) (region-end)))))))
+        (minibuffer-prompt
+         :key ?i
+         :description "Minibuffer Prompt"
+         :action (lambda ()
+                   (when-let ((prefix (read-string "Enter prompt: " nil nil nil t)))
+                     (unless (not (string-empty-p prefix))
+                       (user-error "Input string is empty"))
+                     (ollama-buddy--send prefix))))
+        
+        (kill-request
+         :key ?x
+         :description "Kill request"
+         :action (lambda ()
+                   (delete-process ollama-buddy--active-process)))
+        (quit
+         :key ?q
+         :description "Quit"
+         :action (lambda () (message "Quit Ollama Shell menu.")))
+        )
+      )
+#+end_src
+
+**** expected output
+
+| Key | Description        | Model            |
+|-----+--------------------+------------------|
+| o   | Open chat buffer   |                  |
+| m   | Swap model         |                  |
+| l   | Send region        |                  |
+| r   | Refactor code      | qwen2.5-coder:7b |
+| g   | Git commit message | qwen2.5-coder:3b |
+| c   | Describe code      | qwen2.5-coder:3b |
+| d   | Dictionary Lookup  | llama3.2:1b      |
+| e   | Custom prompt      | deepseek-r1:7b   |
+| i   | Minibuffer Prompt  |                  |
+| x   | Kill request       |                  |
+| q   | Quit               |                  |
+      
+** Previous Emacs versions tested and supported
+
+- [X] emacs-28.1
+- [X] emacs-29.3
+- [X] emacs-29.4
+- [X] emacs-30.1
+
+** ERT Testing
+
+To run these tests, you'll need:
+1. Emacs (26.1 or higher)
+2. The main package files
+3. The test files in this directory
+
+*** Running Tests
+
+You can run all tests with:
+
+#+begin_src bash
+make test
+#+end_src
+
+To run a specific test:
+
+#+begin_src bash
+make test-NAME
+#+end_src
+
+Replace =NAME= with the name of the test tag or test function.
+
+*** Test Files
+
+- =ollama-buddy-test.el= - Main test file containing all unit tests
+- =savehist-mock.el= - Mock implementation of savehist for testing
+
+*** Mock Setup
+
+The tests use mocks to avoid making real network calls to the Ollama server:
+
+- Network functions are mocked using =advice-add=
+- Mock data is provided for models and API responses
+- UI interactions are tested in temporary buffers
+
+*** Adding New Tests
+
+When adding new tests:
+1. Use the =ert-deftest= macro to define your test
+2. Group related tests with tags
+3. Add appropriate mocks for external dependencies
+4. Use the =ollama-buddy-test--with-mock-buffer= macro for UI tests
