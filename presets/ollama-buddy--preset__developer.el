@@ -39,7 +39,7 @@
          :action ollama-buddy-roles-switch-role)
 
         (create-role
-         :key ?N
+         :key ?E
          :description "Create new role"
          :model nil
          :action ollama-buddy-role-creator-create-new-role)
