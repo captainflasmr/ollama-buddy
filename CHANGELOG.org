@@ -11,6 +11,10 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-03-12> *0.7.2*
+
+Added menu model colours back in and removed some redundant code
+
 ** <2025-03-11> *0.7.1*
 
 Added debug mode to display raw JSON messages in a debug buffer
