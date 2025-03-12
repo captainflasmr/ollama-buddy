@@ -69,6 +69,8 @@
 (require 'cl-lib)
 (require 'dired)
 (require 'org)
+(require 'savehist)
+(require 'color)
 
 (defgroup ollama-buddy nil
   "Customization group for Ollama Buddy."
