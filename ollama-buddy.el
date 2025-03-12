@@ -615,47 +615,84 @@ Each command is defined with:
   (save-excursion
     (save-restriction
       (narrow-to-region start end)
-      ;; Lists: Translate `-`, `*`, or `+` lists to Org-mode lists
+      
+      ;; First, handle code blocks by temporarily protecting their content
       (goto-char (point-min))
-      (while (re-search-forward "^\\([ \t]*\\)[*-+] \\(.*\\)$" nil t)
-        (replace-match (concat (match-string 1) "- \\2")))
-      ;; Bold: `**bold**` -> `*bold*` only if directly adjacent
-      (goto-char (point-min))
-      (while (re-search-forward "\\*\\*\\([^ ]\\(.*?\\)[^ ]\\)\\*\\*" nil t)
-        (replace-match "*\\1*"))
-      ;; Italics: `_italic_` -> `/italic/`
-      (goto-char (point-min))
-      (while (re-search-forward "\\([ \n]\\)_\\([^ ].*?[^ ]\\)_\\([ \n]\\)" nil t)
-        (replace-match "\\1/\\2/\\3"))
-      ;; Links: `[text](url)` -> `[[url][text]]`
-      (goto-char (point-min))
-      (while (re-search-forward "\\[\\(.*?\\)\\](\\(.*?\\))" nil t)
-        (replace-match "[[\\2][\\1]]"))
-      ;; Code blocks: Markdown ```lang ... ``` to Org #+begin_src ... #+end_src
-      (goto-char (point-min))
-      (while (re-search-forward "```\\(.*?\\)\\(?:\n\\|\\s-\\)\\(\\(?:.\\|\n\\)*?\\)```" nil t)
-        (replace-match "#+begin_src \\1\n\\2#+end_src"))
-      ;; Inline code: `code` -> =code=
-      (goto-char (point-min))
-      (while (re-search-forward "`\\(.*?\\)`" nil t)
-        (replace-match "=\\1="))
-      ;; Horizontal rules: `---` or `***` -> `-----`
-      (goto-char (point-min))
-      (while (re-search-forward "^\\(-{3,}\\|\\*{3,}\\)$" nil t)
-        (replace-match "-----"))
-      ;; Images: `![alt text](url)` -> `[[url]]`
-      (goto-char (point-min))
-      (while (re-search-forward "!\\[.*?\\](\\(.*?\\))" nil t)
-        (replace-match "[[\\1]]"))
-      (goto-char (point-min))
-      ;; Headers: Adjust '#'
-      (while (re-search-forward "^\\(#+\\) " nil t)
-        (replace-match (make-string (length (match-string 1)) ?*) nil nil nil 1))
-      (goto-char (point-min))
-      ;; any extra characters
-      (while (re-search-forward "—" nil t)
-        (replace-match ", ")))))
-
+      (let ((code-blocks nil)
+            (counter 0)
+            block-start block-end lang content placeholder)
+        
+        ;; Find and replace code blocks with placeholders
+        (while (re-search-forward "```\\(.*?\\)\\(?:\n\\|\\s-\\)\\(\\(?:.\\|\n\\)*?\\)```" nil t)
+          (setq lang (match-string 1)
+                content (match-string 2)
+                block-start (match-beginning 0)
+                block-end (match-end 0)
+                placeholder (format "CODE_BLOCK_PLACEHOLDER_%d" counter))
+          
+          ;; Store the code block information for later restoration
+          (push (list placeholder lang content) code-blocks)
+          
+          ;; Replace with placeholder
+          (delete-region block-start block-end)
+          (goto-char block-start)
+          (insert placeholder)
+          (setq counter (1+ counter)))
+        
+        ;; Apply regular Markdown to Org transformations
+        ;; Lists: Translate `-`, `*`, or `+` lists to Org-mode lists
+        (goto-char (point-min))
+        (while (re-search-forward "^\\([ \t]*\\)[*-+] \\(.*\\)$" nil t)
+          (replace-match (concat (match-string 1) "- \\2")))
+        
+        ;; Bold: `**bold**` -> `*bold*` only if directly adjacent
+        (goto-char (point-min))
+        (while (re-search-forward "\\*\\*\\([^ ]\\(.*?\\)[^ ]\\)\\*\\*" nil t)
+          (replace-match "*\\1*"))
+        
+        ;; Italics: `_italic_` -> `/italic/`
+        (goto-char (point-min))
+        (while (re-search-forward "\\([ \n]\\)_\\([^ ].*?[^ ]\\)_\\([ \n]\\)" nil t)
+          (replace-match "\\1/\\2/\\3"))
+        
+        ;; Links: `[text](url)` -> `[[url][text]]`
+        (goto-char (point-min))
+        (while (re-search-forward "\\[\\(.*?\\)\\](\\(.*?\\))" nil t)
+          (replace-match "[[\\2][\\1]]"))
+        
+        ;; Inline code: `code` -> =code=
+        (goto-char (point-min))
+        (while (re-search-forward "`\\(.*?\\)`" nil t)
+          (replace-match "=\\1="))
+        
+        ;; Horizontal rules: `---` or `***` -> `-----`
+        (goto-char (point-min))
+        (while (re-search-forward "^\\(-{3,}\\|\\*{3,}\\)$" nil t)
+          (replace-match "-----"))
+        
+        ;; Images: `![alt text](url)` -> `[[url]]`
+        (goto-char (point-min))
+        (while (re-search-forward "!\\[.*?\\](\\(.*?\\))" nil t)
+          (replace-match "[[\\1]]"))
+        
+        ;; Headers: Adjust '#'
+        (goto-char (point-min))
+        (while (re-search-forward "^\\(#+\\) " nil t)
+          (replace-match (make-string (length (match-string 1)) ?*) nil nil nil 1))
+        
+        ;; Any extra characters
+        (goto-char (point-min))
+        (while (re-search-forward "—" nil t)
+          (replace-match ", "))
+        
+        ;; Restore code blocks with proper Org syntax
+        (dolist (block (nreverse code-blocks))
+          (let ((placeholder (nth 0 block))
+                (lang (nth 1 block))
+                (content (nth 2 block)))
+            (goto-char (point-min))
+            (when (search-forward placeholder nil t)
+              (replace-match (format "#+begin_src %s\n%s#+end_src" lang content) t t))))))))
 
 (defun ollama-buddy--prepare-prompt-area (&optional new-prompt keep-content)
   "Prepare the prompt area in the buffer.
