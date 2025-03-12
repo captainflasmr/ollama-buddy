@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama Buddy: Your Friendly AI Assistant -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.7.2
+;; Version: 0.7.3
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -2450,6 +2450,15 @@ ACTUAL-MODEL is the model being used instead."
                 (key (read-key prompt))
                 (cmd (assoc key items)))
       (funcall (caddr cmd)))))
+
+;;;###autoload
+(defun ollama-buddy-add-model-to-menu-entry (entry-name model-name)
+  "Add :model property with MODEL-NAME to ENTRY-NAME in the menu variable.
+Modifies the variable in place."
+  (when-let ((entry (assq entry-name ollama-buddy-command-definitions)))
+    (setf (cdr entry)
+          (append (cdr entry) (list :model model-name))))
+  ollama-buddy-command-definitions)
 
 (defun ollama-buddy-show-model-status ()
   "Display status of models referenced in command definitions with color coding."
