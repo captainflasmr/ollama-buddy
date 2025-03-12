@@ -1991,7 +1991,18 @@ ACTUAL-MODEL is the model being used instead."
                        (plist-get last-info :tokens)
                        (plist-get last-info :rate)))
             (ollama-buddy--update-status (concat "Stream " status))))
-      (ollama-buddy--update-status (concat "Stream " status)))))
+      (progn
+        (when ollama-buddy-convert-markdown-to-org
+          (save-excursion
+            (goto-char (point-max))
+            (beginning-of-line)
+            (let ((end (point)))
+              (if (re-search-backward ": RESPONSE" nil t)
+                  (progn
+                    (search-forward "]")
+                    (ollama-buddy--md-to-org-convert-region
+                     (point) end))))))
+        (ollama-buddy--update-status (concat "Stream " status))))))
 
 (defun ollama-buddy--swap-model ()
   "Swap ollama model."
