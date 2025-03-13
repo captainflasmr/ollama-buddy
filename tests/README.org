@@ -35,8 +35,8 @@ Using the following script to generate a very simple init.el file which is then 
 # Example: ./test-ollama-buddy.sh 29.3
 
 # Default Emacs version if none specified
-VERSION=${1:-"29.3"}
-PACKAGE_PATH="/mnt/hgfs/SharedVM/ollama-buddy-main"
+VERSION=${1:-"27.2"}
+PACKAGE_PATH="~/source/repos/ollama-buddy"
 
 # Create a temporary directory for the test
 TEMP_DIR=$(mktemp -d -t ollama-buddy-test-XXXXXX)
@@ -71,6 +71,12 @@ echo "Temporary init file: $INIT_FILE"
 echo "Cleaning up temporary directory..."
 rm -rf "$TEMP_DIR"
 #+end_src
+
+#+RESULTS:
+| Starting  | Emacs        | 27.2      | with                                  | minimal | configuration... |
+| Testing   | ollama-buddy | from:     | ~/source/repos/ollama-buddy           |         |                  |
+| Temporary | init         | file:     | /tmp/ollama-buddy-test-1QJvq0/init.el |         |                  |
+| Cleaning  | up           | temporary | directory...                          |         |                  |
 
 The script to build different versions of Emacs is as follows:
 
