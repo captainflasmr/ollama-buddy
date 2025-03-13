@@ -11,6 +11,19 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-03-13> *0.7.4*
+
+Added model info command, update keybindings
+
+- Added `ollama-buddy-show-raw-model-info` to fetch and display raw JSON details 
+  of the current model in the chat buffer.
+- Updated keybindings:
+  - `C-c i` now triggers model info display.
+  - `C-c h` mapped to help assistant.
+  - Improved shortcut descriptions in quick tips section.
+- Removed unused help assistant entry from menu.
+- Changed minibuffer-prompt key from `?i` to `?b`.
+
 ** <2025-03-12> *0.7.3*
 
 Added function to associate models with menu commands
