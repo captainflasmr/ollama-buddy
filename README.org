@@ -1473,7 +1473,7 @@ Contributions are welcome! Please:
 
 [[https://opensource.org/licenses/MIT][MIT License]]
 
-* Acknowledgements
+* Acknowledgments
 
 - [[https://ollama.ai/][Ollama]] for making local LLM inference accessible
 - Emacs community for continuous inspiration

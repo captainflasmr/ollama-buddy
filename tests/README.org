@@ -6,95 +6,306 @@
 #+todo: TODO DOING | DONE
 #+startup: showall
 
-* Ollama Buddy Tests
+* Ollama Buddy Testing Process/Strategy
 
-This directory contains unit tests for the Ollama Buddy Emacs package.
+This file contains a description of my testing strategy for the =ollama-buddy= Emacs package and the tests directory includes local unit tests and files to aid in robustly testing before pushing to =github= https://github.com/captainflasmr/ollama-buddy and then on to MELPA.
 
-Developing locally and running through and evaluating elisp code.
+** Validate/lint elisp
 
-** NOTE: ALWAYS BE RUNNING ON VANILLA EMACS WITH NO OTHER CONFIG TO TRULLY TEST!!!
-
-** Testing process
-
-Generally I run the following before I push out to github and hence MELPA:
-
-- Run ollama-buddy locally for all Emacs versions supported (see below)
 - Run =checkdoc=
 - =byte-compile= on ollama-buddy.el
 - =flycheck= on ollama-buddy.el
 - =package-lint= on ollama-buddy.el
-- Possibly =melpazoid= if I can be bothered!
+- Possibly =melpazoid= (if I can be bothered!)
 
-Also, remember to tag a stable main branch every now and then.
+** Run ollama-buddy with different Emacs versions
+
+- [X] emacs-28.1
+- [X] emacs-29.3
+- [X] emacs-29.4
+- [X] emacs-30.1
+
+Using the following script to generate a very simple init.el file which is then run up against varying versions of Emacs to then run up =ollama-buddy= using =C-c o= and perform some quick tests.
+
+#+begin_src bash
+#!/bin/bash
+
+# Script to test ollama-buddy package in a vanilla Emacs environment
+# Usage: ./test-ollama-buddy.sh [emacs-version]
+# Example: ./test-ollama-buddy.sh 29.3
+
+# Default Emacs version if none specified
+VERSION=${1:-"29.3"}
+PACKAGE_PATH="/mnt/hgfs/SharedVM/ollama-buddy-main"
+
+# Create a temporary directory for the test
+TEMP_DIR=$(mktemp -d -t ollama-buddy-test-XXXXXX)
+INIT_FILE="$TEMP_DIR/init.el"
+
+# Create a minimal init.el file
+cat > "$INIT_FILE" << EOF
+;; Minimal init.el for testing ollama-buddy (offline version)
+
+;; Add the package to the load path
+(add-to-list 'load-path "$PACKAGE_PATH")
+
+;; Load the package
+(require 'ollama-buddy)
+
+;; Add the key binding
+(global-set-key (kbd "C-c o") 'ollama-buddy-menu)
+
+;; Show a message to confirm we're in test mode
+(message "Testing ollama-buddy in vanilla Emacs %s" emacs-version)
+EOF
+
+# Run Emacs with the temporary init file
+echo "Starting Emacs $VERSION with minimal configuration..."
+echo "Testing ollama-buddy from: $PACKAGE_PATH"
+echo "Temporary init file: $INIT_FILE"
+
+# Run the appropriate Emacs version
+"$HOME/bin/emacs-$VERSION" -Q -l "$INIT_FILE"
+
+# Cleanup
+echo "Cleaning up temporary directory..."
+rm -rf "$TEMP_DIR"
+#+end_src
+
+The script to build different versions of Emacs is as follows:
+
+#+begin_src bash
+#!/bin/bash
+
+# Directory for Emacs builds
+BUILD_ROOT="$HOME/emacs-builds"
+INSTALL_ROOT="$HOME/emacs-versions"
+
+# Build dependencies for different distributions
+ARCH_BUILD_DEPS="base-devel gtk2 gtk3 libxpm libjpeg-turbo libpng libtiff giflib libxml2 gnutls librsvg"
+SLES_BUILD_DEPS="gcc gcc-c++ make automake gtk2-devel gtk3-devel libXpm-devel libjpeg8-devel libpng16-devel libtiff-devel giflib-devel libxml2-devel gnutls-devel cairo-devel harfbuzz-devel librsvg-devel"
+
+# 27.2 2021-03-25
+# 28.2 2022-09-12
+# 29.4 2024-06-22
+VERSIONS=(
+    # "emacs-27.1"
+    # "emacs-28.1"
+    # "emacs-29.1"
+    "emacs-29.3"
+    # "emacs-29.4"
+    "emacs-30.1"
+)
+
+# Detect OS
+detect_os() {
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        OS=$NAME
+    else
+        OS=$(uname -s)
+    fi
+}
+
+function prepare_environment() {
+    echo "Creating build directories..."
+    mkdir -p "$BUILD_ROOT"
+    mkdir -p "$INSTALL_ROOT"
+    
+    detect_os
+    echo "Detected OS: $OS"
+    
+    case "$OS" in
+        ,*"SLED"*|"SLES"*|*"SUSE"*)
+            echo "Installing build dependencies for SUSE SLES..."
+            sudo zypper refresh
+            sudo zypper install -y pattern-devel-base-devel
+            sudo zypper install -y $SLES_BUILD_DEPS
+            ;;
+        ,*"Garuda"*)
+            echo "Installing build dependencies for Arch Linux..."
+            sudo pacman -Syu --needed --noconfirm $ARCH_BUILD_DEPS
+            
+            # Check if we have yay for AUR access (optional)
+            if ! command -v yay &> /dev/null; then
+                echo "Installing yay (AUR helper)..."
+                cd /tmp
+                git clone https://aur.archlinux.org/yay.git
+                cd yay
+                makepkg -si --noconfirm
+            fi
+            ;;
+        ,*)
+            echo "Unsupported OS detected: $OS"
+            echo "Please install build dependencies manually and continue."
+            read -p "Press Enter to continue or Ctrl+C to abort..."
+            ;;
+    esac
+}
+
+function build_emacs() {
+    local version=$1
+    local build_dir="$BUILD_ROOT/$version"
+    local install_dir="$INSTALL_ROOT/$version"
+    
+    echo "Building $version..."
+    
+    # Download and extract
+    cd "$BUILD_ROOT"
+    if [ ! -f "$version.tar.gz" ]; then
+        wget "https://ftp.gnu.org/gnu/emacs/$version.tar.gz"
+    fi
+    
+    # Clean previous build if exists
+    rm -rf "$build_dir"
+    tar xzf "$version.tar.gz"
+    
+    # Configure and build
+    cd "$version"
+    
+    # Different configure flags for different versions
+    if [[ "$version" == "emacs-24.5" || "$version" == "emacs-25.3" ]]; then
+        # Older versions use GTK2
+        ./configure \
+            --prefix="$install_dir" \
+            --with-x-toolkit=gtk2 \
+            --with-xpm \
+            --with-jpeg \
+            --with-png \
+            --with-gif \
+            --with-tiff \
+            --with-gnutls \
+            --with-xml2 \
+            --with-rsvg
+    else
+        # Newer versions use GTK3
+        ./configure \
+            --prefix="$install_dir" \
+            --with-x-toolkit=gtk3 \
+            --with-xpm \
+            --with-jpeg \
+            --with-png \
+            --with-gif \
+            --with-tiff \
+            --with-gnutls \
+            --with-xml2 \
+            --with-cairo \
+            --with-harfbuzz \
+            --with-rsvg
+    fi
+    
+    # Use all available cores for compilation
+    make -j$(nproc)
+    make install
+    
+    echo "$version installed to $install_dir"
+}
+
+function create_pkgbuild() {
+    # Only create PKGBUILD for Arch Linux
+    if [[ "$OS" != *"Arch Linux"* ]]; then
+        echo "PKGBUILD creation is only supported on Arch Linux"
+        return 1
+    fi
+
+    local version=$1
+    local version_num=${version#emacs-}
+    
+    echo "Creating PKGBUILD for $version..."
+    mkdir -p "$BUILD_ROOT/pkgbuilds/$version"
+    cd "$BUILD_ROOT/pkgbuilds/$version"
+    
+    cat > PKGBUILD << EOF
+# Maintainer: Your Name <your.email@example.com>
+pkgname=$version
+pkgver=$version_num
+pkgrel=1
+pkgdesc="GNU Emacs version $version_num"
+arch=('x86_64')
+url="https://www.gnu.org/software/emacs/"
+license=('GPL3')
+depends=('gtk3' 'libxpm' 'libjpeg-turbo' 'libpng' 'giflib' 'libtiff' 'libxml2' 'gnutls')
+makedepends=('base-devel')
+provides=("emacs-$version_num")
+conflicts=("emacs")
+source=("https://ftp.gnu.org/gnu/emacs/emacs-\$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+    cd "\$srcdir/emacs-\$pkgver"
+    ./configure \\
+        --prefix=/usr \\
+        --sysconfdir=/etc \\
+        --libexecdir=/usr/lib \\
+        --localstatedir=/var \\
+        --with-x-toolkit=gtk3 \\
+        --with-xpm \\
+        --with-jpeg \\
+        --with-png \\
+        --with-gif \\
+        --with-tiff \\
+        --with-gnutls \\
+        --with-xml2
+    make
+}
+
+package() {
+    cd "\$srcdir/emacs-\$pkgver"
+    make DESTDIR="\$pkgdir" install
+}
+EOF
+}
+
+# Main execution
+echo "This script provides two methods to build Emacs:"
+echo "1. Direct compilation (traditional)"
+echo "2. Using makepkg (Arch Linux only)"
+read -p "Which method do you prefer? (1/2): " build_method
+
+case $build_method in
+    1)
+        prepare_environment
+        for version in "${VERSIONS[@]}"; do
+            build_emacs "$version"
+        done
+        
+        # Create convenience symlinks
+        mkdir -p "$HOME/bin"
+        echo "Creating version-specific symlinks..."
+        for version in "${VERSIONS[@]}"; do
+            ln -sf "$INSTALL_ROOT/$version/bin/emacs" "$HOME/bin/emacs-${version#emacs-}"
+        done
+        ;;
+        
+    2)
+        detect_os
+        if [[ "$OS" != *"Arch Linux"* ]]; then
+            echo "makepkg method is only supported on Arch Linux"
+            exit 1
+        fi
+        prepare_environment
+        for version in "${VERSIONS[@]}"; do
+            create_pkgbuild "$version"
+            echo "PKGBUILD created for $version"
+            echo "To build, cd to $BUILD_ROOT/pkgbuilds/$version and run 'makepkg -si'"
+        done
+        ;;
+        
+    ,*)
+        echo "Invalid option selected"
+        exit 1
+        ;;
+esac
+
+echo "Build complete. You can run specific versions using:"
+for version in "${VERSIONS[@]}"; do
+    echo "emacs-${version#emacs-}"
+done
+#+end_src
 
 ** Prompt Text Edge Cases
 
-Sending text below with various edge cases and challenging content to test =ollama-buddy= text handling capabilities.
-
-#+begin_src text
-=== Test Case 1: Special Characters and Symbols ===
-§ ¶ † ‡ ± ÷ × ≠ ≈ ~ ≤ ≥ µ ¢ £ € ¥ © ® ™
-⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ ⁿ ∞ ∑ ∏ √ ∂ ∆ ∇ ∫ ∮
-
-=== Test Case 2: Quotation Marks and Apostrophes ===
-"Smart quotes" vs "straight quotes"
-Don't mix up 'single' and 'curly' quotes
-She said: "I'm not sure about the 'nested quotes' here."
-
-=== Test Case 3: JSON-like Content ===
-{
-  "key": "value with \"quotes\"",
-  'problem': 'mixing quote types',
-  nested: {
-    "escape\\chars": "testing\nNewlines",
-    "numbers": 123.456
-  }
-}
-
-=== Test Case 4: Code Snippets with Mixed Syntax ===
-#+end_srcpython
-def test_func(x='test'):
-    return f"Value is {x}\n"
-#+begin_src 
-
-<!-- HTML Comment -->
-<div class="test">
-    'Mixed content' && "quotes"
-    =backticks= and $variables
-</div>
-
-=== Test Case 5: Unicode Characters ===
-🌟 Stars and 🌙 moons
-👨‍👩‍👧‍👦 Family emoji
-🏳️‍🌈 Complex emoji
-→ ← ↑ ↓ ↔ ↕ ⇄ ⇅
-
-=== Test Case 6: Whitespace and Line Endings ===
-Text with trailing spaces    
-Text with tabs		between
-Line with mixed endings\r\n
-No ending on last line without newline
-
-=== Test Case 7: Shell Special Characters ===
-echo "Testing $(command substitution)"
-grep -r "pattern" | awk '{print $1}' > output.txt
-PATH=$PATH:/new/path; export PATH
-
-=== Test Case 8: SQL-like Queries ===
-SELECT * FROM "users" WHERE name LIKE '%O''Brien%';
-INSERT INTO =table= ('column') VALUES ("mixed 'quotes'");
-
-=== Test Case 9: URLs and Paths ===
-https://example.com/path?param=value&special=%20space
-C:\Program Files\Test\path with spaces\file.txt
-/usr/local/bin/program\ with\ spaces
-
-=== Test Case 10: Mixed Languages ===
-English with español
-日本語 mixed with English
-Русский текст with 한글 and عربي
-
-#+end_src
+Sending weird characters in the file =prompt-edge-text-cases.txt= with various edge cases and challenging content to test =ollama-buddy= text handling capabilities.
 
 This test text src includes:
 
@@ -111,59 +322,35 @@ This test text src includes:
 
 ** Prompting
 
-These are the models I currently have loaded and are testing:
-
-- qwen2.5-coder:7b
-- deepseek-r1:7b
-- qwen2.5-coder:3b
-- starcoder2:3b
-- deepseek-r1:1.5b
-- llama3.2:1b
-- tinyllama:latest
-
 *** Bad Sentence
 
-This aint a good sentence, pleez rewrite!
-
-llama3.2:3b generates something like:
-
-[Temperature: 0.70]
-
-I'll correct this informal and colloquial text.
-
-Here's the proofread version of your sentence:
-
-"This isn't a very good sentence; could you please rephrase it?"
-
-I corrected the following:
-
-- "ain't" to "isn't", which is the standard spelling for the negation of "to be".
-- "pleez" to "please", which is the standard spelling in English.
-- Replaced "rewrite" with "rephrase", as "rewrite" implies making a complete new version, whereas "rephrase" means rewording or expressing something in different words.
+*This aint a good sentence, pleez rewrite!*
 
 *** Temperature
 
-Given the bad sentence above
+*This aint a good sentence, pleez rewrite!*
 
-Temperature to 0.0 gives a very pricise proofreading, typically only a single concise sentence.
+Temperature 0.0:
 
-Temperature to 2.0 is generally more casual, with a slangish alternative given.
+Very pricise proofreading, typically only a single concise sentence.
+
+Temperature to 2.0:
+
+More casual, with a slangish alternative given.
 
 *** History/context
 
-By default with history turned on
+History turned on:
 
-What is the capital of the UK?
+*What is the capital of the UK?*
 
-and of France
+*and of France*
 
-Now turn off History
+Now turn off History:
 
-and of Germany
+*and of Germany*
 
 *** elisp structure to org-table
-
-**** prompt
 
 Given the following elisp data structure can you extract out an org table that contains the following columns : key : description : model
 
@@ -186,21 +373,6 @@ Given the following elisp data structure can you extract out an org table that c
          :description "Send region"
          :action (lambda () (ollama-buddy--send-with-command 'send-region)))
         
-        ;; Specialized commands
-        (refactor-code
-         :key ?r
-         :description "Refactor code"
-         :model "qwen2.5-coder:7b"
-         :prompt "refactor the following code:"
-         :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
-        
-        (git-commit
-         :key ?g
-         :description "Git commit message"
-         :model "qwen2.5-coder:3b"
-         :prompt "write a concise git commit message for the following:"
-         :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
-        
         (describe-code
          :key ?c
          :description "Describe code"
@@ -215,35 +387,6 @@ Given the following elisp data structure can you extract out an org table that c
          :prompt "For the following word provide a typical dictionary definition:"
          :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup)))
         
-        ;; System Commands
-        (custom-prompt
-         :key ?e
-         :description "Custom prompt"
-         :model "deepseek-r1:7b"
-         :action (lambda ()
-                   (when-let ((prefix (read-string "Enter prompt prefix: " nil nil nil t)))
-                     (unless (use-region-p)
-                       (user-error "No region selected. Select text to use with prompt"))
-                     (unless (not (string-empty-p prefix))
-                       (user-error "Input string is empty"))
-                     (ollama-buddy--send
-                      (concat prefix "\n\n"
-                              (buffer-substring-no-properties 
-                               (region-beginning) (region-end)))))))
-        (minibuffer-prompt
-         :key ?i
-         :description "Minibuffer Prompt"
-         :action (lambda ()
-                   (when-let ((prefix (read-string "Enter prompt: " nil nil nil t)))
-                     (unless (not (string-empty-p prefix))
-                       (user-error "Input string is empty"))
-                     (ollama-buddy--send prefix))))
-        
-        (kill-request
-         :key ?x
-         :description "Kill request"
-         :action (lambda ()
-                   (delete-process ollama-buddy--active-process)))
         (quit
          :key ?q
          :description "Quit"
@@ -259,32 +402,33 @@ Given the following elisp data structure can you extract out an org table that c
 | o   | Open chat buffer   |                  |
 | m   | Swap model         |                  |
 | l   | Send region        |                  |
-| r   | Refactor code      | qwen2.5-coder:7b |
-| g   | Git commit message | qwen2.5-coder:3b |
 | c   | Describe code      | qwen2.5-coder:3b |
 | d   | Dictionary Lookup  | llama3.2:1b      |
-| e   | Custom prompt      | deepseek-r1:7b   |
-| i   | Minibuffer Prompt  |                  |
-| x   | Kill request       |                  |
 | q   | Quit               |                  |
       
-** Previous Emacs versions tested and supported
+** Menu testing
 
-- [X] emacs-28.1
-- [X] emacs-29.3
-- [X] emacs-29.4
-- [X] emacs-30.1
+Open up =leagues.txt=, select/mark any text, open up =ollama-buddy-menu= and test pushing given different prompting to the chat buffer.
 
-** ERT Testing
+** Run with test server (without ollama)
+
+There is a test server written in python that can simulate many =ollama= responses so =ollama-buddy= can now be tested completely offline and of course the JSON explicitly inspected.
+
+See =server.py= and run with:
+
+~python3 ./server.py~
+
+** ERT Unit Testing
 
 To run these tests, you'll need:
+
 1. Emacs (26.1 or higher)
 2. The main package files
 3. The test files in this directory
 
 *** Running Tests
 
-You can run all tests with:
+You can run all tests with (from the top level of this repo):
 
 #+begin_src bash
 make test

@@ -139,11 +139,6 @@ These are the only parameters that will be sent to Ollama."
      :description "Open chat buffer"
      :action ollama-buddy--open-chat)
 
-    (help
-     :key ?h
-     :description "Help assistant"
-     :action ollama-buddy--menu-help-assistant)
-    
     (show-models
      :key ?v
      :description "View model status"
@@ -228,7 +223,7 @@ These are the only parameters that will be sent to Ollama."
      :action ollama-buddy--menu-custom-prompt)
     
     (minibuffer-prompt
-     :key ?i
+     :key ?b
      :description "Minibuffer Prompt"
      :action ollama-buddy--menu-minibuffer-prompt)
     
@@ -297,6 +292,50 @@ Each command is defined with:
   "Predefined parameter profiles for different usage scenarios."
   :type '(alist :key-type string :value-type (alist :key-type symbol :value-type sexp))
   :group 'ollama-buddy-params)
+
+(defun ollama-buddy-show-raw-model-info ()
+  "Retrieve and display raw JSON information about the current default model in the chat buffer."
+  (interactive)
+  (let* ((model (or ollama-buddy--current-model
+                    ollama-buddy-default-model
+                    (error "No default model set")))
+         (endpoint "/api/show")
+         (payload (json-encode `((model . ,model)))))
+    
+    ;; Make API request to get model info
+    (condition-case err
+        (let* ((response (ollama-buddy--make-request endpoint "POST" payload)))
+          
+          ;; Open and prepare chat buffer
+          (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+            (pop-to-buffer (current-buffer))
+            (goto-char (point-max))
+            
+            ;; Insert model info header with color
+            (insert (format "[MODEL INFO REQUEST]\n\n** [MODEL INFO: %s]\n\n" model))
+
+            ;; Pretty print the JSON response
+            (insert "#+begin_src json\n")
+            (let ((json-start (point)))
+              ;; Convert Elisp object to JSON string and insert
+              (insert (json-encode response))
+              ;; Pretty print the inserted JSON
+              (json-pretty-print json-start (point)))
+            (insert "\n#+end_src")
+            
+            ;; Add a prompt area after the information
+            (ollama-buddy--prepare-prompt-area)
+            (ollama-buddy--update-status "Model info displayed")))
+      
+      (error
+       (message "Failed to retrieve model info: %s" (error-message-string err))
+       (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+         (pop-to-buffer (current-buffer))
+         (goto-char (point-max))
+         (insert (format "\n\n** [ERROR] Failed to retrieve info for model: %s\n\n" model))
+         (insert (format "Error: %s\n\n" (error-message-string err)))
+         (ollama-buddy--prepare-prompt-area)
+         (ollama-buddy--update-status "Error retrieving model info"))))))
 
 (defun ollama-buddy-toggle-params-in-header ()
   "Toggle display of modified parameters in the header line."
@@ -2253,15 +2292,15 @@ ACTUAL-MODEL is the model being used instead."
            models-section
            "** Quick Tips\n\n"
            "- Ask me anything!            C-c C-c\n"
-           "- Change model                C-c m\n"
-           "- Cancel request              C-c k\n"
+           "- Show help!                  C-c h\n"
+           "- Model Change/Info/Cancel    C-c m/i/k\n"
            "- Prompt history              M-p/M-n\n"
            "- New/Load/Save Session       C-c N/L/S\n"
            "- Toggle/Clear history        C-c H/X\n"
            "- Same prompt to multi-models C-c l\n"
-           "- Toggle debug received JSON  C-c D\n"
+           "- Toggle debug JSON           C-c D\n"
            "- Param Edit/Show/Help/Reset  C-c P/G/I/K\n"
-           "- In another buffer           M-x ollama-buddy-menu")))
+           "- In another buffer?          M-x ollama-buddy-menu")))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
 
@@ -2606,9 +2645,11 @@ Modifies the variable in place."
 (defvar ollama-buddy-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-c") #'ollama-buddy--send-prompt)
+    (define-key map (kbd "C-c h") #'ollama-buddy--menu-help-assistant)
     (define-key map (kbd "C-c l") #'ollama-buddy--multishot-prompt)
     (define-key map (kbd "C-c k") #'ollama-buddy--cancel-request)
     (define-key map (kbd "C-c m") #'ollama-buddy--swap-model)
+    (define-key map (kbd "C-c i") #'ollama-buddy-show-raw-model-info)
     (define-key map (kbd "M-p") #'ollama-buddy-previous-history)
     (define-key map (kbd "M-n") #'ollama-buddy-next-history)
     (define-key map (kbd "C-c H") #'ollama-buddy-toggle-history)
