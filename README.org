@@ -1387,14 +1387,16 @@ Here is a kanban of the features that I plan on (hopefully) adding in due course
 #+RESULTS:
 | TODO                            | DOING                         | DONE                              |
 |---------------------------------+-------------------------------+-----------------------------------|
-| Create a model from a GGUF file | Show incoming ollama messages | Chat buffer to use org-mode       |
-| API - Pulling a model           |                               | Chat export options               |
-| API - show model information    |                               | Add temperature                   |
-| API - images                    |                               | Managing Sessions                 |
-| API - suffix                    |                               | Sparse minified version           |
-| API - system prompt             |                               | Role-Based Menu Preset System     |
-| Embeddings?                     |                               | Add to MELPA                      |
-| Test on Windows                 |                               | Enhancing Menu Clarity            |
+| Create a model from a GGUF file | API - suffix                  | API - show model information      |
+| API - Pulling a model           | Show incoming ollama messages | API - system prompt               |
+| API - images                    |                               | Chat buffer to use org-mode       |
+| Embeddings?                     |                               | Chat export options               |
+| Test on Windows                 |                               | Add temperature                   |
+|                                 |                               | Managing Sessions                 |
+|                                 |                               | Sparse minified version           |
+|                                 |                               | Role-Based Menu Preset System     |
+|                                 |                               | Add to MELPA                      |
+|                                 |                               | Enhancing Menu Clarity            |
 |                                 |                               | Real time token tracking          |
 |                                 |                               | Managing chat history and context |
 
@@ -1404,19 +1406,21 @@ Here is a kanban of the features that I plan on (hopefully) adding in due course
 
 ** TODO API - Pulling a model
 
-** TODO API - show model information
-
 ** TODO API - images
-
-** TODO API - suffix
-
-** TODO API - system prompt
 
 ** TODO Embeddings?
 
 ** TODO Test on Windows
 
+** DOING API - suffix
+
+I think this is only for generate, but I have quietly added it in.
+
 ** DOING Show incoming ollama messages
+
+** DONE API - show model information
+
+** DONE API - system prompt
 
 ** DONE Chat buffer to use org-mode
 
@@ -1533,6 +1537,8 @@ Let's compare ollama-buddy to the existing solutions:
 Report issues on the [[https://github.com/captainflasmr/ollama-buddy/issues][GitHub Issues page]]
 
 * Bugs
+
+** TODO Save system prompts as part of session
 
 ** TODO keybindings in ollama chat buffer are reserved
 

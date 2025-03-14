@@ -493,6 +493,9 @@ Each command is defined with:
   :type 'boolean
   :group 'ollama-buddy)
 
+(defvar ollama-buddy--current-suffix nil
+  "The current suffix if set.")
+
 (defvar ollama-buddy--current-system-prompt nil
   "The current system prompt if set.")
 
@@ -591,6 +594,58 @@ Each command is defined with:
 ;; Keep track of model colors
 (defvar ollama-buddy--model-colors (make-hash-table :test 'equal)
   "Hash table mapping model names to their colors.")
+
+(defun ollama-buddy-set-suffix ()
+  "Set the current prompt as a suffix."
+  (interactive)
+  (let* ((prompt-data (ollama-buddy--get-prompt-content))
+         (prompt-text (car prompt-data)))
+    
+    ;; Add to history if non-empty
+    (when (and prompt-text (not (string-empty-p prompt-text)))
+      (put 'ollama-buddy--cycle-prompt-history 'history-position -1)
+      (add-to-history 'ollama-buddy--prompt-history prompt-text))
+    
+    ;; Set as suffix
+    (setq ollama-buddy--current-suffix prompt-text)
+    
+    ;; Update the UI to reflect the change
+    (ollama-buddy--prepare-prompt-area t t nil t)
+    (ollama-buddy--prepare-prompt-area nil nil)
+    
+    ;; Update status to show suffix is set
+    (ollama-buddy--update-status "Suffix set")
+    (message "Suffix set: %s" 
+             (if (> (length prompt-text) 50)
+                 (concat (substring prompt-text 0 47) "...")
+               prompt-text))))
+
+(defun ollama-buddy-reset-suffix ()
+  "Reset the suffix to default (none)."
+  (interactive)
+  (setq ollama-buddy--current-suffix nil)
+  
+  ;; Update the UI to reflect the change
+  (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+    (ollama-buddy--prepare-prompt-area t))
+  
+  ;; Update status
+  (ollama-buddy--update-status "Suffix reset")
+  (message "Suffix has been reset"))
+
+(defun ollama-buddy-reset-all-prompts ()
+  "Reset both system prompt and suffix to default (none)."
+  (interactive)
+  (setq ollama-buddy--current-system-prompt nil
+        ollama-buddy--current-suffix nil)
+  
+  ;; Update the UI to reflect the change
+  (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+    (ollama-buddy--prepare-prompt-area t))
+  
+  ;; Update status
+  (ollama-buddy--update-status "System prompt and suffix reset")
+  (message "System prompt and suffix have been reset"))
 
 (defun ollama-buddy-show-raw-model-info ()
   "Retrieve and display raw JSON information about the current default model."
@@ -775,10 +830,12 @@ Each command is defined with:
   (ollama-buddy--update-status "System prompt reset")
   (message "System prompt has been reset"))
 
-(defun ollama-buddy--prepare-prompt-area (&optional new-prompt keep-content system-prompt)
+(defun ollama-buddy--prepare-prompt-area (&optional new-prompt keep-content system-prompt suffix-prompt)
   "Prepare the prompt area in the buffer.
 When NEW-PROMPT is non-nil, replace the existing prompt area.
-When KEEP-CONTENT is non-nil, preserve the existing prompt content."
+When KEEP-CONTENT is non-nil, preserve the existing prompt content.
+When SYSTEM-PROMPT is non-nil, mark as a system prompt.
+When SUFFIX-PROMPT is non-nil, mark as a suffix."
   (let* ((model (or ollama-buddy--current-model
                     ollama-buddy-default-model
                     "Default:latest"))
@@ -787,7 +844,7 @@ When KEEP-CONTENT is non-nil, preserve the existing prompt content."
     
     ;; Clean up existing prompt
     (goto-char (point-max))
-    (when (re-search-backward "\\* .*>> \\(?:PROMPT\\|SYSTEM PROMPT\\):" nil t)
+    (when (re-search-backward "\\* .*>> \\(?:PROMPT\\|SYSTEM PROMPT\\|SUFFIX\\):" nil t)
       (beginning-of-line)
       (if (or new-prompt
               (not (string-match-p "[[:alnum:]]" (ollama-buddy--text-after-prompt))))
@@ -803,9 +860,10 @@ When KEEP-CONTENT is non-nil, preserve the existing prompt content."
     (let ((start (point)))
       (insert (format "\n\n* %s %s"
                       model
-                      (if system-prompt
-                          ">> SYSTEM PROMPT: "
-                        ">> PROMPT: ")))
+                      (cond
+                       (system-prompt ">> SYSTEM PROMPT: ")
+                       (suffix-prompt ">> SUFFIX: ")
+                       (t ">> PROMPT: "))))
       
       ;; Apply overlay for model name
       (let ((overlay (make-overlay start (+ start 4 (length model)))))
@@ -1810,7 +1868,7 @@ For parameters with 4 or fewer characters, returns the full name."
               (substring param-name (- param-len 2) param-len)))))
 
 (defun ollama-buddy--update-status (status &optional original-model actual-model)
-  "Update the Ollama status and refresh the displayn.
+  "Update the Ollama status and refresh the display.
 STATUS is the current operation status.
 ORIGINAL-MODEL is the model that was requested.
 ACTUAL-MODEL is the model being used instead."
@@ -1844,8 +1902,9 @@ ACTUAL-MODEL is the model being used instead."
                          (format " [%s]" param-str))))))
       (setq header-line-format
             (concat
-             (if ollama-buddy--current-system-prompt " S " " ")
-             (if ollama-buddy-convert-markdown-to-org "ORG" "Markdown")
+             (if ollama-buddy--current-system-prompt "S" " ")
+             (if ollama-buddy--current-suffix "F" " ")
+             (if ollama-buddy-convert-markdown-to-org " ORG" " Markdown")
              (if ollama-buddy-display-token-stats " T" "")
              (format (if (string-empty-p (ollama-buddy--update-multishot-status))
                          " %s%s %s %s%s%s"
@@ -2193,7 +2252,7 @@ ACTUAL-MODEL is the model being used instead."
       (ollama-buddy--send (string-trim full-prompt) model))))
 
 (defun ollama-buddy--send (&optional prompt specified-model)
-  "Send PROMPT with optional SYSTEM-PROMPT and SPECIFIED-MODEL."
+  "Send PROMPT with optional SYSTEM-PROMPT, SUFFIX and SPECIFIED-MODEL."
   ;; Check status and update UI if offline
   (unless (ollama-buddy--check-status)
     (ollama-buddy--update-status "OFFLINE")
@@ -2219,29 +2278,23 @@ ACTUAL-MODEL is the model being used instead."
                                   (content . ,prompt)))))
          ;; Get only the modified parameters
          (modified-options (ollama-buddy-params-get-for-request))
-         ;; Build the payload based on whether we have system prompt and modified parameters
-         (base-payload (if ollama-buddy--current-system-prompt
-                           ;; With system prompt
-                           (if modified-options
-                               `((model . ,model)
-                                 (system . ,ollama-buddy--current-system-prompt)
-                                 (messages . ,(vconcat [] messages-all))
-                                 (stream . t)
-                                 (options . ,modified-options))
-                             `((model . ,model)
-                               (system . ,ollama-buddy--current-system-prompt)
-                               (messages . ,(vconcat [] messages-all))
-                               (stream . t)))
-                         ;; Without system prompt
-                         (if modified-options
-                             `((model . ,model)
-                               (messages . ,(vconcat [] messages-all))
-                               (stream . t)
-                               (options . ,modified-options))
-                           `((model . ,model)
-                             (messages . ,(vconcat [] messages-all))
-                             (stream . t)))))
-         (payload (json-encode base-payload)))
+         ;; Build the base payload
+         (base-payload `((model . ,model)
+                         (messages . ,(vconcat [] messages-all))
+                         (stream . t)))
+         ;; Add system prompt if present
+         (with-system (if ollama-buddy--current-system-prompt
+                          (append base-payload `((system . ,ollama-buddy--current-system-prompt)))
+                        base-payload))
+         ;; Add suffix if present
+         (with-suffix (if ollama-buddy--current-suffix
+                          (append with-system `((suffix . ,ollama-buddy--current-suffix)))
+                        with-system))
+         ;; Add modified parameters if present
+         (final-payload (if modified-options
+                            (append with-suffix `((options . ,modified-options)))
+                          with-suffix))
+         (payload (json-encode final-payload)))
     
     (setq ollama-buddy--current-model model)
     (setq ollama-buddy--current-prompt prompt)
@@ -2355,17 +2408,18 @@ ACTUAL-MODEL is the model being used instead."
            "** Available Models\n\n"
            models-section
            "** Quick Tips\n\n"
-           "- Ask me anything!                  C-c C-c\n"
-           "- System Prompt Set/Clear  C-u/+C-u C-c C-c\n"
-           "- Show help!                        C-c h\n"
-           "- Model Change/Info/Cancel          C-c m/i/k\n"
-           "- Prompt history                    M-p/M-n\n"
-           "- New/Load/Save Session             C-c N/L/S\n"
-           "- Toggle/Clear history              C-c H/X\n"
-           "- Same prompt to multi-models       C-c l\n"
-           "- Toggle debug JSON                 C-c D\n"
-           "- Param Edit/Show/Help/Reset        C-c P/G/I/K\n"
-           "- In another buffer?      M-x ollama-buddy-menu")))
+           "- Ask me anything!                   C-c C-c\n"
+           "- Show help!                         C-c h\n"
+           "- Model Change/Info/Cancel           C-c m/i/k\n"
+           "- Prompt history                     M-p/M-n\n"
+           "- Session New/Load/Save              C-c N/L/S\n"
+           "- History Toggle/Clear               C-c H/X\n"
+           "- Prompt to multiple models          C-c l\n"
+           "- Parameter Edit/Show/Help/Reset     C-c P/G/I/K\n"
+           "- System Prompt/Clear  C-u/+C-u +C-u C-c C-c\n"
+           "- Toggle JSON/Token/Params/Format    C-c D/T/Z/C-o\n"
+           "- In another buffer? M-x ollama-buddy-menu"
+           )))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
 
@@ -2621,7 +2675,7 @@ Modifies the variable in place."
     (display-buffer buf)))
 
 (defun ollama-buddy--send-prompt ()
-  "Send the current prompt to a LLM with support for system prompts."
+  "Send the current prompt to a LLM with support for system prompts and suffixes."
   (interactive)
   (let* ((current-prefix-arg-val (prefix-numeric-value current-prefix-arg))
          (prompt-data (ollama-buddy--get-prompt-content))
@@ -2632,13 +2686,17 @@ Modifies the variable in place."
     
     ;; Handle prefix arguments
     (cond
-     ;; C-u C-u (16) - Reset system prompt
+     ;; C-u C-u C-u (16) - Set suffix
      ((= current-prefix-arg-val 16)
-      (ollama-buddy-reset-system-prompt))
+      (ollama-buddy-set-suffix))
      
      ;; C-u (4) - Set system prompt
      ((= current-prefix-arg-val 4)
       (ollama-buddy-set-system-prompt))
+
+     ;; C-u C-u (64) - Reset both system prompt and suffix
+     ((= current-prefix-arg-val 64)
+      (ollama-buddy-reset-all-prompts))
      
      ;; No prefix - Regular prompt
      (t
@@ -2651,7 +2709,7 @@ Modifies the variable in place."
       (setq ollama-buddy--multishot-sequence nil
             ollama-buddy--multishot-prompt nil)
       
-      ;; Send with system prompt support
+      ;; Send with system prompt and suffix support
       (ollama-buddy--send prompt-text model)))))
 
 (defun ollama-buddy--cancel-request ()
@@ -2723,27 +2781,36 @@ Modifies the variable in place."
 
 (defvar ollama-buddy-mode-map
   (let ((map (make-sparse-keymap)))
+    ;; Send
     (define-key map (kbd "C-c C-c") #'ollama-buddy--send-prompt)
+    ;; Help
     (define-key map (kbd "C-c h") #'ollama-buddy--menu-help-assistant)
-    (define-key map (kbd "C-c l") #'ollama-buddy--multishot-prompt)
-    (define-key map (kbd "C-c k") #'ollama-buddy--cancel-request)
+    ;; Model
     (define-key map (kbd "C-c m") #'ollama-buddy--swap-model)
     (define-key map (kbd "C-c i") #'ollama-buddy-show-raw-model-info)
+    (define-key map (kbd "C-c k") #'ollama-buddy--cancel-request)
+    ;; Prompt History
     (define-key map (kbd "M-p") #'ollama-buddy-previous-history)
     (define-key map (kbd "M-n") #'ollama-buddy-next-history)
-    (define-key map (kbd "C-c H") #'ollama-buddy-toggle-history)
-    (define-key map (kbd "C-c X") #'ollama-buddy-clear-history)
-    (define-key map (kbd "C-c T") #'ollama-buddy-toggle-token-display)
+    ;; Sessions
     (define-key map (kbd "C-c N") #'ollama-buddy-sessions-new)
     (define-key map (kbd "C-c L") #'ollama-buddy-sessions-load)
     (define-key map (kbd "C-c S") #'ollama-buddy-sessions-save)
+    ;; History
+    (define-key map (kbd "C-c H") #'ollama-buddy-toggle-history)
+    (define-key map (kbd "C-c X") #'ollama-buddy-clear-history)
+    ;; Multishot
+    (define-key map (kbd "C-c l") #'ollama-buddy--multishot-prompt)
+    ;; Parameters
     (define-key map (kbd "C-c P")
                 (lambda () (interactive) (call-interactively #'ollama-buddy-params-edit)))
-    (define-key map (kbd "C-c I") #'ollama-buddy-params-help)
     (define-key map (kbd "C-c G") #'ollama-buddy-params-display)
+    (define-key map (kbd "C-c I") #'ollama-buddy-params-help)
     (define-key map (kbd "C-c K") #'ollama-buddy-params-reset)
-    (define-key map (kbd "C-c Z") #'ollama-buddy-toggle-params-in-header)
+    ;; Debug
     (define-key map (kbd "C-c D") #'ollama-buddy-toggle-debug-mode)
+    (define-key map (kbd "C-c T") #'ollama-buddy-toggle-token-display)
+    (define-key map (kbd "C-c Z") #'ollama-buddy-toggle-params-in-header)
     (define-key map (kbd "C-c C-o") #'ollama-buddy-toggle-markdown-conversion)
     map)
   "Keymap for ollama-buddy mode.")
