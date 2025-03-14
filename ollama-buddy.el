@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama Buddy: Your Friendly AI Assistant -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.7.3
+;; Version: 0.8.0
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -81,11 +81,6 @@
   "Customization group for Ollama API parameters."
   :group 'ollama-buddy
   :prefix "ollama-buddy-param-")
-
-(defcustom ollama-buddy-show-system-indicator t
-  "Whether to display system prompt indicator in the status bar."
-  :type 'boolean
-  :group 'ollama-buddy)
 
 (defcustom ollama-buddy-default-model nil
   "Default Ollama model to use."
@@ -1815,7 +1810,7 @@ For parameters with 4 or fewer characters, returns the full name."
               (substring param-name (- param-len 2) param-len)))))
 
 (defun ollama-buddy--update-status (status &optional original-model actual-model)
-  "Update the Ollama status and refresh the display including system prompt indicator.
+  "Update the Ollama status and refresh the displayn.
 STATUS is the current operation status.
 ORIGINAL-MODEL is the model that was requested.
 ACTUAL-MODEL is the model being used instead."
@@ -1832,9 +1827,6 @@ ACTUAL-MODEL is the model being used instead."
                                                         nil))
                                               2)))
                         (format " [H:%d]" history-count))))
-           (system-indicator (when (and ollama-buddy-show-system-indicator
-                                       ollama-buddy--current-system-prompt)
-                              "S "))
            (params (when ollama-buddy-show-params-in-header
                      (let ((param-str
                             (mapconcat
