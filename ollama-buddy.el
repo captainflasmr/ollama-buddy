@@ -82,6 +82,11 @@
   :group 'ollama-buddy
   :prefix "ollama-buddy-param-")
 
+(defcustom ollama-buddy-default-model nil
+  "Default Ollama model to use."
+  :type 'string
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-debug-mode nil
   "When non-nil, show raw JSON messages in a debug buffer."
   :type 'boolean
@@ -250,8 +255,7 @@ These are the only parameters that will be sent to Ollama."
     (quit
      :key ?q
      :description "Quit"
-     :action (lambda () (message "Quit Ollama Shell menu.")))
-    )
+     :action (lambda () (message "Quit Ollama Shell menu."))))
   "Comprehensive command definitions for Ollama Buddy.
 Each command is defined with:
   :key - Character for menu selection
@@ -292,50 +296,6 @@ Each command is defined with:
   "Predefined parameter profiles for different usage scenarios."
   :type '(alist :key-type string :value-type (alist :key-type symbol :value-type sexp))
   :group 'ollama-buddy-params)
-
-(defun ollama-buddy-show-raw-model-info ()
-  "Retrieve and display raw JSON information about the current default model in the chat buffer."
-  (interactive)
-  (let* ((model (or ollama-buddy--current-model
-                    ollama-buddy-default-model
-                    (error "No default model set")))
-         (endpoint "/api/show")
-         (payload (json-encode `((model . ,model)))))
-    
-    ;; Make API request to get model info
-    (condition-case err
-        (let* ((response (ollama-buddy--make-request endpoint "POST" payload)))
-          
-          ;; Open and prepare chat buffer
-          (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-            (pop-to-buffer (current-buffer))
-            (goto-char (point-max))
-            
-            ;; Insert model info header with color
-            (insert (format "[MODEL INFO REQUEST]\n\n** [MODEL INFO: %s]\n\n" model))
-
-            ;; Pretty print the JSON response
-            (insert "#+begin_src json\n")
-            (let ((json-start (point)))
-              ;; Convert Elisp object to JSON string and insert
-              (insert (json-encode response))
-              ;; Pretty print the inserted JSON
-              (json-pretty-print json-start (point)))
-            (insert "\n#+end_src")
-            
-            ;; Add a prompt area after the information
-            (ollama-buddy--prepare-prompt-area)
-            (ollama-buddy--update-status "Model info displayed")))
-      
-      (error
-       (message "Failed to retrieve model info: %s" (error-message-string err))
-       (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-         (pop-to-buffer (current-buffer))
-         (goto-char (point-max))
-         (insert (format "\n\n** [ERROR] Failed to retrieve info for model: %s\n\n" model))
-         (insert (format "Error: %s\n\n" (error-message-string err)))
-         (ollama-buddy--prepare-prompt-area)
-         (ollama-buddy--update-status "Error retrieving model info"))))))
 
 (defun ollama-buddy-toggle-params-in-header ()
   "Toggle display of modified parameters in the header line."
@@ -507,11 +467,6 @@ Each command is defined with:
   :type 'integer
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-default-model nil
-  "Default Ollama model to use."
-  :type 'string
-  :group 'ollama-buddy)
-
 (defcustom ollama-buddy-roles-directory
   (expand-file-name "ollama-buddy-presets" user-emacs-directory)
   "Directory containing ollama-buddy role preset files."
@@ -633,6 +588,50 @@ Each command is defined with:
 ;; Keep track of model colors
 (defvar ollama-buddy--model-colors (make-hash-table :test 'equal)
   "Hash table mapping model names to their colors.")
+
+(defun ollama-buddy-show-raw-model-info ()
+  "Retrieve and display raw JSON information about the current default model."
+  (interactive)
+  (let* ((model (or ollama-buddy--current-model
+                    ollama-buddy-default-model
+                    (error "No default model set")))
+         (endpoint "/api/show")
+         (payload (json-encode `((model . ,model)))))
+    
+    ;; Make API request to get model info
+    (condition-case err
+        (let* ((response (ollama-buddy--make-request endpoint "POST" payload)))
+          
+          ;; Open and prepare chat buffer
+          (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+            (pop-to-buffer (current-buffer))
+            (goto-char (point-max))
+            
+            ;; Insert model info header with color
+            (insert (format "[MODEL INFO REQUEST]\n\n** [MODEL INFO: %s]\n\n" model))
+
+            ;; Pretty print the JSON response
+            (insert "#+begin_src json\n")
+            (let ((json-start (point)))
+              ;; Convert Elisp object to JSON string and insert
+              (insert (json-encode response))
+              ;; Pretty print the inserted JSON
+              (json-pretty-print json-start (point)))
+            (insert "\n#+end_src")
+            
+            ;; Add a prompt area after the information
+            (ollama-buddy--prepare-prompt-area)
+            (ollama-buddy--update-status "Model info displayed")))
+      
+      (error
+       (message "Failed to retrieve model info: %s" (error-message-string err))
+       (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+         (pop-to-buffer (current-buffer))
+         (goto-char (point-max))
+         (insert (format "\n\n** [ERROR] Failed to retrieve info for model: %s\n\n" model))
+         (insert (format "Error: %s\n\n" (error-message-string err)))
+         (ollama-buddy--prepare-prompt-area)
+         (ollama-buddy--update-status "Error retrieving model info"))))))
 
 (defun ollama-buddy-toggle-debug-mode ()
   "Toggle display of raw JSON messages in a debug buffer."

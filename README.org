@@ -1474,6 +1474,28 @@ Report issues on the [[https://github.com/captainflasmr/ollama-buddy/issues][Git
 
 * Bugs
 
+** TODO keybindings in ollama chat buffer are reserved
+
+#+begin_src 
+2647:70: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
+2648:67: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
+2649:65: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
+2650:61: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
+2651:69: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
+2654:64: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
+2655:63: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
+2656:70: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
+2657:62: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
+2658:63: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
+2659:63: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
+2661:90: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
+2662:61: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
+2663:64: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
+2664:62: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
+2665:73: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
+2666:67: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
+#+end_src
+
 * Contributing
 
 Contributions are welcome! Please:
