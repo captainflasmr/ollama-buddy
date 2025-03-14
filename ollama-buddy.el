@@ -82,6 +82,11 @@
   :group 'ollama-buddy
   :prefix "ollama-buddy-param-")
 
+(defcustom ollama-buddy-show-system-indicator t
+  "Whether to display system prompt indicator in the status bar."
+  :type 'boolean
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-default-model nil
   "Default Ollama model to use."
   :type 'string
@@ -493,6 +498,9 @@ Each command is defined with:
   :type 'boolean
   :group 'ollama-buddy)
 
+(defvar ollama-buddy--current-system-prompt nil
+  "The current system prompt if set.")
+
 (defvar ollama-buddy--debug-buffer "*Ollama Debug*"
   "Buffer for showing raw JSON messages.")
 
@@ -734,7 +742,48 @@ Each command is defined with:
             (when (search-forward placeholder nil t)
               (replace-match (format "#+begin_src %s\n%s#+end_src" lang content) t t))))))))
 
-(defun ollama-buddy--prepare-prompt-area (&optional new-prompt keep-content)
+(defun ollama-buddy-set-system-prompt ()
+  "Set the current prompt as a system prompt."
+  (interactive)
+  (let* ((prompt-data (ollama-buddy--get-prompt-content))
+         (prompt-text (car prompt-data)))
+    
+    ;; Add to history if non-empty
+    (when (and prompt-text (not (string-empty-p prompt-text)))
+      (put 'ollama-buddy--cycle-prompt-history 'history-position -1)
+      (add-to-history 'ollama-buddy--prompt-history prompt-text))
+    
+    ;; Set as system prompt
+    (setq ollama-buddy--current-system-prompt prompt-text)
+    
+    ;; Update the UI to reflect the change
+    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+      (let ((inhibit-read-only t))
+        (ollama-buddy--prepare-prompt-area)
+        (goto-char (point-max))
+        (insert prompt-text)))
+    
+    ;; Update status to show system prompt is set
+    (ollama-buddy--update-status "System prompt set")
+    (message "System prompt set: %s" 
+             (if (> (length prompt-text) 50)
+                 (concat (substring prompt-text 0 47) "...")
+               prompt-text))))
+
+(defun ollama-buddy-reset-system-prompt ()
+  "Reset the system prompt to default (none)."
+  (interactive)
+  (setq ollama-buddy--current-system-prompt nil)
+  
+  ;; Update the UI to reflect the change
+  (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+    (ollama-buddy--prepare-prompt-area t))
+  
+  ;; Update status
+  (ollama-buddy--update-status "System prompt reset")
+  (message "System prompt has been reset"))
+
+(defun ollama-buddy--prepare-prompt-area (&optional new-prompt keep-content system-prompt)
   "Prepare the prompt area in the buffer.
 When NEW-PROMPT is non-nil, replace the existing prompt area.
 When KEEP-CONTENT is non-nil, preserve the existing prompt content."
@@ -746,7 +795,7 @@ When KEEP-CONTENT is non-nil, preserve the existing prompt content."
     
     ;; Clean up existing prompt
     (goto-char (point-max))
-    (when (re-search-backward "\\* .*>> PROMPT:" nil t)
+    (when (re-search-backward "\\* .*>> \\(?:PROMPT\\|SYSTEM PROMPT\\):" nil t)
       (beginning-of-line)
       (if (or new-prompt
               (not (string-match-p "[[:alnum:]]" (ollama-buddy--text-after-prompt))))
@@ -762,7 +811,9 @@ When KEEP-CONTENT is non-nil, preserve the existing prompt content."
     (let ((start (point)))
       (insert (format "\n\n* %s %s"
                       model
-                      ">> PROMPT: "))
+                      (if system-prompt
+                          ">> SYSTEM PROMPT: "
+                        ">> PROMPT: ")))
       
       ;; Apply overlay for model name
       (let ((overlay (make-overlay start (+ start 4 (length model)))))
@@ -777,7 +828,7 @@ When KEEP-CONTENT is non-nil, preserve the existing prompt content."
 Returns a cons cell (TEXT . POINT) with the prompt text and point position."
   (save-excursion
     (goto-char (point-max))
-    (if (re-search-backward ">> PROMPT:\\s-*" nil t)
+    (if (re-search-backward ">> \\(?:PROMPT\\|SYSTEM PROMPT\\):" nil t)
         (let ((start-point (point)))
           (search-forward ":")
           (cons (string-trim (buffer-substring-no-properties
@@ -1767,7 +1818,7 @@ For parameters with 4 or fewer characters, returns the full name."
               (substring param-name (- param-len 2) param-len)))))
 
 (defun ollama-buddy--update-status (status &optional original-model actual-model)
-  "Update the Ollama status and refresh the display.
+  "Update the Ollama status and refresh the display including system prompt indicator.
 STATUS is the current operation status.
 ORIGINAL-MODEL is the model that was requested.
 ACTUAL-MODEL is the model being used instead."
@@ -1784,6 +1835,9 @@ ACTUAL-MODEL is the model being used instead."
                                                         nil))
                                               2)))
                         (format " [H:%d]" history-count))))
+           (system-indicator (when (and ollama-buddy-show-system-indicator
+                                       ollama-buddy--current-system-prompt)
+                              "S "))
            (params (when ollama-buddy-show-params-in-header
                      (let ((param-str
                             (mapconcat
@@ -1801,7 +1855,8 @@ ACTUAL-MODEL is the model being used instead."
                          (format " [%s]" param-str))))))
       (setq header-line-format
             (concat
-             (if ollama-buddy-convert-markdown-to-org " ORG" " Markdown")
+             (if ollama-buddy--current-system-prompt " S " " ")
+             (if ollama-buddy-convert-markdown-to-org "ORG" "Markdown")
              (if ollama-buddy-display-token-stats " T" "")
              (format (if (string-empty-p (ollama-buddy--update-multishot-status))
                          " %s%s %s %s%s%s"
@@ -2125,7 +2180,7 @@ ACTUAL-MODEL is the model being used instead."
   (interactive)
   (save-excursion
     (goto-char (point-max))
-    (if (re-search-backward ">> PROMPT:\\s-*" nil t)
+    (if (re-search-backward ">> \\(?:PROMPT\\|SYSTEM PROMPT\\):" nil t)
         (progn
           (search-forward ":")
           (string-trim (buffer-substring-no-properties
@@ -2167,16 +2222,29 @@ ACTUAL-MODEL is the model being used instead."
                                        (content . ,prompt)))))
          ;; Get only the modified parameters
          (modified-options (ollama-buddy-params-get-for-request))
-         ;; Build the payload based on whether we have modified parameters
-         (payload (json-encode
-                   (if modified-options
-                       `((model . ,model)
-                         (messages . ,(vconcat [] messages))
-                         (stream . t)
-                         (options . ,modified-options))
-                     `((model . ,model)
-                       (messages . ,(vconcat [] messages))
-                       (stream . t))))))
+         ;; Build the payload based on whether we have system prompt and modified parameters
+         (base-payload (if ollama-buddy--current-system-prompt
+                           ;; With system prompt
+                           (if modified-options
+                               `((model . ,model)
+                                 (system . ,ollama-buddy--current-system-prompt)
+                                 (messages . ,(vconcat [] messages))
+                                 (stream . t)
+                                 (options . ,modified-options))
+                             `((model . ,model)
+                               (system . ,ollama-buddy--current-system-prompt)
+                               (messages . ,(vconcat [] messages))
+                               (stream . t)))
+                         ;; Without system prompt
+                         (if modified-options
+                             `((model . ,model)
+                               (messages . ,(vconcat [] messages))
+                               (stream . t)
+                               (options . ,modified-options))
+                           `((model . ,model)
+                             (messages . ,(vconcat [] messages))
+                             (stream . t)))))
+         (payload (json-encode base-payload)))
     
     (setq ollama-buddy--current-model model)
     (setq ollama-buddy--current-prompt prompt)
@@ -2555,24 +2623,40 @@ Modifies the variable in place."
     (display-buffer buf)))
 
 (defun ollama-buddy--send-prompt ()
-  "Send the current prompt to a LLM."
+  "Send the current prompt to a LLM with support for system prompts."
   (interactive)
-  (let* ((prompt-data (ollama-buddy--get-prompt-content))
+  (let* ((current-prefix-arg-val (prefix-numeric-value current-prefix-arg))
+         (prompt-data (ollama-buddy--get-prompt-content))
          (prompt-text (car prompt-data))
          (model (or ollama-buddy--current-model
                     ollama-buddy-default-model
                     "Default:latest")))
     
-    ;; Add to history if non-empty
-    (when (and prompt-text (not (string-empty-p prompt-text)))
-      (put 'ollama-buddy--cycle-prompt-history 'history-position -1)
-      (add-to-history 'ollama-buddy--prompt-history prompt-text))
-    
-    ;; Reset multishot variables
-    (setq ollama-buddy--multishot-sequence nil
-          ollama-buddy--multishot-prompt nil)
-    
-    (ollama-buddy--send prompt-text model)))
+    ;; Handle prefix arguments
+    (cond
+     ;; C-u C-u (16) - Reset system prompt
+     ((= current-prefix-arg-val 16)
+      (ollama-buddy-reset-system-prompt))
+     
+     ;; C-u (4) - Set system prompt
+     ((= current-prefix-arg-val 4)
+      (ollama-buddy-set-system-prompt)
+      (ollama-buddy--prepare-prompt-area t t t)
+      (ollama-buddy--prepare-prompt-area nil nil))
+     
+     ;; No prefix - Regular prompt
+     (t
+      ;; Add to history if non-empty
+      (when (and prompt-text (not (string-empty-p prompt-text)))
+        (put 'ollama-buddy--cycle-prompt-history 'history-position -1)
+        (add-to-history 'ollama-buddy--prompt-history prompt-text))
+      
+      ;; Reset multishot variables
+      (setq ollama-buddy--multishot-sequence nil
+            ollama-buddy--multishot-prompt nil)
+      
+      ;; Send with system prompt support
+      (ollama-buddy--send prompt-text model)))))
 
 (defun ollama-buddy--cancel-request ()
   "Cancel the current request and clean up resources."
