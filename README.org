@@ -18,6 +18,66 @@ The name is just something a little bit fun and it seems to always remind me of 
 
 * Whats New
 
+** <2025-03-14> *0.8.0*
+
+Added system prompt support
+
+- Added =ollama-buddy--current-system-prompt= variable to track system prompts
+- Updated prompt area rendering to distinguish system prompts
+- Modified request payload to include system prompt when set
+- Enhanced status bar to display system prompt indicator
+- Improved help menu with system prompt keybindings
+
+So this is system prompt support in Ollama Buddy!, allowing you to set and manage system-level instructions for your AI interactions. This feature enables you to define a *persistent system prompt* that remains active across user queries, providing better control over conversation context.  
+
+*Key Features*
+
+You can now designate any user prompt as a system prompt, ensuring that the AI considers it as a guiding instruction for future interactions. To set the system prompt, use:  
+
+#+begin_src 
+C-u C-c C-c
+#+end_src
+
+*Example:*
+
+1. Type:
+
+#+begin_src 
+Always respond in a formal tone.
+#+end_src
+
+2. Press =C-u C-c C-c= This prompt is now set as the *system prompt* and any further chat ollama responses will adhere to the overarching guidelines defined in the prompt.
+
+If you need to clear the system prompt and revert to normal interactions, use:  
+
+#+begin_src 
+C-u C-u C-c C-c
+#+end_src
+
+*How It Works*
+
+- The active *system prompt* is stored and sent with each user prompt.  
+- A "S" indicator appears in the status bar when a system prompt is active.  
+- The request payload now includes the system role, allowing AI to recognize persistent instructions.  
+
+*Demo*
+
+Set the system message to:
+
+You must always respond in a single sentence.
+
+Now ask the following:
+
+Tell me why Emacs is so great!
+
+Tell me about black holes
+
+clear the system message and ask again, the reponses should now be more verbose!!
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_015.gif]]
+
 ** <2025-03-13> *0.7.4*
 
 Added model info command, update keybindings

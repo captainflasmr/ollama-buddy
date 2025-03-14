@@ -11,6 +11,16 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-03-14> *0.8.0*
+
+Added system prompt support
+
+- Added =ollama-buddy--current-system-prompt= variable to track system prompts
+- Updated prompt area rendering to distinguish system prompts
+- Modified request payload to include system prompt when set 
+- Enhanced status bar to display system prompt indicator
+- Improved help menu with system prompt keybindings
+  
 ** <2025-03-13> *0.7.4*
 
 Added model info command, update keybindings
