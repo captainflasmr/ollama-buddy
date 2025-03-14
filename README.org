@@ -844,16 +844,7 @@ The default menu offers the following menu items:
 | z   | Make concise                | Make concise                |
 | e   | Custom prompt               | Custom prompt               |
 | i   | Minibuffer Prompt           | Minibuffer Prompt           |
-| s   | Save chat                   | Save chat                   |
-| x   | Kill request                | Kill request                |
-| C   | Toggle Colors               | Toggle Colors               |
 | t   | Token Usage Stats           | Token Usage Stats           |
-| H   | Toggle conversation history | Toggle conversation history |
-| X   | Clear conversation history  | Clear conversation history  |
-| V   | View conversation history   | View conversation history   |
-| E   | New session                 | New session                 |
-| L   | Load session                | Load session                |
-| S   | Save session                | Save session                |
 | Y   | List sessions               | List sessions               |
 | K   | Delete session              | Delete session              |
 | q   | Quit                        | Quit                        |
