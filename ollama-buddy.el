@@ -2214,9 +2214,17 @@ ACTUAL-MODEL is the model being used instead."
          (model (car model-info))
          (original-model (cdr model-info))
          (messages (ollama-buddy--get-history-for-request))
+         ;; If we have a system prompt, add it to the request
+         (messages-with-system
+          (if ollama-buddy--current-system-prompt
+              (append `(((role . "system")
+                         (content . ,ollama-buddy--current-system-prompt)))
+                      messages)
+            messages))
          ;; Add the current prompt to the messages
-         (messages (append messages `(((role . "user")
-                                       (content . ,prompt)))))
+         (messages-all (append messages-with-system 
+                               `(((role . "user")
+                                  (content . ,prompt)))))
          ;; Get only the modified parameters
          (modified-options (ollama-buddy-params-get-for-request))
          ;; Build the payload based on whether we have system prompt and modified parameters
@@ -2225,21 +2233,21 @@ ACTUAL-MODEL is the model being used instead."
                            (if modified-options
                                `((model . ,model)
                                  (system . ,ollama-buddy--current-system-prompt)
-                                 (messages . ,(vconcat [] messages))
+                                 (messages . ,(vconcat [] messages-all))
                                  (stream . t)
                                  (options . ,modified-options))
                              `((model . ,model)
                                (system . ,ollama-buddy--current-system-prompt)
-                               (messages . ,(vconcat [] messages))
+                               (messages . ,(vconcat [] messages-all))
                                (stream . t)))
                          ;; Without system prompt
                          (if modified-options
                              `((model . ,model)
-                               (messages . ,(vconcat [] messages))
+                               (messages . ,(vconcat [] messages-all))
                                (stream . t)
                                (options . ,modified-options))
                            `((model . ,model)
-                             (messages . ,(vconcat [] messages))
+                             (messages . ,(vconcat [] messages-all))
                              (stream . t)))))
          (payload (json-encode base-payload)))
     
