@@ -757,11 +757,8 @@ Each command is defined with:
     (setq ollama-buddy--current-system-prompt prompt-text)
     
     ;; Update the UI to reflect the change
-    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-      (let ((inhibit-read-only t))
-        (ollama-buddy--prepare-prompt-area)
-        (goto-char (point-max))
-        (insert prompt-text)))
+    (ollama-buddy--prepare-prompt-area t t t)
+    (ollama-buddy--prepare-prompt-area nil nil)
     
     ;; Update status to show system prompt is set
     (ollama-buddy--update-status "System prompt set")
@@ -2640,9 +2637,7 @@ Modifies the variable in place."
      
      ;; C-u (4) - Set system prompt
      ((= current-prefix-arg-val 4)
-      (ollama-buddy-set-system-prompt)
-      (ollama-buddy--prepare-prompt-area t t t)
-      (ollama-buddy--prepare-prompt-area nil nil))
+      (ollama-buddy-set-system-prompt))
      
      ;; No prefix - Regular prompt
      (t
