@@ -297,15 +297,6 @@ Each command is defined with:
   :type '(alist :key-type string :value-type (alist :key-type symbol :value-type sexp))
   :group 'ollama-buddy-params)
 
-(defun ollama-buddy-toggle-params-in-header ()
-  "Toggle display of modified parameters in the header line."
-  (interactive)
-  (setq ollama-buddy-show-params-in-header
-        (not ollama-buddy-show-params-in-header))
-  (ollama-buddy--update-status ollama-buddy--status)
-  (message "Parameters in header: %s"
-           (if ollama-buddy-show-params-in-header "enabled" "disabled")))
-
 (defun ollama-buddy-params-reset ()
   "Reset all parameters to default values and clear modification tracking."
   (interactive)
@@ -594,6 +585,15 @@ Each command is defined with:
 ;; Keep track of model colors
 (defvar ollama-buddy--model-colors (make-hash-table :test 'equal)
   "Hash table mapping model names to their colors.")
+
+(defun ollama-buddy-toggle-params-in-header ()
+  "Toggle display of modified parameters in the header line."
+  (interactive)
+  (setq ollama-buddy-show-params-in-header
+        (not ollama-buddy-show-params-in-header))
+  (ollama-buddy--update-status ollama-buddy--status)
+  (message "Parameters in header: %s"
+           (if ollama-buddy-show-params-in-header "enabled" "disabled")))
 
 (defun ollama-buddy-set-suffix ()
   "Set the current prompt as a suffix."
