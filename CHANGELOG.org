@@ -10,6 +10,13 @@ This document contains the release notes for each tagged commit on the
 project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
+** <2025-03-16> *0.8.5*
+
+Added system prompt support for commands
+
+- Introduced `:system` field to command definitions.
+- Added `ollama-buddy-show-system-prompt` to view active system prompt.
+- Updated UI elements to reflect system prompt status.
 
 ** <2025-03-14> *0.8.0*
 
