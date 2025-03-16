@@ -34,6 +34,24 @@ Previously, individual menu commands in =ollama-buddy= only included a user prom
 - *View active system prompt*: Use =C-c C-s= to display the current system prompt in a dedicated buffer.  
 - *Updated UI elements*: The status line now indicates whether a system prompt is active.  
 
+A helper function has also been added to update the default menu, for example, you might want to tweak a couple of things:
+
+#+begin_src elisp
+(use-package ollama-buddy
+  :bind ("C-c o" . ollama-buddy-menu)
+  :custom
+  (ollama-buddy-default-model "llama3.2:3b")
+  :config
+  (ollama-buddy-update-menu-entry
+   'refactor-code
+   :model "qwen2.5-coder:7b"
+   :system "You are an expert software engineer who improves code and only mainly using the principles exhibited by Ada")
+  (ollama-buddy-update-menu-entry
+   'git-commit
+   :model "qwen2.5-coder:3b"
+   :system "You are a version control expert and mainly using subversion"))
+#+end_src
+
 ** <2025-03-14> *0.8.0*
 
 Added system prompt support
