@@ -183,42 +183,49 @@ These are the only parameters that will be sent to Ollama."
      :key ?r
      :description "Refactor code"
      :prompt "refactor the following code:"
+     :system "You are an expert software engineer with deep knowledge of clean code principles, design patterns, and modern programming practices. Your task is to refactor code to improve its quality while maintaining its functionality. Focus on readability, maintainability, and efficiency. Identify code smells and suggest specific improvements. For each suggested change, briefly explain the reasoning behind it. Structure your response to clearly show the original code, the refactored version, and explanations of key changes."
      :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
     
     (git-commit
      :key ?g
      :description "Git commit message"
      :prompt "write a concise git commit message for the following:"
+     :system "You are a version control expert who specializes in writing clear, concise, and informative git commit messages. Follow these best practices: 1) Use the imperative mood (e.g., 'Add' not 'Added'), 2) Keep the first line under 50 characters as a summary, 3) If necessary, provide more detailed explanation after a blank line, wrapped at 72 characters, 4) Explain WHAT changed and WHY, not HOW, 5) Reference issue numbers if applicable. For this task, analyze the code changes provided and generate an appropriate commit message."
      :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
     
     (describe-code
      :key ?c
      :description "Describe code"
      :prompt "describe the following code:"
+     :system "You are a technical documentation specialist with extensive programming experience. Your task is to analyze and explain code in a clear, comprehensive manner. Structure your response as follows: 1) Start with a high-level summary of what the code does, 2) Explain the main components, functions, or classes, 3) Detail the control flow and key algorithms, 4) Highlight any notable patterns, optimizations, or potential issues, 5) Include explanations of any non-obvious or complex parts. Use plain language while maintaining technical accuracy. Your goal is to help someone understand both the purpose and implementation details of the code."
      :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
     
     (dictionary-lookup
      :key ?d
      :description "Dictionary Lookup"
      :prompt "For the following word provide a typical dictionary definition:"
+     :system "You are a professional lexicographer. Provide comprehensive dictionary entries for words, including: 1) Standard pronunciation, 2) All relevant parts of speech and definitions, ordered from most to least common, 3) Etymology and word origin, 4) Example sentences showing proper usage, 5) Synonyms and antonyms where applicable, 6) Any relevant idioms or common phrases. Format your response as a proper dictionary entry with clear structure and organization."
      :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup)))
     
     (synonym
      :key ?n
      :description "Word synonym"
      :prompt "list synonyms for word:"
+     :system "You are a linguistic expert specializing in synonyms, nuance, and word choice. When given a word, provide: 1) A comprehensive list of synonyms grouped by meaning or context, 2) Notes on connotations, formality levels, or usage contexts for each group, 3) Indication of which synonyms are most commonly used, 4) Any notable differences in meaning or usage. Your goal is to help the user find precisely the right alternative word for their specific context."
      :action (lambda () (ollama-buddy--send-with-command 'synonym)))
     
     (proofread
      :key ?p
      :description "Proofread text"
      :prompt "proofread the following:"
+     :system "You are a professional editor and proofreader with expertise in grammar, spelling, punctuation, and style. Your task is to identify and correct errors in the provided text while improving clarity and flow. For each correction, briefly explain the rule or reason. Organize your response as follows: 1) First provide the corrected version of the full text, 2) Then list all corrections with explanations, 3) Finally, offer brief style suggestions if appropriate. Maintain the author's voice and intention while improving technical correctness."
      :action (lambda () (ollama-buddy--send-with-command 'proofread)))
     
     (make-concise
      :key ?z
      :description "Make concise"
      :prompt "reduce wordiness while preserving meaning:"
+     :system "You are an expert editor specializing in concise writing. Your task is to condense text without losing key information or meaning. Apply these principles: 1) Eliminate redundant words and phrases, 2) Replace wordy expressions with simpler alternatives, 3) Use active voice, 4) Combine sentences where appropriate, 5) Remove unnecessary qualifiers and modifiers, 6) Prioritize strong, specific verbs. Your response should include the condensed version followed by a brief note on how many words or what percentage was reduced. Ensure the final text maintains the original tone and all essential information."
      :action (lambda () (ollama-buddy--send-with-command 'make-concise)))
 
     ;; System Commands
@@ -261,7 +268,8 @@ Each command is defined with:
   :key - Character for menu selection
   :description - String describing the action
   :model - Specific Ollama model to use (nil means use default)
-  :prompt - Optional system prompt
+  :prompt - Optional user prompt prefix
+  :system - Optional system prompt/message
   :action - Function to execute"
   :type '(repeat
           (list :tag "Command Definition"
@@ -274,6 +282,7 @@ Each command is defined with:
                                         (const :tag "Use Default" nil)
                                         (string :tag "Model Name")))
                         (:prompt (string :tag "Static Prompt Text"))
+                        (:system (string :tag "System Prompt/Message"))
                         (:action (choice :tag "Action"
                                          (function :tag "Existing Function")
                                          (sexp :tag "Lambda Expression")))))))
@@ -1672,7 +1681,8 @@ Adapts the color to the current theme (light or dark) for better visibility."
   '((key . nil)
     (description . nil)
     (model . nil)
-    (prompt . nil))
+    (prompt . nil)
+    (system . nil))
   "Template for a new command definition.")
 
 (defun ollama-buddy-roles--get-available-roles ()
@@ -1728,9 +1738,13 @@ Adapts the color to the current theme (light or dark) for better visibility."
          (model (if use-model
                     (completing-read "Model: " (ollama-buddy--get-models) nil t)
                   nil))
-         (use-prompt (y-or-n-p "Add a system prompt? "))
+         (use-prompt (y-or-n-p "Add a user prompt prefix? "))
          (prompt (if use-prompt
-                     (read-string "System prompt: ")
+                     (read-string "User prompt prefix: ")
+                   nil))
+         (use-system (y-or-n-p "Add a system prompt/message? "))
+         (system (if use-system
+                     (read-string "System prompt/message: ")
                    nil))
          (symbol (intern command-name)))
     ;; Generate the command definition
@@ -1739,6 +1753,7 @@ Adapts the color to the current theme (light or dark) for better visibility."
           :description description
           :model model
           :prompt prompt
+          :system system
           :action `(lambda ()
                      (ollama-buddy--send-with-command ',symbol)))))
 
@@ -2238,6 +2253,7 @@ ACTUAL-MODEL is the model being used instead."
 (defun ollama-buddy--send-with-command (command-name)
   "Send request using configuration from COMMAND-NAME."
   (let* ((prompt-text (ollama-buddy--get-command-prop command-name :prompt))
+         (system-text (ollama-buddy--get-command-prop command-name :system))
          (selected-text (when (use-region-p)
                           (buffer-substring-no-properties
                            (region-beginning) (region-end))))
@@ -2249,7 +2265,17 @@ ACTUAL-MODEL is the model being used instead."
     
     ;; Prepare and send the prompt
     (let ((full-prompt (ollama-buddy--prepare-command-prompt command-name selected-text)))
-      (ollama-buddy--send (string-trim full-prompt) model))))
+      ;; Temporarily set system prompt if specified for this command
+      (let ((old-system-prompt ollama-buddy--current-system-prompt))
+        (when system-text
+          (setq ollama-buddy--current-system-prompt system-text))
+        
+        ;; Send the request
+        (ollama-buddy--send (string-trim full-prompt) model)
+        
+        ;; Restore the original system prompt if we changed it
+        (when system-text
+          (setq ollama-buddy--current-system-prompt old-system-prompt))))))
 
 (defun ollama-buddy--send (&optional prompt specified-model)
   "Send PROMPT with optional SYSTEM-PROMPT, SUFFIX and SPECIFIED-MODEL."
