@@ -137,132 +137,130 @@ These are the only parameters that will be sent to Ollama."
   :group 'ollama-buddy-params)
 
 (defcustom ollama-buddy-command-definitions
-  '(
-    ;; General Commands
-    (open-chat
-     :key ?o
-     :description "Open chat buffer"
-     :action ollama-buddy--open-chat)
-
-    (show-models
-     :key ?v
-     :description "View model status"
-     :action ollama-buddy-show-model-status)
-
-    (send-region
-     :key ?l
-     :description "Send region"
-     :action (lambda () (ollama-buddy--send-with-command 'send-region)))
-
-    (kill-request
-     :key ?k
-     :description "Kill request"
-     :action (lambda ()
-               (delete-process ollama-buddy--active-process)))
-
-    (switch-role
-     :key ?R
-     :description "Switch roles"
-     :model nil
-     :action ollama-buddy-roles-switch-role)
-
-    (create-role
-     :key ?E
-     :description "Create new role"
-     :model nil
-     :action ollama-buddy-role-creator-create-new-role)
-
-    (open-roles-directory
-     :key ?D
-     :description "Open roles directory"
-     :model nil
-     :action ollama-buddy-roles-open-directory)
-
-    ;; Custom commands
-    (refactor-code
-     :key ?r
-     :description "Refactor code"
-     :prompt "refactor the following code:"
-     :system "You are an expert software engineer with deep knowledge of clean code principles, design patterns, and modern programming practices. Your task is to refactor code to improve its quality while maintaining its functionality. Focus on readability, maintainability, and efficiency. Identify code smells and suggest specific improvements. For each suggested change, briefly explain the reasoning behind it. Structure your response to clearly show the original code, the refactored version, and explanations of key changes."
-     :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
-    
-    (git-commit
-     :key ?g
-     :description "Git commit message"
-     :prompt "write a concise git commit message for the following:"
-     :system "You are a version control expert who specializes in writing clear, concise, and informative git commit messages. Follow these best practices: 1) Use the imperative mood (e.g., 'Add' not 'Added'), 2) Keep the first line under 50 characters as a summary, 3) If necessary, provide more detailed explanation after a blank line, wrapped at 72 characters, 4) Explain WHAT changed and WHY, not HOW, 5) Reference issue numbers if applicable. For this task, analyze the code changes provided and generate an appropriate commit message."
-     :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
-    
-    (describe-code
-     :key ?c
-     :description "Describe code"
-     :prompt "describe the following code:"
-     :system "You are a technical documentation specialist with extensive programming experience. Your task is to analyze and explain code in a clear, comprehensive manner. Structure your response as follows: 1) Start with a high-level summary of what the code does, 2) Explain the main components, functions, or classes, 3) Detail the control flow and key algorithms, 4) Highlight any notable patterns, optimizations, or potential issues, 5) Include explanations of any non-obvious or complex parts. Use plain language while maintaining technical accuracy. Your goal is to help someone understand both the purpose and implementation details of the code."
-     :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
-    
-    (dictionary-lookup
-     :key ?d
-     :description "Dictionary Lookup"
-     :prompt "For the following word provide a typical dictionary definition:"
-     :system "You are a professional lexicographer. Provide comprehensive dictionary entries for words, including: 1) Standard pronunciation, 2) All relevant parts of speech and definitions, ordered from most to least common, 3) Etymology and word origin, 4) Example sentences showing proper usage, 5) Synonyms and antonyms where applicable, 6) Any relevant idioms or common phrases. Format your response as a proper dictionary entry with clear structure and organization."
-     :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup)))
-    
-    (synonym
-     :key ?n
-     :description "Word synonym"
-     :prompt "list synonyms for word:"
-     :system "You are a linguistic expert specializing in synonyms, nuance, and word choice. When given a word, provide: 1) A comprehensive list of synonyms grouped by meaning or context, 2) Notes on connotations, formality levels, or usage contexts for each group, 3) Indication of which synonyms are most commonly used, 4) Any notable differences in meaning or usage. Your goal is to help the user find precisely the right alternative word for their specific context."
-     :action (lambda () (ollama-buddy--send-with-command 'synonym)))
-    
-    (proofread
-     :key ?p
-     :description "Proofread text"
-     :prompt "proofread the following:"
-     :system "You are a professional editor and proofreader with expertise in grammar, spelling, punctuation, and style. Your task is to identify and correct errors in the provided text while improving clarity and flow. For each correction, briefly explain the rule or reason. Organize your response as follows: 1) First provide the corrected version of the full text, 2) Then list all corrections with explanations, 3) Finally, offer brief style suggestions if appropriate. Maintain the author's voice and intention while improving technical correctness."
-     :action (lambda () (ollama-buddy--send-with-command 'proofread)))
-    
-    (make-concise
-     :key ?z
-     :description "Make concise"
-     :prompt "reduce wordiness while preserving meaning:"
-     :system "You are an expert editor specializing in concise writing. Your task is to condense text without losing key information or meaning. Apply these principles: 1) Eliminate redundant words and phrases, 2) Replace wordy expressions with simpler alternatives, 3) Use active voice, 4) Combine sentences where appropriate, 5) Remove unnecessary qualifiers and modifiers, 6) Prioritize strong, specific verbs. Your response should include the condensed version followed by a brief note on how many words or what percentage was reduced. Ensure the final text maintains the original tone and all essential information."
-     :action (lambda () (ollama-buddy--send-with-command 'make-concise)))
-
-    ;; System Commands
-    (custom-prompt
-     :key ?e
-     :description "Custom prompt"
-     :action ollama-buddy--menu-custom-prompt)
-    
-    (minibuffer-prompt
-     :key ?b
-     :description "Minibuffer Prompt"
-     :action ollama-buddy--menu-minibuffer-prompt)
-    
-    (token-stats
-     :key ?U
-     :description "Token Usage Stats"
-     :action ollama-buddy-display-token-stats)
-
-    (show-history
-     :key ?V
-     :description "View conversation history"
-     :action (lambda () (ollama-buddy--display-history 1)))
-
-    (list-sessions
-     :key ?Y
-     :description "List sessions"
-     :action ollama-buddy-sessions-list)
-
-    (delete-sessions
-     :key ?K
-     :description "Delete session"
-     :action ollama-buddy-sessions-delete)
-    
-    (quit
-     :key ?q
-     :description "Quit"
-     :action (lambda () (message "Quit Ollama Shell menu."))))
+  '(    
+        ;; General Commands
+        (open-chat
+         :key ?o
+         :description "Open chat buffer"
+         :action ollama-buddy--open-chat)
+        
+        (show-models
+         :key ?v
+         :description "View model status"
+         :action ollama-buddy-show-model-status)
+        
+        (send-region
+         :key ?l
+         :description "Send region"
+         :action (lambda () (ollama-buddy--send-with-command 'send-region)))
+        
+        (kill-request
+         :key ?k
+         :description "Kill request"
+         :action (lambda ()
+                   (delete-process ollama-buddy--active-process)))
+        
+        (switch-role
+         :key ?R
+         :description "Switch roles"
+         :action ollama-buddy-roles-switch-role)
+        
+        (create-role
+         :key ?E
+         :description "Create new role"
+         :action ollama-buddy-role-creator-create-new-role)
+        
+        (open-roles-directory
+         :key ?D
+         :description "Open roles directory"
+         :action ollama-buddy-roles-open-directory)
+        
+        ;; Custom commands
+        (refactor-code
+         :key ?r
+         :description "Refactor code"
+         :prompt "refactor the following code:"
+         :system "You are an expert software engineer who improves code quality while maintaining functionality, focusing on readability, maintainability, and efficiency by applying clean code principles and design patterns with clear explanations for each change."
+         :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
+        
+        (git-commit
+         :key ?g
+         :description "Git commit message"
+         :prompt "write a concise git commit message for the following:"
+         :system "You are a version control expert who creates clear commit messages using imperative mood, keeping summaries under 50 characters, explaining the what and why of changes, and referencing issue numbers where applicable."
+         :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+        
+        (describe-code
+         :key ?c
+         :description "Describe code"
+         :prompt "describe the following code:"
+         :system "You are a technical documentation specialist who analyzes code to provide high-level summaries, explain main components and control flow, highlight notable patterns or optimizations, and clarify complex parts in accessible language."
+         :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
+        
+        (dictionary-lookup
+         :key ?d
+         :description "Dictionary Lookup"
+         :prompt "For the following word provide a typical dictionary definition:"
+         :system "You are a professional lexicographer who provides comprehensive word definitions including pronunciation, all relevant parts of speech, etymology, examples of usage, and related synonyms and antonyms in a clear dictionary-style format."
+         :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup)))
+        
+        (synonym
+         :key ?n
+         :description "Word synonym"
+         :prompt "list synonyms for word:"
+         :system "You are a linguistic expert who provides contextually grouped synonyms with notes on connotation, formality levels, and usage contexts to help find the most precise alternative word for specific situations."
+         :action (lambda () (ollama-buddy--send-with-command 'synonym)))
+        
+        (proofread
+         :key ?p
+         :description "Proofread text"
+         :prompt "proofread the following:"
+         :system "You are a professional editor who identifies and corrects grammar, spelling, punctuation, and style errors with brief explanations of corrections, providing both the corrected text and a list of changes made."
+         :action (lambda () (ollama-buddy--send-with-command 'proofread)))
+        
+        (make-concise
+         :key ?z
+         :description "Make concise"
+         :prompt "reduce wordiness while preserving meaning:"
+         :system "You are a concise writing specialist who eliminates redundancy, replaces wordy phrases with simpler alternatives, uses active voice, combines sentences, and removes unnecessary qualifiers while preserving the original meaning and tone."
+         :action (lambda () (ollama-buddy--send-with-command 'make-concise)))
+        
+        ;; System Commands
+        (custom-prompt
+         :key ?e
+         :description "Custom prompt"
+         :action ollama-buddy--menu-custom-prompt)
+        
+        (minibuffer-prompt
+         :key ?i
+         :description "Minibuffer Prompt"
+         :action ollama-buddy--menu-minibuffer-prompt)
+        
+        (token-stats
+         :key ?U
+         :description "Token Usage Stats"
+         :action ollama-buddy-display-token-stats)
+        
+        (show-history
+         :key ?V
+         :description "View conversation history"
+         :action (lambda () (ollama-buddy--display-history 1)))
+        
+        (list-sessions
+         :key ?Y
+         :description "List sessions"
+         :action ollama-buddy-sessions-list)
+        
+        (delete-sessions
+         :key ?K
+         :description "Delete session"
+         :action ollama-buddy-sessions-delete)
+        
+        (quit
+         :key ?q
+         :description "Quit"
+         :action (lambda () (message "Quit Ollama Shell menu.")))
+        )
   "Comprehensive command definitions for Ollama Buddy.
 Each command is defined with:
   :key - Character for menu selection
