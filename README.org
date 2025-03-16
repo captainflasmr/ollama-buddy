@@ -18,6 +18,22 @@ The name is just something a little bit fun and it seems to always remind me of 
 
 * Whats New
 
+** <2025-03-16> *0.8.5*
+
+Added system prompt support for commands
+
+- Introduced `:system` field to command definitions.
+- Added `ollama-buddy-show-system-prompt` to view active system prompt.
+- Updated UI elements to reflect system prompt status.
+
+Previously, individual menu commands in =ollama-buddy= only included a user prompt. Now, each command can define a *system prompt*, which provides background context to guide the AI's responses. This makes interactions more precise and tailored.  
+
+*Key Features*
+
+- *System prompts per command*: Specify background instructions for each AI-powered command using the new =:system= field.  
+- *View active system prompt*: Use =C-c C-s= to display the current system prompt in a dedicated buffer.  
+- *Updated UI elements*: The status line now indicates whether a system prompt is active.  
+
 ** <2025-03-14> *0.8.0*
 
 Added system prompt support
