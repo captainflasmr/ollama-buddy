@@ -306,6 +306,21 @@ Each command is defined with:
   :type '(alist :key-type string :value-type (alist :key-type symbol :value-type sexp))
   :group 'ollama-buddy-params)
 
+(defun ollama-buddy--display-system-prompt (system-prompt &optional timeout)
+  "Display SYSTEM-PROMPT in the minibuffer for TIMEOUT seconds.
+If TIMEOUT is nil, use a default of 2 seconds."
+  (let ((timeout (or timeout 2))
+        (message-text (if (string-empty-p system-prompt)
+                          "No system prompt set"
+                        (format "Using system prompt: %s"
+                                (if (> (length system-prompt) 80)
+                                    (concat (substring system-prompt 0 77) "...")
+                                  system-prompt)))))
+    ;; Display the message
+    (message message-text)
+    ;; Set a timer to clear it after timeout
+    (run-with-timer timeout nil (lambda () (message nil)))))
+
 (defun ollama-buddy-params-reset ()
   "Reset all parameters to default values and clear modification tracking."
   (interactive)
@@ -1900,6 +1915,12 @@ ACTUAL-MODEL is the model being used instead."
                                                         nil))
                                               2)))
                         (format " [H:%d]" history-count))))
+           (system-indicator (if ollama-buddy--current-system-prompt
+                                (let ((system-text (if (> (length ollama-buddy--current-system-prompt) 30)
+                                                      (concat (substring ollama-buddy--current-system-prompt 0 27) "...")
+                                                    ollama-buddy--current-system-prompt)))
+                                  (format " [System: %s]" system-text))
+                              ""))
            (params (when ollama-buddy-show-params-in-header
                      (let ((param-str
                             (mapconcat
@@ -1922,18 +1943,34 @@ ACTUAL-MODEL is the model being used instead."
              (if ollama-buddy-convert-markdown-to-org " ORG" " Markdown")
              (if ollama-buddy-display-token-stats " T" "")
              (format (if (string-empty-p (ollama-buddy--update-multishot-status))
-                         " %s%s %s %s%s%s"
-                       " %s %s %s %s%s%s")
+                         " %s%s %s %s%s%s%s"
+                       " %s %s %s %s%s%s%s")
                      (ollama-buddy--update-multishot-status)
                      (propertize (if (ollama-buddy--check-status) "RUNNING" "OFFLINE")
                                  'face '(:weight bold))
                      (propertize model 'face `(:weight bold :box (:line-width 4 :style pressed-button)))
                      (propertize status 'face '(:weight bold))
                      (or history "")
+                     system-indicator
                      (or params ""))
              (when (and original-model actual-model (not (string= original-model actual-model)))
                (propertize (format " [Using %s instead of %s]" actual-model original-model)
                            'face '(:foreground "orange" :weight bold))))))))
+
+(defun ollama-buddy-show-system-prompt ()
+  "Display the current system prompt in a buffer."
+  (interactive)
+  (let ((buf (get-buffer-create "*Ollama System Prompt*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (if ollama-buddy--current-system-prompt
+            (progn
+              (insert "Current System Prompt:\n\n")
+              (insert ollama-buddy--current-system-prompt))
+          (insert "No system prompt is currently set.")))
+      (view-mode 1))
+    (display-buffer buf)))
 
 (defun ollama-buddy--initialize-chat-buffer ()
   "Initialize the chat buffer and check Ollama status."
@@ -2262,6 +2299,10 @@ ACTUAL-MODEL is the model being used instead."
     ;; Verify requirements
     (when (and prompt-text (not selected-text))
       (user-error "This command requires selected text"))
+    
+    ;; Display which system prompt will be used
+    (when system-text
+      (ollama-buddy--display-system-prompt system-text 3))
     
     ;; Prepare and send the prompt
     (let ((full-prompt (ollama-buddy--prepare-command-prompt command-name selected-text)))
@@ -2838,6 +2879,7 @@ Modifies the variable in place."
     (define-key map (kbd "C-c T") #'ollama-buddy-toggle-token-display)
     (define-key map (kbd "C-c Z") #'ollama-buddy-toggle-params-in-header)
     (define-key map (kbd "C-c C-o") #'ollama-buddy-toggle-markdown-conversion)
+    (define-key map (kbd "C-c C-s") #'ollama-buddy-show-system-prompt)
     map)
   "Keymap for ollama-buddy mode.")
 
