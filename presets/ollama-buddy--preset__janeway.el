@@ -103,21 +103,6 @@
          :description "Minibuffer Prompt"
          :action ollama-buddy--menu-minibuffer-prompt)
         
-        (show-history
-         :key ?V
-         :description "View conversation history"
-         :action (lambda () (ollama-buddy--display-history 1)))
-
-        (list-sessions
-         :key ?Y
-         :description "List sessions"
-         :action ollama-buddy-sessions-list)
-
-        (delete-sessions
-         :key ?K
-         :description "Delete session"
-         :action ollama-buddy-sessions-delete)
-        
         (quit
          :key ?q
          :description "Quit"
