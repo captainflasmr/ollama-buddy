@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama Buddy: Your Friendly AI Assistant -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.8.5
+;; Version: 0.9.1
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -81,6 +81,14 @@
   "Customization group for Ollama API parameters."
   :group 'ollama-buddy
   :prefix "ollama-buddy-param-")
+
+(defcustom ollama-buddy-interface-level 'basic
+  "Level of interface complexity to display.
+'basic shows minimal commands for new users.
+'advanced shows all available commands and features."
+  :type '(choice (const :tag "Basic (for beginners)" basic)
+                (const :tag "Advanced (full features)" advanced))
+  :group 'ollama-buddy)
 
 (defcustom ollama-buddy-default-model nil
   "Default Ollama model to use."
@@ -181,6 +189,7 @@ These are the only parameters that will be sent to Ollama."
      :description "Refactor code"
      :prompt "refactor the following code:"
      :system "You are an expert software engineer who improves code quality while maintaining functionality, focusing on readability, maintainability, and efficiency by applying clean code principles and design patterns with clear explanations for each change."
+     :parameters ((temperature . 0.2) (top_p . 0.7) (repeat_penalty . 1.3))
      :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
     
     (git-commit
@@ -236,26 +245,6 @@ These are the only parameters that will be sent to Ollama."
      :description "Minibuffer Prompt"
      :action ollama-buddy--menu-minibuffer-prompt)
     
-    (token-stats
-     :key ?U
-     :description "Token Usage Stats"
-     :action ollama-buddy-display-token-stats)
-    
-    (show-history
-     :key ?V
-     :description "View conversation history"
-     :action (lambda () (ollama-buddy--display-history 1)))
-    
-    (list-sessions
-     :key ?Y
-     :description "List sessions"
-     :action ollama-buddy-sessions-list)
-    
-    (delete-sessions
-     :key ?K
-     :description "Delete session"
-     :action ollama-buddy-sessions-delete)
-    
     (quit
      :key ?q
      :description "Quit"
@@ -268,6 +257,7 @@ Each command is defined with:
   :model - Specific Ollama model to use (nil means use default)
   :prompt - Optional user prompt prefix
   :system - Optional system prompt/message
+  :parameters - Association list of Ollama API parameters for this specific command
   :action - Function to execute"
   :type '(repeat
           (list :tag "Command Definition"
@@ -281,6 +271,7 @@ Each command is defined with:
                                         (string :tag "Model Name")))
                         (:prompt (string :tag "Static Prompt Text"))
                         (:system (string :tag "System Prompt/Message"))
+                        (:parameters (alist :key-type symbol :value-type sexp))
                         (:action (choice :tag "Action"
                                          (function :tag "Existing Function")
                                          (sexp :tag "Lambda Expression")))))))
@@ -303,6 +294,93 @@ Each command is defined with:
   "Predefined parameter profiles for different usage scenarios."
   :type '(alist :key-type string :value-type (alist :key-type symbol :value-type sexp))
   :group 'ollama-buddy-params)
+
+(defun ollama-buddy-toggle-interface-level ()
+  "Toggle between basic and advanced interface levels."
+  (interactive)
+  (setq ollama-buddy-interface-level 
+        (if (eq ollama-buddy-interface-level 'basic) 'advanced 'basic))
+  (message "Ollama Buddy interface level set to %s" 
+          (if (eq ollama-buddy-interface-level 'basic) "basic" "advanced"))
+  (ollama-buddy--menu-help-assistant))
+
+(defun ollama-buddy--apply-command-parameters (params-alist)
+  "Apply parameters from PARAMS-ALIST to the current Ollama request."
+  ;; Save current parameters to restore later
+  (setq ollama-buddy--saved-params-active (copy-tree ollama-buddy-params-active)
+        ollama-buddy--saved-params-modified (copy-tree ollama-buddy-params-modified))
+  
+  ;; Apply new parameters
+  (dolist (param-pair params-alist)
+    (let ((param (car param-pair))
+          (value (cdr param-pair)))
+      (setf (alist-get param ollama-buddy-params-active) value)
+      (add-to-list 'ollama-buddy-params-modified param))))
+
+(defun ollama-buddy--restore-default-parameters ()
+  "Restore parameters to their state before command execution."
+  (when ollama-buddy--saved-params-active
+    (setq ollama-buddy-params-active ollama-buddy--saved-params-active
+          ollama-buddy-params-modified ollama-buddy--saved-params-modified)
+    (setq ollama-buddy--saved-params-active nil
+          ollama-buddy--saved-params-modified nil)))
+
+;;;###autoload
+(defun ollama-buddy-update-command-with-params (entry-name &rest props-and-params)
+  "Update command ENTRY-NAME with properties and parameters.
+PROPS-AND-PARAMS should be property-value pairs, with an optional :parameters
+property followed by parameter-value pairs.
+Example: (ollama-buddy-update-command-with-params 'refactor-code
+          :model \"codellama:latest\" 
+          :parameters '((temperature . 0.2) (top_p . 0.7)))"
+  (when-let ((entry (assq entry-name ollama-buddy-command-definitions)))
+    (let ((current-plist (cdr entry))
+          properties
+          parameters)
+      
+      ;; Split into properties and parameters
+      (let ((params-pos (cl-position :parameters props-and-params)))
+        (if params-pos
+            (progn
+              (setq properties (cl-subseq props-and-params 0 params-pos))
+              (when (< (+ params-pos 1) (length props-and-params))
+                (setq parameters (nth (+ params-pos 1) props-and-params))))
+          (setq properties props-and-params)))
+      
+      ;; Update properties
+      (while properties
+        (let ((prop (car properties))
+              (value (cadr properties)))
+          (setq current-plist (plist-put current-plist prop value))
+          (setq properties (cddr properties))))
+      
+      ;; Update parameters if provided
+      (when parameters
+        (setq current-plist (plist-put current-plist :parameters parameters)))
+      
+      ;; Update the command definition
+      (setf (cdr entry) current-plist)))
+  ollama-buddy-command-definitions)
+
+(defun ollama-buddy-add-parameters-to-command (entry-name &rest parameters)
+  "Add specific parameters to ENTRY-NAME command in ollama-buddy-command-definitions.
+PARAMETERS should be a plist with parameter names and values.
+Example: (ollama-buddy-add-parameters-to-command 'refactor-code
+          :temperature 0.2 :top_p 0.7 :repeat_penalty 1.5)"
+  (when-let ((entry (assq entry-name ollama-buddy-command-definitions)))
+    (let* ((current-plist (cdr entry))
+           (current-params (plist-get current-plist :parameters))
+           (new-params (if current-params
+                          current-params
+                        (list))))
+      
+      ;; Process parameter pairs and add to list
+      (cl-loop for (param value) on parameters by #'cddr do
+               (push (cons param value) new-params))
+      
+      ;; Update the command definition
+      (setf (cdr entry) (plist-put current-plist :parameters new-params))))
+  ollama-buddy-command-definitions)
 
 ;;;###autoload
 (defun ollama-buddy-update-menu-entry (entry-name &rest props)
@@ -521,6 +599,12 @@ If TIMEOUT is nil, use a default of 2 seconds."
   "Whether to show the history indicator in the header line."
   :type 'boolean
   :group 'ollama-buddy)
+
+(defvar ollama-buddy--saved-params-active nil
+  "Saved copy of params-active before applying command-specific parameters.")
+
+(defvar ollama-buddy--saved-params-modified nil 
+  "Saved copy of params-modified before applying command-specific parameters.")
 
 (defvar ollama-buddy--current-suffix nil
   "The current suffix if set.")
@@ -2309,11 +2393,16 @@ ACTUAL-MODEL is the model being used instead."
          (selected-text (when (use-region-p)
                           (buffer-substring-no-properties
                            (region-beginning) (region-end))))
-         (model (ollama-buddy--get-command-prop command-name :model)))
+         (model (ollama-buddy--get-command-prop command-name :model))
+         (params-alist (ollama-buddy--get-command-prop command-name :parameters)))
     
     ;; Verify requirements
     (when (and prompt-text (not selected-text))
       (user-error "This command requires selected text"))
+    
+    ;; Apply command-specific parameters if provided
+    (when params-alist
+      (ollama-buddy--apply-command-parameters params-alist))
     
     ;; Display which system prompt will be used
     (when system-text
@@ -2331,7 +2420,11 @@ ACTUAL-MODEL is the model being used instead."
         
         ;; Restore the original system prompt if we changed it
         (when system-text
-          (setq ollama-buddy--current-system-prompt old-system-prompt))))))
+          (setq ollama-buddy--current-system-prompt old-system-prompt))
+        
+        ;; Restore default parameters if we changed them
+        (when params-alist
+          (ollama-buddy--restore-default-parameters))))))
 
 (defun ollama-buddy--send (&optional prompt specified-model)
   "Send PROMPT with optional SYSTEM-PROMPT, SUFFIX and SPECIFIED-MODEL."
@@ -2475,6 +2568,31 @@ ACTUAL-MODEL is the model being used instead."
   (let* ((models-section
           (when (ollama-buddy--ollama-running)
             (ollama-buddy--format-models-with-letters-plain)))
+         ;; Basic tips for beginners
+         (basic-tips
+          "- Ask me anything!                    C-c C-c
+- Change model                        C-c m
+- Cancel request                      C-c k
+- Browse prompt history               M-p/M-n
+- Advanced interface (show all tips)  C-c A")
+         ;; Advanced tips for experienced users
+         (advanced-tips
+          "- Ask me anything!                    C-c C-c
+- Show Help/Token-usage/System-prompt C-c h/U/C-s
+- Model Change/Info/Cancel            C-c m/i/k
+- Prompt history                      M-p/M-n
+- Session New/Load/Save/List/Delete   C-c N/L/S/Y/W
+- History Toggle/Clear/Show           C-c H/X/V
+- Prompt to multiple models           C-c l
+- Parameter Edit/Show/Help/Reset      C-c P/G/I/K
+- System Prompt/Clear   C-u/+C-u +C-u C-c C-c
+- Toggle JSON/Token/Params/Format     C-c D/T/Z/C-o
+- Basic interface (simpler display)   C-c A
+- In another buffer? M-x ollama-buddy-menu")
+         ;; Choose tips based on interface level
+         (tips-section (if (eq ollama-buddy-interface-level 'basic)
+                          basic-tips
+                          advanced-tips))
          (message-text
           (concat
            (when (= (buffer-size) 0)
@@ -2490,18 +2608,7 @@ ACTUAL-MODEL is the model being used instead."
            "** Available Models\n\n"
            models-section
            "** Quick Tips\n\n"
-           "- Ask me anything!                   C-c C-c\n"
-           "- Show help/system prompt            C-c h/C-s\n"
-           "- Model Change/Info/Cancel           C-c m/i/k\n"
-           "- Prompt history                     M-p/M-n\n"
-           "- Session New/Load/Save              C-c N/L/S\n"
-           "- History Toggle/Clear               C-c H/X\n"
-           "- Prompt to multiple models          C-c l\n"
-           "- Parameter Edit/Show/Help/Reset     C-c P/G/I/K\n"
-           "- System Prompt/Clear  C-u/+C-u +C-u C-c C-c\n"
-           "- Toggle JSON/Token/Params/Format    C-c D/T/Z/C-o\n"
-           "- In another buffer? M-x ollama-buddy-menu"
-           )))
+           tips-section)))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
 
@@ -2865,8 +2972,10 @@ Modifies the variable in place."
   (let ((map (make-sparse-keymap)))
     ;; Send
     (define-key map (kbd "C-c C-c") #'ollama-buddy--send-prompt)
-    ;; Help
+    ;; Show
     (define-key map (kbd "C-c h") #'ollama-buddy--menu-help-assistant)
+    (define-key map (kbd "C-c U") #'ollama-buddy-display-token-stats)
+    (define-key map (kbd "C-c C-s") #'ollama-buddy-show-system-prompt)
     ;; Model
     (define-key map (kbd "C-c m") #'ollama-buddy--swap-model)
     (define-key map (kbd "C-c i") #'ollama-buddy-show-raw-model-info)
@@ -2878,9 +2987,12 @@ Modifies the variable in place."
     (define-key map (kbd "C-c N") #'ollama-buddy-sessions-new)
     (define-key map (kbd "C-c L") #'ollama-buddy-sessions-load)
     (define-key map (kbd "C-c S") #'ollama-buddy-sessions-save)
+    (define-key map (kbd "C-c Y") #'ollama-buddy-sessions-list)
+    (define-key map (kbd "C-c W") #'ollama-buddy-sessions-delete)
     ;; History
     (define-key map (kbd "C-c H") #'ollama-buddy-toggle-history)
     (define-key map (kbd "C-c X") #'ollama-buddy-clear-history)
+    (define-key map (kbd "C-c V") #'ollama-buddy-display-history)
     ;; Multishot
     (define-key map (kbd "C-c l") #'ollama-buddy--multishot-prompt)
     ;; Parameters
@@ -2894,7 +3006,7 @@ Modifies the variable in place."
     (define-key map (kbd "C-c T") #'ollama-buddy-toggle-token-display)
     (define-key map (kbd "C-c Z") #'ollama-buddy-toggle-params-in-header)
     (define-key map (kbd "C-c C-o") #'ollama-buddy-toggle-markdown-conversion)
-    (define-key map (kbd "C-c C-s") #'ollama-buddy-show-system-prompt)
+    (define-key map (kbd "C-c A") #'ollama-buddy-toggle-interface-level)
     map)
   "Keymap for ollama-buddy mode.")
 
