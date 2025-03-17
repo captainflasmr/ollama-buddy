@@ -18,6 +18,147 @@ The name is just something a little bit fun and it seems to always remind me of 
 
 * Whats New
 
+** <2025-03-17> *0.9.1*
+
+New simple basic interface is available.
+
+As this package becomes more advanced, I've been adding more to the intro message, making it increasingly cluttered. This could be off-putting for users who just want a simple interface to a local LLM via Ollama.
+
+Therefore I have decided to add a customization option to simplify the menu.
+
+Note: all functionality will still be available through keybindings, so just like Emacs then! :)
+
+Note: some could see this initially as a breaking change as the intro message will look different, but rest assured all the functionality is still there (just to re-emphasize), so if you have been using it before and want the original functionality/intro message, just set :
+
+#+begin_src 
+(setq ollama-buddy-interface-level 'advanced)
+#+end_src
+
+#+begin_src elisp
+(defcustom ollama-buddy-interface-level 'basic
+  "Level of interface complexity to display.
+'basic shows minimal commands for new users.
+'advanced shows all available commands and features."
+  :type '(choice (const :tag "Basic (for beginners)" basic)
+                (const :tag "Advanced (full features)" advanced))
+  :group 'ollama-buddy)
+#+end_src
+
+By default the menu will be set to Basic, unless obviously set explictly in an init file.  Here is an example of the basic menu:
+
+#+begin_src 
+,*** Welcome to OLLAMA BUDDY
+
+,#+begin_example
+ ___ _ _      n _ n      ___       _   _ _ _
+|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |
+| | | | | .  |     | .  | . | | | . | . |__ |
+|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|
+,#+end_example
+
+,**** Available Models
+
+  (a) another:latest     (d) jamesio:latest
+  (b) funnyname2:latest  (e) tinyllama:latest
+  (c) funnyname:latest   (f) llama:latest
+
+,**** Quick Tips
+
+- Ask me anything!                    C-c C-c
+- Change model                        C-c m
+- Cancel request                      C-c k
+- Browse prompt history               M-p/M-n
+- Advanced interface (show all tips)  C-c A
+#+end_src
+
+and of the more advanced version
+
+#+begin_src 
+,*** Welcome to OLLAMA BUDDY
+
+,#+begin_example
+ ___ _ _      n _ n      ___       _   _ _ _
+|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |
+| | | | | .  |     | .  | . | | | . | . |__ |
+|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|
+,#+end_example
+
+,**** Available Models
+
+  (a) another:latest     (d) jamesio:latest
+  (b) funnyname2:latest  (e) tinyllama:latest
+  (c) funnyname:latest   (f) llama:latest
+
+,**** Quick Tips
+
+- Ask me anything!                    C-c C-c
+- Show Help/Token-usage/System-prompt C-c h/U/C-s
+- Model Change/Info/Cancel            C-c m/i/k
+- Prompt history                      M-p/M-n
+- Session New/Load/Save/List/Delete   C-c N/L/S/Y/W
+- History Toggle/Clear/Show           C-c H/X/V
+- Prompt to multiple models           C-c l
+- Parameter Edit/Show/Help/Reset      C-c P/G/I/K
+- System Prompt/Clear   C-u/+C-u +C-u C-c C-c
+- Toggle JSON/Token/Params/Format     C-c D/T/Z/C-o
+- Basic interface (simpler display)   C-c A
+- In another buffer? M-x ollama-buddy-menu
+#+end_src
+
+
+
+** <2025-03-17> *0.9.0*
+
+Added command-specific parameter customization
+
+- Added :parameters property to command definitions for granular control
+- Implemented functions to apply and restore parameter settings
+- Added example configuration to refactor-code command
+
+With the latest update, you can now define specific parameter sets for each command in the menu, enabling you to optimize each AI interaction for its particular use case.
+
+Different AI tasks benefit from different parameter settings. When refactoring code, you might want a more deterministic, precise response (lower temperature, higher repetition penalty), but when generating creative content, you might prefer more variation and randomness (higher temperature, lower repetition penalty). Previously, you had to manually adjust these parameters each time you switched between different types of tasks.
+
+The new command-specific parameters feature lets you pre-configure the optimal settings for each use case. Here's how it works:
+
+*** Key Features
+
+- *Per-Command Parameter Sets*: Define custom parameter values for each command in your menu
+- *Automatic Application*: Parameters are applied when running a command and restored afterward
+- *Non-Destructive*: Your global parameter settings remain untouched
+- *Easy Configuration*: Simple interface for adding or updating parameters
+
+*** Example Configuration
+
+#+begin_src elisp
+;; Define a command with specific parameters
+(refactor-code
+ :key ?r
+ :description "Refactor code"
+ :prompt "refactor the following code:"
+ :system "You are an expert software engineer..."
+ :parameters ((temperature . 0.2) (top_p . 0.7) (repeat_penalty . 1.3))
+ :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
+
+;; Add parameters to an existing command
+(ollama-buddy-add-parameters-to-command 'git-commit
+ :temperature 0.4
+ :top_p 0.9
+ :repeat_penalty 1.1)
+
+;; Update properties and parameters at once
+(ollama-buddy-update-command-with-params 'describe-code
+ :model "codellama:latest"
+ :parameters '((temperature . 0.3) (top_p . 0.8)))
+#+end_src
+
+This feature is particularly useful for:
+
+1. *Code-related tasks*: Lower temperature for more deterministic code generation
+2. *Creative writing*: Higher temperature for more varied and creative outputs
+3. *Technical explanations*: Balanced settings for clear, accurate explanations
+4. *Summarization tasks*: Custom parameters to control verbosity and focus
+
 ** <2025-03-16> *0.8.5*
 
 Added system prompt support for commands
