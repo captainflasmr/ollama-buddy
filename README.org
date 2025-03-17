@@ -18,6 +18,31 @@ The name is just something a little bit fun and it seems to always remind me of 
 
 * Whats New
 
+** <2025-03-17> *0.9.5*
+
+Added conversation history editing
+
+- Added functions to edit conversation history (=ollama-buddy-history-edit=, =ollama-buddy-history-save=, etc.).
+- Updated =ollama-buddy-display-history= to support history editing.
+- Added keybinding =C-c E= for history editing.
+
+Introducing conversation history editing!!
+
+*Key Features*
+
+Now, you can directly modify past interactions, making it easier to refine and manage your =ollama-buddy= chat history.
+
+Previously, conversation history was static, you could view it but not change it. With this update, you can now:
+
+- Edit conversation history directly in a buffer.
+- Modify past interactions for accuracy or clarity.
+- Save or discard changes with intuitive keybindings (=C-c C-c= to save, =C-c C-k= to cancel).
+- Edit the history of all models or a specific one.
+
+Simply use the new command *=C-c E=* to open the conversation history editor. This will display your past interactions in an editable format (alist). Once you’ve made your changes, press =C-c C-c= to save them back into Ollama Buddy’s memory.
+
+and with a universal argument you can leverage =C-c E= to edit an individual model.
+
 ** <2025-03-17> *0.9.1*
 
 New simple basic interface is available.
