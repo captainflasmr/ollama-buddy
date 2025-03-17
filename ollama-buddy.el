@@ -227,13 +227,6 @@ These are the only parameters that will be sent to Ollama."
      :system "You are a professional editor who identifies and corrects grammar, spelling, punctuation, and style errors with brief explanations of corrections, providing both the corrected text and a list of changes made."
      :action (lambda () (ollama-buddy--send-with-command 'proofread)))
     
-    (make-concise
-     :key ?z
-     :description "Make concise"
-     :prompt "reduce wordiness while preserving meaning:"
-     :system "You are a concise writing specialist who eliminates redundancy, replaces wordy phrases with simpler alternatives, uses active voice, combines sentences, and removes unnecessary qualifiers while preserving the original meaning and tone."
-     :action (lambda () (ollama-buddy--send-with-command 'make-concise)))
-    
     ;; System Commands
     (custom-prompt
      :key ?e
