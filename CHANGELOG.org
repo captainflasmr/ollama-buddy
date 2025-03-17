@@ -10,6 +10,19 @@ This document contains the release notes for each tagged commit on the
 project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
+
+** <2025-03-17> *0.9.1*
+
+New simple basic interface is available.
+
+** <2025-03-17> *0.9.0*
+
+Added command-specific parameter customization
+
+- Added :parameters property to command definitions for granular control
+- Implemented functions to apply and restore parameter settings
+- Added example configuration to refactor-code command
+
 ** <2025-03-16> *0.8.5*
 
 Added system prompt support for commands
