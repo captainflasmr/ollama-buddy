@@ -766,8 +766,8 @@ If TIMEOUT is nil, use a default of 2 seconds."
     (ollama-buddy--prepare-prompt-area t))
   
   ;; Update status
-  (ollama-buddy--update-status "System prompt and suffix reset")
-  (message "System prompt and suffix have been reset"))
+  (ollama-buddy--update-status "System prompt reset")
+  (message "System prompt has been reset"))
 
 (defun ollama-buddy-show-raw-model-info ()
   "Retrieve and display raw JSON information about the current default model."
@@ -1410,7 +1410,7 @@ With prefix argument ALL-MODELS, clear history for all models."
   (message "Ollama conversation history %s"
            (if ollama-buddy-history-enabled "enabled" "disabled")))
 
-(defun ollama-buddy--display-history (&optional all-models)
+(defun ollama-buddy-display-history (&optional all-models)
   "Display the conversation history in a buffer.
 With prefix argument ALL-MODELS, show history for all models."
   (interactive "P")
@@ -1456,15 +1456,10 @@ With prefix argument ALL-MODELS, show history for all models."
                   (let* ((role (alist-get 'role msg))
                          (content (alist-get 'content msg))
                          (role-face (if (string= role "user")
-                                        '(:inherit bold :foreground "green")
-                                      '(:inherit bold :foreground "blue"))))
+                                        '(:inherit bold)
+                                      '(:inherit bold))))
                     (insert (propertize (format "[%s]: " (upcase role)) 'face role-face))
                     (insert (format "%s\n\n" content))))))))
-
-        (insert "\n==================================================")
-        (insert "\nM-x ollama-buddy-toggle-history to toggle history")
-        (insert "\nM-x ollama-buddy-clear-history to clear history for current model")
-        (insert "\nC-u M-x ollama-buddy-clear-history to clear history for all models")
         (view-mode 1)))
     (display-buffer buf)))
 
@@ -1480,7 +1475,7 @@ With prefix argument ALL-MODELS, show history for all models."
       
       ;; Update status with token information
       (ollama-buddy--update-status
-       (format "Processing... [%d tokens, %.1f t/s]"
+       (format "Typing... [%d tokens, %.1f t/s]"
                ollama-buddy--current-token-count total-rate))
       
       ;; Update tracking variables
@@ -2513,7 +2508,7 @@ ACTUAL-MODEL is the model being used instead."
       (error
        (ollama-buddy--update-status "OFFLINE - Connection failed")
        (error "Failed to connect to Ollama: %s" (error-message-string err))))
-    
+
     (condition-case err
         (process-send-string
          ollama-buddy--active-process
@@ -2875,16 +2870,12 @@ Modifies the variable in place."
     
     ;; Handle prefix arguments
     (cond
-     ;; C-u C-u C-u (16) - Set suffix
-     ((= current-prefix-arg-val 16)
-      (ollama-buddy-set-suffix))
-     
      ;; C-u (4) - Set system prompt
      ((= current-prefix-arg-val 4)
       (ollama-buddy-set-system-prompt))
 
-     ;; C-u C-u (64) - Reset both system prompt and suffix
-     ((= current-prefix-arg-val 64)
+     ;; C-u C-u (16) - Reset both system prompt
+     ((= current-prefix-arg-val 16)
       (ollama-buddy-reset-all-prompts))
      
      ;; No prefix - Regular prompt
