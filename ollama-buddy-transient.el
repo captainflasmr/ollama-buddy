@@ -36,7 +36,7 @@
     ("i" "Show Model Info" ollama-buddy-show-raw-model-info)
     ("M" "Multishot" ollama-buddy--multishot-prompt)
     ]
-      
+   
    ["Roles"
     ("R" "Switch Roles" ollama-buddy-roles-switch-role)
     ("E" "Create New Role" ollama-buddy-role-creator-create-new-role)
@@ -44,7 +44,18 @@
     ]
    ]
   
-  [["History"
+  [
+   ["Display Options"
+    ("A" "Toggle Interface Level" ollama-buddy-toggle-interface-level)
+    ("B" "Toggle Debug Mode" ollama-buddy-toggle-debug-mode)
+    ("T" "Toggle Token Display" ollama-buddy-toggle-token-display)
+    ("U" "Display Token Stats" ollama-buddy-display-token-stats)
+    ("C-o" "Toggle Markdown->Org" ollama-buddy-toggle-markdown-conversion)
+    ("c" "Toggle Model Colors" ollama-buddy-toggle-model-colors)
+    ("g" "Token Usage Graph" ollama-buddy-display-token-graph)
+    ]
+   
+   ["History"
     ("H" "Toggle History" ollama-buddy-toggle-history)
     ("X" "Clear History" ollama-buddy-clear-history)
     ("V" "Display History" ollama-buddy-display-history)
@@ -65,17 +76,34 @@
     ("I" "Parameter Help" ollama-buddy-params-help)
     ("K" "Reset Parameters" ollama-buddy-params-reset)
     ("F" "Toggle Params in Header" ollama-buddy-toggle-params-in-header)
-    ]
-   
-   ["Display Options"
-    ("A" "Toggle Interface Level" ollama-buddy-toggle-interface-level)
-    ("B" "Toggle Debug Mode" ollama-buddy-toggle-debug-mode)
-    ("T" "Toggle Token Display" ollama-buddy-toggle-token-display)
-    ("U" "Display Token Stats" ollama-buddy-display-token-stats)
-    ("C-o" "Toggle Markdown->Org" ollama-buddy-toggle-markdown-conversion)
+    ("p" "Parameter Profiles" ollama-buddy-transient-profile-menu)
     ]
    ]
   )
+
+(transient-define-prefix ollama-buddy-transient-profile-menu ()
+  "Parameter profiles menu for Ollama Buddy."
+  ["Parameter Profiles"
+   [:description
+    (lambda ()
+      (format "Current modified parameters: %s"
+              (mapconcat #'symbol-name ollama-buddy-params-modified ", ")))]
+   
+   ["Available Profiles"
+    ("d" "Default" (lambda () (interactive)
+                     (ollama-buddy-apply-param-profile "Default")
+                     (message "Applied Default profile")))
+    ("c" "Creative" (lambda () (interactive)
+                      (ollama-buddy-apply-param-profile "Creative")
+                      (message "Applied Creative profile")))
+    ("p" "Precise" (lambda () (interactive)
+                     (ollama-buddy-apply-param-profile "Precise")
+                     (message "Applied Precise profile")))]
+   
+   ["Actions"
+    ("q" "Back to Main Menu" ollama-buddy-transient-main-menu)]]
+  (interactive)
+  (transient-setup 'ollama-buddy-transient-profile-menu))
 
 (transient-define-prefix ollama-buddy-transient-parameter-menu ()
   "Parameter menu for Ollama Buddy."
@@ -101,27 +129,39 @@
     ("E" "Mirostat Eta" (lambda () (interactive) (ollama-buddy-params-edit 'mirostat_eta)))]
    ]
   
-  [   ["Resource"
-       ("c" "Num Ctx" (lambda () (interactive) (ollama-buddy-params-edit 'num_ctx)))
-       ("b" "Num Batch" (lambda () (interactive) (ollama-buddy-params-edit 'num_batch)))
-       ("g" "Num GPU" (lambda () (interactive) (ollama-buddy-params-edit 'num_gpu)))
-       ("G" "Main GPU" (lambda () (interactive) (ollama-buddy-params-edit 'main_gpu)))
-       ("K" "Num Keep" (lambda () (interactive) (ollama-buddy-params-edit 'num_keep)))]
-      
-      ["More Resource"
-       ("P" "Num Predict" (lambda () (interactive) (ollama-buddy-params-edit 'num_predict)))
-       ("S" "Seed" (lambda () (interactive) (ollama-buddy-params-edit 'seed)))
-       ("N" "NUMA" (lambda () (interactive) (ollama-buddy-params-edit 'numa)))
-       ("V" "Low VRAM" (lambda () (interactive) (ollama-buddy-params-edit 'low_vram)))
-       ("o" "Vocab Only" (lambda () (interactive) (ollama-buddy-params-edit 'vocab_only)))]
-      
-      ["Memory"
-       ("m" "Use MMAP" (lambda () (interactive) (ollama-buddy-params-edit 'use_mmap)))
-       ("L" "Use MLOCK" (lambda () (interactive) (ollama-buddy-params-edit 'use_mlock)))
-       ("C" "Num Thread" (lambda () (interactive) (ollama-buddy-params-edit 'num_thread)))]
-      ]
-  
-  [["Actions"
+  [["Resource"
+    ("c" "Num Ctx" (lambda () (interactive) (ollama-buddy-params-edit 'num_ctx)))
+    ("b" "Num Batch" (lambda () (interactive) (ollama-buddy-params-edit 'num_batch)))
+    ("g" "Num GPU" (lambda () (interactive) (ollama-buddy-params-edit 'num_gpu)))
+    ("G" "Main GPU" (lambda () (interactive) (ollama-buddy-params-edit 'main_gpu)))
+    ("K" "Num Keep" (lambda () (interactive) (ollama-buddy-params-edit 'num_keep)))]
+   
+   ["More Resource"
+    ("P" "Num Predict" (lambda () (interactive) (ollama-buddy-params-edit 'num_predict)))
+    ("S" "Seed" (lambda () (interactive) (ollama-buddy-params-edit 'seed)))
+    ("N" "NUMA" (lambda () (interactive) (ollama-buddy-params-edit 'numa)))
+    ("V" "Low VRAM" (lambda () (interactive) (ollama-buddy-params-edit 'low_vram)))
+    ("o" "Vocab Only" (lambda () (interactive) (ollama-buddy-params-edit 'vocab_only)))]
+   
+   ["Memory"
+    ("m" "Use MMAP" (lambda () (interactive) (ollama-buddy-params-edit 'use_mmap)))
+    ("L" "Use MLOCK" (lambda () (interactive) (ollama-buddy-params-edit 'use_mlock)))
+    ("C" "Num Thread" (lambda () (interactive) (ollama-buddy-params-edit 'num_thread)))]
+   ]
+
+  [["Profiles"
+    ("d" "Default Profile" (lambda () (interactive) 
+                             (ollama-buddy-apply-param-profile "Default")
+                             (message "Applied Default profile")))
+    ("a" "Creative Profile" (lambda () (interactive) 
+                              (ollama-buddy-apply-param-profile "Creative")
+                              (message "Applied Creative profile")))
+    ("e" "Precise Profile" (lambda () (interactive) 
+                             (ollama-buddy-apply-param-profile "Precise")
+                             (message "Applied Precise profile")))
+    ("A" "All Profiles" ollama-buddy-transient-profile-menu)]
+   
+   ["Actions"
     ("D" "Display All" ollama-buddy-params-display)
     ("R" "Reset All" ollama-buddy-params-reset)
     ("H" "Help" ollama-buddy-params-help)
