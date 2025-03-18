@@ -71,6 +71,7 @@
 (require 'org)
 (require 'savehist)
 (require 'color)
+(require 'ollama-buddy-transient)
 
 (defgroup ollama-buddy nil
   "Customization group for Ollama Buddy."

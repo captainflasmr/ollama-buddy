@@ -8,7 +8,6 @@
 ;;; Code:
 
 (require 'transient)
-(require 'ollama-buddy)
 (require 'ollama-buddy-fabric)
 
 (transient-define-prefix ollama-buddy-transient-main-menu ()

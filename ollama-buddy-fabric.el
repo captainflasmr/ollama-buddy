@@ -7,9 +7,6 @@
 
 ;;; Code:
 
-(require 'ollama-buddy)
-(require 'cl-lib)
-
 (defgroup ollama-buddy-fabric nil
   "Customization group for ollama-buddy-fabric."
   :group 'ollama-buddy
@@ -342,7 +339,7 @@
 
 ;; Add a command to set the system prompt without sending
 (defun ollama-buddy-fabric-set-system-prompt ()
-  "Set the ollama-buddy system prompt to a Fabric pattern without sending a request."
+  "Set the system prompt to a Fabric pattern without sending a request."
   (interactive)
   (let ((system-prompt (ollama-buddy-fabric-yield-prompt)))
     (setq ollama-buddy--current-system-prompt system-prompt)
