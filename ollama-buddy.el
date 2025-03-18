@@ -286,6 +286,109 @@ Each command is defined with:
   :type '(alist :key-type string :value-type (alist :key-type symbol :value-type sexp))
   :group 'ollama-buddy-params)
 
+(defun ollama-buddy-apply-param-profile (profile-name)
+  "Apply parameter PROFILE-NAME from ollama-buddy-params-profiles."
+  (let ((profile (alist-get profile-name ollama-buddy-params-profiles nil nil #'string=)))
+    (if (null profile)
+        (message "Profile '%s' not found" profile-name)
+      ;; Reset all parameters to defaults
+      (setq ollama-buddy-params-active (copy-tree ollama-buddy-params-defaults)
+            ollama-buddy-params-modified nil)
+      ;; Apply profile-specific parameters
+      (dolist (param-pair profile)
+        (let ((param (car param-pair))
+              (value (cdr param-pair)))
+          (setf (alist-get param ollama-buddy-params-active) value)
+          (add-to-list 'ollama-buddy-params-modified param)))
+      (ollama-buddy--update-status "Profile Applied"))))
+
+(defun ollama-buddy-display-token-graph ()
+  "Display a visual graph of token usage statistics."
+  (interactive)
+  (let ((buf (get-buffer-create "*Ollama Token Graph*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert "Token Usage Graph\n\n")
+        
+        (if (null ollama-buddy--token-usage-history)
+            (insert "No token usage data available yet.")
+          
+          ;; Group by model
+          (let ((model-data (make-hash-table :test 'equal)))
+            (dolist (info ollama-buddy--token-usage-history)
+              (let* ((model (plist-get info :model))
+                     (tokens (plist-get info :tokens))
+                     (rate (plist-get info :rate))
+                     (model-stats (gethash model model-data nil)))
+                (unless model-stats
+                  (setq model-stats (list :tokens 0 :count 0 :rates nil)))
+                (plist-put model-stats :tokens (+ (plist-get model-stats :tokens) tokens))
+                (plist-put model-stats :count (1+ (plist-get model-stats :count)))
+                (plist-put model-stats :rates 
+                           (cons rate (plist-get model-stats :rates)))
+                (puthash model model-stats model-data)))
+            
+            ;; Display token count graph
+            (insert "=== Token Count by Model ===\n\n")
+            (let* ((models nil)
+                   (max-tokens 0)
+                   (max-model-len 0))
+              
+              ;; Gather data
+              (maphash (lambda (model stats)
+                         (push model models)
+                         (setq max-tokens (max max-tokens (plist-get stats :tokens)))
+                         (setq max-model-len (max max-model-len (length model))))
+                       model-data)
+              
+              ;; Sort models by token count
+              (setq models (sort models (lambda (a b)
+                                          (> (plist-get (gethash a model-data) :tokens)
+                                             (plist-get (gethash b model-data) :tokens)))))
+              
+              ;; Display bar chart
+              (dolist (model models)
+                (let* ((stats (gethash model model-data))
+                       (tokens (plist-get stats :tokens))
+                       (count (plist-get stats :count))
+                       (color (ollama-buddy--get-model-color model))
+                       (bar-width (round (* 50 (/ (float tokens) max-tokens))))
+                       (bar (make-string bar-width ?█)))
+                  (insert (format (format "%%-%ds │ %%s %%d tokens (%%d responses)\n" 
+                                          max-model-len)
+                                  model
+                                  (propertize bar 'face `(:foreground ,color))
+                                  tokens count))))
+              
+              ;; Display token rate graph
+              (insert "\n=== Average Token Rate by Model ===\n\n")
+              (let ((max-rate 0))
+                ;; Find max rate
+                (maphash (lambda (_model stats)
+                           (let ((rates (plist-get stats :rates)))
+                             (when rates
+                               (let ((avg (/ (apply #'+ rates) (float (length rates)))))
+                                 (setq max-rate (max max-rate avg))))))
+                         model-data)
+                
+                ;; Display bar chart
+                (dolist (model models)
+                  (let* ((stats (gethash model model-data))
+                         (rates (plist-get stats :rates))
+                         (avg-rate (if rates (/ (apply #'+ rates) (float (length rates))) 0))
+                         (color (ollama-buddy--get-model-color model))
+                         (bar-width (round (* 50 (/ avg-rate max-rate))))
+                         (bar (make-string bar-width ?█)))
+                    (insert (format (format "%%-%ds │ %%s %%.1f tokens/sec\n" 
+                                            max-model-len)
+                                    model
+                                    (propertize bar 'face `(:foreground ,color))
+                                    avg-rate)))))))))
+      (goto-char (point-min))
+      (view-mode 1))
+    (display-buffer buf)))
+
 (defun ollama-buddy-history-edit ()
   "Edit the conversation history in a buffer."
   (interactive)
