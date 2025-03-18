@@ -3,11 +3,13 @@
 ;;; Commentary:
 ;; This extension provides a transient-based menu system for ollama-buddy.
 ;; It organizes the commands into logical groups with descriptive prefixes.
+;; Now includes Fabric pattern integration.
 
 ;;; Code:
 
 (require 'transient)
 (require 'ollama-buddy)
+(require 'ollama-buddy-fabric)
 
 (transient-define-prefix ollama-buddy-transient-main-menu ()
   "Ollama Buddy main menu."
@@ -37,10 +39,11 @@
     ("M" "Multishot" ollama-buddy--multishot-prompt)
     ]
    
-   ["Roles"
+   ["Roles & Patterns"
     ("R" "Switch Roles" ollama-buddy-roles-switch-role)
     ("E" "Create New Role" ollama-buddy-role-creator-create-new-role)
     ("D" "Open Roles Directory" ollama-buddy-roles-open-directory)
+    ("f" "Fabric Patterns" ollama-buddy-transient-fabric-menu)
     ]
    ]
   
@@ -80,6 +83,52 @@
     ]
    ]
   )
+
+(transient-define-prefix ollama-buddy-transient-fabric-menu ()
+  "Fabric patterns menu for Ollama Buddy."
+  [:description
+   (lambda ()
+     (format "Fabric Patterns (%d available%s)"
+             (length ollama-buddy-fabric--patterns)
+             (if ollama-buddy-fabric--last-sync-time
+                 (format ", last synced: %s" 
+                         (format-time-string "%Y-%m-%d %H:%M" 
+                                             ollama-buddy-fabric--last-sync-time))
+               ", never synced")))]
+  
+  [["Actions"
+    ("s" "Send with Pattern" ollama-buddy-fabric-send)
+    ("p" "Set as System Prompt" ollama-buddy-fabric-set-system-prompt)
+    ("l" "List All Patterns" ollama-buddy-fabric-list-patterns)
+    ("v" "View Pattern Details" ollama-buddy-fabric-show-pattern)]
+   
+   ["Sync"
+    ("S" "Sync Latest Patterns" ollama-buddy-fabric-sync-patterns)
+    ("P" "Populate Cache" ollama-buddy-fabric-populate-patterns)
+    ("I" "Initial Setup" ollama-buddy-fabric-setup)]
+   
+   ["Categories"
+    ("u" "Universal Patterns" (lambda () (interactive)
+                               (let ((ollama-buddy-fabric-pattern-categories '("universal")))
+                                 (ollama-buddy-fabric-send))))
+    ("c" "Code Patterns" (lambda () (interactive)
+                           (let ((ollama-buddy-fabric-pattern-categories '("code")))
+                             (ollama-buddy-fabric-send))))
+    ("w" "Writing Patterns" (lambda () (interactive)
+                             (let ((ollama-buddy-fabric-pattern-categories '("writing")))
+                               (ollama-buddy-fabric-send))))
+    ("a" "Analysis Patterns" (lambda () (interactive)
+                              (let ((ollama-buddy-fabric-pattern-categories '("analysis")))
+                                (ollama-buddy-fabric-send))))]
+   
+   ["Navigation"
+    ("q" "Back to Main Menu" ollama-buddy-transient-main-menu)]]
+  
+  (interactive)
+  (unless ollama-buddy-fabric--patterns
+    (message "Loading Fabric patterns...")
+    (ollama-buddy-fabric-populate-patterns))
+  (transient-setup 'ollama-buddy-transient-fabric-menu))
 
 (transient-define-prefix ollama-buddy-transient-profile-menu ()
   "Parameter profiles menu for Ollama Buddy."
@@ -182,8 +231,17 @@
     ("s" "Synonym Lookup" (lambda () (interactive) (ollama-buddy--send-with-command 'synonym)))
     ("p" "Proofread Text" (lambda () (interactive) (ollama-buddy--send-with-command 'proofread)))]
    
+   ["Pattern-based"
+    ("f" "Fabric Patterns" ollama-buddy-transient-fabric-menu)
+    ("u" "Universal Patterns" (lambda () (interactive)
+                                (let ((ollama-buddy-fabric-pattern-categories '("universal")))
+                                  (ollama-buddy-fabric-send))))
+    ("c" "Code Patterns" (lambda () (interactive)
+                            (let ((ollama-buddy-fabric-pattern-categories '("code")))
+                              (ollama-buddy-fabric-send))))]
+   
    ["Custom"
-    ("c" "Custom Prompt" ollama-buddy--menu-custom-prompt)
+    ("C" "Custom Prompt" ollama-buddy--menu-custom-prompt)
     ("m" "Minibuffer Prompt" ollama-buddy--menu-minibuffer-prompt)]
    
    ["Actions"
