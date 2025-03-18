@@ -13,62 +13,69 @@
   "Ollama Buddy main menu."
   :info-manual "(ollama-buddy) Main Commands"
   [
-   ;; " n___n\n|o(Y)o| Ollama Buddy\n===================="
    "|o(Y)o| Ollama Buddy"
-   ;; " n___n\n|o(Y)o|\n"
    ["Chat"
+    ("o" "Open Chat" ollama-buddy--open-chat)
+    ("O" "Commands" ollama-buddy-transient-commands-menu)
     ("RET" "Send Prompt" ollama-buddy--send-prompt)
     ("h" "Help/Menu" ollama-buddy--menu-help-assistant)
-    ("o" "Open Chat" ollama-buddy--open-chat)
-    ("l" "Send Region" (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))
     ("k" "Kill/Cancel Request" ollama-buddy--cancel-request)
-    ("O" "Commands" ollama-buddy-transient-commands-menu)
+    ]
+
+   ["Prompts"
+    ("l" "Send Region" (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))
+    ("s" "Set System Prompt" ollama-buddy-set-system-prompt)
+    ("C-s" "Show System Prompt" ollama-buddy-show-system-prompt)
+    ("r" "Reset System Prompt" ollama-buddy-reset-system-prompt)
+    ("b" "Ollama Buddy Menu" ollama-buddy-menu)
     ]
    
    ["Model"
     ("m" "Switch Model" ollama-buddy--swap-model)
     ("v" "View Model Status" ollama-buddy-show-model-status)
     ("i" "Show Model Info" ollama-buddy-show-raw-model-info)
-    ("M" "Multishot (Multiple Models)" ollama-buddy--multishot-prompt)]
-   
+    ("M" "Multishot" ollama-buddy--multishot-prompt)
+    ]
+      
    ["Roles"
     ("R" "Switch Roles" ollama-buddy-roles-switch-role)
     ("E" "Create New Role" ollama-buddy-role-creator-create-new-role)
-    ("D" "Open Roles Directory" ollama-buddy-roles-open-directory)]
-   
-   ["Prompts"
-    ("s" "Set System Prompt" ollama-buddy-set-system-prompt)
-    ("C-s" "Show System Prompt" ollama-buddy-show-system-prompt)
-    ("r" "Reset System Prompt" ollama-buddy-reset-system-prompt)]
+    ("D" "Open Roles Directory" ollama-buddy-roles-open-directory)
+    ]
    ]
   
   [["History"
     ("H" "Toggle History" ollama-buddy-toggle-history)
     ("X" "Clear History" ollama-buddy-clear-history)
     ("V" "Display History" ollama-buddy-display-history)
-    ("J" "Edit History" ollama-buddy-history-edit)]
+    ("J" "Edit History" ollama-buddy-history-edit)
+    ]
    
    ["Sessions"
     ("N" "New Session" ollama-buddy-sessions-new)
     ("L" "Load Session" ollama-buddy-sessions-load)
     ("S" "Save Session" ollama-buddy-sessions-save)
     ("Q" "List Sessions" ollama-buddy-sessions-list)
-    ("Z" "Delete Session" ollama-buddy-sessions-delete)]
+    ("Z" "Delete Session" ollama-buddy-sessions-delete)
+    ]
    
    ["Parameters"
     ("P" "Edit Parameter" ollama-buddy-transient-parameter-menu)
     ("G" "Display Parameters" ollama-buddy-params-display)
     ("I" "Parameter Help" ollama-buddy-params-help)
     ("K" "Reset Parameters" ollama-buddy-params-reset)
-    ("F" "Toggle Params in Header" ollama-buddy-toggle-params-in-header)]
+    ("F" "Toggle Params in Header" ollama-buddy-toggle-params-in-header)
+    ]
    
    ["Display Options"
     ("A" "Toggle Interface Level" ollama-buddy-toggle-interface-level)
     ("B" "Toggle Debug Mode" ollama-buddy-toggle-debug-mode)
     ("T" "Toggle Token Display" ollama-buddy-toggle-token-display)
     ("U" "Display Token Stats" ollama-buddy-display-token-stats)
-    ("C-o" "Toggle Markdown->Org" ollama-buddy-toggle-markdown-conversion)]
-   ])
+    ("C-o" "Toggle Markdown->Org" ollama-buddy-toggle-markdown-conversion)
+    ]
+   ]
+  )
 
 (transient-define-prefix ollama-buddy-transient-parameter-menu ()
   "Parameter menu for Ollama Buddy."
