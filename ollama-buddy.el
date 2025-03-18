@@ -2,7 +2,7 @@
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
 ;; Version: 0.9.5
-;; Package-Requires: ((emacs "26.1"))
+;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
 ;;
@@ -83,9 +83,7 @@
   :prefix "ollama-buddy-param-")
 
 (defcustom ollama-buddy-interface-level 'basic
-  "Level of interface complexity to display.
-'basic shows minimal commands for new users.
-'advanced shows all available commands and features."
+  "Level of interface complexity to display."
   :type '(choice (const :tag "Basic (for beginners)" basic)
                 (const :tag "Advanced (full features)" advanced))
   :group 'ollama-buddy)
@@ -250,7 +248,7 @@ Each command is defined with:
   :model - Specific Ollama model to use (nil means use default)
   :prompt - Optional user prompt prefix
   :system - Optional system prompt/message
-  :parameters - Association list of Ollama API parameters for this specific command
+  :parameters - Association list of Ollama API parameters
   :action - Function to execute"
   :type '(repeat
           (list :tag "Command Definition"
@@ -289,9 +287,7 @@ Each command is defined with:
   :group 'ollama-buddy-params)
 
 (defun ollama-buddy-history-edit ()
-  "Edit the conversation history in a buffer.
-Outputs the pretty-printed JSON version of ollama-buddy--conversation-history-by-model
-to a buffer for editing."
+  "Edit the conversation history in a buffer."
   (interactive)
   (cond
    ((= (prefix-numeric-value current-prefix-arg) 4)
@@ -418,7 +414,7 @@ to a buffer for editing."
     (message "Edit history and press C-c C-c to save, C-c C-k to cancel")))
 
 (defun ollama-buddy-history-save-model (model)
-  "Save the edited history for MODEL back to ollama-buddy--conversation-history-by-model."
+  "Save the edited history for MODEL back to variable."
   (interactive)
   (unless (and (boundp 'ollama-buddy-editing-history)
                ollama-buddy-editing-history
@@ -480,11 +476,8 @@ to a buffer for editing."
 ;;;###autoload
 (defun ollama-buddy-update-command-with-params (entry-name &rest props-and-params)
   "Update command ENTRY-NAME with properties and parameters.
-PROPS-AND-PARAMS should be property-value pairs, with an optional :parameters
-property followed by parameter-value pairs.
-Example: (ollama-buddy-update-command-with-params 'refactor-code
-          :model \"codellama:latest\" 
-          :parameters '((temperature . 0.2) (top_p . 0.7)))"
+PROPS-AND-PARAMS should be property-value pairs,
+with an optional :parameters property followed by parameter-value pairs."
   (when-let ((entry (assq entry-name ollama-buddy-command-definitions)))
     (let ((current-plist (cdr entry))
           properties
@@ -515,10 +508,8 @@ Example: (ollama-buddy-update-command-with-params 'refactor-code
   ollama-buddy-command-definitions)
 
 (defun ollama-buddy-add-parameters-to-command (entry-name &rest parameters)
-  "Add specific parameters to ENTRY-NAME command in ollama-buddy-command-definitions.
-PARAMETERS should be a plist with parameter names and values.
-Example: (ollama-buddy-add-parameters-to-command 'refactor-code
-          :temperature 0.2 :top_p 0.7 :repeat_penalty 1.5)"
+  "Add specific parameters to ENTRY-NAME command.
+PARAMETERS should be a plist with parameter names and values."
   (when-let ((entry (assq entry-name ollama-buddy-command-definitions)))
     (let* ((current-plist (cdr entry))
            (current-params (plist-get current-plist :parameters))
@@ -537,9 +528,7 @@ Example: (ollama-buddy-add-parameters-to-command 'refactor-code
 ;;;###autoload
 (defun ollama-buddy-update-menu-entry (entry-name &rest props)
   "Update menu entry ENTRY-NAME with property-value pairs in PROPS.
-PROPS should be a sequence of property-value pairs.
-Example: (ollama-buddy-update-menu-entry 'refactor-code
-          :model \"codellama:latest\" :system \"You are a coding expert\")"
+PROPS should be a sequence of property-value pairs."
   (when-let ((entry (assq entry-name ollama-buddy-command-definitions)))
     (let ((current-plist (cdr entry)))
       (while props
@@ -2727,12 +2716,12 @@ ACTUAL-MODEL is the model being used instead."
 - Show Help/Token-usage/System-prompt  C-c h/U/C-s
 - Model Change/Info/Cancel             C-c m/i/k
 - Prompt history                       M-p/M-n
-- Session New/Load/Save/List/Delete    C-c N/L/S/Y/W
-- History Toggle/Clear/Show/Edit       C-c H/X/V/E
-- Prompt to multiple models            C-c l
+- Session New/Load/Save/List/Delete    C-c N/L/S/Q/Z
+- History Toggle/Clear/Show/Edit       C-c H/X/V/J
+- Prompt to multiple models            C-c M
 - Parameter Edit/Show/Help/Reset       C-c P/G/I/K
 - System Prompt/Clear    C-u/+C-u +C-u C-c C-c
-- Toggle JSON/Token/Params/Format      C-c D/T/Z/C-o
+- Toggle JSON/Token/Params/Format      C-c D/T/F/C-o
 - Basic interface (simpler display)    C-c A
 - In another buffer? M-x ollama-buddy-menu")
          ;; Choose tips based on interface level
@@ -3129,25 +3118,25 @@ Modifies the variable in place."
     (define-key map (kbd "C-c N") #'ollama-buddy-sessions-new)
     (define-key map (kbd "C-c L") #'ollama-buddy-sessions-load)
     (define-key map (kbd "C-c S") #'ollama-buddy-sessions-save)
-    (define-key map (kbd "C-c Y") #'ollama-buddy-sessions-list)
-    (define-key map (kbd "C-c W") #'ollama-buddy-sessions-delete)
+    (define-key map (kbd "C-c Q") #'ollama-buddy-sessions-list)
+    (define-key map (kbd "C-c Z") #'ollama-buddy-sessions-delete)
     ;; History
     (define-key map (kbd "C-c H") #'ollama-buddy-toggle-history)
     (define-key map (kbd "C-c X") #'ollama-buddy-clear-history)
     (define-key map (kbd "C-c V") #'ollama-buddy-display-history)
     (define-key map (kbd "C-c E") #'ollama-buddy-history-edit)
     ;; Multishot
-    (define-key map (kbd "C-c l") #'ollama-buddy--multishot-prompt)
+    (define-key map (kbd "C-c M") #'ollama-buddy--multishot-prompt)
     ;; Parameters
     (define-key map (kbd "C-c P")
                 (lambda () (interactive) (call-interactively #'ollama-buddy-params-edit)))
     (define-key map (kbd "C-c G") #'ollama-buddy-params-display)
     (define-key map (kbd "C-c I") #'ollama-buddy-params-help)
     (define-key map (kbd "C-c K") #'ollama-buddy-params-reset)
+    (define-key map (kbd "C-c F") #'ollama-buddy-toggle-params-in-header)
     ;; Debug
     (define-key map (kbd "C-c D") #'ollama-buddy-toggle-debug-mode)
     (define-key map (kbd "C-c T") #'ollama-buddy-toggle-token-display)
-    (define-key map (kbd "C-c Z") #'ollama-buddy-toggle-params-in-header)
     (define-key map (kbd "C-c C-o") #'ollama-buddy-toggle-markdown-conversion)
     (define-key map (kbd "C-c A") #'ollama-buddy-toggle-interface-level)
     map)
