@@ -11,6 +11,12 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-03-18> *0.9.6*
+
+- Added a transient menu containing all commands currently presented in the chat buffer
+- Added fabric prompting support, see https://github.com/danielmiessler/fabric
+- Moved the presets to the top level so they will be present in the package folder
+  
 ** <2025-03-17> *0.9.5*
 
 Added conversation history editing

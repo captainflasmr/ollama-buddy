@@ -16,6 +16,71 @@ A friendly Emacs interface for interacting with Ollama models. This package prov
 
 The name is just something a little bit fun and it seems to always remind me of the "bathroom buddy" from the film Gremlins (although hopefully this will work better than that seemed to!)
 
+* Whats New
+
+** <2025-03-18> *0.9.6*
+
+- Added a transient menu containing all commands currently presented in the chat buffer
+- Added fabric prompting support, see https://github.com/danielmiessler/fabric
+- Moved the presets to the top level so they will be present in the package folder
+
+Ollama Buddy now includes a transient-based menu system to improve usability and streamline interactions. Yes, I originally stated that I would never do it, but I think it compliments my crafted simple textual menu and the fact that I have now defaulted the main chat interface to a simple menu.
+
+This can give the user more options for configuration, they can use the chat in advanced mode where the keybindings are presented in situ, or a more minimal basic setup where the transient menu can be activated.  For my use-package definition I current have the following set up, with the two styles of menus sitting alongside each other :
+
+  #+begin_src elisp
+  :bind
+  ("C-c o" . ollama-buddy-menu)
+  ("C-c O" . ollama-buddy-transient-menu)
+  #+end_src
+
+The new menu provides an organized interface for accessing the assistant’s core functions, including chat, model management, roles, and Fabric patterns. This post provides an overview of the features available in the Ollama Buddy transient menus.
+
+Yes that's right also =fabric= patterns!, I have decided to add in auto syncing of the patterns directory in https://github.com/danielmiessler/fabric
+
+Simply I pull the patterns directory which contain prompt guidance for a range of different topics and then push them through a completing read to set the =ollama-buddy= system prompt, so a special set of curated prompts can now be applied right in the =ollama-buddy= chat!
+
+Anyways, here is a description of the transient menu system.
+
+** Main Menu
+
+The main menu is the entry point for interacting with Ollama Buddy. It groups commands into logical sections for better accessibility:
+
+- *Chat Commands*: Open a chat (=o=), send a prompt (=RET=), access help (=h=), and cancel requests (=k=).
+- *Prompt Management*: Send a region (=l=), set a system prompt (=s=), view the current prompt (=C-s=), and reset it (=r=).
+- *Model Controls*: Switch models (=m=), view status (=v=), inspect model information (=i=), and use multishot prompts (=M=).
+- *Roles & Patterns*: Manage conversation roles (=R=), open the roles directory (=D=), and access Fabric patterns (=f=).
+
+Additional sections allow for toggling display options, managing session history, handling saved sessions, and editing parameters.
+
+** Fabric Patterns Menu
+
+Fabric patterns integrate structured interaction templates into the chat. The Fabric menu provides actions such as:
+
+- *Pattern Actions*: Send input using a pattern (=s=), list available patterns (=l=), and view details (=v=).
+- *Synchronization*: Sync the latest patterns (=S=), populate cached patterns (=P=), and perform initial setup (=I=).
+- *Pattern Categories*: Quickly switch between predefined patterns for coding (=c=), writing (=w=), analysis (=a=), and general use (=u=).
+
+** Parameter Menu
+
+The parameter menu allows customization of generation settings, model behavior, and resource allocation:
+
+- *Generation Options*: Adjust parameters like temperature, top-k, top-p sampling, and frequency penalties.
+- *Mirostat Settings*: Modify adaptive sampling controls such as tau and eta.
+- *Resource Allocation*: Set context window size, GPU usage, and batch processing limits.
+- *Memory and Execution*: Control MMAP/MLock usage, thread allocation, and NUMA optimization.
+
+Users can also apply pre-configured parameter profiles such as *Default*, *Creative*, or *Precise*.
+
+** Commands Menu
+
+For specialized tasks, the commands menu provides quick access to built-in actions:
+
+- *Code Operations*: Refactor code (=r=), describe a code snippet (=d=), and generate Git commit messages (=g=).
+- *Language Processing*: Perform dictionary lookups (=l=), synonym searches (=s=), and proofread text (=p=).
+- *Pattern-Based Interactions*: Access Fabric-based workflows for different use cases (=f=, =u=, =c=).
+
+
 * Features
 
 See [[file:README-features.org]] for a deeper delve into each feature as it was added.
