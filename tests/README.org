@@ -35,8 +35,8 @@ Using the following script to generate a very simple init.el file which is then 
 # Example: ./test-ollama-buddy.sh 29.3
 
 # Default Emacs version if none specified
-VERSION=${1:-"27.2"}
-PACKAGE_PATH="~/source/repos/ollama-buddy"
+VERSION=${1:-"28.1"}
+PACKAGE_PATH="/mnt/hgfs/SharedVM/ollama-buddy-main"
 
 # Create a temporary directory for the test
 TEMP_DIR=$(mktemp -d -t ollama-buddy-test-XXXXXX)
@@ -51,9 +51,11 @@ cat > "$INIT_FILE" << EOF
 
 ;; Load the package
 (require 'ollama-buddy)
+(require 'ollama-buddy-transient)
 
 ;; Add the key binding
 (global-set-key (kbd "C-c o") 'ollama-buddy-menu)
+(global-set-key (kbd "C-c O") 'ollama-buddy-transient-menu)
 
 ;; Show a message to confirm we're in test mode
 (message "Testing ollama-buddy in vanilla Emacs %s" emacs-version)
@@ -73,9 +75,9 @@ rm -rf "$TEMP_DIR"
 #+end_src
 
 #+RESULTS:
-| Starting  | Emacs        | 27.2      | with                                  | minimal | configuration... |
-| Testing   | ollama-buddy | from:     | ~/source/repos/ollama-buddy           |         |                  |
-| Temporary | init         | file:     | /tmp/ollama-buddy-test-1QJvq0/init.el |         |                  |
+| Starting  | Emacs        | 28.1      | with                                  | minimal | configuration... |
+| Testing   | ollama-buddy | from:     | /mnt/hgfs/SharedVM/ollama-buddy-main  |         |                  |
+| Temporary | init         | file:     | /tmp/ollama-buddy-test-vTIv5I/init.el |         |                  |
 | Cleaning  | up           | temporary | directory...                          |         |                  |
 
 The script to build different versions of Emacs is as follows:
