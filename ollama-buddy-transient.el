@@ -33,6 +33,7 @@
     ]
    
    ["Model"
+    ("W" "Manage Models" ollama-buddy-manage-models)
     ("m" "Switch Model" ollama-buddy--swap-model)
     ("v" "View Model Status" ollama-buddy-show-model-status)
     ("i" "Show Model Info" ollama-buddy-show-raw-model-info)
