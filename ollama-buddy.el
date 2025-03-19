@@ -240,8 +240,7 @@ These are the only parameters that will be sent to Ollama."
     (quit
      :key ?q
      :description "Quit"
-     :action (lambda () (message "Quit Ollama Shell menu.")))
-    )
+     :action (lambda () (message "Quit Ollama Shell menu."))))
   "Comprehensive command definitions for Ollama Buddy.
 Each command is defined with:
   :key - Character for menu selection
@@ -286,6 +285,185 @@ Each command is defined with:
   "Predefined parameter profiles for different usage scenarios."
   :type '(alist :key-type string :value-type (alist :key-type symbol :value-type sexp))
   :group 'ollama-buddy-params)
+
+(defcustom ollama-buddy-convert-markdown-to-org t
+  "Whether to automatically convert markdown to `org-mode' format in responses."
+  :type 'boolean
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-sessions-directory
+  (expand-file-name "ollama-buddy-sessions" user-emacs-directory)
+  "Directory containing ollama-buddy session files."
+  :type 'directory
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-enable-model-colors t
+  "Whether to show model colors."
+  :type 'boolean
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-host "localhost"
+  "Host where Ollama server is running."
+  :type 'string
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-port 11434
+  "Port where Ollama server is running."
+  :type 'integer
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-menu-columns 5
+  "Number of columns to display in the Ollama Buddy menu."
+  :type 'integer
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-roles-directory
+  (expand-file-name "ollama-buddy-presets" user-emacs-directory)
+  "Directory containing ollama-buddy role preset files."
+  :type 'directory
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-connection-check-interval 5
+  "Interval in seconds to check Ollama connection status."
+  :type 'integer
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-history-enabled t
+  "Whether to use conversation history in Ollama requests."
+  :type 'boolean
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-max-history-length 10
+  "Maximum number of message pairs to keep in conversation history."
+  :type 'integer
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-show-history-indicator t
+  "Whether to show the history indicator in the header line."
+  :type 'boolean
+  :group 'ollama-buddy)
+
+(defvar ollama-buddy-roles--current-role "default"
+  "The currently active ollama-buddy role.")
+
+(defvar ollama-buddy-role-creator--command-template
+  '((key . nil)
+    (description . nil)
+    (model . nil)
+    (prompt . nil)
+    (system . nil))
+  "Template for a new command definition.")
+
+(defvar ollama-buddy--history-edit-buffer "*Ollama History Edit*"
+  "Buffer name for editing Ollama conversation history.")
+
+(defvar ollama-buddy--saved-params-active nil
+  "Saved copy of params-active before applying command-specific parameters.")
+
+(defvar ollama-buddy--saved-params-modified nil
+  "Saved copy of params-modified before applying command-specific parameters.")
+
+(defvar ollama-buddy--current-suffix nil
+  "The current suffix if set.")
+
+(defvar ollama-buddy--current-system-prompt nil
+  "The current system prompt if set.")
+
+(defvar ollama-buddy--debug-buffer "*Ollama Debug*"
+  "Buffer for showing raw JSON messages.")
+
+(defvar ollama-buddy--current-request-temporary-model nil
+  "For the current request don't make current model permanent.")
+
+(defvar ollama-buddy--response-start-position nil
+  "Marker for the start position of the current response.")
+
+(defvar ollama-buddy--current-response nil
+  "The current response text being accumulated.")
+
+(defvar-local ollama-buddy--response-start-position nil
+  "Buffer-local marker for the start position of the current response.")
+
+(defvar ollama-buddy--current-prompt nil
+  "The current prompt.")
+
+(defvar ollama-buddy--current-session nil
+  "Name of the currently active session, or nil if none.")
+
+(defvar ollama-buddy--conversation-history-by-model (make-hash-table :test 'equal)
+  "Hash table mapping model names to their conversation histories.")
+
+(defvar ollama-buddy--conversation-history nil
+  "Current model's conversation history (alias for backward compatibility).")
+
+(defvar ollama-buddy--token-usage-history nil
+  "History of token usage for ollama-buddy interactions.")
+
+(defvar ollama-buddy--current-token-count 0
+  "Counter for tokens in the current response.")
+
+(defvar ollama-buddy--current-token-start-time nil
+  "Timestamp when the current response started.")
+
+(defcustom ollama-buddy-display-token-stats nil
+  "Whether to display token usage statistics in responses."
+  :type 'boolean
+  :group 'ollama-buddy)
+
+(defvar ollama-buddy--token-update-interval 0.5
+  "How often to update the token rate display, in seconds.")
+
+(defvar ollama-buddy--token-update-timer nil
+  "Timer for updating token rate display.")
+
+(defvar ollama-buddy--last-token-count 0
+  "Token count at last update interval.")
+
+(defvar ollama-buddy--last-update-time nil
+  "Timestamp of last token rate update.")
+
+(defvar ollama-buddy--prompt-history nil
+  "History of prompts used in ollama-buddy.")
+
+(defvar ollama-buddy--last-status-check nil
+  "Timestamp of last Ollama status check.")
+
+(defvar ollama-buddy--status-cache nil
+  "Cached status of Ollama connection.")
+
+(defvar ollama-buddy--status-cache-ttl 5
+  "Time in seconds before status cache expires.")
+
+(defvar ollama-buddy--current-model nil
+  "Timer for checking Ollama connection status.")
+
+(defvar ollama-buddy--connection-timer nil
+  "Timer for checking Ollama connection status.")
+
+(defvar ollama-buddy--chat-buffer "*Ollama Buddy Chat*"
+  "Chat interaction buffer.")
+
+(defvar ollama-buddy--active-process nil
+  "Active Ollama process.")
+
+(defvar ollama-buddy--status "Idle"
+  "Current status of the Ollama request.")
+
+(defvar ollama-buddy--model-letters nil
+  "Alist mapping letters to model names.")
+
+(defvar ollama-buddy--multishot-sequence nil
+  "Current sequence of models for multishot execution.")
+
+(defvar ollama-buddy--multishot-progress 0
+  "Progress through current multishot sequence.")
+
+(defvar ollama-buddy--multishot-prompt nil
+  "The prompt being used for the current multishot sequence.")
+
+;; Keep track of model colors
+(defvar ollama-buddy--model-colors (make-hash-table :test 'equal)
+  "Hash table mapping model names to their colors.")
 
 (defun ollama-buddy-apply-param-profile (profile-name)
   "Apply parameter PROFILE-NAME from `ollama-buddy-params-profiles'."
@@ -788,174 +966,6 @@ If TIMEOUT is nil, use a default of 2 seconds."
                         (format ": %s" (mapcar #'symbol-name ollama-buddy-params-modified))))))
     (display-buffer buf)))
 
-(defcustom ollama-buddy-convert-markdown-to-org t
-  "Whether to automatically convert markdown to `org-mode' format in responses."
-  :type 'boolean
-  :group 'ollama-buddy)
-
-(defcustom ollama-buddy-sessions-directory
-  (expand-file-name "ollama-buddy-sessions" user-emacs-directory)
-  "Directory containing ollama-buddy session files."
-  :type 'directory
-  :group 'ollama-buddy)
-
-(defcustom ollama-buddy-enable-model-colors t
-  "Whether to show model colors."
-  :type 'boolean
-  :group 'ollama-buddy)
-
-(defcustom ollama-buddy-host "localhost"
-  "Host where Ollama server is running."
-  :type 'string
-  :group 'ollama-buddy)
-
-(defcustom ollama-buddy-port 11434
-  "Port where Ollama server is running."
-  :type 'integer
-  :group 'ollama-buddy)
-
-(defcustom ollama-buddy-menu-columns 5
-  "Number of columns to display in the Ollama Buddy menu."
-  :type 'integer
-  :group 'ollama-buddy)
-
-(defcustom ollama-buddy-roles-directory
-  (expand-file-name "ollama-buddy-presets" user-emacs-directory)
-  "Directory containing ollama-buddy role preset files."
-  :type 'directory
-  :group 'ollama-buddy)
-
-(defcustom ollama-buddy-connection-check-interval 5
-  "Interval in seconds to check Ollama connection status."
-  :type 'integer
-  :group 'ollama-buddy)
-
-(defcustom ollama-buddy-history-enabled t
-  "Whether to use conversation history in Ollama requests."
-  :type 'boolean
-  :group 'ollama-buddy)
-
-(defcustom ollama-buddy-max-history-length 10
-  "Maximum number of message pairs to keep in conversation history."
-  :type 'integer
-  :group 'ollama-buddy)
-
-(defcustom ollama-buddy-show-history-indicator t
-  "Whether to show the history indicator in the header line."
-  :type 'boolean
-  :group 'ollama-buddy)
-
-(defvar ollama-buddy--history-edit-buffer "*Ollama History Edit*"
-  "Buffer name for editing Ollama conversation history.")
-
-(defvar ollama-buddy--saved-params-active nil
-  "Saved copy of params-active before applying command-specific parameters.")
-
-(defvar ollama-buddy--saved-params-modified nil
-  "Saved copy of params-modified before applying command-specific parameters.")
-
-(defvar ollama-buddy--current-suffix nil
-  "The current suffix if set.")
-
-(defvar ollama-buddy--current-system-prompt nil
-  "The current system prompt if set.")
-
-(defvar ollama-buddy--debug-buffer "*Ollama Debug*"
-  "Buffer for showing raw JSON messages.")
-
-(defvar ollama-buddy--current-request-temporary-model nil
-  "For the current request don't make current model permanent.")
-
-(defvar ollama-buddy--response-start-position nil
-  "Marker for the start position of the current response.")
-
-(defvar ollama-buddy--current-response nil
-  "The current response text being accumulated.")
-
-(defvar-local ollama-buddy--response-start-position nil
-  "Buffer-local marker for the start position of the current response.")
-
-(defvar ollama-buddy--current-prompt nil
-  "The current prompt.")
-
-(defvar ollama-buddy--current-session nil
-  "Name of the currently active session, or nil if none.")
-
-(defvar ollama-buddy--conversation-history-by-model (make-hash-table :test 'equal)
-  "Hash table mapping model names to their conversation histories.")
-
-(defvar ollama-buddy--conversation-history nil
-  "Current model's conversation history (alias for backward compatibility).")
-
-(defvar ollama-buddy--token-usage-history nil
-  "History of token usage for ollama-buddy interactions.")
-
-(defvar ollama-buddy--current-token-count 0
-  "Counter for tokens in the current response.")
-
-(defvar ollama-buddy--current-token-start-time nil
-  "Timestamp when the current response started.")
-
-(defcustom ollama-buddy-display-token-stats nil
-  "Whether to display token usage statistics in responses."
-  :type 'boolean
-  :group 'ollama-buddy)
-
-(defvar ollama-buddy--token-update-interval 0.5
-  "How often to update the token rate display, in seconds.")
-
-(defvar ollama-buddy--token-update-timer nil
-  "Timer for updating token rate display.")
-
-(defvar ollama-buddy--last-token-count 0
-  "Token count at last update interval.")
-
-(defvar ollama-buddy--last-update-time nil
-  "Timestamp of last token rate update.")
-
-(defvar ollama-buddy--prompt-history nil
-  "History of prompts used in ollama-buddy.")
-
-(defvar ollama-buddy--last-status-check nil
-  "Timestamp of last Ollama status check.")
-
-(defvar ollama-buddy--status-cache nil
-  "Cached status of Ollama connection.")
-
-(defvar ollama-buddy--status-cache-ttl 5
-  "Time in seconds before status cache expires.")
-
-(defvar ollama-buddy--current-model nil
-  "Timer for checking Ollama connection status.")
-
-(defvar ollama-buddy--connection-timer nil
-  "Timer for checking Ollama connection status.")
-
-(defvar ollama-buddy--chat-buffer "*Ollama Buddy Chat*"
-  "Chat interaction buffer.")
-
-(defvar ollama-buddy--active-process nil
-  "Active Ollama process.")
-
-(defvar ollama-buddy--status "Idle"
-  "Current status of the Ollama request.")
-
-(defvar ollama-buddy--model-letters nil
-  "Alist mapping letters to model names.")
-
-(defvar ollama-buddy--multishot-sequence nil
-  "Current sequence of models for multishot execution.")
-
-(defvar ollama-buddy--multishot-progress 0
-  "Progress through current multishot sequence.")
-
-(defvar ollama-buddy--multishot-prompt nil
-  "The prompt being used for the current multishot sequence.")
-
-;; Keep track of model colors
-(defvar ollama-buddy--model-colors (make-hash-table :test 'equal)
-  "Hash table mapping model names to their colors.")
-
 (defun ollama-buddy-toggle-params-in-header ()
   "Toggle display of modified parameters in the header line."
   (interactive)
@@ -1416,8 +1426,7 @@ If SESSION-NAME is not provided, prompt for a name."
                          (unless (assoc 'timestamp msg-with-model)
                            (setq msg-with-model (cons (cons 'timestamp 0) msg-with-model)))
                          ;; (push msg-with-model all-messages)
-                         (setq all-messages (append all-messages (list msg-with-model)))
-                         )))
+                         (setq all-messages (append all-messages (list msg-with-model))))))
                    ollama-buddy--conversation-history-by-model)
                   
                   ;; (setq all-messages (nreverse all-messages))
@@ -2025,17 +2034,6 @@ Adapts the color to the current theme (light or dark) for better visibility."
       (setq ollama-buddy--status-cache (ollama-buddy--ollama-running)
             ollama-buddy--last-status-check current-time))
     ollama-buddy--status-cache))
-
-(defvar ollama-buddy-roles--current-role "default"
-  "The currently active ollama-buddy role.")
-
-(defvar ollama-buddy-role-creator--command-template
-  '((key . nil)
-    (description . nil)
-    (model . nil)
-    (prompt . nil)
-    (system . nil))
-  "Template for a new command definition.")
 
 (defun ollama-buddy-roles--get-available-roles ()
   "Scan the preset directory and extract role names from filenames."
@@ -3128,9 +3126,7 @@ Modifies the variable in place."
               (insert (format ": %s\n"
                               (if (member model available-models)
                                   "Available ✓"
-                                "Not Available ✗"))))))
-        
-        ))
+                                "Not Available ✗"))))))))
     (display-buffer buf)))
 
 (defun ollama-buddy--send-prompt ()
@@ -3215,12 +3211,12 @@ Modifies the variable in place."
   (let* ((file-name (file-name-nondirectory file-path))
          (base-name (replace-regexp-in-string "\\.gguf$" "" file-name))
          ;; Prompt for model name, suggesting a sanitized version of the filename
-         (model-name (read-string "Model name to create: " 
+         (model-name (read-string "Model name to create: "
                                  (replace-regexp-in-string "[^a-zA-Z0-9_-]" "-" base-name)))
          ;; Prompt for model parameters
          (parameters (read-string "Model parameters (optional): " ""))
          ;; Create a temporary Modelfile
-         (modelfile-path (expand-file-name (format "Modelfile-%s" model-name) 
+         (modelfile-path (expand-file-name (format "Modelfile-%s" model-name)
                                           ollama-buddy-modelfile-directory))
          ;; Buffer for output
          (output-buffer (get-buffer-create "*Ollama Import*"))
@@ -3243,9 +3239,9 @@ Modifies the variable in place."
         (display-buffer (current-buffer))))
     
     ;; Run the ollama create command
-    (let ((process (start-process "ollama-create" output-buffer 
+    (let ((process (start-process "ollama-create" output-buffer
                                  "ollama" "create" model-name "-f" modelfile-path)))
-      (set-process-sentinel 
+      (set-process-sentinel
        process
        (lambda (proc event)
          (let ((status (string-trim event)))
@@ -3257,7 +3253,7 @@ Modifies the variable in place."
                  (insert "\nSuccessfully created model: " model-name)
                  (ollama-buddy--assign-model-letters) ;; Update model list
                  ;; Ask if user wants to use this model now
-                 (when (y-or-n-p (format "Model '%s' created. Use it now? " model-name))
+                 (when (y-or-n-p (format "Model '%s' created.  Use it now? " model-name))
                    (setq ollama-buddy--current-model model-name)
                    (message "Switched to model: %s" model-name)))
                 (t
@@ -3323,7 +3319,7 @@ Modifies the variable in place."
             ;; Select button
             (insert-text-button
              (propertize model 'face `(:foreground ,color))
-             'action `(lambda (_) 
+             'action `(lambda (_)
                         (ollama-buddy-select-model ,model))
              'help-echo "Select this model")
             
@@ -3331,8 +3327,8 @@ Modifies the variable in place."
             
             ;; Info button
             (insert-text-button
-             "Info" 
-             'action `(lambda (_) 
+             "Info"
+             'action `(lambda (_)
                         (ollama-buddy-show-raw-model-info ,model))
              'help-echo "Show model information")
             
@@ -3341,13 +3337,13 @@ Modifies the variable in place."
             ;; Pull/Stop button
             (if is-running
                 (insert-text-button
-                 "Stop" 
-                 'action `(lambda (_) 
+                 "Stop"
+                 'action `(lambda (_)
                             (ollama-buddy-stop-model ,model))
                  'help-echo "Stop this model")
               (insert-text-button
-               "Pull" 
-               'action `(lambda (_) 
+               "Pull"
+               'action `(lambda (_)
                           (ollama-buddy-pull-model ,model))
                'help-echo "Pull/update this model"))
             
@@ -3355,8 +3351,8 @@ Modifies the variable in place."
             
             ;; Delete button with proper capture
             (insert-text-button
-             "Delete" 
-             'action `(lambda (_) 
+             "Delete"
+             'action `(lambda (_)
                         (when (yes-or-no-p (format "Really delete model '%s'? " ,model))
                           (ollama-buddy-delete-model ,model)))
              'help-echo "Delete this model")
@@ -3384,7 +3380,7 @@ Modifies the variable in place."
         (special-mode)
         (use-local-map (copy-keymap special-mode-map))
         (local-set-key (kbd "g") #'ollama-buddy-manage-models) ;; g to refresh
-        (local-set-key (kbd "i") (lambda () (interactive) 
+        (local-set-key (kbd "i") (lambda () (interactive)
                                    (call-interactively #'ollama-buddy-import-gguf-file)))
         (local-set-key (kbd "p") (lambda () (interactive)
                                    (call-interactively #'ollama-buddy-pull-model-interactive)))))
@@ -3422,8 +3418,8 @@ Modifies the variable in place."
 (defun ollama-buddy-pull-model (model)
   "Pull or update MODEL from Ollama Hub."
   (interactive
-   (list (completing-read "Pull model: " 
-                          (append (ollama-buddy--get-models) 
+   (list (completing-read "Pull model: "
+                          (append (ollama-buddy--get-models)
                                   '("llama2" "mistral" "gemma" "llava")))))
   (let ((buf (get-buffer-create "*Ollama Pull*")))
     (with-current-buffer buf
@@ -3433,7 +3429,7 @@ Modifies the variable in place."
         (display-buffer (current-buffer))))
     
     (let ((process (start-process "ollama-pull" buf "ollama" "pull" model)))
-      (set-process-sentinel 
+      (set-process-sentinel
        process
        (lambda (proc event)
          (let ((status (string-trim event)))
@@ -3462,7 +3458,7 @@ Modifies the variable in place."
         (display-buffer (current-buffer))))
     
     (let ((process (start-process "ollama-rm-running" buf "ollama" "rm" "-r" model)))
-      (set-process-sentinel 
+      (set-process-sentinel
        process
        (lambda (proc event)
          (let ((status (string-trim event)))
@@ -3484,7 +3480,7 @@ Modifies the variable in place."
         (display-buffer (current-buffer))))
     
     (let ((process (start-process "ollama-delete" buf "ollama" "rm" model)))
-      (set-process-sentinel 
+      (set-process-sentinel
        process
        (lambda (proc event)
          (let ((status (string-trim event)))
