@@ -11,6 +11,10 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-03-19> *0.9.7*
+
+- Added GGUF file import and Dired integration
+
 ** <2025-03-18> *0.9.6*
 
 - Added a transient menu containing all commands currently presented in the chat buffer
