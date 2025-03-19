@@ -11,6 +11,13 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-03-19> *0.9.8*
+
+Added model management interface to pull and delete models
+
+- Introduced `ollama-buddy-manage-models` to list and manage models.
+- Added actions for selecting, pulling, stopping, and deleting models.
+
 ** <2025-03-19> *0.9.7*
 
 - Added GGUF file import and Dired integration

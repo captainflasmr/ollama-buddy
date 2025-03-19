@@ -18,6 +18,59 @@ The name is just something a little bit fun and it seems to always remind me of 
 
 * Whats New
 
+** <2025-03-19> *0.9.8*
+
+Added model management interface to pull and delete models
+
+- Introduced `ollama-buddy-manage-models` to list and manage models.
+- Added actions for selecting, pulling, stopping, and deleting models.
+
+You can now manage your Ollama models directly within Emacs with =ollama-buddy=
+
+With this update, you can now:
+
+*Browse Available Models* – See all installed models at a glance.  
+*Select Models Easily* – Set your active AI model with a single click.  
+*Pull Models from Ollama Hub* – Download new models or update existing ones.  
+*Stop Running Models* – Halt background processes when necessary.  
+*Delete Unused Models* – Clean up your workspace with ease.  
+
+1. *Open the Model Management Interface*  
+   Press *=C-c W=* to launch the new *Model Management* buffer or through the transient menu.
+
+2. *Manage Your Models*  
+   - Click on a model to *select* it.  
+   - Use *"Pull"* to fetch models from the Ollama Hub.  
+   - Click *"Stop"* to halt active models.  
+   - Use *"Delete"* to remove unwanted models.
+
+3. *Perform Quick Actions*  
+   - *=g=* → Refresh the model list.  
+   - *=i=* → Import a *GGUF model file*.  
+   - *=p=* → Pull a new model from the *Ollama Hub*.  
+
+When you open the management interface, you get a structured list like this:
+
+#+begin_src 
+Ollama Models Management
+=======================
+
+Current Model: mistral:7b
+Default Model: mistral:7b
+
+Available Models:
+  [ ] llama3.2:1b  Info  Pull  Delete
+  [ ] starcoder2:3b  Info  Pull  Delete
+  [ ] codellama:7b  Info  Pull  Delete
+  [ ] phi3:3.8b  Info  Pull  Delete
+  [x] llama3.2:3b  Info  Pull  Delete Stop
+
+Actions:
+[Import GGUF File]  [Refresh List]  [Pull Model from Hub]
+#+end_src
+
+Previously, managing Ollama models required manually running shell commands. With this update, you can now *do it all from Emacs*, keeping your workflow smooth and efficient!
+
 ** <2025-03-19> *0.9.7*
 
 - Added GGUF file import and Dired integration
