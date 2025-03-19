@@ -18,6 +18,14 @@ The name is just something a little bit fun and it seems to always remind me of 
 
 * Whats New
 
+** <2025-03-19> *0.9.7*
+
+- Added GGUF file import and Dired integration
+
+Import GGUF Models into Ollama from =dired= with the new =ollama-buddy-import-gguf-file= function. In =dired= just navigate to your file and press =C-c i= or =M-x ollama-buddy-import-gguf-file= to start the import process. This eliminates the need to manually input file paths, making the workflow smoother and faster.
+
+The model will then be immediately available in the =ollama-buddy= chat interface.
+
 ** <2025-03-18> *0.9.6*
 
 - Added a transient menu containing all commands currently presented in the chat buffer
