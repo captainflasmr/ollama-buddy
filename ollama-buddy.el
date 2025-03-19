@@ -3041,6 +3041,13 @@ ACTUAL-MODEL is the model being used instead."
                 (cmd (assoc key items)))
       (funcall (caddr cmd)))))
 
+(defun ollama-buddy--get-running-models ()
+  "Get list of currently running Ollama models."
+  (when-let ((response (ollama-buddy--make-request "/api/ps" "GET")))
+    (mapcar (lambda (m)
+              (alist-get 'name m))
+            (alist-get 'models response))))
+
 ;;;###autoload
 (defun ollama-buddy-add-model-to-menu-entry (entry-name model-name)
   "Add :model property with MODEL-NAME to ENTRY-NAME in the menu variable.
@@ -3059,6 +3066,7 @@ Modifies the variable in place."
                                        (plist-get (cdr cmd) :model))
                                      ollama-buddy-command-definitions))))
          (available-models (ollama-buddy--get-models))
+         (running-models (ollama-buddy--get-running-models))
          (buf (get-buffer-create "*Ollama Model Status*")))
     ;; Update model colors
     (when (ollama-buddy--ollama-running)
@@ -3068,6 +3076,19 @@ Modifies the variable in place."
       (let ((inhibit-read-only t))
         (erase-buffer)
         (insert "Ollama Model Status:\n\n")
+
+        ;; List running models with colors
+        (if running-models
+            (progn
+              (insert "Currently Running Models:\n")
+              (dolist (model running-models)
+                (let ((color (ollama-buddy--get-model-color model)))
+                  (insert "  ")
+                  (insert (propertize model 'face `(:foreground ,color)))
+                  (insert "\n"))))
+          (insert "No models currently running.\n"))
+
+        (insert "\n")
         
         ;; Display current model with color
         (when ollama-buddy--current-model
@@ -3081,7 +3102,17 @@ Modifies the variable in place."
           (let ((color (ollama-buddy--get-model-color ollama-buddy-default-model)))
             (insert "Default Model: ")
             (insert (propertize ollama-buddy-default-model 'face `(:foreground ,color :weight bold)))
-            (insert "\n\n")))
+            (insert "\n")))
+        
+        ;; List available models with colors
+        (insert "\nAvailable Models:\n")
+        (dolist (model available-models)
+          (let ((color (ollama-buddy--get-model-color model)))
+            (insert "  ")
+            (insert (propertize model 'face `(:foreground ,color)))
+            (insert "\n")))
+
+        (insert "\n")
         
         ;; Display models used in commands with colors
         (insert "Models used in commands:\n")
@@ -3095,13 +3126,7 @@ Modifies the variable in place."
                                   "Available ✓"
                                 "Not Available ✗"))))))
         
-        ;; List available models with colors
-        (insert "\nAvailable Models:\n")
-        (dolist (model available-models)
-          (let ((color (ollama-buddy--get-model-color model)))
-            (insert "  ")
-            (insert (propertize model 'face `(:foreground ,color)))
-            (insert "\n")))))
+        ))
     (display-buffer buf)))
 
 (defun ollama-buddy--send-prompt ()
