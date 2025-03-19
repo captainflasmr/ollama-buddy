@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama Buddy: Your Friendly AI Assistant -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.9.6
+;; Version: 0.9.7
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -3183,6 +3183,103 @@ Modifies the variable in place."
   
   ;; Update status to show cancelled
   (ollama-buddy--update-status "Cancelled"))
+
+(defcustom ollama-buddy-modelfile-directory
+  (expand-file-name "ollama-buddy-modelfiles" user-emacs-directory)
+  "Directory for storing temporary Modelfiles."
+  :type 'directory
+  :group 'ollama-buddy)
+
+(defun ollama-buddy-ensure-modelfile-directory ()
+  "Create the ollama-buddy modelfile directory if it doesn't exist."
+  (unless (file-directory-p ollama-buddy-modelfile-directory)
+    (make-directory ollama-buddy-modelfile-directory t)))
+
+(defun ollama-buddy-import-gguf-file (file-path)
+  "Import a GGUF file at FILE-PATH into Ollama."
+  (interactive "fSelect GGUF file: ")
+  (unless (file-exists-p file-path)
+    (user-error "File does not exist: %s" file-path))
+  
+  (unless (string-match-p "\\.gguf$" file-path)
+    (user-error "File does not appear to be a GGUF file (missing .gguf extension): %s" file-path))
+  
+  ;; Ensure the modelfile directory exists
+  (ollama-buddy-ensure-modelfile-directory)
+  
+  ;; Get the base name without extension for default model name
+  (let* ((file-name (file-name-nondirectory file-path))
+         (base-name (replace-regexp-in-string "\\.gguf$" "" file-name))
+         ;; Prompt for model name, suggesting a sanitized version of the filename
+         (model-name (read-string "Model name to create: " 
+                                 (replace-regexp-in-string "[^a-zA-Z0-9_-]" "-" base-name)))
+         ;; Prompt for model parameters
+         (parameters (read-string "Model parameters (optional): " ""))
+         ;; Create a temporary Modelfile
+         (modelfile-path (expand-file-name (format "Modelfile-%s" model-name) 
+                                          ollama-buddy-modelfile-directory))
+         ;; Buffer for output
+         (output-buffer (get-buffer-create "*Ollama Import*"))
+         (default-directory (file-name-directory file-path)))
+    
+    ;; Generate Modelfile content
+    (with-temp-file modelfile-path
+      (insert (format "FROM %s\n" file-path))
+      (when (not (string-empty-p parameters))
+        (insert (format "PARAMETER %s\n" parameters))))
+    
+    ;; Show the buffer
+    (with-current-buffer output-buffer
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (format "Creating Ollama model '%s' from file: %s\n\n" model-name file-path))
+        (insert "Modelfile content:\n")
+        (insert-file-contents modelfile-path)
+        (insert "\n\nRunning ollama create command...\n\n")
+        (display-buffer (current-buffer))))
+    
+    ;; Run the ollama create command
+    (let ((process (start-process "ollama-create" output-buffer 
+                                 "ollama" "create" model-name "-f" modelfile-path)))
+      (set-process-sentinel 
+       process
+       (lambda (proc event)
+         (let ((status (string-trim event)))
+           (with-current-buffer (process-buffer proc)
+             (let ((inhibit-read-only t))
+               (goto-char (point-max))
+               (cond
+                ((string-prefix-p "finished" status)
+                 (insert "\nSuccessfully created model: " model-name)
+                 (ollama-buddy--assign-model-letters) ;; Update model list
+                 ;; Ask if user wants to use this model now
+                 (when (y-or-n-p (format "Model '%s' created. Use it now? " model-name))
+                   (setq ollama-buddy--current-model model-name)
+                   (message "Switched to model: %s" model-name)))
+                (t
+                 (insert "\nError creating model: " status)))
+               (insert "\n")))))))))
+
+(defun ollama-buddy-dired-import-gguf ()
+  "Import the GGUF file at point in Dired into Ollama."
+  (interactive)
+  (unless (eq major-mode 'dired-mode)
+    (user-error "This command only works in Dired mode"))
+  
+  (let ((file (dired-get-filename nil t)))
+    (if file
+        (if (string-match-p "\\.gguf$" file)
+            (ollama-buddy-import-gguf-file file)
+          (user-error "File is not a GGUF file: %s" file))
+      (user-error "No file at point"))))
+
+(defun ollama-buddy-add-dired-integration ()
+  "Add Ollama integration to Dired mode."
+  (when (eq major-mode 'dired-mode)
+    (local-set-key (kbd "C-c i") #'ollama-buddy-dired-import-gguf)))
+
+;; Add hook to enable integration when entering dired mode
+(add-hook 'dired-mode-hook #'ollama-buddy-add-dired-integration)
 
 (defun ollama-buddy-params-help ()
   "Display help for Ollama parameters."
