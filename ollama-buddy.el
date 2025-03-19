@@ -144,7 +144,7 @@ These are the only parameters that will be sent to Ollama."
   :group 'ollama-buddy-params)
 
 (defcustom ollama-buddy-command-definitions
-  '(    
+  '(
     ;; General Commands
     (open-chat
      :key ?o
@@ -288,7 +288,7 @@ Each command is defined with:
   :group 'ollama-buddy-params)
 
 (defun ollama-buddy-apply-param-profile (profile-name)
-  "Apply parameter PROFILE-NAME from ollama-buddy-params-profiles."
+  "Apply parameter PROFILE-NAME from `ollama-buddy-params-profiles'."
   (let ((profile (alist-get profile-name ollama-buddy-params-profiles nil nil #'string=)))
     (if (null profile)
         (message "Profile '%s' not found" profile-name)
@@ -326,7 +326,7 @@ Each command is defined with:
                   (setq model-stats (list :tokens 0 :count 0 :rates nil)))
                 (plist-put model-stats :tokens (+ (plist-get model-stats :tokens) tokens))
                 (plist-put model-stats :count (1+ (plist-get model-stats :count)))
-                (plist-put model-stats :rates 
+                (plist-put model-stats :rates
                            (cons rate (plist-get model-stats :rates)))
                 (puthash model model-stats model-data)))
             
@@ -356,7 +356,7 @@ Each command is defined with:
                        (color (ollama-buddy--get-model-color model))
                        (bar-width (round (* 50 (/ (float tokens) max-tokens))))
                        (bar (make-string bar-width ?█)))
-                  (insert (format (format "%%-%ds │ %%s %%d tokens (%%d responses)\n" 
+                  (insert (format (format "%%-%ds │ %%s %%d tokens (%%d responses)\n"
                                           max-model-len)
                                   model
                                   (propertize bar 'face `(:foreground ,color))
@@ -381,7 +381,7 @@ Each command is defined with:
                          (color (ollama-buddy--get-model-color model))
                          (bar-width (round (* 50 (/ avg-rate max-rate))))
                          (bar (make-string bar-width ?█)))
-                    (insert (format (format "%%-%ds │ %%s %%.1f tokens/sec\n" 
+                    (insert (format (format "%%-%ds │ %%s %%.1f tokens/sec\n"
                                             max-model-len)
                                     model
                                     (propertize bar 'face `(:foreground ,color))
@@ -432,7 +432,7 @@ Each command is defined with:
     (message "Edit history and press C-c C-c to save, C-c C-k to cancel")))))
 
 (defun ollama-buddy-history-save ()
-  "Save the edited history back to ollama-buddy--conversation-history-by-model."
+  "Save the edited history back to `ollama-buddy--conversation-history-by-model'."
   (interactive)
   (unless (and (boundp 'ollama-buddy-editing-history)
                ollama-buddy-editing-history)
@@ -455,8 +455,8 @@ Each command is defined with:
         
         ;; Update current conversation history for backward compatibility
         (when ollama-buddy--current-model
-          (setq ollama-buddy--conversation-history 
-                (gethash ollama-buddy--current-model 
+          (setq ollama-buddy--conversation-history
+                (gethash ollama-buddy--current-model
                          ollama-buddy--conversation-history-by-model nil)))
         
         ;; Provide feedback and clean up
@@ -469,7 +469,7 @@ Each command is defined with:
 (defun ollama-buddy-history-cancel ()
   "Cancel editing the history."
   (interactive)
-  (when (y-or-n-p "Cancel editing? Changes will be lost. ")
+  (when (y-or-n-p "Cancel editing? Changes will be lost.  ?")
     (kill-buffer)
     (message "History editing cancelled")))
 
@@ -501,15 +501,15 @@ Each command is defined with:
       
       ;; Set up local keys for saving or canceling
       (use-local-map (copy-keymap emacs-lisp-mode-map))
-      (local-set-key (kbd "C-c C-c") 
-                     (lambda () (interactive) 
+      (local-set-key (kbd "C-c C-c")
+                     (lambda () (interactive)
                        (ollama-buddy-history-save-model model)))
       (local-set-key (kbd "C-c C-k") 'ollama-buddy-history-cancel)
       
       ;; Set buffer-local variables to identify this as a history edit buffer
       (setq-local ollama-buddy-editing-history t)
       (setq-local ollama-buddy-editing-model model)
-      (setq header-line-format 
+      (setq header-line-format
             (format "Edit history for %s and press C-c C-c to save, C-c C-k to cancel" model)))
     
     ;; Display the buffer
@@ -550,9 +550,9 @@ Each command is defined with:
 (defun ollama-buddy-toggle-interface-level ()
   "Toggle between basic and advanced interface levels."
   (interactive)
-  (setq ollama-buddy-interface-level 
+  (setq ollama-buddy-interface-level
         (if (eq ollama-buddy-interface-level 'basic) 'advanced 'basic))
-  (message "Ollama Buddy interface level set to %s" 
+  (message "Ollama Buddy interface level set to %s"
           (if (eq ollama-buddy-interface-level 'basic) "basic" "advanced"))
   (ollama-buddy--menu-help-assistant))
 
@@ -851,7 +851,7 @@ If TIMEOUT is nil, use a default of 2 seconds."
 (defvar ollama-buddy--saved-params-active nil
   "Saved copy of params-active before applying command-specific parameters.")
 
-(defvar ollama-buddy--saved-params-modified nil 
+(defvar ollama-buddy--saved-params-modified nil
   "Saved copy of params-modified before applying command-specific parameters.")
 
 (defvar ollama-buddy--current-suffix nil
@@ -985,7 +985,7 @@ If TIMEOUT is nil, use a default of 2 seconds."
     
     ;; Update status to show suffix is set
     (ollama-buddy--update-status "Suffix set")
-    (message "Suffix set: %s" 
+    (message "Suffix set: %s"
              (if (> (length prompt-text) 50)
                  (concat (substring prompt-text 0 47) "...")
                prompt-text))))
@@ -1182,7 +1182,7 @@ If TIMEOUT is nil, use a default of 2 seconds."
     
     ;; Update status to show system prompt is set
     (ollama-buddy--update-status "System prompt set")
-    (message "System prompt set: %s" 
+    (message "System prompt set: %s"
              (if (> (length prompt-text) 50)
                  (concat (substring prompt-text 0 47) "...")
                prompt-text))))
@@ -2687,7 +2687,7 @@ ACTUAL-MODEL is the model being used instead."
                       messages)
             messages))
          ;; Add the current prompt to the messages
-         (messages-all (append messages-with-system 
+         (messages-all (append messages-with-system
                                `(((role . "user")
                                   (content . ,prompt)))))
          ;; Get only the modified parameters
@@ -2809,25 +2809,27 @@ ACTUAL-MODEL is the model being used instead."
             (ollama-buddy--format-models-with-letters-plain)))
          ;; Basic tips for beginners
          (basic-tips
-          "- Ask me anything!                     C-c C-c
-- Change model                         C-c m
-- Cancel request                       C-c k
-- Browse prompt history                M-p/M-n
-- Advanced interface (show all tips)   C-c A")
+          "- Ask me anything!                    C-c C-c
+- Main menu                           C-c O
+- Change model                        C-c m
+- Cancel request                      C-c k
+- Browse prompt history               M-p/M-n
+- Advanced interface (show all tips)  C-c A")
          ;; Advanced tips for experienced users
          (advanced-tips
-          "- Ask me anything!                     C-c C-c
-- Show Help/Token-usage/System-prompt  C-c h/U/C-s
-- Model Change/Info/Cancel             C-c m/i/k
-- Prompt history                       M-p/M-n
-- Session New/Load/Save/List/Delete    C-c N/L/S/Q/Z
-- History Toggle/Clear/Show/Edit       C-c H/X/V/J
-- Prompt to multiple models            C-c M
-- Parameter Edit/Show/Help/Reset       C-c P/G/I/K
-- System Prompt/Clear    C-u/+C-u +C-u C-c C-c
-- Toggle JSON/Token/Params/Format      C-c D/T/F/C-o
-- Basic interface (simpler display)    C-c A
-- In another buffer? M-x ollama-buddy-menu")
+          "- Ask me anything!                    C-c C-c
+- Main transient menu                 C-c O
+- Show Help/Status/Token usage        C-c h/v/U
+- Model Change/Info/Multishot         C-c m/i/M
+- System Prompt Set/Show/Reset        C-c s/C-s/r
+- Parameter Menu/Profiles             C-c P/p
+- History Toggle/Clear/Show/Edit      C-c H/X/V/J
+- Session New/Load/Save/List          C-c N/L/S/Q
+- Role Switch/Create/Directory        C-c R/E/D
+- Fabric Patterns Menu                C-c f
+- Display Options (Colors/Markdown)   C-c c/C-o
+- Browse prompt history               M-p/M-n
+- Basic interface (simpler display)   C-c A")
          ;; Choose tips based on interface level
          (tips-section (if (eq ollama-buddy-interface-level 'basic)
                           basic-tips
@@ -3103,7 +3105,7 @@ Modifies the variable in place."
     (display-buffer buf)))
 
 (defun ollama-buddy--send-prompt ()
-  "Send the current prompt to a LLM with support for system prompts and suffixes."
+  "Send the current prompt to a LLM with support for system prompt and suffixes."
   (interactive)
   (let* ((current-prefix-arg-val (prefix-numeric-value current-prefix-arg))
          (prompt-data (ollama-buddy--get-prompt-content))
@@ -3205,44 +3207,65 @@ Modifies the variable in place."
 
 (defvar ollama-buddy-mode-map
   (let ((map (make-sparse-keymap)))
-    ;; Send
-    (define-key map (kbd "C-c C-c") #'ollama-buddy--send-prompt)
-    ;; Show
+    ;; Primary Transient Menu access
+    (define-key map (kbd "C-c O") #'ollama-buddy-transient-menu)  ;; Main transient menu entry point
+    
+    ;; Chat section keybindings from transient
+    (define-key map (kbd "C-c C-c") #'ollama-buddy--send-prompt)  ;; Keep existing binding for RET
     (define-key map (kbd "C-c h") #'ollama-buddy--menu-help-assistant)
-    (define-key map (kbd "C-c U") #'ollama-buddy-display-token-stats)
-    (define-key map (kbd "C-c C-s") #'ollama-buddy-show-system-prompt)
-    ;; Model
-    (define-key map (kbd "C-c m") #'ollama-buddy--swap-model)
-    (define-key map (kbd "C-c i") #'ollama-buddy-show-raw-model-info)
     (define-key map (kbd "C-c k") #'ollama-buddy--cancel-request)
-    ;; Prompt History
-    (define-key map (kbd "M-p") #'ollama-buddy-previous-history)
+    
+    ;; Prompts section keybindings
+    (define-key map (kbd "C-c l") (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))
+    (define-key map (kbd "C-c s") #'ollama-buddy-set-system-prompt)
+    (define-key map (kbd "C-c C-s") #'ollama-buddy-show-system-prompt)
+    (define-key map (kbd "C-c r") #'ollama-buddy-reset-system-prompt)
+    (define-key map (kbd "C-c b") #'ollama-buddy-menu)
+    
+    ;; Model section keybindings
+    (define-key map (kbd "C-c m") #'ollama-buddy--swap-model)
+    (define-key map (kbd "C-c v") #'ollama-buddy-show-model-status)
+    (define-key map (kbd "C-c i") #'ollama-buddy-show-raw-model-info)
+    (define-key map (kbd "C-c M") #'ollama-buddy--multishot-prompt)
+    
+    ;; Roles & Patterns keybindings
+    (define-key map (kbd "C-c R") #'ollama-buddy-roles-switch-role)
+    (define-key map (kbd "C-c E") #'ollama-buddy-role-creator-create-new-role)
+    (define-key map (kbd "C-c D") #'ollama-buddy-roles-open-directory)
+    (define-key map (kbd "C-c f") #'ollama-buddy-transient-fabric-menu)
+    
+    ;; Display Options keybindings
+    (define-key map (kbd "C-c A") #'ollama-buddy-toggle-interface-level)
+    (define-key map (kbd "C-c B") #'ollama-buddy-toggle-debug-mode)
+    (define-key map (kbd "C-c T") #'ollama-buddy-toggle-token-display)
+    (define-key map (kbd "C-c U") #'ollama-buddy-display-token-stats)
+    (define-key map (kbd "C-c C-o") #'ollama-buddy-toggle-markdown-conversion)
+    (define-key map (kbd "C-c c") #'ollama-buddy-toggle-model-colors)
+    (define-key map (kbd "C-c g") #'ollama-buddy-display-token-graph)
+    
+    ;; History keybindings
+    (define-key map (kbd "C-c H") #'ollama-buddy-toggle-history)
+    (define-key map (kbd "C-c X") #'ollama-buddy-clear-history)
+    (define-key map (kbd "C-c V") #'ollama-buddy-display-history)
+    (define-key map (kbd "C-c J") #'ollama-buddy-history-edit)
+    (define-key map (kbd "M-p") #'ollama-buddy-previous-history)  ;; Keep these existing bindings
     (define-key map (kbd "M-n") #'ollama-buddy-next-history)
-    ;; Sessions
+    
+    ;; Session keybindings
     (define-key map (kbd "C-c N") #'ollama-buddy-sessions-new)
     (define-key map (kbd "C-c L") #'ollama-buddy-sessions-load)
     (define-key map (kbd "C-c S") #'ollama-buddy-sessions-save)
     (define-key map (kbd "C-c Q") #'ollama-buddy-sessions-list)
     (define-key map (kbd "C-c Z") #'ollama-buddy-sessions-delete)
-    ;; History
-    (define-key map (kbd "C-c H") #'ollama-buddy-toggle-history)
-    (define-key map (kbd "C-c X") #'ollama-buddy-clear-history)
-    (define-key map (kbd "C-c V") #'ollama-buddy-display-history)
-    (define-key map (kbd "C-c E") #'ollama-buddy-history-edit)
-    ;; Multishot
-    (define-key map (kbd "C-c M") #'ollama-buddy--multishot-prompt)
-    ;; Parameters
-    (define-key map (kbd "C-c P")
-                (lambda () (interactive) (call-interactively #'ollama-buddy-params-edit)))
+    
+    ;; Parameter keybindings
+    (define-key map (kbd "C-c P") #'ollama-buddy-transient-parameter-menu)
     (define-key map (kbd "C-c G") #'ollama-buddy-params-display)
     (define-key map (kbd "C-c I") #'ollama-buddy-params-help)
     (define-key map (kbd "C-c K") #'ollama-buddy-params-reset)
     (define-key map (kbd "C-c F") #'ollama-buddy-toggle-params-in-header)
-    ;; Debug
-    (define-key map (kbd "C-c D") #'ollama-buddy-toggle-debug-mode)
-    (define-key map (kbd "C-c T") #'ollama-buddy-toggle-token-display)
-    (define-key map (kbd "C-c C-o") #'ollama-buddy-toggle-markdown-conversion)
-    (define-key map (kbd "C-c A") #'ollama-buddy-toggle-interface-level)
+    (define-key map (kbd "C-c p") #'ollama-buddy-transient-profile-menu)
+    
     map)
   "Keymap for ollama-buddy mode.")
 
