@@ -29,11 +29,11 @@ You can now manage your Ollama models directly within Emacs with =ollama-buddy=
 
 With this update, you can now:
 
-*Browse Available Models* – See all installed models at a glance.  
-*Select Models Easily* – Set your active AI model with a single click.  
-*Pull Models from Ollama Hub* – Download new models or update existing ones.  
-*Stop Running Models* – Halt background processes when necessary.  
-*Delete Unused Models* – Clean up your workspace with ease.  
+- *Browse Available Models* – See all installed models at a glance.  
+- *Select Models Easily* – Set your active AI model with a single click.  
+- *Pull Models from Ollama Hub* – Download new models or update existing ones.  
+- *Stop Running Models* – Halt background processes when necessary.  
+- *Delete Unused Models* – Clean up your workspace with ease.  
 
 1. *Open the Model Management Interface*  
    Press *=C-c W=* to launch the new *Model Management* buffer or through the transient menu.
