@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama Buddy: Your Friendly AI Assistant -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.9.7
+;; Version: 0.9.8
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -2812,6 +2812,7 @@ ACTUAL-MODEL is the model being used instead."
           "- Ask me anything!                    C-c C-c
 - Main menu                           C-c O
 - Change model                        C-c m
+- Manage models                       C-c W
 - Cancel request                      C-c k
 - Browse prompt history               M-p/M-n
 - Advanced interface (show all tips)  C-c A")
@@ -2819,6 +2820,7 @@ ACTUAL-MODEL is the model being used instead."
          (advanced-tips
           "- Ask me anything!                    C-c C-c
 - Main transient menu                 C-c O
+- Manage models                       C-c W
 - Show Help/Status/Token usage        C-c h/v/U
 - Model Change/Info/Multishot         C-c m/i/M
 - System Prompt Set/Show/Reset        C-c s/C-s/r
@@ -3283,6 +3285,218 @@ Modifies the variable in place."
 ;; Add hook to enable integration when entering dired mode
 (add-hook 'dired-mode-hook #'ollama-buddy-add-dired-integration)
 
+(defun ollama-buddy-manage-models ()
+  "Display and manage Ollama models."
+  (interactive)
+  (let* ((available-models (ollama-buddy--get-models))
+         (running-models (ollama-buddy--get-running-models))
+         (buf (get-buffer-create "*Ollama Models Management*")))
+    
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert "Ollama Models Management\n")
+        (insert "=======================\n\n")
+        
+        ;; Display current and default models
+        (when ollama-buddy--current-model
+          (let ((color (ollama-buddy--get-model-color ollama-buddy--current-model)))
+            (insert "Current Model: ")
+            (insert (propertize ollama-buddy--current-model 'face `(:foreground ,color :weight bold)))
+            (insert "\n")))
+        
+        (when ollama-buddy-default-model
+          (let ((color (ollama-buddy--get-model-color ollama-buddy-default-model)))
+            (insert "Default Model: ")
+            (insert (propertize ollama-buddy-default-model 'face `(:foreground ,color :weight bold)))
+            (insert "\n\n")))
+        
+        ;; List of models with status and actions
+        (insert "Available Models:\n")
+        
+        (dolist (model available-models)
+          (let* ((color (ollama-buddy--get-model-color model))
+                (is-running (member model running-models)))
+            
+            (insert (format "  [%s] " (if is-running "✓" " ")))
+            
+            ;; Select button
+            (insert-text-button
+             (propertize model 'face `(:foreground ,color))
+             'action `(lambda (_) 
+                        (ollama-buddy-select-model ,model))
+             'help-echo "Select this model")
+            
+            (insert "  ")
+            
+            ;; Info button
+            (insert-text-button
+             "Info" 
+             'action `(lambda (_) 
+                        (ollama-buddy-show-raw-model-info ,model))
+             'help-echo "Show model information")
+            
+            (insert "  ")
+            
+            ;; Pull/Stop button
+            (if is-running
+                (insert-text-button
+                 "Stop" 
+                 'action `(lambda (_) 
+                            (ollama-buddy-stop-model ,model))
+                 'help-echo "Stop this model")
+              (insert-text-button
+               "Pull" 
+               'action `(lambda (_) 
+                          (ollama-buddy-pull-model ,model))
+               'help-echo "Pull/update this model"))
+            
+            (insert "  ")
+            
+            ;; Delete button with proper capture
+            (insert-text-button
+             "Delete" 
+             'action `(lambda (_) 
+                        (when (yes-or-no-p (format "Really delete model '%s'? " ,model))
+                          (ollama-buddy-delete-model ,model)))
+             'help-echo "Delete this model")
+            
+            (insert "\n")))
+        
+        ;; Actions at bottom
+        (insert "\nActions:\n")
+        (insert-text-button
+         "[Import GGUF File]"
+         'action (lambda (_) (call-interactively #'ollama-buddy-import-gguf-file))
+         'help-echo "Import a GGUF file to create a new model")
+        (insert "  ")
+        (insert-text-button
+         "[Refresh List]"
+         'action (lambda (_) (ollama-buddy-manage-models))
+         'help-echo "Refresh model list")
+        (insert "  ")
+        (insert-text-button
+         "[Pull Model from Hub]"
+         'action (lambda (_) (call-interactively #'ollama-buddy-pull-model-interactive))
+         'help-echo "Pull a model from Ollama Hub")
+        
+        ;; Set up the mode
+        (special-mode)
+        (use-local-map (copy-keymap special-mode-map))
+        (local-set-key (kbd "g") #'ollama-buddy-manage-models) ;; g to refresh
+        (local-set-key (kbd "i") (lambda () (interactive) 
+                                   (call-interactively #'ollama-buddy-import-gguf-file)))
+        (local-set-key (kbd "p") (lambda () (interactive)
+                                   (call-interactively #'ollama-buddy-pull-model-interactive)))))
+    
+    (display-buffer buf)))
+
+
+; Helper functions for actions
+(defun ollama-buddy-select-model (model)
+  "Set MODEL as the current model."
+  (setq ollama-buddy--current-model model)
+  (message "Selected model: %s" model)
+  (ollama-buddy-manage-models))
+
+(defun ollama-buddy-show-model-info (model)
+  "Display detailed information about MODEL."
+  (let ((endpoint "/api/show")
+        (payload (json-encode `((name . ,model)))))
+    (condition-case err
+        (let* ((response (ollama-buddy--make-request endpoint "POST" payload))
+               (buf (get-buffer-create "*Ollama Model Info*")))
+          (with-current-buffer buf
+            (let ((inhibit-read-only t))
+              (erase-buffer)
+              (insert (format "Ollama Model Information: %s\n\n" model))
+              (insert "#+begin_src json\n")
+              (let ((json-start (point)))
+                (insert (json-encode response))
+                (json-pretty-print json-start (point)))
+              (insert "\n#+end_src")
+              (view-mode 1)))
+          (display-buffer buf))
+      (error (message "Error fetching model info: %s" (error-message-string err))))))
+
+(defun ollama-buddy-pull-model (model)
+  "Pull or update MODEL from Ollama Hub."
+  (interactive
+   (list (completing-read "Pull model: " 
+                          (append (ollama-buddy--get-models) 
+                                  '("llama2" "mistral" "gemma" "llava")))))
+  (let ((buf (get-buffer-create "*Ollama Pull*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (format "Pulling model: %s\n\n" model))
+        (display-buffer (current-buffer))))
+    
+    (let ((process (start-process "ollama-pull" buf "ollama" "pull" model)))
+      (set-process-sentinel 
+       process
+       (lambda (proc event)
+         (let ((status (string-trim event)))
+           (with-current-buffer (process-buffer proc)
+             (let ((inhibit-read-only t))
+               (goto-char (point-max))
+               (insert (format "\nPull %s: %s\n" model status))
+               (when (string-prefix-p "finished" status)
+                 (ollama-buddy--assign-model-letters) ;; Update model list
+                 (insert "\nModel ready to use.")))))))
+      (message "Pulling model %s in background..." model))))
+
+(defun ollama-buddy-pull-model-interactive ()
+  "Interactively prompt for model to pull from Ollama Hub."
+  (interactive)
+  (let ((model-name (read-string "Model to pull (e.g., llama2, mistral, gemma): ")))
+    (ollama-buddy-pull-model model-name)))
+
+(defun ollama-buddy-stop-model (model)
+  "Stop a running MODEL."
+  (let ((buf (get-buffer-create "*Ollama Command*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (format "Stopping model: %s\n\n" model))
+        (display-buffer (current-buffer))))
+    
+    (let ((process (start-process "ollama-rm-running" buf "ollama" "rm" "-r" model)))
+      (set-process-sentinel 
+       process
+       (lambda (proc event)
+         (let ((status (string-trim event)))
+           (with-current-buffer (process-buffer proc)
+             (let ((inhibit-read-only t))
+               (goto-char (point-max))
+               (insert (format "\nStop %s: %s\n" model status))
+               (when (string-prefix-p "finished" status)
+                 (ollama-buddy-manage-models)))))))
+      (message "Stopping model %s..." model))))
+
+(defun ollama-buddy-delete-model (model)
+  "Delete MODEL from Ollama."
+  (let ((buf (get-buffer-create "*Ollama Command*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (format "Deleting model: %s\n\n" model))
+        (display-buffer (current-buffer))))
+    
+    (let ((process (start-process "ollama-delete" buf "ollama" "rm" model)))
+      (set-process-sentinel 
+       process
+       (lambda (proc event)
+         (let ((status (string-trim event)))
+           (with-current-buffer (process-buffer proc)
+             (let ((inhibit-read-only t))
+               (goto-char (point-max))
+               (insert (format "\nDelete %s: %s\n" model status))
+               (when (string-prefix-p "finished" status)
+                 (ollama-buddy--assign-model-letters) ;; Update model list
+                 (ollama-buddy-manage-models)))))))
+      (message "Deleting model %s..." model))))
+
 (defun ollama-buddy-params-help ()
   "Display help for Ollama parameters."
   (interactive)
@@ -3332,7 +3546,8 @@ Modifies the variable in place."
 (defvar ollama-buddy-mode-map
   (let ((map (make-sparse-keymap)))
     ;; Primary Transient Menu access
-    (define-key map (kbd "C-c O") #'ollama-buddy-transient-menu)  ;; Main transient menu entry point
+    (define-key map (kbd "C-c O") #'ollama-buddy-transient-menu)
+    (define-key map (kbd "C-c W") #'ollama-buddy-manage-models)
     
     ;; Chat section keybindings from transient
     (define-key map (kbd "C-c C-c") #'ollama-buddy--send-prompt)  ;; Keep existing binding for RET
