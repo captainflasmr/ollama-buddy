@@ -3067,6 +3067,7 @@ Modifies the variable in place."
                                      ollama-buddy-command-definitions))))
          (available-models (ollama-buddy--get-models))
          (running-models (ollama-buddy--get-running-models))
+         (ollama-version (ollama-buddy--make-request "/api/version" "GET"))
          (buf (get-buffer-create "*Ollama Model Status*")))
     ;; Update model colors
     (when (ollama-buddy--ollama-running)
@@ -3075,8 +3076,9 @@ Modifies the variable in place."
     (with-current-buffer buf
       (let ((inhibit-read-only t))
         (erase-buffer)
-        (insert "Ollama Model Status:\n\n")
-
+        ;; ollama version
+        (insert "ollama version : " (cdar ollama-version) "\n\n")
+        
         ;; List running models with colors
         (if running-models
             (progn
