@@ -1233,26 +1233,34 @@ Here is a kanban of the features that I plan on (hopefully) adding in due course
 #+end_src
 
 #+RESULTS:
-| TODO                            | DOING                         | DONE                              |
-|---------------------------------+-------------------------------+-----------------------------------|
-| Create a model from a GGUF file | API - suffix                  | API - show model information      |
-| API - Pulling a model           | Show incoming ollama messages | API - system prompt               |
-| API - images                    |                               | Chat buffer to use org-mode       |
-| Embeddings?                     |                               | Chat export options               |
-| Test on Windows                 |                               | Add temperature                   |
-|                                 |                               | Managing Sessions                 |
-|                                 |                               | Sparse minified version           |
-|                                 |                               | Role-Based Menu Preset System     |
-|                                 |                               | Add to MELPA                      |
-|                                 |                               | Enhancing Menu Clarity            |
-|                                 |                               | Real time token tracking          |
-|                                 |                               | Managing chat history and context |
+| TODO                            | DOING                             | DONE                              |
+|---------------------------------+-----------------------------------+-----------------------------------|
+| Create a model from a GGUF file | API - suffix                      | API - Show running models         |
+| API - Pulling a model           | Show incoming ollama messages     | Add transient menu                |
+| API - Prompt template           | Add fabric pattern/prompt support | History editing                   |
+| Debug - Final response display  |                                   | API - options - parameter editing |
+| API - images                    |                                   | API - show model information      |
+| Embeddings?                     |                                   | API - system prompt               |
+| Test on Windows                 |                                   | Chat buffer to use org-mode       |
+|                                 |                                   | Chat export options               |
+|                                 |                                   | Add temperature                   |
+|                                 |                                   | Managing Sessions                 |
+|                                 |                                   | Sparse minified version           |
+|                                 |                                   | Role-Based Menu Preset System     |
+|                                 |                                   | Add to MELPA                      |
+|                                 |                                   | Enhancing Menu Clarity            |
+|                                 |                                   | Real time token tracking          |
+|                                 |                                   | Managing chat history and context |
 
 * Roadmap                                                           :roadmap:
 
 ** TODO Create a model from a GGUF file
 
 ** TODO API - Pulling a model
+
+** TODO API - Prompt template
+
+** TODO Debug - Final response display
 
 ** TODO API - images
 
@@ -1265,6 +1273,16 @@ Here is a kanban of the features that I plan on (hopefully) adding in due course
 I think this is only for generate, but I have quietly added it in.
 
 ** DOING Show incoming ollama messages
+
+** DOING Add fabric pattern/prompt support
+
+** DONE API - Show running models
+
+** DONE Add transient menu
+
+** DONE History editing
+
+** DONE API - options - parameter editing
 
 ** DONE API - show model information
 
@@ -1289,10 +1307,6 @@ I think this is only for generate, but I have quietly added it in.
 ** DONE Real time token tracking
 
 ** DONE Managing chat history and context
-
-
-
-
 
 * Alternative LLM based packages
 
