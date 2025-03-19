@@ -10,7 +10,8 @@
 (require 'transient)
 (require 'ollama-buddy-fabric)
 
-(transient-define-prefix ollama-buddy-transient-main-menu ()
+;;;###autoload
+(transient-define-prefix ollama-buddy-transient-menu ()
   "Ollama Buddy main menu."
   :info-manual "(ollama-buddy) Main Commands"
   [
@@ -121,7 +122,7 @@
                                 (ollama-buddy-fabric-send))))]
    
    ["Navigation"
-    ("q" "Back to Main Menu" ollama-buddy-transient-main-menu)]]
+    ("q" "Back to Main Menu" ollama-buddy-transient-menu)]]
   
   (interactive)
   (unless ollama-buddy-fabric--patterns
@@ -149,7 +150,7 @@
                      (message "Applied Precise profile")))]
    
    ["Actions"
-    ("q" "Back to Main Menu" ollama-buddy-transient-main-menu)]]
+    ("q" "Back to Main Menu" ollama-buddy-transient-menu)]]
   (interactive)
   (transient-setup 'ollama-buddy-transient-profile-menu))
 
@@ -214,7 +215,7 @@
     ("R" "Reset All" ollama-buddy-params-reset)
     ("H" "Help" ollama-buddy-params-help)
     ("F" "Toggle Display in Header" ollama-buddy-toggle-params-in-header)
-    ("q" "Back to Main Menu" ollama-buddy-transient-main-menu)]
+    ("q" "Back to Main Menu" ollama-buddy-transient-menu)]
    ])
 
 (transient-define-prefix ollama-buddy-transient-commands-menu ()
@@ -244,14 +245,8 @@
     ("m" "Minibuffer Prompt" ollama-buddy--menu-minibuffer-prompt)]
    
    ["Actions"
-    ("q" "Back to Main Menu" ollama-buddy-transient-main-menu)]
+    ("q" "Back to Main Menu" ollama-buddy-transient-menu)]
    ])
-
-;;;###autoload
-(defun ollama-buddy-transient-menu ()
-  "Show the Ollama Buddy transient menu."
-  (interactive)
-  (ollama-buddy-transient-main-menu))
 
 (provide 'ollama-buddy-transient)
 ;;; ollama-buddy-transient.el ends here
