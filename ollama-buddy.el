@@ -2070,9 +2070,8 @@ With prefix argument ALL-MODELS, clear history for all models."
          ;; Basic tips for beginners
          (basic-tips
           "- Ask me anything!                    C-c C-c
-- Main menu                           C-c O
+- Main transient menu                 C-c O
 - Change model                        C-c m
-- Manage models                       C-c W
 - Cancel request                      C-c k
 - Browse prompt history               M-p/M-n
 - Advanced interface (show all tips)  C-c A")
