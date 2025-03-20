@@ -320,6 +320,26 @@ Each command is defined with:
   :type 'directory
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-available-models
+  '(
+    "llama3.2:1b"
+    "starcoder2:3b"
+    "codellama:7b"
+    "phi3:3.8b"
+    "gemma3:1b"
+    "gemma3:4b"
+    "qwen2.5-coder:7b"
+    "qwen2.5-coder:3b"
+    "mistral:7b"
+    "deepseek-r1:7b"
+    "deepseek-r1:1.5b"
+    "tinyllama:latest"
+    "llama3.2:3b"
+    )
+  "List of available models to pull from Ollama Hub."
+  :type '(repeat string)
+  :group 'ollama-buddy)
+
 ;; Shared variables
 (defvar ollama-buddy-roles--current-role "default"
   "The currently active ollama-buddy role.")

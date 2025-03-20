@@ -18,6 +18,13 @@ The name is just something a little bit fun and it seems to always remind me of 
 
 * Whats New
 
+** <2025-03-20> *0.9.9*
+
+Intro message with model management options (select, pull, delete) and option for recommended models to pull
+
+- Enhance model management and selection features
+- Display models available for download but not yet pulled
+
 ** <2025-03-19> *0.9.8*
 
 Added model management interface to pull and delete models

@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama Buddy: Your Friendly AI Assistant -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.9.8
+;; Version: 0.9.9
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -571,10 +571,11 @@ PROPS should be a sequence of property-value pairs."
   (ollama-buddy--update-status "System prompt reset")
   (message "System prompt has been reset"))
 
-(defun ollama-buddy-show-raw-model-info ()
+(defun ollama-buddy-show-raw-model-info (&optional model)
   "Retrieve and display raw JSON information about the current default model."
   (interactive)
-  (let* ((model (or ollama-buddy--current-model
+  (let* ((model (or model
+                    ollama-buddy--current-model
                     ollama-buddy-default-model
                     (error "No default model set")))
          (endpoint "/api/show")
@@ -1311,6 +1312,10 @@ With prefix argument ALL-MODELS, clear history for all models."
                  for letter across "abcdefghijklmnopqrstuvwxyz"
                  collect (cons letter model))))
 
+(defun ollama-buddy--get-model-letter (model-name)
+  "Return the letter assigned to MODEL-NAME from `ollama-buddy--model-letters`."
+  (car (rassoc model-name ollama-buddy--model-letters)))
+
 (defun ollama-buddy--format-models-with-letters-plain ()
   "Format models with letter assignments for display without color properties."
   (when-let* ((models-alist ollama-buddy--model-letters)
@@ -1347,7 +1352,7 @@ With prefix argument ALL-MODELS, clear history for all models."
   (save-excursion
     ;; First, find the Available Models section
     (goto-char (point-max))
-    (when (search-backward "** Available Models" nil t)
+    (when (search-backward "** Local Available Models" nil t)
       (forward-line 2) ;; Skip the header and empty line
       
       ;; Now we're at the start of the model list
@@ -2050,11 +2055,18 @@ With prefix argument ALL-MODELS, clear history for all models."
        (error "Failed to send request to Ollama: %s" (error-message-string err))))))
 
 (defun ollama-buddy--create-intro-message ()
-  "Create welcome message with lettered model assignments in org format."
+  "Create welcome message with model management capabilities in org format."
   (ollama-buddy--assign-model-letters)
-  (let* ((models-section
-          (when (ollama-buddy--ollama-running)
-            (ollama-buddy--format-models-with-letters-plain)))
+  (let* ((available-models (when (ollama-buddy--ollama-running)
+                             (ollama-buddy--get-models)))
+         (running-models (when (ollama-buddy--ollama-running)
+                           (ollama-buddy--get-running-models)))
+         ;; Get models available for pull but not yet downloaded
+         (models-to-pull (when (ollama-buddy--ollama-running)
+                           (cl-set-difference 
+                            ollama-buddy-available-models
+                            available-models
+                            :test #'string=)))
          ;; Basic tips for beginners
          (basic-tips
           "- Ask me anything!                    C-c C-c
@@ -2084,6 +2096,48 @@ With prefix argument ALL-MODELS, clear history for all models."
          (tips-section (if (eq ollama-buddy-interface-level 'basic)
                           basic-tips
                           advanced-tips))
+         ;; Create model management section
+         (models-management-section
+          (when available-models
+            (concat 
+             "** Local Available Models\n\n"
+             (mapconcat
+              (lambda (model)
+                (let ((is-running (member model running-models))
+                      (model-letter (ollama-buddy--get-model-letter model)))
+                  (concat
+                   (format
+                    "(%c) %s [[elisp:(ollama-buddy-select-model \"%s\")][[Select]]] "
+                    model-letter model model)
+                   (format
+                    "[[elisp:(ollama-buddy-show-raw-model-info \"%s\")][[Info]]] " model)
+                   (format "[[elisp:(ollama-buddy-pull-model \"%s\")][[Pull]]] " model)
+                   (format
+                    "[[elisp:(ollama-buddy-delete-model-in-chat \"%s\"))][[Delete]]]"
+                    model)
+                   )
+                  ))
+              available-models
+              "\n")
+             "\n\n")))
+         
+         ;; Create section for models available to pull but not yet downloaded
+         (models-to-pull-section
+          (when (and models-to-pull (not (null models-to-pull)))
+            (concat
+             "** Recommended Models to Download\n\n"
+             (mapconcat
+              (lambda (model)
+                (format "[[elisp:(ollama-buddy-pull-model \"%s\")][[%s]]]"
+                        model model))
+              models-to-pull
+              " ")
+             "\n\n")))
+         
+         ;; Models with letters (the original section)
+         (models-letter-section
+          (when (ollama-buddy--ollama-running)
+            (ollama-buddy--format-models-with-letters-plain)))
          (message-text
           (concat
            (when (= (buffer-size) 0)
@@ -2096,13 +2150,29 @@ With prefix argument ALL-MODELS, clear history for all models."
            "| | | | | .  |     | .  | . | | | . | . |__ |\n"
            "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n"
            "#+end_example\n\n"
-           "** Available Models\n\n"
-           models-section
+           models-management-section
+           models-to-pull-section
+           "** Actions\n\n"
+           "[[elisp:(call-interactively #'ollama-buddy-import-gguf-file)][[Import GGUF File]]] "
+           "[[elisp:(call-interactively #'ollama-buddy-pull-model)][[Pull Any Model]]]\n\n"
            "** Quick Tips\n\n"
            tips-section)))
+    ;; Apply overlay colors to model names
+    (with-temp-buffer
+      (insert message-text)
+      (goto-char (point-min))
+      ;; Find model names in the format "=model-name=" and apply face
+      (while (re-search-forward "=\\([^=]+\\)=" nil t)
+        (let* ((model-name (match-string 1))
+               (color (ollama-buddy--get-model-color model-name))
+               (start (match-beginning 0))
+               (end (match-end 0)))
+          (add-text-properties start end `(face (:foreground ,color :weight bold)) (current-buffer))))
+      (setq message-text (buffer-string)))
+    
+    ;; Add bold face to the entire message
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
-
 
 (defun ollama-buddy--multishot-send (prompt sequence)
   "Send PROMPT to multiple models specified by SEQUENCE of letters."
@@ -2599,7 +2669,7 @@ Modifies the variable in place."
         (insert "  ")
         (insert-text-button
          "[Pull Model from Hub]"
-         'action (lambda (_) (call-interactively #'ollama-buddy-pull-model-interactive))
+         'action (lambda (_) (call-interactively #'ollama-buddy-pull-model))
          'help-echo "Pull a model from Ollama Hub")
         
         ;; Set up the mode
@@ -2609,16 +2679,20 @@ Modifies the variable in place."
         (local-set-key (kbd "i") (lambda () (interactive)
                                    (call-interactively #'ollama-buddy-import-gguf-file)))
         (local-set-key (kbd "p") (lambda () (interactive)
-                                   (call-interactively #'ollama-buddy-pull-model-interactive)))))
+                                   (call-interactively #'ollama-buddy-pull-model)))))
     
     (display-buffer buf)))
 
 ; Helper functions for actions
 (defun ollama-buddy-select-model (model)
   "Set MODEL as the current model."
+  (setq ollama-buddy-default-model model)
   (setq ollama-buddy--current-model model)
   (message "Selected model: %s" model)
-  (ollama-buddy-manage-models))
+  (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
+  (ollama-buddy--prepare-prompt-area)
+  (goto-char (point-max))
+  (ollama-buddy--update-status "Idle"))
 
 (defun ollama-buddy-show-model-info (model)
   "Display detailed information about MODEL."
@@ -2643,9 +2717,7 @@ Modifies the variable in place."
 (defun ollama-buddy-pull-model (model)
   "Pull or update MODEL from Ollama Hub."
   (interactive
-   (list (completing-read "Pull model: "
-                          (append (ollama-buddy--get-models)
-                                  '("llama2" "mistral" "gemma" "llava")))))
+   (list (completing-read "Pull model: " ollama-buddy-available-models)))
   (let ((buf (get-buffer-create "*Ollama Pull*")))
     (with-current-buffer buf
       (let ((inhibit-read-only t))
@@ -2666,12 +2738,6 @@ Modifies the variable in place."
                  (ollama-buddy--assign-model-letters) ;; Update model list
                  (insert "\nModel ready to use.")))))))
       (message "Pulling model %s in background..." model))))
-
-(defun ollama-buddy-pull-model-interactive ()
-  "Interactively prompt for model to pull from Ollama Hub."
-  (interactive)
-  (let ((model-name (read-string "Model to pull (e.g., llama2, mistral, gemma): ")))
-    (ollama-buddy-pull-model model-name)))
 
 (defun ollama-buddy-stop-model (model)
   "Stop a running MODEL."
@@ -2694,6 +2760,30 @@ Modifies the variable in place."
                (when (string-prefix-p "finished" status)
                  (ollama-buddy-manage-models)))))))
       (message "Stopping model %s..." model))))
+
+(defun ollama-buddy-delete-model-in-chat (model)
+  "Delete MODEL from Ollama."
+  (let ((buf (get-buffer-create ollama-buddy--chat-buffer)))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (insert (format "Deleting model: %s\n\n" model))
+        (display-buffer (current-buffer))))
+    
+    (let ((process (start-process "ollama-delete" buf "ollama" "rm" model)))
+      (set-process-sentinel
+       process
+       (lambda (proc event)
+         (let ((status (string-trim event)))
+           (with-current-buffer (process-buffer proc)
+             (let ((inhibit-read-only t))
+               (goto-char (point-max))
+               (insert (format "\nDelete %s: %s\n" model status))
+               (when (string-prefix-p "finished" status)
+                 (ollama-buddy--assign-model-letters) ;; Update model list
+                 (insert (ollama-buddy--create-intro-message))
+                 (ollama-buddy--apply-model-colors-to-buffer)
+                 (ollama-buddy--prepare-prompt-area)))))))
+      (message "Deleting model %s..." model))))
 
 (defun ollama-buddy-delete-model (model)
   "Delete MODEL from Ollama."
@@ -2835,6 +2925,8 @@ Modifies the variable in place."
   :keymap ollama-buddy-mode-map)
 
 (push 'ollama-buddy--prompt-history savehist-additional-variables)
+
+(setq org-return-follows-link t)
 
 (provide 'ollama-buddy)
 ;;; ollama-buddy.el ends here
