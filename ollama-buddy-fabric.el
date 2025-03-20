@@ -7,6 +7,8 @@
 
 ;;; Code:
 
+(require 'ollama-buddy-core)
+
 (defgroup ollama-buddy-fabric nil
   "Customization group for ollama-buddy-fabric."
   :group 'ollama-buddy
