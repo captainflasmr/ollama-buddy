@@ -370,9 +370,11 @@ the quick brown fox jumps over the lazy dog
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_004.gif]]
 
-** 005 006 From 20,000 Leagues under the Sea to Buffy! using a custom menu - just for fun!
+** 005 006 Roald Dahl to Buffy! using a custom menu - just for fun!
 
-Open up 20,000 Leagues from Project Gutenberg, select a paragraph, load a custom menu from presets called Buffy and lets see what fun we can have!
+In fairy-tales, witches always wear silly black hats and black coats, and they ride on broomsticks. But this is not a fairy-tale. This is about REAL WITCHES.
+
+Lets change roles into a Buffy presets and have some fun!
 
 - *Cordelia burn*
 
@@ -380,7 +382,7 @@ Open up 20,000 Leagues from Project Gutenberg, select a paragraph, load a custom
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_005.gif]]
 
-- *Buffy!*
+- *Giles... yawn!*
 
 #+attr_org: :width 300px
 #+attr_html: :width 100%
