@@ -16,6 +16,8 @@ A friendly Emacs interface for interacting with Ollama models. This package prov
 
 The name is just something a little bit fun and it seems to always remind me of the "bathroom buddy" from the film Gremlins (although hopefully this will work better than that seemed to!)
 
+I have a youtube channel where I am looking to put up regular videos demonstrating the packages capabilities : https://www.youtube.com/@OllamaBuddyforEmacs
+
 * Quick Demo Video
 
 ** 011 Real-time tracking and display
