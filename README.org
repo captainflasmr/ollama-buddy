@@ -334,20 +334,29 @@ The transient menu can be customized by modifying the =transient-define-prefix= 
 
 Note that all the demos are in real time.
 
+** youtube
+
+Also these videos will all be uploaded to a youtube channel:
+
+https://www.youtube.com/@OllamaBuddyforEmacs
+
+*** description
+
+Demonstrating the Emacs package ollama-buddy, providing a convenient way to integrate Ollama's local LLM capabilities.
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama #ollama-buddy
+
 ** 001 First Steps
 
 - Starting with model : llama3.2:1b
-
 - Show menu activation C-c o =ollama-buddy-menu=
-
 - [o] Open chat buffer
-
-- PROMPT>> why is the sky blue?
-
+- PROMPT:: why is the sky blue?
 - C-c C-c to send from chat buffer
-
 - From this demo README file, select the following text and send to chat buffer:
-
   What is the capital of France?
 
 #+attr_org: :width 300px
@@ -357,12 +366,9 @@ Note that all the demos are in real time.
 ** 002 Swap Models
 
 - C-c m to swap to differing models from chat buffer
-
 - Select models from the intro message
-
 - Swap models from the transient menu
-
-- PROMPT>> how many fingers do I have?
+- PROMPT:: how many fingers do I have?
 
 #+attr_org: :width 300px
 #+attr_html: :width 100%
@@ -371,9 +377,7 @@ Note that all the demos are in real time.
 ** 003 From Other Buffers
 
 the quick brown fox jumps over the lazy dog
-
 - Select individual words for dictionary menu items
-
 - Select whole sentence and convert to uppercase
 
 #+attr_org: :width 300px
@@ -382,10 +386,8 @@ the quick brown fox jumps over the lazy dog
 
 ** 004 Coding - Writing a Hello World! program with increasingly advanced models
 
-- PROMPT>> can you write a hello world program in Ada?
-
+- PROMPT:: can you write a hello world program in Ada?
 - switch models to the following and check differing output:
-
   - tinyllama:latest
   - qwen2.5-coder:3b
   - qwen2.5-coder:7b
@@ -414,11 +416,9 @@ Lets change roles into a Buffy preset and have some fun!
 
 ** 007 Multishot
 
-- PROMPT>> how many fingers do I have?
-
-  send to multiple models, any difference in output?
-
-  Also they are now available in the equivalent letter named registers, so lets pull those registers!
+- PROMPT:: how many fingers do I have?
+- send to multiple models, any difference in output?
+- Also they are now available in the equivalent letter named registers, so lets pull those registers!
 
 #+attr_org: :width 300px
 #+attr_html: :width 100%
@@ -443,25 +443,15 @@ Enter a few queries to test the system, then navigate back through your previous
 ** 012 Sessions/History and recall
 
 - Ask:
-
 What is the capital of France?
-
 and of Italy?
-
 - Turn off history
-
 and of Germany?
-
 - Turn on history
-
 and of Germany?
-
 - Save Session
-
 - Restart Emacs
-
 - Load Session
-
 and of Sweden?
 
 #+attr_org: :width 300px
@@ -471,15 +461,10 @@ and of Sweden?
 ** 015 System prompt support
 
 Set the system message to:
-
 You must always respond in a single sentence.
-
 Now ask the following:
-
 Tell me why Emacs is so great!
-
 Tell me about black holes
-
 clear the system message and ask again, the reponses should now be more verbose!!
 
 #+attr_org: :width 300px
@@ -491,7 +476,6 @@ clear the system message and ask again, the reponses should now be more verbose!
 *** Get the same response each time using *seed*
 
 Set the seed using edit parameters to 50
-
 Send the same prompt and see the same response!!
 
 ** *TODO* Code queries
@@ -515,17 +499,11 @@ end Gen_List;
 #+end_src
 
 [c] Describe code
-
 [e] Custom prompt
-
 Can you generate the body for this specification?
-
 [e] Custom prompt
-    
 Can you convert this Ada code into [C#/C++/elisp]?
-
 [e] Custom prompt
-     
 Can you write unit tests for the generated code
 
 * Features
