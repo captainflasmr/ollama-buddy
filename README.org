@@ -7,7 +7,7 @@
 #+startup: showall
 
 #+attr_org: :width 300px
-#+attr_html: :width 100%
+#+attr_html: :width 50%
 [[file:img/ollama-buddy-youtube-banner.jpg]]
 
 * Overview
