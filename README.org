@@ -416,14 +416,6 @@ Enter a few queries to test the system, then navigate back through your previous
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_009.gif]]  
 
-** 010 Distinguishing models by colour
-
-Switch on =ollama-buddy-enable-model-colors= and see the lovely colours!!
-
-#+attr_org: :width 300px
-#+attr_html: :width 100%
-[[file:img/ollama-buddy-screen-recording_010.gif]]  
-
 ** 011 Real-time tracking and display
 
 Submit some queries, with different models:
@@ -435,6 +427,8 @@ PROMPT>> why is emacs so great?
 and show the token usage and rate being displayed in the chat buffer.
 
 Open the Token Usage stats from the menu
+
+Open the Token Usage graph
 
 Toggle on =ollama-buddy-toggle-token-display=
 
