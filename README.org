@@ -521,7 +521,9 @@ If desired, the following will get you going! (of course, have =ollama= running 
   #+begin_src elisp
    (use-package ollama-buddy
      :ensure t
-     :bind ("C-c o" . ollama-buddy-menu))
+     :bind
+     ("C-c o" . ollama-buddy-menu)
+     ("C-c O" . ollama-buddy-transient-menu-wrapper))
   #+end_src
 
 - *Interactive Command Menu*
@@ -760,9 +762,11 @@ Prompts are integrated into the Emacs history mechanism and persist across sessi
 ** MELPA
 
 #+begin_src emacs-lisp
-(use-package ollama-buddy
-  :ensure t
-  :bind ("C-c o" . ollama-buddy-menu))
+   (use-package ollama-buddy
+     :ensure t
+     :bind
+     ("C-c o" . ollama-buddy-menu)
+     ("C-c O" . ollama-buddy-transient-menu-wrapper))
 #+end_src
 
 ** Manual Installation
@@ -781,6 +785,7 @@ With the option to add your own user keybinding for the =ollama-buddy-menu=
 (add-to-list 'load-path "path/to/ollama-buddy")
 (require 'ollama-buddy)
 (global-set-key (kbd "C-c o") #'ollama-buddy-menu)
+(global-set-key (kbd "C-c O") #'ollama-buddy-transient-menu-wrapper)
 #+end_src
 
 OR
@@ -788,7 +793,9 @@ OR
 #+begin_src elisp
  (use-package ollama-buddy
    :load-path "path/to/ollama-buddy"
-   :bind ("C-c o" . ollama-buddy-menu))
+   :bind
+   ("C-c o" . ollama-buddy-menu)
+   ("C-c O" . ollama-buddy-transient-menu-wrapper))
 #+end_src
 
 - Usage
@@ -863,7 +870,9 @@ The default menu offers the following menu items:
 
 #+begin_src elisp
 (use-package ollama-buddy
-  :bind ("C-c o" . ollama-buddy-menu)
+  :bind
+  ("C-c o" . ollama-buddy-menu)
+  ("C-c O" . ollama-buddy-transient-menu-wrapper)
   :custom
   ;; Set default model
   (ollama-buddy-default-model "llama3:latest")
@@ -879,7 +888,9 @@ The default menu offers the following menu items:
 
 #+begin_src elisp
 (use-package ollama-buddy
-  :bind ("C-c o" . ollama-buddy-menu)
+  :bind
+  ("C-c o" . ollama-buddy-menu)
+  ("C-c O" . ollama-buddy-transient-menu-wrapper)
   :custom
   (ollama-buddy-host "http://<remote-server>")
   (ollama-buddy-port 11400))
@@ -889,7 +900,9 @@ The default menu offers the following menu items:
 
 #+begin_src elisp
 (use-package ollama-buddy
-  :bind ("C-c o" . ollama-buddy-menu)
+  :bind
+  ("C-c o" . ollama-buddy-menu)
+  ("C-c O" . ollama-buddy-transient-menu-wrapper)
   :config
   (ollama-buddy-add-model-to-menu-entry 'dictionary-lookup "tinyllama:latest")
   (ollama-buddy-add-model-to-menu-entry 'synonym "tinyllama:latest"))
@@ -899,7 +912,9 @@ The default menu offers the following menu items:
 
 #+begin_src elisp
 (use-package ollama-buddy
-  :bind ("C-c o" . ollama-buddy-menu)
+  :bind
+  ("C-c o" . ollama-buddy-menu)
+  ("C-c O" . ollama-buddy-transient-menu-wrapper)
   :config
   (ollama-buddy-update-menu-entry
    'refactor-code
@@ -1060,7 +1075,9 @@ You can add new commands to =ollama-buddy-command-definitions= in your config:
 ;; Incorporate into a use-package
 (use-package ollama-buddy
   :load-path "path/to/ollama-buddy"
-  :bind ("C-c o" . ollama-buddy-menu)
+  :bind
+  ("C-c o" . ollama-buddy-menu)
+  ("C-c O" . ollama-buddy-transient-menu-wrapper)
   (add-to-list 'ollama-buddy-command-definitions
                '(pirate
                  :key ?i

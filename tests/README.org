@@ -55,7 +55,7 @@ cat > "$INIT_FILE" << EOF
 
 ;; Add the key binding
 (global-set-key (kbd "C-c o") 'ollama-buddy-menu)
-(global-set-key (kbd "C-c O") 'ollama-buddy-transient-menu)
+(global-set-key (kbd "C-c O") 'ollama-buddy-transient-menu-wrapper)
 
 ;; Show a message to confirm we're in test mode
 (message "Testing ollama-buddy in vanilla Emacs %s" emacs-version)

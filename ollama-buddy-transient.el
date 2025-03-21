@@ -58,7 +58,6 @@
 (declare-function ollama-buddy-fabric-populate-patterns "ollama-buddy-fabric")
 (declare-function ollama-buddy-fabric-setup "ollama-buddy-fabric")
 
-;;;###autoload
 (transient-define-prefix ollama-buddy-transient-menu ()
   "Ollama Buddy main menu."
   :info-manual "(ollama-buddy) Main Commands"
@@ -296,6 +295,16 @@
    ["Actions"
     ("q" "Back to Main Menu" ollama-buddy-transient-menu)]
    ])
+
+;;;###autoload
+(defun ollama-buddy-transient-menu-wrapper ()
+  "Wrapper function for safely loading the Ollama Buddy transient menu.
+This ensures all required functions are loaded before displaying the menu."
+  (interactive)
+  ;; Make sure the main package is loaded
+  (require 'ollama-buddy)
+  ;; Now call the transient menu
+  (call-interactively 'ollama-buddy-transient-menu))
 
 (provide 'ollama-buddy-transient)
 ;;; ollama-buddy-transient.el ends here
