@@ -550,7 +550,7 @@ Prompts are integrated into the Emacs history mechanism and persist across sessi
 
 Note that all the demos are in real time.
 
-** First Steps
+** 001 First Steps
 
 - Starting with model : llama3.2:1b
 
@@ -570,9 +570,13 @@ Note that all the demos are in real time.
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_001.gif]]
 
-** Swap Models
+** 002 Swap Models
 
-- C-c C-m to swap to differing models from chat buffer
+- C-c m to swap to differing models from chat buffer
+
+- Select models from the intro message
+
+- Swap models from the transient menu
 
 - PROMPT>> how many fingers do I have?
 
@@ -580,7 +584,7 @@ Note that all the demos are in real time.
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_002.gif]]
 
-** From Other Buffers
+** 003 From Other Buffers
 
 the quick brown fox jumps over the lazy dog
 
@@ -592,7 +596,7 @@ the quick brown fox jumps over the lazy dog
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_003.gif]]
 
-** Coding - Writing a Hello World! program with increasingly advanced models
+** 004 Coding - Writing a Hello World! program with increasingly advanced models
 
 - PROMPT>> can you write a hello world program in Ada?
 
@@ -606,7 +610,7 @@ the quick brown fox jumps over the lazy dog
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_004.gif]]
 
-** From 20,000 Leagues under the Sea to Buffy! using a custom menu - just for fun!
+** 005 006 From 20,000 Leagues under the Sea to Buffy! using a custom menu - just for fun!
 
 Open up 20,000 Leagues from Project Gutenberg, select a paragraph, load a custom menu from presets called Buffy and lets see what fun we can have!
 
@@ -622,7 +626,7 @@ Open up 20,000 Leagues from Project Gutenberg, select a paragraph, load a custom
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_006.gif]]
 
-** Multishot
+** 007 Multishot
 
 - PROMPT>> how many fingers do I have?
 
@@ -634,7 +638,7 @@ Open up 20,000 Leagues from Project Gutenberg, select a paragraph, load a custom
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_007.gif]]  
 
-** Role Switching
+** 008 Role Switching
 
 Show the changing of roles and how they affect the menu and hence the commands available.
 
@@ -642,7 +646,7 @@ Show the changing of roles and how they affect the menu and hence the commands a
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_008.gif]]  
 
-** Prompt History
+** 009 Prompt History
 
 Enter a few queries to test the system, then navigate back through your previous inputs, switch models, and resubmit to compare results.
 
@@ -650,7 +654,7 @@ Enter a few queries to test the system, then navigate back through your previous
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_009.gif]]  
 
-** Distinguishing models by colour
+** 010 Distinguishing models by colour
 
 Switch on =ollama-buddy-enable-model-colors= and see the lovely colours!!
 
@@ -658,7 +662,7 @@ Switch on =ollama-buddy-enable-model-colors= and see the lovely colours!!
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_010.gif]]  
 
-** Real-time tracking and display
+** 011 Real-time tracking and display
 
 Submit some queries, with different models:
 
@@ -676,7 +680,7 @@ Toggle on =ollama-buddy-toggle-token-display=
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_011.gif]]
 
-** Sessions/History and recall
+** 012 Sessions/History and recall
 
 - Ask:
 
@@ -704,7 +708,7 @@ and of Sweden?
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_012.gif]]
 
-** System prompt support
+** 015 System prompt support
 
 Set the system message to:
 
