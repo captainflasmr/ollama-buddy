@@ -572,7 +572,7 @@ PROPS should be a sequence of property-value pairs."
   (message "System prompt has been reset"))
 
 (defun ollama-buddy-show-raw-model-info (&optional model)
-  "Retrieve and display raw JSON information about the current default model."
+  "Retrieve and display raw JSON information about the current default MODEL."
   (interactive)
   (let* ((model (or model
                     ollama-buddy--current-model
@@ -754,49 +754,6 @@ PROPS should be a sequence of property-value pairs."
   ;; Update status
   (ollama-buddy--update-status "System prompt reset")
   (message "System prompt has been reset"))
-
-(defun ollama-buddy--prepare-prompt-area (&optional new-prompt keep-content system-prompt suffix-prompt)
-  "Prepare the prompt area in the buffer.
-When NEW-PROMPT is non-nil, replace the existing prompt area.
-When KEEP-CONTENT is non-nil, preserve the existing prompt content.
-When SYSTEM-PROMPT is non-nil, mark as a system prompt.
-When SUFFIX-PROMPT is non-nil, mark as a suffix."
-  (let* ((model (or ollama-buddy--current-model
-                    ollama-buddy-default-model
-                    "Default:latest"))
-         (color (ollama-buddy--get-model-color model))
-         (existing-content (when keep-content (ollama-buddy--text-after-prompt))))
-    
-    ;; Clean up existing prompt
-    (goto-char (point-max))
-    (when (re-search-backward "\\* .*>> \\(?:PROMPT\\|SYSTEM PROMPT\\|SUFFIX\\):" nil t)
-      (beginning-of-line)
-      (if (or new-prompt
-              (not (string-match-p "[[:alnum:]]" (ollama-buddy--text-after-prompt))))
-          ;; Either replacing prompt or current prompt is empty
-          (progn
-            (skip-chars-backward "\n")
-            (delete-region (point) (point-max))
-            (goto-char (point-max)))
-        ;; Keeping prompt with content
-        (goto-char (point-max))))
-    
-    ;; Insert new prompt header
-    (let ((start (point)))
-      (insert (format "\n\n* %s %s"
-                      model
-                      (cond
-                       (system-prompt ">> SYSTEM PROMPT: ")
-                       (suffix-prompt ">> SUFFIX: ")
-                       (t ">> PROMPT: "))))
-      
-      ;; Apply overlay for model name
-      (let ((overlay (make-overlay start (+ start 4 (length model)))))
-        (overlay-put overlay 'face `(:foreground ,color :weight bold))))
-    
-    ;; Restore content if requested
-    (when (and keep-content existing-content)
-      (insert existing-content))))
 
 (defun ollama-buddy--get-prompt-content ()
   "Extract the current prompt content from the buffer.
@@ -1899,18 +1856,6 @@ With prefix argument ALL-MODELS, clear history for all models."
       (insert (string-trim prompt)))
     (ollama-buddy--send (string-trim prompt))))
 
-(defun ollama-buddy--text-after-prompt ()
-  "Get the text after the prompt:."
-  (interactive)
-  (save-excursion
-    (goto-char (point-max))
-    (if (re-search-backward ">> \\(?:PROMPT\\|SYSTEM PROMPT\\):" nil t)
-        (progn
-          (search-forward ":")
-          (string-trim (buffer-substring-no-properties
-                        (point) (point-max))))
-      "")))
-
 (defun ollama-buddy--send-with-command (command-name)
   "Send request using configuration from COMMAND-NAME."
   (let* ((prompt-text (ollama-buddy--get-command-prop command-name :prompt))
@@ -2059,11 +2004,9 @@ With prefix argument ALL-MODELS, clear history for all models."
   (ollama-buddy--assign-model-letters)
   (let* ((available-models (when (ollama-buddy--ollama-running)
                              (ollama-buddy--get-models)))
-         (running-models (when (ollama-buddy--ollama-running)
-                           (ollama-buddy--get-running-models)))
          ;; Get models available for pull but not yet downloaded
          (models-to-pull (when (ollama-buddy--ollama-running)
-                           (cl-set-difference 
+                           (cl-set-difference
                             ollama-buddy-available-models
                             available-models
                             :test #'string=)))
@@ -2098,12 +2041,11 @@ With prefix argument ALL-MODELS, clear history for all models."
          ;; Create model management section
          (models-management-section
           (when available-models
-            (concat 
+            (concat
              "** Local Available Models\n\n"
              (mapconcat
               (lambda (model)
-                (let ((is-running (member model running-models))
-                      (model-letter (ollama-buddy--get-model-letter model)))
+                (let ((model-letter (ollama-buddy--get-model-letter model)))
                   (concat
                    (format
                     "(%c) %s [[elisp:(ollama-buddy-select-model \"%s\")][[Select]]] "
@@ -2113,9 +2055,7 @@ With prefix argument ALL-MODELS, clear history for all models."
                    (format "[[elisp:(ollama-buddy-pull-model \"%s\")][[Pull]]] " model)
                    (format
                     "[[elisp:(ollama-buddy-delete-model-in-chat \"%s\"))][[Delete]]]"
-                    model)
-                   )
-                  ))
+                    model))))
               available-models
               "\n")
              "\n\n")))
@@ -2134,9 +2074,6 @@ With prefix argument ALL-MODELS, clear history for all models."
              "\n\n")))
          
          ;; Models with letters (the original section)
-         (models-letter-section
-          (when (ollama-buddy--ollama-running)
-            (ollama-buddy--format-models-with-letters-plain)))
          (message-text
           (concat
            (when (= (buffer-size) 0)

@@ -13,6 +13,8 @@
 
 ;; Forward declarations for functions defined in ollama-buddy.el
 (declare-function ollama-buddy--open-chat "ollama-buddy")
+(declare-function ollama-buddy--send-with-command "ollama-buddy")
+(declare-function ollama-buddy-params-edit "ollama-buddy")
 (declare-function ollama-buddy--send-prompt "ollama-buddy")
 (declare-function ollama-buddy--menu-help-assistant "ollama-buddy")
 (declare-function ollama-buddy--cancel-request "ollama-buddy")

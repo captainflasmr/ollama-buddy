@@ -460,6 +460,18 @@ Each command is defined with:
 
 ;; Core utility functions
 
+(defun ollama-buddy--text-after-prompt ()
+  "Get the text after the prompt:."
+  (interactive)
+  (save-excursion
+    (goto-char (point-max))
+    (if (re-search-backward ">> \\(?:PROMPT\\|SYSTEM PROMPT\\):" nil t)
+        (progn
+          (search-forward ":")
+          (string-trim (buffer-substring-no-properties
+                        (point) (point-max))))
+      "")))
+
 (defun ollama-buddy--get-command-def (command-name)
   "Get command definition for COMMAND-NAME."
   (assoc command-name ollama-buddy-command-definitions))
@@ -564,6 +576,49 @@ For parameters with 4 or fewer characters, returns the full name."
         param-name
       (concat (substring param-name 0 2)
               (substring param-name (- param-len 2) param-len)))))
+
+(defun ollama-buddy--prepare-prompt-area (&optional new-prompt keep-content system-prompt suffix-prompt)
+  "Prepare the prompt area in the buffer.
+When NEW-PROMPT is non-nil, replace the existing prompt area.
+When KEEP-CONTENT is non-nil, preserve the existing prompt content.
+When SYSTEM-PROMPT is non-nil, mark as a system prompt.
+When SUFFIX-PROMPT is non-nil, mark as a suffix."
+  (let* ((model (or ollama-buddy--current-model
+                    ollama-buddy-default-model
+                    "Default:latest"))
+         (color (ollama-buddy--get-model-color model))
+         (existing-content (when keep-content (ollama-buddy--text-after-prompt))))
+    
+    ;; Clean up existing prompt
+    (goto-char (point-max))
+    (when (re-search-backward "\\* .*>> \\(?:PROMPT\\|SYSTEM PROMPT\\|SUFFIX\\):" nil t)
+      (beginning-of-line)
+      (if (or new-prompt
+              (not (string-match-p "[[:alnum:]]" (ollama-buddy--text-after-prompt))))
+          ;; Either replacing prompt or current prompt is empty
+          (progn
+            (skip-chars-backward "\n")
+            (delete-region (point) (point-max))
+            (goto-char (point-max)))
+        ;; Keeping prompt with content
+        (goto-char (point-max))))
+    
+    ;; Insert new prompt header
+    (let ((start (point)))
+      (insert (format "\n\n* %s %s"
+                      model
+                      (cond
+                       (system-prompt ">> SYSTEM PROMPT: ")
+                       (suffix-prompt ">> SUFFIX: ")
+                       (t ">> PROMPT: "))))
+      
+      ;; Apply overlay for model name
+      (let ((overlay (make-overlay start (+ start 4 (length model)))))
+        (overlay-put overlay 'face `(:foreground ,color :weight bold))))
+    
+    ;; Restore content if requested
+    (when (and keep-content existing-content)
+      (insert existing-content))))
 
 ;; API Interaction
 

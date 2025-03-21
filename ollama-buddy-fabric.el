@@ -9,6 +9,9 @@
 
 (require 'ollama-buddy-core)
 
+(declare-function ollama-buddy--send "ollama-buddy")
+(declare-function ollama-buddy--prepare-prompt-area "ollama-buddy")
+
 (defgroup ollama-buddy-fabric nil
   "Customization group for ollama-buddy-fabric."
   :group 'ollama-buddy
