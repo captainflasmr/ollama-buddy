@@ -351,7 +351,7 @@ Demonstrating the Emacs package ollama-buddy, providing a convenient way to inte
 https://melpa.org/#/ollama-buddy
 https://github.com/captainflasmr/ollama-buddy
 
-#emacs #ollama #ollama-buddy
+#emacs #ollama
 
 ** 001 First Steps
 
@@ -1474,6 +1474,20 @@ Let's compare ollama-buddy to the existing solutions:
 Report issues on the [[https://github.com/captainflasmr/ollama-buddy/issues][GitHub Issues page]]
 
 * Bugs
+
+** TODO Transient initially not defined
+
+#+begin_src 
+transient-setup: Suffix command ollama-buddy--open-chat is not defined or autoloaded
+#+end_src
+
+** TODO After a multishot I sometimes get:
+
+#+begin_src 
+error in process filter: Args out of range: "aef", 3
+error in process filter: let*: Args out of range: "aef", 3
+error in process filter: Args out of range: "aef", 3
+#+end_src
 
 ** TODO Save system prompts as part of session
 
