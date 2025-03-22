@@ -214,6 +214,10 @@ This uses a non-streaming approach to avoid duplication issues."
                                 (delete-region start-point (point-max))
                                 (goto-char start-point)
                                 (insert content)
+
+                                ;; Now convert from markdown to org if enabled
+                                (when ollama-buddy-convert-markdown-to-org
+                                  (ollama-buddy--md-to-org-convert-region start-point (point-max)))
                                 
                                 ;; Add to history
                                 (setq ollama-buddy-openai--current-response content)

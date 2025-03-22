@@ -2070,7 +2070,6 @@ With prefix argument ALL-MODELS, clear history for all models."
 - Session New/Load/Save/List          C-c N/L/S/Q
 - Role Switch/Create/Directory        C-c R/E/D
 - Fabric Patterns Menu                C-c f
-- OpenAI Integration                  C-c o
 - Display Options (Colors/Markdown)   C-c c/C-o
 - Browse prompt history               M-p/M-n
 - Basic interface (simpler display)   C-c A")
@@ -2919,14 +2918,6 @@ Modifies the variable in place."
     (define-key map (kbd "C-c K") #'ollama-buddy-params-reset)
     (define-key map (kbd "C-c F") #'ollama-buddy-toggle-params-in-header)
     (define-key map (kbd "C-c p") #'ollama-buddy-transient-profile-menu)
-    (define-key map (kbd "C-c o") 
-                (lambda () (interactive)
-                  (if (featurep 'ollama-buddy-openai)
-                      (call-interactively 'ollama-buddy-transient-openai-menu)
-                    (message "OpenAI integration not loaded. Use M-x require RET ollama-buddy-openai RET")
-                    (when (yes-or-no-p "Load OpenAI integration now? ")
-                      (require 'ollama-buddy-openai)
-                      (call-interactively 'ollama-buddy-transient-openai-menu)))))
     map)
   "Keymap for ollama-buddy mode.")
 
