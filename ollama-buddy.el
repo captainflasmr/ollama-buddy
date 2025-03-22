@@ -2150,10 +2150,6 @@ With prefix argument ALL-MODELS, clear history for all models."
            "** Quick Tips\n\n"
            tips-section)))
 
-    (prin1 openai-models)
-    (prin1 "\n")
-    (prin1 models-to-pull)
-    
     ;; Apply overlay colors to model names
     (with-temp-buffer
       (insert message-text)
