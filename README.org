@@ -48,20 +48,56 @@ See *Screenshots / Demos* section for more videos/demonstration.
 
 ** <2025-03-22> *0.9.10*
 
-Added expermental openai support!
+Added experimental OpenAI support!
 
-Yes thats right, I said I never would do it, and of course this package is very much going to be still =ollama= centric, but I thought I would just sneak in some rudimentary ChatGPT support.
+Yes, that's right, I said I never would do it, and of course, this package is still very much =ollama=-centric, but I thought I would just sneak in some rudimentary ChatGPT support, just for fun!
 
-It is very simple, I haven't managed to get streaming working, so Emacs will block and wait for a single response and it isn't fully integrated into the ollama buddy full chat experience yet, oh, and it is also using =curl= as it simplifies certain aspects for me.
+It is a very simple implementation, I haven't managed to get streaming working, so Emacs will just show "Loading Response..." as it waits for the response to arrive. It is asynchronous, however, so you can go off on your Emacs day while it loads (although being ChatGPT, you would think the response would be quite fast!)
 
-By default, openai/ChatGPT will not be enabled, so anyone wanting to just use a local LLM through =ollama= can continue as before, but you can sneak in some experiental ChatGPT support now by adding the following to your Emacs config:
+By default, OpenAI/ChatGPT will not be enabled, so anyone wanting to use just a local LLM through =ollama= can continue as before. However, you can now sneak in some experimental ChatGPT support by adding the following to your Emacs config as part of the =ollama-buddy= set up.
 
 #+begin_src elisp
 (require 'ollama-buddy-openai nil t)
 (setq ollama-buddy-openai-api-key "<big long key>")
 #+end_src
 
-and then the chat will present a list of ChatGPT models to choose from, with a single prompt running synchronously, so you will have to wait for a response and Emacs will temporarily pause.  Like I said, this is just experimental to prove a concept. I currently use ChatGPT quite a lot from within Emacs and would like to use the =ollama-buddy= interface if possible.
+and you can set the default model to ChatGPT too!
+
+#+begin_src elisp
+(setq ollama-buddy-default-model "GPT gpt-4o")
+#+end_src
+
+With this enabled, chat will present a list of ChatGPT models to choose from. The custom menu should also now work with chat, so from anywhere in Emacs, you can push predefined prompts to the =ollama= buddy chat buffer now supporting ChatGPT.
+
+There is more integration required to fully incorporate ChatGPT into the =ollama= buddy system, like token rates and history, etc. But not bad for a first effort, methinks!
+
+Here is my current config, now mixing ChatGPT with =ollama= models:
+
+#+begin_src elisp
+(use-package ollama-buddy
+  :bind
+  ("C-c o" . ollama-buddy-menu)
+  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  :custom
+  (ollama-buddy-openai-api-key "<very long key>")
+  (ollama-buddy-default-model "GPT gpt-4o")
+  :config
+  (require 'ollama-buddy-openai nil t)
+  (ollama-buddy-update-menu-entry
+   'refactor-code :model "qwen2.5-coder:7b")
+  (ollama-buddy-update-menu-entry
+   'git-commit :model "qwen2.5-coder:3b")
+  (ollama-buddy-update-menu-entry
+   'describe-code :model "qwen2.5-coder:3b")
+  (ollama-buddy-update-menu-entry
+   'dictionary-lookup :model "llama3.2:3b")
+  (ollama-buddy-update-menu-entry
+   'synonym :model "llama3.2:3b")
+  (ollama-buddy-update-menu-entry
+   'proofread :model "GPT gpt-4o")
+  (ollama-buddy-update-menu-entry
+   'custom-prompt :model "deepseek-r1:7b"))
+#+end_src
 
 ** <2025-03-22> *0.9.9*
 
