@@ -1585,6 +1585,7 @@ With prefix argument ALL-MODELS, clear history for all models."
       ;; Apply color overlays to the inserted text
       (ollama-buddy--apply-model-colors-to-buffer)
       ;; now set up default model if none exist
+      (setq ollama-buddy--current-model ollama-buddy-default-model)
       (when (not ollama-buddy-default-model)
         ;; just get the first model
         (let ((model (car (ollama-buddy--get-models))))
