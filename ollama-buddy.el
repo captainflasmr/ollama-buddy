@@ -73,7 +73,6 @@
 (require 'color)
 (require 'ollama-buddy-core)
 (require 'ollama-buddy-transient)
-(require 'ollama-buddy-openai nil t)
 
 (defun ollama-buddy-display-token-graph ()
   "Display a visual graph of token usage statistics."
