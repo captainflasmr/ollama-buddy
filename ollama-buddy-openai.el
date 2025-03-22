@@ -293,14 +293,183 @@ This uses a non-streaming approach to avoid duplication issues."
 
 ;; Command functions
 
-(defun ollama-buddy-openai-send (&optional prompt model)
-  "Send PROMPT to OpenAI API using MODEL.
-If not provided, uses the current prompt and default model."
-  (interactive)
-  (let ((prompt-to-send (or prompt (ollama-buddy--text-after-prompt))))
-    (if (string-empty-p prompt-to-send)
-        (message "Please enter a prompt")
-      (ollama-buddy-openai--send prompt-to-send model))))
+(defun ollama-buddy-openai--send (prompt &optional model)
+  "Send PROMPT to OpenAI's API using MODEL or default model.
+This uses proper encoding for multibyte characters."
+  (when (ollama-buddy-openai--verify-api-key)
+    ;; Set up the current model
+    (setq ollama-buddy-openai--current-model
+          (or model 
+              ollama-buddy-openai--current-model
+              (ollama-buddy-openai--get-full-model-name ollama-buddy-openai-default-model)))
+    
+    ;; Store the prompt and initialize response
+    (setq ollama-buddy-openai--current-prompt prompt
+          ollama-buddy-openai--current-response "")
+    
+    ;; Initialize token counter
+    (setq ollama-buddy-openai--current-token-count 0)
+    
+    ;; Get history and system prompt
+    (let* ((history (when ollama-buddy-history-enabled
+                     (gethash ollama-buddy-openai--current-model
+                              ollama-buddy-openai--conversation-history-by-model
+                              nil)))
+           (system-prompt ollama-buddy--current-system-prompt)
+           (json-object-type 'alist)
+           (json-array-type 'vector)
+           (json-key-type 'symbol)
+           (json-encoding-pretty-print nil)
+           (json-encoding-default-indentation "")
+           (json-payload
+            `((model . ,(ollama-buddy-openai--get-real-model-name ollama-buddy-openai--current-model))
+              (messages . ,(vconcat [] 
+                                   (append
+                                    (when (and system-prompt (not (string-empty-p system-prompt)))
+                                      `(((role . "system")
+                                         (content . ,system-prompt))))
+                                    history
+                                    `(((role . "user")
+                                       (content . ,prompt))))))
+              (temperature . ,ollama-buddy-openai-temperature)
+              ,@(when ollama-buddy-openai-max-tokens
+                  `((max_tokens . ,ollama-buddy-openai-max-tokens)))))
+           (payload (json-encode json-payload)))
+      
+      ;; Prepare the chat buffer
+      (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+        (pop-to-buffer (current-buffer))
+        (goto-char (point-max))
+        (let ((inhibit-read-only t)
+              (model-name (ollama-buddy-openai--get-real-model-name 
+                           ollama-buddy-openai--current-model))
+              (display-name ollama-buddy-openai--current-model))
+          
+          ;; Add model info to response header
+          (insert (propertize (format "\n\n** [%s: RESPONSE]" display-name) 
+                              'face `(:inherit bold :foreground 
+                                              ,(ollama-buddy-openai--get-model-color display-name))) 
+                  "\n\n"))
+        
+        ;; Show loading message
+        (let ((inhibit-read-only t)
+              (start-point (point)))
+          (when ollama-buddy-openai-show-loading
+            (insert "Loading response..."))
+          
+          ;; Update status
+          (ollama-buddy--update-status "Sending request to OpenAI...")
+          
+          ;; Use curl directly rather than url-retrieve for better encoding control
+          (condition-case err
+              (let* ((temp-file (make-temp-file "openai-request"))
+                     (output-buffer (generate-new-buffer " *openai-output*"))
+                     curl-status)
+                ;; Write the payload to a temporary file
+                (with-temp-file temp-file
+                  (insert payload))
+                
+                ;; Execute curl command
+                (setq curl-status
+                      (call-process 
+                       "curl" nil output-buffer nil
+                       "-s" 
+                       "-X" "POST"
+                       "-H" "Content-Type: application/json"
+                       "-H" (concat "Authorization: Bearer " ollama-buddy-openai-api-key)
+                       "-d" (format "@%s" temp-file)
+                       ollama-buddy-openai-api-endpoint))
+                
+                ;; Process the response
+                (if (= curl-status 0)
+                    (with-current-buffer output-buffer
+                      (goto-char (point-min))
+                      (condition-case json-err
+                          (let* ((json-response (json-read))
+                                 (error-message (alist-get 'error json-response))
+                                 (choices (alist-get 'choices json-response)))
+                            
+                            ;; Check for errors in response
+                            (if error-message
+                                (let ((error-text (alist-get 'message error-message)))
+                                  (with-current-buffer ollama-buddy--chat-buffer
+                                    (let ((inhibit-read-only t))
+                                      (delete-region start-point (point-max))
+                                      (goto-char start-point)
+                                      (insert (propertize (format "Error: %s" error-text)
+                                                          'face '(:foreground "red")))
+                                      (ollama-buddy--update-status "Error from OpenAI API")
+                                      (ollama-buddy--prepare-prompt-area))))
+                              
+                              ;; Process successful response
+                              (when choices
+                                (let* ((first-choice (aref choices 0))
+                                       (message (alist-get 'message first-choice))
+                                       (content (alist-get 'content message)))
+                                  
+                                  ;; Replace loading message with actual content
+                                  (with-current-buffer ollama-buddy--chat-buffer
+                                    (let ((inhibit-read-only t))
+                                      (delete-region start-point (point-max))
+                                      (goto-char start-point)
+                                      (insert content)
+                                      
+                                      ;; Add to history
+                                      (setq ollama-buddy-openai--current-response content)
+                                      (when ollama-buddy-history-enabled
+                                        (ollama-buddy-openai--add-to-history "user" prompt)
+                                        (ollama-buddy-openai--add-to-history "assistant" content))
+                                      
+                                      ;; Calculate token count
+                                      (setq ollama-buddy-openai--current-token-count
+                                            (length (split-string content "\\b" t)))
+                                      
+                                      ;; Show token stats if enabled
+                                      (when ollama-buddy-display-token-stats
+                                        (insert (format "\n\n*** Token Stats\n[%d tokens]"
+                                                        ollama-buddy-openai--current-token-count)))
+                                      
+                                      (insert "\n\n*** FINISHED")
+                                      (ollama-buddy--prepare-prompt-area)
+                                      (ollama-buddy--update-status
+                                       (format "Finished [%d tokens]" ollama-buddy-openai--current-token-count))))))))
+                        
+                        (error
+                         (with-current-buffer ollama-buddy--chat-buffer
+                           (let ((inhibit-read-only t))
+                             (delete-region start-point (point-max))
+                             (goto-char start-point)
+                             (insert (propertize (format "Error parsing JSON response: %s" 
+                                                         (error-message-string json-err))
+                                                 'face '(:foreground "red")))
+                             (ollama-buddy--update-status "Failed to Parse Response")
+                             (ollama-buddy--prepare-prompt-area))))))
+                  
+                  ;; Handle curl process error
+                  (with-current-buffer ollama-buddy--chat-buffer
+                    (let ((inhibit-read-only t))
+                      (delete-region start-point (point-max))
+                      (goto-char start-point)
+                      (insert (propertize (format "Error: curl process failed with status %d" curl-status)
+                                          'face '(:foreground "red")))
+                      (ollama-buddy--update-status "API Request Failed")
+                      (ollama-buddy--prepare-prompt-area))))
+                
+                ;; Clean up
+                (delete-file temp-file)
+                (when (buffer-live-p output-buffer)
+                  (kill-buffer output-buffer)))
+            
+            ;; Handle Emacs errors during execution
+            (error
+             (with-current-buffer ollama-buddy--chat-buffer
+               (let ((inhibit-read-only t))
+                 (delete-region start-point (point-max))
+                 (goto-char start-point)
+                 (insert (propertize (format "Error: %s" (error-message-string err))
+                                     'face '(:foreground "red")))
+                 (ollama-buddy--update-status "API Request Failed")
+                 (ollama-buddy--prepare-prompt-area))))))))))
 
 (defun ollama-buddy-openai-select-model ()
   "Select an OpenAI model to use."
