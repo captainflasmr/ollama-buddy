@@ -660,6 +660,14 @@ When SUFFIX-PROMPT is non-nil, mark as a suffix."
             ollama-buddy--last-status-check current-time))
     ollama-buddy--status-cache))
 
+(defun ollama-buddy--get-models-with-openai ()
+  "Get all available models, including OpenAI models if the module is loaded."
+  (let ((models (ollama-buddy--get-models)))
+    (when (featurep 'ollama-buddy-openai)
+      (dolist (model ollama-buddy-openai-models)
+        (push (ollama-buddy-openai--get-full-model-name model) models)))
+    models))
+
 (defun ollama-buddy--get-models ()
   "Get available Ollama models."
   (when-let ((response (ollama-buddy--make-request "/api/tags" "GET")))

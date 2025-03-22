@@ -11,6 +11,13 @@
 (require 'ollama-buddy-core)  ;; Use core instead of main package
 (require 'ollama-buddy-fabric)
 
+;; Forward declare OpenAI functions
+(declare-function ollama-buddy-openai-send-prompt "ollama-buddy-openai")
+(declare-function ollama-buddy-openai-select-model "ollama-buddy-openai")
+(declare-function ollama-buddy-openai-clear-history "ollama-buddy-openai")
+(declare-function ollama-buddy-openai-display-history "ollama-buddy-openai")
+(declare-function ollama-buddy-openai-setup "ollama-buddy-openai")
+(declare-function ollama-buddy-openai-configure "ollama-buddy-openai")
 ;; Forward declarations for functions defined in ollama-buddy.el
 (declare-function ollama-buddy--open-chat "ollama-buddy")
 (declare-function ollama-buddy--send-with-command "ollama-buddy")
@@ -92,6 +99,7 @@
     ("E" "Create New Role" ollama-buddy-role-creator-create-new-role)
     ("D" "Open Roles Directory" ollama-buddy-roles-open-directory)
     ("f" "Fabric Patterns" ollama-buddy-transient-fabric-menu)
+    ("t" "OpenAI Integration" ollama-buddy-transient-openai-menu)
     ]
    ]
   
@@ -131,6 +139,32 @@
     ]
    ]
   )
+
+(transient-define-prefix ollama-buddy-transient-openai-menu ()
+  "OpenAI integration menu for Ollama Buddy."
+  [:description
+   (lambda ()
+     (format "OpenAI Integration (%s)"
+             (if (string-empty-p (bound-and-true-p ollama-buddy-openai-api-key))
+                 "API key not set"
+               "Ready")))]
+  
+  [["Actions"
+    ("s" "Send Prompt to OpenAI" ollama-buddy-openai-send-prompt)
+    ("m" "Select OpenAI Model" ollama-buddy-openai-select-model)
+    ("c" "Configure OpenAI API" ollama-buddy-openai-configure)]
+   
+   ["History"
+    ("d" "Display History" ollama-buddy-openai-display-history)
+    ("C" "Clear History" ollama-buddy-openai-clear-history)]
+   
+   ["Setup"
+    ("S" "Initial Setup" ollama-buddy-openai-setup)
+    ("q" "Back to Main Menu" ollama-buddy-transient-menu)]]
+  
+  (interactive)
+  (require 'ollama-buddy-openai)
+  (transient-setup 'ollama-buddy-transient-openai-menu))
 
 (transient-define-prefix ollama-buddy-transient-fabric-menu ()
   "Fabric patterns menu for Ollama Buddy."

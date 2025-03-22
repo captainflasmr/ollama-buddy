@@ -73,6 +73,7 @@
 (require 'color)
 (require 'ollama-buddy-core)
 (require 'ollama-buddy-transient)
+(require 'ollama-buddy-openai nil t)
 
 (defun ollama-buddy-display-token-graph ()
   "Display a visual graph of token usage statistics."
@@ -1801,14 +1802,27 @@ With prefix argument ALL-MODELS, clear history for all models."
         (ollama-buddy--update-status (concat "Stream " status))))))
 
 (defun ollama-buddy--swap-model ()
-  "Swap ollama model."
+  "Swap ollama model, including OpenAI models if available."
   (interactive)
-  (if (not (ollama-buddy--ollama-running))
+  (if (and (not (ollama-buddy--ollama-running))
+           (not (featurep 'ollama-buddy-openai)))
       (error "!!WARNING!! ollama server not running")
-    (let ((new-model
-           (completing-read "Model: " (ollama-buddy--get-models) nil t)))
-      (setq ollama-buddy-default-model new-model)
-      (setq ollama-buddy--current-model new-model)
+    (let* ((models (ollama-buddy--get-models-with-openai))
+           (new-model (completing-read "Model: " models nil t)))
+      
+      ;; Check if it's an OpenAI model and set it accordingly
+      (if (and (featurep 'ollama-buddy-openai)
+               (ollama-buddy-openai--is-openai-model new-model))
+          (progn
+            (setq ollama-buddy-default-model new-model)
+            (setq ollama-buddy--current-model new-model)
+            (setq ollama-buddy-openai--current-model new-model)
+            (message "Switched to OpenAI model: %s" new-model))
+        (progn
+          (setq ollama-buddy-default-model new-model)
+          (setq ollama-buddy--current-model new-model)
+          (message "Switched to Ollama model: %s" new-model)))
+      
       (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
       (ollama-buddy--prepare-prompt-area)
       (goto-char (point-max))
@@ -1911,111 +1925,125 @@ With prefix argument ALL-MODELS, clear history for all models."
 (defun ollama-buddy--send (&optional prompt specified-model)
   "Send PROMPT with optional SYSTEM-PROMPT, SUFFIX and SPECIFIED-MODEL."
   ;; Check status and update UI if offline
-  (unless (ollama-buddy--check-status)
+  (unless (or (ollama-buddy--check-status)
+              (and (featurep 'ollama-buddy-openai)
+                   (ollama-buddy-openai--is-openai-model 
+                    (or specified-model ollama-buddy--current-model))))
     (ollama-buddy--update-status "OFFLINE")
     (user-error "Ensure Ollama is running"))
 
   (unless (> (length prompt) 0)
     (user-error "Ensure prompt is defined"))
 
-  (let* ((model-info (ollama-buddy--get-valid-model specified-model))
-         (model (car model-info))
-         (original-model (cdr model-info))
-         (messages (ollama-buddy--get-history-for-request))
-         ;; If we have a system prompt, add it to the request
-         (messages-with-system
-          (if ollama-buddy--current-system-prompt
-              (append `(((role . "system")
-                         (content . ,ollama-buddy--current-system-prompt)))
-                      messages)
-            messages))
-         ;; Add the current prompt to the messages
-         (messages-all (append messages-with-system
-                               `(((role . "user")
-                                  (content . ,prompt)))))
-         ;; Get only the modified parameters
-         (modified-options (ollama-buddy-params-get-for-request))
-         ;; Build the base payload
-         (base-payload `((model . ,model)
-                         (messages . ,(vconcat [] messages-all))
-                         (stream . t)))
-         ;; Add system prompt if present
-         (with-system (if ollama-buddy--current-system-prompt
-                          (append base-payload `((system . ,ollama-buddy--current-system-prompt)))
-                        base-payload))
-         ;; Add suffix if present
-         (with-suffix (if ollama-buddy--current-suffix
-                          (append with-system `((suffix . ,ollama-buddy--current-suffix)))
-                        with-system))
-         ;; Add modified parameters if present
-         (final-payload (if modified-options
-                            (append with-suffix `((options . ,modified-options)))
-                          with-suffix))
-         (payload (json-encode final-payload)))
+  ;; For OpenAI models, use the OpenAI send function
+  (if (and (featurep 'ollama-buddy-openai)
+           (ollama-buddy-openai--is-openai-model 
+            (or specified-model ollama-buddy--current-model)))
+      (ollama-buddy-openai--send prompt specified-model)
     
-    (setq ollama-buddy--current-model model)
-    (setq ollama-buddy--current-prompt prompt)
-    
-    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-      (pop-to-buffer (current-buffer))
-      (goto-char (point-max))
-      (unless (> (buffer-size) 0)
-        (insert (ollama-buddy--create-intro-message)))
+    ;; Original Ollama send code
+    (let* ((model-info (ollama-buddy--get-valid-model specified-model))
+           (model (car model-info))
+           (original-model (cdr model-info))
+           (messages (ollama-buddy--get-history-for-request))
+           ;; If we have a system prompt, add it to the request
+           (messages-with-system
+            (if ollama-buddy--current-system-prompt
+                (append `(((role . "system")
+                           (content . ,ollama-buddy--current-system-prompt)))
+                        messages)
+              messages))
+           ;; Add the current prompt to the messages
+           (messages-all (append messages-with-system
+                                 `(((role . "user")
+                                    (content . ,prompt)))))
+           ;; Get only the modified parameters
+           (modified-options (ollama-buddy-params-get-for-request))
+           ;; Build the base payload
+           (base-payload `((model . ,model)
+                           (messages . ,(vconcat [] messages-all))
+                           (stream . t)))
+           ;; Add system prompt if present
+           (with-system (if ollama-buddy--current-system-prompt
+                            (append base-payload `((system . ,ollama-buddy--current-system-prompt)))
+                          base-payload))
+           ;; Add suffix if present
+           (with-suffix (if ollama-buddy--current-suffix
+                            (append with-system `((suffix . ,ollama-buddy--current-suffix)))
+                          with-system))
+           ;; Add modified parameters if present
+           (final-payload (if modified-options
+                              (append with-suffix `((options . ,modified-options)))
+                            with-suffix))
+           (payload (json-encode final-payload)))
       
-      ;; Add model info to response header
-      (insert (propertize (format "\n\n** [%s: RESPONSE]" model) 'face
-                          `(:inherit bold :foreground ,(ollama-buddy--get-model-color model))) "\n\n")
+      (setq ollama-buddy--current-model model)
+      (setq ollama-buddy--current-prompt prompt)
       
-      (when (and original-model model (not (string= original-model model)))
-        (insert (propertize (format "[Using %s instead of %s]" model original-model)
-                            'face '(:inherit error :weight bold)) "\n\n"))
+      (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+        (pop-to-buffer (current-buffer))
+        (goto-char (point-max))
+        (unless (> (buffer-size) 0)
+          (insert (ollama-buddy--create-intro-message)))
+        
+        ;; Add model info to response header
+        (insert (propertize (format "\n\n** [%s: RESPONSE]" model) 'face
+                            `(:inherit bold :foreground ,(ollama-buddy--get-model-color model))) "\n\n")
+        
+        (when (and original-model model (not (string= original-model model)))
+          (insert (propertize (format "[Using %s instead of %s]" model original-model)
+                              'face '(:inherit error :weight bold)) "\n\n"))
+        
+        ;; Enable visual-line-mode for better text wrapping
+        (visual-line-mode 1))
+
+      (ollama-buddy--update-status "Sending request..." original-model model)
+
+      (when (and ollama-buddy--active-process
+                 (process-live-p ollama-buddy--active-process))
+        (set-process-sentinel ollama-buddy--active-process nil)
+        (delete-process ollama-buddy--active-process)
+        (setq ollama-buddy--active-process nil))
       
-      ;; Enable visual-line-mode for better text wrapping
-      (visual-line-mode 1))
+      ;; Add error handling for network process creation
+      (condition-case err
+          (setq ollama-buddy--active-process
+                (make-network-process
+                 :name "ollama-chat-stream"
+                 :buffer nil
+                 :host ollama-buddy-host
+                 :service ollama-buddy-port
+                 :coding 'utf-8
+                 :filter #'ollama-buddy--stream-filter
+                 :sentinel #'ollama-buddy--stream-sentinel))
+        (error
+         (ollama-buddy--update-status "OFFLINE - Connection failed")
+         (error "Failed to connect to Ollama: %s" (error-message-string err))))
 
-    (ollama-buddy--update-status "Sending request..." original-model model)
-
-    (when (and ollama-buddy--active-process
-               (process-live-p ollama-buddy--active-process))
-      (set-process-sentinel ollama-buddy--active-process nil)
-      (delete-process ollama-buddy--active-process)
-      (setq ollama-buddy--active-process nil))
-    
-    ;; Add error handling for network process creation
-    (condition-case err
-        (setq ollama-buddy--active-process
-              (make-network-process
-               :name "ollama-chat-stream"
-               :buffer nil
-               :host ollama-buddy-host
-               :service ollama-buddy-port
-               :coding 'utf-8
-               :filter #'ollama-buddy--stream-filter
-               :sentinel #'ollama-buddy--stream-sentinel))
-      (error
-       (ollama-buddy--update-status "OFFLINE - Connection failed")
-       (error "Failed to connect to Ollama: %s" (error-message-string err))))
-
-    (condition-case err
-        (process-send-string
-         ollama-buddy--active-process
-         (concat "POST /api/chat HTTP/1.1\r\n"
-                 (format "Host: %s:%d\r\n" ollama-buddy-host ollama-buddy-port)
-                 "Content-Type: application/json\r\n"
-                 (format "Content-Length: %d\r\n\r\n" (string-bytes payload))
-                 payload))
-      (error
-       (ollama-buddy--update-status "OFFLINE - Send failed")
-       (when (and ollama-buddy--active-process
-                  (process-live-p ollama-buddy--active-process))
-         (delete-process ollama-buddy--active-process))
-       (error "Failed to send request to Ollama: %s" (error-message-string err))))))
+      (condition-case err
+          (process-send-string
+           ollama-buddy--active-process
+           (concat "POST /api/chat HTTP/1.1\r\n"
+                   (format "Host: %s:%d\r\n" ollama-buddy-host ollama-buddy-port)
+                   "Content-Type: application/json\r\n"
+                   (format "Content-Length: %d\r\n\r\n" (string-bytes payload))
+                   payload))
+        (error
+         (ollama-buddy--update-status "OFFLINE - Send failed")
+         (when (and ollama-buddy--active-process
+                    (process-live-p ollama-buddy--active-process))
+           (delete-process ollama-buddy--active-process))
+         (error "Failed to send request to Ollama: %s" (error-message-string err)))))))
 
 (defun ollama-buddy--create-intro-message ()
   "Create welcome message with model management capabilities in org format."
   (ollama-buddy--assign-model-letters)
   (let* ((available-models (when (ollama-buddy--ollama-running)
                              (ollama-buddy--get-models)))
+         ;; Get OpenAI models if available
+         (openai-models (when (featurep 'ollama-buddy-openai)
+                          (mapcar #'ollama-buddy-openai--get-full-model-name
+                                 ollama-buddy-openai-models)))
          ;; Get models available for pull but not yet downloaded
          (models-to-pull (when (ollama-buddy--ollama-running)
                            (cl-set-difference
@@ -2043,6 +2071,7 @@ With prefix argument ALL-MODELS, clear history for all models."
 - Session New/Load/Save/List          C-c N/L/S/Q
 - Role Switch/Create/Directory        C-c R/E/D
 - Fabric Patterns Menu                C-c f
+- OpenAI Integration                  C-c o
 - Display Options (Colors/Markdown)   C-c c/C-o
 - Browse prompt history               M-p/M-n
 - Basic interface (simpler display)   C-c A")
@@ -2084,6 +2113,19 @@ With prefix argument ALL-MODELS, clear history for all models."
               models-to-pull
               " ")
              "\n\n")))
+
+         ;; Create section for OpenAI models if available
+         (openai-models-section
+          (when (and openai-models (not (null openai-models)))
+            (concat
+             "** OpenAI Models\n\n"
+             (mapconcat
+              (lambda (model)
+                (format "[[elisp:(ollama-buddy-select-model \"%s\")][[%s]]]"
+                        model model))
+              openai-models
+              " ")
+             "\n\n")))
          
          ;; Models with letters (the original section)
          (message-text
@@ -2099,12 +2141,21 @@ With prefix argument ALL-MODELS, clear history for all models."
            "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n"
            "#+end_example\n\n"
            models-management-section
+           openai-models-section
            models-to-pull-section
            "** Actions\n\n"
            "[[elisp:(call-interactively #'ollama-buddy-import-gguf-file)][[Import GGUF File]]] "
-           "[[elisp:(call-interactively #'ollama-buddy-pull-model)][[Pull Any Model]]]\n\n"
+           "[[elisp:(call-interactively #'ollama-buddy-pull-model)][[Pull Any Model]]] "
+           (if (featurep 'ollama-buddy-openai)
+               "[[elisp:(call-interactively #'ollama-buddy-openai-setup)][[Setup OpenAI]]]\n\n"
+             "\n\n")
            "** Quick Tips\n\n"
            tips-section)))
+
+    (prin1 openai-models)
+    (prin1 "\n")
+    (prin1 models-to-pull)
+    
     ;; Apply overlay colors to model names
     (with-temp-buffer
       (insert message-text)
@@ -2633,9 +2684,15 @@ Modifies the variable in place."
 
 ; Helper functions for actions
 (defun ollama-buddy-select-model (model)
-  "Set MODEL as the current model."
+  "Set MODEL as the current model, handling both Ollama and OpenAI models."
   (setq ollama-buddy-default-model model)
   (setq ollama-buddy--current-model model)
+  
+  ;; If it's an OpenAI model, update the openai current model as well
+  (when (and (featurep 'ollama-buddy-openai)
+             (ollama-buddy-openai--is-openai-model model))
+    (setq ollama-buddy-openai--current-model model))
+  
   (message "Selected model: %s" model)
   (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
   (ollama-buddy--prepare-prompt-area)
@@ -2863,7 +2920,14 @@ Modifies the variable in place."
     (define-key map (kbd "C-c K") #'ollama-buddy-params-reset)
     (define-key map (kbd "C-c F") #'ollama-buddy-toggle-params-in-header)
     (define-key map (kbd "C-c p") #'ollama-buddy-transient-profile-menu)
-    
+    (define-key map (kbd "C-c o") 
+                (lambda () (interactive)
+                  (if (featurep 'ollama-buddy-openai)
+                      (call-interactively 'ollama-buddy-transient-openai-menu)
+                    (message "OpenAI integration not loaded. Use M-x require RET ollama-buddy-openai RET")
+                    (when (yes-or-no-p "Load OpenAI integration now? ")
+                      (require 'ollama-buddy-openai)
+                      (call-interactively 'ollama-buddy-transient-openai-menu)))))
     map)
   "Keymap for ollama-buddy mode.")
 
