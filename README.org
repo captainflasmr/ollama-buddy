@@ -61,12 +61,13 @@ Then calling up =info= =C-h i= and ollama buddy will be present in the Emacs men
 
 For those interested in the manual, I have converted it into html format, which is accessible here:
 
-[[docs/ollama-buddy.html][Ollama Buddy Online Manual]]
+[[file:docs/ollama-buddy.org]]
 
 It has been converted using the following command:
 
 #+begin_src bash
 makeinfo --html --no-split ollama-buddy.texi -o ollama-buddy.html
+pandoc -f html -t org -o ollama-buddy.org ollama-buddy.html
 #+end_src
 
 ** <2025-03-20> *0.9.9*
