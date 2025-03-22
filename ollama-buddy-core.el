@@ -341,6 +341,15 @@ Each command is defined with:
   :group 'ollama-buddy)
 
 ;; Shared variables
+(defvar ollama-buddy-openai--current-model nil
+  "The currently active OpenAI model.")
+
+(defcustom ollama-buddy-openai-models
+  '("gpt-4o-mini" "gpt-4o" "gpt-3.5-turbo")
+  "List of available OpenAI models."
+  :type '(repeat string)
+  :group 'ollama-buddy-openai)
+
 (defvar ollama-buddy-roles--current-role "default"
   "The currently active ollama-buddy role.")
 
@@ -459,6 +468,10 @@ Each command is defined with:
   "Hash table mapping model names to their colors.")
 
 ;; Core utility functions
+
+(defun ollama-buddy-openai--get-full-model-name (model)
+  "Get the full display name for MODEL with prefix."
+  (concat ollama-buddy-openai-marker-prefix " " model))
 
 (defun ollama-buddy--text-after-prompt ()
   "Get the text after the prompt:."

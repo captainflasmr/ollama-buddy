@@ -15,6 +15,7 @@
 (require 'json)
 (require 'url)
 (require 'cl-lib)
+(require 'ollama-buddy-core)
 
 (defgroup ollama-buddy-openai nil
   "OpenAI integration for Ollama Buddy."
@@ -25,12 +26,6 @@
   "API key for accessing OpenAI services.
 Get your key from https://platform.openai.com/api-keys."
   :type 'string
-  :group 'ollama-buddy-openai)
-
-(defcustom ollama-buddy-openai-models
-  '("gpt-4o-mini" "gpt-4o" "gpt-3.5-turbo")
-  "List of available OpenAI models."
-  :type '(repeat string)
   :group 'ollama-buddy-openai)
 
 (defcustom ollama-buddy-openai-default-model "gpt-3.5-turbo"
@@ -78,17 +73,10 @@ Use nil for API default behavior (adaptive)."
 (defvar ollama-buddy-openai--current-prompt nil
   "The current prompt sent to OpenAI.")
 
-(defvar ollama-buddy-openai--current-model nil
-  "The currently active OpenAI model.")
-
 (defvar ollama-buddy-openai--current-token-count 0
   "Counter for tokens in the current OpenAI response.")
 
 ;; Model display and management functions
-
-(defun ollama-buddy-openai--get-full-model-name (model)
-  "Get the full display name for MODEL with prefix."
-  (concat ollama-buddy-openai-marker-prefix " " model))
 
 (defun ollama-buddy-openai--is-openai-model (model)
   "Check if MODEL is an OpenAI model based on prefix."
