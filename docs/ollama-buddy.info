@@ -1,0 +1,1407 @@
+This is ollama-buddy.info, produced by makeinfo version 7.2 from
+ollama-buddy.texi.
+
+Copyright © 2024 James Dyer
+
+     Permission is granted to copy, distribute and/or modify this
+     document under the terms of the GNU Free Documentation License,
+     Version 1.3 or any later version published by the Free Software
+     Foundation; with no Invariant Sections, no Front-Cover Texts, and
+     no Back-Cover Texts.
+INFO-DIR-SECTION Emacs
+START-INFO-DIR-ENTRY
+* Ollama Buddy: (ollama-buddy). AI assistant integration with Ollama.
+END-INFO-DIR-ENTRY
+
+
+File: ollama-buddy.info,  Node: Top,  Next: Introduction,  Up: (dir)
+
+Ollama Buddy
+************
+
+Ollama Buddy is a comprehensive Emacs package that provides seamless
+integration with Ollama, allowing you to leverage powerful large
+language models (LLMs) directly within your Emacs workflow.
+
+* Menu:
+
+* Introduction::                What is Ollama Buddy?
+* Installation::                How to install the package
+* Configuration::               Basic and advanced configuration
+* Quick Start::                 Getting started with basic commands
+* Core Features::               Explanation of main capabilities
+* Chat Interface::              Using the chat UI
+* Working with Models::         Managing and using different models
+* Parameter Control::           Customizing AI behavior with parameters
+* Session Management::          Saving and loading conversations
+* Roles and Commands::          Creating custom commands and roles
+* Fabric Pattern Integration::  Using predefined prompt patterns
+* Advanced Usage::              Tips and techniques for power users
+* API Reference::               Comprehensive function documentation
+* FAQ::                         Frequently asked questions
+* Troubleshooting::             Common problems and solutions
+* Contributing::                How to contribute to Ollama Buddy
+* Index::                       Complete index
+
+
+File: ollama-buddy.info,  Node: Introduction,  Next: Installation,  Prev: Top,  Up: Top
+
+1 Introduction
+**************
+
+1.1 What is Ollama Buddy?
+=========================
+
+Ollama Buddy is an Emacs package that provides a friendly AI assistant
+interface to Ollama, a tool for running large language models (LLMs)
+locally on your computer.  It allows you to interact with AI models
+directly from within Emacs for various tasks such as:
+
+   • Code refactoring and explanation
+   • Writing assistance and proofreading
+   • Generating Git commit messages
+   • Dictionary lookups and language assistance
+   • Custom AI-powered workflows via roles
+   • Using pre-built prompt templates from Fabric
+
+   Instead of context-switching to web interfaces or terminal
+applications, Ollama Buddy brings the power of local LLMs right into
+your Emacs workflow.
+
+1.2 Why Use Ollama Buddy?
+=========================
+
+   • *Privacy*: All interactions happen locally with Ollama - no data
+     sent to external services
+   • *Integration*: Seamlessly fits into your existing Emacs workflow
+   • *Flexibility*: Supports multiple models, parameter tuning, and
+     custom commands
+   • *Efficiency*: Quick access to AI assistance without leaving your
+     editor
+   • *Extensibility*: Create custom roles and commands for your specific
+     needs
+
+1.3 Prerequisites
+=================
+
+Before using Ollama Buddy, you need:
+
+   • Emacs 28.1 or later
+   • Ollama installed and running on your system (see
+     <https://ollama.ai>)
+   • At least one language model pulled into Ollama
+
+
+File: ollama-buddy.info,  Node: Installation,  Next: Configuration,  Prev: Introduction,  Up: Top
+
+2 Installation
+**************
+
+2.1 Installing Ollama
+=====================
+
+Before installing Ollama Buddy, you need to install Ollama itself:
+
+  1. Visit <https://ollama.ai> and download the installer for your
+     platform
+  2. Install and run Ollama according to the instructions
+  3. Pull at least one model using ‘ollama pull llama3:latest’ (or
+     another model of your choice)
+
+2.2 Package Installation
+========================
+
+2.2.1 Using package.el
+----------------------
+
+The recommended way to install Ollama Buddy is through MELPA:
+
+     M-x package-install RET ollama-buddy RET
+
+2.2.2 Using use-package
+-----------------------
+
+If you use ‘use-package’, add the following to your Emacs configuration:
+
+     (use-package ollama-buddy
+       :ensure t
+       :bind ("C-c o" . ollama-buddy-menu))
+
+   With a default model:
+
+     (use-package ollama-buddy
+       :ensure t
+       :bind ("C-c o" . ollama-buddy-menu)
+       :custom (ollama-buddy-default-model "llama3:latest"))
+
+2.2.3 Manual Installation
+-------------------------
+
+To install manually:
+
+  1. Clone the repository:
+          git clone https://github.com/captainflasmr/ollama-buddy.git
+
+  2. Add to your configuration:
+          (add-to-list 'load-path "/path/to/ollama-buddy")
+          (require 'ollama-buddy)
+          (global-set-key (kbd "C-c o") #'ollama-buddy-menu)
+
+2.3 Dependencies
+================
+
+Ollama Buddy requires the following Emacs packages:
+
+   • transient
+   • json
+   • cl-lib
+
+   These should be automatically installed if you use package.el or
+use-package.
+
+
+File: ollama-buddy.info,  Node: Configuration,  Next: Quick Start,  Prev: Installation,  Up: Top
+
+3 Configuration
+***************
+
+3.1 Basic Configuration
+=======================
+
+Here are the essential configuration options:
+
+‘ollama-buddy-default-model’
+     Set your preferred default model.
+          (setq ollama-buddy-default-model "llama3:latest")
+
+‘ollama-buddy-host’
+     Host where Ollama server is running (default: "localhost").
+          (setq ollama-buddy-host "localhost")
+
+‘ollama-buddy-port’
+     Port where Ollama server is running (default: 11434).
+          (setq ollama-buddy-port 11434)
+
+3.2 Display Options
+===================
+
+Customize the appearance and behavior of Ollama Buddy:
+
+‘ollama-buddy-convert-markdown-to-org’
+     Whether to automatically convert markdown to org-mode format in
+     responses (default: t).
+          (setq ollama-buddy-convert-markdown-to-org t)
+
+‘ollama-buddy-enable-model-colors’
+     Whether to show model names with distinctive colors (default: t).
+          (setq ollama-buddy-enable-model-colors t)
+
+‘ollama-buddy-display-token-stats’
+     Whether to display token usage statistics after responses (default:
+     nil).
+          (setq ollama-buddy-display-token-stats t)
+
+‘ollama-buddy-interface-level’
+     Level of interface complexity ('basic or 'advanced).
+          (setq ollama-buddy-interface-level 'advanced)
+
+3.3 Directory Configuration
+===========================
+
+Customize where Ollama Buddy stores its files:
+
+‘ollama-buddy-sessions-directory’
+     Directory for storing session files.
+          (setq ollama-buddy-sessions-directory
+                (expand-file-name "ollama-buddy-sessions" user-emacs-directory))
+
+‘ollama-buddy-roles-directory’
+     Directory for storing role preset files.
+          (setq ollama-buddy-roles-directory
+                (expand-file-name "ollama-buddy-presets" user-emacs-directory))
+
+‘ollama-buddy-modelfile-directory’
+     Directory for storing temporary Modelfiles.
+          (setq ollama-buddy-modelfile-directory
+                (expand-file-name "ollama-buddy-modelfiles" user-emacs-directory))
+
+3.4 History and Session Configuration
+=====================================
+
+Configure how conversation history is managed:
+
+‘ollama-buddy-history-enabled’
+     Whether to use conversation history in Ollama requests (default:
+     t).
+          (setq ollama-buddy-history-enabled t)
+
+‘ollama-buddy-max-history-length’
+     Maximum number of message pairs to keep in conversation history
+     (default: 10).
+          (setq ollama-buddy-max-history-length 10)
+
+‘ollama-buddy-show-history-indicator’
+     Whether to show the history indicator in the header line (default:
+     t).
+          (setq ollama-buddy-show-history-indicator t)
+
+
+File: ollama-buddy.info,  Node: Quick Start,  Next: Core Features,  Prev: Configuration,  Up: Top
+
+4 Quick Start
+*************
+
+4.1 Basic Usage
+===============
+
+  1. Launch Ollama Buddy:
+          M-x ollama-buddy-menu
+     or use your configured keybinding (e.g., ‘C-c o’).
+
+  2. The menu will show available options.  Press the corresponding key
+     for the action you want.
+
+  3. To open the chat interface, press ‘o’ or select "Open Chat".
+
+  4. In the chat buffer, type your prompt and press ‘C-c C-c’ to send
+     it.
+
+  5. The AI will respond in the chat buffer.
+
+4.2 Common Operations
+=====================
+
+Sending text from a file
+     Select text in any buffer, then press ‘C-c o’ and choose "Send
+     Region" (or press ‘l’).
+
+Refactoring code
+     Select code, press ‘C-c o’, then choose "Refactor Code" (or press
+     ‘r’).
+
+Generating a commit message
+     Select your changes, press ‘C-c o’, then choose "Git Commit
+     Message" (or press ‘g’).
+
+Changing models
+     Press ‘C-c o’ followed by ‘m’ to switch between available models.
+
+Getting help
+     In the chat buffer, press ‘C-c h’ to display the help screen with
+     available commands and models.
+
+
+File: ollama-buddy.info,  Node: Core Features,  Next: Chat Interface,  Prev: Quick Start,  Up: Top
+
+5 Core Features
+***************
+
+5.1 Chat Interface
+==================
+
+The chat interface is the main way to interact with Ollama Buddy:
+
+   • Persistent conversation with history
+   • Markdown to Org-mode conversion
+   • Model-specific colors
+   • System prompt support
+   • Parameter customization
+
+5.2 Pre-built Commands
+======================
+
+Ollama Buddy comes with several pre-built commands:
+
+Code Refactoring
+     Improves code while maintaining functionality
+
+Code Description
+     Explains what code does and how it works
+
+Git Commit Messages
+     Generates meaningful commit messages from code changes
+
+Dictionary Lookups
+     Provides comprehensive word definitions
+
+Synonym Finder
+     Suggests alternative words with context
+
+Proofreading
+     Corrects grammar, style, and spelling
+
+5.3 Model Management
+====================
+
+   • Switch between any model available in Ollama
+   • Pull new models directly from the interface
+   • View model information and statistics
+   • Delete models you no longer need
+   • Import GGUF files to create new models
+
+5.4 Parameter Control
+=====================
+
+   • Fine-tune model behavior with customizable parameters
+   • Save and use parameter profiles for different use cases
+   • Command-specific parameter settings
+   • Real-time parameter adjustment
+
+5.5 Roles and Custom Commands
+=============================
+
+   • Create custom command sets for specific workflows
+   • Design specialized AI assistants with custom system prompts
+   • Save and switch between different roles
+   • Share role configurations across your team
+
+5.6 Fabric Pattern Integration
+==============================
+
+   • Use pre-built prompt patterns from Daniel Miessler's Fabric project
+   • Access universal, code, writing, and analysis patterns
+   • Synchronize with the latest patterns from GitHub
+   • Apply patterns to your content with one command
+
+
+File: ollama-buddy.info,  Node: Chat Interface,  Next: Working with Models,  Prev: Core Features,  Up: Top
+
+6 Chat Interface
+****************
+
+6.1 Opening the Chat
+====================
+
+To open the chat interface:
+
+  1. Use ‘M-x ollama-buddy-menu’ or your configured keybinding
+  2. Press ‘o’ to select "Open Chat"
+  3. A new buffer will open with the Ollama Buddy chat interface
+
+6.2 Interface Overview
+======================
+
+The chat interface consists of:
+
+   • A welcome message with available models
+   • Conversation history (previous prompts and responses)
+   • A prompt area for entering your queries
+   • A header line with status information
+
+6.3 Sending Prompts
+===================
+
+To send a prompt to the AI:
+
+  1. Type your message in the prompt area (after ">> PROMPT:")
+  2. Press ‘C-c C-c’ to send
+  3. Wait for the AI to generate a response
+
+   You can also:
+   • Use ‘M-p’ and ‘M-n’ to navigate through prompt history
+   • Press ‘C-c k’ to cancel a request if it's taking too long
+
+6.4 System Prompts
+==================
+
+System prompts allow you to define the AI's behavior:
+
+Setting a system prompt
+     Type your system prompt, then press ‘C-c s’
+
+Viewing the current system prompt
+     Press ‘C-c C-s’
+
+Resetting the system prompt
+     Press ‘C-c r’
+
+   Example system prompt:
+     You are a programming expert who specializes in Python.
+     Provide concise, efficient solutions with explanations.
+
+6.5 Markdown to Org Conversion
+==============================
+
+By default, Ollama Buddy converts markdown in responses to Org-mode
+syntax:
+
+   • Code blocks are converted to Org-mode source blocks
+   • Headers are converted to Org-mode headings
+   • Lists are properly formatted
+   • Links are converted to Org-mode format
+
+   To toggle this feature:
+     M-x ollama-buddy-toggle-markdown-conversion
+   or press ‘C-c C-o’ in the chat buffer.
+
+
+File: ollama-buddy.info,  Node: Working with Models,  Next: Parameter Control,  Prev: Chat Interface,  Up: Top
+
+7 Working with Models
+*********************
+
+7.1 Available Models
+====================
+
+Ollama Buddy displays available models in the chat interface.  Each
+model is assigned a letter for quick selection.
+
+   To view detailed model information:
+     M-x ollama-buddy-show-model-status
+   or press ‘C-c v’ in the chat buffer.
+
+7.2 Switching Models
+====================
+
+To change the current model:
+
+  1. Press ‘C-c m’ in the chat buffer
+  2. Select a model from the completion list
+  3. The new model will be used for future requests
+
+   You can also switch models from the main menu with ‘m’.
+
+7.3 Managing Models
+===================
+
+Ollama Buddy provides a comprehensive model management interface.  To
+access it:
+     M-x ollama-buddy-manage-models
+   or press ‘C-c W’ in the chat buffer.
+
+   From this interface, you can:
+   • See which models are currently running
+   • Pull new models from Ollama Hub
+   • Delete models you no longer need
+   • View detailed model information
+   • Select models for use
+
+7.4 Pulling New Models
+======================
+
+To pull a new model:
+
+  1. Open the model management interface with ‘C-c W’
+  2. Click "[Pull Any Model]" or press the appropriate key
+  3. Enter the model name (e.g., "phi:latest", "codellama:7b")
+  4. Wait for the model to download
+
+7.5 Importing GGUF Files
+========================
+
+You can import custom GGUF model files:
+
+  1. Press ‘C-c W’ to open the model management interface
+  2. Click "[Import GGUF File]" or press the appropriate key
+  3. Select the GGUF file from your file system
+  4. Enter a name for the model
+  5. Optionally provide model parameters
+  6. Wait for Ollama to create the model
+
+7.6 Multishot Mode
+==================
+
+Multishot mode allows you to send the same prompt to multiple models
+simultaneously:
+
+  1. Type your prompt in the chat buffer
+  2. Press ‘C-c M’
+  3. Enter the sequence of model letters you want to use (e.g., "abc" to
+     use models a, b, and c)
+  4. Watch as Ollama Buddy processes your request with each model in
+     sequence
+
+   The responses are stored in Emacs registers corresponding to the
+model letters for easy comparison.
+
+
+File: ollama-buddy.info,  Node: Parameter Control,  Next: Session Management,  Prev: Working with Models,  Up: Top
+
+8 Parameter Control
+*******************
+
+8.1 Understanding Parameters
+============================
+
+Ollama's models support various parameters that control their behavior:
+
+temperature
+     Controls randomness (0.0-1.0+), higher values produce more creative
+     outputs
+
+top_k
+     Limits token selection to top K most probable tokens
+
+top_p
+     Nucleus sampling threshold (0.0-1.0)
+
+repeat_penalty
+     Penalty for repeating tokens (higher values reduce repetition)
+
+8.2 Viewing Current Parameters
+==============================
+
+To view all current parameters:
+     M-x ollama-buddy-params-display
+   or press ‘C-c G’ in the chat buffer.
+
+   Parameters that have been modified from default values are marked
+with an asterisk (*).
+
+8.3 Editing Parameters
+======================
+
+To edit parameters:
+
+  1. Press ‘C-c P’ to open the parameter menu
+  2. Select the parameter you want to modify
+  3. Enter the new value
+
+   You can also use ‘M-x ollama-buddy-params-edit’ and select from a
+completion list.
+
+8.4 Parameter Profiles
+======================
+
+Ollama Buddy comes with predefined parameter profiles for different use
+cases:
+
+Default
+     Standard balanced settings
+
+Creative
+     Higher temperature, lower penalties for more creative responses
+
+Precise
+     Lower temperature, higher penalties for more deterministic
+     responses
+
+   To apply a profile:
+     M-x ollama-buddy-transient-profile-menu
+   or press ‘C-c p’ and select a profile.
+
+8.5 Command-Specific Parameters
+===============================
+
+Some commands have pre-configured parameters.  For example:
+   • The "Refactor Code" command uses lower temperature for more
+     deterministic results
+   • The "Creative Writing" command uses higher temperature for more
+     varied outputs
+
+   These parameters are automatically applied when you use these
+commands and restored afterward.
+
+8.6 Reset Parameters
+====================
+
+To reset all parameters to default values:
+     M-x ollama-buddy-params-reset
+   or press ‘C-c K’ in the chat buffer.
+
+8.7 Displaying Parameters in Header
+===================================
+
+To toggle whether modified parameters are shown in the header:
+     M-x ollama-buddy-toggle-params-in-header
+   or press ‘C-c F’ in the chat buffer.
+
+
+File: ollama-buddy.info,  Node: Session Management,  Next: Roles and Commands,  Prev: Parameter Control,  Up: Top
+
+9 Session Management
+********************
+
+9.1 Understanding Sessions
+==========================
+
+Sessions in Ollama Buddy allow you to:
+   • Save the entire conversation history
+   • Save the current model selection
+   • Restore previous conversations later
+   • Switch between different conversation contexts
+
+9.2 Creating a New Session
+==========================
+
+To start a fresh session:
+     M-x ollama-buddy-sessions-new
+   or press ‘C-c N’ in the chat buffer.
+
+   This will clear the current conversation history and let you start
+fresh.
+
+9.3 Saving a Session
+====================
+
+To save the current session:
+     M-x ollama-buddy-sessions-save
+   or press ‘C-c S’ in the chat buffer.
+
+   You'll be prompted to enter a name for the session.
+
+9.4 Loading a Session
+=====================
+
+To load a previously saved session:
+     M-x ollama-buddy-sessions-load
+   or press ‘C-c L’ in the chat buffer.
+
+   You'll be presented with a list of saved sessions to choose from.
+
+9.5 Managing Sessions
+=====================
+
+To see a list of all saved sessions:
+     M-x ollama-buddy-sessions-list
+   or press ‘C-c Q’ in the chat buffer.
+
+   From this view, you can see:
+   • Session names
+   • Last modified times
+   • Which models are used in each session
+
+   To delete a session:
+     M-x ollama-buddy-sessions-delete
+   or press ‘C-c Z’ in the chat buffer.
+
+9.6 Conversation History
+========================
+
+Sessions save the conversation history for each model separately.
+
+   To view the current conversation history:
+     M-x ollama-buddy-display-history
+   or press ‘C-c V’ in the chat buffer.
+
+   To clear the history:
+     M-x ollama-buddy-clear-history
+   or press ‘C-c X’ in the chat buffer.
+
+   To toggle whether history is used in requests:
+     M-x ollama-buddy-toggle-history
+   or press ‘C-c H’ in the chat buffer.
+
+
+File: ollama-buddy.info,  Node: Roles and Commands,  Next: Fabric Pattern Integration,  Prev: Session Management,  Up: Top
+
+10 Roles and Commands
+*********************
+
+10.1 Understanding Roles
+========================
+
+Roles in Ollama Buddy are collections of commands with specific
+configurations:
+   • Each role has its own set of commands
+   • Commands can use specific models
+   • Commands can have specialized system prompts
+   • Commands can have specialized parameters
+
+   This allows you to create specialized assistants for different
+workflows.
+
+10.2 Built-in Commands
+======================
+
+Ollama Buddy comes with several built-in commands:
+
+refactor-code
+     Improves code while maintaining functionality
+
+describe-code
+     Explains what code does and how it works
+
+git-commit
+     Generates meaningful commit messages
+
+dictionary-lookup
+     Provides comprehensive word definitions
+
+synonym
+     Suggests alternative words with context
+
+proofread
+     Corrects grammar, style, and spelling
+
+10.3 Creating Custom Roles
+==========================
+
+To create a new role:
+     M-x ollama-buddy-role-creator-create-new-role
+   or press ‘C-c E’ in the chat buffer.
+
+   The creation wizard will guide you through:
+  1. Naming your role
+  2. Adding commands (name, key, description)
+  3. Specifying models for each command
+  4. Setting system prompts for each command
+  5. Setting parameters for each command
+
+10.4 Switching Roles
+====================
+
+To switch between roles:
+     M-x ollama-buddy-roles-switch-role
+   or press ‘C-c R’ in the chat buffer.
+
+   You'll be presented with a list of available roles to choose from.
+
+10.5 Managing Roles
+===================
+
+Roles are stored as Elisp files in the ‘ollama-buddy-roles-directory’.
+
+   To open this directory:
+     M-x ollama-buddy-roles-open-directory
+   or press ‘C-c D’ in the chat buffer.
+
+   You can manually edit these files to customize roles further or share
+them with others.
+
+10.6 Example Custom Role
+========================
+
+Here's what a custom "Code Assistant" role might include:
+   • A "review-code" command with a code review system prompt
+   • A "document-code" command with a documentation generation system
+     prompt
+   • A "fix-bugs" command with a bug-fixing system prompt
+   • Each command using a specific coding-focused model
+
+   This creates a specialized code assistant tailored to your needs.
+
+
+File: ollama-buddy.info,  Node: Fabric Pattern Integration,  Next: Advanced Usage,  Prev: Roles and Commands,  Up: Top
+
+11 Fabric Pattern Integration
+*****************************
+
+11.1 What are Fabric Patterns?
+==============================
+
+Fabric patterns are pre-defined prompt templates from Daniel Miessler's
+Fabric project (<https://github.com/danielmiessler/fabric>).  They
+provide optimized prompts for various tasks, categorized as:
+
+   • universal - General-purpose patterns
+   • code - Programming and development
+   • writing - Content creation and editing
+   • analysis - Data and concept examination
+
+11.2 Setting Up Fabric Integration
+==================================
+
+To set up Fabric integration:
+     M-x ollama-buddy-fabric-setup
+
+   This will:
+  1. Clone the Fabric repository (or set up sparse checkout)
+  2. Populate available patterns
+  3. Make patterns available for use
+
+11.3 Using Fabric Patterns
+==========================
+
+To use a Fabric pattern:
+     M-x ollama-buddy-fabric-send
+   or press ‘C-c f’ and then ‘s’.
+
+   You'll be prompted to:
+  1. Select a pattern
+  2. Enter text to process (or use selected text)
+
+   The pattern will be used as a system prompt for your request.
+
+11.4 Browsing Available Patterns
+================================
+
+To see all available patterns:
+     M-x ollama-buddy-fabric-list-patterns
+   or press ‘C-c f’ and then ‘l’.
+
+   This shows:
+   • Pattern names
+   • Categories
+   • Descriptions
+
+11.5 Viewing Pattern Details
+============================
+
+To see the full content of a specific pattern:
+     M-x ollama-buddy-fabric-show-pattern
+   or press ‘C-c f’ and then ‘v’.
+
+   Select a pattern to see:
+   • The system prompt content
+   • Full description
+
+11.6 Updating Patterns
+======================
+
+To sync with the latest patterns from GitHub:
+     M-x ollama-buddy-fabric-sync-patterns
+   or press ‘C-c f’ and then ‘S’.
+
+11.7 Using Patterns by Category
+===============================
+
+You can quickly access patterns by category:
+   • ‘C-c f u’ - Universal patterns
+   • ‘C-c f c’ - Code patterns
+   • ‘C-c f w’ - Writing patterns
+   • ‘C-c f a’ - Analysis patterns
+
+
+File: ollama-buddy.info,  Node: Advanced Usage,  Next: API Reference,  Prev: Fabric Pattern Integration,  Up: Top
+
+12 Advanced Usage
+*****************
+
+12.1 Managing Token Usage
+=========================
+
+Ollama Buddy can track token usage statistics:
+
+   To toggle token statistics display after responses:
+     M-x ollama-buddy-toggle-token-display
+   or press ‘C-c T’ in the chat buffer.
+
+   To view detailed token usage statistics:
+     M-x ollama-buddy-display-token-stats
+   or press ‘C-c U’ in the chat buffer.
+
+   To display a visual graph of token usage:
+     M-x ollama-buddy-display-token-graph
+   or press ‘C-c g’ in the chat buffer.
+
+12.2 Customizing the Interface
+==============================
+
+12.2.1 Interface Level
+----------------------
+
+Ollama Buddy has two interface levels:
+   • basic - Simplified for beginners
+   • advanced - Full feature set for power users
+
+   To toggle between them:
+     M-x ollama-buddy-toggle-interface-level
+   or press ‘C-c A’ in the chat buffer.
+
+12.2.2 Model Colors
+-------------------
+
+Each model has a distinctive color to help identify responses.
+
+   To toggle model colors:
+     M-x ollama-buddy-toggle-model-colors
+   or press ‘C-c c’ in the chat buffer.
+
+12.2.3 Debug Mode
+-----------------
+
+For advanced troubleshooting, you can enable debug mode:
+     M-x ollama-buddy-toggle-debug-mode
+   or press ‘C-c B’ in the chat buffer.
+
+   This shows raw JSON messages in a debug buffer.
+
+12.3 Editing Conversation History
+=================================
+
+To manually edit conversation history:
+     M-x ollama-buddy-history-edit
+   or press ‘C-c J’ in the chat buffer.
+
+   This opens an editable buffer with the conversation history.  You can
+modify it and press ‘C-c C-c’ to save or ‘C-c C-k’ to cancel.
+
+   To edit history for a specific model, use ‘C-u C-c J’.
+
+12.4 Advanced System Prompt Management
+======================================
+
+For more control over system prompts:
+
+12.4.1 Setting a system prompt without sending
+----------------------------------------------
+
+     (ollama-buddy-set-system-prompt)
+   Enter your system prompt, then press ‘C-c s’.
+
+12.4.2 Using a system prompt from Fabric
+----------------------------------------
+
+     M-x ollama-buddy-fabric-set-system-prompt
+   or press ‘C-c f p’.
+
+12.5 Using Direct API Access
+============================
+
+For direct programmatic access to Ollama:
+
+     (ollama-buddy--make-request "/api/tags" "GET")
+
+   Or with a payload:
+     (ollama-buddy--make-request "/api/chat" "POST"
+                                (json-encode '((model . "llama3:latest")
+                                              (prompt . "Hello"))))
+
+
+File: ollama-buddy.info,  Node: API Reference,  Next: FAQ,  Prev: Advanced Usage,  Up: Top
+
+13 API Reference
+****************
+
+13.1 Interactive Functions
+==========================
+
+‘ollama-buddy-menu’
+     Display the main Ollama Buddy menu.
+
+‘ollama-buddy-transient-menu’
+     Display the transient-based menu.
+
+‘ollama-buddy--open-chat’
+     Open the chat buffer.
+
+‘ollama-buddy--send-prompt’
+     Send the current prompt to the AI.
+
+‘ollama-buddy--swap-model’
+     Switch to a different model.
+
+‘ollama-buddy-manage-models’
+     Display and manage available models.
+
+‘ollama-buddy-pull-model’
+     Pull a new model from Ollama Hub.
+
+‘ollama-buddy-import-gguf-file’
+     Import a GGUF file to create a custom model.
+
+‘ollama-buddy-set-system-prompt’
+     Set the current prompt as the system prompt.
+
+‘ollama-buddy-reset-system-prompt’
+     Reset the system prompt to default (none).
+
+‘ollama-buddy-sessions-save’
+     Save the current conversation as a session.
+
+‘ollama-buddy-sessions-load’
+     Load a previously saved session.
+
+‘ollama-buddy-sessions-list’
+     Display a list of saved sessions.
+
+‘ollama-buddy-sessions-delete’
+     Delete a saved session.
+
+‘ollama-buddy-sessions-new’
+     Start a new session.
+
+‘ollama-buddy-toggle-history’
+     Toggle conversation history on/off.
+
+‘ollama-buddy-clear-history’
+     Clear the conversation history.
+
+‘ollama-buddy-display-history’
+     Display the conversation history.
+
+‘ollama-buddy-roles-switch-role’
+     Switch to a different role.
+
+‘ollama-buddy-role-creator-create-new-role’
+     Create a new role.
+
+‘ollama-buddy-params-display’
+     Display current parameter settings.
+
+‘ollama-buddy-params-edit’
+     Edit a specific parameter.
+
+‘ollama-buddy-params-reset’
+     Reset all parameters to defaults.
+
+‘ollama-buddy-toggle-params-in-header’
+     Toggle display of parameters in header.
+
+‘ollama-buddy-toggle-token-display’
+     Toggle display of token statistics.
+
+‘ollama-buddy-display-token-stats’
+     Display token usage statistics.
+
+‘ollama-buddy-display-token-graph’
+     Display a visual graph of token usage.
+
+‘ollama-buddy-fabric-setup’
+     Set up Fabric pattern integration.
+
+‘ollama-buddy-fabric-sync-patterns’
+     Sync with the latest Fabric patterns.
+
+‘ollama-buddy-fabric-list-patterns’
+     List available Fabric patterns.
+
+‘ollama-buddy-fabric-send’
+     Apply a Fabric pattern to selected text.
+
+‘ollama-buddy-toggle-markdown-conversion’
+     Toggle Markdown to Org conversion.
+
+‘ollama-buddy-toggle-debug-mode’
+     Toggle display of debug information.
+
+13.2 Core Functions
+===================
+
+‘ollama-buddy--send’
+     Send a prompt to Ollama.
+
+‘ollama-buddy--make-request’
+     Make a generic request to the Ollama API.
+
+‘ollama-buddy--get-models’
+     Get a list of available models.
+
+‘ollama-buddy--get-valid-model’
+     Get a valid model with fallback handling.
+
+‘ollama-buddy--add-to-history’
+     Add a message to the conversation history.
+
+‘ollama-buddy--get-history-for-request’
+     Get history for the current request.
+
+‘ollama-buddy--prepare-prompt-area’
+     Prepare the prompt area in the buffer.
+
+‘ollama-buddy--update-status’
+     Update the status display.
+
+13.3 Customization Functions
+============================
+
+‘ollama-buddy-update-command-with-params’
+     Update a command definition with new properties and parameters.
+
+‘ollama-buddy-update-menu-entry’
+     Update a menu entry's properties.
+
+‘ollama-buddy-add-model-to-menu-entry’
+     Associate a specific model with a menu entry.
+
+‘ollama-buddy-add-parameters-to-command’
+     Add specific parameters to a command definition.
+
+
+File: ollama-buddy.info,  Node: FAQ,  Next: Troubleshooting,  Prev: API Reference,  Up: Top
+
+14 Frequently Asked Questions
+*****************************
+
+14.1 General Questions
+======================
+
+14.1.1 What is the difference between Ollama Buddy and other AI assistants?
+---------------------------------------------------------------------------
+
+Ollama Buddy integrates with Ollama to run LLMs locally, offering
+privacy, customization, and seamless Emacs integration without relying
+on external API services.
+
+14.1.2 Does Ollama Buddy require an internet connection?
+--------------------------------------------------------
+
+Once you've installed Ollama and pulled your models, no internet
+connection is required for normal operation.  Internet is only needed
+when pulling new models or syncing Fabric patterns.
+
+14.1.3 Which models work best with Ollama Buddy?
+------------------------------------------------
+
+Most models supported by Ollama work well.  Popular choices include:
+   • llama3:latest - Good general purpose assistant
+   • codellama:latest - Excellent for code-related tasks
+   • mistral:latest - Good balance of performance and quality
+   • phi:latest - Smaller model that works well on limited hardware
+
+14.1.4 How much RAM do I need?
+------------------------------
+
+It depends on the model:
+   • Small models (7B) - 8GB minimum, 16GB recommended
+   • Medium models (13B) - 16GB minimum, 24GB+ recommended
+   • Large models (34B+) - 32GB+ recommended
+
+   Quantized models (e.g., Q4_K_M variants) require less RAM.
+
+14.2 Usage Questions
+====================
+
+14.2.1 How do I cancel a request that's taking too long?
+--------------------------------------------------------
+
+Press ‘C-c k’ in the chat buffer or select "Kill Request" from the menu.
+
+14.2.2 How can I save my conversations?
+---------------------------------------
+
+Use ‘C-c S’ to save the current session, giving it a name.  You can
+restore it later with ‘C-c L’.
+
+14.2.3 Can I use multiple models in the same conversation?
+----------------------------------------------------------
+
+Yes, you can switch models at any time with ‘C-c m’.  Each model
+maintains its own conversation history.
+
+14.2.4 How do I clear the conversation history?
+-----------------------------------------------
+
+Press ‘C-c X’ to clear history, or ‘C-c N’ to start a completely new
+session.
+
+14.2.5 How can I create a custom command?
+-----------------------------------------
+
+The easiest way is through the role creator: press ‘C-c E’ and follow
+the prompts to create commands with specific prompts, models, and
+parameters.
+
+14.3 Troubleshooting
+====================
+
+14.3.1 Ollama Buddy shows "OFFLINE" status
+------------------------------------------
+
+Ensure that:
+   • Ollama is installed and running
+   • The hostname and port are correctly configured (‘ollama-buddy-host’
+     and ‘ollama-buddy-port’)
+   • Your firewall isn't blocking connections
+
+14.3.2 Responses are slow or the model seems to hang
+----------------------------------------------------
+
+Try:
+   • Using a smaller model
+   • Adjusting the ‘num_ctx’ parameter to a smaller value
+   • Setting ‘low_vram’ to ‘t’ if you have limited GPU memory
+   • Checking CPU/RAM usage to ensure your system isn't overloaded
+
+14.3.3 Getting "error parsing model" when pulling a model
+---------------------------------------------------------
+
+This usually means:
+   • The model name is incorrect
+   • The model is not available in the Ollama repository
+   • You have network connectivity issues
+
+14.3.4 Model responses are low quality or truncated
+---------------------------------------------------
+
+Try:
+   • Increasing the ‘temperature’ parameter for more creative responses
+   • Increasing ‘num_predict’ for longer responses
+   • Using a more capable model
+   • Providing clearer instructions in your prompt
+
+
+File: ollama-buddy.info,  Node: Troubleshooting,  Next: Contributing,  Prev: FAQ,  Up: Top
+
+15 Troubleshooting
+******************
+
+15.1 Common Issues
+==================
+
+15.1.1 Connection Problems
+--------------------------
+
+Symptom: Unable to connect to Ollama server
+        • Check if Ollama is running with ‘ps aux | grep ollama’
+        • Verify host and port settings (‘ollama-buddy-host’ and
+          ‘ollama-buddy-port’)
+        • Try connecting to Ollama directly: ‘curl
+          http://localhost:11434/api/tags’
+
+Symptom: Connection breaks during long responses
+        • This can happen with very large responses
+        • Try setting a lower ‘num_predict’ value
+        • Check if your OS has any network timeout settings
+
+15.1.2 Model Problems
+---------------------
+
+Symptom: Model loads but gives poor responses
+        • Try a different model
+        • Adjust parameters (increase temperature for more creativity)
+        • Provide clearer or more detailed prompts
+        • Check if the model is appropriate for your task
+
+Symptom: Model fails to load or crashes
+        • Check system memory usage
+        • Try a smaller quantized model
+        • Adjust ‘num_ctx’ to a smaller value
+        • Set ‘low_vram’ to ‘t’ if using GPU
+
+15.1.3 Interface Issues
+-----------------------
+
+Symptom: Chat buffer becomes unresponsive
+        • Cancel any running requests with ‘C-c k’
+        • Check if Emacs is using high CPU
+        • Try disabling token statistics display
+        • Close and reopen the chat buffer
+
+Symptom: Markdown conversion issues
+        • Toggle markdown conversion off with ‘C-c C-o’
+        • Check if the response contains complex formatting
+        • Try editing the history to fix formatting issues
+
+15.2 Debugging
+==============
+
+15.2.1 Enable Debug Mode
+------------------------
+
+To get more information about what's happening:
+     M-x ollama-buddy-toggle-debug-mode
+
+   This opens a debug buffer showing raw JSON communication with Ollama.
+
+15.2.2 Check Logs
+-----------------
+
+Ollama logs can be useful for troubleshooting:
+     tail -f ~/.ollama/logs/ollama.log
+
+15.2.3 Report Issues
+--------------------
+
+If you encounter a bug:
+  1. Enable debug mode
+  2. Reproduce the issue
+  3. Copy the debug output
+  4. Report the issue on GitHub with:
+        • Emacs version
+        • Ollama version
+        • Model used
+        • Debug output
+        • Steps to reproduce
+
+
+File: ollama-buddy.info,  Node: Contributing,  Next: Index,  Prev: Troubleshooting,  Up: Top
+
+16 Contributing
+***************
+
+16.1 Getting Started
+====================
+
+Ollama Buddy is an open-source project, and contributions are welcome!
+
+  1. Fork the repository:
+     <https://github.com/captainflasmr/ollama-buddy>
+  2. Clone your fork: ‘git clone
+     https://github.com/YOUR-USERNAME/ollama-buddy.git’
+  3. Create a branch: ‘git checkout -b my-feature-branch’
+  4. Make your changes
+  5. Test thoroughly
+  6. Commit with a clear message
+  7. Push to your fork
+  8. Create a pull request
+
+16.2 Development Setup
+======================
+
+16.2.1 Required Tools
+---------------------
+
+   • Emacs 28.1+
+   • Ollama installed and running
+   • Git
+
+16.2.2 Recommended Packages
+---------------------------
+
+   • package-lint
+   • flycheck
+   • elisp-lint
+
+16.3 Coding Guidelines
+======================
+
+   • Follow Emacs Lisp conventions
+   • Use two spaces for indentation
+   • Add documentation strings to functions
+   • Keep line length under 80 characters
+   • Use prefix ‘ollama-buddy--’ for internal functions
+   • Use prefix ‘ollama-buddy-’ for public functions
+
+16.4 Testing
+============
+
+16.4.1 Run Existing Tests
+-------------------------
+
+The package includes comprehensive tests:
+
+     M-x ollama-buddy-run-tests
+     M-x ollama-buddy-integration-run-tests
+     M-x ollama-buddy-fabric-run-tests
+     M-x ollama-buddy-parameter-run-tests
+
+16.4.2 Adding New Tests
+-----------------------
+
+When adding features, please also add tests:
+   • Unit tests for individual functions
+   • Integration tests for API interactions
+   • Parameter tests for parameter handling
+
+16.5 Feature Requests and Bug Reports
+=====================================
+
+   • Use GitHub Issues for bug reports and feature requests
+   • Provide clear steps to reproduce bugs
+   • For feature requests, explain the use case
+
+
+File: ollama-buddy.info,  Node: Index,  Prev: Contributing,  Up: Top
+
+Index
+*****
+
+
+Tag Table:
+Node: Top550
+Node: Introduction1923
+Node: Installation3512
+Node: Configuration5184
+Node: Quick Start7982
+Node: Core Features9205
+Node: Chat Interface11240
+Node: Working with Models13168
+Node: Parameter Control15461
+Node: Session Management17851
+Node: Roles and Commands19848
+Node: Fabric Pattern Integration22275
+Node: Advanced Usage24493
+Node: API Reference27191
+Node: FAQ30964
+Node: Troubleshooting34896
+Node: Contributing37401
+Node: Index39358
+
+End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:
