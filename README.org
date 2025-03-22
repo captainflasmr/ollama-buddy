@@ -46,6 +46,23 @@ See *Screenshots / Demos* section for more videos/demonstration.
 
 * Whats New
 
+** <2025-03-22> *0.9.10*
+
+Added expermental openai support!
+
+Yes thats right, I said I never would do it, and of course this package is very much going to be still =ollama= centric, but I thought I would just sneak in some rudimentary ChatGPT support.
+
+It is very simple, I haven't managed to get streaming working, so Emacs will block and wait for a single response and it isn't fully integrated into the ollama buddy full chat experience yet, oh, and it is also using =curl= as it simplifies certain aspects for me.
+
+By default, openai/ChatGPT will not be enabled, so anyone wanting to just use a local LLM through =ollama= can continue as before, but you can sneak in some experiental ChatGPT support now by adding the following to your Emacs config:
+
+#+begin_src elisp
+(require 'ollama-buddy-openai nil t)
+(setq ollama-buddy-openai-api-key "<big long key>")
+#+end_src
+
+and then the chat will present a list of ChatGPT models to choose from, with a single prompt running synchronously, so you will have to wait for a response and Emacs will temporarily pause.  Like I said, this is just experimental to prove a concept. I currently use ChatGPT quite a lot from within Emacs and would like to use the =ollama-buddy= interface if possible.
+
 ** <2025-03-22> *0.9.9*
 
 Added texinfo documentation for future automatic installation through MELPA and created an Emacs manual.
