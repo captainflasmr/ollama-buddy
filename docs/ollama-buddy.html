@@ -1,0 +1,2166 @@
+<!DOCTYPE html>
+<html>
+<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<!-- Copyright © 2024 James Dyer
+
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3
+or any later version published by the Free Software Foundation;
+with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts. -->
+<title>Ollama Buddy User Manual</title>
+
+<meta name="description" content="Ollama Buddy User Manual">
+<meta name="keywords" content="Ollama Buddy User Manual">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link href="#Top" rel="start" title="Top">
+<link href="#Index" rel="index" title="Index">
+<link href="#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="#Introduction" rel="next" title="Introduction">
+<style type="text/css">
+<!--
+a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
+div.example {margin-left: 3.2em}
+span:hover a.copiable-link {visibility: visible}
+ul.mark-bullet {list-style-type: disc}
+ul.toc-numbered-mark {list-style: none}
+-->
+</style>
+
+
+</head>
+
+<body lang="en">
+
+
+
+
+
+<div class="top-level-extent" id="Top">
+<div class="nav-panel">
+<p>
+Next: <a href="#Introduction" accesskey="n" rel="next">Introduction</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<h1 class="top" id="Ollama-Buddy"><span>Ollama Buddy<a class="copiable-link" href="#Ollama-Buddy"> &para;</a></span></h1>
+
+<p>Ollama Buddy is a comprehensive Emacs package that provides seamless integration with Ollama, 
+allowing you to leverage powerful large language models (LLMs) directly within your Emacs workflow.
+</p>
+
+
+<div class="region-contents" id="SEC_Contents">
+<h2 class="contents-heading">Table of Contents</h2>
+
+<div class="contents">
+
+<ul class="toc-numbered-mark">
+  <li><a id="toc-Introduction" href="#Introduction">1 Introduction</a>
+  <ul class="toc-numbered-mark">
+    <li><a id="toc-What-is-Ollama-Buddy_003f" href="#What-is-Ollama-Buddy_003f">1.1 What is Ollama Buddy?</a></li>
+    <li><a id="toc-Why-Use-Ollama-Buddy_003f" href="#Why-Use-Ollama-Buddy_003f">1.2 Why Use Ollama Buddy?</a></li>
+    <li><a id="toc-Prerequisites" href="#Prerequisites">1.3 Prerequisites</a></li>
+  </ul></li>
+  <li><a id="toc-Installation" href="#Installation">2 Installation</a>
+  <ul class="toc-numbered-mark">
+    <li><a id="toc-Installing-Ollama" href="#Installing-Ollama">2.1 Installing Ollama</a></li>
+    <li><a id="toc-Package-Installation" href="#Package-Installation">2.2 Package Installation</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Using-package_002eel" href="#Using-package_002eel">2.2.1 Using package.el</a></li>
+      <li><a id="toc-Using-use_002dpackage" href="#Using-use_002dpackage">2.2.2 Using use-package</a></li>
+      <li><a id="toc-Manual-Installation" href="#Manual-Installation">2.2.3 Manual Installation</a></li>
+    </ul></li>
+    <li><a id="toc-Dependencies" href="#Dependencies">2.3 Dependencies</a></li>
+  </ul></li>
+  <li><a id="toc-Configuration" href="#Configuration">3 Configuration</a>
+  <ul class="toc-numbered-mark">
+    <li><a id="toc-Basic-Configuration" href="#Basic-Configuration">3.1 Basic Configuration</a></li>
+    <li><a id="toc-Display-Options" href="#Display-Options">3.2 Display Options</a></li>
+    <li><a id="toc-Directory-Configuration" href="#Directory-Configuration">3.3 Directory Configuration</a></li>
+    <li><a id="toc-History-and-Session-Configuration" href="#History-and-Session-Configuration">3.4 History and Session Configuration</a></li>
+  </ul></li>
+  <li><a id="toc-Quick-Start" href="#Quick-Start">4 Quick Start</a>
+  <ul class="toc-numbered-mark">
+    <li><a id="toc-Basic-Usage" href="#Basic-Usage">4.1 Basic Usage</a></li>
+    <li><a id="toc-Common-Operations" href="#Common-Operations">4.2 Common Operations</a></li>
+  </ul></li>
+  <li><a id="toc-Core-Features" href="#Core-Features">5 Core Features</a>
+  <ul class="toc-numbered-mark">
+    <li><a id="toc-Chat-Interface" href="#Chat-Interface-1">5.1 Chat Interface</a></li>
+    <li><a id="toc-Pre_002dbuilt-Commands" href="#Pre_002dbuilt-Commands">5.2 Pre-built Commands</a></li>
+    <li><a id="toc-Model-Management" href="#Model-Management">5.3 Model Management</a></li>
+    <li><a id="toc-Parameter-Control" href="#Parameter-Control-1">5.4 Parameter Control</a></li>
+    <li><a id="toc-Roles-and-Custom-Commands" href="#Roles-and-Custom-Commands">5.5 Roles and Custom Commands</a></li>
+    <li><a id="toc-Fabric-Pattern-Integration" href="#Fabric-Pattern-Integration-1">5.6 Fabric Pattern Integration</a></li>
+  </ul></li>
+  <li><a id="toc-Chat-Interface-1" href="#Chat-Interface">6 Chat Interface</a>
+  <ul class="toc-numbered-mark">
+    <li><a id="toc-Opening-the-Chat" href="#Opening-the-Chat">6.1 Opening the Chat</a></li>
+    <li><a id="toc-Interface-Overview" href="#Interface-Overview">6.2 Interface Overview</a></li>
+    <li><a id="toc-Sending-Prompts" href="#Sending-Prompts">6.3 Sending Prompts</a></li>
+    <li><a id="toc-System-Prompts" href="#System-Prompts">6.4 System Prompts</a></li>
+    <li><a id="toc-Markdown-to-Org-Conversion" href="#Markdown-to-Org-Conversion">6.5 Markdown to Org Conversion</a></li>
+  </ul></li>
+  <li><a id="toc-Working-with-Models" href="#Working-with-Models">7 Working with Models</a>
+  <ul class="toc-numbered-mark">
+    <li><a id="toc-Available-Models" href="#Available-Models">7.1 Available Models</a></li>
+    <li><a id="toc-Switching-Models" href="#Switching-Models">7.2 Switching Models</a></li>
+    <li><a id="toc-Managing-Models" href="#Managing-Models">7.3 Managing Models</a></li>
+    <li><a id="toc-Pulling-New-Models" href="#Pulling-New-Models">7.4 Pulling New Models</a></li>
+    <li><a id="toc-Importing-GGUF-Files" href="#Importing-GGUF-Files">7.5 Importing GGUF Files</a></li>
+    <li><a id="toc-Multishot-Mode" href="#Multishot-Mode">7.6 Multishot Mode</a></li>
+  </ul></li>
+  <li><a id="toc-Parameter-Control-1" href="#Parameter-Control">8 Parameter Control</a>
+  <ul class="toc-numbered-mark">
+    <li><a id="toc-Understanding-Parameters" href="#Understanding-Parameters">8.1 Understanding Parameters</a></li>
+    <li><a id="toc-Viewing-Current-Parameters" href="#Viewing-Current-Parameters">8.2 Viewing Current Parameters</a></li>
+    <li><a id="toc-Editing-Parameters" href="#Editing-Parameters">8.3 Editing Parameters</a></li>
+    <li><a id="toc-Parameter-Profiles" href="#Parameter-Profiles">8.4 Parameter Profiles</a></li>
+    <li><a id="toc-Command_002dSpecific-Parameters" href="#Command_002dSpecific-Parameters">8.5 Command-Specific Parameters</a></li>
+    <li><a id="toc-Reset-Parameters" href="#Reset-Parameters">8.6 Reset Parameters</a></li>
+    <li><a id="toc-Displaying-Parameters-in-Header" href="#Displaying-Parameters-in-Header">8.7 Displaying Parameters in Header</a></li>
+  </ul></li>
+  <li><a id="toc-Session-Management" href="#Session-Management">9 Session Management</a>
+  <ul class="toc-numbered-mark">
+    <li><a id="toc-Understanding-Sessions" href="#Understanding-Sessions">9.1 Understanding Sessions</a></li>
+    <li><a id="toc-Creating-a-New-Session" href="#Creating-a-New-Session">9.2 Creating a New Session</a></li>
+    <li><a id="toc-Saving-a-Session" href="#Saving-a-Session">9.3 Saving a Session</a></li>
+    <li><a id="toc-Loading-a-Session" href="#Loading-a-Session">9.4 Loading a Session</a></li>
+    <li><a id="toc-Managing-Sessions" href="#Managing-Sessions">9.5 Managing Sessions</a></li>
+    <li><a id="toc-Conversation-History" href="#Conversation-History">9.6 Conversation History</a></li>
+  </ul></li>
+  <li><a id="toc-Roles-and-Commands" href="#Roles-and-Commands">10 Roles and Commands</a>
+  <ul class="toc-numbered-mark">
+    <li><a id="toc-Understanding-Roles" href="#Understanding-Roles">10.1 Understanding Roles</a></li>
+    <li><a id="toc-Built_002din-Commands" href="#Built_002din-Commands">10.2 Built-in Commands</a></li>
+    <li><a id="toc-Creating-Custom-Roles" href="#Creating-Custom-Roles">10.3 Creating Custom Roles</a></li>
+    <li><a id="toc-Switching-Roles" href="#Switching-Roles">10.4 Switching Roles</a></li>
+    <li><a id="toc-Managing-Roles" href="#Managing-Roles">10.5 Managing Roles</a></li>
+    <li><a id="toc-Example-Custom-Role" href="#Example-Custom-Role">10.6 Example Custom Role</a></li>
+  </ul></li>
+  <li><a id="toc-Fabric-Pattern-Integration-1" href="#Fabric-Pattern-Integration">11 Fabric Pattern Integration</a>
+  <ul class="toc-numbered-mark">
+    <li><a id="toc-What-are-Fabric-Patterns_003f" href="#What-are-Fabric-Patterns_003f">11.1 What are Fabric Patterns?</a></li>
+    <li><a id="toc-Setting-Up-Fabric-Integration" href="#Setting-Up-Fabric-Integration">11.2 Setting Up Fabric Integration</a></li>
+    <li><a id="toc-Using-Fabric-Patterns" href="#Using-Fabric-Patterns">11.3 Using Fabric Patterns</a></li>
+    <li><a id="toc-Browsing-Available-Patterns" href="#Browsing-Available-Patterns">11.4 Browsing Available Patterns</a></li>
+    <li><a id="toc-Viewing-Pattern-Details" href="#Viewing-Pattern-Details">11.5 Viewing Pattern Details</a></li>
+    <li><a id="toc-Updating-Patterns" href="#Updating-Patterns">11.6 Updating Patterns</a></li>
+    <li><a id="toc-Using-Patterns-by-Category" href="#Using-Patterns-by-Category">11.7 Using Patterns by Category</a></li>
+  </ul></li>
+  <li><a id="toc-Advanced-Usage" href="#Advanced-Usage">12 Advanced Usage</a>
+  <ul class="toc-numbered-mark">
+    <li><a id="toc-Managing-Token-Usage" href="#Managing-Token-Usage">12.1 Managing Token Usage</a></li>
+    <li><a id="toc-Customizing-the-Interface" href="#Customizing-the-Interface">12.2 Customizing the Interface</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Interface-Level" href="#Interface-Level">12.2.1 Interface Level</a></li>
+      <li><a id="toc-Model-Colors" href="#Model-Colors">12.2.2 Model Colors</a></li>
+      <li><a id="toc-Debug-Mode" href="#Debug-Mode">12.2.3 Debug Mode</a></li>
+    </ul></li>
+    <li><a id="toc-Editing-Conversation-History" href="#Editing-Conversation-History">12.3 Editing Conversation History</a></li>
+    <li><a id="toc-Advanced-System-Prompt-Management" href="#Advanced-System-Prompt-Management">12.4 Advanced System Prompt Management</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Setting-a-system-prompt-without-sending" href="#Setting-a-system-prompt-without-sending">12.4.1 Setting a system prompt without sending</a></li>
+      <li><a id="toc-Using-a-system-prompt-from-Fabric" href="#Using-a-system-prompt-from-Fabric">12.4.2 Using a system prompt from Fabric</a></li>
+    </ul></li>
+    <li><a id="toc-Using-Direct-API-Access" href="#Using-Direct-API-Access">12.5 Using Direct API Access</a></li>
+  </ul></li>
+  <li><a id="toc-API-Reference" href="#API-Reference">13 API Reference</a>
+  <ul class="toc-numbered-mark">
+    <li><a id="toc-Interactive-Functions" href="#Interactive-Functions">13.1 Interactive Functions</a></li>
+    <li><a id="toc-Core-Functions" href="#Core-Functions">13.2 Core Functions</a></li>
+    <li><a id="toc-Customization-Functions" href="#Customization-Functions">13.3 Customization Functions</a></li>
+  </ul></li>
+  <li><a id="toc-Frequently-Asked-Questions" href="#FAQ">14 Frequently Asked Questions</a>
+  <ul class="toc-numbered-mark">
+    <li><a id="toc-General-Questions" href="#General-Questions">14.1 General Questions</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f" href="#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f">14.1.1 What is the difference between Ollama Buddy and other AI assistants?</a></li>
+      <li><a id="toc-Does-Ollama-Buddy-require-an-internet-connection_003f" href="#Does-Ollama-Buddy-require-an-internet-connection_003f">14.1.2 Does Ollama Buddy require an internet connection?</a></li>
+      <li><a id="toc-Which-models-work-best-with-Ollama-Buddy_003f" href="#Which-models-work-best-with-Ollama-Buddy_003f">14.1.3 Which models work best with Ollama Buddy?</a></li>
+      <li><a id="toc-How-much-RAM-do-I-need_003f" href="#How-much-RAM-do-I-need_003f">14.1.4 How much RAM do I need?</a></li>
+    </ul></li>
+    <li><a id="toc-Usage-Questions" href="#Usage-Questions">14.2 Usage Questions</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-How-do-I-cancel-a-request-that_0027s-taking-too-long_003f" href="#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f">14.2.1 How do I cancel a request that&rsquo;s taking too long?</a></li>
+      <li><a id="toc-How-can-I-save-my-conversations_003f" href="#How-can-I-save-my-conversations_003f">14.2.2 How can I save my conversations?</a></li>
+      <li><a id="toc-Can-I-use-multiple-models-in-the-same-conversation_003f" href="#Can-I-use-multiple-models-in-the-same-conversation_003f">14.2.3 Can I use multiple models in the same conversation?</a></li>
+      <li><a id="toc-How-do-I-clear-the-conversation-history_003f" href="#How-do-I-clear-the-conversation-history_003f">14.2.4 How do I clear the conversation history?</a></li>
+      <li><a id="toc-How-can-I-create-a-custom-command_003f" href="#How-can-I-create-a-custom-command_003f">14.2.5 How can I create a custom command?</a></li>
+    </ul></li>
+    <li><a id="toc-Troubleshooting" href="#Troubleshooting-1">14.3 Troubleshooting</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Ollama-Buddy-shows-_0022OFFLINE_0022-status" href="#Ollama-Buddy-shows-_0022OFFLINE_0022-status">14.3.1 Ollama Buddy shows &quot;OFFLINE&quot; status</a></li>
+      <li><a id="toc-Responses-are-slow-or-the-model-seems-to-hang" href="#Responses-are-slow-or-the-model-seems-to-hang">14.3.2 Responses are slow or the model seems to hang</a></li>
+      <li><a id="toc-Getting-_0022error-parsing-model_0022-when-pulling-a-model" href="#Getting-_0022error-parsing-model_0022-when-pulling-a-model">14.3.3 Getting &quot;error parsing model&quot; when pulling a model</a></li>
+      <li><a id="toc-Model-responses-are-low-quality-or-truncated" href="#Model-responses-are-low-quality-or-truncated">14.3.4 Model responses are low quality or truncated</a></li>
+    </ul></li>
+  </ul></li>
+  <li><a id="toc-Troubleshooting-1" href="#Troubleshooting">15 Troubleshooting</a>
+  <ul class="toc-numbered-mark">
+    <li><a id="toc-Common-Issues" href="#Common-Issues">15.1 Common Issues</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Connection-Problems" href="#Connection-Problems">15.1.1 Connection Problems</a></li>
+      <li><a id="toc-Model-Problems" href="#Model-Problems">15.1.2 Model Problems</a></li>
+      <li><a id="toc-Interface-Issues" href="#Interface-Issues">15.1.3 Interface Issues</a></li>
+    </ul></li>
+    <li><a id="toc-Debugging" href="#Debugging">15.2 Debugging</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Enable-Debug-Mode" href="#Enable-Debug-Mode">15.2.1 Enable Debug Mode</a></li>
+      <li><a id="toc-Check-Logs" href="#Check-Logs">15.2.2 Check Logs</a></li>
+      <li><a id="toc-Report-Issues" href="#Report-Issues">15.2.3 Report Issues</a></li>
+    </ul></li>
+  </ul></li>
+  <li><a id="toc-Contributing" href="#Contributing">16 Contributing</a>
+  <ul class="toc-numbered-mark">
+    <li><a id="toc-Getting-Started" href="#Getting-Started">16.1 Getting Started</a></li>
+    <li><a id="toc-Development-Setup" href="#Development-Setup">16.2 Development Setup</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Required-Tools" href="#Required-Tools">16.2.1 Required Tools</a></li>
+      <li><a id="toc-Recommended-Packages" href="#Recommended-Packages">16.2.2 Recommended Packages</a></li>
+    </ul></li>
+    <li><a id="toc-Coding-Guidelines" href="#Coding-Guidelines">16.3 Coding Guidelines</a></li>
+    <li><a id="toc-Testing" href="#Testing">16.4 Testing</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Run-Existing-Tests" href="#Run-Existing-Tests">16.4.1 Run Existing Tests</a></li>
+      <li><a id="toc-Adding-New-Tests" href="#Adding-New-Tests">16.4.2 Adding New Tests</a></li>
+    </ul></li>
+    <li><a id="toc-Feature-Requests-and-Bug-Reports" href="#Feature-Requests-and-Bug-Reports">16.5 Feature Requests and Bug Reports</a></li>
+  </ul></li>
+  <li><a id="toc-Index" href="#Index" rel="index">Index</a></li>
+</ul>
+</div>
+</div>
+<hr>
+<div class="chapter-level-extent" id="Introduction">
+<div class="nav-panel">
+<p>
+Next: <a href="#Installation" accesskey="n" rel="next">Installation</a>, Previous: <a href="#Top" accesskey="p" rel="prev">Ollama Buddy</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<h2 class="chapter" id="Introduction-1"><span>1 Introduction<a class="copiable-link" href="#Introduction-1"> &para;</a></span></h2>
+
+<ul class="mini-toc">
+<li><a href="#What-is-Ollama-Buddy_003f" accesskey="1">What is Ollama Buddy?</a></li>
+<li><a href="#Why-Use-Ollama-Buddy_003f" accesskey="2">Why Use Ollama Buddy?</a></li>
+<li><a href="#Prerequisites" accesskey="3">Prerequisites</a></li>
+</ul>
+<div class="section-level-extent" id="What-is-Ollama-Buddy_003f">
+<h3 class="section"><span>1.1 What is Ollama Buddy?<a class="copiable-link" href="#What-is-Ollama-Buddy_003f"> &para;</a></span></h3>
+
+<p>Ollama Buddy is an Emacs package that provides a friendly AI assistant interface to Ollama, 
+a tool for running large language models (LLMs) locally on your computer. It allows you to 
+interact with AI models directly from within Emacs for various tasks such as:
+</p>
+<ul class="itemize mark-bullet">
+<li>Code refactoring and explanation
+</li><li>Writing assistance and proofreading
+</li><li>Generating Git commit messages
+</li><li>Dictionary lookups and language assistance
+</li><li>Custom AI-powered workflows via roles
+</li><li>Using pre-built prompt templates from Fabric
+</li></ul>
+
+<p>Instead of context-switching to web interfaces or terminal applications, Ollama Buddy brings 
+the power of local LLMs right into your Emacs workflow.
+</p>
+</div>
+<div class="section-level-extent" id="Why-Use-Ollama-Buddy_003f">
+<h3 class="section"><span>1.2 Why Use Ollama Buddy?<a class="copiable-link" href="#Why-Use-Ollama-Buddy_003f"> &para;</a></span></h3>
+
+<ul class="itemize mark-bullet">
+<li><strong class="strong">Privacy</strong>: All interactions happen locally with Ollama - no data sent to external services
+</li><li><strong class="strong">Integration</strong>: Seamlessly fits into your existing Emacs workflow
+</li><li><strong class="strong">Flexibility</strong>: Supports multiple models, parameter tuning, and custom commands
+</li><li><strong class="strong">Efficiency</strong>: Quick access to AI assistance without leaving your editor
+</li><li><strong class="strong">Extensibility</strong>: Create custom roles and commands for your specific needs
+</li></ul>
+
+</div>
+<div class="section-level-extent" id="Prerequisites">
+<h3 class="section"><span>1.3 Prerequisites<a class="copiable-link" href="#Prerequisites"> &para;</a></span></h3>
+
+<p>Before using Ollama Buddy, you need:
+</p>
+<ul class="itemize mark-bullet">
+<li>Emacs 28.1 or later
+</li><li>Ollama installed and running on your system (see <a class="url" href="https://ollama.ai">https://ollama.ai</a>)
+</li><li>At least one language model pulled into Ollama
+</li></ul>
+
+<hr>
+</div>
+</div>
+<div class="chapter-level-extent" id="Installation">
+<div class="nav-panel">
+<p>
+Next: <a href="#Configuration" accesskey="n" rel="next">Configuration</a>, Previous: <a href="#Introduction" accesskey="p" rel="prev">Introduction</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<h2 class="chapter" id="Installation-1"><span>2 Installation<a class="copiable-link" href="#Installation-1"> &para;</a></span></h2>
+
+<ul class="mini-toc">
+<li><a href="#Installing-Ollama" accesskey="1">Installing Ollama</a></li>
+<li><a href="#Package-Installation" accesskey="2">Package Installation</a></li>
+<li><a href="#Dependencies" accesskey="3">Dependencies</a></li>
+</ul>
+<div class="section-level-extent" id="Installing-Ollama">
+<h3 class="section"><span>2.1 Installing Ollama<a class="copiable-link" href="#Installing-Ollama"> &para;</a></span></h3>
+
+<p>Before installing Ollama Buddy, you need to install Ollama itself:
+</p>
+<ol class="enumerate">
+<li> Visit <a class="url" href="https://ollama.ai">https://ollama.ai</a> and download the installer for your platform
+</li><li> Install and run Ollama according to the instructions
+</li><li> Pull at least one model using <code class="code">ollama pull llama3:latest</code> (or another model of your choice)
+</li></ol>
+
+</div>
+<div class="section-level-extent" id="Package-Installation">
+<h3 class="section"><span>2.2 Package Installation<a class="copiable-link" href="#Package-Installation"> &para;</a></span></h3>
+
+<ul class="mini-toc">
+<li><a href="#Using-package_002eel" accesskey="1">Using package.el</a></li>
+<li><a href="#Using-use_002dpackage" accesskey="2">Using use-package</a></li>
+<li><a href="#Manual-Installation" accesskey="3">Manual Installation</a></li>
+</ul>
+<div class="subsection-level-extent" id="Using-package_002eel">
+<h4 class="subsection"><span>2.2.1 Using package.el<a class="copiable-link" href="#Using-package_002eel"> &para;</a></span></h4>
+
+<p>The recommended way to install Ollama Buddy is through MELPA:
+</p>
+<div class="example">
+<pre class="example-preformatted">M-x package-install RET ollama-buddy RET
+</pre></div>
+
+</div>
+<div class="subsection-level-extent" id="Using-use_002dpackage">
+<h4 class="subsection"><span>2.2.2 Using use-package<a class="copiable-link" href="#Using-use_002dpackage"> &para;</a></span></h4>
+
+<p>If you use <code class="code">use-package</code>, add the following to your Emacs configuration:
+</p>
+<div class="example">
+<pre class="example-preformatted">(use-package ollama-buddy
+  :ensure t
+  :bind (&quot;C-c o&quot; . ollama-buddy-menu))
+</pre></div>
+
+<p>With a default model:
+</p>
+<div class="example">
+<pre class="example-preformatted">(use-package ollama-buddy
+  :ensure t
+  :bind (&quot;C-c o&quot; . ollama-buddy-menu)
+  :custom (ollama-buddy-default-model &quot;llama3:latest&quot;))
+</pre></div>
+
+</div>
+<div class="subsection-level-extent" id="Manual-Installation">
+<h4 class="subsection"><span>2.2.3 Manual Installation<a class="copiable-link" href="#Manual-Installation"> &para;</a></span></h4>
+
+<p>To install manually:
+</p>
+<ol class="enumerate">
+<li> Clone the repository:
+<div class="example">
+<pre class="example-preformatted">git clone https://github.com/captainflasmr/ollama-buddy.git
+</pre></div>
+
+</li><li> Add to your configuration:
+<div class="example">
+<pre class="example-preformatted">(add-to-list 'load-path &quot;/path/to/ollama-buddy&quot;)
+(require 'ollama-buddy)
+(global-set-key (kbd &quot;C-c o&quot;) #'ollama-buddy-menu)
+</pre></div>
+</li></ol>
+
+</div>
+</div>
+<div class="section-level-extent" id="Dependencies">
+<h3 class="section"><span>2.3 Dependencies<a class="copiable-link" href="#Dependencies"> &para;</a></span></h3>
+
+<p>Ollama Buddy requires the following Emacs packages:
+</p>
+<ul class="itemize mark-bullet">
+<li>transient
+</li><li>json
+</li><li>cl-lib
+</li></ul>
+
+<p>These should be automatically installed if you use package.el or use-package.
+</p>
+<hr>
+</div>
+</div>
+<div class="chapter-level-extent" id="Configuration">
+<div class="nav-panel">
+<p>
+Next: <a href="#Quick-Start" accesskey="n" rel="next">Quick Start</a>, Previous: <a href="#Installation" accesskey="p" rel="prev">Installation</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<h2 class="chapter" id="Configuration-1"><span>3 Configuration<a class="copiable-link" href="#Configuration-1"> &para;</a></span></h2>
+
+<ul class="mini-toc">
+<li><a href="#Basic-Configuration" accesskey="1">Basic Configuration</a></li>
+<li><a href="#Display-Options" accesskey="2">Display Options</a></li>
+<li><a href="#Directory-Configuration" accesskey="3">Directory Configuration</a></li>
+<li><a href="#History-and-Session-Configuration" accesskey="4">History and Session Configuration</a></li>
+</ul>
+<div class="section-level-extent" id="Basic-Configuration">
+<h3 class="section"><span>3.1 Basic Configuration<a class="copiable-link" href="#Basic-Configuration"> &para;</a></span></h3>
+
+<p>Here are the essential configuration options:
+</p>
+<dl class="table">
+<dt><code class="code">ollama-buddy-default-model</code></dt>
+<dd><p>Set your preferred default model.
+</p><div class="example">
+<pre class="example-preformatted">(setq ollama-buddy-default-model &quot;llama3:latest&quot;)
+</pre></div>
+
+</dd>
+<dt><code class="code">ollama-buddy-host</code></dt>
+<dd><p>Host where Ollama server is running (default: &quot;localhost&quot;).
+</p><div class="example">
+<pre class="example-preformatted">(setq ollama-buddy-host &quot;localhost&quot;)
+</pre></div>
+
+</dd>
+<dt><code class="code">ollama-buddy-port</code></dt>
+<dd><p>Port where Ollama server is running (default: 11434).
+</p><div class="example">
+<pre class="example-preformatted">(setq ollama-buddy-port 11434)
+</pre></div>
+</dd>
+</dl>
+
+</div>
+<div class="section-level-extent" id="Display-Options">
+<h3 class="section"><span>3.2 Display Options<a class="copiable-link" href="#Display-Options"> &para;</a></span></h3>
+
+<p>Customize the appearance and behavior of Ollama Buddy:
+</p>
+<dl class="table">
+<dt><code class="code">ollama-buddy-convert-markdown-to-org</code></dt>
+<dd><p>Whether to automatically convert markdown to org-mode format in responses (default: t).
+</p><div class="example">
+<pre class="example-preformatted">(setq ollama-buddy-convert-markdown-to-org t)
+</pre></div>
+
+</dd>
+<dt><code class="code">ollama-buddy-enable-model-colors</code></dt>
+<dd><p>Whether to show model names with distinctive colors (default: t).
+</p><div class="example">
+<pre class="example-preformatted">(setq ollama-buddy-enable-model-colors t)
+</pre></div>
+
+</dd>
+<dt><code class="code">ollama-buddy-display-token-stats</code></dt>
+<dd><p>Whether to display token usage statistics after responses (default: nil).
+</p><div class="example">
+<pre class="example-preformatted">(setq ollama-buddy-display-token-stats t)
+</pre></div>
+
+</dd>
+<dt><code class="code">ollama-buddy-interface-level</code></dt>
+<dd><p>Level of interface complexity (&rsquo;basic or &rsquo;advanced).
+</p><div class="example">
+<pre class="example-preformatted">(setq ollama-buddy-interface-level 'advanced)
+</pre></div>
+</dd>
+</dl>
+
+</div>
+<div class="section-level-extent" id="Directory-Configuration">
+<h3 class="section"><span>3.3 Directory Configuration<a class="copiable-link" href="#Directory-Configuration"> &para;</a></span></h3>
+
+<p>Customize where Ollama Buddy stores its files:
+</p>
+<dl class="table">
+<dt><code class="code">ollama-buddy-sessions-directory</code></dt>
+<dd><p>Directory for storing session files.
+</p><div class="example">
+<pre class="example-preformatted">(setq ollama-buddy-sessions-directory 
+      (expand-file-name &quot;ollama-buddy-sessions&quot; user-emacs-directory))
+</pre></div>
+
+</dd>
+<dt><code class="code">ollama-buddy-roles-directory</code></dt>
+<dd><p>Directory for storing role preset files.
+</p><div class="example">
+<pre class="example-preformatted">(setq ollama-buddy-roles-directory
+      (expand-file-name &quot;ollama-buddy-presets&quot; user-emacs-directory))
+</pre></div>
+
+</dd>
+<dt><code class="code">ollama-buddy-modelfile-directory</code></dt>
+<dd><p>Directory for storing temporary Modelfiles.
+</p><div class="example">
+<pre class="example-preformatted">(setq ollama-buddy-modelfile-directory
+      (expand-file-name &quot;ollama-buddy-modelfiles&quot; user-emacs-directory))
+</pre></div>
+</dd>
+</dl>
+
+</div>
+<div class="section-level-extent" id="History-and-Session-Configuration">
+<h3 class="section"><span>3.4 History and Session Configuration<a class="copiable-link" href="#History-and-Session-Configuration"> &para;</a></span></h3>
+
+<p>Configure how conversation history is managed:
+</p>
+<dl class="table">
+<dt><code class="code">ollama-buddy-history-enabled</code></dt>
+<dd><p>Whether to use conversation history in Ollama requests (default: t).
+</p><div class="example">
+<pre class="example-preformatted">(setq ollama-buddy-history-enabled t)
+</pre></div>
+
+</dd>
+<dt><code class="code">ollama-buddy-max-history-length</code></dt>
+<dd><p>Maximum number of message pairs to keep in conversation history (default: 10).
+</p><div class="example">
+<pre class="example-preformatted">(setq ollama-buddy-max-history-length 10)
+</pre></div>
+
+</dd>
+<dt><code class="code">ollama-buddy-show-history-indicator</code></dt>
+<dd><p>Whether to show the history indicator in the header line (default: t).
+</p><div class="example">
+<pre class="example-preformatted">(setq ollama-buddy-show-history-indicator t)
+</pre></div>
+</dd>
+</dl>
+
+<hr>
+</div>
+</div>
+<div class="chapter-level-extent" id="Quick-Start">
+<div class="nav-panel">
+<p>
+Next: <a href="#Core-Features" accesskey="n" rel="next">Core Features</a>, Previous: <a href="#Configuration" accesskey="p" rel="prev">Configuration</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<h2 class="chapter" id="Quick-Start-1"><span>4 Quick Start<a class="copiable-link" href="#Quick-Start-1"> &para;</a></span></h2>
+
+<ul class="mini-toc">
+<li><a href="#Basic-Usage" accesskey="1">Basic Usage</a></li>
+<li><a href="#Common-Operations" accesskey="2">Common Operations</a></li>
+</ul>
+<div class="section-level-extent" id="Basic-Usage">
+<h3 class="section"><span>4.1 Basic Usage<a class="copiable-link" href="#Basic-Usage"> &para;</a></span></h3>
+
+<ol class="enumerate">
+<li> Launch Ollama Buddy:
+<div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-menu
+</pre></div>
+<p>or use your configured keybinding (e.g., <code class="code">C-c o</code>).
+</p>
+</li><li> The menu will show available options. Press the corresponding key for the action you want.
+
+</li><li> To open the chat interface, press <code class="code">o</code> or select &quot;Open Chat&quot;.
+
+</li><li> In the chat buffer, type your prompt and press <code class="code">C-c C-c</code> to send it.
+
+</li><li> The AI will respond in the chat buffer.
+</li></ol>
+
+</div>
+<div class="section-level-extent" id="Common-Operations">
+<h3 class="section"><span>4.2 Common Operations<a class="copiable-link" href="#Common-Operations"> &para;</a></span></h3>
+
+<dl class="table">
+<dt>Sending text from a file</dt>
+<dd><p>Select text in any buffer, then press <code class="code">C-c o</code> and choose &quot;Send Region&quot; (or press <code class="code">l</code>).
+</p>
+</dd>
+<dt>Refactoring code</dt>
+<dd><p>Select code, press <code class="code">C-c o</code>, then choose &quot;Refactor Code&quot; (or press <code class="code">r</code>).
+</p>
+</dd>
+<dt>Generating a commit message</dt>
+<dd><p>Select your changes, press <code class="code">C-c o</code>, then choose &quot;Git Commit Message&quot; (or press <code class="code">g</code>).
+</p>
+</dd>
+<dt>Changing models</dt>
+<dd><p>Press <code class="code">C-c o</code> followed by <code class="code">m</code> to switch between available models.
+</p>
+</dd>
+<dt>Getting help</dt>
+<dd><p>In the chat buffer, press <code class="code">C-c h</code> to display the help screen with available commands and models.
+</p></dd>
+</dl>
+
+<hr>
+</div>
+</div>
+<div class="chapter-level-extent" id="Core-Features">
+<div class="nav-panel">
+<p>
+Next: <a href="#Chat-Interface" accesskey="n" rel="next">Chat Interface</a>, Previous: <a href="#Quick-Start" accesskey="p" rel="prev">Quick Start</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<h2 class="chapter" id="Core-Features-1"><span>5 Core Features<a class="copiable-link" href="#Core-Features-1"> &para;</a></span></h2>
+
+<ul class="mini-toc">
+<li><a href="#Chat-Interface-1" accesskey="1">Chat Interface</a></li>
+<li><a href="#Pre_002dbuilt-Commands" accesskey="2">Pre-built Commands</a></li>
+<li><a href="#Model-Management" accesskey="3">Model Management</a></li>
+<li><a href="#Parameter-Control-1" accesskey="4">Parameter Control</a></li>
+<li><a href="#Roles-and-Custom-Commands" accesskey="5">Roles and Custom Commands</a></li>
+<li><a href="#Fabric-Pattern-Integration-1" accesskey="6">Fabric Pattern Integration</a></li>
+</ul>
+<div class="section-level-extent" id="Chat-Interface-1">
+<h3 class="section"><span>5.1 Chat Interface<a class="copiable-link" href="#Chat-Interface-1"> &para;</a></span></h3>
+
+<p>The chat interface is the main way to interact with Ollama Buddy:
+</p>
+<ul class="itemize mark-bullet">
+<li>Persistent conversation with history
+</li><li>Markdown to Org-mode conversion
+</li><li>Model-specific colors
+</li><li>System prompt support
+</li><li>Parameter customization
+</li></ul>
+
+</div>
+<div class="section-level-extent" id="Pre_002dbuilt-Commands">
+<h3 class="section"><span>5.2 Pre-built Commands<a class="copiable-link" href="#Pre_002dbuilt-Commands"> &para;</a></span></h3>
+
+<p>Ollama Buddy comes with several pre-built commands:
+</p>
+<dl class="table">
+<dt>Code Refactoring</dt>
+<dd><p>Improves code while maintaining functionality
+</p>
+</dd>
+<dt>Code Description</dt>
+<dd><p>Explains what code does and how it works
+</p>
+</dd>
+<dt>Git Commit Messages</dt>
+<dd><p>Generates meaningful commit messages from code changes
+</p>
+</dd>
+<dt>Dictionary Lookups</dt>
+<dd><p>Provides comprehensive word definitions
+</p>
+</dd>
+<dt>Synonym Finder</dt>
+<dd><p>Suggests alternative words with context
+</p>
+</dd>
+<dt>Proofreading</dt>
+<dd><p>Corrects grammar, style, and spelling
+</p></dd>
+</dl>
+
+</div>
+<div class="section-level-extent" id="Model-Management">
+<h3 class="section"><span>5.3 Model Management<a class="copiable-link" href="#Model-Management"> &para;</a></span></h3>
+
+<ul class="itemize mark-bullet">
+<li>Switch between any model available in Ollama
+</li><li>Pull new models directly from the interface
+</li><li>View model information and statistics
+</li><li>Delete models you no longer need
+</li><li>Import GGUF files to create new models
+</li></ul>
+
+</div>
+<div class="section-level-extent" id="Parameter-Control-1">
+<h3 class="section"><span>5.4 Parameter Control<a class="copiable-link" href="#Parameter-Control-1"> &para;</a></span></h3>
+
+<ul class="itemize mark-bullet">
+<li>Fine-tune model behavior with customizable parameters
+</li><li>Save and use parameter profiles for different use cases
+</li><li>Command-specific parameter settings
+</li><li>Real-time parameter adjustment
+</li></ul>
+
+</div>
+<div class="section-level-extent" id="Roles-and-Custom-Commands">
+<h3 class="section"><span>5.5 Roles and Custom Commands<a class="copiable-link" href="#Roles-and-Custom-Commands"> &para;</a></span></h3>
+
+<ul class="itemize mark-bullet">
+<li>Create custom command sets for specific workflows
+</li><li>Design specialized AI assistants with custom system prompts
+</li><li>Save and switch between different roles
+</li><li>Share role configurations across your team
+</li></ul>
+
+</div>
+<div class="section-level-extent" id="Fabric-Pattern-Integration-1">
+<h3 class="section"><span>5.6 Fabric Pattern Integration<a class="copiable-link" href="#Fabric-Pattern-Integration-1"> &para;</a></span></h3>
+
+<ul class="itemize mark-bullet">
+<li>Use pre-built prompt patterns from Daniel Miessler&rsquo;s Fabric project
+</li><li>Access universal, code, writing, and analysis patterns
+</li><li>Synchronize with the latest patterns from GitHub
+</li><li>Apply patterns to your content with one command
+</li></ul>
+
+<hr>
+</div>
+</div>
+<div class="chapter-level-extent" id="Chat-Interface">
+<div class="nav-panel">
+<p>
+Next: <a href="#Working-with-Models" accesskey="n" rel="next">Working with Models</a>, Previous: <a href="#Core-Features" accesskey="p" rel="prev">Core Features</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<h2 class="chapter" id="Chat-Interface-2"><span>6 Chat Interface<a class="copiable-link" href="#Chat-Interface-2"> &para;</a></span></h2>
+
+<ul class="mini-toc">
+<li><a href="#Opening-the-Chat" accesskey="1">Opening the Chat</a></li>
+<li><a href="#Interface-Overview" accesskey="2">Interface Overview</a></li>
+<li><a href="#Sending-Prompts" accesskey="3">Sending Prompts</a></li>
+<li><a href="#System-Prompts" accesskey="4">System Prompts</a></li>
+<li><a href="#Markdown-to-Org-Conversion" accesskey="5">Markdown to Org Conversion</a></li>
+</ul>
+<div class="section-level-extent" id="Opening-the-Chat">
+<h3 class="section"><span>6.1 Opening the Chat<a class="copiable-link" href="#Opening-the-Chat"> &para;</a></span></h3>
+
+<p>To open the chat interface:
+</p>
+<ol class="enumerate">
+<li> Use <code class="code">M-x ollama-buddy-menu</code> or your configured keybinding
+</li><li> Press <code class="code">o</code> to select &quot;Open Chat&quot;
+</li><li> A new buffer will open with the Ollama Buddy chat interface
+</li></ol>
+
+</div>
+<div class="section-level-extent" id="Interface-Overview">
+<h3 class="section"><span>6.2 Interface Overview<a class="copiable-link" href="#Interface-Overview"> &para;</a></span></h3>
+
+<p>The chat interface consists of:
+</p>
+<ul class="itemize mark-bullet">
+<li>A welcome message with available models
+</li><li>Conversation history (previous prompts and responses)
+</li><li>A prompt area for entering your queries
+</li><li>A header line with status information
+</li></ul>
+
+</div>
+<div class="section-level-extent" id="Sending-Prompts">
+<h3 class="section"><span>6.3 Sending Prompts<a class="copiable-link" href="#Sending-Prompts"> &para;</a></span></h3>
+
+<p>To send a prompt to the AI:
+</p>
+<ol class="enumerate">
+<li> Type your message in the prompt area (after &quot;&gt;&gt; PROMPT:&quot;)
+</li><li> Press <code class="code">C-c C-c</code> to send
+</li><li> Wait for the AI to generate a response
+</li></ol>
+
+<p>You can also:
+</p><ul class="itemize mark-bullet">
+<li>Use <code class="code">M-p</code> and <code class="code">M-n</code> to navigate through prompt history
+</li><li>Press <code class="code">C-c k</code> to cancel a request if it&rsquo;s taking too long
+</li></ul>
+
+</div>
+<div class="section-level-extent" id="System-Prompts">
+<h3 class="section"><span>6.4 System Prompts<a class="copiable-link" href="#System-Prompts"> &para;</a></span></h3>
+
+<p>System prompts allow you to define the AI&rsquo;s behavior:
+</p>
+<dl class="table">
+<dt>Setting a system prompt</dt>
+<dd><p>Type your system prompt, then press <code class="code">C-c s</code>
+</p>
+</dd>
+<dt>Viewing the current system prompt</dt>
+<dd><p>Press <code class="code">C-c C-s</code>
+</p>
+</dd>
+<dt>Resetting the system prompt</dt>
+<dd><p>Press <code class="code">C-c r</code>
+</p></dd>
+</dl>
+
+<p>Example system prompt:
+</p><div class="example">
+<pre class="example-preformatted">You are a programming expert who specializes in Python. 
+Provide concise, efficient solutions with explanations.
+</pre></div>
+
+</div>
+<div class="section-level-extent" id="Markdown-to-Org-Conversion">
+<h3 class="section"><span>6.5 Markdown to Org Conversion<a class="copiable-link" href="#Markdown-to-Org-Conversion"> &para;</a></span></h3>
+
+<p>By default, Ollama Buddy converts markdown in responses to Org-mode syntax:
+</p>
+<ul class="itemize mark-bullet">
+<li>Code blocks are converted to Org-mode source blocks
+</li><li>Headers are converted to Org-mode headings
+</li><li>Lists are properly formatted
+</li><li>Links are converted to Org-mode format
+</li></ul>
+
+<p>To toggle this feature:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-toggle-markdown-conversion
+</pre></div>
+<p>or press <code class="code">C-c C-o</code> in the chat buffer.
+</p>
+<hr>
+</div>
+</div>
+<div class="chapter-level-extent" id="Working-with-Models">
+<div class="nav-panel">
+<p>
+Next: <a href="#Parameter-Control" accesskey="n" rel="next">Parameter Control</a>, Previous: <a href="#Chat-Interface" accesskey="p" rel="prev">Chat Interface</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<h2 class="chapter" id="Working-with-Models-1"><span>7 Working with Models<a class="copiable-link" href="#Working-with-Models-1"> &para;</a></span></h2>
+
+<ul class="mini-toc">
+<li><a href="#Available-Models" accesskey="1">Available Models</a></li>
+<li><a href="#Switching-Models" accesskey="2">Switching Models</a></li>
+<li><a href="#Managing-Models" accesskey="3">Managing Models</a></li>
+<li><a href="#Pulling-New-Models" accesskey="4">Pulling New Models</a></li>
+<li><a href="#Importing-GGUF-Files" accesskey="5">Importing GGUF Files</a></li>
+<li><a href="#Multishot-Mode" accesskey="6">Multishot Mode</a></li>
+</ul>
+<div class="section-level-extent" id="Available-Models">
+<h3 class="section"><span>7.1 Available Models<a class="copiable-link" href="#Available-Models"> &para;</a></span></h3>
+
+<p>Ollama Buddy displays available models in the chat interface. Each model is assigned a letter for quick selection.
+</p>
+<p>To view detailed model information:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-show-model-status
+</pre></div>
+<p>or press <code class="code">C-c v</code> in the chat buffer.
+</p>
+</div>
+<div class="section-level-extent" id="Switching-Models">
+<h3 class="section"><span>7.2 Switching Models<a class="copiable-link" href="#Switching-Models"> &para;</a></span></h3>
+
+<p>To change the current model:
+</p>
+<ol class="enumerate">
+<li> Press <code class="code">C-c m</code> in the chat buffer
+</li><li> Select a model from the completion list
+</li><li> The new model will be used for future requests
+</li></ol>
+
+<p>You can also switch models from the main menu with <code class="code">m</code>.
+</p>
+</div>
+<div class="section-level-extent" id="Managing-Models">
+<h3 class="section"><span>7.3 Managing Models<a class="copiable-link" href="#Managing-Models"> &para;</a></span></h3>
+
+<p>Ollama Buddy provides a comprehensive model management interface. To access it:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-manage-models
+</pre></div>
+<p>or press <code class="code">C-c W</code> in the chat buffer.
+</p>
+<p>From this interface, you can:
+</p><ul class="itemize mark-bullet">
+<li>See which models are currently running
+</li><li>Pull new models from Ollama Hub
+</li><li>Delete models you no longer need
+</li><li>View detailed model information
+</li><li>Select models for use
+</li></ul>
+
+</div>
+<div class="section-level-extent" id="Pulling-New-Models">
+<h3 class="section"><span>7.4 Pulling New Models<a class="copiable-link" href="#Pulling-New-Models"> &para;</a></span></h3>
+
+<p>To pull a new model:
+</p>
+<ol class="enumerate">
+<li> Open the model management interface with <code class="code">C-c W</code>
+</li><li> Click &quot;[Pull Any Model]&quot; or press the appropriate key
+</li><li> Enter the model name (e.g., &quot;phi:latest&quot;, &quot;codellama:7b&quot;)
+</li><li> Wait for the model to download
+</li></ol>
+
+</div>
+<div class="section-level-extent" id="Importing-GGUF-Files">
+<h3 class="section"><span>7.5 Importing GGUF Files<a class="copiable-link" href="#Importing-GGUF-Files"> &para;</a></span></h3>
+
+<p>You can import custom GGUF model files:
+</p>
+<ol class="enumerate">
+<li> Press <code class="code">C-c W</code> to open the model management interface
+</li><li> Click &quot;[Import GGUF File]&quot; or press the appropriate key
+</li><li> Select the GGUF file from your file system
+</li><li> Enter a name for the model
+</li><li> Optionally provide model parameters
+</li><li> Wait for Ollama to create the model
+</li></ol>
+
+</div>
+<div class="section-level-extent" id="Multishot-Mode">
+<h3 class="section"><span>7.6 Multishot Mode<a class="copiable-link" href="#Multishot-Mode"> &para;</a></span></h3>
+
+<p>Multishot mode allows you to send the same prompt to multiple models simultaneously:
+</p>
+<ol class="enumerate">
+<li> Type your prompt in the chat buffer
+</li><li> Press <code class="code">C-c M</code>
+</li><li> Enter the sequence of model letters you want to use (e.g., &quot;abc&quot; to use models a, b, and c)
+</li><li> Watch as Ollama Buddy processes your request with each model in sequence
+</li></ol>
+
+<p>The responses are stored in Emacs registers corresponding to the model letters for easy comparison.
+</p>
+<hr>
+</div>
+</div>
+<div class="chapter-level-extent" id="Parameter-Control">
+<div class="nav-panel">
+<p>
+Next: <a href="#Session-Management" accesskey="n" rel="next">Session Management</a>, Previous: <a href="#Working-with-Models" accesskey="p" rel="prev">Working with Models</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<h2 class="chapter" id="Parameter-Control-2"><span>8 Parameter Control<a class="copiable-link" href="#Parameter-Control-2"> &para;</a></span></h2>
+
+<ul class="mini-toc">
+<li><a href="#Understanding-Parameters" accesskey="1">Understanding Parameters</a></li>
+<li><a href="#Viewing-Current-Parameters" accesskey="2">Viewing Current Parameters</a></li>
+<li><a href="#Editing-Parameters" accesskey="3">Editing Parameters</a></li>
+<li><a href="#Parameter-Profiles" accesskey="4">Parameter Profiles</a></li>
+<li><a href="#Command_002dSpecific-Parameters" accesskey="5">Command-Specific Parameters</a></li>
+<li><a href="#Reset-Parameters" accesskey="6">Reset Parameters</a></li>
+<li><a href="#Displaying-Parameters-in-Header" accesskey="7">Displaying Parameters in Header</a></li>
+</ul>
+<div class="section-level-extent" id="Understanding-Parameters">
+<h3 class="section"><span>8.1 Understanding Parameters<a class="copiable-link" href="#Understanding-Parameters"> &para;</a></span></h3>
+
+<p>Ollama&rsquo;s models support various parameters that control their behavior:
+</p>
+<dl class="table">
+<dt>temperature</dt>
+<dd><p>Controls randomness (0.0-1.0+), higher values produce more creative outputs
+</p>
+</dd>
+<dt>top_k</dt>
+<dd><p>Limits token selection to top K most probable tokens
+</p>
+</dd>
+<dt>top_p</dt>
+<dd><p>Nucleus sampling threshold (0.0-1.0)
+</p>
+</dd>
+<dt>repeat_penalty</dt>
+<dd><p>Penalty for repeating tokens (higher values reduce repetition)
+</p></dd>
+</dl>
+
+</div>
+<div class="section-level-extent" id="Viewing-Current-Parameters">
+<h3 class="section"><span>8.2 Viewing Current Parameters<a class="copiable-link" href="#Viewing-Current-Parameters"> &para;</a></span></h3>
+
+<p>To view all current parameters:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-params-display
+</pre></div>
+<p>or press <code class="code">C-c G</code> in the chat buffer.
+</p>
+<p>Parameters that have been modified from default values are marked with an asterisk (*).
+</p>
+</div>
+<div class="section-level-extent" id="Editing-Parameters">
+<h3 class="section"><span>8.3 Editing Parameters<a class="copiable-link" href="#Editing-Parameters"> &para;</a></span></h3>
+
+<p>To edit parameters:
+</p>
+<ol class="enumerate">
+<li> Press <code class="code">C-c P</code> to open the parameter menu
+</li><li> Select the parameter you want to modify
+</li><li> Enter the new value
+</li></ol>
+
+<p>You can also use <code class="code">M-x ollama-buddy-params-edit</code> and select from a completion list.
+</p>
+</div>
+<div class="section-level-extent" id="Parameter-Profiles">
+<h3 class="section"><span>8.4 Parameter Profiles<a class="copiable-link" href="#Parameter-Profiles"> &para;</a></span></h3>
+
+<p>Ollama Buddy comes with predefined parameter profiles for different use cases:
+</p>
+<dl class="table">
+<dt>Default</dt>
+<dd><p>Standard balanced settings
+</p>
+</dd>
+<dt>Creative</dt>
+<dd><p>Higher temperature, lower penalties for more creative responses
+</p>
+</dd>
+<dt>Precise</dt>
+<dd><p>Lower temperature, higher penalties for more deterministic responses
+</p></dd>
+</dl>
+
+<p>To apply a profile:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-transient-profile-menu
+</pre></div>
+<p>or press <code class="code">C-c p</code> and select a profile.
+</p>
+</div>
+<div class="section-level-extent" id="Command_002dSpecific-Parameters">
+<h3 class="section"><span>8.5 Command-Specific Parameters<a class="copiable-link" href="#Command_002dSpecific-Parameters"> &para;</a></span></h3>
+
+<p>Some commands have pre-configured parameters. For example:
+</p><ul class="itemize mark-bullet">
+<li>The &quot;Refactor Code&quot; command uses lower temperature for more deterministic results
+</li><li>The &quot;Creative Writing&quot; command uses higher temperature for more varied outputs
+</li></ul>
+
+<p>These parameters are automatically applied when you use these commands and restored afterward.
+</p>
+</div>
+<div class="section-level-extent" id="Reset-Parameters">
+<h3 class="section"><span>8.6 Reset Parameters<a class="copiable-link" href="#Reset-Parameters"> &para;</a></span></h3>
+
+<p>To reset all parameters to default values:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-params-reset
+</pre></div>
+<p>or press <code class="code">C-c K</code> in the chat buffer.
+</p>
+</div>
+<div class="section-level-extent" id="Displaying-Parameters-in-Header">
+<h3 class="section"><span>8.7 Displaying Parameters in Header<a class="copiable-link" href="#Displaying-Parameters-in-Header"> &para;</a></span></h3>
+
+<p>To toggle whether modified parameters are shown in the header:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-toggle-params-in-header
+</pre></div>
+<p>or press <code class="code">C-c F</code> in the chat buffer.
+</p>
+<hr>
+</div>
+</div>
+<div class="chapter-level-extent" id="Session-Management">
+<div class="nav-panel">
+<p>
+Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands</a>, Previous: <a href="#Parameter-Control" accesskey="p" rel="prev">Parameter Control</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<h2 class="chapter" id="Session-Management-1"><span>9 Session Management<a class="copiable-link" href="#Session-Management-1"> &para;</a></span></h2>
+
+<ul class="mini-toc">
+<li><a href="#Understanding-Sessions" accesskey="1">Understanding Sessions</a></li>
+<li><a href="#Creating-a-New-Session" accesskey="2">Creating a New Session</a></li>
+<li><a href="#Saving-a-Session" accesskey="3">Saving a Session</a></li>
+<li><a href="#Loading-a-Session" accesskey="4">Loading a Session</a></li>
+<li><a href="#Managing-Sessions" accesskey="5">Managing Sessions</a></li>
+<li><a href="#Conversation-History" accesskey="6">Conversation History</a></li>
+</ul>
+<div class="section-level-extent" id="Understanding-Sessions">
+<h3 class="section"><span>9.1 Understanding Sessions<a class="copiable-link" href="#Understanding-Sessions"> &para;</a></span></h3>
+
+<p>Sessions in Ollama Buddy allow you to:
+</p><ul class="itemize mark-bullet">
+<li>Save the entire conversation history
+</li><li>Save the current model selection
+</li><li>Restore previous conversations later
+</li><li>Switch between different conversation contexts
+</li></ul>
+
+</div>
+<div class="section-level-extent" id="Creating-a-New-Session">
+<h3 class="section"><span>9.2 Creating a New Session<a class="copiable-link" href="#Creating-a-New-Session"> &para;</a></span></h3>
+
+<p>To start a fresh session:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-sessions-new
+</pre></div>
+<p>or press <code class="code">C-c N</code> in the chat buffer.
+</p>
+<p>This will clear the current conversation history and let you start fresh.
+</p>
+</div>
+<div class="section-level-extent" id="Saving-a-Session">
+<h3 class="section"><span>9.3 Saving a Session<a class="copiable-link" href="#Saving-a-Session"> &para;</a></span></h3>
+
+<p>To save the current session:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-sessions-save
+</pre></div>
+<p>or press <code class="code">C-c S</code> in the chat buffer.
+</p>
+<p>You&rsquo;ll be prompted to enter a name for the session.
+</p>
+</div>
+<div class="section-level-extent" id="Loading-a-Session">
+<h3 class="section"><span>9.4 Loading a Session<a class="copiable-link" href="#Loading-a-Session"> &para;</a></span></h3>
+
+<p>To load a previously saved session:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-sessions-load
+</pre></div>
+<p>or press <code class="code">C-c L</code> in the chat buffer.
+</p>
+<p>You&rsquo;ll be presented with a list of saved sessions to choose from.
+</p>
+</div>
+<div class="section-level-extent" id="Managing-Sessions">
+<h3 class="section"><span>9.5 Managing Sessions<a class="copiable-link" href="#Managing-Sessions"> &para;</a></span></h3>
+
+<p>To see a list of all saved sessions:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-sessions-list
+</pre></div>
+<p>or press <code class="code">C-c Q</code> in the chat buffer.
+</p>
+<p>From this view, you can see:
+</p><ul class="itemize mark-bullet">
+<li>Session names
+</li><li>Last modified times
+</li><li>Which models are used in each session
+</li></ul>
+
+<p>To delete a session:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-sessions-delete
+</pre></div>
+<p>or press <code class="code">C-c Z</code> in the chat buffer.
+</p>
+</div>
+<div class="section-level-extent" id="Conversation-History">
+<h3 class="section"><span>9.6 Conversation History<a class="copiable-link" href="#Conversation-History"> &para;</a></span></h3>
+
+<p>Sessions save the conversation history for each model separately.
+</p>
+<p>To view the current conversation history:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-display-history
+</pre></div>
+<p>or press <code class="code">C-c V</code> in the chat buffer.
+</p>
+<p>To clear the history:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-clear-history
+</pre></div>
+<p>or press <code class="code">C-c X</code> in the chat buffer.
+</p>
+<p>To toggle whether history is used in requests:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-toggle-history
+</pre></div>
+<p>or press <code class="code">C-c H</code> in the chat buffer.
+</p>
+<hr>
+</div>
+</div>
+<div class="chapter-level-extent" id="Roles-and-Commands">
+<div class="nav-panel">
+<p>
+Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Pattern Integration</a>, Previous: <a href="#Session-Management" accesskey="p" rel="prev">Session Management</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<h2 class="chapter" id="Roles-and-Commands-1"><span>10 Roles and Commands<a class="copiable-link" href="#Roles-and-Commands-1"> &para;</a></span></h2>
+
+<ul class="mini-toc">
+<li><a href="#Understanding-Roles" accesskey="1">Understanding Roles</a></li>
+<li><a href="#Built_002din-Commands" accesskey="2">Built-in Commands</a></li>
+<li><a href="#Creating-Custom-Roles" accesskey="3">Creating Custom Roles</a></li>
+<li><a href="#Switching-Roles" accesskey="4">Switching Roles</a></li>
+<li><a href="#Managing-Roles" accesskey="5">Managing Roles</a></li>
+<li><a href="#Example-Custom-Role" accesskey="6">Example Custom Role</a></li>
+</ul>
+<div class="section-level-extent" id="Understanding-Roles">
+<h3 class="section"><span>10.1 Understanding Roles<a class="copiable-link" href="#Understanding-Roles"> &para;</a></span></h3>
+
+<p>Roles in Ollama Buddy are collections of commands with specific configurations:
+</p><ul class="itemize mark-bullet">
+<li>Each role has its own set of commands
+</li><li>Commands can use specific models
+</li><li>Commands can have specialized system prompts
+</li><li>Commands can have specialized parameters
+</li></ul>
+
+<p>This allows you to create specialized assistants for different workflows.
+</p>
+</div>
+<div class="section-level-extent" id="Built_002din-Commands">
+<h3 class="section"><span>10.2 Built-in Commands<a class="copiable-link" href="#Built_002din-Commands"> &para;</a></span></h3>
+
+<p>Ollama Buddy comes with several built-in commands:
+</p>
+<dl class="table">
+<dt>refactor-code</dt>
+<dd><p>Improves code while maintaining functionality
+</p>
+</dd>
+<dt>describe-code</dt>
+<dd><p>Explains what code does and how it works
+</p>
+</dd>
+<dt>git-commit</dt>
+<dd><p>Generates meaningful commit messages
+</p>
+</dd>
+<dt>dictionary-lookup</dt>
+<dd><p>Provides comprehensive word definitions
+</p>
+</dd>
+<dt>synonym</dt>
+<dd><p>Suggests alternative words with context
+</p>
+</dd>
+<dt>proofread</dt>
+<dd><p>Corrects grammar, style, and spelling
+</p></dd>
+</dl>
+
+</div>
+<div class="section-level-extent" id="Creating-Custom-Roles">
+<h3 class="section"><span>10.3 Creating Custom Roles<a class="copiable-link" href="#Creating-Custom-Roles"> &para;</a></span></h3>
+
+<p>To create a new role:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-role-creator-create-new-role
+</pre></div>
+<p>or press <code class="code">C-c E</code> in the chat buffer.
+</p>
+<p>The creation wizard will guide you through:
+</p><ol class="enumerate">
+<li> Naming your role
+</li><li> Adding commands (name, key, description)
+</li><li> Specifying models for each command
+</li><li> Setting system prompts for each command
+</li><li> Setting parameters for each command
+</li></ol>
+
+</div>
+<div class="section-level-extent" id="Switching-Roles">
+<h3 class="section"><span>10.4 Switching Roles<a class="copiable-link" href="#Switching-Roles"> &para;</a></span></h3>
+
+<p>To switch between roles:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-roles-switch-role
+</pre></div>
+<p>or press <code class="code">C-c R</code> in the chat buffer.
+</p>
+<p>You&rsquo;ll be presented with a list of available roles to choose from.
+</p>
+</div>
+<div class="section-level-extent" id="Managing-Roles">
+<h3 class="section"><span>10.5 Managing Roles<a class="copiable-link" href="#Managing-Roles"> &para;</a></span></h3>
+
+<p>Roles are stored as Elisp files in the <code class="code">ollama-buddy-roles-directory</code>.
+</p>
+<p>To open this directory:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-roles-open-directory
+</pre></div>
+<p>or press <code class="code">C-c D</code> in the chat buffer.
+</p>
+<p>You can manually edit these files to customize roles further or share them with others.
+</p>
+</div>
+<div class="section-level-extent" id="Example-Custom-Role">
+<h3 class="section"><span>10.6 Example Custom Role<a class="copiable-link" href="#Example-Custom-Role"> &para;</a></span></h3>
+
+<p>Here&rsquo;s what a custom &quot;Code Assistant&quot; role might include:
+</p><ul class="itemize mark-bullet">
+<li>A &quot;review-code&quot; command with a code review system prompt
+</li><li>A &quot;document-code&quot; command with a documentation generation system prompt
+</li><li>A &quot;fix-bugs&quot; command with a bug-fixing system prompt
+</li><li>Each command using a specific coding-focused model
+</li></ul>
+
+<p>This creates a specialized code assistant tailored to your needs.
+</p>
+<hr>
+</div>
+</div>
+<div class="chapter-level-extent" id="Fabric-Pattern-Integration">
+<div class="nav-panel">
+<p>
+Next: <a href="#Advanced-Usage" accesskey="n" rel="next">Advanced Usage</a>, Previous: <a href="#Roles-and-Commands" accesskey="p" rel="prev">Roles and Commands</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<h2 class="chapter" id="Fabric-Pattern-Integration-2"><span>11 Fabric Pattern Integration<a class="copiable-link" href="#Fabric-Pattern-Integration-2"> &para;</a></span></h2>
+
+<ul class="mini-toc">
+<li><a href="#What-are-Fabric-Patterns_003f" accesskey="1">What are Fabric Patterns?</a></li>
+<li><a href="#Setting-Up-Fabric-Integration" accesskey="2">Setting Up Fabric Integration</a></li>
+<li><a href="#Using-Fabric-Patterns" accesskey="3">Using Fabric Patterns</a></li>
+<li><a href="#Browsing-Available-Patterns" accesskey="4">Browsing Available Patterns</a></li>
+<li><a href="#Viewing-Pattern-Details" accesskey="5">Viewing Pattern Details</a></li>
+<li><a href="#Updating-Patterns" accesskey="6">Updating Patterns</a></li>
+<li><a href="#Using-Patterns-by-Category" accesskey="7">Using Patterns by Category</a></li>
+</ul>
+<div class="section-level-extent" id="What-are-Fabric-Patterns_003f">
+<h3 class="section"><span>11.1 What are Fabric Patterns?<a class="copiable-link" href="#What-are-Fabric-Patterns_003f"> &para;</a></span></h3>
+
+<p>Fabric patterns are pre-defined prompt templates from Daniel Miessler&rsquo;s Fabric project (<a class="url" href="https://github.com/danielmiessler/fabric">https://github.com/danielmiessler/fabric</a>). They provide optimized prompts for various tasks, categorized as:
+</p>
+<ul class="itemize mark-bullet">
+<li>universal - General-purpose patterns
+</li><li>code - Programming and development
+</li><li>writing - Content creation and editing
+</li><li>analysis - Data and concept examination
+</li></ul>
+
+</div>
+<div class="section-level-extent" id="Setting-Up-Fabric-Integration">
+<h3 class="section"><span>11.2 Setting Up Fabric Integration<a class="copiable-link" href="#Setting-Up-Fabric-Integration"> &para;</a></span></h3>
+
+<p>To set up Fabric integration:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-fabric-setup
+</pre></div>
+
+<p>This will:
+</p><ol class="enumerate">
+<li> Clone the Fabric repository (or set up sparse checkout)
+</li><li> Populate available patterns
+</li><li> Make patterns available for use
+</li></ol>
+
+</div>
+<div class="section-level-extent" id="Using-Fabric-Patterns">
+<h3 class="section"><span>11.3 Using Fabric Patterns<a class="copiable-link" href="#Using-Fabric-Patterns"> &para;</a></span></h3>
+
+<p>To use a Fabric pattern:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-fabric-send
+</pre></div>
+<p>or press <code class="code">C-c f</code> and then <code class="code">s</code>.
+</p>
+<p>You&rsquo;ll be prompted to:
+</p><ol class="enumerate">
+<li> Select a pattern
+</li><li> Enter text to process (or use selected text)
+</li></ol>
+
+<p>The pattern will be used as a system prompt for your request.
+</p>
+</div>
+<div class="section-level-extent" id="Browsing-Available-Patterns">
+<h3 class="section"><span>11.4 Browsing Available Patterns<a class="copiable-link" href="#Browsing-Available-Patterns"> &para;</a></span></h3>
+
+<p>To see all available patterns:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-fabric-list-patterns
+</pre></div>
+<p>or press <code class="code">C-c f</code> and then <code class="code">l</code>.
+</p>
+<p>This shows:
+</p><ul class="itemize mark-bullet">
+<li>Pattern names
+</li><li>Categories
+</li><li>Descriptions
+</li></ul>
+
+</div>
+<div class="section-level-extent" id="Viewing-Pattern-Details">
+<h3 class="section"><span>11.5 Viewing Pattern Details<a class="copiable-link" href="#Viewing-Pattern-Details"> &para;</a></span></h3>
+
+<p>To see the full content of a specific pattern:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-fabric-show-pattern
+</pre></div>
+<p>or press <code class="code">C-c f</code> and then <code class="code">v</code>.
+</p>
+<p>Select a pattern to see:
+</p><ul class="itemize mark-bullet">
+<li>The system prompt content
+</li><li>Full description
+</li></ul>
+
+</div>
+<div class="section-level-extent" id="Updating-Patterns">
+<h3 class="section"><span>11.6 Updating Patterns<a class="copiable-link" href="#Updating-Patterns"> &para;</a></span></h3>
+
+<p>To sync with the latest patterns from GitHub:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-fabric-sync-patterns
+</pre></div>
+<p>or press <code class="code">C-c f</code> and then <code class="code">S</code>.
+</p>
+</div>
+<div class="section-level-extent" id="Using-Patterns-by-Category">
+<h3 class="section"><span>11.7 Using Patterns by Category<a class="copiable-link" href="#Using-Patterns-by-Category"> &para;</a></span></h3>
+
+<p>You can quickly access patterns by category:
+</p><ul class="itemize mark-bullet">
+<li><code class="code">C-c f u</code> - Universal patterns
+</li><li><code class="code">C-c f c</code> - Code patterns
+</li><li><code class="code">C-c f w</code> - Writing patterns
+</li><li><code class="code">C-c f a</code> - Analysis patterns
+</li></ul>
+
+<hr>
+</div>
+</div>
+<div class="chapter-level-extent" id="Advanced-Usage">
+<div class="nav-panel">
+<p>
+Next: <a href="#API-Reference" accesskey="n" rel="next">API Reference</a>, Previous: <a href="#Fabric-Pattern-Integration" accesskey="p" rel="prev">Fabric Pattern Integration</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<h2 class="chapter" id="Advanced-Usage-1"><span>12 Advanced Usage<a class="copiable-link" href="#Advanced-Usage-1"> &para;</a></span></h2>
+
+<ul class="mini-toc">
+<li><a href="#Managing-Token-Usage" accesskey="1">Managing Token Usage</a></li>
+<li><a href="#Customizing-the-Interface" accesskey="2">Customizing the Interface</a></li>
+<li><a href="#Editing-Conversation-History" accesskey="3">Editing Conversation History</a></li>
+<li><a href="#Advanced-System-Prompt-Management" accesskey="4">Advanced System Prompt Management</a></li>
+<li><a href="#Using-Direct-API-Access" accesskey="5">Using Direct API Access</a></li>
+</ul>
+<div class="section-level-extent" id="Managing-Token-Usage">
+<h3 class="section"><span>12.1 Managing Token Usage<a class="copiable-link" href="#Managing-Token-Usage"> &para;</a></span></h3>
+
+<p>Ollama Buddy can track token usage statistics:
+</p>
+<p>To toggle token statistics display after responses:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-toggle-token-display
+</pre></div>
+<p>or press <code class="code">C-c T</code> in the chat buffer.
+</p>
+<p>To view detailed token usage statistics:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-display-token-stats
+</pre></div>
+<p>or press <code class="code">C-c U</code> in the chat buffer.
+</p>
+<p>To display a visual graph of token usage:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-display-token-graph
+</pre></div>
+<p>or press <code class="code">C-c g</code> in the chat buffer.
+</p>
+</div>
+<div class="section-level-extent" id="Customizing-the-Interface">
+<h3 class="section"><span>12.2 Customizing the Interface<a class="copiable-link" href="#Customizing-the-Interface"> &para;</a></span></h3>
+
+<ul class="mini-toc">
+<li><a href="#Interface-Level" accesskey="1">Interface Level</a></li>
+<li><a href="#Model-Colors" accesskey="2">Model Colors</a></li>
+<li><a href="#Debug-Mode" accesskey="3">Debug Mode</a></li>
+</ul>
+<div class="subsection-level-extent" id="Interface-Level">
+<h4 class="subsection"><span>12.2.1 Interface Level<a class="copiable-link" href="#Interface-Level"> &para;</a></span></h4>
+
+<p>Ollama Buddy has two interface levels:
+</p><ul class="itemize mark-bullet">
+<li>basic - Simplified for beginners
+</li><li>advanced - Full feature set for power users
+</li></ul>
+
+<p>To toggle between them:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-toggle-interface-level
+</pre></div>
+<p>or press <code class="code">C-c A</code> in the chat buffer.
+</p>
+</div>
+<div class="subsection-level-extent" id="Model-Colors">
+<h4 class="subsection"><span>12.2.2 Model Colors<a class="copiable-link" href="#Model-Colors"> &para;</a></span></h4>
+
+<p>Each model has a distinctive color to help identify responses.
+</p>
+<p>To toggle model colors:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-toggle-model-colors
+</pre></div>
+<p>or press <code class="code">C-c c</code> in the chat buffer.
+</p>
+</div>
+<div class="subsection-level-extent" id="Debug-Mode">
+<h4 class="subsection"><span>12.2.3 Debug Mode<a class="copiable-link" href="#Debug-Mode"> &para;</a></span></h4>
+
+<p>For advanced troubleshooting, you can enable debug mode:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-toggle-debug-mode
+</pre></div>
+<p>or press <code class="code">C-c B</code> in the chat buffer.
+</p>
+<p>This shows raw JSON messages in a debug buffer.
+</p>
+</div>
+</div>
+<div class="section-level-extent" id="Editing-Conversation-History">
+<h3 class="section"><span>12.3 Editing Conversation History<a class="copiable-link" href="#Editing-Conversation-History"> &para;</a></span></h3>
+
+<p>To manually edit conversation history:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-history-edit
+</pre></div>
+<p>or press <code class="code">C-c J</code> in the chat buffer.
+</p>
+<p>This opens an editable buffer with the conversation history. You can modify it and press <code class="code">C-c C-c</code> to save or <code class="code">C-c C-k</code> to cancel.
+</p>
+<p>To edit history for a specific model, use <code class="code">C-u C-c J</code>.
+</p>
+</div>
+<div class="section-level-extent" id="Advanced-System-Prompt-Management">
+<h3 class="section"><span>12.4 Advanced System Prompt Management<a class="copiable-link" href="#Advanced-System-Prompt-Management"> &para;</a></span></h3>
+
+<p>For more control over system prompts:
+</p>
+<ul class="mini-toc">
+<li><a href="#Setting-a-system-prompt-without-sending" accesskey="1">Setting a system prompt without sending</a></li>
+<li><a href="#Using-a-system-prompt-from-Fabric" accesskey="2">Using a system prompt from Fabric</a></li>
+</ul>
+<div class="subsection-level-extent" id="Setting-a-system-prompt-without-sending">
+<h4 class="subsection"><span>12.4.1 Setting a system prompt without sending<a class="copiable-link" href="#Setting-a-system-prompt-without-sending"> &para;</a></span></h4>
+<div class="example">
+<pre class="example-preformatted">(ollama-buddy-set-system-prompt)
+</pre></div>
+<p>Enter your system prompt, then press <code class="code">C-c s</code>.
+</p>
+</div>
+<div class="subsection-level-extent" id="Using-a-system-prompt-from-Fabric">
+<h4 class="subsection"><span>12.4.2 Using a system prompt from Fabric<a class="copiable-link" href="#Using-a-system-prompt-from-Fabric"> &para;</a></span></h4>
+<div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-fabric-set-system-prompt
+</pre></div>
+<p>or press <code class="code">C-c f p</code>.
+</p>
+</div>
+</div>
+<div class="section-level-extent" id="Using-Direct-API-Access">
+<h3 class="section"><span>12.5 Using Direct API Access<a class="copiable-link" href="#Using-Direct-API-Access"> &para;</a></span></h3>
+
+<p>For direct programmatic access to Ollama:
+</p>
+<div class="example">
+<pre class="example-preformatted">(ollama-buddy--make-request &quot;/api/tags&quot; &quot;GET&quot;)
+</pre></div>
+
+<p>Or with a payload:
+</p><div class="example">
+<pre class="example-preformatted">(ollama-buddy--make-request &quot;/api/chat&quot; &quot;POST&quot; 
+                           (json-encode '((model . &quot;llama3:latest&quot;)
+                                         (prompt . &quot;Hello&quot;))))
+</pre></div>
+
+<hr>
+</div>
+</div>
+<div class="chapter-level-extent" id="API-Reference">
+<div class="nav-panel">
+<p>
+Next: <a href="#FAQ" accesskey="n" rel="next">Frequently Asked Questions</a>, Previous: <a href="#Advanced-Usage" accesskey="p" rel="prev">Advanced Usage</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<h2 class="chapter" id="API-Reference-1"><span>13 API Reference<a class="copiable-link" href="#API-Reference-1"> &para;</a></span></h2>
+
+<ul class="mini-toc">
+<li><a href="#Interactive-Functions" accesskey="1">Interactive Functions</a></li>
+<li><a href="#Core-Functions" accesskey="2">Core Functions</a></li>
+<li><a href="#Customization-Functions" accesskey="3">Customization Functions</a></li>
+</ul>
+<div class="section-level-extent" id="Interactive-Functions">
+<h3 class="section"><span>13.1 Interactive Functions<a class="copiable-link" href="#Interactive-Functions"> &para;</a></span></h3>
+
+<dl class="table">
+<dt><code class="code">ollama-buddy-menu</code></dt>
+<dd><p>Display the main Ollama Buddy menu.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-transient-menu</code></dt>
+<dd><p>Display the transient-based menu.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy--open-chat</code></dt>
+<dd><p>Open the chat buffer.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy--send-prompt</code></dt>
+<dd><p>Send the current prompt to the AI.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy--swap-model</code></dt>
+<dd><p>Switch to a different model.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-manage-models</code></dt>
+<dd><p>Display and manage available models.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-pull-model</code></dt>
+<dd><p>Pull a new model from Ollama Hub.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-import-gguf-file</code></dt>
+<dd><p>Import a GGUF file to create a custom model.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-set-system-prompt</code></dt>
+<dd><p>Set the current prompt as the system prompt.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-reset-system-prompt</code></dt>
+<dd><p>Reset the system prompt to default (none).
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-sessions-save</code></dt>
+<dd><p>Save the current conversation as a session.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-sessions-load</code></dt>
+<dd><p>Load a previously saved session.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-sessions-list</code></dt>
+<dd><p>Display a list of saved sessions.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-sessions-delete</code></dt>
+<dd><p>Delete a saved session.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-sessions-new</code></dt>
+<dd><p>Start a new session.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-toggle-history</code></dt>
+<dd><p>Toggle conversation history on/off.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-clear-history</code></dt>
+<dd><p>Clear the conversation history.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-display-history</code></dt>
+<dd><p>Display the conversation history.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-roles-switch-role</code></dt>
+<dd><p>Switch to a different role.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-role-creator-create-new-role</code></dt>
+<dd><p>Create a new role.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-params-display</code></dt>
+<dd><p>Display current parameter settings.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-params-edit</code></dt>
+<dd><p>Edit a specific parameter.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-params-reset</code></dt>
+<dd><p>Reset all parameters to defaults.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-toggle-params-in-header</code></dt>
+<dd><p>Toggle display of parameters in header.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-toggle-token-display</code></dt>
+<dd><p>Toggle display of token statistics.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-display-token-stats</code></dt>
+<dd><p>Display token usage statistics.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-display-token-graph</code></dt>
+<dd><p>Display a visual graph of token usage.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-fabric-setup</code></dt>
+<dd><p>Set up Fabric pattern integration.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-fabric-sync-patterns</code></dt>
+<dd><p>Sync with the latest Fabric patterns.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-fabric-list-patterns</code></dt>
+<dd><p>List available Fabric patterns.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-fabric-send</code></dt>
+<dd><p>Apply a Fabric pattern to selected text.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-toggle-markdown-conversion</code></dt>
+<dd><p>Toggle Markdown to Org conversion.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-toggle-debug-mode</code></dt>
+<dd><p>Toggle display of debug information.
+</p></dd>
+</dl>
+
+</div>
+<div class="section-level-extent" id="Core-Functions">
+<h3 class="section"><span>13.2 Core Functions<a class="copiable-link" href="#Core-Functions"> &para;</a></span></h3>
+
+<dl class="table">
+<dt><code class="code">ollama-buddy--send</code></dt>
+<dd><p>Send a prompt to Ollama.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy--make-request</code></dt>
+<dd><p>Make a generic request to the Ollama API.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy--get-models</code></dt>
+<dd><p>Get a list of available models.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy--get-valid-model</code></dt>
+<dd><p>Get a valid model with fallback handling.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy--add-to-history</code></dt>
+<dd><p>Add a message to the conversation history.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy--get-history-for-request</code></dt>
+<dd><p>Get history for the current request.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy--prepare-prompt-area</code></dt>
+<dd><p>Prepare the prompt area in the buffer.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy--update-status</code></dt>
+<dd><p>Update the status display.
+</p></dd>
+</dl>
+
+</div>
+<div class="section-level-extent" id="Customization-Functions">
+<h3 class="section"><span>13.3 Customization Functions<a class="copiable-link" href="#Customization-Functions"> &para;</a></span></h3>
+
+<dl class="table">
+<dt><code class="code">ollama-buddy-update-command-with-params</code></dt>
+<dd><p>Update a command definition with new properties and parameters.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-update-menu-entry</code></dt>
+<dd><p>Update a menu entry&rsquo;s properties.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-add-model-to-menu-entry</code></dt>
+<dd><p>Associate a specific model with a menu entry.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-add-parameters-to-command</code></dt>
+<dd><p>Add specific parameters to a command definition.
+</p></dd>
+</dl>
+
+<hr>
+</div>
+</div>
+<div class="chapter-level-extent" id="FAQ">
+<div class="nav-panel">
+<p>
+Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, Previous: <a href="#API-Reference" accesskey="p" rel="prev">API Reference</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<h2 class="chapter" id="Frequently-Asked-Questions"><span>14 Frequently Asked Questions<a class="copiable-link" href="#Frequently-Asked-Questions"> &para;</a></span></h2>
+
+<ul class="mini-toc">
+<li><a href="#General-Questions" accesskey="1">General Questions</a></li>
+<li><a href="#Usage-Questions" accesskey="2">Usage Questions</a></li>
+<li><a href="#Troubleshooting-1" accesskey="3">Troubleshooting</a></li>
+</ul>
+<div class="section-level-extent" id="General-Questions">
+<h3 class="section"><span>14.1 General Questions<a class="copiable-link" href="#General-Questions"> &para;</a></span></h3>
+
+<ul class="mini-toc">
+<li><a href="#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f" accesskey="1">What is the difference between Ollama Buddy and other AI assistants?</a></li>
+<li><a href="#Does-Ollama-Buddy-require-an-internet-connection_003f" accesskey="2">Does Ollama Buddy require an internet connection?</a></li>
+<li><a href="#Which-models-work-best-with-Ollama-Buddy_003f" accesskey="3">Which models work best with Ollama Buddy?</a></li>
+<li><a href="#How-much-RAM-do-I-need_003f" accesskey="4">How much RAM do I need?</a></li>
+</ul>
+<div class="subsection-level-extent" id="What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f">
+<h4 class="subsection"><span>14.1.1 What is the difference between Ollama Buddy and other AI assistants?<a class="copiable-link" href="#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f"> &para;</a></span></h4>
+<p>Ollama Buddy integrates with Ollama to run LLMs locally, offering privacy, customization, and seamless Emacs integration without relying on external API services.
+</p>
+</div>
+<div class="subsection-level-extent" id="Does-Ollama-Buddy-require-an-internet-connection_003f">
+<h4 class="subsection"><span>14.1.2 Does Ollama Buddy require an internet connection?<a class="copiable-link" href="#Does-Ollama-Buddy-require-an-internet-connection_003f"> &para;</a></span></h4>
+<p>Once you&rsquo;ve installed Ollama and pulled your models, no internet connection is required for normal operation. Internet is only needed when pulling new models or syncing Fabric patterns.
+</p>
+</div>
+<div class="subsection-level-extent" id="Which-models-work-best-with-Ollama-Buddy_003f">
+<h4 class="subsection"><span>14.1.3 Which models work best with Ollama Buddy?<a class="copiable-link" href="#Which-models-work-best-with-Ollama-Buddy_003f"> &para;</a></span></h4>
+<p>Most models supported by Ollama work well. Popular choices include:
+</p><ul class="itemize mark-bullet">
+<li>llama3:latest - Good general purpose assistant
+</li><li>codellama:latest - Excellent for code-related tasks
+</li><li>mistral:latest - Good balance of performance and quality
+</li><li>phi:latest - Smaller model that works well on limited hardware
+</li></ul>
+
+</div>
+<div class="subsection-level-extent" id="How-much-RAM-do-I-need_003f">
+<h4 class="subsection"><span>14.1.4 How much RAM do I need?<a class="copiable-link" href="#How-much-RAM-do-I-need_003f"> &para;</a></span></h4>
+<p>It depends on the model:
+</p><ul class="itemize mark-bullet">
+<li>Small models (7B) - 8GB minimum, 16GB recommended
+</li><li>Medium models (13B) - 16GB minimum, 24GB+ recommended
+</li><li>Large models (34B+) - 32GB+ recommended
+</li></ul>
+
+<p>Quantized models (e.g., Q4_K_M variants) require less RAM.
+</p>
+</div>
+</div>
+<div class="section-level-extent" id="Usage-Questions">
+<h3 class="section"><span>14.2 Usage Questions<a class="copiable-link" href="#Usage-Questions"> &para;</a></span></h3>
+
+<ul class="mini-toc">
+<li><a href="#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f" accesskey="1">How do I cancel a request that&rsquo;s taking too long?</a></li>
+<li><a href="#How-can-I-save-my-conversations_003f" accesskey="2">How can I save my conversations?</a></li>
+<li><a href="#Can-I-use-multiple-models-in-the-same-conversation_003f" accesskey="3">Can I use multiple models in the same conversation?</a></li>
+<li><a href="#How-do-I-clear-the-conversation-history_003f" accesskey="4">How do I clear the conversation history?</a></li>
+<li><a href="#How-can-I-create-a-custom-command_003f" accesskey="5">How can I create a custom command?</a></li>
+</ul>
+<div class="subsection-level-extent" id="How-do-I-cancel-a-request-that_0027s-taking-too-long_003f">
+<h4 class="subsection"><span>14.2.1 How do I cancel a request that&rsquo;s taking too long?<a class="copiable-link" href="#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f"> &para;</a></span></h4>
+<p>Press <code class="code">C-c k</code> in the chat buffer or select &quot;Kill Request&quot; from the menu.
+</p>
+</div>
+<div class="subsection-level-extent" id="How-can-I-save-my-conversations_003f">
+<h4 class="subsection"><span>14.2.2 How can I save my conversations?<a class="copiable-link" href="#How-can-I-save-my-conversations_003f"> &para;</a></span></h4>
+<p>Use <code class="code">C-c S</code> to save the current session, giving it a name. You can restore it later with <code class="code">C-c L</code>.
+</p>
+</div>
+<div class="subsection-level-extent" id="Can-I-use-multiple-models-in-the-same-conversation_003f">
+<h4 class="subsection"><span>14.2.3 Can I use multiple models in the same conversation?<a class="copiable-link" href="#Can-I-use-multiple-models-in-the-same-conversation_003f"> &para;</a></span></h4>
+<p>Yes, you can switch models at any time with <code class="code">C-c m</code>. Each model maintains its own conversation history.
+</p>
+</div>
+<div class="subsection-level-extent" id="How-do-I-clear-the-conversation-history_003f">
+<h4 class="subsection"><span>14.2.4 How do I clear the conversation history?<a class="copiable-link" href="#How-do-I-clear-the-conversation-history_003f"> &para;</a></span></h4>
+<p>Press <code class="code">C-c X</code> to clear history, or <code class="code">C-c N</code> to start a completely new session.
+</p>
+</div>
+<div class="subsection-level-extent" id="How-can-I-create-a-custom-command_003f">
+<h4 class="subsection"><span>14.2.5 How can I create a custom command?<a class="copiable-link" href="#How-can-I-create-a-custom-command_003f"> &para;</a></span></h4>
+<p>The easiest way is through the role creator: press <code class="code">C-c E</code> and follow the prompts to create commands with specific prompts, models, and parameters.
+</p>
+</div>
+</div>
+<div class="section-level-extent" id="Troubleshooting-1">
+<h3 class="section"><span>14.3 Troubleshooting<a class="copiable-link" href="#Troubleshooting-1"> &para;</a></span></h3>
+
+<ul class="mini-toc">
+<li><a href="#Ollama-Buddy-shows-_0022OFFLINE_0022-status" accesskey="1">Ollama Buddy shows &quot;OFFLINE&quot; status</a></li>
+<li><a href="#Responses-are-slow-or-the-model-seems-to-hang" accesskey="2">Responses are slow or the model seems to hang</a></li>
+<li><a href="#Getting-_0022error-parsing-model_0022-when-pulling-a-model" accesskey="3">Getting &quot;error parsing model&quot; when pulling a model</a></li>
+<li><a href="#Model-responses-are-low-quality-or-truncated" accesskey="4">Model responses are low quality or truncated</a></li>
+</ul>
+<div class="subsection-level-extent" id="Ollama-Buddy-shows-_0022OFFLINE_0022-status">
+<h4 class="subsection"><span>14.3.1 Ollama Buddy shows &quot;OFFLINE&quot; status<a class="copiable-link" href="#Ollama-Buddy-shows-_0022OFFLINE_0022-status"> &para;</a></span></h4>
+<p>Ensure that:
+</p><ul class="itemize mark-bullet">
+<li>Ollama is installed and running
+</li><li>The hostname and port are correctly configured (<code class="code">ollama-buddy-host</code> and <code class="code">ollama-buddy-port</code>)
+</li><li>Your firewall isn&rsquo;t blocking connections
+</li></ul>
+
+</div>
+<div class="subsection-level-extent" id="Responses-are-slow-or-the-model-seems-to-hang">
+<h4 class="subsection"><span>14.3.2 Responses are slow or the model seems to hang<a class="copiable-link" href="#Responses-are-slow-or-the-model-seems-to-hang"> &para;</a></span></h4>
+<p>Try:
+</p><ul class="itemize mark-bullet">
+<li>Using a smaller model
+</li><li>Adjusting the <code class="code">num_ctx</code> parameter to a smaller value
+</li><li>Setting <code class="code">low_vram</code> to <code class="code">t</code> if you have limited GPU memory
+</li><li>Checking CPU/RAM usage to ensure your system isn&rsquo;t overloaded
+</li></ul>
+
+</div>
+<div class="subsection-level-extent" id="Getting-_0022error-parsing-model_0022-when-pulling-a-model">
+<h4 class="subsection"><span>14.3.3 Getting &quot;error parsing model&quot; when pulling a model<a class="copiable-link" href="#Getting-_0022error-parsing-model_0022-when-pulling-a-model"> &para;</a></span></h4>
+<p>This usually means:
+</p><ul class="itemize mark-bullet">
+<li>The model name is incorrect
+</li><li>The model is not available in the Ollama repository
+</li><li>You have network connectivity issues
+</li></ul>
+
+</div>
+<div class="subsection-level-extent" id="Model-responses-are-low-quality-or-truncated">
+<h4 class="subsection"><span>14.3.4 Model responses are low quality or truncated<a class="copiable-link" href="#Model-responses-are-low-quality-or-truncated"> &para;</a></span></h4>
+<p>Try:
+</p><ul class="itemize mark-bullet">
+<li>Increasing the <code class="code">temperature</code> parameter for more creative responses
+</li><li>Increasing <code class="code">num_predict</code> for longer responses
+</li><li>Using a more capable model
+</li><li>Providing clearer instructions in your prompt
+</li></ul>
+
+<hr>
+</div>
+</div>
+</div>
+<div class="chapter-level-extent" id="Troubleshooting">
+<div class="nav-panel">
+<p>
+Next: <a href="#Contributing" accesskey="n" rel="next">Contributing</a>, Previous: <a href="#FAQ" accesskey="p" rel="prev">Frequently Asked Questions</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<h2 class="chapter" id="Troubleshooting-2"><span>15 Troubleshooting<a class="copiable-link" href="#Troubleshooting-2"> &para;</a></span></h2>
+
+<ul class="mini-toc">
+<li><a href="#Common-Issues" accesskey="1">Common Issues</a></li>
+<li><a href="#Debugging" accesskey="2">Debugging</a></li>
+</ul>
+<div class="section-level-extent" id="Common-Issues">
+<h3 class="section"><span>15.1 Common Issues<a class="copiable-link" href="#Common-Issues"> &para;</a></span></h3>
+
+<ul class="mini-toc">
+<li><a href="#Connection-Problems" accesskey="1">Connection Problems</a></li>
+<li><a href="#Model-Problems" accesskey="2">Model Problems</a></li>
+<li><a href="#Interface-Issues" accesskey="3">Interface Issues</a></li>
+</ul>
+<div class="subsection-level-extent" id="Connection-Problems">
+<h4 class="subsection"><span>15.1.1 Connection Problems<a class="copiable-link" href="#Connection-Problems"> &para;</a></span></h4>
+
+<dl class="table">
+<dt>Symptom: Unable to connect to Ollama server</dt>
+<dd><ul class="itemize mark-bullet">
+<li>Check if Ollama is running with <code class="code">ps aux | grep ollama</code>
+</li><li>Verify host and port settings (<code class="code">ollama-buddy-host</code> and <code class="code">ollama-buddy-port</code>)
+</li><li>Try connecting to Ollama directly: <code class="code">curl http://localhost:11434/api/tags</code>
+</li></ul>
+
+</dd>
+<dt>Symptom: Connection breaks during long responses</dt>
+<dd><ul class="itemize mark-bullet">
+<li>This can happen with very large responses
+</li><li>Try setting a lower <code class="code">num_predict</code> value
+</li><li>Check if your OS has any network timeout settings
+</li></ul>
+</dd>
+</dl>
+
+</div>
+<div class="subsection-level-extent" id="Model-Problems">
+<h4 class="subsection"><span>15.1.2 Model Problems<a class="copiable-link" href="#Model-Problems"> &para;</a></span></h4>
+
+<dl class="table">
+<dt>Symptom: Model loads but gives poor responses</dt>
+<dd><ul class="itemize mark-bullet">
+<li>Try a different model
+</li><li>Adjust parameters (increase temperature for more creativity)
+</li><li>Provide clearer or more detailed prompts
+</li><li>Check if the model is appropriate for your task
+</li></ul>
+
+</dd>
+<dt>Symptom: Model fails to load or crashes</dt>
+<dd><ul class="itemize mark-bullet">
+<li>Check system memory usage
+</li><li>Try a smaller quantized model
+</li><li>Adjust <code class="code">num_ctx</code> to a smaller value
+</li><li>Set <code class="code">low_vram</code> to <code class="code">t</code> if using GPU
+</li></ul>
+</dd>
+</dl>
+
+</div>
+<div class="subsection-level-extent" id="Interface-Issues">
+<h4 class="subsection"><span>15.1.3 Interface Issues<a class="copiable-link" href="#Interface-Issues"> &para;</a></span></h4>
+
+<dl class="table">
+<dt>Symptom: Chat buffer becomes unresponsive</dt>
+<dd><ul class="itemize mark-bullet">
+<li>Cancel any running requests with <code class="code">C-c k</code>
+</li><li>Check if Emacs is using high CPU
+</li><li>Try disabling token statistics display
+</li><li>Close and reopen the chat buffer
+</li></ul>
+
+</dd>
+<dt>Symptom: Markdown conversion issues</dt>
+<dd><ul class="itemize mark-bullet">
+<li>Toggle markdown conversion off with <code class="code">C-c C-o</code>
+</li><li>Check if the response contains complex formatting
+</li><li>Try editing the history to fix formatting issues
+</li></ul>
+</dd>
+</dl>
+
+</div>
+</div>
+<div class="section-level-extent" id="Debugging">
+<h3 class="section"><span>15.2 Debugging<a class="copiable-link" href="#Debugging"> &para;</a></span></h3>
+
+<ul class="mini-toc">
+<li><a href="#Enable-Debug-Mode" accesskey="1">Enable Debug Mode</a></li>
+<li><a href="#Check-Logs" accesskey="2">Check Logs</a></li>
+<li><a href="#Report-Issues" accesskey="3">Report Issues</a></li>
+</ul>
+<div class="subsection-level-extent" id="Enable-Debug-Mode">
+<h4 class="subsection"><span>15.2.1 Enable Debug Mode<a class="copiable-link" href="#Enable-Debug-Mode"> &para;</a></span></h4>
+
+<p>To get more information about what&rsquo;s happening:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-toggle-debug-mode
+</pre></div>
+
+<p>This opens a debug buffer showing raw JSON communication with Ollama.
+</p>
+</div>
+<div class="subsection-level-extent" id="Check-Logs">
+<h4 class="subsection"><span>15.2.2 Check Logs<a class="copiable-link" href="#Check-Logs"> &para;</a></span></h4>
+
+<p>Ollama logs can be useful for troubleshooting:
+</p><div class="example">
+<pre class="example-preformatted">tail -f ~/.ollama/logs/ollama.log
+</pre></div>
+
+</div>
+<div class="subsection-level-extent" id="Report-Issues">
+<h4 class="subsection"><span>15.2.3 Report Issues<a class="copiable-link" href="#Report-Issues"> &para;</a></span></h4>
+
+<p>If you encounter a bug:
+</p><ol class="enumerate">
+<li> Enable debug mode
+</li><li> Reproduce the issue
+</li><li> Copy the debug output
+</li><li> Report the issue on GitHub with:
+  <ul class="itemize mark-bullet">
+<li>Emacs version
+  </li><li>Ollama version
+  </li><li>Model used
+  </li><li>Debug output
+  </li><li>Steps to reproduce
+  </li></ul>
+</li></ol>
+
+<hr>
+</div>
+</div>
+</div>
+<div class="chapter-level-extent" id="Contributing">
+<div class="nav-panel">
+<p>
+Next: <a href="#Index" accesskey="n" rel="next">Index</a>, Previous: <a href="#Troubleshooting" accesskey="p" rel="prev">Troubleshooting</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<h2 class="chapter" id="Contributing-1"><span>16 Contributing<a class="copiable-link" href="#Contributing-1"> &para;</a></span></h2>
+
+<ul class="mini-toc">
+<li><a href="#Getting-Started" accesskey="1">Getting Started</a></li>
+<li><a href="#Development-Setup" accesskey="2">Development Setup</a></li>
+<li><a href="#Coding-Guidelines" accesskey="3">Coding Guidelines</a></li>
+<li><a href="#Testing" accesskey="4">Testing</a></li>
+<li><a href="#Feature-Requests-and-Bug-Reports" accesskey="5">Feature Requests and Bug Reports</a></li>
+</ul>
+<div class="section-level-extent" id="Getting-Started">
+<h3 class="section"><span>16.1 Getting Started<a class="copiable-link" href="#Getting-Started"> &para;</a></span></h3>
+
+<p>Ollama Buddy is an open-source project, and contributions are welcome!
+</p>
+<ol class="enumerate">
+<li> Fork the repository: <a class="url" href="https://github.com/captainflasmr/ollama-buddy">https://github.com/captainflasmr/ollama-buddy</a>
+</li><li> Clone your fork: <code class="code">git clone https://github.com/YOUR-USERNAME/ollama-buddy.git</code>
+</li><li> Create a branch: <code class="code">git checkout -b my-feature-branch</code>
+</li><li> Make your changes
+</li><li> Test thoroughly
+</li><li> Commit with a clear message
+</li><li> Push to your fork
+</li><li> Create a pull request
+</li></ol>
+
+</div>
+<div class="section-level-extent" id="Development-Setup">
+<h3 class="section"><span>16.2 Development Setup<a class="copiable-link" href="#Development-Setup"> &para;</a></span></h3>
+
+<ul class="mini-toc">
+<li><a href="#Required-Tools" accesskey="1">Required Tools</a></li>
+<li><a href="#Recommended-Packages" accesskey="2">Recommended Packages</a></li>
+</ul>
+<div class="subsection-level-extent" id="Required-Tools">
+<h4 class="subsection"><span>16.2.1 Required Tools<a class="copiable-link" href="#Required-Tools"> &para;</a></span></h4>
+
+<ul class="itemize mark-bullet">
+<li>Emacs 28.1+
+</li><li>Ollama installed and running
+</li><li>Git
+</li></ul>
+
+</div>
+<div class="subsection-level-extent" id="Recommended-Packages">
+<h4 class="subsection"><span>16.2.2 Recommended Packages<a class="copiable-link" href="#Recommended-Packages"> &para;</a></span></h4>
+
+<ul class="itemize mark-bullet">
+<li>package-lint
+</li><li>flycheck
+</li><li>elisp-lint
+</li></ul>
+
+</div>
+</div>
+<div class="section-level-extent" id="Coding-Guidelines">
+<h3 class="section"><span>16.3 Coding Guidelines<a class="copiable-link" href="#Coding-Guidelines"> &para;</a></span></h3>
+
+<ul class="itemize mark-bullet">
+<li>Follow Emacs Lisp conventions
+</li><li>Use two spaces for indentation
+</li><li>Add documentation strings to functions
+</li><li>Keep line length under 80 characters
+</li><li>Use prefix <code class="code">ollama-buddy--</code> for internal functions
+</li><li>Use prefix <code class="code">ollama-buddy-</code> for public functions
+</li></ul>
+
+</div>
+<div class="section-level-extent" id="Testing">
+<h3 class="section"><span>16.4 Testing<a class="copiable-link" href="#Testing"> &para;</a></span></h3>
+
+<ul class="mini-toc">
+<li><a href="#Run-Existing-Tests" accesskey="1">Run Existing Tests</a></li>
+<li><a href="#Adding-New-Tests" accesskey="2">Adding New Tests</a></li>
+</ul>
+<div class="subsection-level-extent" id="Run-Existing-Tests">
+<h4 class="subsection"><span>16.4.1 Run Existing Tests<a class="copiable-link" href="#Run-Existing-Tests"> &para;</a></span></h4>
+
+<p>The package includes comprehensive tests:
+</p>
+<div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-run-tests
+M-x ollama-buddy-integration-run-tests
+M-x ollama-buddy-fabric-run-tests
+M-x ollama-buddy-parameter-run-tests
+</pre></div>
+
+</div>
+<div class="subsection-level-extent" id="Adding-New-Tests">
+<h4 class="subsection"><span>16.4.2 Adding New Tests<a class="copiable-link" href="#Adding-New-Tests"> &para;</a></span></h4>
+
+<p>When adding features, please also add tests:
+</p><ul class="itemize mark-bullet">
+<li>Unit tests for individual functions
+</li><li>Integration tests for API interactions
+</li><li>Parameter tests for parameter handling
+</li></ul>
+
+</div>
+</div>
+<div class="section-level-extent" id="Feature-Requests-and-Bug-Reports">
+<h3 class="section"><span>16.5 Feature Requests and Bug Reports<a class="copiable-link" href="#Feature-Requests-and-Bug-Reports"> &para;</a></span></h3>
+
+<ul class="itemize mark-bullet">
+<li>Use GitHub Issues for bug reports and feature requests
+</li><li>Provide clear steps to reproduce bugs
+</li><li>For feature requests, explain the use case
+</li></ul>
+
+<hr>
+</div>
+</div>
+<div class="unnumbered-level-extent" id="Index">
+<div class="nav-panel">
+<p>
+Previous: <a href="#Contributing" accesskey="p" rel="prev">Contributing</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<h2 class="unnumbered" id="Index-1"><span>Index<a class="copiable-link" href="#Index-1"> &para;</a></span></h2>
+
+
+</div>
+</div>
+
+
+
+</body>
+</html>
