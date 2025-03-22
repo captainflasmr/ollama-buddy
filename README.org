@@ -61,7 +61,7 @@ Then calling up =info= =C-h i= and ollama buddy will be present in the Emacs men
 
 For those interested in the manual, I have converted it into html format, which is accessible here:
 
-[[file:docs/ollama-buddy.html][Ollama Buddy Online Manual]]
+[[docs/ollama-buddy.html][Ollama Buddy Online Manual]]
 
 It has been converted using the following command:
 
