@@ -46,6 +46,29 @@ See *Screenshots / Demos* section for more videos/demonstration.
 
 * Whats New
 
+** <2025-03-22> *0.9.9*
+
+Added texinfo documentation for future automatic installation through MELPA and created an Emacs manual.
+
+If you want to see what the manual would look like, just download the docs directory from github, cd into it, and run:
+
+#+begin_src bash
+make
+sudo make install-docs
+#+end_src
+
+Then calling up =info= =C-h i= and ollama buddy will be present in the Emacs menu, or just select =m= and search for =Ollama Buddy=
+
+For those interested in the manual, I have converted it into html format, which is accessible here:
+
+[[file:docs/ollama-buddy.html][Ollama Buddy Online Manual]]
+
+It has been converted using the following command:
+
+#+begin_src bash
+makeinfo --html --no-split ollama-buddy.texi -o ollama-buddy.html
+#+end_src
+
 ** <2025-03-20> *0.9.9*
 
 Intro message with model management options (select, pull, delete) and option for recommended models to pull
