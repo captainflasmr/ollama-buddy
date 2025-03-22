@@ -12,7 +12,6 @@
 (require 'ollama-buddy-fabric)
 
 ;; Forward declare OpenAI functions
-(declare-function ollama-buddy-openai-send-prompt "ollama-buddy-openai")
 (declare-function ollama-buddy-openai-select-model "ollama-buddy-openai")
 (declare-function ollama-buddy-openai-clear-history "ollama-buddy-openai")
 (declare-function ollama-buddy-openai-display-history "ollama-buddy-openai")
@@ -150,7 +149,6 @@
                "Ready")))]
   
   [["Actions"
-    ("s" "Send Prompt to OpenAI" ollama-buddy-openai-send-prompt)
     ("m" "Select OpenAI Model" ollama-buddy-openai-select-model)
     ("c" "Configure OpenAI API" ollama-buddy-openai-configure)]
    

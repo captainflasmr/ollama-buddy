@@ -154,8 +154,6 @@ This uses proper encoding for multibyte characters."
         (pop-to-buffer (current-buffer))
         (goto-char (point-max))
         (let ((inhibit-read-only t)
-              (model-name (ollama-buddy-openai--get-real-model-name 
-                           ollama-buddy-openai--current-model))
               (display-name ollama-buddy-openai--current-model))
           
           ;; Add model info to response header
@@ -416,12 +414,6 @@ This uses proper encoding for multibyte characters."
   (interactive)
   (ollama-buddy-openai-initialize)
   (ollama-buddy-openai-configure))
-
-;;;###autoload
-(defun ollama-buddy-openai-send-prompt ()
-  "Send the current prompt to OpenAI API."
-  (interactive)
-  (ollama-buddy-openai-send))
 
 (provide 'ollama-buddy-openai)
 ;;; ollama-buddy-openai.el ends here
