@@ -55,7 +55,7 @@ Use nil for API default behavior (adaptive)."
   :type '(choice integer (const nil))
   :group 'ollama-buddy-openai)
 
-(defcustom ollama-buddy-openai-marker-prefix "[GPT]"
+(defcustom ollama-buddy-openai-marker-prefix "GPT"
   "Prefix to indicate that a model is from OpenAI rather than Ollama."
   :type 'string
   :group 'ollama-buddy-openai)
