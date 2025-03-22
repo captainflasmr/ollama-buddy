@@ -403,5 +403,11 @@ This uses proper encoding for multibyte characters."
   (ollama-buddy-openai-initialize)
   (ollama-buddy-openai-configure))
 
+;;;###autoload
+(defun ollama-buddy-openai-send-prompt ()
+  "Send the current prompt to OpenAI API."
+  (interactive)
+  (ollama-buddy-openai-send))
+
 (provide 'ollama-buddy-openai)
 ;;; ollama-buddy-openai.el ends here
