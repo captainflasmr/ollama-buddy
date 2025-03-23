@@ -189,17 +189,17 @@
    
    ["Categories"
     ("u" "Universal Patterns" (lambda () (interactive)
-                               (let ((ollama-buddy-fabric-pattern-categories '("universal")))
-                                 (ollama-buddy-fabric-send))))
+                                (let ((ollama-buddy-fabric-pattern-categories '("universal")))
+                                  (ollama-buddy-fabric-send))))
     ("c" "Code Patterns" (lambda () (interactive)
                            (let ((ollama-buddy-fabric-pattern-categories '("code")))
                              (ollama-buddy-fabric-send))))
     ("w" "Writing Patterns" (lambda () (interactive)
-                             (let ((ollama-buddy-fabric-pattern-categories '("writing")))
-                               (ollama-buddy-fabric-send))))
+                              (let ((ollama-buddy-fabric-pattern-categories '("writing")))
+                                (ollama-buddy-fabric-send))))
     ("a" "Analysis Patterns" (lambda () (interactive)
-                              (let ((ollama-buddy-fabric-pattern-categories '("analysis")))
-                                (ollama-buddy-fabric-send))))]
+                               (let ((ollama-buddy-fabric-pattern-categories '("analysis")))
+                                 (ollama-buddy-fabric-send))))]
    
    ["Navigation"
     ("q" "Back to Main Menu" ollama-buddy-transient-menu)]]
@@ -317,8 +317,8 @@
                                 (let ((ollama-buddy-fabric-pattern-categories '("universal")))
                                   (ollama-buddy-fabric-send))))
     ("c" "Code Patterns" (lambda () (interactive)
-                            (let ((ollama-buddy-fabric-pattern-categories '("code")))
-                              (ollama-buddy-fabric-send))))]
+                           (let ((ollama-buddy-fabric-pattern-categories '("code")))
+                             (ollama-buddy-fabric-send))))]
    
    ["Custom"
     ("C" "Custom Prompt" ollama-buddy--menu-custom-prompt)

@@ -196,9 +196,9 @@
     (ollama-buddy-fabric-populate-patterns))
   
   (let* ((formatted-patterns (mapcar #'ollama-buddy-fabric--format-pattern-name 
-                                      ollama-buddy-fabric--patterns))
+                                     ollama-buddy-fabric--patterns))
          (pattern-alist (cl-mapcar #'cons formatted-patterns 
-                                    ollama-buddy-fabric--patterns))
+                                   ollama-buddy-fabric--patterns))
          (selected-formatted (completing-read "Fabric pattern: " formatted-patterns nil t))
          (selected-pattern (cdr (assoc selected-formatted pattern-alist)))
          (system-file (expand-file-name (format "%s/%s/system.md" 

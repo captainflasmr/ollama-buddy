@@ -50,11 +50,6 @@ Use nil for API default behavior (adaptive)."
   :type '(choice integer (const nil))
   :group 'ollama-buddy-openai)
 
-(defcustom ollama-buddy-openai-marker-prefix "GPT"
-  "Prefix to indicate that a model is from OpenAI rather than Ollama."
-  :type 'string
-  :group 'ollama-buddy-openai)
-
 (defcustom ollama-buddy-openai-show-loading t
   "Whether to show a loading indicator during API requests."
   :type 'boolean
@@ -77,11 +72,6 @@ Use nil for API default behavior (adaptive)."
   "Counter for tokens in the current OpenAI response.")
 
 ;; Model display and management functions
-
-(defun ollama-buddy-openai--is-openai-model (model)
-  "Check if MODEL is an OpenAI model based on prefix."
-  (and model
-       (string-match-p (concat "^" (regexp-quote ollama-buddy-openai-marker-prefix)) model)))
 
 (defun ollama-buddy-openai--get-model-color (model)
   "Get color for OpenAI MODEL."
@@ -125,9 +115,9 @@ This uses proper encoding for multibyte characters."
     
     ;; Get history and system prompt
     (let* ((history (when ollama-buddy-history-enabled
-                     (gethash ollama-buddy-openai--current-model
-                              ollama-buddy-openai--conversation-history-by-model
-                              nil)))
+                      (gethash ollama-buddy-openai--current-model
+                               ollama-buddy-openai--conversation-history-by-model
+                               nil)))
            (system-prompt ollama-buddy--current-system-prompt)
            (json-object-type 'alist)
            (json-array-type 'vector)
@@ -137,13 +127,13 @@ This uses proper encoding for multibyte characters."
            (json-payload
             `((model . ,(ollama-buddy-openai--get-real-model-name ollama-buddy-openai--current-model))
               (messages . ,(vconcat [] 
-                                   (append
-                                    (when (and system-prompt (not (string-empty-p system-prompt)))
-                                      `(((role . "system")
-                                         (content . ,system-prompt))))
-                                    history
-                                    `(((role . "user")
-                                       (content . ,prompt))))))
+                                    (append
+                                     (when (and system-prompt (not (string-empty-p system-prompt)))
+                                       `(((role . "system")
+                                          (content . ,system-prompt))))
+                                     history
+                                     `(((role . "user")
+                                        (content . ,prompt))))))
               (temperature . ,ollama-buddy-openai-temperature)
               ,@(when ollama-buddy-openai-max-tokens
                   `((max_tokens . ,ollama-buddy-openai-max-tokens)))))
@@ -159,7 +149,7 @@ This uses proper encoding for multibyte characters."
           ;; Add model info to response header
           (insert (propertize (format "\n\n** [%s: RESPONSE]" display-name) 
                               'face `(:inherit bold :foreground 
-                                              ,(ollama-buddy-openai--get-model-color display-name))) 
+                                               ,(ollama-buddy-openai--get-model-color display-name))) 
                   "\n\n"))
         
         ;; Show loading message

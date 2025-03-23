@@ -180,27 +180,27 @@
         ;; Convert the hashtable to an alist for easier editing
         (let ((history-alist nil))
           (maphash (lambda (k v)
-                   (push (cons k v) history-alist))
-                 ollama-buddy--conversation-history-by-model)
+                     (push (cons k v) history-alist))
+                   ollama-buddy--conversation-history-by-model)
+          
+          ;; Insert the pretty-printed history
+          (let ((print-level nil)
+                (print-length nil))
+            (pp (nreverse history-alist) (current-buffer))))
         
-        ;; Insert the pretty-printed history
-        (let ((print-level nil)
-              (print-length nil))
-          (pp (nreverse history-alist) (current-buffer))))
+        ;; Set up local keys for saving or canceling
+        (use-local-map (copy-keymap emacs-lisp-mode-map))
+        (local-set-key (kbd "C-c C-c") 'ollama-buddy-history-save)
+        (local-set-key (kbd "C-c C-k") 'ollama-buddy-history-cancel)
+        
+        ;; Set buffer-local variables to identify this as a history edit buffer
+        (setq-local ollama-buddy-editing-history t)
+        (setq header-line-format "Edit history and press C-c C-c to save, C-c C-k to cancel"))
       
-      ;; Set up local keys for saving or canceling
-      (use-local-map (copy-keymap emacs-lisp-mode-map))
-      (local-set-key (kbd "C-c C-c") 'ollama-buddy-history-save)
-      (local-set-key (kbd "C-c C-k") 'ollama-buddy-history-cancel)
-      
-      ;; Set buffer-local variables to identify this as a history edit buffer
-      (setq-local ollama-buddy-editing-history t)
-      (setq header-line-format "Edit history and press C-c C-c to save, C-c C-k to cancel"))
-    
-    ;; Display the buffer
-    (pop-to-buffer buf)
-    (goto-char (point-min))
-    (message "Edit history and press C-c C-c to save, C-c C-k to cancel")))))
+      ;; Display the buffer
+      (pop-to-buffer buf)
+      (goto-char (point-min))
+      (message "Edit history and press C-c C-c to save, C-c C-k to cancel")))))
 
 (defun ollama-buddy-history-save ()
   "Save the edited history back to `ollama-buddy--conversation-history-by-model'."
@@ -262,7 +262,7 @@
 
       (when (= (hash-table-count ollama-buddy--conversation-history-by-model) 0)
         (insert "No conversation history available for any model. "))
-              
+      
       ;; Get just this model's history
       (let ((model-history (gethash model ollama-buddy--conversation-history-by-model nil)))
         ;; Insert the pretty-printed history
@@ -324,7 +324,7 @@
   (setq ollama-buddy-interface-level
         (if (eq ollama-buddy-interface-level 'basic) 'advanced 'basic))
   (message "Ollama Buddy interface level set to %s"
-          (if (eq ollama-buddy-interface-level 'basic) "basic" "advanced"))
+           (if (eq ollama-buddy-interface-level 'basic) "basic" "advanced"))
   (ollama-buddy--menu-help-assistant))
 
 ;;;###autoload
@@ -368,8 +368,8 @@ PARAMETERS should be a plist with parameter names and values."
     (let* ((current-plist (cdr entry))
            (current-params (plist-get current-plist :parameters))
            (new-params (if current-params
-                          current-params
-                        (list))))
+                           current-params
+                         (list))))
       
       ;; Process parameter pairs and add to list
       (cl-loop for (param value) on parameters by #'cddr do
@@ -632,102 +632,6 @@ PROPS should be a sequence of property-value pairs."
     (when (get-buffer ollama-buddy--debug-buffer)
       (kill-buffer ollama-buddy--debug-buffer))
     (message "Debug mode disabled")))
-
-(defun ollama-buddy--md-to-org-convert-region (start end)
-  "Convert the region from START to END from Markdown to Org-mode format."
-  (save-excursion
-    (save-restriction
-      (narrow-to-region start end)
-      
-      ;; First, handle code blocks by temporarily protecting their content
-      (goto-char (point-min))
-      (let ((code-blocks nil)
-            (counter 0)
-            block-start block-end lang content placeholder)
-        
-        ;; IMPORTANT: Add save-match-data here
-        (save-match-data
-          ;; Find and replace code blocks with placeholders
-          (while (re-search-forward "```\\(.*?\\)\\(?:\n\\|\\s-\\)\\(\\(?:.\\|\n\\)*?\\)```" nil t)
-            (setq lang (match-string 1)
-                  content (match-string 2)
-                  block-start (match-beginning 0)
-                  block-end (match-end 0)
-                  placeholder (format "CODE_BLOCK_PLACEHOLDER_%d" counter))
-            
-            ;; Store the code block information for later restoration
-            (push (list placeholder lang content) code-blocks)
-            
-            ;; Replace with placeholder
-            (delete-region block-start block-end)
-            (goto-char block-start)
-            (insert placeholder)
-            (setq counter (1+ counter))))
-        
-        ;; Apply regular Markdown to Org transformations - in individual save-match-data blocks
-        ;; Lists: Translate `-`, `*`, or `+` lists to Org-mode lists
-        (save-match-data
-          (goto-char (point-min))
-          (while (re-search-forward "^\\([ \t]*\\)[*-+] \\(.*\\)$" nil t)
-            (replace-match (concat (match-string 1) "- \\2"))))
-        
-        ;; Bold: `**bold**` -> `*bold*` only if directly adjacent
-        (save-match-data
-          (goto-char (point-min))
-          (while (re-search-forward "\\*\\*\\([^ ]\\(.*?\\)[^ ]\\)\\*\\*" nil t)
-            (replace-match "*\\1*")))
-        
-        ;; Italics: `_italic_` -> `/italic/`
-        (save-match-data
-          (goto-char (point-min))
-          (while (re-search-forward "\\([ \n]\\)_\\([^ ].*?[^ ]\\)_\\([ \n]\\)" nil t)
-            (replace-match "\\1/\\2/\\3")))
-        
-        ;; Links: `[text](url)` -> `[[url][text]]`
-        (save-match-data
-          (goto-char (point-min))
-          (while (re-search-forward "\\[\\(.*?\\)\\](\\(.*?\\))" nil t)
-            (replace-match "[[\\2][\\1]]")))
-        
-        ;; Inline code: `code` -> =code=
-        (save-match-data
-          (goto-char (point-min))
-          (while (re-search-forward "`\\(.*?\\)`" nil t)
-            (replace-match "=\\1=")))
-        
-        ;; Horizontal rules: `---` or `***` -> `-----`
-        (save-match-data
-          (goto-char (point-min))
-          (while (re-search-forward "^\\(-{3,}\\|\\*{3,}\\)$" nil t)
-            (replace-match "-----")))
-        
-        ;; Images: `![alt text](url)` -> `[[url]]`
-        (save-match-data
-          (goto-char (point-min))
-          (while (re-search-forward "!\\[.*?\\](\\(.*?\\))" nil t)
-            (replace-match "[[\\1]]")))
-        
-        ;; Headers: Adjust '#'
-        (save-match-data
-          (goto-char (point-min))
-          (while (re-search-forward "^\\(#+\\) " nil t)
-            (replace-match (make-string (length (match-string 1)) ?*) nil nil nil 1)))
-        
-        ;; Any extra characters
-        (save-match-data
-          (goto-char (point-min))
-          (while (re-search-forward "—" nil t)
-            (replace-match ", ")))
-        
-        ;; Restore code blocks with proper Org syntax
-        (save-match-data
-          (dolist (block (nreverse code-blocks))
-            (let ((placeholder (nth 0 block))
-                  (lang (nth 1 block))
-                  (content (nth 2 block)))
-              (goto-char (point-min))
-              (when (search-forward placeholder nil t)
-                (replace-match (format "#+begin_src %s\n%s#+end_src" lang content) t t)))))))))
 
 (defun ollama-buddy-set-system-prompt ()
   "Set the current prompt as a system prompt."
@@ -1182,7 +1086,7 @@ With prefix argument ALL-MODELS, clear history for all models."
                  (insert "\n")))
              ollama-buddy--conversation-history-by-model))))
         (view-mode 1)))
-      (display-buffer buf)))
+    (display-buffer buf)))
 
 (defun ollama-buddy--update-token-rate-display ()
   "Update the token rate display in real-time."
@@ -2043,7 +1947,7 @@ With prefix argument ALL-MODELS, clear history for all models."
          ;; Get OpenAI models if available
          (openai-models (when (featurep 'ollama-buddy-openai)
                           (mapcar #'ollama-buddy-openai--get-full-model-name
-                                 ollama-buddy-openai-models)))
+                                  ollama-buddy-openai-models)))
          ;; Get models available for pull but not yet downloaded
          (models-to-pull (when (ollama-buddy--ollama-running)
                            (cl-set-difference
@@ -2076,8 +1980,8 @@ With prefix argument ALL-MODELS, clear history for all models."
 - Basic interface (simpler display)   C-c A")
          ;; Choose tips based on interface level
          (tips-section (if (eq ollama-buddy-interface-level 'basic)
-                          basic-tips
-                          advanced-tips))
+                           basic-tips
+                         advanced-tips))
          ;; Create model management section
          (models-management-section
           (when available-models
@@ -2502,12 +2406,12 @@ Modifies the variable in place."
          (base-name (replace-regexp-in-string "\\.gguf$" "" file-name))
          ;; Prompt for model name, suggesting a sanitized version of the filename
          (model-name (read-string "Model name to create: "
-                                 (replace-regexp-in-string "[^a-zA-Z0-9_-]" "-" base-name)))
+                                  (replace-regexp-in-string "[^a-zA-Z0-9_-]" "-" base-name)))
          ;; Prompt for model parameters
          (parameters (read-string "Model parameters (optional): " ""))
          ;; Create a temporary Modelfile
          (modelfile-path (expand-file-name (format "Modelfile-%s" model-name)
-                                          ollama-buddy-modelfile-directory))
+                                           ollama-buddy-modelfile-directory))
          ;; Buffer for output
          (output-buffer (get-buffer-create "*Ollama Import*"))
          (default-directory (file-name-directory file-path)))
@@ -2530,7 +2434,7 @@ Modifies the variable in place."
     
     ;; Run the ollama create command
     (let ((process (start-process "ollama-create" output-buffer
-                                 "ollama" "create" model-name "-f" modelfile-path)))
+                                  "ollama" "create" model-name "-f" modelfile-path)))
       (set-process-sentinel
        process
        (lambda (proc event)
@@ -2602,7 +2506,7 @@ Modifies the variable in place."
         
         (dolist (model available-models)
           (let* ((color (ollama-buddy--get-model-color model))
-                (is-running (member model running-models)))
+                 (is-running (member model running-models)))
             
             (insert (format "  [%s] " (if is-running "✓" " ")))
             
@@ -2677,7 +2581,7 @@ Modifies the variable in place."
     
     (display-buffer buf)))
 
-; Helper functions for actions
+                                        ; Helper functions for actions
 (defun ollama-buddy-select-model (model)
   "Set MODEL as the current model, handling both Ollama and OpenAI models."
   (setq ollama-buddy-default-model model)

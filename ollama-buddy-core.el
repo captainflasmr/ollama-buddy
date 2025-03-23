@@ -42,7 +42,7 @@ These are the only parameters that will be sent to Ollama."
 (defcustom ollama-buddy-interface-level 'basic
   "Level of interface complexity to display."
   :type '(choice (const :tag "Basic (for beginners)" basic)
-                (const :tag "Advanced (full features)" advanced))
+                 (const :tag "Advanced (full features)" advanced))
   :group 'ollama-buddy)
 
 (defcustom ollama-buddy-default-model nil
@@ -341,6 +341,16 @@ Each command is defined with:
   :group 'ollama-buddy)
 
 ;; Shared variables
+(defun ollama-buddy-openai--is-openai-model (model)
+  "Check if MODEL is an OpenAI model based on prefix."
+  (and model
+       (string-match-p (concat "^" (regexp-quote ollama-buddy-openai-marker-prefix)) model)))
+
+(defcustom ollama-buddy-openai-marker-prefix "GPT"
+  "Prefix to indicate that a model is from OpenAI rather than Ollama."
+  :type 'string
+  :group 'ollama-buddy-openai)
+
 (defvar ollama-buddy-openai--current-model nil
   "The currently active OpenAI model.")
 
@@ -468,6 +478,102 @@ Each command is defined with:
   "Hash table mapping model names to their colors.")
 
 ;; Core utility functions
+
+(defun ollama-buddy--md-to-org-convert-region (start end)
+  "Convert the region from START to END from Markdown to Org-mode format."
+  (save-excursion
+    (save-restriction
+      (narrow-to-region start end)
+      
+      ;; First, handle code blocks by temporarily protecting their content
+      (goto-char (point-min))
+      (let ((code-blocks nil)
+            (counter 0)
+            block-start block-end lang content placeholder)
+        
+        ;; IMPORTANT: Add save-match-data here
+        (save-match-data
+          ;; Find and replace code blocks with placeholders
+          (while (re-search-forward "```\\(.*?\\)\\(?:\n\\|\\s-\\)\\(\\(?:.\\|\n\\)*?\\)```" nil t)
+            (setq lang (match-string 1)
+                  content (match-string 2)
+                  block-start (match-beginning 0)
+                  block-end (match-end 0)
+                  placeholder (format "CODE_BLOCK_PLACEHOLDER_%d" counter))
+            
+            ;; Store the code block information for later restoration
+            (push (list placeholder lang content) code-blocks)
+            
+            ;; Replace with placeholder
+            (delete-region block-start block-end)
+            (goto-char block-start)
+            (insert placeholder)
+            (setq counter (1+ counter))))
+        
+        ;; Apply regular Markdown to Org transformations - in individual save-match-data blocks
+        ;; Lists: Translate `-`, `*`, or `+` lists to Org-mode lists
+        (save-match-data
+          (goto-char (point-min))
+          (while (re-search-forward "^\\([ \t]*\\)[*-+] \\(.*\\)$" nil t)
+            (replace-match (concat (match-string 1) "- \\2"))))
+        
+        ;; Bold: `**bold**` -> `*bold*` only if directly adjacent
+        (save-match-data
+          (goto-char (point-min))
+          (while (re-search-forward "\\*\\*\\([^ ]\\(.*?\\)[^ ]\\)\\*\\*" nil t)
+            (replace-match "*\\1*")))
+        
+        ;; Italics: `_italic_` -> `/italic/`
+        (save-match-data
+          (goto-char (point-min))
+          (while (re-search-forward "\\([ \n]\\)_\\([^ ].*?[^ ]\\)_\\([ \n]\\)" nil t)
+            (replace-match "\\1/\\2/\\3")))
+        
+        ;; Links: `[text](url)` -> `[[url][text]]`
+        (save-match-data
+          (goto-char (point-min))
+          (while (re-search-forward "\\[\\(.*?\\)\\](\\(.*?\\))" nil t)
+            (replace-match "[[\\2][\\1]]")))
+        
+        ;; Inline code: `code` -> =code=
+        (save-match-data
+          (goto-char (point-min))
+          (while (re-search-forward "`\\(.*?\\)`" nil t)
+            (replace-match "=\\1=")))
+        
+        ;; Horizontal rules: `---` or `***` -> `-----`
+        (save-match-data
+          (goto-char (point-min))
+          (while (re-search-forward "^\\(-{3,}\\|\\*{3,}\\)$" nil t)
+            (replace-match "-----")))
+        
+        ;; Images: `![alt text](url)` -> `[[url]]`
+        (save-match-data
+          (goto-char (point-min))
+          (while (re-search-forward "!\\[.*?\\](\\(.*?\\))" nil t)
+            (replace-match "[[\\1]]")))
+        
+        ;; Headers: Adjust '#'
+        (save-match-data
+          (goto-char (point-min))
+          (while (re-search-forward "^\\(#+\\) " nil t)
+            (replace-match (make-string (length (match-string 1)) ?*) nil nil nil 1)))
+        
+        ;; Any extra characters
+        (save-match-data
+          (goto-char (point-min))
+          (while (re-search-forward "—" nil t)
+            (replace-match ", ")))
+        
+        ;; Restore code blocks with proper Org syntax
+        (save-match-data
+          (dolist (block (nreverse code-blocks))
+            (let ((placeholder (nth 0 block))
+                  (lang (nth 1 block))
+                  (content (nth 2 block)))
+              (goto-char (point-min))
+              (when (search-forward placeholder nil t)
+                (replace-match (format "#+begin_src %s\n%s#+end_src" lang content) t t)))))))))
 
 (defun ollama-buddy-openai--get-full-model-name (model)
   "Get the full display name for MODEL with prefix."
