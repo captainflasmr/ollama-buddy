@@ -341,10 +341,7 @@ Each command is defined with:
   :group 'ollama-buddy)
 
 ;; Shared variables
-(defun ollama-buddy-openai--is-openai-model (model)
-  "Check if MODEL is an OpenAI model based on prefix."
-  (and model
-       (string-match-p (concat "^" (regexp-quote ollama-buddy-openai-marker-prefix)) model)))
+
 
 (defcustom ollama-buddy-openai-marker-prefix "GPT"
   "Prefix to indicate that a model is from OpenAI rather than Ollama."
@@ -478,6 +475,11 @@ Each command is defined with:
   "Hash table mapping model names to their colors.")
 
 ;; Core utility functions
+
+(defun ollama-buddy-openai--is-openai-model (model)
+  "Check if MODEL is an OpenAI model based on prefix."
+  (and model
+       (string-match-p (concat "^" (regexp-quote ollama-buddy-openai-marker-prefix)) model)))
 
 (defun ollama-buddy--md-to-org-convert-region (start end)
   "Convert the region from START to END from Markdown to Org-mode format."

@@ -74,6 +74,8 @@
 (require 'ollama-buddy-core)
 (require 'ollama-buddy-transient)
 
+(declare-function ollama-buddy-openai--send "ollama-buddy-openai")
+
 (defun ollama-buddy-display-token-graph ()
   "Display a visual graph of token usage statistics."
   (interactive)
