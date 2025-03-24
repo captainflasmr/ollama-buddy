@@ -2008,13 +2008,13 @@ With prefix argument ALL-MODELS, clear history for all models."
                 (let ((model-letter (ollama-buddy--get-model-letter model)))
                   (concat
                    (format
-                    "(%c) %s [[elisp:(ollama-buddy-select-model \"%s\")][[Select]]] "
+                    "(%c) %s [[elisp:(ollama-buddy-select-model \"%s\")][Select]] "
                     model-letter model model)
                    (format
-                    "[[elisp:(ollama-buddy-show-raw-model-info \"%s\")][[Info]]] " model)
-                   (format "[[elisp:(ollama-buddy-pull-model \"%s\")][[Pull]]] " model)
+                    "[[elisp:(ollama-buddy-show-raw-model-info \"%s\")][Info]] " model)
+                   (format "[[elisp:(ollama-buddy-pull-model \"%s\")][Pull]] " model)
                    (format
-                    "[[elisp:(ollama-buddy-delete-model-in-chat \"%s\"))][[Delete]]]"
+                    "[[elisp:(ollama-buddy-delete-model-in-chat \"%s\"))][Delete]]"
                     model))))
               available-models
               "\n")
@@ -2027,7 +2027,7 @@ With prefix argument ALL-MODELS, clear history for all models."
              "** Recommended Models to Download\n\n"
              (mapconcat
               (lambda (model)
-                (format "[[elisp:(ollama-buddy-pull-model \"%s\")][[%s]]]"
+                (format "[[elisp:(ollama-buddy-pull-model \"%s\")][%s]]"
                         model model))
               models-to-pull
               " ")
@@ -2062,9 +2062,9 @@ With prefix argument ALL-MODELS, clear history for all models."
            models-management-section
            openai-models-section
            models-to-pull-section
-           "** Actions\n\n"
-           "[[elisp:(call-interactively #'ollama-buddy-import-gguf-file)][[Import GGUF File]]] "
-           "[[elisp:(call-interactively #'ollama-buddy-pull-model)][[Pull Any Model]]] "
+           ;; "** Actions\n\n"
+           "[[elisp:(call-interactively #'ollama-buddy-import-gguf-file)][Import-GGUF-File]] "
+           "[[elisp:(call-interactively #'ollama-buddy-pull-model)][Pull-Any-Model]] "
            (if (featurep 'ollama-buddy-openai)
                "[[elisp:(call-interactively #'ollama-buddy-openai-setup)][[Setup OpenAI]]]\n\n"
              "\n\n")
