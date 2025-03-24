@@ -46,6 +46,35 @@ See *Screenshots / Demos* section for more videos/demonstration.
 
 * Whats New
 
+** <2025-03-24> *0.9.11*
+
+Added the ability to toggle streaming on and off
+
+- Added customization option to enable/disable streaming mode
+- Implemented toggle function with keybindings (C-c x) and transient menu option
+- Added streaming status indicator in the modeline
+
+The latest update introduces the ability to toggle between two response modes:
+
+- *Streaming mode (default)*: Responses appear token by token in real-time, giving you immediate feedback as the AI generates content.
+- *Non-streaming mode*: Responses only appear after they're fully generated, showing a "Loading response..." placeholder in the meantime.
+
+While watching AI responses stream in real-time is often helpful, there are situations where you might prefer to see the complete response at once:
+
+- When working on large displays where the cursor jumping around during streaming is distracting
+- When you want to focus on your work without the distraction of incoming tokens until the full response is ready
+
+The streaming toggle can be accessed in several ways:
+
+1. Use the keyboard shortcut =C-c x=
+2. Press =x= in the transient menu
+3. Set the default behavior through customization:
+   #+begin_src elisp
+   (setq ollama-buddy-streaming-enabled nil) ;; Disable streaming by default
+   #+end_src
+
+The current streaming status is visible in the modeline indicator, where an "X" appears when streaming is disabled.
+
 ** <2025-03-22> *0.9.10*
 
 Added experimental OpenAI support!
