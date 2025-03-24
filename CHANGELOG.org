@@ -11,6 +11,14 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-03-24> *0.9.11*
+
+Added the ability to toggle streaming on and off
+
+- Added customization option to enable/disable streaming mode
+- Implemented toggle function with keybindings (C-c x) and transient menu option
+- Added streaming status indicator in the modeline
+
 ** <2025-03-20> *0.9.9*
 
 Intro message with model management options (select, pull, delete) and option for recommended models to pull
