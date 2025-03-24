@@ -2063,13 +2063,14 @@ With prefix argument ALL-MODELS, clear history for all models."
            openai-models-section
            models-to-pull-section
            ;; "** Actions\n\n"
+           (when (featurep 'ollama-buddy-openai)
+               "[[elisp:(call-interactively #'ollama-buddy-openai-setup)][[Setup OpenAI]]]\n\n")
+           "** Quick Tips\n\n"
+           tips-section
+           "\n\n"
            "[[elisp:(call-interactively #'ollama-buddy-import-gguf-file)][Import-GGUF-File]] "
            "[[elisp:(call-interactively #'ollama-buddy-pull-model)][Pull-Any-Model]] "
-           (if (featurep 'ollama-buddy-openai)
-               "[[elisp:(call-interactively #'ollama-buddy-openai-setup)][[Setup OpenAI]]]\n\n"
-             "\n\n")
-           "** Quick Tips\n\n"
-           tips-section)))
+           )))
 
     ;; Apply overlay colors to model names
     (with-temp-buffer
