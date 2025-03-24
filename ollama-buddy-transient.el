@@ -75,6 +75,7 @@
     ("RET" "Send Prompt" ollama-buddy--send-prompt)
     ("h" "Help/Menu" ollama-buddy--menu-help-assistant)
     ("k" "Kill/Cancel Request" ollama-buddy--cancel-request)
+    ("x" "Toggle Streaming" ollama-buddy-toggle-streaming)
     ]
 
    ["Prompts"
