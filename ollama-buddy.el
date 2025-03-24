@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama Buddy: Your Friendly AI Assistant -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.9.10
+;; Version: 0.9.11
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -75,6 +75,9 @@
 (require 'ollama-buddy-transient)
 
 (declare-function ollama-buddy-openai--send "ollama-buddy-openai")
+
+(defvar ollama-buddy--start-point nil
+  "General store of a starting point.")
 
 (defun ollama-buddy-display-token-graph ()
   "Display a visual graph of token usage statistics."
@@ -1555,6 +1558,11 @@ With prefix argument ALL-MODELS, clear history for all models."
              (old-window-start (and window (window-start window))))
         (save-excursion
           (goto-char (point-max))
+
+          (when ollama-buddy--start-point
+            (delete-region ollama-buddy--start-point (point-max))
+            (setq ollama-buddy--start-point nil))
+          
           ;; Insert the text directly - we'll convert it at the end of the response
           (insert text)
 
@@ -1868,7 +1876,7 @@ With prefix argument ALL-MODELS, clear history for all models."
            ;; Build the base payload
            (base-payload `((model . ,model)
                            (messages . ,(vconcat [] messages-all))
-                           (stream . t)))
+                           (stream . ,(if ollama-buddy-streaming-enabled t :json-false))))
            ;; Add system prompt if present
            (with-system (if ollama-buddy--current-system-prompt
                             (append base-payload `((system . ,ollama-buddy--current-system-prompt)))
@@ -1903,6 +1911,10 @@ With prefix argument ALL-MODELS, clear history for all models."
         ;; Enable visual-line-mode for better text wrapping
         (visual-line-mode 1))
 
+      (when (not ollama-buddy-streaming-enabled)
+        (setq ollama-buddy--start-point (point))
+        (insert "Loading response..."))
+      
       (ollama-buddy--update-status "Sending request..." original-model model)
 
       (when (and ollama-buddy--active-process
@@ -1962,6 +1974,7 @@ With prefix argument ALL-MODELS, clear history for all models."
 - Main transient menu                 C-c O
 - Change model                        C-c m
 - Cancel request                      C-c k
+- Toggle Streaming                    C-c x
 - Browse prompt history               M-p/M-n
 - Advanced interface (show all tips)  C-c A")
          ;; Advanced tips for experienced users
@@ -1971,6 +1984,7 @@ With prefix argument ALL-MODELS, clear history for all models."
 - Manage models                       C-c W
 - Show Help/Status/Token usage        C-c h/v/U
 - Model Change/Info/Multishot         C-c m/i/M
+- Toggle Streaming                    C-c x
 - System Prompt Set/Show/Reset        C-c s/C-s/r
 - Parameter Menu/Profiles             C-c P/p
 - History Toggle/Clear/Show/Edit      C-c H/X/V/J
@@ -2767,9 +2781,10 @@ Modifies the variable in place."
     (define-key map (kbd "C-c W") #'ollama-buddy-manage-models)
     
     ;; Chat section keybindings from transient
-    (define-key map (kbd "C-c C-c") #'ollama-buddy--send-prompt)  ;; Keep existing binding for RET
+    (define-key map (kbd "C-c C-c") #'ollama-buddy--send-prompt)
     (define-key map (kbd "C-c h") #'ollama-buddy--menu-help-assistant)
     (define-key map (kbd "C-c k") #'ollama-buddy--cancel-request)
+    (define-key map (kbd "C-c x") #'ollama-buddy-toggle-streaming)
     
     ;; Prompts section keybindings
     (define-key map (kbd "C-c l") (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))
