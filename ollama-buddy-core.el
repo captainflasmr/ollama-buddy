@@ -32,6 +32,13 @@
   :prefix "ollama-buddy-param-")
 
 ;; Core customization options
+(defcustom ollama-buddy-streaming-enabled t
+  "Whether to use streaming mode for responses.
+When enabled, responses appear token by token in real time.
+When disabled, responses only appear after completion."
+  :type 'boolean
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-params-modified
   nil
   "Set of parameters that have been explicitly modified by the user.
@@ -342,7 +349,6 @@ Each command is defined with:
 
 ;; Shared variables
 
-
 (defcustom ollama-buddy-openai-marker-prefix "GPT"
   "Prefix to indicate that a model is from OpenAI rather than Ollama."
   :type 'string
@@ -475,6 +481,16 @@ Each command is defined with:
   "Hash table mapping model names to their colors.")
 
 ;; Core utility functions
+(defun ollama-buddy-toggle-streaming ()
+  "Toggle streaming mode for Ollama responses.
+When streaming is enabled, responses appear token by token in real time.
+When disabled, responses only appear after completion."
+  (interactive)
+  (setq ollama-buddy-streaming-enabled (not ollama-buddy-streaming-enabled))
+  (ollama-buddy--update-status 
+   (if ollama-buddy-streaming-enabled "Streaming enabled" "Streaming disabled"))
+  (message "Ollama Buddy streaming mode: %s" 
+           (if ollama-buddy-streaming-enabled "enabled" "disabled")))
 
 (defun ollama-buddy-openai--is-openai-model (model)
   "Check if MODEL is an OpenAI model based on prefix."
@@ -973,11 +989,10 @@ ACTUAL-MODEL is the model being used instead."
              (format (if (string-empty-p (ollama-buddy--update-multishot-status))
                          " %s%s%s%s %s %s%s %s %s %s%s"
                        " %s%s%s%s %s %s %s %s %s %s%s")
-                     (if ollama-buddy--current-system-prompt "S" "")
                      (if ollama-buddy--current-suffix "F" "")
                      (if ollama-buddy-display-token-stats "T" "")
-                     (or history "")
-                     (if ollama-buddy-convert-markdown-to-org "ORG" "Markdown")
+                     (if ollama-buddy-streaming-enabled "" "X")
+                     (or history "")                     (if ollama-buddy-convert-markdown-to-org "ORG" "Markdown")
                      (ollama-buddy--update-multishot-status)
                      (propertize (if (ollama-buddy--check-status) "RUNNING" "OFFLINE")
                                  'face '(:weight bold))
