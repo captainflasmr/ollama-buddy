@@ -1,7 +1,7 @@
 ;;; ollama-buddy-claude.el --- Anthropic Claude integration for ollama-buddy -*- lexical-binding: t; -*-
 
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Keywords: applications, tools, convenience
+;; Keywordsisend: applications, tools, convenience
 ;; Package-Requires: ((emacs "28.1") (url "1.2"))
 
 ;;; Commentary:
@@ -44,7 +44,7 @@ Lower values make the output more deterministic, higher values more creative."
   :type 'float
   :group 'ollama-buddy-claude)
 
-(defcustom ollama-buddy-claude-max-tokens 4096
+(defcustom ollama-buddy-claude-max-tokens nil
   "Maximum number of tokens to generate in the response.
 Use nil for API default behavior (adaptive)."
   :type '(choice integer (const nil))
@@ -122,205 +122,144 @@ Use nil for API default behavior (adaptive)."
     t))
 
 (defun ollama-buddy-claude--send (prompt &optional model)
-  "Send PROMPT to Claude's API using MODEL or default model asynchronously.
-This uses proper encoding for multibyte characters."
+  "Send PROMPT to Claude's API using MODEL or default model asynchronously using `url-retrieve`."
   (when (ollama-buddy-claude--verify-api-key)
     ;; Set up the current model
     (setq ollama-buddy-claude--current-model
           (or model 
               ollama-buddy-claude--current-model
               (ollama-buddy-claude--get-full-model-name ollama-buddy-claude-default-model)))
-    
+
     ;; Store the prompt and initialize response
     (setq ollama-buddy-claude--current-prompt prompt
           ollama-buddy-claude--current-response "")
-    
+
     ;; Initialize token counter
     (setq ollama-buddy-claude--current-token-count 0)
-    
-    ;; Get history and system prompt
+
+    ;; Ensure max_tokens is always set
     (let* ((history (when ollama-buddy-history-enabled
                       (gethash ollama-buddy-claude--current-model
                                ollama-buddy-claude--conversation-history-by-model
                                nil)))
            (system-prompt ollama-buddy--current-system-prompt)
-           (json-object-type 'alist)
-           (json-array-type 'vector)
-           (json-key-type 'symbol)
-           (json-encoding-pretty-print nil)
-           (json-encoding-default-indentation "")
-           ;; Prepare messages array from history
            (messages (vconcat []
                               (append
-                               ;; We'll handle the system prompt separately since Claude expects it differently
+                               (when (and system-prompt (not (string-empty-p system-prompt)))
+                                 `(((role . "system") (content . ,system-prompt))))
                                history
-                               `(((role . "user")
-                                  (content . ,prompt))))))
+                               `(((role . "user") (content . ,prompt))))))
+           (max-tokens (or ollama-buddy-claude-max-tokens 4096)) ;; Ensure max_tokens is always set
            ;; Prepare the full payload
            (json-payload
             `((model . ,(ollama-buddy-claude--get-real-model-name ollama-buddy-claude--current-model))
               (messages . ,messages)
               (temperature . ,ollama-buddy-claude-temperature)
-              ,@(when ollama-buddy-claude-max-tokens
-                  `((max_tokens . ,ollama-buddy-claude-max-tokens)))
-              ,@(when (and system-prompt (not (string-empty-p system-prompt)))
-                  `((system . ,system-prompt)))))
-           (payload (json-encode json-payload)))
-      
-      ;; Prepare the chat buffer
+              (max_tokens . ,max-tokens))) ;; Always include max_tokens
+           (json-str (encode-coding-string (json-encode json-payload) 'utf-8))
+           (url-request-method "POST")
+           (url-request-extra-headers
+            `(("Content-Type" . "application/json")
+              ("Authorization" . ,(concat "Bearer " ollama-buddy-claude-api-key))
+              ("X-API-Key" . ,ollama-buddy-claude-api-key)
+              ("anthropic-version" . "2023-06-01")))
+           (url-request-data json-str)
+           (endpoint "https://api.anthropic.com/v1/messages"))
+
+      ;; Prepare chat buffer
       (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
         (pop-to-buffer (current-buffer))
         (goto-char (point-max))
         (let ((inhibit-read-only t)
               (display-name ollama-buddy-claude--current-model))
-          
           ;; Add model info to response header
-          (insert (propertize (format "\n\n** [%s: RESPONSE]" display-name) 
-                              'face `(:inherit bold :foreground 
-                                               ,(ollama-buddy-claude--get-model-color display-name))) 
-                  "\n\n"))
-        
-        ;; Show loading message
-        (let ((inhibit-read-only t)
-              (start-point (point)))
-          (when ollama-buddy-claude-show-loading
-            (insert "Loading response..."))
-          
+          (insert (propertize (format "\n\n** [%s: RESPONSE]" display-name)
+                              'face `(:inherit bold :foreground
+                                               ,(ollama-buddy-claude--get-model-color display-name)))
+                  "\n\n")
+          ;; Show loading message
+          (insert "Loading response...")
+
           ;; Update status
           (ollama-buddy--update-status "Sending request to Claude...")
-          
-          ;; Use start-process to make curl call asynchronous
-          (condition-case err
-              (let* ((temp-file (make-temp-file "claude-request"))
-                     (proc-buffer (generate-new-buffer " *claude-async*"))
-                     (proc-name "claude-curl-process"))
-                
-                ;; Write the payload to a temporary file
-                (with-temp-file temp-file
-                  (insert payload))
-                
-                ;; Create a sentinel function to process the response when curl completes
-                (let ((response-handler 
-                       (lambda (process event)
-                         (when (string-match-p "\\(finished\\|exited\\)" event)
-                           (let ((exit-status (process-exit-status process)))
-                             (unwind-protect
-                                 (if (= exit-status 0)
-                                     ;; Process successful response
-                                     (with-current-buffer (process-buffer process)
-                                       (goto-char (point-min))
-                                       (condition-case json-err
-                                           (let* ((json-response (json-read))
-                                                  (error-object (alist-get 'error json-response))
-                                                  (content (alist-get 'content json-response)))
-                                             
-                                             ;; Check for errors in response
-                                             (if error-object
-                                                 (let ((error-text (alist-get 'message error-object)))
-                                                   (with-current-buffer ollama-buddy--chat-buffer
-                                                     (let ((inhibit-read-only t))
-                                                       (goto-char start-point)
-                                                       (delete-region start-point (point-max))
-                                                       (insert (propertize (format "Error: %s" error-text)
-                                                                           'face '(:foreground "red")))
-                                                       (ollama-buddy--update-status "Error from Claude API")
-                                                       (ollama-buddy--prepare-prompt-area))))
-                                               
-                                               ;; Process successful response - Claude puts content in a different structure 
-                                               ;; than OpenAI - need to adapt to Claude's format
-                                               (when content
-                                                 (let* ((content-text (aref content 0))
-                                                        (message-type (alist-get 'type content-text))
-                                                        (actual-text (alist-get 'text content-text)))
-                                                   
-                                                   ;; Replace loading message with actual content if this is text
-                                                   (when (string= message-type "text")
-                                                     (with-current-buffer ollama-buddy--chat-buffer
-                                                       (let ((inhibit-read-only t))
-                                                         (goto-char start-point)
-                                                         (delete-region start-point (point-max))
-                                                         (insert actual-text)
 
-                                                         ;; Now convert from markdown to org if enabled
-                                                         (when ollama-buddy-convert-markdown-to-org
-                                                           (ollama-buddy--md-to-org-convert-region start-point (point-max)))
+          ;; Send request via `url-retrieve`
+          (url-retrieve
+           endpoint
+           (lambda (status)
+             (goto-char (point-min))
+             (if (not (search-forward "\n\n" nil t))
+                 (message "Error: Malformed HTTP response.")
+               (let* ((json-object-type 'alist)
+                      (json-array-type 'vector)
+                      (json-key-type 'symbol)
+                      (response (ignore-errors (json-read)))
+                      (error-message (alist-get 'error response))
+                      (content ""))
 
-                                                         ;; Add to history
-                                                         (setq ollama-buddy-claude--current-response actual-text)
-                                                         (when ollama-buddy-history-enabled
-                                                           (ollama-buddy-claude--add-to-history "user" prompt)
-                                                           (ollama-buddy-claude--add-to-history "assistant" actual-text))
-                                                         
-                                                         ;; Calculate token count
-                                                         (setq ollama-buddy-claude--current-token-count
-                                                               (length (split-string actual-text "\\b" t)))
-                                                         
-                                                         ;; Show token stats if enabled
-                                                         (when ollama-buddy-display-token-stats
-                                                           (insert (format "\n\n*** Token Stats\n[%d tokens]"
-                                                                           ollama-buddy-claude--current-token-count)))
-                                                         
-                                                         (insert "\n\n*** FINISHED")
-                                                         (ollama-buddy--prepare-prompt-area)
-                                                         (ollama-buddy--update-status
-                                                          (format "Finished [%d tokens]" 
-                                                                  ollama-buddy-claude--current-token-count)))))))))
-                                         
-                                         (error
-                                          (with-current-buffer ollama-buddy--chat-buffer
-                                            (let ((inhibit-read-only t))
-                                              (goto-char start-point)
-                                              (delete-region start-point (point-max))
-                                              (insert (propertize 
-                                                       (format "Error parsing JSON response: %s" 
-                                                               (error-message-string json-err))
-                                                       'face '(:foreground "red")))
-                                              (ollama-buddy--update-status "Failed to Parse Response")
-                                              (ollama-buddy--prepare-prompt-area))))))
-                                   
-                                   ;; Handle curl process error
-                                   (with-current-buffer ollama-buddy--chat-buffer
-                                     (let ((inhibit-read-only t))
-                                       (goto-char start-point)
-                                       (delete-region start-point (point-max))
-                                       (insert (propertize 
-                                                (format "Error: curl process failed with status %d" exit-status)
-                                                'face '(:foreground "red")))
-                                       (ollama-buddy--update-status "API Request Failed")
-                                       (ollama-buddy--prepare-prompt-area))))
-                               
-                               ;; Cleanup in unwind-protect
-                               (when (file-exists-p temp-file)
-                                 (delete-file temp-file))
-                               (when (buffer-live-p (process-buffer process))
-                                 (kill-buffer (process-buffer process)))))))))
-                  
-                  ;; Start the async process with our sentinel
-                  (let ((process (apply 'start-process
-                                        proc-name
-                                        proc-buffer
-                                        "curl"
-                                        (list
-                                         "-s" 
-                                         "-X" "POST"
-                                         "-H" "Content-Type: application/json"
-                                         "-H" (concat "X-API-Key: " ollama-buddy-claude-api-key) 
-                                         "-H" "anthropic-version: 2023-06-01"
-                                         "-H" (concat "Authorization: Bearer " ollama-buddy-claude-api-key)
-                                         "-d" (format "@%s" temp-file)
-                                         ollama-buddy-claude-api-endpoint))))
-                    (set-process-sentinel process response-handler))))
-            
-            ;; Handle Emacs errors during setup
-            (error
-             (with-current-buffer ollama-buddy--chat-buffer
-               (let ((inhibit-read-only t))
-                 (goto-char start-point)
-                 (delete-region start-point (point-max))
-                 (insert (propertize (format "Error: %s" (error-message-string err))
-                                     'face '(:foreground "red")))
-                 (ollama-buddy--update-status "API Request Failed")
-                 (ollama-buddy--prepare-prompt-area))))))))))
+                 ;; Check for API errors
+                 (if error-message
+                     (setq content (format "Error: %s" (alist-get 'message error-message)))
+                   ;; Extract the content based on the new API response format
+                   (let ((extracted-text ""))
+                     ;; Get the content array from the response
+                     (let ((content-obj (alist-get 'content response)))
+                       (if (listp content-obj)
+                           ;; Handle new API format where content is an object containing an array
+                           (let ((content-array (alist-get 'content content-obj)))
+                             (if (vectorp content-array)
+                                 ;; Process each content item in the array
+                                 (dotimes (i (length content-array))
+                                   (let* ((item (aref content-array i))
+                                         (item-type (alist-get 'type item))
+                                         (item-text (alist-get 'text item)))
+                                     (when (and (string= item-type "text") item-text)
+                                       (setq extracted-text (concat extracted-text item-text)))))
+                               ;; Handle case where content.content is not a vector
+                               (message "Unexpected content format: %S" content-array)))
+                         ;; Handle case where content is already the array
+                         (if (vectorp content-obj)
+                             (dotimes (i (length content-obj))
+                               (let* ((item (aref content-obj i))
+                                     (item-type (alist-get 'type item))
+                                     (item-text (alist-get 'text item)))
+                                 (when (and (string= item-type "text") item-text)
+                                   (setq extracted-text (concat extracted-text item-text)))))
+                           (message "Unexpected response format: %S" content-obj))))
+                     (setq content extracted-text)))
+
+                 ;; Update the chat buffer
+                 (with-current-buffer ollama-buddy--chat-buffer
+                   (let ((inhibit-read-only t))
+                     (goto-char (point-max))
+                     (delete-region (line-beginning-position) (point-max))
+                     (insert content)
+
+                     ;; Convert markdown to org if enabled
+                     (when ollama-buddy-convert-markdown-to-org
+                       (ollama-buddy--md-to-org-convert-region (point-min) (point-max)))
+
+                     ;; Add to history
+                     (setq ollama-buddy-claude--current-response content)
+                     (when ollama-buddy-history-enabled
+                       (ollama-buddy-claude--add-to-history "user" prompt)
+                       (ollama-buddy-claude--add-to-history "assistant" content))
+                     
+                     ;; Calculate token count
+                     (setq ollama-buddy-claude--current-token-count
+                           (length (split-string content "\\b" t)))
+
+                     ;; Show token stats if enabled
+                     (when ollama-buddy-display-token-stats
+                       (insert (format "\n\n*** Token Stats\n[%d tokens]"
+                                       ollama-buddy-claude--current-token-count)))
+
+                     (insert "\n\n*** FINISHED")
+                     (ollama-buddy--prepare-prompt-area)
+                     (ollama-buddy--update-status
+                      (format "Finished [%d tokens]" 
+                              ollama-buddy-claude--current-token-count))))))))
+          nil t)))))
 
 ;; History management functions
 
