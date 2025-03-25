@@ -165,7 +165,7 @@ Use nil for API default behavior (adaptive)."
           (let ((url-request-method "POST")
                 (url-request-extra-headers `(("Content-Type" . "application/json")
                                              ("Authorization" . ,(concat "Bearer " ollama-buddy-openai-api-key))))
-                (url-request-data payload))
+                (url-request-data (encode-coding-string (json-encode json-payload) 'utf-8 'binary)))
             (url-retrieve
              "https://api.openai.com/v1/chat/completions"
              (lambda (status)
