@@ -797,12 +797,15 @@ When SUFFIX-PROMPT is non-nil, mark as a suffix."
             ollama-buddy--last-status-check current-time))
     ollama-buddy--status-cache))
 
-(defun ollama-buddy--get-models-with-openai ()
-  "Get all available models, including OpenAI models if the module is loaded."
+(defun ollama-buddy--get-models-with-others ()
+  "Get all available models, including non ollama models."
   (let ((models (ollama-buddy--get-models)))
     (when (featurep 'ollama-buddy-openai)
       (dolist (model ollama-buddy-openai-models)
         (push (ollama-buddy-openai--get-full-model-name model) models)))
+    (when (featurep 'ollama-buddy-claude)
+      (dolist (model ollama-buddy-claude-models)
+        (push (ollama-buddy-claude--get-full-model-name model) models)))
     models))
 
 (defun ollama-buddy--get-models ()
@@ -828,7 +831,7 @@ When SUFFIX-PROMPT is non-nil, mark as a suffix."
 (defun ollama-buddy--validate-model (model)
   "Validate MODEL availability."
   (when (and model (ollama-buddy--ollama-running))
-    (when (member model (ollama-buddy--get-models))
+    (when (member model (ollama-buddy--get-models-with-others))
       model)))
 
 (defun ollama-buddy--get-valid-model (specified-model)
