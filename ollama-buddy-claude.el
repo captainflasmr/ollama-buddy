@@ -38,11 +38,6 @@ Get your key from https://console.anthropic.com/."
   :type 'string
   :group 'ollama-buddy-claude)
 
-(defcustom ollama-buddy-claude-api-version "2023-06-01"
-  "API version for Anthropic Claude."
-  :type 'string
-  :group 'ollama-buddy-claude)
-
 (defcustom ollama-buddy-claude-temperature 0.7
   "Temperature setting for Claude requests (0.0-1.0).
 Lower values make the output more deterministic, higher values more creative."
@@ -127,8 +122,8 @@ Use nil for API default behavior (adaptive)."
     t))
 
 (defun ollama-buddy-claude--send (prompt &optional model)
-  "Send PROMPT to Claude's API using MODEL or default model.
-This function handles non-streaming requests to the Anthropic API."
+  "Send PROMPT to Claude's API using MODEL or default model asynchronously.
+This uses proper encoding for multibyte characters."
   (when (ollama-buddy-claude--verify-api-key)
     ;; Set up the current model
     (setq ollama-buddy-claude--current-model
@@ -157,6 +152,7 @@ This function handles non-streaming requests to the Anthropic API."
            ;; Prepare messages array from history
            (messages (vconcat []
                               (append
+                               ;; We'll handle the system prompt separately since Claude expects it differently
                                history
                                `(((role . "user")
                                   (content . ,prompt))))))
@@ -230,7 +226,8 @@ This function handles non-streaming requests to the Anthropic API."
                                                        (ollama-buddy--update-status "Error from Claude API")
                                                        (ollama-buddy--prepare-prompt-area))))
                                                
-                                               ;; Process successful response
+                                               ;; Process successful response - Claude puts content in a different structure 
+                                               ;; than OpenAI - need to adapt to Claude's format
                                                (when content
                                                  (let* ((content-text (aref content 0))
                                                         (message-type (alist-get 'type content-text))
@@ -307,7 +304,8 @@ This function handles non-streaming requests to the Anthropic API."
                                          "-s" 
                                          "-X" "POST"
                                          "-H" "Content-Type: application/json"
-                                         "-H" (concat "anthropic-version: " ollama-buddy-claude-api-version)
+                                         "-H" (concat "X-API-Key: " ollama-buddy-claude-api-key) 
+                                         "-H" "anthropic-version: 2023-06-01"
                                          "-H" (concat "Authorization: Bearer " ollama-buddy-claude-api-key)
                                          "-d" (format "@%s" temp-file)
                                          ollama-buddy-claude-api-endpoint))))
