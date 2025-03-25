@@ -11,6 +11,11 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-03-25> *0.9.12*
+
+- Added experimental Claude AI support!
+- removed curl and replaced with url.el for online AI integration
+
 ** <2025-03-24> *0.9.11*
 
 Added the ability to toggle streaming on and off
