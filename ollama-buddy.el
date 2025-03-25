@@ -1721,21 +1721,30 @@ With prefix argument ALL-MODELS, clear history for all models."
   (if (and (not (ollama-buddy--ollama-running))
            (not (featurep 'ollama-buddy-openai)))
       (error "!!WARNING!! ollama server not running")
-    (let* ((models (ollama-buddy--get-models-with-openai))
+    (let* ((models (ollama-buddy--get-models-with-others))
            (new-model (completing-read "Model: " models nil t)))
       
       ;; Check if it's an OpenAI model and set it accordingly
-      (if (and (featurep 'ollama-buddy-openai)
-               (ollama-buddy-openai--is-openai-model new-model))
+      (cond
+       ((and (featurep 'ollama-buddy-openai)
+             (ollama-buddy-openai--is-openai-model new-model))
           (progn
             (setq ollama-buddy-default-model new-model)
             (setq ollama-buddy--current-model new-model)
             (setq ollama-buddy-openai--current-model new-model)
-            (message "Switched to OpenAI model: %s" new-model))
+            (message "Switched to OpenAI model: %s" new-model)))
+       ((and (featurep 'ollama-buddy-claude)
+             (ollama-buddy-claude--is-claude-model new-model))
+          (progn
+            (setq ollama-buddy-default-model new-model)
+            (setq ollama-buddy--current-model new-model)
+            (setq ollama-buddy-claude--current-model new-model)
+            (message "Switched to Claude model: %s" new-model)))
+       (t
         (progn
           (setq ollama-buddy-default-model new-model)
           (setq ollama-buddy--current-model new-model)
-          (message "Switched to Ollama model: %s" new-model)))
+          (message "Switched to Ollama model: %s" new-model))))
       
       (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
       (ollama-buddy--prepare-prompt-area)
@@ -1841,7 +1850,7 @@ With prefix argument ALL-MODELS, clear history for all models."
   ;; Check status and update UI if offline
   (unless (or (ollama-buddy--check-status)
               (and (featurep 'ollama-buddy-openai)
-                   (ollama-buddy-openai--is-openai-model 
+                   (ollama-buddy-openai--is-openai-model
                     (or specified-model ollama-buddy--current-model))))
     (ollama-buddy--update-status "OFFLINE")
     (user-error "Ensure Ollama is running"))
@@ -1850,11 +1859,16 @@ With prefix argument ALL-MODELS, clear history for all models."
     (user-error "Ensure prompt is defined"))
 
   ;; For OpenAI models, use the OpenAI send function
-  (if (and (featurep 'ollama-buddy-openai)
-           (ollama-buddy-openai--is-openai-model 
-            (or specified-model ollama-buddy--current-model)))
-      (ollama-buddy-openai--send prompt specified-model)
-    
+  (cond
+   ((and (featurep 'ollama-buddy-openai)
+         (ollama-buddy-openai--is-openai-model 
+          (or specified-model ollama-buddy--current-model)))
+    (ollama-buddy-openai--send prompt specified-model))
+   ((and (featurep 'ollama-buddy-claude)
+         (ollama-buddy-claude--is-claude-model 
+          (or specified-model ollama-buddy--current-model)))
+    (ollama-buddy-claude--send prompt specified-model))
+   (t
     ;; Original Ollama send code
     (let* ((model-info (ollama-buddy--get-valid-model specified-model))
            (model (car model-info))
@@ -1951,7 +1965,7 @@ With prefix argument ALL-MODELS, clear history for all models."
          (when (and ollama-buddy--active-process
                     (process-live-p ollama-buddy--active-process))
            (delete-process ollama-buddy--active-process))
-         (error "Failed to send request to Ollama: %s" (error-message-string err)))))))
+         (error "Failed to send request to Ollama: %s" (error-message-string err))))))))
 
 (defun ollama-buddy--create-intro-message ()
   "Create welcome message with model management capabilities in org format."

@@ -1,6 +1,6 @@
 ;;; ollama-buddy-claude.el --- Anthropic Claude integration for ollama-buddy -*- lexical-binding: t; -*-
 
-;; Author: Your Name <your-email@example.com>
+;; Author: James Dyer <captainflasmr@gmail.com>
 ;; Keywords: applications, tools, convenience
 ;; Package-Requires: ((emacs "28.1") (url "1.2"))
 
@@ -35,6 +35,11 @@ Get your key from https://console.anthropic.com/."
 
 (defcustom ollama-buddy-claude-api-endpoint "https://api.anthropic.com/v1/messages"
   "Endpoint for Anthropic Claude API."
+  :type 'string
+  :group 'ollama-buddy-claude)
+
+(defcustom ollama-buddy-claude-api-version "2023-06-01"
+  "API version for Anthropic Claude."
   :type 'string
   :group 'ollama-buddy-claude)
 
@@ -122,8 +127,8 @@ Use nil for API default behavior (adaptive)."
     t))
 
 (defun ollama-buddy-claude--send (prompt &optional model)
-  "Send PROMPT to Claude's API using MODEL or default model asynchronously.
-This uses proper encoding for multibyte characters."
+  "Send PROMPT to Claude's API using MODEL or default model.
+This function handles non-streaming requests to the Anthropic API."
   (when (ollama-buddy-claude--verify-api-key)
     ;; Set up the current model
     (setq ollama-buddy-claude--current-model
@@ -152,7 +157,6 @@ This uses proper encoding for multibyte characters."
            ;; Prepare messages array from history
            (messages (vconcat []
                               (append
-                               ;; We'll handle the system prompt separately since Claude expects it differently
                                history
                                `(((role . "user")
                                   (content . ,prompt))))))
@@ -226,8 +230,7 @@ This uses proper encoding for multibyte characters."
                                                        (ollama-buddy--update-status "Error from Claude API")
                                                        (ollama-buddy--prepare-prompt-area))))
                                                
-                                               ;; Process successful response - Claude puts content in a different structure 
-                                               ;; than OpenAI - need to adapt to Claude's format
+                                               ;; Process successful response
                                                (when content
                                                  (let* ((content-text (aref content 0))
                                                         (message-type (alist-get 'type content-text))
@@ -304,8 +307,7 @@ This uses proper encoding for multibyte characters."
                                          "-s" 
                                          "-X" "POST"
                                          "-H" "Content-Type: application/json"
-                                         "-H" (concat "X-API-Key: " ollama-buddy-claude-api-key) 
-                                         "-H" "anthropic-version: 2023-06-01"
+                                         "-H" (concat "anthropic-version: " ollama-buddy-claude-api-version)
                                          "-H" (concat "Authorization: Bearer " ollama-buddy-claude-api-key)
                                          "-d" (format "@%s" temp-file)
                                          ollama-buddy-claude-api-endpoint))))
