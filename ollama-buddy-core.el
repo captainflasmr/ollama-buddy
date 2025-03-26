@@ -32,6 +32,12 @@
   :prefix "ollama-buddy-param-")
 
 ;; Core customization options
+(defcustom ollama-buddy-default-register ?a
+  "Default register to store the current response when not in multishot mode.
+This should be a character (e.g., ?a for register 'a')."
+  :type 'character
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-streaming-enabled t
   "Whether to use streaming mode for responses.
 When enabled, responses appear token by token in real time.
@@ -725,37 +731,40 @@ When SUFFIX-PROMPT is non-nil, mark as a suffix."
                     "Default:latest"))
          (color (ollama-buddy--get-model-color model))
          (existing-content (when keep-content (ollama-buddy--text-after-prompt))))
-    
-    ;; Clean up existing prompt
-    (goto-char (point-max))
-    (when (re-search-backward "\\* .*>> \\(?:PROMPT\\|SYSTEM PROMPT\\|SUFFIX\\):" nil t)
-      (beginning-of-line)
-      (if (or new-prompt
-              (not (string-match-p "[[:alnum:]]" (ollama-buddy--text-after-prompt))))
-          ;; Either replacing prompt or current prompt is empty
-          (progn
-            (skip-chars-backward "\n")
-            (delete-region (point) (point-max))
-            (goto-char (point-max)))
-        ;; Keeping prompt with content
-        (goto-char (point-max))))
-    
-    ;; Insert new prompt header
-    (let ((start (point)))
-      (insert (format "\n\n* %s %s"
-                      model
-                      (cond
-                       (system-prompt ">> SYSTEM PROMPT: ")
-                       (suffix-prompt ">> SUFFIX: ")
-                       (t ">> PROMPT: "))))
-      
-      ;; Apply overlay for model name
-      (let ((overlay (make-overlay start (+ start 4 (length model)))))
-        (overlay-put overlay 'face `(:foreground ,color :weight bold))))
-    
-    ;; Restore content if requested
-    (when (and keep-content existing-content)
-      (insert existing-content))))
+
+    (let ((buf (get-buffer-create ollama-buddy--chat-buffer)))
+      (with-current-buffer buf
+        (let ((inhibit-read-only t))
+          ;; Clean up existing prompt
+          (goto-char (point-max))
+          (when (re-search-backward "\\* .*>> \\(?:PROMPT\\|SYSTEM PROMPT\\|SUFFIX\\):" nil t)
+            (beginning-of-line)
+            (if (or new-prompt
+                    (not (string-match-p "[[:alnum:]]" (ollama-buddy--text-after-prompt))))
+                ;; Either replacing prompt or current prompt is empty
+                (progn
+                  (skip-chars-backward "\n")
+                  (delete-region (point) (point-max))
+                  (goto-char (point-max)))
+              ;; Keeping prompt with content
+              (goto-char (point-max))))
+          
+          ;; Insert new prompt header
+          (let ((start (point)))
+            (insert (format "\n\n* %s %s"
+                            model
+                            (cond
+                             (system-prompt ">> SYSTEM PROMPT: ")
+                             (suffix-prompt ">> SUFFIX: ")
+                             (t ">> PROMPT: "))))
+            
+            ;; Apply overlay for model name
+            (let ((overlay (make-overlay start (+ start 4 (length model)))))
+              (overlay-put overlay 'face `(:foreground ,color :weight bold))))
+          
+          ;; Restore content if requested
+          (when (and keep-content existing-content)
+            (insert existing-content)))))))
 
 ;; API Interaction
 
@@ -775,17 +784,13 @@ When SUFFIX-PROMPT is non-nil, mark as a suffix."
         (json-read-from-string (buffer-string))))))
 
 (defun ollama-buddy--ollama-running ()
-  "Check if Ollama server is running."
-  (condition-case nil
-      (let ((proc (make-network-process
-                   :name "ollama-test"
-                   :buffer nil
-                   :host ollama-buddy-host
-                   :service ollama-buddy-port
-                   :nowait nil)))
-        (delete-process proc)
-        t)
-    (error nil)))
+  "Check if Ollama server is running using url.el."
+  (let ((ollama-url (format "http://%s:%s/api/tags"
+                            ollama-buddy-host ollama-buddy-port)))
+    (condition-case err
+        (let ((buffer (url-retrieve-synchronously ollama-url)))
+          t)
+      (error nil))))
 
 (defun ollama-buddy--check-status ()
   "Check Ollama status with caching for better performance."

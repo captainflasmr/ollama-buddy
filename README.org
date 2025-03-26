@@ -46,6 +46,23 @@ See *Screenshots / Demos* section for more videos/demonstration.
 
 * Whats New
 
+** <2025-03-26> *0.9.13*
+
+- Added automatic writing of last response to a register
+- Added M-r to search through prompt history
+
+I was just thinking about a general workflow aspect and that is getting responses out of the =ollama-buddy= chat buffer.  Of course if you are already there then it will be easier, but even then the latest prompt, which is probably the one you are interested in will still have to be copied to the kill ring.
+
+This issue is even more pronounced when you are sending text from other buffers to the chat.
+
+So, the solution I have put in place is to always write the last response to a register of your choice.  I always think registers are an underused part of Emacs, I already have repurposed them for the multishot, so why not always make the last response available.
+
+For example, you want to proofread a sentence, you can mark the text, send to the chat using the custom menu to proofread then the response will be available in maybe register "a".  The chat buffer will be brought up if not already visible so you can validate the output, then pop back to your buffer, delete the paragraph and insert the register "a"?, maybe.  I am going to put this in as I suspect no-one uses registers anyway and if they do, they can push the response writing register away using =ollama-buddy-default-register=, I don't think this will do any harm, and actually it is something I may starting using more often.
+
+As a side note, I also need to think about popping into the chat buffer with a buffer text push to the chat, should I do it?, not sure yet, still getting to grips with the whole workflow aspect, so will need a little more time to see what works.
+
+Also as a side note to this ramble, the general register prefix is annoyingly long =C-x r i <register>= so I have rebound in my config to =M-a=, as I never want to go back a sentence and also if I just write to the default "a" register then it feels ergonomically fast.
+
 ** <2025-03-25> *0.9.12*
 
 - Added experimental Claude AI support!
@@ -142,7 +159,7 @@ Here is my current config, now mixing ChatGPT with =ollama= models:
    'custom-prompt :model "deepseek-r1:7b"))
 #+end_src
 
-** <2025-03-22> *0.9.9*
+** <2025-03-22> *0.9.9.5*
 
 Added texinfo documentation for future automatic installation through MELPA and created an Emacs manual.
 
@@ -1415,6 +1432,52 @@ By default, strategic status checks should be enough to indicate a good consiste
 
 All interactive functions available in ollama-buddy are listed in the original README.
 
+* ollama API Support Tables
+
+** Core API
+
+| API Endpoint    | Method | Purpose                            | Supported?                 | will ollama-buddy support?        |
+|-----------------+--------+------------------------------------+----------------------------+-----------------------------------|
+| =/api/chat=     | POST   | Send chat messages to a model      | Yes                        |                                   |
+| =/api/generate= | POST   | Generate text without chat context | No                         | Probably not, as chat covers      |
+| =/api/delete=   | DELETE | Deletes available models           | Yes (but with "ollama rm") |                                   |
+| =/api/tags=     | GET    | List available models              | Yes                        |                                   |
+| =/api/pull=     | POST   | Pull a model from Ollama library   | Yes                        |                                   |
+| =/api/push=     | POST   | Push a model to the Ollama library | No                         | No                                |
+| =/api/create=   | POST   | Create a model from a Modelfile    | Yes                        |                                   |
+| =/api/show=     | POST   | Show model information             | Yes                        |                                   |
+| =/api/ps=       | GET    | List running models                | Yes                        |                                   |
+| =/api/copy=     | POST   | Copy a model                       | No                         | Yes                               |
+| =/api/embed=    | POST   | Generate embeddings from text      | No                         | Probably when I can figure it out |
+| =/api/version=  | GET    | Get Ollama version                 | Yes                        |                                   |
+| Cancel requests | Custom | Terminate ongoing request          | Yes                        |                                   |
+
+** Core Params
+
+| Parameter    | Supported | Notes                                            | will ollama-buddy support? |
+|--------------+-----------+--------------------------------------------------+----------------------------|
+| =model=      | Yes       | Can be specified per command or globally         |                            |
+| =prompt=     | Yes       | Core feature with extensive prompt handling      |                            |
+| =suffix=     | Yes/No    | Can be set with =ollama-buddy-set-suffix=        |                            |
+| =images=     | No        |                                                  | Unlikely, this is Emacs!   |
+| =format=     | No        |                                                  | Maybe                      |
+| =options=    | Yes       | Full implementation of all model parameters      |                            |
+| =system=     | Yes       | Can be set with =ollama-buddy-set-system-prompt= |                            |
+| =template=   | No        |                                                  | Maybe                      |
+| =stream=     | Yes       | Toggleable with =ollama-buddy-toggle-streaming=  |                            |
+| =raw=        | No        |                                                  | Might as well              |
+| =keep_alive= | No        | Uses default Ollama behavior                     | Yes                        |
+
+** Model Options Parameters 
+
+| Parameter Group         | Parameters                                                                                     | Supported |
+|-------------------------+------------------------------------------------------------------------------------------------+-----------|
+| *Temperature Controls*  | =temperature=, =top_k=, =top_p=, =min_p=, =typical_p=                                          | Yes       |
+| *Repetition Controls*   | =repeat_last_n=, =repeat_penalty=, =presence_penalty=, =frequency_penalty=                     | Yes       |
+| *Advanced Sampling*     | =mirostat=, =mirostat_tau=, =mirostat_eta=, =penalize_newline=, =stop=                         | Yes       |
+| *Resource Management*   | =num_keep=, =seed=, =num_predict=, =num_ctx=, =num_batch=                                      | Yes       |
+| *Hardware Optimization* | =numa=, =num_gpu=, =main_gpu=, =low_vram=, =vocab_only=, =use_mmap=, =use_mlock=, =num_thread= | Yes       |
+
 * Kanban
 
 Here is a kanban of the features that I plan on (hopefully) adding in due course.
@@ -1424,42 +1487,46 @@ Here is a kanban of the features that I plan on (hopefully) adding in due course
 #+end_src
 
 #+RESULTS:
-| TODO                            | DOING                             | DONE                              |
-|---------------------------------+-----------------------------------+-----------------------------------|
-| Create a model from a GGUF file | API - suffix                      | API - Show running models         |
-| API - Pulling a model           | Show incoming ollama messages     | Add transient menu                |
-| API - Prompt template           | Add fabric pattern/prompt support | History editing                   |
-| Debug - Final response display  |                                   | API - options - parameter editing |
-| API - images                    |                                   | API - show model information      |
-| Embeddings?                     |                                   | API - system prompt               |
-| Test on Windows                 |                                   | Chat buffer to use org-mode       |
-|                                 |                                   | Chat export options               |
-|                                 |                                   | Add temperature                   |
-|                                 |                                   | Managing Sessions                 |
-|                                 |                                   | Sparse minified version           |
-|                                 |                                   | Role-Based Menu Preset System     |
-|                                 |                                   | Add to MELPA                      |
-|                                 |                                   | Enhancing Menu Clarity            |
-|                                 |                                   | Real time token tracking          |
-|                                 |                                   | Managing chat history and context |
+| TODO                    | DOING                             | DONE                                       |
+|-------------------------+-----------------------------------+--------------------------------------------|
+| Core API - Delete Model | Core Params - suffix              | Core API - stream                          |
+| Core API - Copy a model | Show incoming ollama messages     | Core API - Pull/Info/Pull/Delete a model   |
+| Core API - Embeddings   | Add fabric pattern/prompt support | Core API - Show running models             |
+| Core Params - format    |                                   | Core API - Create a model from a GGUF file |
+| Core Params - template  |                                   | Add transient menu                         |
+| Core Params - raw       |                                   | History editing                            |
+| Test on Windows         |                                   | Core API - options - parameter editing     |
+|                         |                                   | Core API - show model information          |
+|                         |                                   | Core API - system prompt                   |
+|                         |                                   | Chat buffer to use org-mode                |
+|                         |                                   | Chat export options                        |
+|                         |                                   | Core Params - options:temperature          |
+|                         |                                   | Managing Sessions                          |
+|                         |                                   | Sparse minified version                    |
+|                         |                                   | Role-Based Menu Preset System              |
+|                         |                                   | Add to MELPA                               |
+|                         |                                   | Enhancing Menu Clarity                     |
+|                         |                                   | Real time token tracking                   |
+|                         |                                   | Managing chat history and context          |
 
 * Roadmap                                                           :roadmap:
 
-** TODO Create a model from a GGUF file
+** TODO Core API - Delete Model
+Revisit as currently running command "ollama rm" but really should send DELETE through the Core API
 
-** TODO API - Pulling a model
+** TODO Core API - Copy a model
 
-** TODO API - Prompt template
+** TODO Core API - Embeddings
 
-** TODO Debug - Final response display
+** TODO Core Params - format
 
-** TODO API - images
+** TODO Core Params - template
 
-** TODO Embeddings?
+** TODO Core Params - raw
 
 ** TODO Test on Windows
 
-** DOING API - suffix
+** DOING Core Params - suffix
 
 I think this is only for generate, but I have quietly added it in.
 
@@ -1467,23 +1534,29 @@ I think this is only for generate, but I have quietly added it in.
 
 ** DOING Add fabric pattern/prompt support
 
-** DONE API - Show running models
+** DONE Core API - stream
+
+** DONE Core API - Pull/Info/Pull/Delete a model
+
+** DONE Core API - Show running models
+
+** DONE Core API - Create a model from a GGUF file
 
 ** DONE Add transient menu
 
 ** DONE History editing
 
-** DONE API - options - parameter editing
+** DONE Core API - options - parameter editing
 
-** DONE API - show model information
+** DONE Core API - show model information
 
-** DONE API - system prompt
+** DONE Core API - system prompt
 
 ** DONE Chat buffer to use org-mode
 
 ** DONE Chat export options
 
-** DONE Add temperature
+** DONE Core Params - options:temperature
 
 ** DONE Managing Sessions
 
@@ -1594,20 +1667,6 @@ Let's compare ollama-buddy to the existing solutions:
 Report issues on the [[https://github.com/captainflasmr/ollama-buddy/issues][GitHub Issues page]]
 
 * Bugs
-
-** TODO Transient initially not defined
-
-#+begin_src 
-transient-setup: Suffix command ollama-buddy--open-chat is not defined or autoloaded
-#+end_src
-
-** TODO After a multishot I sometimes get:
-
-#+begin_src 
-error in process filter: Args out of range: "aef", 3
-error in process filter: let*: Args out of range: "aef", 3
-error in process filter: Args out of range: "aef", 3
-#+end_src
 
 ** TODO Save system prompts as part of session
 

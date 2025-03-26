@@ -11,6 +11,11 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-03-26> *0.9.13*
+
+- Added automatic writing of last response to a register
+- Added M-r to search through prompt history
+
 ** <2025-03-25> *0.9.12*
 
 - Added experimental Claude AI support!
@@ -23,6 +28,14 @@ Added the ability to toggle streaming on and off
 - Added customization option to enable/disable streaming mode
 - Implemented toggle function with keybindings (C-c x) and transient menu option
 - Added streaming status indicator in the modeline
+
+** <2025-03-22> *0.9.10*
+
+Added experimental OpenAI support!
+
+** <2025-03-22> *0.9.9.5*
+
+Added texinfo documentation for future automatic installation through MELPA and created an Emacs manual.
 
 ** <2025-03-20> *0.9.9*
 

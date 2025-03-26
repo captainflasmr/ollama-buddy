@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama Buddy: Your Friendly AI Assistant -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.9.12
+;; Version: 0.9.13
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -78,6 +78,36 @@
 
 (defvar ollama-buddy--start-point nil
   "General store of a starting point.")
+
+(defun ollama-buddy-history-search ()
+  "Search through the prompt history using a completing-read interface.
+Similar to readline's C-r functionality."
+  (interactive)
+  (when ollama-buddy--prompt-history
+    (let* ((prompt-data (ollama-buddy--get-prompt-content))
+           (prompt-point (cdr prompt-data))
+           ;; Create an alist with indices and history items for completing-read
+           (history-items 
+            (cl-loop for item in ollama-buddy--prompt-history
+                     for index from 0
+                     collect (cons item index)))
+           ;; Use completing-read to search through history
+           (selected-item (completing-read "Search history: " 
+                                          (mapcar #'car history-items)
+                                          nil t))
+           ;; Find the selected item in our history
+           (selected-index (cdr (assoc selected-item history-items))))
+      
+      ;; Store position for next cycle
+      (put 'ollama-buddy--cycle-prompt-history 'history-position selected-index)
+      
+      ;; Replace current prompt with selected history item
+      (when prompt-point
+        (save-excursion
+          (goto-char prompt-point)
+          (search-forward ":")
+          (delete-region (point) (point-max))
+          (insert " " selected-item))))))
 
 (defun ollama-buddy-display-token-graph ()
   "Display a visual graph of token usage statistics."
@@ -1573,14 +1603,15 @@ With prefix argument ALL-MODELS, clear history for all models."
           (unless (boundp 'ollama-buddy--current-response)
             (setq ollama-buddy--current-response text))
 
-          ;; lets push to a register if multishot is enabled
-          (when ollama-buddy--multishot-sequence
-            (let* ((reg-char
-                    (aref ollama-buddy--multishot-sequence
-                          ollama-buddy--multishot-progress))
-                   (current (get-register reg-char))
-                   (new-content (concat (if (stringp current) current "") text)))
-              (set-register reg-char new-content)))
+          ;; Write to register - if multishot is enabled, use that register, otherwise use default
+          (let* ((reg-char (if ollama-buddy--multishot-sequence
+                              (if (< ollama-buddy--multishot-progress (length ollama-buddy--multishot-sequence))
+                                  (aref ollama-buddy--multishot-sequence ollama-buddy--multishot-progress)
+                                ollama-buddy-default-register)
+                            ollama-buddy-default-register))
+                 (current (get-register reg-char))
+                 (new-content (concat (if (stringp current) current "") text)))
+            (set-register reg-char new-content))
           
           ;; Check if this response is complete
           (when (eq (alist-get 'done json-data) t)
@@ -1672,9 +1703,14 @@ With prefix argument ALL-MODELS, clear history for all models."
   (when-let* ((status (cond ((string-match-p "finished" event) "Completed")
                             ((string-match-p "\\(?:deleted\\|connection broken\\)" event) "Interrupted")))
               (msg (format "\n\n[Stream %s]" status)))
-    ;; Clean up multishot variables
-    (setq ollama-buddy--multishot-sequence nil
-          ollama-buddy--multishot-prompt nil)
+    ;; Clean up multishot variables but ensure we don't create out-of-range conditions
+    (setq ollama-buddy--multishot-prompt nil)
+    ;; Only set sequence to nil if we're done with it or interrupted
+    (when (or (string= status "Interrupted") 
+              (not ollama-buddy--multishot-sequence)
+              (>= ollama-buddy--multishot-progress (length ollama-buddy--multishot-sequence)))
+      (setq ollama-buddy--multishot-sequence nil
+            ollama-buddy--multishot-progress 0))
     
     ;; Clean up token tracking
     (when ollama-buddy--token-update-timer
@@ -1904,6 +1940,8 @@ With prefix argument ALL-MODELS, clear history for all models."
                               (append with-suffix `((options . ,modified-options)))
                             with-suffix))
            (payload (json-encode final-payload)))
+
+      (set-register ollama-buddy-default-register "")
       
       (setq ollama-buddy--current-model model)
       (setq ollama-buddy--current-prompt prompt)
@@ -1989,7 +2027,7 @@ With prefix argument ALL-MODELS, clear history for all models."
 - Change model                        C-c m
 - Cancel request                      C-c k
 - Toggle Streaming                    C-c x
-- Browse prompt history               M-p/M-n
+- Browse prompt history               M-p/M-n/M-r
 - Advanced interface (show all tips)  C-c A")
          ;; Advanced tips for experienced users
          (advanced-tips
@@ -2006,7 +2044,7 @@ With prefix argument ALL-MODELS, clear history for all models."
 - Role Switch/Create/Directory        C-c R/E/D
 - Fabric Patterns Menu                C-c f
 - Display Options (Colors/Markdown)   C-c c/C-o
-- Browse prompt history               M-p/M-n
+- Browse prompt history               M-p/M-n/M-r
 - Basic interface (simpler display)   C-c A")
          ;; Choose tips based on interface level
          (tips-section (if (eq ollama-buddy-interface-level 'basic)
@@ -2131,7 +2169,10 @@ With prefix argument ALL-MODELS, clear history for all models."
             (ollama-buddy--prepare-prompt-area t t)
           (progn
             (ollama-buddy--prepare-prompt-area)
-            (insert ollama-buddy--multishot-prompt)))
+            (let ((buf (get-buffer-create ollama-buddy--chat-buffer)))
+              (with-current-buffer buf
+                (let ((inhibit-read-only t))
+                  (insert ollama-buddy--multishot-prompt))))))
         (ollama-buddy--send ollama-buddy--multishot-prompt model)))))
 
 (defun ollama-buddy--multishot-prepare ()
@@ -2411,6 +2452,13 @@ Modifies the variable in place."
         ollama-buddy--current-token-start-time nil
         ollama-buddy--last-token-count 0
         ollama-buddy--last-update-time nil)
+  
+  ;; Safely reset multishot variables
+  (setq ollama-buddy--multishot-prompt nil)
+  ;; Only reset sequence if we were using it
+  (when ollama-buddy--multishot-sequence
+    (setq ollama-buddy--multishot-sequence nil
+          ollama-buddy--multishot-progress 0))
   
   ;; Update status to show cancelled
   (ollama-buddy--update-status "Cancelled"))
@@ -2836,6 +2884,7 @@ Modifies the variable in place."
     (define-key map (kbd "C-c J") #'ollama-buddy-history-edit)
     (define-key map (kbd "M-p") #'ollama-buddy-previous-history)  ;; Keep these existing bindings
     (define-key map (kbd "M-n") #'ollama-buddy-next-history)
+    (define-key map (kbd "M-r") #'ollama-buddy-history-search)
     
     ;; Session keybindings
     (define-key map (kbd "C-c N") #'ollama-buddy-sessions-new)
