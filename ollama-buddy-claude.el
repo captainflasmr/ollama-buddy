@@ -146,17 +146,21 @@ Use nil for API default behavior (adaptive)."
            (system-prompt ollama-buddy--current-system-prompt)
            (messages (vconcat []
                               (append
-                               (when (and system-prompt (not (string-empty-p system-prompt)))
-                                 `(((role . "system") (content . ,system-prompt))))
+                               ;; Don't include system prompt in messages array
                                history
                                `(((role . "user") (content . ,prompt))))))
            (max-tokens (or ollama-buddy-claude-max-tokens 4096))
+           ;; Create base JSON payload
            (json-payload
             `((model . ,(ollama-buddy-claude--get-real-model-name
                          ollama-buddy-claude--current-model))
               (messages . ,messages)
               (temperature . ,ollama-buddy-claude-temperature)
               (max_tokens . ,max-tokens)))
+           ;; Add system parameter if it exists and is not empty
+           (json-payload (if (and system-prompt (not (string-empty-p system-prompt)))
+                             (append json-payload `((system . ,system-prompt)))
+                           json-payload))
            (json-str (encode-coding-string (json-encode json-payload) 'utf-8))
            (url-request-method "POST")
            (url-request-extra-headers
