@@ -128,7 +128,8 @@ Use nil for API default behavior (adaptive)."
     (setq ollama-buddy-claude--current-model
           (or model 
               ollama-buddy-claude--current-model
-              (ollama-buddy-claude--get-full-model-name ollama-buddy-claude-default-model)))
+              (ollama-buddy-claude--get-full-model-name
+               ollama-buddy-claude-default-model)))
 
     ;; Store the prompt and initialize response
     (setq ollama-buddy-claude--current-prompt prompt
@@ -137,7 +138,7 @@ Use nil for API default behavior (adaptive)."
     ;; Initialize token counter
     (setq ollama-buddy-claude--current-token-count 0)
 
-    ;; Ensure max_tokens is always set
+    ;; Get history and system prompt
     (let* ((history (when ollama-buddy-history-enabled
                       (gethash ollama-buddy-claude--current-model
                                ollama-buddy-claude--conversation-history-by-model
@@ -149,13 +150,13 @@ Use nil for API default behavior (adaptive)."
                                  `(((role . "system") (content . ,system-prompt))))
                                history
                                `(((role . "user") (content . ,prompt))))))
-           (max-tokens (or ollama-buddy-claude-max-tokens 4096)) ;; Ensure max_tokens is always set
-           ;; Prepare the full payload
+           (max-tokens (or ollama-buddy-claude-max-tokens 4096))
            (json-payload
-            `((model . ,(ollama-buddy-claude--get-real-model-name ollama-buddy-claude--current-model))
+            `((model . ,(ollama-buddy-claude--get-real-model-name
+                         ollama-buddy-claude--current-model))
               (messages . ,messages)
               (temperature . ,ollama-buddy-claude-temperature)
-              (max_tokens . ,max-tokens))) ;; Always include max_tokens
+              (max_tokens . ,max-tokens)))
            (json-str (encode-coding-string (json-encode json-payload) 'utf-8))
            (url-request-method "POST")
            (url-request-extra-headers
@@ -170,17 +171,18 @@ Use nil for API default behavior (adaptive)."
       (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
         (pop-to-buffer (current-buffer))
         (goto-char (point-max))
-        (let ((inhibit-read-only t)
+        (let (start-point
+              (inhibit-read-only t)
               (display-name ollama-buddy-claude--current-model))
-          ;; Add model info to response header
+
           (insert (propertize (format "\n\n** [%s: RESPONSE]" display-name)
                               'face `(:inherit bold :foreground
                                                ,(ollama-buddy-claude--get-model-color display-name)))
                   "\n\n")
-          ;; Show loading message
-          (insert "Loading response...")
 
-          ;; Update status
+          (setq start-point (point))
+          
+          (insert "Loading response...")
           (ollama-buddy--update-status "Sending request to Claude...")
 
           ;; Send request via `url-retrieve`
@@ -197,10 +199,10 @@ Use nil for API default behavior (adaptive)."
                       (error-message (alist-get 'error response))
                       (content ""))
 
-                 ;; Check for API errors
+                 ;; Extract the message
                  (if error-message
                      (setq content (format "Error: %s" (alist-get 'message error-message)))
-                   ;; Extract the content based on the new API response format
+                   ;; Extract the message
                    (let ((extracted-text ""))
                      ;; Get the content array from the response
                      (let ((content-obj (alist-get 'content response)))
@@ -211,8 +213,8 @@ Use nil for API default behavior (adaptive)."
                                  ;; Process each content item in the array
                                  (dotimes (i (length content-array))
                                    (let* ((item (aref content-array i))
-                                         (item-type (alist-get 'type item))
-                                         (item-text (alist-get 'text item)))
+                                          (item-type (alist-get 'type item))
+                                          (item-text (alist-get 'text item)))
                                      (when (and (string= item-type "text") item-text)
                                        (setq extracted-text (concat extracted-text item-text)))))
                                ;; Handle case where content.content is not a vector
@@ -221,8 +223,8 @@ Use nil for API default behavior (adaptive)."
                          (if (vectorp content-obj)
                              (dotimes (i (length content-obj))
                                (let* ((item (aref content-obj i))
-                                     (item-type (alist-get 'type item))
-                                     (item-text (alist-get 'text item)))
+                                      (item-type (alist-get 'type item))
+                                      (item-text (alist-get 'text item)))
                                  (when (and (string= item-type "text") item-text)
                                    (setq extracted-text (concat extracted-text item-text)))))
                            (message "Unexpected response format: %S" content-obj))))
@@ -231,13 +233,13 @@ Use nil for API default behavior (adaptive)."
                  ;; Update the chat buffer
                  (with-current-buffer ollama-buddy--chat-buffer
                    (let ((inhibit-read-only t))
-                     (goto-char (point-max))
-                     (delete-region (line-beginning-position) (point-max))
+                     (goto-char start-point)
+                     (delete-region start-point (point-max))
                      (insert content)
 
                      ;; Convert markdown to org if enabled
                      (when ollama-buddy-convert-markdown-to-org
-                       (ollama-buddy--md-to-org-convert-region (point-min) (point-max)))
+                       (ollama-buddy--md-to-org-convert-region start-point (point-max)))
 
                      ;; Add to history
                      (setq ollama-buddy-claude--current-response content)
@@ -258,8 +260,7 @@ Use nil for API default behavior (adaptive)."
                      (ollama-buddy--prepare-prompt-area)
                      (ollama-buddy--update-status
                       (format "Finished [%d tokens]" 
-                              ollama-buddy-claude--current-token-count))))))))
-          nil t)))))
+                              ollama-buddy-claude--current-token-count)))))))))))))
 
 ;; History management functions
 
