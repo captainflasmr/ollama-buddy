@@ -1436,21 +1436,21 @@ All interactive functions available in ollama-buddy are listed in the original R
 
 ** Core API
 
-| API Endpoint    | Method | Purpose                            | Supported?                 | will ollama-buddy support?        |
-|-----------------+--------+------------------------------------+----------------------------+-----------------------------------|
-| =/api/chat=     | POST   | Send chat messages to a model      | Yes                        |                                   |
-| =/api/generate= | POST   | Generate text without chat context | No                         | Probably not, as chat covers      |
-| =/api/delete=   | DELETE | Deletes available models           | Yes (but with "ollama rm") |                                   |
-| =/api/tags=     | GET    | List available models              | Yes                        |                                   |
-| =/api/pull=     | POST   | Pull a model from Ollama library   | Yes                        |                                   |
-| =/api/push=     | POST   | Push a model to the Ollama library | No                         | No                                |
-| =/api/create=   | POST   | Create a model from a Modelfile    | Yes                        |                                   |
-| =/api/show=     | POST   | Show model information             | Yes                        |                                   |
-| =/api/ps=       | GET    | List running models                | Yes                        |                                   |
-| =/api/copy=     | POST   | Copy a model                       | No                         | Yes                               |
-| =/api/embed=    | POST   | Generate embeddings from text      | No                         | Probably when I can figure it out |
-| =/api/version=  | GET    | Get Ollama version                 | Yes                        |                                   |
-| Cancel requests | Custom | Terminate ongoing request          | Yes                        |                                   |
+| API Endpoint    | Method | Purpose                            | Supported? | will ollama-buddy support?        |
+|-----------------+--------+------------------------------------+------------+-----------------------------------|
+| =/api/chat=     | POST   | Send chat messages to a model      | Yes        |                                   |
+| =/api/generate= | POST   | Generate text without chat context | No         | Probably not, as chat covers      |
+| =/api/delete=   | DELETE | Deletes available models           | Yes        |                                   |
+| =/api/tags=     | GET    | List available models              | Yes        |                                   |
+| =/api/pull=     | POST   | Pull a model from Ollama library   | Yes        |                                   |
+| =/api/push=     | POST   | Push a model to the Ollama library | No         | No                                |
+| =/api/create=   | POST   | Create a model from a Modelfile    | Yes        |                                   |
+| =/api/show=     | POST   | Show model information             | Yes        |                                   |
+| =/api/ps=       | GET    | List running models                | Yes        |                                   |
+| =/api/copy=     | POST   | Copy a model                       | Yes        |                                   |
+| =/api/embed=    | POST   | Generate embeddings from text      | No         | Probably when I can figure it out |
+| =/api/version=  | GET    | Get Ollama version                 | Yes        |                                   |
+| Cancel requests | Custom | Terminate ongoing request          | Yes        |                                   |
 
 ** Core Params
 
@@ -1514,8 +1514,6 @@ Here is a kanban of the features that I plan on (hopefully) adding in due course
 ** TODO Core API - Delete Model
 Revisit as currently running command "ollama rm" but really should send DELETE through the Core API
 
-** TODO Core API - Copy a model
-
 ** TODO Core API - Embeddings
 
 ** TODO Core Params - format
@@ -1533,6 +1531,8 @@ I think this is only for generate, but I have quietly added it in.
 ** DOING Show incoming ollama messages
 
 ** DOING Add fabric pattern/prompt support
+
+** DONE Core API - Copy a model
 
 ** DONE Core API - stream
 

@@ -257,16 +257,16 @@
     ("M" "Mirostat Mode" (lambda () (interactive) (ollama-buddy-params-edit 'mirostat)))
     ("T" "Mirostat Tau" (lambda () (interactive) (ollama-buddy-params-edit 'mirostat_tau)))
     ("E" "Mirostat Eta" (lambda () (interactive) (ollama-buddy-params-edit 'mirostat_eta)))]
-   ]
   
-  [["Resource"
+  ["Resource"
     ("c" "Num Ctx" (lambda () (interactive) (ollama-buddy-params-edit 'num_ctx)))
     ("b" "Num Batch" (lambda () (interactive) (ollama-buddy-params-edit 'num_batch)))
     ("g" "Num GPU" (lambda () (interactive) (ollama-buddy-params-edit 'num_gpu)))
     ("G" "Main GPU" (lambda () (interactive) (ollama-buddy-params-edit 'main_gpu)))
     ("K" "Num Keep" (lambda () (interactive) (ollama-buddy-params-edit 'num_keep)))]
+  ]
    
-   ["More Resource"
+   [["More Resource"
     ("P" "Num Predict" (lambda () (interactive) (ollama-buddy-params-edit 'num_predict)))
     ("S" "Seed" (lambda () (interactive) (ollama-buddy-params-edit 'seed)))
     ("N" "NUMA" (lambda () (interactive) (ollama-buddy-params-edit 'numa)))
@@ -277,9 +277,8 @@
     ("m" "Use MMAP" (lambda () (interactive) (ollama-buddy-params-edit 'use_mmap)))
     ("L" "Use MLOCK" (lambda () (interactive) (ollama-buddy-params-edit 'use_mlock)))
     ("C" "Num Thread" (lambda () (interactive) (ollama-buddy-params-edit 'num_thread)))]
-   ]
 
-  [["Profiles"
+  ["Profiles"
     ("d" "Default Profile" (lambda () (interactive) 
                              (ollama-buddy-apply-param-profile "Default")
                              (message "Applied Default profile")))

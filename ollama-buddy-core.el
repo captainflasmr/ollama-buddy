@@ -419,9 +419,6 @@ Each command is defined with:
 (defvar ollama-buddy--conversation-history-by-model (make-hash-table :test 'equal)
   "Hash table mapping model names to their conversation histories.")
 
-(defvar ollama-buddy--conversation-history nil
-  "Current model's conversation history (alias for backward compatibility).")
-
 (defvar ollama-buddy--token-usage-history nil
   "History of token usage for ollama-buddy interactions.")
 
@@ -781,7 +778,8 @@ When SUFFIX-PROMPT is non-nil, mark as a suffix."
             (let ((url-request-data (encode-coding-string payload 'utf-8)))
               (url-insert-file-contents url))
           (url-insert-file-contents url))
-        (json-read-from-string (buffer-string))))))
+        (when (not (string-empty-p (buffer-string)))
+          (json-read-from-string (buffer-string)))))))
 
 (defun ollama-buddy--ollama-running ()
   "Check if Ollama server is running using url.el."
@@ -931,10 +929,7 @@ When SUFFIX-PROMPT is non-nil, mark as a suffix."
         (setq history (seq-take history (* 2 ollama-buddy-max-history-length))))
       
       ;; Update the hash table with the modified history
-      (puthash model history ollama-buddy--conversation-history-by-model)
-      
-      ;; Update the current history variable for backward compatibility
-      (setq ollama-buddy--conversation-history history))))
+      (puthash model history ollama-buddy--conversation-history-by-model))))
 
 (defun ollama-buddy--get-history-for-request ()
   "Get history for the current request."
