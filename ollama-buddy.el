@@ -2645,10 +2645,13 @@ Modifies the variable in place."
 (defun ollama-buddy-show-model-info (model)
   "Display detailed information about MODEL."
   (let ((endpoint "/api/show")
-        (payload (json-encode `((name . ,model)))))
-    
-    (ollama-buddy--update-status (format "Fetching info for %s..." model))
-    
+        (payload (json-encode `((name . ,model))))
+        (operation-id (gensym "show-")))
+
+    (ollama-buddy--register-background-operation 
+     operation-id
+     (format "Fetching info for %s" model))
+        
     (ollama-buddy--make-request-async 
      endpoint 
      "POST" 
@@ -2657,7 +2660,9 @@ Modifies the variable in place."
        (if (plist-get status :error)
            (progn
              (message "Error fetching model info: %s" (cdr (plist-get status :error)))
-             (ollama-buddy--update-status "Error fetching model info"))
+             (ollama-buddy--complete-background-operation 
+              operation-id
+              (format "Error fetching %s" model)))
          (let ((buf (get-buffer-create "*Ollama Model Info*")))
            (with-current-buffer buf
              (let ((inhibit-read-only t))
@@ -2670,15 +2675,20 @@ Modifies the variable in place."
                (insert "\n#+end_src")
                (view-mode 1)))
            (display-buffer buf)))
-       (ollama-buddy--update-status (format "Model info for %s displayed" model))))))
+                  (ollama-buddy--complete-background-operation 
+            operation-id
+            (format "Model %s info displayed" model))))))
 
 (defun ollama-buddy-pull-model (model &optional callback)
   "Pull or update MODEL from Ollama Hub asynchronously.
 When the operation completes, CALLBACK is called with no arguments if provided."
   (let ((buf (get-buffer-create ollama-buddy--chat-buffer))
-        (payload (json-encode `((model . ,model)))))
+        (payload (json-encode `((model . ,model))))
+        (operation-id (gensym "pull-")))
 
-    (ollama-buddy--update-status (format "Pulling model %s..." model))
+    (ollama-buddy--register-background-operation 
+     operation-id
+     (format "Pulling model %s" model))
     
     (ollama-buddy--make-request-async 
      "/api/pull" 
@@ -2687,20 +2697,27 @@ When the operation completes, CALLBACK is called with no arguments if provided."
      (lambda (status result)
        (if (plist-get status :error)
            (progn
-             (messa-textge "Error pulling model %s: %s" model (cdr (plist-get status :error)))
-             (ollama-buddy--update-status "Error pulling model"))
+             (message "Error pulling model %s: %s" model (cdr (plist-get status :error)))
+             (ollama-buddy--complete-background-operation 
+              operation-id
+              (format "Error pulling %s" model)))
          (progn
            (message "Successfully pulled model %s" model)
-           (ollama-buddy--update-status (format "Model pulled to %s" model))))))))
+           (ollama-buddy--complete-background-operation 
+            operation-id
+            (format "Successfully pulled model %s" model))))))))
 
 (defun ollama-buddy-copy-model (model)
   "Copy MODEL in Ollama."
   (let* ((buf (get-buffer-create ollama-buddy--chat-buffer))
          (destination (read-string (format "New name for copy of %s: " model)))
          (payload (json-encode `((source . ,model)
-                                 (destination . ,destination)))))
-    
-    (ollama-buddy--update-status (format "Copying model %s to %s..." model destination))
+                                 (destination . ,destination))))
+         (operation-id (gensym "copy-")))
+
+    (ollama-buddy--register-background-operation 
+     operation-id
+     (format "Copying model to %s" model))
     
     (ollama-buddy--make-request-async 
      "/api/copy" 
@@ -2710,17 +2727,24 @@ When the operation completes, CALLBACK is called with no arguments if provided."
        (if (plist-get status :error)
            (progn
              (message "Error copying model: %s" (cdr (plist-get status :error)))
-             (ollama-buddy--update-status "Error copying model"))
+             (ollama-buddy--complete-background-operation 
+              operation-id
+              (format "Error copying %s" model)))
          (progn
            (message "Model %s successfully copied to %s" model destination)
-           (ollama-buddy--update-status (format "Model copied to %s" destination))))))))
+           (ollama-buddy--complete-background-operation 
+            operation-id
+            (format "Successfully copied model %s" model))))))))
 
 (defun ollama-buddy-delete-model (model)
   "Delete MODEL from Ollama."
   (let ((buf (get-buffer-create ollama-buddy--chat-buffer))
-        (payload (json-encode `((model . ,model)))))
-    
-    (ollama-buddy--update-status (format "Deleting model %s..." model))
+        (payload (json-encode `((model . ,model))))
+        (operation-id (gensym "delete-")))
+
+    (ollama-buddy--register-background-operation 
+     operation-id
+     (format "Deleting model %s" model))
     
     (ollama-buddy--make-request-async 
      "/api/delete" 
@@ -2730,10 +2754,14 @@ When the operation completes, CALLBACK is called with no arguments if provided."
        (if (plist-get status :error)
            (progn
              (message "Error deleting model: %s" (cdr (plist-get status :error)))
-             (ollama-buddy--update-status "Error deleting model"))
+             (ollama-buddy--complete-background-operation 
+              operation-id
+              (format "Error deleting %s" model)))
          (progn
            (message "Model %s successfully deleted" model)
-           (ollama-buddy--update-status (format "Model %s deleted" model))))))))
+           (ollama-buddy--complete-background-operation 
+            operation-id
+            (format "Successfully deleted model %s" model))))))))
 
 (defun ollama-buddy-params-help ()
   "Display help for Ollama parameters."

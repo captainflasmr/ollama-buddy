@@ -354,6 +354,18 @@ Each command is defined with:
   :group 'ollama-buddy)
 
 ;; Shared variables
+(defvar ollama-buddy--background-operations nil
+  "Alist of active background operations.
+Each entry is (OPERATION-ID . DESCRIPTION) where OPERATION-ID
+is a unique identifier and DESCRIPTION is displayed in the status line.")
+
+(defvar ollama-buddy--status-update-timer nil
+  "Timer for updating the status line with background operations.")
+
+(defcustom ollama-buddy-status-update-interval 1.0
+  "Interval in seconds to update the status line with background operations."
+  :type 'float
+  :group 'ollama-buddy)
 
 (defvar ollama-buddy--running-models-cache nil
   "Cache for running Ollama models.")
@@ -505,6 +517,55 @@ Each command is defined with:
   "Hash table mapping model names to their colors.")
 
 ;; Core utility functions
+(defun ollama-buddy--register-background-operation (operation-id description)
+  "Register a new background OPERATION-ID with DESCRIPTION."
+  ;; Start the timer if it's not already running
+  (unless ollama-buddy--status-update-timer
+    (setq ollama-buddy--status-update-timer
+          (run-with-timer 0 ollama-buddy-status-update-interval
+                          #'ollama-buddy--update-status-with-operations)))
+  
+  ;; Add the operation to the list
+  (push (cons operation-id description) ollama-buddy--background-operations)
+  
+  ;; Immediately update the status
+  (ollama-buddy--update-status-with-operations))
+
+(defun ollama-buddy--complete-background-operation (operation-id &optional completion-status)
+  "Mark OPERATION-ID as completed with optional COMPLETION-STATUS."
+  ;; Remove the operation from the list
+  (setq ollama-buddy--background-operations
+        (assq-delete-all operation-id ollama-buddy--background-operations))
+  
+  ;; Update status with completion message if provided
+  (when completion-status
+    (ollama-buddy--update-status completion-status))
+  
+  ;; Cancel the timer if no more operations
+  (when (and (null ollama-buddy--background-operations)
+             ollama-buddy--status-update-timer)
+    (cancel-timer ollama-buddy--status-update-timer)
+    (setq ollama-buddy--status-update-timer nil))
+  
+  ;; Update the status display
+  (ollama-buddy--update-status-with-operations))
+
+(defun ollama-buddy--update-status-with-operations ()
+  "Update status line to show background operations."
+  (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+    (let* ((regular-status ollama-buddy--status)
+           (operations-text 
+            (when ollama-buddy--background-operations
+              (mapconcat #'cdr ollama-buddy--background-operations " | ")))
+           (combined-status 
+            (if operations-text
+                (format "%s [%s...]" regular-status operations-text)
+              regular-status)))
+      
+      ;; Call the original update status function with our combined status
+      (let ((ollama-buddy--status combined-status))
+        (ollama-buddy--update-status combined-status)))))
+
 (defun ollama-buddy-toggle-streaming ()
   "Toggle streaming mode for Ollama responses.
 When streaming is enabled, responses appear token by token in real time.
