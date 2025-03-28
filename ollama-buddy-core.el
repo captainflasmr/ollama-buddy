@@ -353,6 +353,23 @@ Each command is defined with:
   :group 'ollama-buddy)
 
 ;; Shared variables
+(defcustom ollama-buddy-claude-marker-prefix "claude:"
+  "Prefix used to identify Claude models in the model list."
+  :type 'string
+  :group 'ollama-buddy-claude)
+
+(defcustom ollama-buddy-claude-models
+  '("claude-3-7-sonnet-20250219"
+    "claude-3-5-sonnet-20240620"
+    "claude-3-opus-20240229"
+    "claude-3-5-haiku-20240307")
+  "List of available Claude models."
+  :type '(repeat string)
+  :group 'ollama-buddy-claude)
+
+(defvar ollama-buddy-claude--current-model nil
+  "The currently selected Claude model.")
+
 (defvar ollama-buddy--background-operations nil
   "Alist of active background operations.
 Each entry is (OPERATION-ID . DESCRIPTION) where OPERATION-ID
@@ -516,6 +533,13 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
   "Hash table mapping model names to their colors.")
 
 ;; Core utility functions
+(defun ollama-buddy-claude--get-full-model-name (model)
+  "Get the full model name with prefix for MODEL."
+  (concat ollama-buddy-claude-marker-prefix model))
+
+(defun ollama-buddy-claude--is-claude-model (model)
+  "Check if MODEL is a Claude model by checking for the prefix."
+  (and model (string-prefix-p ollama-buddy-claude-marker-prefix model)))
 
 (defun ollama-buddy-fix-encoding-issues (string)
   "Fix common encoding issues with a simpler approach."

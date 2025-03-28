@@ -75,6 +75,7 @@
 (require 'ollama-buddy-transient)
 
 (declare-function ollama-buddy-openai--send "ollama-buddy-openai")
+(declare-function ollama-buddy-claude--send "ollama-buddy-claude")
 
 (defvar ollama-buddy--start-point nil
   "General store of a starting point.")

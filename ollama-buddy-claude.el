@@ -55,20 +55,6 @@ Use nil for API default behavior (adaptive)."
   :type 'boolean
   :group 'ollama-buddy-claude)
 
-(defcustom ollama-buddy-claude-marker-prefix "claude:"
-  "Prefix used to identify Claude models in the model list."
-  :type 'string
-  :group 'ollama-buddy-claude)
-
-(defcustom ollama-buddy-claude-models
-  '("claude-3-7-sonnet-20250219"
-    "claude-3-5-sonnet-20240620"
-    "claude-3-opus-20240229"
-    "claude-3-5-haiku-20240307")
-  "List of available Claude models."
-  :type '(repeat string)
-  :group 'ollama-buddy-claude)
-
 ;; Internal variables
 (defvar ollama-buddy-claude--model-colors (make-hash-table :test 'equal)
   "Hash table for storing Claude model colors.")
@@ -85,9 +71,6 @@ Use nil for API default behavior (adaptive)."
 (defvar ollama-buddy-claude--current-token-count 0
   "Counter for tokens in the current Claude response.")
 
-(defvar ollama-buddy-claude--current-model nil
-  "The currently selected Claude model.")
-
 ;; Model display and management functions
 
 (defun ollama-buddy-claude--get-model-color (model)
@@ -96,14 +79,6 @@ Use nil for API default behavior (adaptive)."
       (let ((color (ollama-buddy--hash-string-to-color model)))
         (puthash model color ollama-buddy-claude--model-colors)
         color)))
-
-(defun ollama-buddy-claude--get-full-model-name (model)
-  "Get the full model name with prefix for MODEL."
-  (concat ollama-buddy-claude-marker-prefix model))
-
-(defun ollama-buddy-claude--is-claude-model (model)
-  "Check if MODEL is a Claude model by checking for the prefix."
-  (and model (string-prefix-p ollama-buddy-claude-marker-prefix model)))
 
 (defun ollama-buddy-claude--get-real-model-name (model)
   "Extract the actual model name from the prefixed MODEL string."
