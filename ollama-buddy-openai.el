@@ -135,7 +135,7 @@ Use nil for API default behavior (adaptive)."
            (json-str (encode-coding-string (json-encode json-payload) 'utf-8))
            (url-request-method "POST")
            (url-request-extra-headers
-            `(("Content-Type" . "application/json")
+            `(("Content-Type" . "application/json; charset=utf-8")
               ("Authorization" . ,(concat "Bearer " ollama-buddy-openai-api-key))))
            (url-request-data json-str)
            (endpoint "https://api.openai.com/v1/chat/completions"))

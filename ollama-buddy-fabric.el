@@ -208,18 +208,6 @@
     (with-temp-buffer 
       (insert-file-contents system-file)
       (let ((content (buffer-string)))
-        ;; Also show the description if available
-        (let ((desc-file (expand-file-name (format "%s/%s/description.md" 
-                                                   (ollama-buddy-fabric--patterns-path) 
-                                                   selected-pattern))))
-          (when (file-exists-p desc-file)
-            (with-current-buffer (get-buffer-create "*Fabric Pattern Info*")
-              (let ((inhibit-read-only t))
-                (erase-buffer)
-                (insert (format "Pattern: %s\n\n" selected-pattern))
-                (insert-file-contents desc-file)
-                (view-mode 1))
-              (display-buffer (current-buffer)))))
         content))))
 
 (defun ollama-buddy-fabric-send ()

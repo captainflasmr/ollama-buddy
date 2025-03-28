@@ -164,7 +164,7 @@ Use nil for API default behavior (adaptive)."
            (json-str (encode-coding-string (json-encode json-payload) 'utf-8))
            (url-request-method "POST")
            (url-request-extra-headers
-            `(("Content-Type" . "application/json")
+            `(("Content-Type" . "application/json; charset=utf-8")
               ("Authorization" . ,(concat "Bearer " ollama-buddy-claude-api-key))
               ("X-API-Key" . ,ollama-buddy-claude-api-key)
               ("anthropic-version" . "2023-06-01")))
