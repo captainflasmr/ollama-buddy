@@ -32,8 +32,12 @@ You can install with literally no config, but I would suggest binding to both me
   #+end_src
 
 A simple text information screen will be presented on the first opening of the chat (by selecting "o" from any of the menu), its just a bit of fun, but I wanted a quick start tutorial/assistant type of feel, here is what will be presented:
-  
-#+begin_src 
+
+#+begin_src
+,#+TITLE: Ollama Buddy Chat
+
+,* Welcome to OLLAMA BUDDY
+
 ,#+begin_example
  ___ _ _      n _ n      ___       _   _ _ _
 |   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |
@@ -64,7 +68,7 @@ starcoder2:3b mistral:7b deepseek-r1:1.5b gemma3:1b qwen2.5-coder:3b llama3.2:3b
 - Browse prompt history               M-p/n/r
 - Advanced interface (show all tips)  C-c A
 
-,** *tinyllama:latest >> PROMPT:* <put prompt in here>
+,* *tinyllama:latest >> PROMPT:* <put prompt in here>
 #+end_src
 
 You will, of course, need to have =ollama serve= running, but technically, that is all you need! Emacs and =ollama-buddy= will handle the rest!
