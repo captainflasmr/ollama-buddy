@@ -33,14 +33,15 @@ You can install with literally no config, but I would suggest binding to both me
 
 A simple text information screen will be presented on the first opening of the chat (by selecting "o" from any of the menu), its just a bit of fun, but I wanted a quick start tutorial/assistant type of feel, here is what will be presented:
   
-#+begin_example
+#+begin_src 
+,#+begin_example
  ___ _ _      n _ n      ___       _   _ _ _
 |   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |
 | | | | | .  |     | .  | . | | | . | . |__ |
 |___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|
-#+end_example
+,#+end_example
 
-** Local Available Models
+,** Local Available Models
 
 (a) *tinyllama:latest* Select Info Pull Copy Delete
 (b) *qwen2.5-coder:7b* Select Info Pull Copy Delete
@@ -50,11 +51,11 @@ A simple text information screen will be presented on the first opening of the c
 (f) *phi3:3.8b* Select Info Pull Copy Delete
 (g) *llama3.2:1b* Select Info Pull Copy Delete
 
-** Recommended Models (click to download)
+,** Recommended Models (click to download)
 
 starcoder2:3b mistral:7b deepseek-r1:1.5b gemma3:1b qwen2.5-coder:3b llama3.2:3b
 
-** Quick Tips
+,** Quick Tips
 
 - Ask me anything!                    C-c C-c
 - Main transient menu                 C-c O
@@ -63,7 +64,8 @@ starcoder2:3b mistral:7b deepseek-r1:1.5b gemma3:1b qwen2.5-coder:3b llama3.2:3b
 - Browse prompt history               M-p/n/r
 - Advanced interface (show all tips)  C-c A
 
-** *tinyllama:latest >> PROMPT:* <put prompt in here>
+,** *tinyllama:latest >> PROMPT:* <put prompt in here>
+#+end_src
 
 You will, of course, need to have =ollama serve= running, but technically, that is all you need! Emacs and =ollama-buddy= will handle the rest!
 
