@@ -330,10 +330,7 @@ Returns the first paragraph (up to 250 chars) as a description."
                                  ollama-buddy-fabric--patterns))
          (system-file (expand-file-name (format "%s/%s/system.md" 
                                                 (ollama-buddy-fabric--patterns-path) 
-                                                real-pattern)))
-         (desc-file (expand-file-name (format "%s/%s/description.md" 
-                                              (ollama-buddy-fabric--patterns-path) 
-                                              real-pattern))))
+                                                real-pattern))))
     
     (with-current-buffer (get-buffer-create "*Fabric Pattern*")
       (let ((inhibit-read-only t))
