@@ -11,6 +11,16 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-03-28> *0.9.15*
+
+- Implement asynchronous operations for model management
+  - Introduce non-blocking API requests for fetching, copying, and deleting models
+- Add caching mechanisms to improve efficiency
+  - Cache model data to reduce redundant API calls
+  - Manage cache expiration with timestamps and time-to-live settings
+- Update status line to reflect ongoing background operations
+- Ensure smooth user interaction by minimizing wait times and enhancing performance
+
 ** <2025-03-26> *0.9.13*
 
 - Added automatic writing of last response to a register
