@@ -46,6 +46,12 @@ See *Screenshots / Demos* section for more videos/demonstration.
 
 * Whats New
 
+** <2025-03-28> *0.9.16*
+
+- Added =ollama-buddy-fix-encoding-issues= to handle text encoding problems.
+- Refactored and streamline fabric pattern description handling.
+- Removed unused fabric pattern categories to enhance maintainability.
+
 ** <2025-03-28> *0.9.15*
 
 - Implement asynchronous operations for model management
@@ -1497,32 +1503,33 @@ Here is a kanban of the features that I plan on (hopefully) adding in due course
 #+end_src
 
 #+RESULTS:
-| TODO                    | DOING                             | DONE                                       |
-|-------------------------+-----------------------------------+--------------------------------------------|
-| Core API - Delete Model | Core Params - suffix              | Core API - stream                          |
-| Core API - Copy a model | Show incoming ollama messages     | Core API - Pull/Info/Pull/Delete a model   |
-| Core API - Embeddings   | Add fabric pattern/prompt support | Core API - Show running models             |
-| Core Params - format    |                                   | Core API - Create a model from a GGUF file |
-| Core Params - template  |                                   | Add transient menu                         |
-| Core Params - raw       |                                   | History editing                            |
-| Test on Windows         |                                   | Core API - options - parameter editing     |
-|                         |                                   | Core API - show model information          |
-|                         |                                   | Core API - system prompt                   |
-|                         |                                   | Chat buffer to use org-mode                |
-|                         |                                   | Chat export options                        |
-|                         |                                   | Core Params - options:temperature          |
-|                         |                                   | Managing Sessions                          |
-|                         |                                   | Sparse minified version                    |
-|                         |                                   | Role-Based Menu Preset System              |
-|                         |                                   | Add to MELPA                               |
-|                         |                                   | Enhancing Menu Clarity                     |
-|                         |                                   | Real time token tracking                   |
-|                         |                                   | Managing chat history and context          |
+| TODO                               | DOING                             | DONE                                       |
+|------------------------------------+-----------------------------------+--------------------------------------------|
+| Merge history buffer functionality | Core Params - suffix              | Core API - Delete Model                    |
+| Core API - Embeddings              | Show incoming ollama messages     | Core API - Copy a model                    |
+| Core Params - format               | Add fabric pattern/prompt support | Core API - stream                          |
+| Core Params - template             |                                   | Core API - Pull/Info/Pull/Delete a model   |
+| Core Params - raw                  |                                   | Core API - Show running models             |
+| Test on Windows                    |                                   | Core API - Create a model from a GGUF file |
+|                                    |                                   | Add transient menu                         |
+|                                    |                                   | History editing                            |
+|                                    |                                   | Core API - options - parameter editing     |
+|                                    |                                   | Core API - show model information          |
+|                                    |                                   | Core API - system prompt                   |
+|                                    |                                   | Chat buffer to use org-mode                |
+|                                    |                                   | Chat export options                        |
+|                                    |                                   | Core Params - options:temperature          |
+|                                    |                                   | Managing Sessions                          |
+|                                    |                                   | Sparse minified version                    |
+|                                    |                                   | Role-Based Menu Preset System              |
+|                                    |                                   | Add to MELPA                               |
+|                                    |                                   | Enhancing Menu Clarity                     |
+|                                    |                                   | Real time token tracking                   |
+|                                    |                                   | Managing chat history and context          |
 
 * Roadmap                                                           :roadmap:
 
-** TODO Core API - Delete Model
-Revisit as currently running command "ollama rm" but really should send DELETE through the Core API
+** TODO Merge history buffer functionality
 
 ** TODO Core API - Embeddings
 
@@ -1541,6 +1548,8 @@ I think this is only for generate, but I have quietly added it in.
 ** DOING Show incoming ollama messages
 
 ** DOING Add fabric pattern/prompt support
+
+** DONE Core API - Delete Model
 
 ** DONE Core API - Copy a model
 

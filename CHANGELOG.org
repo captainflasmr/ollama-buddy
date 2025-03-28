@@ -11,6 +11,12 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-03-28> *0.9.16*
+
+- Added =ollama-buddy-fix-encoding-issues= to handle text encoding problems.
+- Refactored and streamline fabric pattern description handling.
+- Removed unused fabric pattern categories to enhance maintainability.
+
 ** <2025-03-28> *0.9.15*
 
 - Implement asynchronous operations for model management
