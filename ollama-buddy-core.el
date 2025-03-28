@@ -355,6 +355,27 @@ Each command is defined with:
 
 ;; Shared variables
 
+(defvar ollama-buddy--running-models-cache nil
+  "Cache for running Ollama models.")
+
+(defvar ollama-buddy--running-models-cache-timestamp nil
+  "Timestamp when running models cache was last updated.")
+
+(defvar ollama-buddy--colors-cache nil
+  "Cache for model colors.")
+
+(defvar ollama-buddy--colors-cache-timestamp nil
+  "Timestamp when colors cache was last updated.")
+
+(defvar ollama-buddy--models-cache nil
+  "Cache for available Ollama models.")
+
+(defvar ollama-buddy--models-cache-timestamp nil
+  "Timestamp when models cache was last updated.")
+
+(defvar ollama-buddy--models-cache-ttl 5
+  "Time-to-live for models cache in seconds.")
+
 (defcustom ollama-buddy-openai-marker-prefix "GPT"
   "Prefix to indicate that a model is from OpenAI rather than Ollama."
   :type 'string
@@ -781,6 +802,29 @@ When SUFFIX-PROMPT is non-nil, mark as a suffix."
         (when (not (string-empty-p (buffer-string)))
           (json-read-from-string (buffer-string)))))))
 
+(defun ollama-buddy--make-request-async (endpoint method payload callback)
+  "Make an asynchronous request to ENDPOINT using METHOD with PAYLOAD.
+When complete, CALLBACK is called with the status response and result."
+  (when (ollama-buddy--ollama-running)
+    (let ((url-request-method method)
+          (url-request-extra-headers '(("Content-Type" . "application/json")
+                                       ("Connection" . "close")))
+          (url-request-data (when payload (encode-coding-string payload 'utf-8)))
+          (url (format "http://%s:%d%s"
+                       ollama-buddy-host ollama-buddy-port endpoint)))
+      (url-retrieve url 
+                    (lambda (status)
+                      (let ((result nil))
+                        (when (not (plist-get status :error))
+                          ;; Only try to parse JSON if there was no error
+                          (goto-char (point-min))
+                          (re-search-forward "^$" nil t) ;; Skip headers
+                          (when (not (= (point) (point-max)))
+                            (setq result (json-read-from-string 
+                                          (buffer-substring-no-properties (point) (point-max))))))
+                        (funcall callback status result)))
+                    nil t t))))
+
 (defun ollama-buddy--ollama-running ()
   "Check if Ollama server is running using url.el."
   (let ((ollama-url (format "http://%s:%s/api/tags"
@@ -812,24 +856,107 @@ When SUFFIX-PROMPT is non-nil, mark as a suffix."
     models))
 
 (defun ollama-buddy--get-models ()
-  "Get available Ollama models."
-  (when-let ((response (ollama-buddy--make-request "/api/tags" "GET")))
-    (mapcar #'car (ollama-buddy--get-models-with-colors))))
+  "Get available Ollama models with caching."
+  (when (ollama-buddy--ollama-running)
+    (let ((current-time (float-time)))
+      (when (or (null ollama-buddy--models-cache-timestamp)
+                (> (- current-time ollama-buddy--models-cache-timestamp)
+                   ollama-buddy--models-cache-ttl))
+        ;; Cache expired or not set - use synchronous version to refresh cache
+        (when-let ((response (ollama-buddy--make-request "/api/tags" "GET")))
+          (setq ollama-buddy--models-cache
+                (mapcar #'car (ollama-buddy--get-models-with-colors-from-result response))
+                ollama-buddy--models-cache-timestamp current-time)
+          
+          ;; Also refresh in background for next time
+          (ollama-buddy--refresh-models-cache)))
+      
+      ollama-buddy--models-cache)))
 
-(defun ollama-buddy--get-models-with-colors ()
-  "Get available Ollama models with their associated colors."
-  (when-let ((response (ollama-buddy--make-request "/api/tags" "GET")))
+(defun ollama-buddy--refresh-models-cache ()
+  "Refresh the models cache in the background."
+  (ollama-buddy--make-request-async 
+   "/api/tags" 
+   "GET" 
+   nil
+   (lambda (status result)
+     (unless (plist-get status :error)
+       (when result
+         (setq ollama-buddy--models-cache
+               (mapcar #'car (ollama-buddy--get-models-with-colors-from-result result))
+               ollama-buddy--models-cache-timestamp (float-time)))))))
+
+(defun ollama-buddy--get-models-with-colors-from-result (result)
+  "Get available Ollama models with their associated colors from RESULT."
+  (when result
     (mapcar (lambda (m)
               (let ((name (alist-get 'name m)))
                 (cons name (ollama-buddy--hash-string-to-color name))))
-            (alist-get 'models response))))
+            (alist-get 'models result))))
+
+(defun ollama-buddy--get-models-with-colors ()
+  "Get available Ollama models with their associated colors using cache."
+  (when (ollama-buddy--ollama-running)
+    (let ((current-time (float-time)))
+      (when (or (null ollama-buddy--colors-cache-timestamp)
+                (> (- current-time ollama-buddy--colors-cache-timestamp)
+                   ollama-buddy--models-cache-ttl))
+        ;; Cache expired or not set - use synchronous version to refresh cache
+        (when-let ((response (ollama-buddy--make-request "/api/tags" "GET")))
+          (setq ollama-buddy--colors-cache
+                (ollama-buddy--get-models-with-colors-from-result response)
+                ollama-buddy--colors-cache-timestamp current-time)
+          
+          ;; Also refresh in background for next time
+          (ollama-buddy--refresh-colors-cache)))
+      
+      ollama-buddy--colors-cache)))
+
+(defun ollama-buddy--refresh-colors-cache ()
+  "Refresh the model colors cache in the background."
+  (ollama-buddy--make-request-async 
+   "/api/tags" 
+   "GET" 
+   nil
+   (lambda (status result)
+     (unless (plist-get status :error)
+       (when result
+         (setq ollama-buddy--colors-cache
+               (ollama-buddy--get-models-with-colors-from-result result)
+               ollama-buddy--colors-cache-timestamp (float-time)))))))
 
 (defun ollama-buddy--get-running-models ()
-  "Get list of currently running Ollama models."
-  (when-let ((response (ollama-buddy--make-request "/api/ps" "GET")))
-    (mapcar (lambda (m)
-              (alist-get 'name m))
-            (alist-get 'models response))))
+  "Get list of currently running Ollama models with caching."
+  (when (ollama-buddy--ollama-running)
+    (let ((current-time (float-time)))
+      (when (or (null ollama-buddy--running-models-cache-timestamp)
+                (> (- current-time ollama-buddy--running-models-cache-timestamp)
+                   ollama-buddy--models-cache-ttl))
+        ;; Cache expired or not set - use synchronous version to refresh cache
+        (when-let ((response (ollama-buddy--make-request "/api/ps" "GET")))
+          (setq ollama-buddy--running-models-cache
+                (mapcar (lambda (m) (alist-get 'name m))
+                        (alist-get 'models response))
+                ollama-buddy--running-models-cache-timestamp current-time)
+          
+          ;; Also refresh in background for next time
+          (ollama-buddy--refresh-running-models-cache)))
+      
+      ollama-buddy--running-models-cache)))
+
+(defun ollama-buddy--refresh-running-models-cache ()
+  "Refresh the running models cache in the background."
+  (ollama-buddy--make-request-async 
+   "/api/ps" 
+   "GET" 
+   nil
+   (lambda (status result)
+     (unless (plist-get status :error)
+       (when result
+         (setq ollama-buddy--running-models-cache
+               (mapcar (lambda (m) (alist-get 'name m))
+                       (alist-get 'models result))
+               ollama-buddy--running-models-cache-timestamp (float-time)))))))
 
 (defun ollama-buddy--validate-model (model)
   "Validate MODEL availability."
@@ -941,10 +1068,30 @@ When SUFFIX-PROMPT is non-nil, mark as a suffix."
 
 ;; Model color functions
 (defun ollama-buddy--update-model-colors ()
-  "Update the model colors hash table and return it."
-  (let ((models-with-colors (ollama-buddy--get-models-with-colors)))
-    (dolist (pair models-with-colors)
+  "Update the model colors hash table and return it with caching."
+  (when (ollama-buddy--ollama-running)
+    ;; First update synchronously if needed
+    (ollama-buddy--get-models-with-colors)
+    
+    ;; Update the hash table from the cache
+    (dolist (pair ollama-buddy--colors-cache)
       (puthash (car pair) (cdr pair) ollama-buddy--model-colors))
+    
+    ;; Also refresh in background
+    (ollama-buddy--make-request-async 
+     "/api/tags" 
+     "GET" 
+     nil
+     (lambda (status result)
+       (unless (plist-get status :error)
+         (when result
+           (let ((models-with-colors (ollama-buddy--get-models-with-colors-from-result result)))
+             (dolist (pair models-with-colors)
+               (puthash (car pair) (cdr pair) ollama-buddy--model-colors))
+             ;; Update cache too
+             (setq ollama-buddy--colors-cache models-with-colors
+                   ollama-buddy--colors-cache-timestamp (float-time)))))))
+    
     ollama-buddy--model-colors))
 
 ;; Status update function

@@ -605,40 +605,45 @@ PROPS should be a sequence of property-value pairs."
          (endpoint "/api/show")
          (payload (json-encode `((model . ,model)))))
     
-    ;; Make API request to get model info
-    (condition-case err
-        (let* ((response (ollama-buddy--make-request endpoint "POST" payload)))
-          
-          ;; Open and prepare chat buffer
-          (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-            (pop-to-buffer (current-buffer))
-            (goto-char (point-max))
-            
-            ;; Insert model info header with color
-            (insert (format "[MODEL INFO REQUEST]\n\n** [MODEL INFO: %s]\n\n" model))
+    ;; Update status to show operation in progress
+    (ollama-buddy--update-status (format "Fetching info for %s..." model))
+    
+    ;; Make API request asynchronously to get model info
+    (ollama-buddy--make-request-async 
+     endpoint 
+     "POST" 
+     payload
+     (lambda (status result)
+       (if (plist-get status :error)
+           (progn
+             (message "Error retrieving model info: %s" (cdr (plist-get status :error)))
+             (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+               (pop-to-buffer (current-buffer))
+               (goto-char (point-max))
+               (insert (format "\n\n** [ERROR] Failed to retrieve info for model: %s\n\n" model))
+               (insert (format "Error: %s\n\n" (cdr (plist-get status :error))))
+               (ollama-buddy--prepare-prompt-area)
+               (ollama-buddy--update-status "Error retrieving model info")))
+         ;; Success path
+         (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+           (pop-to-buffer (current-buffer))
+           (goto-char (point-max))
+           
+           ;; Insert model info header with color
+           (insert (format "[MODEL INFO REQUEST]\n\n** [MODEL INFO: %s]\n\n" model))
 
-            ;; Pretty print the JSON response
-            (insert "#+begin_src json\n")
-            (let ((json-start (point)))
-              ;; Convert Elisp object to JSON string and insert
-              (insert (json-encode response))
-              ;; Pretty print the inserted JSON
-              (json-pretty-print json-start (point)))
-            (insert "\n#+end_src")
-            
-            ;; Add a prompt area after the information
-            (ollama-buddy--prepare-prompt-area)
-            (ollama-buddy--update-status "Model info displayed")))
-      
-      (error
-       (message "Failed to retrieve model info: %s" (error-message-string err))
-       (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-         (pop-to-buffer (current-buffer))
-         (goto-char (point-max))
-         (insert (format "\n\n** [ERROR] Failed to retrieve info for model: %s\n\n" model))
-         (insert (format "Error: %s\n\n" (error-message-string err)))
-         (ollama-buddy--prepare-prompt-area)
-         (ollama-buddy--update-status "Error retrieving model info"))))))
+           ;; Pretty print the JSON response
+           (insert "#+begin_src json\n")
+           (let ((json-start (point)))
+             ;; Insert JSON data
+             (insert (json-encode result))
+             ;; Pretty print the inserted JSON
+             (json-pretty-print json-start (point)))
+           (insert "\n#+end_src")
+           
+           ;; Add a prompt area after the information
+           (ollama-buddy--prepare-prompt-area)
+           (ollama-buddy--update-status "Model info displayed")))))))
 
 (defun ollama-buddy-toggle-debug-mode ()
   "Toggle display of raw JSON messages in a debug buffer."
@@ -2641,62 +2646,120 @@ Modifies the variable in place."
   "Display detailed information about MODEL."
   (let ((endpoint "/api/show")
         (payload (json-encode `((name . ,model)))))
-    (condition-case err
-        (let* ((response (ollama-buddy--make-request endpoint "POST" payload))
-               (buf (get-buffer-create "*Ollama Model Info*")))
-          (with-current-buffer buf
-            (let ((inhibit-read-only t))
-              (erase-buffer)
-              (insert (format "Ollama Model Information: %s\n\n" model))
-              (insert "#+begin_src json\n")
-              (let ((json-start (point)))
-                (insert (json-encode response))
-                (json-pretty-print json-start (point)))
-              (insert "\n#+end_src")
-              (view-mode 1)))
-          (display-buffer buf))
-      (error (message "Error fetching model info: %s" (error-message-string err))))))
+    
+    ;; Update status to show operation in progress
+    (ollama-buddy--update-status (format "Fetching info for %s..." model))
+    
+    (ollama-buddy--make-request-async 
+     endpoint 
+     "POST" 
+     payload
+     (lambda (status result)
+       (if (plist-get status :error)
+           (message "Error fetching model info: %s" (cdr (plist-get status :error)))
+         ;; Success path
+         (let ((buf (get-buffer-create "*Ollama Model Info*")))
+           (with-current-buffer buf
+             (let ((inhibit-read-only t))
+               (erase-buffer)
+               (insert (format "Ollama Model Information: %s\n\n" model))
+               (insert "#+begin_src json\n")
+               (let ((json-start (point)))
+                 (insert (json-encode result))
+                 (json-pretty-print json-start (point)))
+               (insert "\n#+end_src")
+               (view-mode 1)))
+           (display-buffer buf)))
+       (ollama-buddy--update-status (format "Model info for %s displayed" model))))))
 
-(defun ollama-buddy-pull-model (model)
-  "Pull or update MODEL from Ollama Hub."
+(defun ollama-buddy-pull-model (model &optional callback)
+  "Pull or update MODEL from Ollama Hub asynchronously.
+When the operation completes, CALLBACK is called with no arguments if provided."
   (let ((buf (get-buffer-create ollama-buddy--chat-buffer))
         (payload (json-encode `((model . ,model)))))
-    (ollama-buddy--make-request "/api/pull" "POST" payload)
-    (with-current-buffer buf
-      (let ((inhibit-read-only t))
-        (ollama-buddy--assign-model-letters)
-        (goto-char (point-max))
-        (insert (ollama-buddy--create-intro-message))
-        (ollama-buddy--apply-model-colors-to-buffer)
-        (ollama-buddy--prepare-prompt-area)))))
+
+    ;; Update status to show operation in progress
+    (ollama-buddy--update-status (format "Pulling model %s..." model))
+    
+    ;; Use our new async version of make-request
+    (ollama-buddy--make-request-async 
+     "/api/pull" 
+     "POST" 
+     payload
+     (lambda (status result)
+       ;; This callback runs when the request completes
+       (if (plist-get status :error)
+           (message "Error pulling model %s: %s" model (cdr (plist-get status :error)))
+         ;; Update the buffer with the results
+         (with-current-buffer buf
+           (let ((inhibit-read-only t))
+             (ollama-buddy--assign-model-letters)
+             (goto-char (point-max))
+             (insert (ollama-buddy--create-intro-message))
+             (ollama-buddy--apply-model-colors-to-buffer)
+             (ollama-buddy--prepare-prompt-area)))
+         (message "Successfully pulled model %s" model)
+         (ollama-buddy--update-status (format "Model pulled to %s" model)))))))
 
 (defun ollama-buddy-copy-model (model)
   "Copy MODEL in Ollama."
   (let* ((buf (get-buffer-create ollama-buddy--chat-buffer))
-         (destination (read-string "Enter prompt prefix on selection: "))
+         (destination (read-string (format "New name for copy of %s: " model)))
          (payload (json-encode `((source . ,model)
                                  (destination . ,destination)))))
-    (ollama-buddy--make-request "/api/copy" "POST" payload)
-    (with-current-buffer buf
-      (let ((inhibit-read-only t))
-        (ollama-buddy--assign-model-letters)
-        (goto-char (point-max))
-        (insert (ollama-buddy--create-intro-message))
-        (ollama-buddy--apply-model-colors-to-buffer)
-        (ollama-buddy--prepare-prompt-area)))))
+    
+    ;; Update status to show operation in progress
+    (ollama-buddy--update-status (format "Copying model %s to %s..." model destination))
+    
+    (ollama-buddy--make-request-async 
+     "/api/copy" 
+     "POST" 
+     payload
+     (lambda (status result)
+       (if (plist-get status :error)
+           (progn
+             (message "Error copying model: %s" (cdr (plist-get status :error)))
+             (ollama-buddy--update-status "Error copying model"))
+         ;; Success path
+         (with-current-buffer buf
+           (let ((inhibit-read-only t))
+             (ollama-buddy--assign-model-letters)
+             (goto-char (point-max))
+             (insert (format "\n\nModel %s successfully copied to %s\n\n" model destination))
+             (insert (ollama-buddy--create-intro-message))
+             (ollama-buddy--apply-model-colors-to-buffer)
+             (ollama-buddy--prepare-prompt-area)))
+         (message "Model %s successfully copied to %s" model destination)
+         (ollama-buddy--update-status (format "Model copied to %s" destination)))))))
 
 (defun ollama-buddy-delete-model (model)
   "Delete MODEL from Ollama."
   (let ((buf (get-buffer-create ollama-buddy--chat-buffer))
         (payload (json-encode `((model . ,model)))))
-    (ollama-buddy--make-request "/api/delete" "DELETE" payload)
-    (with-current-buffer buf
-      (let ((inhibit-read-only t))
-        (ollama-buddy--assign-model-letters)
-        (goto-char (point-max))
-        (insert (ollama-buddy--create-intro-message))
-        (ollama-buddy--apply-model-colors-to-buffer)
-        (ollama-buddy--prepare-prompt-area)))))
+    
+    ;; Update status to show operation in progress
+    (ollama-buddy--update-status (format "Deleting model %s..." model))
+    
+    (ollama-buddy--make-request-async 
+     "/api/delete" 
+     "DELETE" 
+     payload
+     (lambda (status result)
+       (if (plist-get status :error)
+           (progn
+             (message "Error deleting model: %s" (cdr (plist-get status :error)))
+             (ollama-buddy--update-status "Error deleting model"))
+         ;; Success path
+         (with-current-buffer buf
+           (let ((inhibit-read-only t))
+             (ollama-buddy--assign-model-letters)
+             (goto-char (point-max))
+             (insert (format "\n\nModel %s successfully deleted\n\n" model))
+             (insert (ollama-buddy--create-intro-message))
+             (ollama-buddy--apply-model-colors-to-buffer)
+             (ollama-buddy--prepare-prompt-area)))
+         (message "Model %s successfully deleted" model)
+         (ollama-buddy--update-status (format "Model %s deleted" model)))))))
 
 (defun ollama-buddy-params-help ()
   "Display help for Ollama parameters."
