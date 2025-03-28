@@ -246,6 +246,39 @@
     ;; Send the request
     (ollama-buddy--send selected-text)))
 
+(defun ollama-buddy-fabric--extract-description-from-system (pattern)
+  "Extract a brief description from PATTERN's system.md file.
+Returns the first paragraph (up to 250 chars) as a description."
+  (let ((system-file (expand-file-name (format "%s/%s/system.md" 
+                                              (ollama-buddy-fabric--patterns-path) 
+                                              pattern))))
+    (when (file-exists-p system-file)
+      (with-temp-buffer
+        (insert-file-contents system-file)
+        (goto-char (point-min))
+        ;; Skip any YAML frontmatter if present (between --- markers)
+        (when (looking-at "---")
+          (forward-line 1)
+          (if (re-search-forward "^---$" nil t)
+              (forward-line 1)
+            (goto-char (point-min))))
+        
+        ;; Skip any markdown heading at the beginning
+        (when (looking-at "^#+ ")
+          (forward-line 1))
+        
+        ;; Get the first paragraph
+        (let ((start (point))
+              (end (progn
+                     (if (re-search-forward "\n\n" nil t)
+                         (match-beginning 0)
+                       (point-max)))))
+          ;; Limit to ~250 chars for preview
+          (let ((desc (buffer-substring-no-properties start end)))
+            (if (> (length desc) 250)
+                (concat (substring desc 0 247) "...")
+              desc)))))))
+
 (defun ollama-buddy-fabric-list-patterns ()
   "Display a list of available Fabric patterns with descriptions."
   (interactive)
@@ -265,7 +298,7 @@
                                                 ollama-buddy-fabric--last-sync-time)))
           (insert "Never synced with GitHub repository\n\n"))
         
-        (insert "** Available Patterns\n\n")
+        (insert "** Available Patterns\n")
         
         (let ((current-category ""))
           (dolist (pattern ollama-buddy-fabric--patterns)
@@ -286,12 +319,13 @@
               (insert (format "**** %s\n" name))
               (if (file-exists-p desc-file)
                   (progn
-                    (insert "#+begin_quote\n")
-                    (insert-file-contents desc-file)
-                    (goto-char (point-max))
-                    (insert "#+end_quote\n\n"))
-                (insert "No description available\n\n"))))))
-      
+                    (insert-file-contents (string-trim desc-file))
+                    (insert "\n"))
+                (insert
+                 (string-trim
+                  (ollama-buddy-fabric--extract-description-from-system pattern))
+                  "\n"))
+              (goto-char (point-max))))))
       (view-mode 1))
     (display-buffer buf)))
 
