@@ -6,7 +6,23 @@
 #+todo: TODO DOING | DONE
 #+startup: showall
 
-* Features as they came in
+* Features as they come in
+
+** <2025-03-28> *0.9.16*
+
+- Added =ollama-buddy-fix-encoding-issues= to handle text encoding problems.
+- Refactored and streamline fabric pattern description handling.
+- Removed unused fabric pattern categories to enhance maintainability.
+
+** <2025-03-28> *0.9.15*
+
+- Implement asynchronous operations for model management
+  - Introduce non-blocking API requests for fetching, copying, and deleting models
+- Add caching mechanisms to improve efficiency
+  - Cache model data to reduce redundant API calls
+  - Manage cache expiration with timestamps and time-to-live settings
+- Update status line to reflect ongoing background operations
+- Ensure smooth user interaction by minimizing wait times and enhancing performance
 
 ** <2025-03-26> *0.9.13*
 
