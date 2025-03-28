@@ -161,7 +161,7 @@ Use nil for API default behavior (adaptive)."
           ;; Send request via `url-retrieve`
           (url-retrieve
            endpoint
-           (lambda (status)
+           (lambda (_status)
              (goto-char (point-min))
              (if (not (search-forward "\n\n" nil t))
                  (message "Error: Malformed HTTP response.")
@@ -208,7 +208,7 @@ Use nil for API default behavior (adaptive)."
                      (insert "\n\n*** FINISHED")
                      (ollama-buddy--prepare-prompt-area)
                      (ollama-buddy--update-status
-                      (format "Finished [%d tokens]" 
+                      (format "Finished [%d tokens]"
                               ollama-buddy-openai--current-token-count)))))))))))))
 
 ;; History management functions
@@ -252,7 +252,7 @@ Use nil for API default behavior (adaptive)."
       (ollama-buddy--prepare-prompt-area)
       (goto-char (point-max)))
     
-    (message "Selected OpenAI model: %s" 
+    (message "Selected OpenAI model: %s"
              (ollama-buddy-openai--get-real-model-name selected))))
 
 (defun ollama-buddy-openai-clear-history ()

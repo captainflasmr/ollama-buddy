@@ -80,21 +80,20 @@
   "General store of a starting point.")
 
 (defun ollama-buddy-history-search ()
-  "Search through the prompt history using a completing-read interface.
-Similar to readline's C-r functionality."
+  "Search through the prompt history using a `completing-read' interface."
   (interactive)
   (when ollama-buddy--prompt-history
     (let* ((prompt-data (ollama-buddy--get-prompt-content))
            (prompt-point (cdr prompt-data))
            ;; Create an alist with indices and history items for completing-read
-           (history-items 
+           (history-items
             (cl-loop for item in ollama-buddy--prompt-history
                      for index from 0
                      collect (cons item index)))
            ;; Use completing-read to search through history
-           (selected-item (completing-read "Search history: " 
-                                          (mapcar #'car history-items)
-                                          nil t))
+           (selected-item (completing-read "Search history: "
+                                           (mapcar #'car history-items)
+                                           nil t))
            ;; Find the selected item in our history
            (selected-index (cdr (assoc selected-item history-items))))
       
@@ -609,9 +608,9 @@ PROPS should be a sequence of property-value pairs."
     (ollama-buddy--update-status (format "Fetching info for %s..." model))
     
     ;; Make API request asynchronously to get model info
-    (ollama-buddy--make-request-async 
-     endpoint 
-     "POST" 
+    (ollama-buddy--make-request-async
+     endpoint
+     "POST"
      payload
      (lambda (status result)
        (if (plist-get status :error)
@@ -1590,10 +1589,10 @@ With prefix argument ALL-MODELS, clear history for all models."
 
           ;; Write to register - if multishot is enabled, use that register, otherwise use default
           (let* ((reg-char (if ollama-buddy--multishot-sequence
-                              (if (< ollama-buddy--multishot-progress (length ollama-buddy--multishot-sequence))
-                                  (aref ollama-buddy--multishot-sequence ollama-buddy--multishot-progress)
-                                ollama-buddy-default-register)
-                            ollama-buddy-default-register))
+                               (if (< ollama-buddy--multishot-progress (length ollama-buddy--multishot-sequence))
+                                   (aref ollama-buddy--multishot-sequence ollama-buddy--multishot-progress)
+                                 ollama-buddy-default-register)
+                             ollama-buddy-default-register))
                  (current (get-register reg-char))
                  (new-content (concat (if (stringp current) current "") text)))
             (set-register reg-char new-content))
@@ -1691,7 +1690,7 @@ With prefix argument ALL-MODELS, clear history for all models."
     ;; Clean up multishot variables but ensure we don't create out-of-range conditions
     (setq ollama-buddy--multishot-prompt nil)
     ;; Only set sequence to nil if we're done with it or interrupted
-    (when (or (string= status "Interrupted") 
+    (when (or (string= status "Interrupted")
               (not ollama-buddy--multishot-sequence)
               (>= ollama-buddy--multishot-progress (length ollama-buddy--multishot-sequence)))
       (setq ollama-buddy--multishot-sequence nil
@@ -1749,18 +1748,18 @@ With prefix argument ALL-MODELS, clear history for all models."
       (cond
        ((and (featurep 'ollama-buddy-openai)
              (ollama-buddy-openai--is-openai-model new-model))
-          (progn
-            (setq ollama-buddy-default-model new-model)
-            (setq ollama-buddy--current-model new-model)
-            (setq ollama-buddy-openai--current-model new-model)
-            (message "Switched to OpenAI model: %s" new-model)))
+        (progn
+          (setq ollama-buddy-default-model new-model)
+          (setq ollama-buddy--current-model new-model)
+          (setq ollama-buddy-openai--current-model new-model)
+          (message "Switched to OpenAI model: %s" new-model)))
        ((and (featurep 'ollama-buddy-claude)
              (ollama-buddy-claude--is-claude-model new-model))
-          (progn
-            (setq ollama-buddy-default-model new-model)
-            (setq ollama-buddy--current-model new-model)
-            (setq ollama-buddy-claude--current-model new-model)
-            (message "Switched to Claude model: %s" new-model)))
+        (progn
+          (setq ollama-buddy-default-model new-model)
+          (setq ollama-buddy--current-model new-model)
+          (setq ollama-buddy-claude--current-model new-model)
+          (message "Switched to Claude model: %s" new-model)))
        (t
         (progn
           (setq ollama-buddy-default-model new-model)
@@ -1882,11 +1881,11 @@ With prefix argument ALL-MODELS, clear history for all models."
   ;; For OpenAI models, use the OpenAI send function
   (cond
    ((and (featurep 'ollama-buddy-openai)
-         (ollama-buddy-openai--is-openai-model 
+         (ollama-buddy-openai--is-openai-model
           (or specified-model ollama-buddy--current-model)))
     (ollama-buddy-openai--send prompt specified-model))
    ((and (featurep 'ollama-buddy-claude)
-         (ollama-buddy-claude--is-claude-model 
+         (ollama-buddy-claude--is-claude-model
           (or specified-model ollama-buddy--current-model)))
     (ollama-buddy-claude--send prompt specified-model))
    (t
@@ -2077,7 +2076,7 @@ With prefix argument ALL-MODELS, clear history for all models."
            "#+begin_example\n"
            " ___ _ _      n _ n      ___       _   _ _ _\n"
            "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| |__ |\n"
-           "|_O_|L|L|__A_|__M__|__A_|_B_|_U_|_D_|_D_|_Y_|\n" 
+           "|_O_|L|L|__A_|__M__|__A_|_B_|_U_|_D_|_D_|_Y_|\n"
            "#+end_example\n\n"
            models-management-section
            models-to-pull-section
@@ -2202,7 +2201,9 @@ With prefix argument ALL-MODELS, clear history for all models."
 (defun ollama-buddy-menu ()
   "Display Ollama Buddy menu."
   (interactive)
-  (let ((ollama-status (ollama-buddy--check-status)))  ; Store the status check result
+  (let ((ollama-status (ollama-buddy--check-status))
+        (inhibit-message t)
+        (url-show-status nil))
     (ollama-buddy--update-status
      (if ollama-status "Menu opened - Ready" "Menu opened - Ollama offline"))
     (when-let* ((items (mapcar (lambda (cmd-def)
@@ -2648,19 +2649,19 @@ Modifies the variable in place."
         (payload (json-encode `((name . ,model))))
         (operation-id (gensym "show-")))
 
-    (ollama-buddy--register-background-operation 
+    (ollama-buddy--register-background-operation
      operation-id
      (format "Fetching info for %s" model))
-        
-    (ollama-buddy--make-request-async 
-     endpoint 
-     "POST" 
+    
+    (ollama-buddy--make-request-async
+     endpoint
+     "POST"
      payload
      (lambda (status result)
        (if (plist-get status :error)
            (progn
              (message "Error fetching model info: %s" (cdr (plist-get status :error)))
-             (ollama-buddy--complete-background-operation 
+             (ollama-buddy--complete-background-operation
               operation-id
               (format "Error fetching %s" model)))
          (let ((buf (get-buffer-create "*Ollama Model Info*")))
@@ -2675,91 +2676,88 @@ Modifies the variable in place."
                (insert "\n#+end_src")
                (view-mode 1)))
            (display-buffer buf)))
-                  (ollama-buddy--complete-background-operation 
-            operation-id
-            (format "Model %s info displayed" model))))))
+       (ollama-buddy--complete-background-operation
+        operation-id
+        (format "Model %s info displayed" model))))))
 
-(defun ollama-buddy-pull-model (model &optional callback)
+(defun ollama-buddy-pull-model (model)
   "Pull or update MODEL from Ollama Hub asynchronously.
 When the operation completes, CALLBACK is called with no arguments if provided."
-  (let ((buf (get-buffer-create ollama-buddy--chat-buffer))
-        (payload (json-encode `((model . ,model))))
+  (let ((payload (json-encode `((model . ,model))))
         (operation-id (gensym "pull-")))
 
-    (ollama-buddy--register-background-operation 
+    (ollama-buddy--register-background-operation
      operation-id
      (format "Pulling model %s" model))
     
-    (ollama-buddy--make-request-async 
-     "/api/pull" 
-     "POST" 
+    (ollama-buddy--make-request-async
+     "/api/pull"
+     "POST"
      payload
-     (lambda (status result)
+     (lambda (status _result)
        (if (plist-get status :error)
            (progn
              (message "Error pulling model %s: %s" model (cdr (plist-get status :error)))
-             (ollama-buddy--complete-background-operation 
+             (ollama-buddy--complete-background-operation
               operation-id
               (format "Error pulling %s" model)))
          (progn
            (message "Successfully pulled model %s" model)
-           (ollama-buddy--complete-background-operation 
+           (ollama-buddy--complete-background-operation
             operation-id
             (format "Successfully pulled model %s" model))))))))
 
 (defun ollama-buddy-copy-model (model)
   "Copy MODEL in Ollama."
-  (let* ((buf (get-buffer-create ollama-buddy--chat-buffer))
-         (destination (read-string (format "New name for copy of %s: " model)))
+  (let* ((destination (read-string (format "New name for copy of %s: " model)))
          (payload (json-encode `((source . ,model)
                                  (destination . ,destination))))
          (operation-id (gensym "copy-")))
 
-    (ollama-buddy--register-background-operation 
+    (ollama-buddy--register-background-operation
      operation-id
      (format "Copying model to %s" model))
     
-    (ollama-buddy--make-request-async 
-     "/api/copy" 
-     "POST" 
+    (ollama-buddy--make-request-async
+     "/api/copy"
+     "POST"
      payload
-     (lambda (status result)
+     (lambda (status _result)
        (if (plist-get status :error)
            (progn
              (message "Error copying model: %s" (cdr (plist-get status :error)))
-             (ollama-buddy--complete-background-operation 
+             (ollama-buddy--complete-background-operation
               operation-id
               (format "Error copying %s" model)))
          (progn
            (message "Model %s successfully copied to %s" model destination)
-           (ollama-buddy--complete-background-operation 
+           (ollama-buddy--complete-background-operation
             operation-id
             (format "Successfully copied model %s" model))))))))
 
 (defun ollama-buddy-delete-model (model)
   "Delete MODEL from Ollama."
-  (let ((buf (get-buffer-create ollama-buddy--chat-buffer))
-        (payload (json-encode `((model . ,model))))
+  (let ((payload (json-encode `((model . ,model))))
         (operation-id (gensym "delete-")))
 
-    (ollama-buddy--register-background-operation 
+    (ollama-buddy--register-background-operation
      operation-id
      (format "Deleting model %s" model))
     
-    (ollama-buddy--make-request-async 
-     "/api/delete" 
-     "DELETE" 
+    (ollama-buddy--make-request-async
+     "/api/delete"
+     "DELETE"
      payload
-     (lambda (status result)
+     (lambda (status _result)
        (if (plist-get status :error)
            (progn
              (message "Error deleting model: %s" (cdr (plist-get status :error)))
-             (ollama-buddy--complete-background-operation 
+             (ollama-buddy--complete-background-operation
               operation-id
               (format "Error deleting %s" model)))
          (progn
            (message "Model %s successfully deleted" model)
-           (ollama-buddy--complete-background-operation 
+           (ollama-buddy--complete-background-operation
             operation-id
             (format "Successfully deleted model %s" model))))))))
 

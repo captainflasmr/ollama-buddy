@@ -61,9 +61,9 @@ Use nil for API default behavior (adaptive)."
   :group 'ollama-buddy-claude)
 
 (defcustom ollama-buddy-claude-models
-  '("claude-3-7-sonnet-20250219" 
-    "claude-3-5-sonnet-20240620" 
-    "claude-3-opus-20240229" 
+  '("claude-3-7-sonnet-20250219"
+    "claude-3-5-sonnet-20240620"
+    "claude-3-opus-20240229"
     "claude-3-5-haiku-20240307")
   "List of available Claude models."
   :type '(repeat string)
@@ -122,11 +122,11 @@ Use nil for API default behavior (adaptive)."
     t))
 
 (defun ollama-buddy-claude--send (prompt &optional model)
-  "Send PROMPT to Claude's API using MODEL or default model asynchronously using `url-retrieve`."
+  "Send PROMPT to Claude's API using MODEL."
   (when (ollama-buddy-claude--verify-api-key)
     ;; Set up the current model
     (setq ollama-buddy-claude--current-model
-          (or model 
+          (or model
               ollama-buddy-claude--current-model
               (ollama-buddy-claude--get-full-model-name
                ollama-buddy-claude-default-model)))
@@ -192,7 +192,7 @@ Use nil for API default behavior (adaptive)."
           ;; Send request via `url-retrieve`
           (url-retrieve
            endpoint
-           (lambda (status)
+           (lambda (_status)
              (goto-char (point-min))
              (if (not (search-forward "\n\n" nil t))
                  (message "Error: Malformed HTTP response.")
@@ -263,7 +263,7 @@ Use nil for API default behavior (adaptive)."
                      (insert "\n\n*** FINISHED")
                      (ollama-buddy--prepare-prompt-area)
                      (ollama-buddy--update-status
-                      (format "Finished [%d tokens]" 
+                      (format "Finished [%d tokens]"
                               ollama-buddy-claude--current-token-count)))))))))))))
 
 ;; History management functions
@@ -307,7 +307,7 @@ Use nil for API default behavior (adaptive)."
       (ollama-buddy--prepare-prompt-area)
       (goto-char (point-max)))
     
-    (message "Selected Claude model: %s" 
+    (message "Selected Claude model: %s"
              (ollama-buddy-claude--get-real-model-name selected))))
 
 (defun ollama-buddy-claude-clear-history ()

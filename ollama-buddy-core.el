@@ -33,8 +33,7 @@
 
 ;; Core customization options
 (defcustom ollama-buddy-default-register ?a
-  "Default register to store the current response when not in multishot mode.
-This should be a character (e.g., ?a for register 'a')."
+  "Default register to store the current response when not in multishot mode."
   :type 'character
   :group 'ollama-buddy)
 
@@ -895,8 +894,9 @@ When complete, CALLBACK is called with the status response and result."
   "Check if Ollama server is running using url.el."
   (let ((ollama-url (format "http://%s:%s/api/tags"
                             ollama-buddy-host ollama-buddy-port)))
-    (condition-case err
-        (let ((buffer (url-retrieve-synchronously ollama-url)))
+    (condition-case nil
+        (progn
+          (url-retrieve-synchronously ollama-url)
           t)
       (error nil))))
 
