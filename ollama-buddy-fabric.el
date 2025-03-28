@@ -326,7 +326,8 @@ Returns the first paragraph (up to 250 chars) as a description."
                   (ollama-buddy-fabric--extract-description-from-system pattern))
                   "\n"))
               (goto-char (point-max))))))
-      (view-mode 1))
+      (view-mode 1)
+      (goto-char (point-min)))
     (display-buffer buf)))
 
 (defun ollama-buddy-fabric-show-pattern (pattern)
@@ -350,20 +351,9 @@ Returns the first paragraph (up to 250 chars) as a description."
       (let ((inhibit-read-only t))
         (erase-buffer)
         (org-mode)
-        (insert (format "* Pattern: %s\n\n" real-pattern))
-        
-        (when (file-exists-p desc-file)
-          (insert "** Description\n")
-          (insert-file-contents desc-file)
-          (goto-char (point-max))
-          (insert "\n\n"))
-        
-        (insert "** System Prompt\n")
-        (insert "#+begin_src markdown\n")
         (insert-file-contents system-file)
-        (goto-char (point-max))
-        (insert "#+end_src\n")
-        
+        (ollama-buddy--md-to-org-convert-region (point-min) (point-max))
+        (goto-char (point-min))
         (view-mode 1))
       (display-buffer (current-buffer)))))
 
