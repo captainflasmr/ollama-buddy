@@ -1363,37 +1363,43 @@ When a fallback occurs, Ollama Buddy provides clear feedback:
 - If using a fallback model, an orange warning appears showing both the requested and actual model
 - The model status can be viewed using the "View model status" command (v key)
 
-* AI assistant
+* Welcome to OLLAMA BUDDY
 
 A simple text information screen will be presented on the first opening of the chat, or when requested through the menu system, its just a bit of fun, but I wanted a quick start tutorial/assistant type of feel.
 
-#+begin_src 
------------------- o( Y )o ------------------
+#+begin_example
  ___ _ _      n _ n      ___       _   _ _ _
 |   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |
 | | | | | .  |     | .  | . | | | . | . |__ |
 |___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|
+#+end_example
 
-Hi there! and welcome to OLLAMA BUDDY!
+** Local Available Models
 
-Models available:
+(a) tinyllama:latest Select Info Pull Copy Delete
+(b) qwen2.5-coder:3b Select Info Pull Copy Delete
+(c) qwen2.5-coder:7b Select Info Pull Copy Delete
+(d) deepseek-r1:7b Select Info Pull Copy Delete
+(e) codellama:7b Select Info Pull Copy Delete
+(f) gemma3:4b Select Info Pull Copy Delete
+(g) phi3:3.8b Select Info Pull Copy Delete
+(h) llama3.2:1b Select Info Pull Copy Delete
+(i) gemma3:1b Select Info Pull Copy Delete
+(j) llama3.2:3b Select Info Pull Copy Delete
+(k) deepseek-r1:1.5b Select Info Pull Copy Delete
 
-  (a) tinyllama:latest  (b) llama:latest
+** Recommended Models (click to download)
 
-Quick Tips:
+starcoder2:3b mistral:7b
 
-- Ask me anything!      C-c C-c
-- Multi-model shot?     C-c l
-- Change your mind?     C-c k
-- Change your model?    C-c m
-- Prompt history?       M-p/M-n
-- Jump to User prompts? C-c p/n
-- In another buffer?    M-x ollama-buddy-menu
+** Quick Tips
 
------------------- o( Y )o ------------------
-
-tinyllama:latest >> PROMPT: 
-#+end_src
+- Ask me anything!                    C-c C-c
+- Main transient menu                 C-c O
+- Change model                        C-c m
+- Cancel request                      C-c k
+- Browse prompt history               M-p/n/r
+- Advanced interface (show all tips)  C-c A
 
 * Design ethos expanded / why create this package?
 
@@ -1494,9 +1500,45 @@ All interactive functions available in ollama-buddy are listed in the original R
 | *Resource Management*   | =num_keep=, =seed=, =num_predict=, =num_ctx=, =num_batch=                                      | Yes       |
 | *Hardware Optimization* | =numa=, =num_gpu=, =main_gpu=, =low_vram=, =vocab_only=, =use_mmap=, =use_mlock=, =num_thread= | Yes       |
 
-* Kanban
+* Bugs                                                                 :bugs:
 
-Here is a kanban of the features that I plan on (hopefully) adding in due course.
+#+begin_src emacs-lisp :results table :exports results :tangle no
+(my/kanban-to-table "bugs" "issues")
+#+end_src
+
+#+RESULTS:
+| TODO                                           |
+|------------------------------------------------|
+| Check tags caching                             |
+| System prompt not cleared on new session       |
+| Kill online AI process with cancel request     |
+| External AI to copy to register                |
+| Remove fabric from Commands transient menu     |
+| GGUF to use new syncing option                 |
+| Save system prompts as part of session         |
+| keybindings in ollama chat buffer are reserved |
+
+** TODO Check tags caching
+
+** TODO System prompt not cleared on new session
+
+** TODO Kill online AI process with cancel request
+
+** TODO External AI to copy to register
+
+** TODO Remove fabric from Commands transient menu
+
+** TODO GGUF to use new syncing option
+
+** TODO Save system prompts as part of session
+
+** TODO keybindings in ollama chat buffer are reserved
+
+#+begin_src 
+2647:70: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
+#+end_src
+
+* Roadmap                                                           :roadmap:
 
 #+begin_src emacs-lisp :results table :exports results :tangle no
 (my/kanban-to-table "roadmap" "issues")
@@ -1526,8 +1568,6 @@ Here is a kanban of the features that I plan on (hopefully) adding in due course
 |                                    |                                   | Enhancing Menu Clarity                     |
 |                                    |                                   | Real time token tracking                   |
 |                                    |                                   | Managing chat history and context          |
-
-* Roadmap                                                           :roadmap:
 
 ** TODO Merge history buffer functionality
 
@@ -1684,32 +1724,6 @@ Let's compare ollama-buddy to the existing solutions:
 * Issues
 
 Report issues on the [[https://github.com/captainflasmr/ollama-buddy/issues][GitHub Issues page]]
-
-* Bugs
-
-** TODO Save system prompts as part of session
-
-** TODO keybindings in ollama chat buffer are reserved
-
-#+begin_src 
-2647:70: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
-2648:67: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
-2649:65: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
-2650:61: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
-2651:69: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
-2654:64: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
-2655:63: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
-2656:70: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
-2657:62: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
-2658:63: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
-2659:63: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
-2661:90: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
-2662:61: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
-2663:64: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
-2664:62: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
-2665:73: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
-2666:67: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
-#+end_src
 
 * Contributing
 

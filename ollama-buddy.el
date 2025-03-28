@@ -2076,8 +2076,9 @@ With prefix argument ALL-MODELS, clear history for all models."
            "\n\n* Welcome to OLLAMA BUDDY\n\n"
            "#+begin_example\n"
            " ___ _ _      n _ n      ___       _   _ _ _\n"
-           "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| |__ |\n"
-           "|_O_|L|L|__A_|__M__|__A_|_B_|_U_|_D_|_D_|_Y_|\n"
+           "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |\n"
+           "| | | | | .  |     | .  | . | | | . | . |__ |\n"
+           "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n"
            "#+end_example\n\n"
            models-management-section
            models-to-pull-section
