@@ -516,6 +516,20 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
   "Hash table mapping model names to their colors.")
 
 ;; Core utility functions
+
+(defun ollama-buddy-fix-encoding-issues (string)
+  "Fix common encoding issues with a simpler approach."
+  (let* ((string (replace-regexp-in-string "â" "—" string))      ;; em dash
+        (string (replace-regexp-in-string "" "" string)) ;; alternative em dash
+        (string (replace-regexp-in-string "" "" string)) ;; en dash
+        (string (replace-regexp-in-string "â€œ" "\"" string))    ;; left double quote
+        (string (replace-regexp-in-string "â€" "\"" string))     ;; right double quote
+        (string (replace-regexp-in-string "â€˜" "'" string))     ;; left single quote
+        (string (replace-regexp-in-string "â€™" "'" string))     ;; right single quote
+        (string (replace-regexp-in-string "â€¦" "…" string))     ;; ellipsis
+        (string (replace-regexp-in-string "â€¢" "•" string)))    ;; bullet point
+    string))
+
 (defun ollama-buddy--register-background-operation (operation-id description)
   "Register a new background OPERATION-ID with DESCRIPTION."
   ;; Start the timer if it's not already running

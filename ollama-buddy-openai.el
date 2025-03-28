@@ -135,7 +135,7 @@ Use nil for API default behavior (adaptive)."
            (json-str (encode-coding-string (json-encode json-payload) 'utf-8))
            (url-request-method "POST")
            (url-request-extra-headers
-            `(("Content-Type" . "application/json; charset=utf-8")
+            `(("Content-Type" . "application/json")
               ("Authorization" . ,(concat "Bearer " ollama-buddy-openai-api-key))))
            (url-request-data json-str)
            (endpoint "https://api.openai.com/v1/chat/completions"))
@@ -177,7 +177,7 @@ Use nil for API default behavior (adaptive)."
                  (if error-message
                      (setq content (format "Error: %s" (alist-get 'message error-message)))
                    (when choices
-                     (setq content (alist-get 'content (alist-get 'message (aref choices 0))))))
+                     (setq content (ollama-buddy-fix-encoding-issues (alist-get 'content (alist-get 'message (aref choices 0)))))))
 
                  ;; Update the chat buffer
                  (with-current-buffer ollama-buddy--chat-buffer

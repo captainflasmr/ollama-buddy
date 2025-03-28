@@ -164,7 +164,7 @@ Use nil for API default behavior (adaptive)."
            (json-str (encode-coding-string (json-encode json-payload) 'utf-8))
            (url-request-method "POST")
            (url-request-extra-headers
-            `(("Content-Type" . "application/json; charset=utf-8")
+            `(("Content-Type" . "application/json")
               ("Authorization" . ,(concat "Bearer " ollama-buddy-claude-api-key))
               ("X-API-Key" . ,ollama-buddy-claude-api-key)
               ("anthropic-version" . "2023-06-01")))
@@ -232,7 +232,7 @@ Use nil for API default behavior (adaptive)."
                                  (when (and (string= item-type "text") item-text)
                                    (setq extracted-text (concat extracted-text item-text)))))
                            (message "Unexpected response format: %S" content-obj))))
-                     (setq content extracted-text)))
+                     (setq content (ollama-buddy-fix-encoding-issues extracted-text))))
 
                  ;; Update the chat buffer
                  (with-current-buffer ollama-buddy--chat-buffer
