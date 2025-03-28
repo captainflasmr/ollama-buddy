@@ -815,13 +815,18 @@ When complete, CALLBACK is called with the status response and result."
       (url-retrieve url 
                     (lambda (status)
                       (let ((result nil))
-                        (when (not (plist-get status :error))
-                          ;; Only try to parse JSON if there was no error
+                        (unless (plist-get status :error)
+                          ;; Only try to parse JSON if there was no error and we have content
                           (goto-char (point-min))
                           (re-search-forward "^$" nil t) ;; Skip headers
-                          (when (not (= (point) (point-max)))
-                            (setq result (json-read-from-string 
-                                          (buffer-substring-no-properties (point) (point-max))))))
+                          (when (and (not (= (point) (point-max)))
+                                     (not (string-empty-p (buffer-substring-no-properties (point) (point-max)))))
+                            (condition-case err
+                                (setq result (json-read-from-string 
+                                              (buffer-substring-no-properties (point) (point-max))))
+                              (error
+                               ;; If JSON parsing fails, just return the raw response
+                               (message "Warning: Failed to parse JSON response: %s" (error-message-string err))))))
                         (funcall callback status result)))
                     nil t t))))
 

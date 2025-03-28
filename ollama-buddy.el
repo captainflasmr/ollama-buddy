@@ -2647,7 +2647,6 @@ Modifies the variable in place."
   (let ((endpoint "/api/show")
         (payload (json-encode `((name . ,model)))))
     
-    ;; Update status to show operation in progress
     (ollama-buddy--update-status (format "Fetching info for %s..." model))
     
     (ollama-buddy--make-request-async 
@@ -2656,8 +2655,9 @@ Modifies the variable in place."
      payload
      (lambda (status result)
        (if (plist-get status :error)
-           (message "Error fetching model info: %s" (cdr (plist-get status :error)))
-         ;; Success path
+           (progn
+             (message "Error fetching model info: %s" (cdr (plist-get status :error)))
+             (ollama-buddy--update-status "Error fetching model info"))
          (let ((buf (get-buffer-create "*Ollama Model Info*")))
            (with-current-buffer buf
              (let ((inhibit-read-only t))
@@ -2678,28 +2678,20 @@ When the operation completes, CALLBACK is called with no arguments if provided."
   (let ((buf (get-buffer-create ollama-buddy--chat-buffer))
         (payload (json-encode `((model . ,model)))))
 
-    ;; Update status to show operation in progress
     (ollama-buddy--update-status (format "Pulling model %s..." model))
     
-    ;; Use our new async version of make-request
     (ollama-buddy--make-request-async 
      "/api/pull" 
      "POST" 
      payload
      (lambda (status result)
-       ;; This callback runs when the request completes
        (if (plist-get status :error)
-           (message "Error pulling model %s: %s" model (cdr (plist-get status :error)))
-         ;; Update the buffer with the results
-         (with-current-buffer buf
-           (let ((inhibit-read-only t))
-             (ollama-buddy--assign-model-letters)
-             (goto-char (point-max))
-             (insert (ollama-buddy--create-intro-message))
-             (ollama-buddy--apply-model-colors-to-buffer)
-             (ollama-buddy--prepare-prompt-area)))
-         (message "Successfully pulled model %s" model)
-         (ollama-buddy--update-status (format "Model pulled to %s" model)))))))
+           (progn
+             (messa-textge "Error pulling model %s: %s" model (cdr (plist-get status :error)))
+             (ollama-buddy--update-status "Error pulling model"))
+         (progn
+           (message "Successfully pulled model %s" model)
+           (ollama-buddy--update-status (format "Model pulled to %s" model))))))))
 
 (defun ollama-buddy-copy-model (model)
   "Copy MODEL in Ollama."
@@ -2708,7 +2700,6 @@ When the operation completes, CALLBACK is called with no arguments if provided."
          (payload (json-encode `((source . ,model)
                                  (destination . ,destination)))))
     
-    ;; Update status to show operation in progress
     (ollama-buddy--update-status (format "Copying model %s to %s..." model destination))
     
     (ollama-buddy--make-request-async 
@@ -2720,24 +2711,15 @@ When the operation completes, CALLBACK is called with no arguments if provided."
            (progn
              (message "Error copying model: %s" (cdr (plist-get status :error)))
              (ollama-buddy--update-status "Error copying model"))
-         ;; Success path
-         (with-current-buffer buf
-           (let ((inhibit-read-only t))
-             (ollama-buddy--assign-model-letters)
-             (goto-char (point-max))
-             (insert (format "\n\nModel %s successfully copied to %s\n\n" model destination))
-             (insert (ollama-buddy--create-intro-message))
-             (ollama-buddy--apply-model-colors-to-buffer)
-             (ollama-buddy--prepare-prompt-area)))
-         (message "Model %s successfully copied to %s" model destination)
-         (ollama-buddy--update-status (format "Model copied to %s" destination)))))))
+         (progn
+           (message "Model %s successfully copied to %s" model destination)
+           (ollama-buddy--update-status (format "Model copied to %s" destination))))))))
 
 (defun ollama-buddy-delete-model (model)
   "Delete MODEL from Ollama."
   (let ((buf (get-buffer-create ollama-buddy--chat-buffer))
         (payload (json-encode `((model . ,model)))))
     
-    ;; Update status to show operation in progress
     (ollama-buddy--update-status (format "Deleting model %s..." model))
     
     (ollama-buddy--make-request-async 
@@ -2749,17 +2731,9 @@ When the operation completes, CALLBACK is called with no arguments if provided."
            (progn
              (message "Error deleting model: %s" (cdr (plist-get status :error)))
              (ollama-buddy--update-status "Error deleting model"))
-         ;; Success path
-         (with-current-buffer buf
-           (let ((inhibit-read-only t))
-             (ollama-buddy--assign-model-letters)
-             (goto-char (point-max))
-             (insert (format "\n\nModel %s successfully deleted\n\n" model))
-             (insert (ollama-buddy--create-intro-message))
-             (ollama-buddy--apply-model-colors-to-buffer)
-             (ollama-buddy--prepare-prompt-area)))
-         (message "Model %s successfully deleted" model)
-         (ollama-buddy--update-status (format "Model %s deleted" model)))))))
+         (progn
+           (message "Model %s successfully deleted" model)
+           (ollama-buddy--update-status (format "Model %s deleted" model))))))))
 
 (defun ollama-buddy-params-help ()
   "Display help for Ollama parameters."
