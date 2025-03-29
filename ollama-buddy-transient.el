@@ -297,15 +297,6 @@
     ("s" "Synonym Lookup" (lambda () (interactive) (ollama-buddy--send-with-command 'synonym)))
     ("p" "Proofread Text" (lambda () (interactive) (ollama-buddy--send-with-command 'proofread)))]
    
-   ["Pattern-based"
-    ("f" "Fabric Patterns" ollama-buddy-transient-fabric-menu)
-    ("u" "Universal Patterns" (lambda () (interactive)
-                                (let ((ollama-buddy-fabric-pattern-categories '("universal")))
-                                  (ollama-buddy-fabric-send))))
-    ("c" "Code Patterns" (lambda () (interactive)
-                           (let ((ollama-buddy-fabric-pattern-categories '("code")))
-                             (ollama-buddy-fabric-send))))]
-   
    ["Custom"
     ("C" "Custom Prompt" ollama-buddy--menu-custom-prompt)
     ("m" "Minibuffer Prompt" ollama-buddy--menu-minibuffer-prompt)]

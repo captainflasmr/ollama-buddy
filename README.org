@@ -1273,8 +1273,6 @@ Error: This model's maximum context length is 16385 tokens. However, you request
 
 ** TODO Kill online AI process with cancel request
 
-** TODO Remove fabric from Commands transient menu
-
 ** TODO GGUF to use new syncing option
 
 ** TODO Save system prompts as part of session
@@ -1284,6 +1282,9 @@ Error: This model's maximum context length is 16385 tokens. However, you request
 #+begin_src 
 2647:70: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
 #+end_src
+
+** DONE Remove fabric from Commands transient menu
+CLOSED: [2025-03-29 Sat 13:37]
 
 ** DONE External AI to copy to register
 CLOSED: [2025-03-29 Sat 13:34]
