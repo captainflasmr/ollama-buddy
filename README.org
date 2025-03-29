@@ -1291,29 +1291,31 @@ Error: This model's maximum context length is 16385 tokens. However, you request
 #+end_src
 
 #+RESULTS:
-| TODO                               | DOING                             | DONE                                       |
-|------------------------------------+-----------------------------------+--------------------------------------------|
-| Merge history buffer functionality | Core Params - suffix              | Core API - Delete Model                    |
-| Core API - Embeddings              | Show incoming ollama messages     | Core API - Copy a model                    |
-| Core Params - format               | Add fabric pattern/prompt support | Core API - stream                          |
-| Core Params - template             |                                   | Core API - Pull/Info/Pull/Delete a model   |
-| Core Params - raw                  |                                   | Core API - Show running models             |
-| Test on Windows                    |                                   | Core API - Create a model from a GGUF file |
-|                                    |                                   | Add transient menu                         |
-|                                    |                                   | History editing                            |
-|                                    |                                   | Core API - options - parameter editing     |
-|                                    |                                   | Core API - show model information          |
-|                                    |                                   | Core API - system prompt                   |
-|                                    |                                   | Chat buffer to use org-mode                |
-|                                    |                                   | Chat export options                        |
-|                                    |                                   | Core Params - options:temperature          |
-|                                    |                                   | Managing Sessions                          |
-|                                    |                                   | Sparse minified version                    |
-|                                    |                                   | Role-Based Menu Preset System              |
-|                                    |                                   | Add to MELPA                               |
-|                                    |                                   | Enhancing Menu Clarity                     |
-|                                    |                                   | Real time token tracking                   |
-|                                    |                                   | Managing chat history and context          |
+| TODO                                 | DOING                             | DONE                                       |
+|--------------------------------------+-----------------------------------+--------------------------------------------|
+| Method for securely storing API keys | Core Params - suffix              | Core API - Delete Model                    |
+| Merge history buffer functionality   | Show incoming ollama messages     | Core API - Copy a model                    |
+| Core API - Embeddings                | Add fabric pattern/prompt support | Core API - stream                          |
+| Core Params - format                 |                                   | Core API - Pull/Info/Pull/Delete a model   |
+| Core Params - template               |                                   | Core API - Show running models             |
+| Core Params - raw                    |                                   | Core API - Create a model from a GGUF file |
+| Test on Windows                      |                                   | Add transient menu                         |
+|                                      |                                   | History editing                            |
+|                                      |                                   | Core API - options - parameter editing     |
+|                                      |                                   | Core API - show model information          |
+|                                      |                                   | Core API - system prompt                   |
+|                                      |                                   | Chat buffer to use org-mode                |
+|                                      |                                   | Chat export options                        |
+|                                      |                                   | Core Params - options:temperature          |
+|                                      |                                   | Managing Sessions                          |
+|                                      |                                   | Sparse minified version                    |
+|                                      |                                   | Role-Based Menu Preset System              |
+|                                      |                                   | Add to MELPA                               |
+|                                      |                                   | Enhancing Menu Clarity                     |
+|                                      |                                   | Real time token tracking                   |
+|                                      |                                   | Managing chat history and context          |
+
+** TODO Method for securely storing API keys
 
 ** TODO Merge history buffer functionality
 
