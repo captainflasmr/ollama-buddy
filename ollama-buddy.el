@@ -839,6 +839,9 @@ If SESSION-NAME is not provided, prompt for a name."
           (progn
             ;; Load the session
             (load-file session-file)
+
+            ;; Clear current system prompt
+            (setq ollama-buddy--current-system-prompt nil)
             
             ;; Update the chat buffer to reflect restored state
             (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
@@ -1018,6 +1021,9 @@ If SESSION-NAME is not provided, prompt for a name."
     
     ;; Clear current session
     (setq ollama-buddy--current-session nil)
+
+    ;; Clear current system prompt
+    (setq ollama-buddy--current-system-prompt nil)
     
     ;; Clear all model histories
     (clrhash ollama-buddy--conversation-history-by-model)

@@ -1257,7 +1257,7 @@ All interactive functions available in ollama-buddy are listed in the original R
 | Save system prompts as part of session              |                                         |
 | keybindings in ollama chat buffer are reserved      |                                         |
 
-** TODO Note sure there is conversation history with Claude
+** TODO Conversation history to display with Claude/ChatGPT
 
 ** TODO Add Texinfo to MELPA recipe
 
@@ -1268,8 +1268,6 @@ All interactive functions available in ollama-buddy are listed in the original R
 Error: This model's maximum context length is 16385 tokens. However, you requested 20189 tokens (16093 in the messages, 4096 in the completion). Please reduce the length of the messages or completion.
 
 ** TODO Check tags caching
-
-** TODO System prompt not cleared on new session
 
 ** TODO Kill online AI process with cancel request
 
@@ -1282,6 +1280,9 @@ Error: This model's maximum context length is 16385 tokens. However, you request
 #+begin_src 
 2647:70: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
 #+end_src
+
+** DONE System prompt not cleared on new session
+CLOSED: [2025-03-29 Sat 13:44]
 
 ** DONE Remove fabric from Commands transient menu
 CLOSED: [2025-03-29 Sat 13:37]
