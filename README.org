@@ -1244,18 +1244,17 @@ All interactive functions available in ollama-buddy are listed in the original R
 #+end_src
 
 #+RESULTS:
-| TODO                                           |
-|------------------------------------------------|
-| Check tags caching                             |
-| System prompt not cleared on new session       |
-| Kill online AI process with cancel request     |
-| External AI to copy to register                |
-| Remove fabric from Commands transient menu     |
-| GGUF to use new syncing option                 |
-| Save system prompts as part of session         |
-| keybindings in ollama chat buffer are reserved |
-
-** TODO First request with no chat buffer fails
+| TODO                                           | DONE                                    |
+|------------------------------------------------+-----------------------------------------|
+| ChatGPT request/response too long              | First request with no chat buffer fails |
+| Check tags caching                             |                                         |
+| System prompt not cleared on new session       |                                         |
+| Kill online AI process with cancel request     |                                         |
+| External AI to copy to register                |                                         |
+| Remove fabric from Commands transient menu     |                                         |
+| GGUF to use new syncing option                 |                                         |
+| Save system prompts as part of session         |                                         |
+| keybindings in ollama chat buffer are reserved |                                         |
 
 ** TODO ChatGPT request/response too long
 
@@ -1282,6 +1281,8 @@ Error: This model's maximum context length is 16385 tokens. However, you request
 #+begin_src 
 2647:70: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
 #+end_src
+
+** DONE First request with no chat buffer fails
 
 * Roadmap                                                           :roadmap:
 

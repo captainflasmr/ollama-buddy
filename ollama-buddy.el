@@ -1806,10 +1806,8 @@ With prefix argument ALL-MODELS, clear history for all models."
                                    (when prompt (concat prompt "\n\n"))
                                    (buffer-substring-no-properties
                                     (region-beginning) (region-end)))))
+      (ollama-buddy--open-chat)
       (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-        (pop-to-buffer (current-buffer))
-        (ollama-buddy--prepare-prompt-area)
-        (goto-char (point-max))
         (insert (string-trim prompt-with-selection)))
       (ollama-buddy--send (string-trim prompt-with-selection)))))
 
@@ -1840,6 +1838,8 @@ With prefix argument ALL-MODELS, clear history for all models."
     (when (and prompt-text (not selected-text))
       (user-error "This command requires selected text"))
     
+    (ollama-buddy--open-chat)
+        
     ;; Apply command-specific parameters if provided
     (when params-alist
       (ollama-buddy--apply-command-parameters params-alist))
@@ -1854,7 +1854,7 @@ With prefix argument ALL-MODELS, clear history for all models."
       (let ((old-system-prompt ollama-buddy--current-system-prompt))
         (when system-text
           (setq ollama-buddy--current-system-prompt system-text))
-        
+
         ;; Send the request
         (ollama-buddy--send (string-trim full-prompt) model)
         
