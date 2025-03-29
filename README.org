@@ -1244,17 +1244,23 @@ All interactive functions available in ollama-buddy are listed in the original R
 #+end_src
 
 #+RESULTS:
-| TODO                                           | DONE                                    |
-|------------------------------------------------+-----------------------------------------|
-| ChatGPT request/response too long              | First request with no chat buffer fails |
-| Check tags caching                             |                                         |
-| System prompt not cleared on new session       |                                         |
-| Kill online AI process with cancel request     |                                         |
-| External AI to copy to register                |                                         |
-| Remove fabric from Commands transient menu     |                                         |
-| GGUF to use new syncing option                 |                                         |
-| Save system prompts as part of session         |                                         |
-| keybindings in ollama chat buffer are reserved |                                         |
+| TODO                                                | DONE                                    |
+|-----------------------------------------------------+-----------------------------------------|
+| Note sure there is conversation history with Claude | First request with no chat buffer fails |
+| Add Texinfo to MELPA recipe                         |                                         |
+| ChatGPT request/response too long                   |                                         |
+| Check tags caching                                  |                                         |
+| System prompt not cleared on new session            |                                         |
+| Kill online AI process with cancel request          |                                         |
+| External AI to copy to register                     |                                         |
+| Remove fabric from Commands transient menu          |                                         |
+| GGUF to use new syncing option                      |                                         |
+| Save system prompts as part of session              |                                         |
+| keybindings in ollama chat buffer are reserved      |                                         |
+
+** TODO Note sure there is conversation history with Claude
+
+** TODO Add Texinfo to MELPA recipe
 
 ** TODO ChatGPT request/response too long
 
