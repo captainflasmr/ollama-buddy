@@ -1255,6 +1255,8 @@ All interactive functions available in ollama-buddy are listed in the original R
 | Save system prompts as part of session         |
 | keybindings in ollama chat buffer are reserved |
 
+** TODO First request with no chat buffer fails
+
 ** TODO Check tags caching
 
 ** TODO System prompt not cleared on new session
