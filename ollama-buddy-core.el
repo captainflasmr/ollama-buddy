@@ -551,6 +551,8 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
         (string (replace-regexp-in-string "â€˜" "'" string))     ;; left single quote
         (string (replace-regexp-in-string "â€™" "'" string))     ;; right single quote
         (string (replace-regexp-in-string "â€¦" "…" string))     ;; ellipsis
+        (string (replace-regexp-in-string "Ã" "E" string))   ;; capital E with acute accent
+        (string (replace-regexp-in-string "Ã©" "e" string))   ;; lowercase e with acute accent
         (string (replace-regexp-in-string "â€¢" "•" string)))    ;; bullet point
     string))
 

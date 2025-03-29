@@ -1246,13 +1246,12 @@ All interactive functions available in ollama-buddy are listed in the original R
 #+RESULTS:
 | TODO                                                | DONE                                    |
 |-----------------------------------------------------+-----------------------------------------|
-| Note sure there is conversation history with Claude | First request with no chat buffer fails |
-| Add Texinfo to MELPA recipe                         |                                         |
+| Note sure there is conversation history with Claude | External AI to copy to register         |
+| Add Texinfo to MELPA recipe                         | First request with no chat buffer fails |
 | ChatGPT request/response too long                   |                                         |
 | Check tags caching                                  |                                         |
 | System prompt not cleared on new session            |                                         |
 | Kill online AI process with cancel request          |                                         |
-| External AI to copy to register                     |                                         |
 | Remove fabric from Commands transient menu          |                                         |
 | GGUF to use new syncing option                      |                                         |
 | Save system prompts as part of session              |                                         |
@@ -1274,8 +1273,6 @@ Error: This model's maximum context length is 16385 tokens. However, you request
 
 ** TODO Kill online AI process with cancel request
 
-** TODO External AI to copy to register
-
 ** TODO Remove fabric from Commands transient menu
 
 ** TODO GGUF to use new syncing option
@@ -1287,6 +1284,9 @@ Error: This model's maximum context length is 16385 tokens. However, you request
 #+begin_src 
 2647:70: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
 #+end_src
+
+** DONE External AI to copy to register
+CLOSED: [2025-03-29 Sat 13:34]
 
 ** DONE First request with no chat buffer fails
 
