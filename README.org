@@ -1244,18 +1244,16 @@ All interactive functions available in ollama-buddy are listed in the original R
 #+end_src
 
 #+RESULTS:
-| TODO                                                | DONE                                    |
-|-----------------------------------------------------+-----------------------------------------|
-| Note sure there is conversation history with Claude | External AI to copy to register         |
-| Add Texinfo to MELPA recipe                         | First request with no chat buffer fails |
-| ChatGPT request/response too long                   |                                         |
-| Check tags caching                                  |                                         |
-| System prompt not cleared on new session            |                                         |
-| Kill online AI process with cancel request          |                                         |
-| Remove fabric from Commands transient menu          |                                         |
-| GGUF to use new syncing option                      |                                         |
-| Save system prompts as part of session              |                                         |
-| keybindings in ollama chat buffer are reserved      |                                         |
+| TODO                                                | DONE                                       |
+|-----------------------------------------------------+--------------------------------------------|
+| Conversation history to display with Claude/ChatGPT | System prompt not cleared on new session   |
+| Add Texinfo to MELPA recipe                         | Remove fabric from Commands transient menu |
+| ChatGPT request/response too long                   | External AI to copy to register            |
+| Check tags caching                                  | First request with no chat buffer fails    |
+| Kill online AI process with cancel request          |                                            |
+| GGUF to use new syncing option                      |                                            |
+| Save system prompts as part of session              |                                            |
+| keybindings in ollama chat buffer are reserved      |                                            |
 
 ** TODO Conversation history to display with Claude/ChatGPT
 
