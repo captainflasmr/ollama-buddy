@@ -1257,6 +1257,12 @@ All interactive functions available in ollama-buddy are listed in the original R
 
 ** TODO First request with no chat buffer fails
 
+** TODO ChatGPT request/response too long
+
+[GPT gpt-3.5-turbo: RESPONSE]
+
+Error: This model's maximum context length is 16385 tokens. However, you requested 20189 tokens (16093 in the messages, 4096 in the completion). Please reduce the length of the messages or completion.
+
 ** TODO Check tags caching
 
 ** TODO System prompt not cleared on new session
