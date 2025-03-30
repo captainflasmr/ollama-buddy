@@ -105,6 +105,76 @@ and you can set the default model to ChatGPT too!
 (setq ollama-buddy-default-model "GPT gpt-4o")
 #+end_src
 
+Note that to store the key you would probably want to choose either of the following methods so a sensitive key doesn't get stored in your Emacs init file:
+
+Using =auth-source= (which includes authinfo) or =password-store= are both good options for securely storing and retrieving sensitive information. Here's how you can modify your configuration to use these methods:
+
+1. Using auth-source (authinfo):
+
+First, add your API keys to your =~/.authinfo= or =~/.authinfo.gpg= file (the latter is encrypted):
+
+#+begin_src 
+machine ollama-buddy-openai login apikey password <your-openai-api-key>
+machine ollama-buddy-claude login apikey password <your-claude-api-key>
+#+end_src
+
+Then, modify your Emacs configuration:
+
+#+begin_src elisp
+(use-package ollama-buddy
+  :load-path "~/source/repos/ollama-buddy"
+  :bind
+  ("C-c o" . ollama-buddy-menu)
+  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  :custom
+  (ollama-buddy-openai-api-key
+   (lambda () (auth-source-pick-first-password :host "ollama-buddy-openai" :user "apikey")))
+  (ollama-buddy-default-model "GPT gpt-4o")
+  (ollama-buddy-claude-api-key
+   (lambda () (auth-source-pick-first-password :host "ollama-buddy-claude" :user "apikey")))
+  (ollama-buddy-claude-default-model "claude-3-sonnet-20240229")
+  :config
+  (require 'ollama-buddy-openai nil t)
+  (require 'ollama-buddy-claude nil t)
+  ;; ... rest of your configuration
+  )
+#+end_src
+
+2. Using password-store:
+
+First, ensure you have =password-store= set up and add your API keys:
+
+#+begin_src 
+pass insert ollama-buddy/openai-api-key
+pass insert ollama-buddy/claude-api-key
+#+end_src
+
+Then, modify your Emacs configuration:
+
+#+begin_src elisp
+(use-package password-store)
+
+(use-package ollama-buddy
+  :load-path "~/source/repos/ollama-buddy"
+  :bind
+  ("C-c o" . ollama-buddy-menu)
+  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  :custom
+  (ollama-buddy-openai-api-key
+   (lambda () (password-store-get "ollama-buddy/openai-api-key")))
+  (ollama-buddy-default-model "GPT gpt-4o")
+  (ollama-buddy-claude-api-key
+   (lambda () (password-store-get "ollama-buddy/claude-api-key")))
+  (ollama-buddy-claude-default-model "claude-3-sonnet-20240229")
+  :config
+  (require 'ollama-buddy-openai nil t)
+  (require 'ollama-buddy-claude nil t)
+  ;; ... rest of your configuration
+  )
+#+end_src
+
+Both of these methods will securely store your API keys and retrieve them when needed, keeping them out of your Emacs configuration file. The =lambda= functions ensure that the keys are only retrieved when they're actually needed.
+
 With this enabled, chat will present a list of ChatGPT models to choose from. The custom menu should also now work with chat, so from anywhere in Emacs, you can push predefined prompts to the =ollama= buddy chat buffer now supporting ChatGPT.
 
 There is more integration required to fully incorporate ChatGPT into the =ollama= buddy system, like token rates and history, etc. But not bad for a first effort, methinks!
