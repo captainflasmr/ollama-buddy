@@ -1,0 +1,34 @@
+#+title: Ollama Buddy: Local LLM Integration for Emacs
+#+author: James Dyer
+#+email: captainflasmr@gmail.com
+#+language: en
+#+options: ':t toc:nil author:nil email:nil num:nil title:nil
+#+todo: TODO DOING | DONE
+#+startup: showall
+
+Added texinfo documentation for future automatic installation through MELPA and created an Emacs manual.
+
+If you want to see what the manual would look like, just download the docs directory from github, cd into it, and run:
+
+#+begin_src bash
+make
+sudo make install-docs
+#+end_src
+
+#+RESULTS:
+: make: Nothing to be done for 'docs'.
+
+Then calling up =info= =C-h i= and ollama buddy will be present in the Emacs menu, or just select =m= and search for =Ollama Buddy=
+
+For those interested in the manual, I have converted it into html format, which is accessible here:
+
+[[file:docs/ollama-buddy.org]]
+
+It has been converted using the following command:
+
+#+begin_src bash
+makeinfo --html --no-split ollama-buddy.texi -o ollama-buddy.html
+pandoc -f html -t org -o ollama-buddy.org ollama-buddy.html
+#+end_src
+
+#+RESULTS:
