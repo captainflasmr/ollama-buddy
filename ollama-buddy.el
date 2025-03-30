@@ -2009,9 +2009,9 @@ With prefix argument ALL-MODELS, clear history for all models."
          ;; Basic tips for beginners
          (basic-tips
           "- Ask me anything!                    C-c C-c
+- Cancel request                      C-c C-k
 - Main transient menu                 C-c O
 - Change model                        C-c m
-- Cancel request                      C-c k
 - Browse prompt history               M-p/n/r
 - Advanced interface (show all tips)  C-c A")
          ;; Advanced tips for experienced users
@@ -2019,17 +2019,19 @@ With prefix argument ALL-MODELS, clear history for all models."
           "- Ask me anything!                    C-c C-c
 - Main transient menu                 C-c O
 - Manage models                       C-c W
-- Show Help/Status/Token usage        C-c h/v/U
+- Browse prompt history               M-p/n/r
+- Show Help/Status/Debug              C-c h/v/B
+- Show Token Stats/Graph/Report       C-c u/U/T
 - Model Change/Info/Multishot         C-c m/i/M
 - Toggle Streaming                    C-c x
 - System Prompt Set/Show/Reset        C-c s/C-s/r
-- Parameter Menu/Profiles             C-c P/p
+- Param Menu/Profiles/Show/Help/Reset C-c P/p/G/I/K
 - History Toggle/Clear/Show/Edit      C-c H/X/V/J
-- Session New/Load/Save/List          C-c N/L/S/Q
+- Session New/Load/Save/List/Delete   C-c N/L/S/Q/Z
 - Role Switch/Create/Directory        C-c R/E/D
 - Fabric Patterns Menu                C-c f
-- Display Options (Colors/Markdown)   C-c c/C-o
-- Browse prompt history               M-p/n/r
+- Toggle Display Colors/Markdown      C-c c/C-o
+- Show Buddy custom menu              C-c b
 - Basic interface (simpler display)   C-c A
 
 [[elisp:(call-interactively #'ollama-buddy-import-gguf-file)][Import-GGUF-File]] [[elisp:(call-interactively #'ollama-buddy-pull-model)][Pull-Any-Model]]")
@@ -2823,7 +2825,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     ;; Chat section keybindings from transient
     (define-key map (kbd "C-c C-c") #'ollama-buddy--send-prompt)
     (define-key map (kbd "C-c h") #'ollama-buddy--menu-help-assistant)
-    (define-key map (kbd "C-c k") #'ollama-buddy--cancel-request)
+    (define-key map (kbd "C-c C-k") #'ollama-buddy--cancel-request)
     (define-key map (kbd "C-c x") #'ollama-buddy-toggle-streaming)
     
     ;; Prompts section keybindings
@@ -2849,10 +2851,10 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c A") #'ollama-buddy-toggle-interface-level)
     (define-key map (kbd "C-c B") #'ollama-buddy-toggle-debug-mode)
     (define-key map (kbd "C-c T") #'ollama-buddy-toggle-token-display)
-    (define-key map (kbd "C-c U") #'ollama-buddy-display-token-stats)
+    (define-key map (kbd "C-c u") #'ollama-buddy-display-token-stats)
+    (define-key map (kbd "C-c U") #'ollama-buddy-display-token-graph)
     (define-key map (kbd "C-c C-o") #'ollama-buddy-toggle-markdown-conversion)
     (define-key map (kbd "C-c c") #'ollama-buddy-toggle-model-colors)
-    (define-key map (kbd "C-c g") #'ollama-buddy-display-token-graph)
     
     ;; History keybindings
     (define-key map (kbd "C-c H") #'ollama-buddy-toggle-history)

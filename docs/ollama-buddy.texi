@@ -931,13 +931,13 @@ To view detailed token usage statistics:
 @example
 M-x ollama-buddy-display-token-stats
 @end example
-or press @code{C-c U} in the chat buffer.
+or press @code{C-c u} in the chat buffer.
 
 To display a visual graph of token usage:
 @example
 M-x ollama-buddy-display-token-graph
 @end example
-or press @code{C-c g} in the chat buffer.
+or press @code{C-c U} in the chat buffer.
 
 @section Customizing the Interface
 

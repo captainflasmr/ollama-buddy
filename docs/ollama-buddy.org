@@ -1469,7 +1469,7 @@ To view detailed token usage statistics:
 M-x ollama-buddy-display-token-stats
 #+end_src
 
-or press =C-c U= in the chat buffer.
+or press =C-c u= in the chat buffer.
 
 To display a visual graph of token usage:
 
@@ -1477,7 +1477,7 @@ To display a visual graph of token usage:
 M-x ollama-buddy-display-token-graph
 #+end_src
 
-or press =C-c g= in the chat buffer.
+or press =C-c U= in the chat buffer.
 
 <<Customizing-the-Interface>>
 *** 12.2 Customizing the Interface [[#Customizing-the-Interface][¶]]

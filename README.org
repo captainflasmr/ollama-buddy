@@ -227,20 +227,21 @@ When called, the main transient menu appears at the bottom of your Emacs frame, 
 #+begin_src 
 |o(Y)o| Ollama Buddy
 [Chat]             [Prompts]            [Model]               [Roles & Patterns]
-o  Open Chat       l  Send Region       m  Switch Model       R  Switch Roles
-O  Commands        s  Set System Prompt v  View Model Status  E  Create New Role
-RET Send Prompt    C-s Show System      i  Show Model Info    D  Open Roles Directory
-h  Help/Menu       r  Reset System      M  Multishot          f  Fabric Patterns
-k  Kill/Cancel     b  Ollama Buddy Menu
+o  Open Chat       l  Send Region       W  Manage Models      R  Switch Roles
+O  Commands        s  Set System Prompt m  Switch Model       E  Create New Role
+RET Send Prompt    C-s Show System      v  View Model Status  D  Open Roles Directory
+h  Help/Menu       r  Reset System      i  Show Model Info    f  Fabric Patterns
+k  Kill/Cancel     b  Ollama Buddy Menu M  Multishot          t  OpenAI Integration
+x  Toggle Streaming
 
 [Display Options]          [History]              [Sessions]             [Parameters]
 A  Toggle Interface Level  H  Toggle History      N  New Session         P  Edit Parameter
 B  Toggle Debug Mode       X  Clear History       L  Load Session        G  Display Parameters
 T  Toggle Token Display    V  Display History     S  Save Session        I  Parameter Help
-U  Display Token Stats     J  Edit History        Q  List Sessions       K  Reset Parameters
-C-o Toggle Markdown->Org                          Z  Delete Session      F  Toggle Params in Header
-c  Toggle Model Colors                                                   p  Parameter Profiles
-g  Token Usage Graph
+u  Token Stats             J  Edit History        Q  List Sessions       K  Reset Parameters
+U  Token Usage Graph                              Z  Delete Session      F  Toggle Params in Header
+C-o Toggle Markdown->Org                                                 p  Parameter Profiles
+c  Toggle Model Colors                                                   
 #+end_src
 
 This visual layout makes it easy to discover and access the full range of Ollama Buddy's functionality. Let's explore each section in detail.
@@ -256,6 +257,7 @@ This section contains the core interaction commands:
 - *Send Prompt (RET)*: Sends the current prompt to the model
 - *Help/Menu (h)*: Displays the help assistant with usage tips
 - *Kill/Cancel Request (k)*: Cancels the current ongoing request
+- *Toggle Streaming (x)*: Toggle streaming on and off only for ollama models
 
 *** Prompts Section
 
@@ -265,12 +267,13 @@ These commands help you manage and send prompts:
 - *Set System Prompt (s)*: Sets the current prompt as a system prompt
 - *Show System Prompt (C-s)*: Displays the current system prompt
 - *Reset System Prompt (r)*: Resets the system prompt to default
-- *Ollama Buddy Menu (b)*: Opens the classic menu interface
+- *Ollama Buddy Menu (b)*: Opens the classic custom menu interface
 
 *** Model Section
 
 Commands for model management:
 
+- *Manage Models*: Info, Pull, Copy, Delete for each model, plus Import GGUF Model and Pull any model from ollama library
 - *Switch Model (m)*: Changes the active LLM
 - *View Model Status (v)*: Shows status of all available models
 - *Show Model Info (i)*: Displays detailed information about the current model
@@ -284,6 +287,7 @@ These commands help manage roles and use fabric patterns:
 - *Create New Role (E)*: Create a new role interactively
 - *Open Roles Directory (D)*: Open the directory containing role definitions
 - *Fabric Patterns (f)*: Opens the submenu for Fabric patterns
+- *OpenAI Integration (t)*: Opens menu specifically for OpenAI/ChatGPT
 
 When you select the Fabric Patterns option, you'll see a submenu like this:
 
@@ -618,7 +622,8 @@ OR
 | C-c m           | Change model                            |
 | C-c h           | Show help                               |
 | C-c i           | Show model info                         |
-| C-c U           | Show token usage                        |
+| C-c U           | Show token statistics                   |
+| C-c U           | Show token graph                        |
 | C-c C-s         | Show system prompt                      |
 | C-u C-c C-c     | Set system prompt                       |
 | C-u C-u C-c C-c | Clear system prompt                     |
@@ -918,6 +923,7 @@ Prompts are integrated into the Emacs history mechanism and persist across sessi
 #+RESULTS:
 | Custom variable                        | Description                                                                  |
 |----------------------------------------+------------------------------------------------------------------------------|
+| ollama-buddy-openai-show-loading       | Whether to show a loading indicator during API requests.                     |
 | ollama-buddy-command-definitions       | Comprehensive command definitions for Ollama Buddy.                          |
 | ollama-buddy-enable-model-colors       | Whether to show model colors.                                                |
 | ollama-buddy-interface-level           | Level of interface complexity to display.                                    |
@@ -927,27 +933,53 @@ Prompts are integrated into the Emacs history mechanism and persist across sessi
 | ollama-buddy-mode                      | Non-nil if Ollama-Buddy mode is enabled.                                     |
 | ollama-buddy-sessions-directory        | Directory containing ollama-buddy session files.                             |
 | ollama-buddy-menu-columns              | Number of columns to display in the Ollama Buddy menu.                       |
+| ollama-buddy-fabric-pattern-categories | List of pattern categories to focus on when listing patterns.                |
+| ollama-buddy-status-update-interval    | Interval in seconds to update the status line with background operations.    |
+| ollama-buddy-fabric-update-on-startup  | Whether to automatically update patterns when Emacs starts.                  |
+| ollama-buddy-available-models          | List of available models to pull from Ollama Hub.                            |
+| ollama-buddy-claude-max-tokens         | Maximum number of tokens to generate in the response.                        |
+| ollama-buddy-openai-models             | List of available OpenAI models.                                             |
+| ollama-buddy-openai-marker-prefix      | Prefix to indicate that a model is from OpenAI rather than Ollama.           |
 | ollama-buddy-history-enabled           | Whether to use conversation history in Ollama requests.                      |
+| ollama-buddy-claude-marker-prefix      | Prefix used to identify Claude models in the model list.                     |
 | ollama-buddy-roles-directory           | Directory containing ollama-buddy role preset files.                         |
+| ollama-buddy-fabric-local-dir          | Local directory where Fabric patterns will be stored.                        |
 | ollama-buddy-show-history-indicator    | Whether to show the history indicator in the header line.                    |
 | ollama-buddy-mode-map                  | Keymap for ollama-buddy mode.                                                |
+| ollama-buddy-claude-models             | List of available Claude models.                                             |
+| ollama-buddy-fabric-patterns-subdir    | Subdirectory within the Fabric repo containing the patterns.                 |
+| ollama-buddy-openai-api-endpoint       | Endpoint for OpenAI chat completions API.                                    |
 | ollama-buddy-params-active             | Currently active values for Ollama API parameters.                           |
+| ollama-buddy-openai-default-model      | Default OpenAI model to use.                                                 |
+| ollama-buddy-claude-default-model      | Default Claude model to use.                                                 |
+| ollama-buddy-claude-show-loading       | Whether to show a loading indicator during API requests.                     |
 | ollama-buddy-params-modified           | Set of parameters that have been explicitly modified by the user.            |
 | ollama-buddy-host                      | Host where Ollama server is running.                                         |
 | ollama-buddy-auto-save-session         | Whether to automatically save session on exit.                               |
+| ollama-buddy-streaming-enabled         | Whether to use streaming mode for responses.                                 |
 | ollama-buddy-max-history-length        | Maximum number of message pairs to keep in conversation history.             |
 | ollama-buddy-default-model             | Default Ollama model to use.                                                 |
+| ollama-buddy-claude-temperature        | Temperature setting for Claude requests (0.0-1.0).                           |
 | ollama-buddy-display-token-stats       | Whether to display token usage statistics in responses.                      |
+| ollama-buddy-claude-api-endpoint       | Endpoint for Anthropic Claude API.                                           |
+| ollama-buddy-openai-max-tokens         | Maximum number of tokens to generate in the response.                        |
+| ollama-buddy-claude-api-key            | API key for accessing Anthropic Claude services.                             |
 | ollama-buddy-params-profiles           | Predefined parameter profiles for different usage scenarios.                 |
 | ollama-buddy-params-defaults           | Default values for Ollama API parameters.                                    |
 | ollama-buddy-port                      | Port where Ollama server is running.                                         |
+| ollama-buddy-default-register          | Default register to store the current response when not in multishot mode.   |
+| ollama-buddy-after-load-hook           |                                                                              |
+| ollama-buddy-fabric-repo-url           | URL of the Fabric GitHub repository.                                         |
 | ollama-buddy-connection-check-interval | Interval in seconds to check Ollama connection status.                       |
+| ollama-buddy-modelfile-directory       | Directory for storing temporary Modelfiles.                                  |
+| ollama-buddy-openai-temperature        | Temperature setting for OpenAI requests (0.0-2.0).                           |
 | ollama-buddy-convert-markdown-to-org   | Whether to automatically convert markdown to `org-mode' format in responses. |
 | ollama-buddy-mode-hook                 | Hook run after entering or leaving `ollama-buddy-mode'.                      |
+| ollama-buddy-openai-api-key            | API key for accessing OpenAI services.                                       |
 
 * Interactive functions
 
-#+begin_src emacs-lisp :results table :colnames '("Command" "Description") :exports results
+#+begfin_src emacs-lisp :results table :colnames '("Command" "Description") :exports results
   (let ((rows))
     (mapatoms
      (lambda (symbol)

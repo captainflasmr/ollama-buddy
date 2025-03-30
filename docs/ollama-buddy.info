@@ -869,11 +869,11 @@ Ollama Buddy can track token usage statistics:
 
    To view detailed token usage statistics:
      M-x ollama-buddy-display-token-stats
-   or press ‘C-c U’ in the chat buffer.
+   or press ‘C-c u’ in the chat buffer.
 
    To display a visual graph of token usage:
      M-x ollama-buddy-display-token-graph
-   or press ‘C-c g’ in the chat buffer.
+   or press ‘C-c U’ in the chat buffer.
 
 12.2 Customizing the Interface
 ==============================

@@ -108,10 +108,10 @@
     ("A" "Toggle Interface Level" ollama-buddy-toggle-interface-level)
     ("B" "Toggle Debug Mode" ollama-buddy-toggle-debug-mode)
     ("T" "Toggle Token Display" ollama-buddy-toggle-token-display)
-    ("U" "Display Token Stats" ollama-buddy-display-token-stats)
+    ("u" "Token Stats" ollama-buddy-display-token-stats)
+    ("U" "Token Usage Graph" ollama-buddy-display-token-graph)
     ("C-o" "Toggle Markdown->Org" ollama-buddy-toggle-markdown-conversion)
     ("c" "Toggle Model Colors" ollama-buddy-toggle-model-colors)
-    ("g" "Token Usage Graph" ollama-buddy-display-token-graph)
     ]
    
    ["History"
