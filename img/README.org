@@ -119,9 +119,9 @@ Enter a few queries to test the system, then navigate back through your previous
 
 Submit some queries, with different models:
 
-PROMPT>> why is the sky blue?
-PROMPT>> why is the grass green?
-PROMPT>> why is emacs so great?
+PROMPT:: why is the sky blue?
+PROMPT:: why is the grass green?
+PROMPT:: why is emacs so great?
 
 and show the token usage and rate being displayed in the chat buffer.
 
@@ -170,7 +170,7 @@ clear the system message and ask again, the reponses should now be more verbose!
 
 ** 016 Same prompt to 10 models (multishot)
 
-PROMPT>> What is the capital of France?
+PROMPT:: What is the capital of France?
 Multishot to abcdefghij
 
 #+attr_org: :width 300px
