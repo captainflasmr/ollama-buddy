@@ -1242,18 +1242,18 @@ ACTUAL-MODEL is the model being used instead."
                          (format " [%s]" param-str))))))
       (setq header-line-format
             (concat
-             (format (if (string-empty-p (ollama-buddy--update-multishot-status))
-                         " %s%s%s%s %s %s%s %s %s %s%s"
-                       " %s%s%s%s %s %s %s %s %s %s%s")
-                     (if ollama-buddy--current-suffix "F" "")
+             (format " %s%s%s %s%s%s %s %s %s%s"
                      (if ollama-buddy-display-token-stats "T" "")
                      (if ollama-buddy-streaming-enabled "" "X")
-                     (or history "")                     (if ollama-buddy-convert-markdown-to-org "ORG" "Markdown")
+                     (or history "")
+                     (if ollama-buddy-convert-markdown-to-org "ORG" "Markdown")
                      (ollama-buddy--update-multishot-status)
-                     (propertize (if (ollama-buddy--check-status) "RUNNING" "OFFLINE")
+                     (propertize (if (ollama-buddy--check-status) "" " OFFLINE")
                                  'face '(:weight bold))
-                     (propertize model 'face `(:weight bold :box (:line-width 4 :style pressed-button)))
-                     (propertize status 'face '(:weight bold))
+                     (if (ollama-buddy--check-status)
+                         (propertize model 'face `(:weight bold :box (:line-width 4 :style flat-button)))
+                       (propertize model 'face `(:weight bold :inherit shadow :box (:line-width 4 :style flat-button))))
+                     status
                      system-indicator
                      (or params ""))
              (when (and original-model actual-model (not (string= original-model actual-model)))
@@ -1267,7 +1267,7 @@ ACTUAL-MODEL is the model being used instead."
                                            0 ollama-buddy--multishot-progress)))
              (remaining (substring ollama-buddy--multishot-sequence
                                    ollama-buddy--multishot-progress)))
-        (concat (propertize "Multishot: " 'face '(:weight bold))
+        (concat (propertize " Multishot: " 'face '(:weight bold))
                 (propertize completed 'face '(:weight bold))
                 (propertize remaining 'face '(:weight normal))))
     ""))

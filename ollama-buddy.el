@@ -1126,7 +1126,7 @@ With prefix argument ALL-MODELS, clear history for all models."
       
       ;; Update status with token information
       (ollama-buddy--update-status
-       (format "Typing... [%d tokens, %.1f t/s]"
+       (format "Typing... [%d %.1f t/s]"
                ollama-buddy--current-token-count total-rate))
       
       ;; Update tracking variables
@@ -1680,7 +1680,7 @@ With prefix argument ALL-MODELS, clear history for all models."
               ;; Not in multishot mode, just show the prompt
               (progn
                 (ollama-buddy--prepare-prompt-area)
-                (ollama-buddy--update-status (format "Finished [%d tokens, %.1f t/s]"
+                (ollama-buddy--update-status (format "Finished [%d %.1f t/s]"
                                                      (plist-get (car ollama-buddy--token-usage-history) :tokens)
                                                      (plist-get (car ollama-buddy--token-usage-history) :rate)))))))
         (when window
@@ -1957,7 +1957,7 @@ With prefix argument ALL-MODELS, clear history for all models."
         (setq ollama-buddy--start-point (point))
         (insert "Loading response..."))
       
-      (ollama-buddy--update-status "Sending request..." original-model model)
+      (ollama-buddy--update-status "Processing..." original-model model)
 
       (when (and ollama-buddy--active-process
                  (process-live-p ollama-buddy--active-process))
@@ -2017,6 +2017,7 @@ With prefix argument ALL-MODELS, clear history for all models."
          ;; Advanced tips for experienced users
          (advanced-tips
           "- Ask me anything!                    C-c C-c
+- Cancel request                      C-c C-k
 - Main transient menu                 C-c O
 - Manage models                       C-c W
 - Browse prompt history               M-p/n/r
@@ -2087,6 +2088,9 @@ With prefix argument ALL-MODELS, clear history for all models."
            "| | | | | .  |     | .  | . | | | . | . |__ |\n"
            "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n"
            "#+end_example\n\n"
+           (when (not (ollama-buddy--check-status))
+               "** *THERE IS NO OLLAMA RUNNING*\n
+please run =ollama serve=\n\n")
            models-management-section
            models-to-pull-section
            "** Quick Tips\n\n"
