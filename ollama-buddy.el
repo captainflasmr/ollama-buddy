@@ -1,4 +1,4 @@
-;;; ollama-buddy.el --- Ollama Buddy: Your Friendly AI Assistant -*- lexical-binding: t; -*-
+;;; ollama-buddy.el --- Ollama LLM AI Assistant with ChatGPT and Claude Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
 ;; Version: 0.9.17
