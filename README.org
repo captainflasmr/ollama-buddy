@@ -101,6 +101,10 @@ See *Screenshots / Demos* section for more videos/demonstration.
 
 * Whats New
 
+** <2025-04-01> *0.9.17*
+
+- Added link to =ollama-buddy= info manual from the chat buffer and transient menu as MELPA has now picked it up and installed it!
+
 ** <2025-03-28> *0.9.16*
 
 - Added =ollama-buddy-fix-encoding-issues= to handle text encoding problems.
@@ -1278,18 +1282,15 @@ All interactive functions available in ollama-buddy are listed in the original R
 #+RESULTS:
 | TODO                                                | DONE                                       |
 |-----------------------------------------------------+--------------------------------------------|
-| Conversation history to display with Claude/ChatGPT | System prompt not cleared on new session   |
-| Add Texinfo to MELPA recipe                         | Remove fabric from Commands transient menu |
-| ChatGPT request/response too long                   | External AI to copy to register            |
-| Check tags caching                                  | First request with no chat buffer fails    |
-| Kill online AI process with cancel request          |                                            |
-| GGUF to use new syncing option                      |                                            |
+| Conversation history to display with Claude/ChatGPT | Add Texinfo to MELPA recipe                |
+| ChatGPT request/response too long                   | System prompt not cleared on new session   |
+| Check tags caching                                  | Remove fabric from Commands transient menu |
+| Kill online AI process with cancel request          | External AI to copy to register            |
+| GGUF to use new syncing option                      | First request with no chat buffer fails    |
 | Save system prompts as part of session              |                                            |
 | keybindings in ollama chat buffer are reserved      |                                            |
 
 ** TODO Conversation history to display with Claude/ChatGPT
-
-** TODO Add Texinfo to MELPA recipe
 
 ** TODO ChatGPT request/response too long
 
@@ -1310,6 +1311,11 @@ Error: This model's maximum context length is 16385 tokens. However, you request
 #+begin_src 
 2647:70: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
 #+end_src
+
+** DONE Add Texinfo to MELPA recipe
+CLOSED: [2025-04-01 Tue 20:24]
+
+MELPA has automatically picked up the info file!
 
 ** DONE System prompt not cleared on new session
 CLOSED: [2025-03-29 Sat 13:44]

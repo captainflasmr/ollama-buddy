@@ -533,6 +533,11 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
   "Hash table mapping model names to their colors.")
 
 ;; Core utility functions
+(defun ollama-buddy-open-info ()
+  "Open the Info manual for the ollama-buddy package."
+  (interactive)
+  (info "(ollama-buddy)"))
+
 (defun ollama-buddy-claude--get-full-model-name (model)
   "Get the full model name with prefix for MODEL."
   (concat ollama-buddy-claude-marker-prefix model))

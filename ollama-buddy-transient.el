@@ -71,6 +71,7 @@
    "|o(Y)o| Ollama Buddy"
    ["Chat"
     ("o" "Open Chat" ollama-buddy--open-chat)
+    ("?" "Show Manual" ollama-buddy-open-info)
     ("O" "Commands" ollama-buddy-transient-commands-menu)
     ("RET" "Send Prompt" ollama-buddy--send-prompt)
     ("h" "Help/Menu" ollama-buddy--menu-help-assistant)

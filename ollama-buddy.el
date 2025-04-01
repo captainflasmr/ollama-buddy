@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama Buddy: Your Friendly AI Assistant -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.9.16
+;; Version: 0.9.17
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -2009,10 +2009,11 @@ With prefix argument ALL-MODELS, clear history for all models."
          ;; Basic tips for beginners
          (basic-tips
           "- Ask me anything!                    C-c C-c
-- Cancel request                      C-c C-k
 - Main transient menu                 C-c O
+- Cancel request                      C-c C-k
 - Change model                        C-c m
 - Browse prompt history               M-p/n/r
+- Browse ollama-buddy manual          C-c ?
 - Advanced interface (show all tips)  C-c A")
          ;; Advanced tips for experienced users
          (advanced-tips
@@ -2021,6 +2022,7 @@ With prefix argument ALL-MODELS, clear history for all models."
 - Main transient menu                 C-c O
 - Manage models                       C-c W
 - Browse prompt history               M-p/n/r
+- Browse ollama-buddy manual          C-c ?
 - Show Help/Status/Debug              C-c h/v/B
 - Show Token Stats/Graph/Report       C-c u/U/T
 - Model Change/Info/Multishot         C-c m/i/M
@@ -2825,6 +2827,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     ;; Primary Transient Menu access
     (define-key map (kbd "C-c O") #'ollama-buddy-transient-menu)
     (define-key map (kbd "C-c W") #'ollama-buddy-manage-models)
+    (define-key map (kbd "C-c ?") #'ollama-buddy-open-info)
     
     ;; Chat section keybindings from transient
     (define-key map (kbd "C-c C-c") #'ollama-buddy--send-prompt)

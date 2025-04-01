@@ -11,6 +11,10 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-04-01> *0.9.17*
+
+- Added link to =ollama-buddy= info manual from the chat buffer and transient menu as MELPA has now picked it up and installed it!
+
 ** <2025-03-28> *0.9.16*
 
 - Added =ollama-buddy-fix-encoding-issues= to handle text encoding problems.
