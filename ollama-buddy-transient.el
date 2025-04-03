@@ -327,14 +327,18 @@
     
     ;; Define the transient command
     (let ((commands nil)
-          (cat-count 0))
+          (cat-count 0)
+          (alphabet "abcdefghijklmnopqrstuvwxyz"))
       
       ;; First, define a submenu for each category
       (maphash
        (lambda (category prompts)
          (let* ((cat-sym (intern (format "ollama-buddy-awesome-cat-%d" cat-count)))
                 (cat-doc (format "Prompts in category: %s" (capitalize category)))
-                (cat-items nil))
+                (cat-items nil)
+                (cat-key (if (< cat-count (length alphabet))
+                             (string (aref alphabet cat-count))
+                           (format "M-%d" (- cat-count (length alphabet))))))
            
            ;; Create a command for each prompt in this category
            (let ((prompt-count 0))
@@ -345,7 +349,10 @@
                (let* ((prompt-sym (intern (format "ollama-buddy-awesome-prompt-%d-%d"
                                                  cat-count prompt-count)))
                       (title (plist-get prompt :title))
-                      (content (plist-get prompt :content)))
+                      (content (plist-get prompt :content))
+                      (prompt-key (if (< prompt-count (length alphabet))
+                                      (string (aref alphabet prompt-count))
+                                    (format "%d" (- prompt-count (length alphabet))))))
                  
                  ;; Define a command function for this prompt
                  (defalias prompt-sym
@@ -358,7 +365,7 @@
                      (transient-quit-one)))
                  
                  ;; Add to the list of items in this category menu
-                 (push (list (number-to-string prompt-count) title prompt-sym) cat-items)
+                 (push (list prompt-key title prompt-sym) cat-items)
                  (setq prompt-count (1+ prompt-count)))))
            
            ;; Create the category submenu
@@ -373,7 +380,7 @@
                   ("q" "Return to previous menu" transient-quit-one)])))
            
            ;; Add this category to the main menu
-           (push (list (format "%d" cat-count)
+           (push (list cat-key
                        (format "%s (%d prompts)" (capitalize category) (length prompts))
                        cat-sym)
                  commands)
