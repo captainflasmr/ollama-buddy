@@ -307,7 +307,6 @@
     ("q" "Back to Main Menu" ollama-buddy-transient-menu)]
    ])
 
-
 (defclass ollama-buddy-awesome-prompt-variable (transient-variable)
   ((key         :initarg :key)
    (description :initarg :description)
@@ -326,63 +325,77 @@
              (prompts (gethash category categories nil)))
         (puthash category (cons prompt prompts) categories)))
     
-    ;; Define dynamic command functions for each prompt
-    (let ((i 0))
-      (dolist (prompt ollama-buddy-awesome--prompts)
-        (let ((func-name (intern (format "ollama-buddy-awesome--prompt-%d" i)))
-              (title (plist-get prompt :title))
-              (content (plist-get prompt :content)))
-          (fset func-name
-                (lambda ()
-                  (interactive)
-                  (setq ollama-buddy--current-system-prompt content)
-                  (message "Set system prompt: %s" title)
-                  (ollama-buddy--update-status 
-                   (format "Awesome prompt set: %s" title))
-                  (transient-quit-one)))
-          (setq i (1+ i)))))
-    
-    ;; Create transient prefix dynamically
-    (let ((args 
-           (list 'awesome-prompts-menu
-                 "Awesome ChatGPT Prompts by Category"
-                 :info-manual "(ollama-buddy)Awesome ChatGPT Prompts"
-                 :man-page "ollama-buddy-awesome")))
+    ;; Define the transient command
+    (let ((commands nil)
+          (cat-count 0))
       
-      ;; Add Actions group
-      (push '["Actions"
-              ("s" "Sync prompts from GitHub" ollama-buddy-awesome-sync-prompts)
-              ("l" "List all prompts" ollama-buddy-awesome-list-prompts)
-              ("q" "Quit" transient-quit-one)]
-            args)
-      
-      ;; Add prompt groups by category
-      (maphash 
+      ;; First, define a submenu for each category
+      (maphash
        (lambda (category prompts)
-         (let ((group-vector (vector (format "%s" (capitalize category))))
-               (sorted-prompts 
-                (sort (copy-sequence prompts)
-                      (lambda (a b) 
-                        (string< (plist-get a :title) 
-                                 (plist-get b :title))))))
-           (dotimes (i (length sorted-prompts))
-             (let* ((prompt (nth i sorted-prompts))
-                    (prompt-idx (cl-position prompt ollama-buddy-awesome--prompts))
-                    (func-name (intern (format "ollama-buddy-awesome--prompt-%d" prompt-idx)))
-                    (prompt-entry (vector (format "%d" i) 
-                                          (plist-get prompt :title)
-                                          func-name)))
-               (setq group-vector (vconcat group-vector (list prompt-entry)))))
-           (push group-vector args)))
+         (let* ((cat-sym (intern (format "ollama-buddy-awesome-cat-%d" cat-count)))
+                (cat-doc (format "Prompts in category: %s" (capitalize category)))
+                (cat-items nil))
+           
+           ;; Create a command for each prompt in this category
+           (let ((prompt-count 0))
+             (dolist (prompt (sort (copy-sequence prompts)
+                                   (lambda (a b)
+                                     (string< (plist-get a :title)
+                                              (plist-get b :title)))))
+               (let* ((prompt-sym (intern (format "ollama-buddy-awesome-prompt-%d-%d"
+                                                 cat-count prompt-count)))
+                      (title (plist-get prompt :title))
+                      (content (plist-get prompt :content)))
+                 
+                 ;; Define a command function for this prompt
+                 (defalias prompt-sym
+                   (lambda ()
+                     (interactive)
+                     (setq ollama-buddy--current-system-prompt content)
+                     (message "Set system prompt: %s" title)
+                     (ollama-buddy--update-status
+                      (format "Awesome prompt set: %s" title))
+                     (transient-quit-one)))
+                 
+                 ;; Add to the list of items in this category menu
+                 (push (list (number-to-string prompt-count) title prompt-sym) cat-items)
+                 (setq prompt-count (1+ prompt-count)))))
+           
+           ;; Create the category submenu
+           (eval
+            `(progn
+               (transient-define-prefix ,cat-sym ()
+                 ,cat-doc
+                 :info-manual "(ollama-buddy)Awesome ChatGPT Prompts"
+                 [,(format "%s" (capitalize category))
+                  ,@(nreverse cat-items)]
+                 ["Actions"
+                  ("q" "Return to previous menu" transient-quit-one)])))
+           
+           ;; Add this category to the main menu
+           (push (list (format "%d" cat-count)
+                       (format "%s (%d prompts)" (capitalize category) (length prompts))
+                       cat-sym)
+                 commands)
+           
+           (setq cat-count (1+ cat-count))))
        categories)
       
-      ;; Define the transient prefix
-      (eval `(transient-define-prefix ,(intern "ollama-buddy-awesome-prompts-menu") ()
-               "Browse Awesome ChatGPT Prompts by category."
-               ,@(nreverse args)))
+      ;; Now define the main category browser menu
+      (eval
+       `(progn
+          (transient-define-prefix ollama-buddy-awesome-categories-menu ()
+            "Browse Awesome ChatGPT Prompts by category."
+            :info-manual "(ollama-buddy)Awesome ChatGPT Prompts"
+            ["Categories"
+             ,@(nreverse commands)]
+            ["Actions"
+             ("s" "Sync prompts from GitHub" ollama-buddy-awesome-sync-prompts)
+             ("l" "List all prompts" ollama-buddy-awesome-list-prompts)
+             ("q" "Return to previous menu" transient-quit-one)])))
       
-      ;; Call the newly defined prefix
-      (funcall (intern "ollama-buddy-awesome-prompts-menu")))))
+      ;; Call the menu
+      (call-interactively 'ollama-buddy-awesome-categories-menu))))
 
 (transient-define-prefix ollama-buddy-transient-awesome-menu ()
   "Awesome ChatGPT Prompts for ollama-buddy."
