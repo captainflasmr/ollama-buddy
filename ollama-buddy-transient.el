@@ -101,6 +101,7 @@
     ("E" "Create New Role" ollama-buddy-role-creator-create-new-role)
     ("D" "Open Roles Directory" ollama-buddy-roles-open-directory)
     ("f" "Fabric Patterns" ollama-buddy-transient-fabric-menu)
+    ("a" "Awesome ChatGPT Prompts" ollama-buddy-transient-awesome-menu)
     ("t" "OpenAI Integration" ollama-buddy-transient-openai-menu)
     ]
    ]
@@ -180,17 +181,11 @@
                ", never synced")))]
   
   [["Actions"
-    ("s" "Send with Pattern" ollama-buddy-fabric-send)
+    ("s" "Send with Prompt" ollama-buddy-fabric-send)
     ("p" "Set as System Prompt" ollama-buddy-fabric-set-system-prompt)
-    ("l" "List All Patterns" ollama-buddy-fabric-list-patterns)
-    ("v" "View Pattern Details" ollama-buddy-fabric-show-pattern)]
-   
-   ["Sync"
-    ("S" "Sync Latest Patterns" ollama-buddy-fabric-sync-patterns)
-    ("P" "Populate Cache" ollama-buddy-fabric-populate-patterns)
-    ("I" "Initial Setup" ollama-buddy-fabric-setup)]
-   
-   ["Navigation"
+    ("l" "List All Prompts" ollama-buddy-fabric-list-patterns)
+    ("v" "View Prompt Details" ollama-buddy-fabric-show-pattern)
+    ("S" "Sync Latest Prompts" ollama-buddy-fabric-sync-patterns)
     ("q" "Back to Main Menu" ollama-buddy-transient-menu)]]
   
   (interactive)
@@ -408,19 +403,13 @@
   "Awesome ChatGPT Prompts for ollama-buddy."
   :info-manual "(ollama-buddy)Awesome ChatGPT Prompts"
   :man-page "ollama-buddy-awesome"
-  ["Actions"
-   ("s" "Sync prompts from GitHub" ollama-buddy-awesome-sync-prompts)
-   ("p" "Select & apply prompt" ollama-buddy-awesome-set-system-prompt)
-   ("a" "Apply prompt to text" ollama-buddy-awesome-send)
-   ("l" "List all prompts" ollama-buddy-awesome-list-prompts)
+  [["Actions"
+   ("s" "Send with Prompt" ollama-buddy-awesome-send)
+   ("p" "Set as System Prompt" ollama-buddy-awesome-set-system-prompt)
+   ("l" "List All Prompts" ollama-buddy-awesome-list-prompts)
    ("c" "Category Browser" ollama-buddy-awesome-show-prompts-menu)
-   ("q" "Quit" transient-quit-one)])
-
-;; Add to main ollama-buddy transient menu
-;; This is how to add a new section to the main transient menu
-(transient-append-suffix 'ollama-buddy-transient-menu '(1)
-  ["Awesome Prompts"
-   ("A" "Awesome ChatGPT Prompts" ollama-buddy-transient-awesome-menu)])
+   ("S" "Sync Latest Prompts" ollama-buddy-awesome-sync-prompts)
+   ("q" "Back to Main Menu" transient-quit-one)]])
 
 ;;;###autoload
 (defun ollama-buddy-transient-menu-wrapper ()

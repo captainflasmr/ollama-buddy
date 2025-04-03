@@ -481,6 +481,9 @@ of the awesome-chatgpt-prompts CSV file."
   (let ((system-prompt (ollama-buddy-awesome-yield-prompt)))
     (setq ollama-buddy--current-system-prompt system-prompt)
     (message "System prompt set to Awesome ChatGPT Prompt")
+    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+      (pop-to-buffer (current-buffer))
+      (goto-char (point-max)))
     (ollama-buddy--update-status "Awesome prompt set")))
 
 ;; Initialize on load if configured

@@ -358,6 +358,9 @@ Returns the first paragraph (up to 250 chars) as a description."
   (let ((system-prompt (ollama-buddy-fabric-yield-prompt)))
     (setq ollama-buddy--current-system-prompt system-prompt)
     (message "System prompt set to Fabric pattern")
+    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+      (pop-to-buffer (current-buffer))
+      (goto-char (point-max)))
     (ollama-buddy--update-status "Fabric system prompt set")))
 
 ;; Initialize on load if configured

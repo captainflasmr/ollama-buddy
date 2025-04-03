@@ -1870,7 +1870,8 @@ With prefix argument ALL-MODELS, clear history for all models."
         
         ;; Restore default parameters if we changed them
         (when params-alist
-          (ollama-buddy--restore-default-parameters))))))
+          (ollama-buddy--restore-default-parameters))))
+    ))
 
 (defun ollama-buddy--send (&optional prompt specified-model)
   "Send PROMPT with optional SYSTEM-PROMPT, SUFFIX and SPECIFIED-MODEL."
