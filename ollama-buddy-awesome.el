@@ -1,5 +1,9 @@
 ;;; ollama-buddy-awesome.el --- Awesome ChatGPT Prompts integration for ollama-buddy -*- lexical-binding: t; -*-
-
+;;
+;; Author: James Dyer <captainflasmr@gmail.com>
+;; Package-Requires: ((emacs "28.1"))
+;; URL: https://github.com/captainflasmr/ollama-buddy
+;;
 ;;; Commentary:
 ;; This package provides integration between ollama-buddy and the awesome-chatgpt-prompts
 ;; repository (https://github.com/f/awesome-chatgpt-prompts).
@@ -66,12 +70,12 @@
   "Categories for classifying prompts based on keywords.")
 
 (defun ollama-buddy-awesome--prompts-path ()
-  "Return the full path to the prompts CSV file."
+  "Return the full path to the prompt CSV file."
   (expand-file-name ollama-buddy-awesome-prompts-file
                     ollama-buddy-awesome-local-dir))
 
 (defun ollama-buddy-awesome--ensure-repo-exists ()
-  "Ensure the Awesome ChatGPT Prompts repository exists locally, cloning it if needed."
+  "Ensure the Awesome ChatGPT Prompt repository exists locally."
   (let ((default-directory (file-name-directory ollama-buddy-awesome-local-dir)))
     (unless (file-exists-p ollama-buddy-awesome-local-dir)
       (make-directory ollama-buddy-awesome-local-dir t))
@@ -83,7 +87,7 @@
       (ollama-buddy-awesome--clone-repo))))
 
 (defun ollama-buddy-awesome--clone-repo ()
-  "Clone the Awesome ChatGPT Prompts repository with sparse checkout."
+  "Clone the Awesome ChatGPT Prompt repository with sparse checkout."
   (let ((default-directory (file-name-directory ollama-buddy-awesome-local-dir)))
     (message "Cloning Awesome ChatGPT Prompts repository (sparse checkout)...")
     
@@ -107,7 +111,7 @@
       (setq ollama-buddy-awesome--last-sync-time (current-time)))))
 
 (defun ollama-buddy-awesome--setup-sparse-checkout ()
-  "Configure sparse checkout for the Awesome ChatGPT Prompts repository."
+  "Configure sparse checkout for the Awesome ChatGPT Prompt repository."
   (let ((default-directory ollama-buddy-awesome-local-dir))
     ;; Enable sparse checkout
     (call-process "git" nil "*Awesome Prompts Sparse Output*" nil
@@ -119,7 +123,7 @@
       (insert "/README.md\n"))))
 
 (defun ollama-buddy-awesome-sync-prompts ()
-  "Sync the latest prompts from the Awesome ChatGPT Prompts GitHub repository."
+  "Sync the latest prompt from the Awesome ChatGPT Prompt GitHub repository."
   (interactive)
   (when ollama-buddy-awesome--sync-in-progress
     (user-error "Sync already in progress, please wait"))
@@ -138,7 +142,7 @@
     (make-process
      :name "awesome-prompts-sync"
      :buffer sync-buffer
-     :command (list "bash" "-c" 
+     :command (list "bash" "-c"
                     (format "mkdir -p %s && cd %s && \
                            (git -c advice.detachedHead=false fetch origin main && \
                             git -c advice.detachedHead=false checkout FETCH_HEAD -- %s README.md \
@@ -153,7 +157,7 @@
                        (goto-char (point-max))
                        (insert "\n\n=== Sync completed ===\n")
                        (ollama-buddy-awesome-populate-prompts)
-                       (insert (format "\nFound %d prompts\n" 
+                       (insert (format "\nFound %d prompts\n"
                                        (length ollama-buddy-awesome--prompts)))
                        (view-mode 1)))
                    (setq ollama-buddy-awesome--last-sync-time (current-time))
@@ -182,7 +186,7 @@ of the awesome-chatgpt-prompts CSV file."
           (setq field-start (point)))
          
          ((and (eq (char-after) ?\") in-quotes)
-          (if (and (< (1+ (point)) (point-max)) 
+          (if (and (< (1+ (point)) (point-max))
                    (eq (char-after (1+ (point))) ?\"))
               ;; Double quote within quoted field - skip it
               (forward-char 2)
@@ -225,7 +229,7 @@ of the awesome-chatgpt-prompts CSV file."
     "other"))  ;; Default category if no matches
 
 (defun ollama-buddy-awesome-populate-prompts ()
-  "Populate the list of available prompts from the local repository."
+  "Populate the list of available prompt from the local repository."
   (interactive)
   ;; Ensure the repository exists
   (unless (file-exists-p (ollama-buddy-awesome--prompts-path))
@@ -249,8 +253,8 @@ of the awesome-chatgpt-prompts CSV file."
       (let ((line-count 0)
             (success-count 0))
         (while (not (eobp))
-          (let* ((line (buffer-substring-no-properties 
-                        (line-beginning-position) 
+          (let* ((line (buffer-substring-no-properties
+                        (line-beginning-position)
                         (line-end-position))))
             
             (setq line-count (1+ line-count))
@@ -261,7 +265,7 @@ of the awesome-chatgpt-prompts CSV file."
               (if (string-match "^\"\\([^\"]*\\)\",\"\\([^\"]*\\)\"" line)
                   (let ((act (match-string 1 line))
                         (prompt (match-string 2 line)))
-                    (when (and act prompt 
+                    (when (and act prompt
                                (not (string-empty-p act))
                                (not (string-empty-p prompt)))
                       (let* ((category (if ollama-buddy-awesome-categorize-prompts
@@ -281,7 +285,7 @@ of the awesome-chatgpt-prompts CSV file."
                         (goto-char (point-min))
                         
                         ;; Find the title part
-                        (let* ((start (if (eq (char-after) ?\") 
+                        (let* ((start (if (eq (char-after) ?\")
                                           (progn (forward-char) (point))
                                         (point)))
                                (title-end nil))
@@ -300,7 +304,7 @@ of the awesome-chatgpt-prompts CSV file."
                           
                           ;; Extract title
                           (when title-end
-                            (let ((title (buffer-substring-no-properties 
+                            (let ((title (buffer-substring-no-properties
                                           start title-end)))
                               (push title parts)
                               
@@ -311,10 +315,10 @@ of the awesome-chatgpt-prompts CSV file."
                         
                         ;; The rest is the prompt content
                         (when (< (point) (point-max))
-                          (let* ((start (if (eq (char-after) ?\") 
+                          (let* ((start (if (eq (char-after) ?\")
                                            (progn (forward-char) (point))
                                          (point)))
-                                 (content (buffer-substring-no-properties 
+                                 (content (buffer-substring-no-properties
                                            start (point-max))))
                             ;; Remove trailing quote if present
                             (when (and (> (length content) 0)
@@ -358,7 +362,7 @@ of the awesome-chatgpt-prompts CSV file."
   "Format PROMPT name for display in the completion UI."
   (let ((category (plist-get prompt :category))
         (title (plist-get prompt :title)))
-    (format "%s: %s" 
+    (format "%s: %s"
             (propertize category 'face 'font-lock-type-face)
             (propertize title 'face 'font-lock-function-name-face))))
 
@@ -367,9 +371,9 @@ of the awesome-chatgpt-prompts CSV file."
   (unless ollama-buddy-awesome--prompts
     (ollama-buddy-awesome-populate-prompts))
   
-  (let* ((formatted-prompts (mapcar #'ollama-buddy-awesome--format-prompt-name 
+  (let* ((formatted-prompts (mapcar #'ollama-buddy-awesome--format-prompt-name
                                     ollama-buddy-awesome--prompts))
-         (prompt-alist (cl-mapcar #'cons formatted-prompts 
+         (prompt-alist (cl-mapcar #'cons formatted-prompts
                                   ollama-buddy-awesome--prompts))
          (selected-formatted (completing-read "Awesome ChatGPT Prompt: " formatted-prompts nil t))
          (selected-prompt (cdr (assoc selected-formatted prompt-alist))))
@@ -401,7 +405,7 @@ of the awesome-chatgpt-prompts CSV file."
     (ollama-buddy--send selected-text)))
 
 (defun ollama-buddy-awesome-list-prompts ()
-  "Display a list of available Awesome ChatGPT Prompts."
+  "Display a list of available Awesome ChatGPT Prompt."
   (interactive)
   (unless ollama-buddy-awesome--prompts
     (ollama-buddy-awesome-populate-prompts))
@@ -414,8 +418,8 @@ of the awesome-chatgpt-prompts CSV file."
         (insert "* Awesome ChatGPT Prompts\n\n")
         
         (if ollama-buddy-awesome--last-sync-time
-            (insert (format "Last synced: %s\n\n" 
-                            (format-time-string "%Y-%m-%d %H:%M:%S" 
+            (insert (format "Last synced: %s\n\n"
+                            (format-time-string "%Y-%m-%d %H:%M:%S"
                                                 ollama-buddy-awesome--last-sync-time)))
           (insert "Never synced with GitHub repository\n\n"))
         
@@ -445,12 +449,12 @@ of the awesome-chatgpt-prompts CSV file."
 (defun ollama-buddy-awesome-show-prompt (formatted-name)
   "Display the full content of a prompt with FORMATTED-NAME."
   (interactive
-   (list (completing-read "Show prompt: " 
-                          (mapcar #'ollama-buddy-awesome--format-prompt-name 
+   (list (completing-read "Show prompt: "
+                          (mapcar #'ollama-buddy-awesome--format-prompt-name
                                   ollama-buddy-awesome--prompts))))
   
-  (let* ((prompt-alist (cl-mapcar #'cons 
-                                 (mapcar #'ollama-buddy-awesome--format-prompt-name 
+  (let* ((prompt-alist (cl-mapcar #'cons
+                                 (mapcar #'ollama-buddy-awesome--format-prompt-name
                                          ollama-buddy-awesome--prompts)
                                  ollama-buddy-awesome--prompts))
          (selected-prompt (cdr (assoc formatted-name prompt-alist))))

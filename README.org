@@ -101,6 +101,12 @@ See *Screenshots / Demos* section for more videos/demonstration.
 
 * Whats New
 
+** <2025-04-04> *0.9.20*
+
+- Added =ollama-buddy-awesome.el= to integrate Awesome ChatGPT Prompts.
+
+- Refactored ChatGPT and Claude for improved error handling and Unicode escaping in JSON requests.
+
 ** <2025-04-01> *0.9.17*
 
 - Added link to =ollama-buddy= info manual from the chat buffer and transient menu as MELPA has now picked it up and installed it!

@@ -134,9 +134,7 @@ Use nil for API default behavior (adaptive)."
               (max_tokens . ,max-tokens)))
            ;; Create the JSON string 
            (json-str (let ((json-encoding-pretty-print nil))
-                       (ollama-buddy-escape-unicode (json-encode json-payload))))
-           ;; All the parts below have been replaced with a safer approach
-           (endpoint-url (url-generic-parse-url ollama-buddy-openai-api-endpoint)))
+                       (ollama-buddy-escape-unicode (json-encode json-payload)))))
 
       ;; Prepare chat buffer
       (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)

@@ -1,5 +1,9 @@
 ;;; ollama-buddy-fabric.el --- Fabric integration for ollama-buddy -*- lexical-binding: t; -*-
-
+;;
+;; Author: James Dyer <captainflasmr@gmail.com>
+;; Package-Requires: ((emacs "28.1"))
+;; URL: https://github.com/captainflasmr/ollama-buddy
+;;
 ;;; Commentary:
 ;; This package provides integration between ollama-buddy and danielmiessler's
 ;; Fabric patterns (https://github.com/danielmiessler/fabric).
