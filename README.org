@@ -1341,31 +1341,30 @@ CLOSED: [2025-03-29 Sat 13:34]
 #+end_src
 
 #+RESULTS:
-| TODO                                 | DOING                             | DONE                                       |
-|--------------------------------------+-----------------------------------+--------------------------------------------|
-| Method for securely storing API keys | Core Params - suffix              | Core API - Delete Model                    |
-| Merge history buffer functionality   | Show incoming ollama messages     | Core API - Copy a model                    |
-| Core API - Embeddings                | Add fabric pattern/prompt support | Core API - stream                          |
-| Core Params - format                 |                                   | Core API - Pull/Info/Pull/Delete a model   |
-| Core Params - template               |                                   | Core API - Show running models             |
-| Core Params - raw                    |                                   | Core API - Create a model from a GGUF file |
-| Test on Windows                      |                                   | Add transient menu                         |
-|                                      |                                   | History editing                            |
-|                                      |                                   | Core API - options - parameter editing     |
-|                                      |                                   | Core API - show model information          |
-|                                      |                                   | Core API - system prompt                   |
-|                                      |                                   | Chat buffer to use org-mode                |
-|                                      |                                   | Chat export options                        |
-|                                      |                                   | Core Params - options:temperature          |
-|                                      |                                   | Managing Sessions                          |
-|                                      |                                   | Sparse minified version                    |
-|                                      |                                   | Role-Based Menu Preset System              |
-|                                      |                                   | Add to MELPA                               |
-|                                      |                                   | Enhancing Menu Clarity                     |
-|                                      |                                   | Real time token tracking                   |
-|                                      |                                   | Managing chat history and context          |
-
-** TODO Method for securely storing API keys
+| TODO                               | DOING                              | DONE                                       |
+|------------------------------------+------------------------------------+--------------------------------------------|
+| Merge history buffer functionality | Core Params - suffix               | Method for securely storing API keys       |
+| Core API - Embeddings              | Show incoming ollama messages      | Core API - Delete Model                    |
+| Core Params - format               | Add chatGPT awesome prompt support | Core API - Copy a model                    |
+| Core Params - template             | Add fabric pattern/prompt support  | Core API - stream                          |
+| Core Params - raw                  | ChatGPT support                    | Core API - Pull/Info/Pull/Delete a model   |
+| Test on Windows                    | Claude support                     | Core API - Show running models             |
+|                                    |                                    | Core API - Create a model from a GGUF file |
+|                                    |                                    | Add transient menu                         |
+|                                    |                                    | History editing                            |
+|                                    |                                    | Core API - options - parameter editing     |
+|                                    |                                    | Core API - show model information          |
+|                                    |                                    | Core API - system prompt                   |
+|                                    |                                    | Chat buffer to use org-mode                |
+|                                    |                                    | Chat export options                        |
+|                                    |                                    | Core Params - options:temperature          |
+|                                    |                                    | Managing Sessions                          |
+|                                    |                                    | Sparse minified version                    |
+|                                    |                                    | Role-Based Menu Preset System              |
+|                                    |                                    | Add to MELPA                               |
+|                                    |                                    | Enhancing Menu Clarity                     |
+|                                    |                                    | Real time token tracking                   |
+|                                    |                                    | Managing chat history and context          |
 
 ** TODO Merge history buffer functionality
 
@@ -1385,7 +1384,18 @@ I think this is only for generate, but I have quietly added it in.
 
 ** DOING Show incoming ollama messages
 
+** DOING Add chatGPT awesome prompt support
+
 ** DOING Add fabric pattern/prompt support
+
+** DONE Method for securely storing API keys
+CLOSED: [2025-04-04 Fri 10:18]
+
+Added to readme to advise to use Emacs built-in auth-source
+
+** DOING ChatGPT support
+
+** DOING Claude support
 
 ** DONE Core API - Delete Model
 
