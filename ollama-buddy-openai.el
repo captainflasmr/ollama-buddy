@@ -170,19 +170,6 @@ Use nil for API default behavior (adaptive)."
 
           (set-register ollama-buddy-default-register "")
           
-          ;; Create a debug buffer and log the start of the request
-          (with-current-buffer (get-buffer-create "*OpenAI Debug*")
-            (goto-char (point-max))
-            (insert "\n\n========= NEW REQUEST AT " (format-time-string "%Y-%m-%d %H:%M:%S") " =========\n")
-            (insert "API Endpoint: " ollama-buddy-openai-api-endpoint "\n")
-            (insert "Model: " (ollama-buddy-openai--get-real-model-name 
-                               ollama-buddy-openai--current-model) "\n")
-            (insert "Original JSON (first 100 chars): " 
-                    (substring json-str 0 (min (length json-str) 100)) 
-                    "...\n"))
-            
-          ;; Use a much simpler approach - let url.el handle everything but
-          ;; use binary coding with a raw pre-encoded payload
           (let* ((url-request-method "POST")
                  (url-request-extra-headers
                   `(("Content-Type" . "application/json")
@@ -196,25 +183,11 @@ Use nil for API default behavior (adaptive)."
                   (url-mime-encoding-string nil)
                   (url-mime-accept-string "application/json"))
                
-              (with-current-buffer (get-buffer-create "*OpenAI Debug*")
-                (goto-char (point-max))
-                (insert "Using url.el with binary encoding\n"))
-              
               (url-retrieve
                ollama-buddy-openai-api-endpoint
                (lambda (status)
-                 ;; Process the response from url-retrieve
-                 (with-current-buffer (get-buffer-create "*OpenAI Debug*")
-                   (goto-char (point-max))
-                   (insert "\n--- URL RESPONSE RECEIVED ---\n")
-                   (insert "Status: " (prin1-to-string status) "\n"))
-                 
                  (if (plist-get status :error)
                      (progn
-                       (with-current-buffer (get-buffer-create "*OpenAI Debug*")
-                         (goto-char (point-max))
-                         (insert "Error: " (prin1-to-string (plist-get status :error)) "\n"))
-                       
                        (with-current-buffer ollama-buddy--chat-buffer
                          (let ((inhibit-read-only t))
                            (goto-char start-point)
@@ -227,23 +200,12 @@ Use nil for API default behavior (adaptive)."
                    
                    ;; Success - process the response
                    (progn
-                     (with-current-buffer (get-buffer-create "*OpenAI Debug*")
-                       (goto-char (point-max))
-                       (insert "Successfully retrieved response\n"))
-                     
                      (goto-char (point-min))
                      (when (re-search-forward "\n\n" nil t)
                        (let* ((json-response-raw (buffer-substring (point) (point-max)))
                               (json-object-type 'alist)
                               (json-array-type 'vector)
                               (json-key-type 'symbol))
-                         
-                         (with-current-buffer (get-buffer-create "*OpenAI Debug*")
-                           (goto-char (point-max))
-                           (insert "Raw JSON response (first 300 chars):\n")
-                           (insert (substring json-response-raw 0 
-                                              (min (length json-response-raw) 300)) 
-                                   "...\n"))
                          
                          (condition-case err
                              (let* ((json-response (json-read-from-string json-response-raw))
@@ -302,10 +264,6 @@ Use nil for API default behavior (adaptive)."
                                     (format "Finished [%d tokens]"
                                             ollama-buddy-openai--current-token-count)))))
                            (error
-                            (with-current-buffer (get-buffer-create "*OpenAI Debug*")
-                              (goto-char (point-max))
-                              (insert "JSON parse error: " (error-message-string err) "\n"))
-                            
                             (with-current-buffer ollama-buddy--chat-buffer
                               (let ((inhibit-read-only t))
                                 (goto-char start-point)
