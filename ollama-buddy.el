@@ -1861,6 +1861,10 @@ With prefix argument ALL-MODELS, clear history for all models."
         (when system-text
           (setq ollama-buddy--current-system-prompt system-text))
 
+        (when (and prompt-text (not (string-empty-p prompt-text)))
+          (put 'ollama-buddy--cycle-prompt-history 'history-position -1)
+          (add-to-history 'ollama-buddy--prompt-history prompt-text))
+        
         ;; Send the request
         (ollama-buddy--send (string-trim full-prompt) model)
         
