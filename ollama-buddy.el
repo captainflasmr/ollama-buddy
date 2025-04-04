@@ -2040,6 +2040,7 @@ With prefix argument ALL-MODELS, clear history for all models."
 - Session New/Load/Save/List/Delete   C-c N/L/S/Q/Z
 - Role Switch/Create/Directory        C-c R/E/D
 - Fabric Patterns Menu                C-c f
+- Awesome ChatGPT Patterns Menu       C-c w
 - Toggle Display Colors/Markdown      C-c c/C-o
 - Show Buddy custom menu              C-c b
 - Basic interface (simpler display)   C-c A
@@ -2857,6 +2858,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c E") #'ollama-buddy-role-creator-create-new-role)
     (define-key map (kbd "C-c D") #'ollama-buddy-roles-open-directory)
     (define-key map (kbd "C-c f") #'ollama-buddy-transient-fabric-menu)
+    (define-key map (kbd "C-c w") #'ollama-buddy-transient-awesome-menu)
     
     ;; Display Options keybindings
     (define-key map (kbd "C-c A") #'ollama-buddy-toggle-interface-level)
