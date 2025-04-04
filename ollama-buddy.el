@@ -2049,7 +2049,6 @@ With prefix argument ALL-MODELS, clear history for all models."
          (models-management-section
           (when available-models
             (concat
-             "** Local Available Models\n\n"
              (mapconcat
               (lambda (model)
                 (let ((model-letter (ollama-buddy--get-model-letter model)))
@@ -2072,7 +2071,6 @@ With prefix argument ALL-MODELS, clear history for all models."
          (models-to-pull-section
           (when (and models-to-pull (not (null models-to-pull)))
             (concat
-             "** Recommended Models (click to download)\n\n"
              (mapconcat
               (lambda (model)
                 (format "[[elisp:(ollama-buddy-pull-model \"%s\")][%s]]"
@@ -2098,7 +2096,6 @@ With prefix argument ALL-MODELS, clear history for all models."
 please run =ollama serve=\n\n")
            models-management-section
            models-to-pull-section
-           "** Quick Tips\n\n"
            tips-section)))
 
     ;; Apply overlay colors to model names
