@@ -96,18 +96,6 @@ Use nil for API default behavior (adaptive)."
         (error "Please set your OpenAI API key"))
     t))
 
-(defun ollama-buddy-openai-escape-unicode (string)
-  "Convert all non-ASCII characters in STRING to Unicode escape sequences."
-  (let ((result "")
-        (i 0))
-    (while (< i (length string))
-      (let ((char (aref string i)))
-        (if (< char 128)  ;; ASCII
-            (setq result (concat result (char-to-string char)))
-          (setq result (concat result (format "\\u%04X" char)))))
-      (setq i (1+ i)))
-    result))
-
 (defun ollama-buddy-openai--send (prompt &optional model)
   "Send PROMPT to OpenAI's API using MODEL or default model asynchronously."
   (when (ollama-buddy-openai--verify-api-key)
@@ -146,7 +134,7 @@ Use nil for API default behavior (adaptive)."
               (max_tokens . ,max-tokens)))
            ;; Create the JSON string 
            (json-str (let ((json-encoding-pretty-print nil))
-                       (ollama-buddy-openai-escape-unicode (json-encode json-payload))))
+                       (ollama-buddy-escape-unicode (json-encode json-payload))))
            ;; All the parts below have been replaced with a safer approach
            (endpoint-url (url-generic-parse-url ollama-buddy-openai-api-endpoint)))
 
