@@ -1891,10 +1891,12 @@ With prefix argument ALL-MODELS, clear history for all models."
    ((and (featurep 'ollama-buddy-openai)
          (ollama-buddy-openai--is-openai-model
           (or specified-model ollama-buddy--current-model)))
+    (ollama-buddy--open-chat)
     (ollama-buddy-openai--send prompt specified-model))
    ((and (featurep 'ollama-buddy-claude)
          (ollama-buddy-claude--is-claude-model
           (or specified-model ollama-buddy--current-model)))
+    (ollama-buddy--open-chat)
     (ollama-buddy-claude--send prompt specified-model))
    (t
     ;; Original Ollama send code

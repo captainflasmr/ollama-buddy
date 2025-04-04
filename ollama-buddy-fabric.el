@@ -230,9 +230,8 @@
     
     ;; Prepare the chat buffer
     (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-      (pop-to-buffer (current-buffer))
+      (ollama-buddy--open-chat)
       (ollama-buddy--prepare-prompt-area t nil)  ;; New prompt, no content
-      (goto-char (point-max))
       (insert (string-trim selected-text)))
     
     ;; Send the request
@@ -363,8 +362,7 @@ Returns the first paragraph (up to 250 chars) as a description."
     (setq ollama-buddy--current-system-prompt system-prompt)
     (message "System prompt set to Fabric pattern")
     (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-      (pop-to-buffer (current-buffer))
-      (goto-char (point-max)))
+      (ollama-buddy--open-chat))
     (ollama-buddy--update-status "Fabric system prompt set")))
 
 ;; Initialize on load if configured

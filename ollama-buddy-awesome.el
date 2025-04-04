@@ -396,11 +396,9 @@ of the awesome-chatgpt-prompts CSV file."
     
     ;; Prepare the chat buffer
     (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-      (pop-to-buffer (current-buffer))
+      (ollama-buddy--open-chat)
       (ollama-buddy--prepare-prompt-area t nil)  ;; New prompt, no content
-      (goto-char (point-max))
       (insert (string-trim selected-text)))
-    
     ;; Send the request
     (ollama-buddy--send selected-text)))
 
@@ -486,8 +484,7 @@ of the awesome-chatgpt-prompts CSV file."
     (setq ollama-buddy--current-system-prompt system-prompt)
     (message "System prompt set to Awesome ChatGPT Prompt")
     (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-      (pop-to-buffer (current-buffer))
-      (goto-char (point-max)))
+      (ollama-buddy--open-chat))
     (ollama-buddy--update-status "Awesome prompt set")))
 
 ;; Initialize on load if configured
