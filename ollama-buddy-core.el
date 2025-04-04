@@ -546,6 +546,18 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
   "Check if MODEL is a Claude model by checking for the prefix."
   (and model (string-prefix-p ollama-buddy-claude-marker-prefix model)))
 
+(defun ollama-buddy-escape-unicode (string)
+  "Convert all non-ASCII characters in STRING to Unicode escape sequences."
+  (let ((result "")
+        (i 0))
+    (while (< i (length string))
+      (let ((char (aref string i)))
+        (if (< char 128)  ;; ASCII
+            (setq result (concat result (char-to-string char)))
+          (setq result (concat result (format "\\u%04X" char)))))
+      (setq i (1+ i)))
+    result))
+
 (defun ollama-buddy-fix-encoding-issues (string)
   "Fix common encoding issues with a simpler approach."
   (let* ((string (replace-regexp-in-string "â" "—" string))      ;; em dash
