@@ -186,6 +186,18 @@ Display Token Usage Graph
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_017.gif]]
 
+** 018 Awesome ChatGPT Prompting Pt1
+
+Select a passage from 20,000 and push
+
+as a poet
+as a gaslighter
+as a drunk person
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_018.gif]]
+
 ** Advanced parameter options
 
 *** Get the same response each time using *seed*
