@@ -136,14 +136,9 @@ Use nil for API default behavior (adaptive)."
            (json-payload (if (and system-prompt (not (string-empty-p system-prompt)))
                              (append json-payload `((system . ,system-prompt)))
                            json-payload))
-           (json-str (encode-coding-string (json-encode json-payload) 'utf-8))
-           (url-request-method "POST")
-           (url-request-extra-headers
-            `(("Content-Type" . "application/json")
-              ("Authorization" . ,(concat "Bearer " ollama-buddy-claude-api-key))
-              ("X-API-Key" . ,ollama-buddy-claude-api-key)
-              ("anthropic-version" . "2023-06-01")))
-           (url-request-data json-str)
+           ;; Create the JSON string with unicode escaping
+           (json-str (let ((json-encoding-pretty-print nil))
+                       (ollama-buddy-escape-unicode (json-encode json-payload))))
            (endpoint "https://api.anthropic.com/v1/messages"))
 
       ;; Prepare chat buffer
@@ -166,92 +161,134 @@ Use nil for API default behavior (adaptive)."
 
           (set-register ollama-buddy-default-register "")
           
-          ;; Send request via `url-retrieve`
-          (url-retrieve
-           endpoint
-           (lambda (_status)
-             (goto-char (point-min))
-             (if (not (search-forward "\n\n" nil t))
-                 (message "Error: Malformed HTTP response.")
-               (let* ((json-object-type 'alist)
-                      (json-array-type 'vector)
-                      (json-key-type 'symbol)
-                      (response (ignore-errors (json-read)))
-                      (error-message (alist-get 'error response))
-                      (content ""))
+          ;; Using the same approach as the successful OpenAI implementation
+          (let* ((url-request-method "POST")
+                 (url-request-extra-headers
+                  `(("Content-Type" . "application/json")
+                    ("Authorization" . ,(concat "Bearer " ollama-buddy-claude-api-key))
+                    ("X-API-Key" . ,ollama-buddy-claude-api-key)
+                    ("anthropic-version" . "2023-06-01")))
+                 (url-request-data json-str))
+            
+            ;; Setting this makes url.el use binary for the request
+            (let ((url-mime-charset-string "utf-8")
+                  (url-mime-language-string nil)
+                  (url-mime-encoding-string nil)
+                  (url-mime-accept-string "application/json"))
+               
+              (url-retrieve
+               endpoint
+               (lambda (status)
+                 (if (plist-get status :error)
+                     (progn
+                       (with-current-buffer ollama-buddy--chat-buffer
+                         (let ((inhibit-read-only t))
+                           (goto-char start-point)
+                           (delete-region start-point (point-max))
+                           (insert "Error: URL retrieval failed\n")
+                           (insert "Details: " (prin1-to-string (plist-get status :error)) "\n")
+                           (insert "\n\n*** FAILED")
+                           (ollama-buddy--prepare-prompt-area)
+                           (ollama-buddy--update-status "Failed - URL retrieval error"))))
+                   
+                   ;; Success - process the response
+                   (progn
+                     (goto-char (point-min))
+                     (when (re-search-forward "\n\n" nil t)
+                       (let* ((json-response-raw (buffer-substring (point) (point-max)))
+                              (json-object-type 'alist)
+                              (json-array-type 'vector)
+                              (json-key-type 'symbol))
+                         
+                         (condition-case err
+                             (let* ((response (json-read-from-string json-response-raw))
+                                    (error-message (alist-get 'error response))
+                                    (content ""))
 
-                 ;; Extract the message
-                 (if error-message
-                     (setq content (format "Error: %s" (alist-get 'message error-message)))
-                   ;; Extract the message
-                   (let ((extracted-text ""))
-                     ;; Get the content array from the response
-                     (let ((content-obj (alist-get 'content response)))
-                       (if (listp content-obj)
-                           ;; Handle new API format where content is an object containing an array
-                           (let ((content-array (alist-get 'content content-obj)))
-                             (if (vectorp content-array)
-                                 ;; Process each content item in the array
-                                 (dotimes (i (length content-array))
-                                   (let* ((item (aref content-array i))
-                                          (item-type (alist-get 'type item))
-                                          (item-text (alist-get 'text item)))
-                                     (when (and (string= item-type "text") item-text)
-                                       (setq extracted-text (concat extracted-text item-text)))))
-                               ;; Handle case where content.content is not a vector
-                               (message "Unexpected content format: %S" content-array)))
-                         ;; Handle case where content is already the array
-                         (if (vectorp content-obj)
-                             (dotimes (i (length content-obj))
-                               (let* ((item (aref content-obj i))
-                                      (item-type (alist-get 'type item))
-                                      (item-text (alist-get 'text item)))
-                                 (when (and (string= item-type "text") item-text)
-                                   (setq extracted-text (concat extracted-text item-text)))))
-                           (message "Unexpected response format: %S" content-obj))))
-                     (setq content (ollama-buddy-fix-encoding-issues extracted-text))))
-
-                 ;; Update the chat buffer
-                 (with-current-buffer ollama-buddy--chat-buffer
-                   (let ((inhibit-read-only t))
-                     (goto-char start-point)
-                     (delete-region start-point (point-max))
-                     (insert content)
-
-                     ;; Convert markdown to org if enabled
-                     (when ollama-buddy-convert-markdown-to-org
-                       (ollama-buddy--md-to-org-convert-region start-point (point-max)))
-
-                     ;; Write to register - if multishot is enabled, use that register, otherwise use default
-                     (let* ((reg-char (if ollama-buddy--multishot-sequence
-                                          (if (< ollama-buddy--multishot-progress (length ollama-buddy--multishot-sequence))
-                                              (aref ollama-buddy--multishot-sequence ollama-buddy--multishot-progress)
-                                            ollama-buddy-default-register)
-                                        ollama-buddy-default-register))
-                            (current (get-register reg-char))
-                            (new-content (concat (if (stringp current) current "") content)))
-                       (set-register reg-char new-content))
-                     
-                     ;; Add to history
-                     (setq ollama-buddy-claude--current-response content)
-                     (when ollama-buddy-history-enabled
-                       (ollama-buddy-claude--add-to-history "user" prompt)
-                       (ollama-buddy-claude--add-to-history "assistant" content))
-                     
-                     ;; Calculate token count
-                     (setq ollama-buddy-claude--current-token-count
-                           (length (split-string content "\\b" t)))
-
-                     ;; Show token stats if enabled
-                     (when ollama-buddy-display-token-stats
-                       (insert (format "\n\n*** Token Stats\n[%d tokens]"
-                                       ollama-buddy-claude--current-token-count)))
-
-                     (insert "\n\n*** FINISHED")
-                     (ollama-buddy--prepare-prompt-area)
-                     (ollama-buddy--update-status
-                      (format "Finished [%d tokens]"
-                              ollama-buddy-claude--current-token-count)))))))))))))
+                               ;; Extract the message
+                               (if error-message
+                                   (setq content (format "Error: %s" (alist-get 'message error-message)))
+                                 ;; Extract the message
+                                 (let ((extracted-text ""))
+                                   ;; Get the content array from the response
+                                   (let ((content-obj (alist-get 'content response)))
+                                     (if (listp content-obj)
+                                         ;; Handle new API format where content is an object containing an array
+                                         (let ((content-array (alist-get 'content content-obj)))
+                                           (if (vectorp content-array)
+                                               ;; Process each content item in the array
+                                               (dotimes (i (length content-array))
+                                                 (let* ((item (aref content-array i))
+                                                        (item-type (alist-get 'type item))
+                                                        (item-text (alist-get 'text item)))
+                                                   (when (and (string= item-type "text") item-text)
+                                                     (setq extracted-text (concat extracted-text item-text)))))
+                                             ;; Handle case where content.content is not a vector
+                                             (message "Unexpected content format: %S" content-array)))
+                                       ;; Handle case where content is already the array
+                                       (if (vectorp content-obj)
+                                           (dotimes (i (length content-obj))
+                                             (let* ((item (aref content-obj i))
+                                                    (item-type (alist-get 'type item))
+                                                    (item-text (alist-get 'text item)))
+                                               (when (and (string= item-type "text") item-text)
+                                                 (setq extracted-text (concat extracted-text item-text)))))
+                                         (message "Unexpected response format: %S" content-obj))))
+                                   (setq content (ollama-buddy-fix-encoding-issues extracted-text))))
+                               
+                               ;; Update the chat buffer
+                               (with-current-buffer ollama-buddy--chat-buffer
+                                 (let ((inhibit-read-only t))
+                                   (goto-char start-point)
+                                   (delete-region start-point (point-max))
+                                   
+                                   ;; Insert the content
+                                   (insert content)
+                                   
+                                   ;; Convert markdown to org if enabled
+                                   (when ollama-buddy-convert-markdown-to-org
+                                     (ollama-buddy--md-to-org-convert-region start-point (point-max)))
+                                   
+                                   ;; Write to register
+                                   (let* ((reg-char (if ollama-buddy--multishot-sequence
+                                                        (if (< ollama-buddy--multishot-progress (length ollama-buddy--multishot-sequence))
+                                                            (aref ollama-buddy--multishot-sequence ollama-buddy--multishot-progress)
+                                                          ollama-buddy-default-register)
+                                                      ollama-buddy-default-register))
+                                          (current (get-register reg-char))
+                                          (new-content (concat (if (stringp current) current "") content)))
+                                     (set-register reg-char new-content))
+                                   
+                                   ;; Add to history
+                                   (setq ollama-buddy-claude--current-response content)
+                                   (when ollama-buddy-history-enabled
+                                     (ollama-buddy-claude--add-to-history "user" prompt)
+                                     (ollama-buddy-claude--add-to-history "assistant" content))
+                                   
+                                   ;; Calculate token count
+                                   (setq ollama-buddy-claude--current-token-count
+                                         (length (split-string content "\\b" t)))
+                                   
+                                   ;; Show token stats if enabled
+                                   (when ollama-buddy-display-token-stats
+                                     (insert (format "\n\n*** Token Stats\n[%d tokens]"
+                                                     ollama-buddy-claude--current-token-count)))
+                                   
+                                   (insert "\n\n*** FINISHED")
+                                   (ollama-buddy--prepare-prompt-area)
+                                   (ollama-buddy--update-status
+                                    (format "Finished [%d tokens]"
+                                            ollama-buddy-claude--current-token-count)))))
+                           (error
+                            (with-current-buffer ollama-buddy--chat-buffer
+                              (let ((inhibit-read-only t))
+                                (goto-char start-point)
+                                (delete-region start-point (point-max))
+                                (insert "Error: Failed to parse Claude response\n")
+                                (insert "Details: " (error-message-string err) "\n")
+                                (insert "\n\n*** FAILED")
+                                (ollama-buddy--prepare-prompt-area)
+                                (ollama-buddy--update-status "Failed - JSON parse error"))))))))))))))))))
 
 ;; History management functions
 
