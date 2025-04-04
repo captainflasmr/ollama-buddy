@@ -13,7 +13,6 @@
 
 (require 'ollama-buddy-core)
 (require 'json)
-(require 'csv)
 
 (declare-function ollama-buddy--send "ollama-buddy")
 (declare-function ollama-buddy--prepare-prompt-area "ollama-buddy")
