@@ -1251,12 +1251,12 @@ With prefix argument ALL-MODELS, clear history for all models."
   (save-excursion
     ;; First, find the Available Models section
     (goto-char (point-max))
-    (when (search-backward "** Local Available Models" nil t)
+    (when (search-backward "end_example" nil t)
       (forward-line 2) ;; Skip the header and empty line
       
       ;; Now we're at the start of the model list
       (let ((models-end (save-excursion
-                          (if (search-forward "** Quick Tips" nil t)
+                          (if (search-forward "- Ask me anything" nil t)
                               (progn (forward-line -1) (point))
                             (point-max)))))
         
