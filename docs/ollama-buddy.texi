@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 0.9.9
+@subtitle For Ollama Buddy version 0.9.20
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -55,6 +55,8 @@ allowing you to leverage powerful large language models (LLMs) directly within y
 * Session Management::          Saving and loading conversations
 * Roles and Commands::          Creating custom commands and roles
 * Fabric Pattern Integration::  Using predefined prompt patterns
+* Awesome ChatGPT Prompts::     Using the Awesome ChatGPT Prompts collection
+* ChatGPT and Claude Support::  Using commercial LLM APIs
 * Advanced Usage::              Tips and techniques for power users
 * API Reference::               Comprehensive function documentation
 * FAQ::                         Frequently asked questions
@@ -79,6 +81,8 @@ interact with AI models directly from within Emacs for various tasks such as:
 @item Dictionary lookups and language assistance
 @item Custom AI-powered workflows via roles
 @item Using pre-built prompt templates from Fabric
+@item Utilizing Awesome ChatGPT Prompts
+@item Integrating with Claude and OpenAI's commercial APIs
 @end itemize
 
 Instead of context-switching to web interfaces or terminal applications, Ollama Buddy brings 
@@ -87,7 +91,7 @@ the power of local LLMs right into your Emacs workflow.
 @section Why Use Ollama Buddy?
 
 @itemize @bullet
-@item @strong{Privacy}: All interactions happen locally with Ollama - no data sent to external services
+@item @strong{Privacy}: All interactions happen locally with Ollama - no data sent to external services unless you use commercial APIs
 @item @strong{Integration}: Seamlessly fits into your existing Emacs workflow
 @item @strong{Flexibility}: Supports multiple models, parameter tuning, and custom commands
 @item @strong{Efficiency}: Quick access to AI assistance without leaving your editor
@@ -102,6 +106,7 @@ Before using Ollama Buddy, you need:
 @item Emacs 28.1 or later
 @item Ollama installed and running on your system (see @url{https://ollama.ai})
 @item At least one language model pulled into Ollama
+@item (Optional) API keys for OpenAI or Claude if you want to use those services
 @end itemize
 
 @node Installation
@@ -175,6 +180,24 @@ Ollama Buddy requires the following Emacs packages:
 @end itemize
 
 These should be automatically installed if you use package.el or use-package.
+
+@section API Key Setup
+
+If you want to use OpenAI or Claude integration, you'll need to set up API keys securely:
+
+@enumerate
+@item Use Emacs built-in auth-source for secure storage
+@item Add to your auth sources (e.g., ~/.authinfo.gpg):
+@example
+machine api.openai.com login apikey password YOUR_OPENAI_API_KEY_HERE
+machine api.anthropic.com login apikey password YOUR_CLAUDE_API_KEY_HERE
+@end example
+@item Alternatively, set the variables directly (less secure):
+@example
+(setq ollama-buddy-openai-api-key "your-openai-key")
+(setq ollama-buddy-claude-api-key "your-claude-key")
+@end example
+@end enumerate
 
 @node Configuration
 @chapter Configuration
@@ -258,6 +281,13 @@ Directory for storing temporary Modelfiles.
 (setq ollama-buddy-modelfile-directory
       (expand-file-name "ollama-buddy-modelfiles" user-emacs-directory))
 @end example
+
+@item ollama-buddy-awesome-local-dir
+Directory for storing Awesome ChatGPT Prompts.
+@example
+(setq ollama-buddy-awesome-local-dir
+      (expand-file-name "awesome-chatgpt-prompts" user-emacs-directory))
+@end example
 @end table
 
 @section History and Session Configuration
@@ -281,6 +311,60 @@ Maximum number of message pairs to keep in conversation history (default: 10).
 Whether to show the history indicator in the header line (default: t).
 @example
 (setq ollama-buddy-show-history-indicator t)
+@end example
+@end table
+
+@section External API Configuration
+
+For OpenAI and Claude integration:
+
+@table @code
+@item ollama-buddy-openai-api-key
+Your OpenAI API key.
+@example
+(setq ollama-buddy-openai-api-key "your-openai-key")
+@end example
+
+@item ollama-buddy-claude-api-key
+Your Claude API key.
+@example
+(setq ollama-buddy-claude-api-key "your-claude-key")
+@end example
+
+@item ollama-buddy-openai-default-model
+Default model for OpenAI requests.
+@example
+(setq ollama-buddy-openai-default-model "gpt-4")
+@end example
+
+@item ollama-buddy-claude-default-model
+Default model for Claude requests.
+@example
+(setq ollama-buddy-claude-default-model "claude-3-opus-20240229")
+@end example
+@end table
+
+@section Awesome ChatGPT Prompts Configuration
+
+Configure the Awesome ChatGPT Prompts integration:
+
+@table @code
+@item ollama-buddy-awesome-repo-url
+URL of the Awesome ChatGPT Prompts GitHub repository.
+@example
+(setq ollama-buddy-awesome-repo-url "https://github.com/f/awesome-chatgpt-prompts.git")
+@end example
+
+@item ollama-buddy-awesome-update-on-startup
+Whether to automatically update prompts when Emacs starts.
+@example
+(setq ollama-buddy-awesome-update-on-startup nil)
+@end example
+
+@item ollama-buddy-awesome-categorize-prompts
+Whether to categorize prompts based on common keywords.
+@example
+(setq ollama-buddy-awesome-categorize-prompts t)
 @end example
 @end table
 
@@ -319,6 +403,12 @@ Select your changes, press @code{C-c o}, then choose "Git Commit Message" (or pr
 
 @item Changing models
 Press @code{C-c o} followed by @code{m} to switch between available models.
+
+@item Using Awesome ChatGPT Prompts
+Select text, press @code{C-c o}, then @code{a} for the Awesome prompts menu, then @code{s} to send with a prompt.
+
+@item Using Fabric patterns
+Select text, press @code{C-c o}, then @code{f} for the Fabric menu, then @code{s} to send with a pattern.
 
 @item Getting help
 In the chat buffer, press @code{C-c h} to display the help screen with available commands and models.
@@ -367,6 +457,7 @@ Corrects grammar, style, and spelling
 
 @itemize @bullet
 @item Switch between any model available in Ollama
+@item Use ChatGPT and Claude models with API keys
 @item Pull new models directly from the interface
 @item View model information and statistics
 @item Delete models you no longer need
@@ -391,13 +482,22 @@ Corrects grammar, style, and spelling
 @item Share role configurations across your team
 @end itemize
 
-@section Fabric Pattern Integration
+@section Prompt Template Collections
 
 @itemize @bullet
-@item Use pre-built prompt patterns from Daniel Miessler's Fabric project
-@item Access universal, code, writing, and analysis patterns
-@item Synchronize with the latest patterns from GitHub
-@item Apply patterns to your content with one command
+@item Use pre-built prompt patterns from Fabric project
+@item Utilize the Awesome ChatGPT Prompts collection
+@item Apply specialized prompts to your content with one command
+@item Browse prompts by category
+@end itemize
+
+@section External API Integration
+
+@itemize @bullet
+@item Connect to OpenAI's ChatGPT API
+@item Connect to Anthropic's Claude API
+@item Seamlessly switch between local and cloud models
+@item Secure API key management
 @end itemize
 
 @node Chat Interface
@@ -453,6 +553,9 @@ Press @code{C-c C-s}
 
 @item Resetting the system prompt
 Press @code{C-c r}
+
+@item Using a pre-built prompt
+Use Fabric patterns (@code{C-c f p}) or Awesome ChatGPT prompts (@code{C-c w p})
 @end table
 
 Example system prompt:
@@ -502,6 +605,18 @@ To change the current model:
 @end enumerate
 
 You can also switch models from the main menu with @code{m}.
+
+@section Local vs. Cloud Models
+
+Ollama Buddy supports both local Ollama models and cloud-based models:
+
+@itemize @bullet
+@item Local models (via Ollama): llama3, codellama, mistral, etc.
+@item OpenAI models: gpt-3.5-turbo, gpt-4, etc.
+@item Claude models: claude-3-opus, claude-3-sonnet, etc.
+@end itemize
+
+To use cloud models, you need to configure API keys as described in the Installation chapter.
 
 @section Managing Models
 
@@ -912,6 +1027,251 @@ You can quickly access patterns by category:
 @item @code{C-c f c} - Code patterns
 @item @code{C-c f w} - Writing patterns
 @item @code{C-c f a} - Analysis patterns
+@end itemize
+
+@node Awesome ChatGPT Prompts
+@chapter Awesome ChatGPT Prompts
+
+@section What is Awesome ChatGPT Prompts?
+
+Awesome ChatGPT Prompts is a curated collection of prompt templates created by the community and maintained in the GitHub repository at @url{https://github.com/f/awesome-chatgpt-prompts}. These prompts are designed to make ChatGPT (and other LLMs) act as various specialized personas or experts, such as:
+
+@itemize @bullet
+@item Writing professionals (poets, storytellers, copywriters)
+@item Technical experts (programmers, researchers, scientists)
+@item Creative professionals (artists, designers, photographers)
+@item Business experts (marketers, consultants, strategists)
+@item And many more specialized roles
+@end itemize
+
+@section Setting Up Awesome ChatGPT Prompts
+
+To set up the Awesome ChatGPT Prompts integration:
+@example
+M-x ollama-buddy-awesome-setup
+@end example
+
+This will:
+@enumerate
+@item Create a sparse checkout of the Awesome ChatGPT Prompts repository
+@item Download only the necessary files (prompts.csv and README)
+@item Populate and categorize the available prompts
+@end enumerate
+
+@section Using Awesome ChatGPT Prompts
+
+To use an Awesome ChatGPT Prompt:
+@example
+M-x ollama-buddy-awesome-send
+@end example
+or press @code{C-c w} and then @code{s}.
+
+You'll be prompted to:
+@enumerate
+@item Select a prompt from the categorized list
+@item Enter text to process (or use selected text)
+@end enumerate
+
+The selected prompt will be used as a system prompt for your request, transforming how the AI responds to your text.
+
+@section Browsing Available Prompts
+
+To see all available prompts:
+@example
+M-x ollama-buddy-awesome-list-prompts
+@end example
+or press @code{C-c w} and then @code{l}.
+
+This shows:
+@itemize @bullet
+@item Prompt titles
+@item Categories
+@item Preview of prompt content
+@end itemize
+
+@section Categorized Browsing
+
+Ollama Buddy automatically categorizes the Awesome ChatGPT Prompts into useful groups:
+@itemize @bullet
+@item writing - For writing, poetry, and creative content
+@item code - For programming and development
+@item business - For marketing, entrepreneurship, and business strategy
+@item academic - For educational and research content
+@item creative - For artistic and design-related prompts
+@item philosophy - For philosophical reasoning and ethics
+@item health - For medical, fitness, and wellness
+@item legal - For law-related prompts
+@item finance - For financial advice and analysis
+@item other - Miscellaneous prompts
+@end itemize
+
+To browse by category:
+@example
+M-x ollama-buddy-awesome-show-prompts-menu
+@end example
+or press @code{C-c w} and then @code{c}.
+
+@section Viewing Prompt Details
+
+To see the full content of a specific prompt:
+@example
+M-x ollama-buddy-awesome-show-prompt
+@end example
+or press @code{C-c w} and then @code{v}.
+
+Select a prompt to see its complete template.
+
+@section Updating Prompts
+
+To sync with the latest prompts from GitHub:
+@example
+M-x ollama-buddy-awesome-sync-prompts
+@end example
+or press @code{C-c w} and then @code{S}.
+
+@section Setting Without Sending
+
+To set a prompt as the system prompt without sending text:
+@example
+M-x ollama-buddy-awesome-set-system-prompt
+@end example
+or press @code{C-c w} and then @code{p}.
+
+This is useful when you want to set up a specific persona before starting a conversation.
+
+@section Example Usage
+
+Some popular prompts include:
+@itemize @bullet
+@item "Act as a poet" - Transforms your text into poetry
+@item "Act as a Linux terminal" - Simulates a Linux terminal interface
+@item "Act as a gaslighter" - Responds in a deliberately confusing manner
+@item "Act as a javascript console" - Simulates a JavaScript console
+@item "Act as an English translator" - Translates text to proper English
+@end itemize
+
+@node ChatGPT and Claude Support
+@chapter ChatGPT and Claude Support
+
+@section Overview
+
+Ollama Buddy integrates with commercial AI services:
+@itemize @bullet
+@item OpenAI's ChatGPT API
+@item Anthropic's Claude API
+@end itemize
+
+This allows you to:
+@itemize @bullet
+@item Use the latest commercial models when needed
+@item Compare responses between local and cloud models
+@item Leverage the strengths of different model families
+@end itemize
+
+@section Setting Up API Access
+
+Before using commercial APIs, you need to set up API keys:
+
+@subsection Secure API Key Storage
+The recommended approach is to use Emacs' built-in auth-source:
+@example
+;; Add to ~/.authinfo.gpg (encrypted)
+machine api.openai.com login apikey password YOUR_OPENAI_API_KEY
+machine api.anthropic.com login apikey password YOUR_CLAUDE_API_KEY
+@end example
+
+@subsection Direct Configuration
+For testing or temporary use (less secure):
+@example
+(setq ollama-buddy-openai-api-key "your-openai-key")
+(setq ollama-buddy-claude-api-key "your-claude-key")
+@end example
+
+@section Selecting Commercial Models
+
+Both OpenAI and Claude models appear in the model selection list with special prefixes:
+@itemize @bullet
+@item OpenAI models are prefixed with "openai:"
+@item Claude models are prefixed with "claude:"
+@end itemize
+
+To select a commercial model:
+@example
+M-x ollama-buddy--swap-model
+@end example
+or press @code{C-c m}.
+
+Choose the model from the completion list.
+
+@section Configuring Commercial Models
+
+@subsection OpenAI Configuration
+@table @code
+@item ollama-buddy-openai-default-model
+Default OpenAI model to use (e.g., "gpt-4").
+@example
+(setq ollama-buddy-openai-default-model "gpt-4")
+@end example
+
+@item ollama-buddy-openai-temperature
+Default temperature for OpenAI requests (0.0-2.0).
+@example
+(setq ollama-buddy-openai-temperature 0.7)
+@end example
+
+@item ollama-buddy-openai-max-tokens
+Maximum tokens to generate (nil for API default).
+@example
+(setq ollama-buddy-openai-max-tokens 2000)
+@end example
+
+@item ollama-buddy-openai-api-endpoint
+Custom API endpoint (defaults to OpenAI's standard endpoint).
+@example
+(setq ollama-buddy-openai-api-endpoint "https://api.openai.com/v1/chat/completions")
+@end example
+@end table
+
+@subsection Claude Configuration
+@table @code
+@item ollama-buddy-claude-default-model
+Default Claude model to use.
+@example
+(setq ollama-buddy-claude-default-model "claude-3-opus-20240229")
+@end example
+
+@item ollama-buddy-claude-temperature
+Default temperature for Claude requests (0.0-1.0).
+@example
+(setq ollama-buddy-claude-temperature 0.7)
+@end example
+
+@item ollama-buddy-claude-max-tokens
+Maximum tokens to generate (nil for API default).
+@example
+(setq ollama-buddy-claude-max-tokens 2000)
+@end example
+@end table
+
+@section History Management
+
+Each API service maintains its own conversation history:
+@itemize @bullet
+@item Ollama history for local models
+@item OpenAI history for ChatGPT models
+@item Claude history for Claude models
+@end itemize
+
+This ensures that context is maintained appropriately for each service.
+
+@section Improved Error Handling
+
+As of version 0.9.20, Ollama Buddy includes enhanced error handling for ChatGPT and Claude:
+@itemize @bullet
+@item Better Unicode character handling in JSON requests
+@item More robust error recovery
+@item Clearer error messages
+@item Consistent handling of API responses
 @end itemize
 
 @node Advanced Usage
