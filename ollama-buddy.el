@@ -2017,7 +2017,7 @@ With prefix argument ALL-MODELS, clear history for all models."
          (basic-tips
           "- Ask me anything!                    C-c C-c
 - Main transient menu                 C-c O
-- Cancel request                      C-c C-k
+- Cancel request                      C-c C-k OR C-g
 - Change model                        C-c m
 - Browse prompt history               M-p/n/r
 - Browse ollama-buddy manual          C-c ?
@@ -2025,7 +2025,7 @@ With prefix argument ALL-MODELS, clear history for all models."
          ;; Advanced tips for experienced users
          (advanced-tips
           "- Ask me anything!                    C-c C-c
-- Cancel request                      C-c C-k
+- Cancel request                      C-c C-k OR C-g
 - Main transient menu                 C-c O
 - Manage models                       C-c W
 - Browse prompt history               M-p/n/r
@@ -2838,6 +2838,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c C-c") #'ollama-buddy--send-prompt)
     (define-key map (kbd "C-c h") #'ollama-buddy--menu-help-assistant)
     (define-key map (kbd "C-c C-k") #'ollama-buddy--cancel-request)
+    (define-key map (kbd "C-g") #'ollama-buddy--cancel-request)
     (define-key map (kbd "C-c x") #'ollama-buddy-toggle-streaming)
     
     ;; Prompts section keybindings
