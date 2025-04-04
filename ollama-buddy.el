@@ -2899,7 +2899,8 @@ When the operation completes, CALLBACK is called with no arguments if provided."
 (setq org-return-follows-link t)
 
 (add-to-list 'display-buffer-alist
-             '("\\*Ollama Buddy Chat" display-buffer-same-window))
+             '("\\*Ollama Buddy Chat"
+               (display-buffer-reuse-window display-buffer-same-window)))
 
 (provide 'ollama-buddy)
 ;;; ollama-buddy.el ends here
