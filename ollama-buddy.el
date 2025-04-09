@@ -2454,9 +2454,6 @@ Modifies the variable in place."
         (let ((inhibit-read-only t))
           (goto-char (point-max))
           (ollama-buddy--prepare-prompt-area t))))))
-  
-  ;; Update status to show cancelled
-)
 
 (defun ollama-buddy-ensure-modelfile-directory ()
   "Create the ollama-buddy modelfile directory if it doesn't exist."
