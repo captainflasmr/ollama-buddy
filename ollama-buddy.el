@@ -2422,30 +2422,41 @@ Modifies the variable in place."
 (defun ollama-buddy--cancel-request ()
   "Cancel the current request and clean up resources."
   (interactive)
-  (when ollama-buddy--active-process
-    (delete-process ollama-buddy--active-process)
-    (setq ollama-buddy--active-process nil))
-  
-  ;; Clean up token tracking
-  (when ollama-buddy--token-update-timer
-    (cancel-timer ollama-buddy--token-update-timer)
-    (setq ollama-buddy--token-update-timer nil))
+  (if ollama-buddy--active-process
+      (progn
+        (delete-process ollama-buddy--active-process)
+        (setq ollama-buddy--active-process nil)
+        
+        ;; Clean up token tracking
+        (when ollama-buddy--token-update-timer
+          (cancel-timer ollama-buddy--token-update-timer)
+          (setq ollama-buddy--token-update-timer nil))
+        
+        ;; Reset token tracking variables
+        (setq ollama-buddy--current-token-count 0
+              ollama-buddy--current-token-start-time nil
+              ollama-buddy--last-token-count 0
+              ollama-buddy--last-update-time nil)
+        
+        ;; Safely reset multishot variables
+        (setq ollama-buddy--multishot-prompt nil)
+        ;; Only reset sequence if we were using it
+        (when ollama-buddy--multishot-sequence
+          (setq ollama-buddy--multishot-sequence nil
+                ollama-buddy--multishot-progress 0))
+        
+        (ollama-buddy--update-status "Cancelled"))
 
-  ;; Reset token tracking variables
-  (setq ollama-buddy--current-token-count 0
-        ollama-buddy--current-token-start-time nil
-        ollama-buddy--last-token-count 0
-        ollama-buddy--last-update-time nil)
-  
-  ;; Safely reset multishot variables
-  (setq ollama-buddy--multishot-prompt nil)
-  ;; Only reset sequence if we were using it
-  (when ollama-buddy--multishot-sequence
-    (setq ollama-buddy--multishot-sequence nil
-          ollama-buddy--multishot-progress 0))
+    (progn
+      ;; otherwise regenerate/reset the prompt
+      (put 'ollama-buddy--cycle-prompt-history 'history-position -1)
+      (with-current-buffer ollama-buddy--chat-buffer
+        (let ((inhibit-read-only t))
+          (goto-char (point-max))
+          (ollama-buddy--prepare-prompt-area t))))))
   
   ;; Update status to show cancelled
-  (ollama-buddy--update-status "Cancelled"))
+)
 
 (defun ollama-buddy-ensure-modelfile-directory ()
   "Create the ollama-buddy modelfile directory if it doesn't exist."
