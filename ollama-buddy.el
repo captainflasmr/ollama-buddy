@@ -2192,21 +2192,23 @@ please run =ollama serve=\n\n")
     (let* ((prompt-data (ollama-buddy--get-prompt-content))
            (prompt-point (cdr prompt-data))
            (current-pos (or (get 'ollama-buddy--cycle-prompt-history 'history-position) 0))
+           (history-length (length ollama-buddy--prompt-history))
            (new-pos (+ current-pos direction))
-           (new-pos (if (< new-pos 0)
-                        0
-                      (min new-pos (1- (length ollama-buddy--prompt-history)))))
-           (new-content (nth new-pos ollama-buddy--prompt-history)))
-      
+           (new-pos (if (< new-pos -1) -1
+                      (min new-pos (1- history-length))))
+           (new-content (if (= new-pos -1)
+                            "" ; Clear prompt when moving past the end
+                          (nth new-pos ollama-buddy--prompt-history))))
+
       ;; Store position for next cycle
       (put 'ollama-buddy--cycle-prompt-history 'history-position new-pos)
       
       (when prompt-point
         (save-excursion
           (goto-char prompt-point)
-          (search-forward ":")
+          (search-forward ": ")
           (delete-region (point) (point-max))
-          (insert " " new-content))))))
+          (insert new-content))))))
 
 (defun ollama-buddy-previous-history ()
   "Navigate to previous item in prompt history."
