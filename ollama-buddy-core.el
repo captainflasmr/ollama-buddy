@@ -453,9 +453,6 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
 (defvar ollama-buddy--response-start-position nil
   "Marker for the start position of the current response.")
 
-(defvar ollama-buddy--current-response nil
-  "The current response text being accumulated.")
-
 (defvar-local ollama-buddy--response-start-position nil
   "Buffer-local marker for the start position of the current response.")
 

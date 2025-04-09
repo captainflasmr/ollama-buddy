@@ -80,6 +80,9 @@
 (defvar ollama-buddy--start-point nil
   "General store of a starting point.")
 
+(defvar ollama-buddy--current-response nil
+  "The current response text being accumulated.")
+
 (defun ollama-buddy-history-search ()
   "Search through the prompt history using a `completing-read' interface."
   (interactive)

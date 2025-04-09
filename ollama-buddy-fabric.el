@@ -15,6 +15,9 @@
 
 (declare-function ollama-buddy--send "ollama-buddy")
 (declare-function ollama-buddy--prepare-prompt-area "ollama-buddy")
+(declare-function ollama-buddy--open-chat "ollama-buddy")
+(declare-function ollama-buddy--update-status "ollama-buddy")
+(declare-function ollama-buddy--md-to-org-convert-region "ollama-buddy")
 
 (defgroup ollama-buddy-fabric nil
   "Customization group for ollama-buddy-fabric."
