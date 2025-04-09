@@ -1351,13 +1351,13 @@ CLOSED: [2025-03-29 Sat 13:34]
 #+RESULTS:
 | TODO                               | DOING                              | DONE                                       |
 |------------------------------------+------------------------------------+--------------------------------------------|
-| Merge history buffer functionality | Core Params - suffix               | Method for securely storing API keys       |
-| Core API - Embeddings              | Show incoming ollama messages      | Core API - Delete Model                    |
-| Core Params - format               | Add chatGPT awesome prompt support | Core API - Copy a model                    |
-| Core Params - template             | Add fabric pattern/prompt support  | Core API - stream                          |
-| Core Params - raw                  | ChatGPT support                    | Core API - Pull/Info/Pull/Delete a model   |
-| Test on Windows                    | Claude support                     | Core API - Show running models             |
-|                                    |                                    | Core API - Create a model from a GGUF file |
+| Added gemini?                      | Core Params - suffix               | Method for securely storing API keys       |
+| Merge history buffer functionality | Show incoming ollama messages      | Core API - Delete Model                    |
+| Core API - Embeddings              | Add chatGPT awesome prompt support | Core API - Copy a model                    |
+| Core Params - format               | Add fabric pattern/prompt support  | Core API - stream                          |
+| Core Params - template             | ChatGPT support                    | Core API - Pull/Info/Pull/Delete a model   |
+| Core Params - raw                  | Claude support                     | Core API - Show running models             |
+| Test on Windows                    |                                    | Core API - Create a model from a GGUF file |
 |                                    |                                    | Add transient menu                         |
 |                                    |                                    | History editing                            |
 |                                    |                                    | Core API - options - parameter editing     |
@@ -1373,6 +1373,8 @@ CLOSED: [2025-03-29 Sat 13:34]
 |                                    |                                    | Enhancing Menu Clarity                     |
 |                                    |                                    | Real time token tracking                   |
 |                                    |                                    | Managing chat history and context          |
+
+** TODO Added gemini?
 
 ** TODO Merge history buffer functionality
 
