@@ -126,8 +126,16 @@ These are the only parameters that will be sent to Ollama."
     (send-region
      :key ?l
      :description "Send region"
-     :action (lambda () (ollama-buddy--send-with-command 'send-region)))
-    
+     :action (lambda ()
+               (let* ((selected-text (when (use-region-p)
+                                       (buffer-substring-no-properties
+                                        (region-beginning) (region-end)))))
+                 (when (not selected-text)
+                   (user-error "This command requires selected text"))
+                 
+                 (ollama-buddy--open-chat)
+                 (insert selected-text))))
+     
     (kill-request
      :key ?k
      :description "Kill request"
