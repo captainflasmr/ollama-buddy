@@ -2909,7 +2909,6 @@ When the operation completes, CALLBACK is called with no arguments if provided."
              '("\\*Ollama Buddy Chat"
                (lambda (buffer alist)
                  (let ((chat-window (get-buffer-window "*Ollama Buddy Chat*")))
-                   (prin1 chat-window)
                    (cond
                     ;; If chat window exists, use it
                     (chat-window
@@ -2919,9 +2918,9 @@ When the operation completes, CALLBACK is called with no arguments if provided."
                     ;; If only one window, create a new one
                     ((= (length (window-list)) 1)
                      (display-buffer-pop-up-window buffer alist))
-                    ;; Otherwise, use the current window
+                    ;; Otherwise, create a new window
                     (t
-                     (display-buffer-same-window buffer alist)))))))
+                     (display-buffer-pop-up-window buffer alist)))))))
 
 (provide 'ollama-buddy)
 ;;; ollama-buddy.el ends here
