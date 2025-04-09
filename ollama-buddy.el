@@ -2907,7 +2907,22 @@ When the operation completes, CALLBACK is called with no arguments if provided."
 
 (add-to-list 'display-buffer-alist
              '("\\*Ollama Buddy Chat"
-               (display-buffer-reuse-window display-buffer-same-window)))
+               (lambda (buffer alist)
+                 (let ((chat-window (get-buffer-window "*Ollama Buddy Chat*")))
+                   (prin1 chat-window)
+                   (cond
+                    ;; If chat window exists, use it
+                    (chat-window
+                     (message "poop")
+                     (with-selected-window chat-window
+                       (switch-to-buffer buffer t))
+                     chat-window)
+                    ;; If only one window, create a new one
+                    ((= (length (window-list)) 1)
+                     (display-buffer-pop-up-window buffer alist))
+                    ;; Otherwise, use the current window
+                    (t
+                     (display-buffer-same-window buffer alist)))))))
 
 (provide 'ollama-buddy)
 ;;; ollama-buddy.el ends here
