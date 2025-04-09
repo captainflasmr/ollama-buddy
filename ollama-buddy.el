@@ -1823,10 +1823,8 @@ With prefix argument ALL-MODELS, clear history for all models."
   (when-let ((prompt (read-string "Enter prompt: " nil nil nil t)))
     (unless (not (string-empty-p prompt))
       (user-error "Input string is empty"))
+    (ollama-buddy--open-chat)
     (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-      (pop-to-buffer (current-buffer))
-      (ollama-buddy--prepare-prompt-area)
-      (goto-char (point-max))
       (insert (string-trim prompt)))
     (ollama-buddy--send (string-trim prompt))))
 
