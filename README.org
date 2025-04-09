@@ -1281,27 +1281,25 @@ All interactive functions available in ollama-buddy are listed in the original R
 #+end_src
 
 #+RESULTS:
-| TODO                                                                 | DONE                                                          |
-|----------------------------------------------------------------------+---------------------------------------------------------------|
-| transient-setup: Key sequence 1 0 starts with non-prefix key 1       | As shell generally C-n to end of list to clear prompt history |
-| Claude request and connection can sometimes take time and it blocks! | Add Texinfo to MELPA recipe                                   |
-| =C-a= beginning-of-line to jump to prompt start like comint          | System prompt not cleared on new session                      |
-| Pushing hundreds/thousands of lines to the chat buffer takes a while | Remove fabric from Commands transient menu                    |
-| Conversation history to display with Claude/ChatGPT                  | External AI to copy to register                               |
-| ChatGPT request/response too long                                    | First request with no chat buffer fails                       |
-| Check tags caching                                                   |                                                               |
-| Kill online AI process with cancel request                           |                                                               |
-| GGUF to use new syncing option                                       |                                                               |
-| Save system prompts as part of session                               |                                                               |
-| keybindings in ollama chat buffer are reserved                       |                                                               |
+| TODO                                                                         | DOING                                      | DONE                                                          |
+|------------------------------------------------------------------------------+--------------------------------------------+---------------------------------------------------------------|
+| transient-setup: Key sequence 1 0 starts with non-prefix key 1               | Kill online AI process with cancel request | As shell generally C-n to end of list to clear prompt history |
+| Claude request and connection can sometimes take time and it blocks!         | GGUF to use new syncing option             | Add Texinfo to MELPA recipe                                   |
+| =C-a/M-m= beginning-of-line to jump to prompt start like comint              |                                            | System prompt not cleared on new session                      |
+| Pushing hundreds or even thousands of lines to the chat buffer takes a while |                                            | Remove fabric from Commands transient menu                    |
+| Conversation history to display with Claude/ChatGPT                          |                                            | External AI to copy to register                               |
+| ChatGPT request/response too long                                            |                                            | First request with no chat buffer fails                       |
+| Check tags caching                                                           |                                            |                                                               |
+| Save system prompts as part of session                                       |                                            |                                                               |
+| keybindings in ollama chat buffer are reserved                               |                                            |                                                               |
 
 ** TODO transient-setup: Key sequence 1 0 starts with non-prefix key 1
 
 ** TODO Claude request and connection can sometimes take time and it blocks!
 
-** TODO =C-a= beginning-of-line to jump to prompt start like comint
+** TODO =C-a/M-m= beginning-of-line to jump to prompt start like comint
 
-** TODO Pushing hundreds/thousands of lines to the chat buffer takes a while
+** TODO Pushing hundreds or even thousands of lines to the chat buffer takes a while
 
 For example large diffs, although a 4000 lines diff is unusual?
 
@@ -1315,9 +1313,11 @@ Error: This model's maximum context length is 16385 tokens. However, you request
 
 ** TODO Check tags caching
 
-** TODO Kill online AI process with cancel request
+** DOING Kill online AI process with cancel request
 
-** TODO GGUF to use new syncing option
+** DOING GGUF to use new syncing option
+
+For some reason this is more difficult than it looks
 
 ** TODO Save system prompts as part of session
 
@@ -1326,6 +1326,8 @@ Error: This model's maximum context length is 16385 tokens. However, you request
 #+begin_src 
 2647:70: error: This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)
 #+end_src
+
+Do I even care?
 
 ** DONE As shell generally C-n to end of list to clear prompt history
 CLOSED: [2025-04-09 Wed 11:23]
