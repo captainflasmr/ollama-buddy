@@ -1777,7 +1777,7 @@ With prefix argument ALL-MODELS, clear history for all models."
           (message "Switched to Ollama model: %s" new-model))))
       
       (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
-      (ollama-buddy--prepare-prompt-area)
+      (ollama-buddy--prepare-prompt-area t t)
       (goto-char (point-max))
       (ollama-buddy--update-status "Idle"))))
 
