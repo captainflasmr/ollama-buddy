@@ -1284,16 +1284,19 @@ All interactive functions available in ollama-buddy are listed in the original R
 | TODO                                                                 | DONE                                       |
 |----------------------------------------------------------------------+--------------------------------------------|
 | Claude request and connection can sometimes take time and it blocks! | Add Texinfo to MELPA recipe                |
-| Pushing hundreds/thousands of lines to the chat buffer takes a while | System prompt not cleared on new session   |
-| Conversation history to display with Claude/ChatGPT                  | Remove fabric from Commands transient menu |
-| ChatGPT request/response too long                                    | External AI to copy to register            |
-| Check tags caching                                                   | First request with no chat buffer fails    |
+| =C-a= beginning-of-line to jump to prompt start like comint          | System prompt not cleared on new session   |
+| Pushing hundreds/thousands of lines to the chat buffer takes a while | Remove fabric from Commands transient menu |
+| Conversation history to display with Claude/ChatGPT                  | External AI to copy to register            |
+| ChatGPT request/response too long                                    | First request with no chat buffer fails    |
+| Check tags caching                                                   |                                            |
 | Kill online AI process with cancel request                           |                                            |
 | GGUF to use new syncing option                                       |                                            |
 | Save system prompts as part of session                               |                                            |
 | keybindings in ollama chat buffer are reserved                       |                                            |
 
 ** TODO Claude request and connection can sometimes take time and it blocks!
+
+** TODO =C-a= beginning-of-line to jump to prompt start like comint
 
 ** TODO Pushing hundreds/thousands of lines to the chat buffer takes a while
 
