@@ -45,8 +45,6 @@ A simple text information screen will be presented on the first opening of the c
 |___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|
 ,#+end_example
 
-,** Local Available Models
-
 (a) *tinyllama:latest* Select Info Pull Copy Delete
 (b) *qwen2.5-coder:7b* Select Info Pull Copy Delete
 (c) *deepseek-r1:7b* Select Info Pull Copy Delete
@@ -55,17 +53,14 @@ A simple text information screen will be presented on the first opening of the c
 (f) *phi3:3.8b* Select Info Pull Copy Delete
 (g) *llama3.2:1b* Select Info Pull Copy Delete
 
-,** Recommended Models (click to download)
-
 starcoder2:3b mistral:7b deepseek-r1:1.5b gemma3:1b qwen2.5-coder:3b llama3.2:3b
-
-,** Quick Tips
 
 - Ask me anything!                    C-c C-c
 - Main transient menu                 C-c O
+- Cancel request                      C-c C-k
 - Change model                        C-c m
-- Cancel request                      C-c k
 - Browse prompt history               M-p/n/r
+- Browse ollama-buddy manual          C-c ?
 - Advanced interface (show all tips)  C-c A
 
 ,* *tinyllama:latest >> PROMPT:* <put prompt in here>
@@ -1374,7 +1369,7 @@ CLOSED: [2025-03-29 Sat 13:34]
 |                                    |                                    | Real time token tracking                   |
 |                                    |                                    | Managing chat history and context          |
 
-** TODO Added gemini?
+** TODO Add gemini?
 
 ** TODO Merge history buffer functionality
 
