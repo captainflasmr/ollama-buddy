@@ -1283,21 +1283,18 @@ All interactive functions available in ollama-buddy are listed in the original R
 #+RESULTS:
 | TODO                                                                         | DOING                                      | DONE                                                          |
 |------------------------------------------------------------------------------+--------------------------------------------+---------------------------------------------------------------|
-| transient-setup: Key sequence 1 0 starts with non-prefix key 1               | Kill online AI process with cancel request | As shell generally C-n to end of list to clear prompt history |
-| Claude request and connection can sometimes take time and it blocks!         | GGUF to use new syncing option             | Add Texinfo to MELPA recipe                                   |
-| =C-a/M-m= beginning-of-line to jump to prompt start like comint              |                                            | System prompt not cleared on new session                      |
-| Pushing hundreds or even thousands of lines to the chat buffer takes a while |                                            | Remove fabric from Commands transient menu                    |
-| Conversation history to display with Claude/ChatGPT                          |                                            | External AI to copy to register                               |
-| ChatGPT request/response too long                                            |                                            | First request with no chat buffer fails                       |
-| Check tags caching                                                           |                                            |                                                               |
-| Save system prompts as part of session                                       |                                            |                                                               |
+| transient-setup: Key sequence 1 0 starts with non-prefix key 1               | Kill online AI process with cancel request | =C-a= beginning-of-line to jump to prompt start like comint   |
+| Claude request and connection can sometimes take time and it blocks!         | GGUF to use new syncing option             | As shell generally C-n to end of list to clear prompt history |
+| Pushing hundreds or even thousands of lines to the chat buffer takes a while |                                            | Add Texinfo to MELPA recipe                                   |
+| Conversation history to display with Claude/ChatGPT                          |                                            | System prompt not cleared on new session                      |
+| ChatGPT request/response too long                                            |                                            | Remove fabric from Commands transient menu                    |
+| Check tags caching                                                           |                                            | External AI to copy to register                               |
+| Save system prompts as part of session                                       |                                            | First request with no chat buffer fails                       |
 | keybindings in ollama chat buffer are reserved                               |                                            |                                                               |
 
 ** TODO transient-setup: Key sequence 1 0 starts with non-prefix key 1
 
 ** TODO Claude request and connection can sometimes take time and it blocks!
-
-** TODO =C-a/M-m= beginning-of-line to jump to prompt start like comint
 
 ** TODO Pushing hundreds or even thousands of lines to the chat buffer takes a while
 
@@ -1328,6 +1325,9 @@ For some reason this is more difficult than it looks
 #+end_src
 
 Do I even care?
+
+** DONE =C-a= beginning-of-line to jump to prompt start like comint
+CLOSED: [2025-04-09 Wed 13:12]
 
 ** DONE As shell generally C-n to end of list to clear prompt history
 CLOSED: [2025-04-09 Wed 11:23]

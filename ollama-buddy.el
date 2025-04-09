@@ -83,6 +83,29 @@
 (defvar ollama-buddy--current-response nil
   "The current response text being accumulated.")
 
+(defun ollama-buddy-beginning-of-prompt ()
+  "Move point to the beginning of the current prompt in the Ollama Buddy chat buffer."
+  (interactive)
+  (if (eq major-mode 'org-mode)
+      (let ((prompt-start
+             (save-excursion
+               (when (re-search-backward ">> \\(?:PROMPT\\|SYSTEM PROMPT\\):" nil t)
+                   (search-forward ":")
+                   (forward-char 1)
+                   (point)))))
+        (if prompt-start
+            (goto-char prompt-start)
+          (beginning-of-line)))
+    (beginning-of-line)))
+
+(defun ollama-buddy-advice-beginning-of-line (orig-fun &rest args)
+  "Advice to modify beginning-of-line behavior in Ollama Buddy chat buffer."
+  (if (and (boundp 'ollama-buddy-mode)
+           ollama-buddy-mode
+           (eq (current-buffer) (get-buffer ollama-buddy--chat-buffer)))
+      (ollama-buddy-beginning-of-prompt)
+    (apply orig-fun args)))
+
 (defun ollama-buddy-history-search ()
   "Search through the prompt history using a `completing-read' interface."
   (interactive)
@@ -2903,6 +2926,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c K") #'ollama-buddy-params-reset)
     (define-key map (kbd "C-c F") #'ollama-buddy-toggle-params-in-header)
     (define-key map (kbd "C-c p") #'ollama-buddy-transient-profile-menu)
+    (define-key map [remap move-beginning-of-line] #'ollama-buddy-beginning-of-prompt)
     map)
   "Keymap for ollama-buddy mode.")
 
@@ -2914,6 +2938,8 @@ When the operation completes, CALLBACK is called with no arguments if provided."
 (push 'ollama-buddy--prompt-history savehist-additional-variables)
 
 (setq org-return-follows-link t)
+
+;; (advice-add 'beginning-of-line :around #'ollama-buddy-advice-beginning-of-line)
 
 (add-to-list 'display-buffer-alist
              '("\\*Ollama Buddy Chat"
