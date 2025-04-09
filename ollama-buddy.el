@@ -89,8 +89,8 @@
   (if (eq major-mode 'org-mode)
       (let ((prompt-start
              (save-excursion
-               (when (re-search-backward ">> \\(?:PROMPT\\|SYSTEM PROMPT\\):" nil t)
-                   (search-forward ":")
+               (beginning-of-line)
+               (when (re-search-forward ">> \\(?:PROMPT\\|SYSTEM PROMPT\\):" nil t)
                    (forward-char 1)
                    (point)))))
         (if prompt-start
