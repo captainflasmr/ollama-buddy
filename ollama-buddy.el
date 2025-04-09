@@ -2913,7 +2913,6 @@ When the operation completes, CALLBACK is called with no arguments if provided."
                    (cond
                     ;; If chat window exists, use it
                     (chat-window
-                     (message "poop")
                      (with-selected-window chat-window
                        (switch-to-buffer buffer t))
                      chat-window)
