@@ -1288,14 +1288,17 @@ All interactive functions available in ollama-buddy are listed in the original R
 #+RESULTS:
 | TODO                                                                 | DONE                                       |
 |----------------------------------------------------------------------+--------------------------------------------|
-| Pushing hundreds/thousands of lines to the chat buffer takes a while | Add Texinfo to MELPA recipe                |
-| Conversation history to display with Claude/ChatGPT                  | System prompt not cleared on new session   |
-| ChatGPT request/response too long                                    | Remove fabric from Commands transient menu |
-| Check tags caching                                                   | External AI to copy to register            |
-| Kill online AI process with cancel request                           | First request with no chat buffer fails    |
+| Claude request and connection can sometimes take time and it blocks! | Add Texinfo to MELPA recipe                |
+| Pushing hundreds/thousands of lines to the chat buffer takes a while | System prompt not cleared on new session   |
+| Conversation history to display with Claude/ChatGPT                  | Remove fabric from Commands transient menu |
+| ChatGPT request/response too long                                    | External AI to copy to register            |
+| Check tags caching                                                   | First request with no chat buffer fails    |
+| Kill online AI process with cancel request                           |                                            |
 | GGUF to use new syncing option                                       |                                            |
 | Save system prompts as part of session                               |                                            |
 | keybindings in ollama chat buffer are reserved                       |                                            |
+
+** TODO Claude request and connection can sometimes take time and it blocks!
 
 ** TODO Pushing hundreds/thousands of lines to the chat buffer takes a while
 
