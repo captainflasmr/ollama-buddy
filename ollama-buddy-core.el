@@ -1273,8 +1273,8 @@ ACTUAL-MODEL is the model being used instead."
                      (propertize (if (ollama-buddy--check-status) "" " OFFLINE")
                                  'face '(:weight bold))
                      (if (ollama-buddy--check-status)
-                         (propertize model 'face `(:weight bold :box (:line-width 4 :style flat-button)))
-                       (propertize model 'face `(:weight bold :inherit shadow :box (:line-width 4 :style flat-button))))
+                         (propertize model 'face `(:weight bold :box (:line-width 2 :style flat-button)))
+                       (propertize model 'face `(:weight bold :inherit shadow :box (:line-width 2 :style flat-button))))
                      status
                      system-indicator
                      (or params ""))
