@@ -135,7 +135,7 @@ These are the only parameters that will be sent to Ollama."
                  
                  (ollama-buddy--open-chat)
                  (insert selected-text))))
-     
+    
     (kill-request
      :key ?k
      :description "Kill request"
@@ -564,18 +564,18 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
     result))
 
 (defun ollama-buddy-fix-encoding-issues (string)
-  "Fix common encoding issues with a simpler approach."
+  "Fix common encoding issues with STRING."
   (let* ((string (replace-regexp-in-string "â" "—" string))      ;; em dash
-        (string (replace-regexp-in-string "" "" string)) ;; alternative em dash
-        (string (replace-regexp-in-string "" "" string)) ;; en dash
-        (string (replace-regexp-in-string "â€œ" "\"" string))    ;; left double quote
-        (string (replace-regexp-in-string "â€" "\"" string))     ;; right double quote
-        (string (replace-regexp-in-string "â€˜" "'" string))     ;; left single quote
-        (string (replace-regexp-in-string "â€™" "'" string))     ;; right single quote
-        (string (replace-regexp-in-string "â€¦" "…" string))     ;; ellipsis
-        (string (replace-regexp-in-string "Ã" "E" string))   ;; capital E with acute accent
-        (string (replace-regexp-in-string "Ã©" "e" string))   ;; lowercase e with acute accent
-        (string (replace-regexp-in-string "â€¢" "•" string)))    ;; bullet point
+         (string (replace-regexp-in-string "" "" string)) ;; alternative em dash
+         (string (replace-regexp-in-string "" "" string)) ;; en dash
+         (string (replace-regexp-in-string "â€œ" "\"" string))    ;; left double quote
+         (string (replace-regexp-in-string "â€" "\"" string))     ;; right double quote
+         (string (replace-regexp-in-string "â€˜" "'" string))     ;; left single quote
+         (string (replace-regexp-in-string "â€™" "'" string))     ;; right single quote
+         (string (replace-regexp-in-string "â€¦" "…" string))     ;; ellipsis
+         (string (replace-regexp-in-string "Ã" "E" string))   ;; capital E with acute accent
+         (string (replace-regexp-in-string "Ã©" "e" string))   ;; lowercase e with acute accent
+         (string (replace-regexp-in-string "â€¢" "•" string)))    ;; bullet point
     string))
 
 (defun ollama-buddy--register-background-operation (operation-id description)
@@ -615,10 +615,10 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
   "Update status line to show background operations."
   (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
     (let* ((regular-status ollama-buddy--status)
-           (operations-text 
+           (operations-text
             (when ollama-buddy--background-operations
               (mapconcat #'cdr ollama-buddy--background-operations " | ")))
-           (combined-status 
+           (combined-status
             (if operations-text
                 (format "%s [%s...]" regular-status operations-text)
               regular-status)))
@@ -633,9 +633,9 @@ When streaming is enabled, responses appear token by token in real time.
 When disabled, responses only appear after completion."
   (interactive)
   (setq ollama-buddy-streaming-enabled (not ollama-buddy-streaming-enabled))
-  (ollama-buddy--update-status 
+  (ollama-buddy--update-status
    (if ollama-buddy-streaming-enabled "Streaming enabled" "Streaming disabled"))
-  (message "Ollama Buddy streaming mode: %s" 
+  (message "Ollama Buddy streaming mode: %s"
            (if ollama-buddy-streaming-enabled "enabled" "disabled")))
 
 (defun ollama-buddy-openai--is-openai-model (model)
@@ -934,7 +934,7 @@ When complete, CALLBACK is called with the status response and result."
           (url-request-data (when payload (encode-coding-string payload 'utf-8)))
           (url (format "http://%s:%d%s"
                        ollama-buddy-host ollama-buddy-port endpoint)))
-      (url-retrieve url 
+      (url-retrieve url
                     (lambda (status)
                       (let ((result nil))
                         (unless (plist-get status :error)
@@ -944,7 +944,7 @@ When complete, CALLBACK is called with the status response and result."
                           (when (and (not (= (point) (point-max)))
                                      (not (string-empty-p (buffer-substring-no-properties (point) (point-max)))))
                             (condition-case err
-                                (setq result (json-read-from-string 
+                                (setq result (json-read-from-string
                                               (buffer-substring-no-properties (point) (point-max))))
                               (error
                                ;; If JSON parsing fails, just return the raw response
@@ -1003,9 +1003,9 @@ When complete, CALLBACK is called with the status response and result."
 
 (defun ollama-buddy--refresh-models-cache ()
   "Refresh the models cache in the background."
-  (ollama-buddy--make-request-async 
-   "/api/tags" 
-   "GET" 
+  (ollama-buddy--make-request-async
+   "/api/tags"
+   "GET"
    nil
    (lambda (status result)
      (unless (plist-get status :error)
@@ -1042,9 +1042,9 @@ When complete, CALLBACK is called with the status response and result."
 
 (defun ollama-buddy--refresh-colors-cache ()
   "Refresh the model colors cache in the background."
-  (ollama-buddy--make-request-async 
-   "/api/tags" 
-   "GET" 
+  (ollama-buddy--make-request-async
+   "/api/tags"
+   "GET"
    nil
    (lambda (status result)
      (unless (plist-get status :error)
@@ -1074,9 +1074,9 @@ When complete, CALLBACK is called with the status response and result."
 
 (defun ollama-buddy--refresh-running-models-cache ()
   "Refresh the running models cache in the background."
-  (ollama-buddy--make-request-async 
-   "/api/ps" 
-   "GET" 
+  (ollama-buddy--make-request-async
+   "/api/ps"
+   "GET"
    nil
    (lambda (status result)
      (unless (plist-get status :error)
@@ -1206,9 +1206,9 @@ When complete, CALLBACK is called with the status response and result."
       (puthash (car pair) (cdr pair) ollama-buddy--model-colors))
     
     ;; Also refresh in background
-    (ollama-buddy--make-request-async 
-     "/api/tags" 
-     "GET" 
+    (ollama-buddy--make-request-async
+     "/api/tags"
+     "GET"
      nil
      (lambda (status result)
        (unless (plist-get status :error)

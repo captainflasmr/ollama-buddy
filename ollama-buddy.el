@@ -87,8 +87,7 @@
   "Move point to the beginning of the current prompt in the Ollama Buddy chat buffer."
   (interactive)
   (if (eq major-mode 'org-mode)
-      (let ((line-end (line-end-position))
-            (prompt-start
+      (let ((prompt-start
              (save-excursion
                (beginning-of-line)
                (when (re-search-forward ">> \\(?:PROMPT\\|SYSTEM PROMPT\\):" (line-end-position) t)

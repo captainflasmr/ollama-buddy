@@ -16,6 +16,7 @@
 
 (declare-function ollama-buddy--send "ollama-buddy")
 (declare-function ollama-buddy--prepare-prompt-area "ollama-buddy")
+(declare-function ollama-buddy--open-chat "ollama-buddy")
 
 (defgroup ollama-buddy-awesome nil
   "Customization group for ollama-buddy-awesome."
