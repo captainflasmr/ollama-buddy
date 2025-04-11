@@ -247,6 +247,9 @@ Can be 'display for the readable view or 'edit for the editable view.")
      ;; Switch from display to edit mode
      ((eq ollama-buddy--history-view-mode 'display)
       (erase-buffer)
+      (buffer-disable-undo)
+      (buffer-enable-undo)
+      (read-only-mode -1)
       (emacs-lisp-mode)
       (visual-line-mode 1)
       
@@ -264,6 +267,7 @@ Can be 'display for the readable view or 'edit for the editable view.")
       ;; Update mode and keys
       (setq-local ollama-buddy--history-view-mode 'edit)
       (setq-local ollama-buddy-editing-history t)
+      (use-local-map ollama-buddy-history-view-mode-map)
       (local-set-key (kbd "C-c C-c") 'ollama-buddy-history-save)
       (setq header-line-format "Edit history and press C-c C-c to save, C-x C-q to cancel edit mode, C-c C-k to cancel")
       (message "Now in edit mode. Press C-c C-c to save, C-x C-q to go back to view mode, C-c C-k to cancel"))
@@ -305,6 +309,8 @@ Can be 'display for the readable view or 'edit for the editable view.")
       ;; Update mode and header
       (setq-local ollama-buddy--history-view-mode 'display)
       (setq-local ollama-buddy-editing-history nil)
+      ;; Restore original keymap
+      (use-local-map ollama-buddy-history-view-mode-map)
       (setq header-line-format "Press C-x C-q to edit, C-c C-k to cancel")
       (message "Viewing mode. Press C-x C-q to edit, C-c C-k to cancel")))))
 
@@ -383,6 +389,7 @@ Press C-x C-q to toggle between viewing and editing modes."
         ;; Provide feedback and clean up
         (message "History saved successfully")
         (kill-buffer)
+        (ollama-buddy-history-edit)
         (ollama-buddy--update-status "History Updated"))
     (error
      (message "Error saving history: %s" (error-message-string err)))))
@@ -402,6 +409,9 @@ Press C-x C-q to toggle between viewing and editing modes."
      ;; Switch from display to edit mode
      ((eq ollama-buddy--history-view-mode 'display)
       (erase-buffer)
+      (buffer-disable-undo)
+      (buffer-enable-undo)
+      (read-only-mode -1)
       (emacs-lisp-mode)
       (visual-line-mode 1)
       
@@ -460,6 +470,11 @@ Press C-x C-q to toggle between viewing and editing modes."
       ;; Update mode and header
       (setq-local ollama-buddy--history-view-mode 'display)
       (setq-local ollama-buddy-editing-history nil)
+      ;; Restore original keymap
+      (use-local-map ollama-buddy-history-model-view-mode-map)
+      (local-set-key (kbd "C-x C-q") 
+                    (lambda () (interactive)
+                      (ollama-buddy-history-toggle-edit-model model)))
       (setq header-line-format 
             (format "History for %s - Press C-x C-q to edit, C-c C-k to cancel" model))
       (message "Viewing mode. Press C-x C-q to edit, C-c C-k to cancel")))))
@@ -538,7 +553,7 @@ Press C-x C-q to toggle between viewing and editing modes."
         
         ;; Provide feedback and clean up
         (message "History for %s saved successfully" model)
-        (kill-buffer)
+        ;; (kill-buffer)
         (ollama-buddy--update-status (format "History for %s Updated" model)))
     (error
      (message "Error saving history: %s" (error-message-string err)))))
@@ -3132,6 +3147,10 @@ When the operation completes, CALLBACK is called with no arguments if provided."
                     ;; Otherwise, create a new window
                     (t
                      (display-buffer-pop-up-window buffer alist)))))))
+
+(add-to-list 'display-buffer-alist
+             '("\\*Ollama History Edit\\*"
+               (display-buffer-reuse-window)))
 
 (provide 'ollama-buddy)
 ;;; ollama-buddy.el ends here
