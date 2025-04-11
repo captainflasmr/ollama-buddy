@@ -8,6 +8,10 @@
 
 * Features as they come in
 
+** <2025-04-11> *0.9.21*
+
+Add history edit/view toggle features, so effectively merging the former history display into the history edit functionality.
+
 ** <2025-04-04> *0.9.20*
 
 - Added =ollama-buddy-awesome.el= to integrate Awesome ChatGPT Prompts.
