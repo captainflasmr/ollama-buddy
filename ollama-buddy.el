@@ -388,7 +388,7 @@ Press C-x C-q to toggle between viewing and editing modes."
         
         ;; Provide feedback and clean up
         (message "History saved successfully")
-        (kill-buffer)
+        ;; (kill-buffer)
         (ollama-buddy-history-edit)
         (ollama-buddy--update-status "History Updated"))
     (error
@@ -399,6 +399,7 @@ Press C-x C-q to toggle between viewing and editing modes."
   (interactive)
   (when (y-or-n-p "Cancel editing? Changes will be lost.  ?")
     (kill-buffer)
+    ;; (ollama-buddy-display-history)
     (message "History editing cancelled")))
 
 (defun ollama-buddy-history-toggle-edit-model (model)
@@ -537,10 +538,8 @@ Press C-x C-q to toggle between viewing and editing modes."
   "Save the edited history for MODEL back to variable."
   (interactive)
   (unless (and (boundp 'ollama-buddy-editing-history)
-               ollama-buddy-editing-history
-               (boundp 'ollama-buddy-editing-model)
-               (string= ollama-buddy-editing-model model))
-    (user-error "Not editing history for model %s" model))
+               ollama-buddy-editing-history)
+    (user-error "Not editing history for model %s but for %s" model))
   
   (condition-case err
       (let ((edited-history (read (buffer-string))))
@@ -550,6 +549,8 @@ Press C-x C-q to toggle between viewing and editing modes."
         
         ;; Update the specific model's history
         (puthash model edited-history ollama-buddy--conversation-history-by-model)
+
+        (ollama-buddy-history-edit-model model)
         
         ;; Provide feedback and clean up
         (message "History for %s saved successfully" model)
@@ -1280,55 +1281,6 @@ With prefix argument ALL-MODELS, clear history for all models."
    (if ollama-buddy-history-enabled "History enabled" "History disabled"))
   (message "Ollama conversation history %s"
            (if ollama-buddy-history-enabled "enabled" "disabled")))
-
-(defun ollama-buddy-display-history ()
-  "Display the conversation history in a buffer."
-  (interactive)
-  (let ((buf (get-buffer-create "*Ollama Conversation History*")))
-    (with-current-buffer buf
-      (let ((inhibit-read-only t))
-        (visual-line-mode 1)
-        (erase-buffer)
-        (cond
-         ((= (prefix-numeric-value current-prefix-arg) 4)
-          (let* ((model ollama-buddy--current-model)
-                 (history (gethash model ollama-buddy--conversation-history-by-model nil)))
-            (if (null history)
-                (insert (format "No conversation history available for model %s." model))
-              (let ((history-count (/ (length history) 2)))
-                (insert (format "Current history for %s: %d message pairs\n\n"
-                                model history-count))
-                ;; Display the history in chronological order
-                (dolist (msg history)
-                  (let* ((role (alist-get 'role msg))
-                         (content (alist-get 'content msg))
-                         (role-face (if (string= role "user")
-                                        '(:inherit bold)
-                                      '(:inherit bold))))
-                    (insert (propertize (format "[%s]: " (upcase role)) 'face role-face))
-                    (insert (format "%s\n\n" content))))))))
-         (t
-          (insert "Ollama Conversation History:\n\n")
-          ;; Display history for all models
-          (if (= (hash-table-count ollama-buddy--conversation-history-by-model) 0)
-              (insert "No conversation history available for any model.")
-            (maphash
-             (lambda (model history)
-               (let ((history-count (/ (length history) 2)))
-                 (insert (format "== Model: %s (%d message pairs) ==\n\n"
-                                 model history-count))
-                 (dolist (msg history)
-                   (let* ((role (alist-get 'role msg))
-                          (content (alist-get 'content msg))
-                          (role-face (if (string= role "user")
-                                         '(:inherit bold)
-                                       '(:inherit bold))))
-                     (insert (propertize (format "[%s]: " (upcase role)) 'face role-face))
-                     (insert (format "%s\n\n" content))))
-                 (insert "\n")))
-             ollama-buddy--conversation-history-by-model))))
-        (view-mode 1)))
-    (display-buffer buf)))
 
 (defun ollama-buddy--update-token-rate-display ()
   "Update the token rate display in real-time."
@@ -2250,7 +2202,7 @@ With prefix argument ALL-MODELS, clear history for all models."
 - Toggle Streaming                    C-c x
 - System Prompt Set/Show/Reset        C-c s/C-s/r
 - Param Menu/Profiles/Show/Help/Reset C-c P/p/G/I/K
-- History Toggle/Clear/Show/Edit      C-c H/X/V/J
+- History Toggle/Clear/Show/Edit      C-c H/X/J
 - Session New/Load/Save/List/Delete   C-c N/L/S/Q/Z
 - Role Switch/Create/Directory        C-c R/E/D
 - Fabric Patterns Menu                C-c f
@@ -3096,7 +3048,6 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     ;; History keybindings
     (define-key map (kbd "C-c H") #'ollama-buddy-toggle-history)
     (define-key map (kbd "C-c X") #'ollama-buddy-clear-history)
-    (define-key map (kbd "C-c V") #'ollama-buddy-display-history)
     (define-key map (kbd "C-c J") #'ollama-buddy-history-edit)
     (define-key map (kbd "M-p") #'ollama-buddy-previous-history)  ;; Keep these existing bindings
     (define-key map (kbd "M-n") #'ollama-buddy-next-history)
