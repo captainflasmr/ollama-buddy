@@ -78,8 +78,7 @@
 (declare-function ollama-buddy-claude--send "ollama-buddy-claude")
 
 (defvar-local ollama-buddy--history-view-mode 'display
-  "Current mode of the history buffer.
-Can be 'display for the readable view or 'edit for the editable view.")
+  "Current mode of the history buffer.")
 
 (defvar ollama-buddy-history-model-view-mode-map
   (let ((map (make-sparse-keymap)))
@@ -101,7 +100,7 @@ Can be 'display for the readable view or 'edit for the editable view.")
   "The current response text being accumulated.")
 
 (defun ollama-buddy-beginning-of-prompt ()
-  "Move point to the beginning of the current prompt in the Ollama Buddy chat buffer."
+  "Move point to the beginning of the current prompt."
   (interactive)
   (if (eq major-mode 'org-mode)
       (let ((prompt-start
@@ -315,9 +314,7 @@ Can be 'display for the readable view or 'edit for the editable view.")
       (message "Viewing mode. Press C-x C-q to edit, C-c C-k to cancel")))))
 
 (defun ollama-buddy-history-edit ()
-  "View and edit the conversation history in a buffer.
-Initially displays a human-readable format.
-Press C-x C-q to toggle between viewing and editing modes."
+  "View and edit the conversation history in a buffer."
   (interactive)
   (cond
    ;; C-u M-x ollama-buddy-history-edit - Edit a specific model's history
@@ -473,17 +470,15 @@ Press C-x C-q to toggle between viewing and editing modes."
       (setq-local ollama-buddy-editing-history nil)
       ;; Restore original keymap
       (use-local-map ollama-buddy-history-model-view-mode-map)
-      (local-set-key (kbd "C-x C-q") 
+      (local-set-key (kbd "C-x C-q")
                     (lambda () (interactive)
                       (ollama-buddy-history-toggle-edit-model model)))
-      (setq header-line-format 
+      (setq header-line-format
             (format "History for %s - Press C-x C-q to edit, C-c C-k to cancel" model))
       (message "Viewing mode. Press C-x C-q to edit, C-c C-k to cancel")))))
 
 (defun ollama-buddy-history-edit-model (model)
-  "Edit the conversation history for a specific MODEL.
-Initially displays a human-readable format.
-Press C-x C-q to toggle between viewing and editing modes."
+  "Edit the conversation history for a specific MODEL."
   (interactive
    (list (completing-read "Edit history for model: "
                           (let ((models nil))
@@ -519,14 +514,14 @@ Press C-x C-q to toggle between viewing and editing modes."
       
       ;; Set up local keys for toggle and canceling
       (use-local-map ollama-buddy-history-model-view-mode-map)
-      (local-set-key (kbd "C-x C-q") 
+      (local-set-key (kbd "C-x C-q")
                      (lambda () (interactive)
                        (ollama-buddy-history-toggle-edit-model model)))
       
       ;; Set buffer-local variables
       (setq-local ollama-buddy-editing-history nil)
       (setq-local ollama-buddy-editing-model model)
-      (setq header-line-format 
+      (setq header-line-format
             (format "History for %s - Press C-x C-q to edit, C-c C-k to cancel" model)))
     
     ;; Display the buffer
@@ -539,7 +534,7 @@ Press C-x C-q to toggle between viewing and editing modes."
   (interactive)
   (unless (and (boundp 'ollama-buddy-editing-history)
                ollama-buddy-editing-history)
-    (user-error "Not editing history for model %s but for %s" model))
+    (user-error "Not editing history for model %s" model))
   
   (condition-case err
       (let ((edited-history (read (buffer-string))))
