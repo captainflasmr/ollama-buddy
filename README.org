@@ -96,6 +96,10 @@ See *Screenshots / Demos* section for more videos/demonstration.
 
 * Whats New
 
+** <2025-04-11> *0.9.21*
+
+Add history edit/view toggle features, so effectively merging the former history display into the history edit functionality.
+
 ** <2025-04-04> *0.9.20*
 
 - Added =ollama-buddy-awesome.el= to integrate Awesome ChatGPT Prompts.
@@ -272,8 +276,8 @@ x  Toggle Streaming
 [Display Options]          [History]              [Sessions]             [Parameters]
 A  Toggle Interface Level  H  Toggle History      N  New Session         P  Edit Parameter
 B  Toggle Debug Mode       X  Clear History       L  Load Session        G  Display Parameters
-T  Toggle Token Display    V  Display History     S  Save Session        I  Parameter Help
-u  Token Stats             J  Edit History        Q  List Sessions       K  Reset Parameters
+T  Toggle Token Display    J  Edit History        S  Save Session        I  Parameter Help
+u  Token Stats                                    Q  List Sessions       K  Reset Parameters
 U  Token Usage Graph                              Z  Delete Session      F  Toggle Params in Header
 C-o Toggle Markdown->Org                                                 p  Parameter Profiles
 c  Toggle Model Colors                                                   
@@ -353,7 +357,6 @@ Commands for managing conversation history:
 
 - *Toggle History (H)*: Enable/disable conversation history
 - *Clear History (X)*: Clear the current history
-- *Display History (V)*: Show the conversation history
 - *Edit History (J)*: Edit the history in a buffer
 
 *** Sessions Section
@@ -671,7 +674,6 @@ OR
 | C-c W           | Delete session                          |
 | C-c H           | Toggle history                          |
 | C-c X           | Clear history                           |
-| C-c V           | Show history                            |
 | C-c E           | Edit history                            |
 | C-c l           | Prompt to multiple models               |
 | C-c P           | Edit parameters                         |
@@ -761,7 +763,6 @@ Control this feature with:
 History-related commands:
 - =C-c H=: Toggle history tracking on/off
 - =C-c X=: Clear the current conversation history
-- =C-c V=: View the full conversation history in a dedicated buffer
 - =C-c E=: Edit conversation history (universal argument to edit specific model)
 
 ** Parameter Management
