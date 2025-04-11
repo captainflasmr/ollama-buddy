@@ -1394,14 +1394,14 @@ CLOSED: [2025-03-29 Sat 13:34]
 #+RESULTS:
 | TODO                                | DOING                              | DONE                                       |
 |-------------------------------------+------------------------------------+--------------------------------------------|
-| Add gemini?                         | Core Params - suffix               | Method for securely storing API keys       |
-| Pull ChatGPT and Claude model names | Show incoming ollama messages      | Core API - Delete Model                    |
-| Merge history buffer functionality  | Add chatGPT awesome prompt support | Core API - Copy a model                    |
-| Core API - Embeddings               | Add fabric pattern/prompt support  | Core API - stream                          |
-| Core Params - format                | ChatGPT support                    | Core API - Pull/Info/Pull/Delete a model   |
-| Core Params - template              | Claude support                     | Core API - Show running models             |
-| Core Params - raw                   |                                    | Core API - Create a model from a GGUF file |
-| Test on Windows                     |                                    | Add transient menu                         |
+| Add gemini?                         | Merge history buffer functionality | Method for securely storing API keys       |
+| Pull ChatGPT and Claude model names | Core Params - suffix               | Core API - Delete Model                    |
+| Core API - Embeddings               | Show incoming ollama messages      | Core API - Copy a model                    |
+| Core Params - format                | Add chatGPT awesome prompt support | Core API - stream                          |
+| Core Params - template              | Add fabric pattern/prompt support  | Core API - Pull/Info/Pull/Delete a model   |
+| Core Params - raw                   | ChatGPT support                    | Core API - Show running models             |
+| Test on Windows                     | Claude support                     | Core API - Create a model from a GGUF file |
+|                                     |                                    | Add transient menu                         |
 |                                     |                                    | History editing                            |
 |                                     |                                    | Core API - options - parameter editing     |
 |                                     |                                    | Core API - show model information          |
@@ -1417,11 +1417,11 @@ CLOSED: [2025-03-29 Sat 13:34]
 |                                     |                                    | Real time token tracking                   |
 |                                     |                                    | Managing chat history and context          |
 
+** DOING Merge history buffer functionality
+
 ** TODO Add gemini?
 
 ** TODO Pull ChatGPT and Claude model names
-
-** TODO Merge history buffer functionality
 
 ** TODO Core API - Embeddings
 
