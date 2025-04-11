@@ -77,6 +77,23 @@
 (declare-function ollama-buddy-openai--send "ollama-buddy-openai")
 (declare-function ollama-buddy-claude--send "ollama-buddy-claude")
 
+(defvar-local ollama-buddy--history-view-mode 'display
+  "Current mode of the history buffer.
+Can be 'display for the readable view or 'edit for the editable view.")
+
+(defvar ollama-buddy-history-model-view-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-k") 'ollama-buddy-history-cancel)
+    map)
+  "Keymap for model-specific history viewing mode.")
+
+(defvar ollama-buddy-history-view-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-x C-q") 'ollama-buddy-history-toggle-edit-mode)
+    (define-key map (kbd "C-c C-k") 'ollama-buddy-history-cancel)
+    map)
+  "Keymap for history viewing mode.")
+
 (defvar ollama-buddy--start-point nil
   "General store of a starting point.")
 
@@ -222,46 +239,124 @@
       (view-mode 1))
     (display-buffer buf)))
 
+(defun ollama-buddy-history-toggle-edit-mode ()
+  "Toggle between viewing and editing modes for history."
+  (interactive)
+  (let ((inhibit-read-only t))
+    (cond
+     ;; Switch from display to edit mode
+     ((eq ollama-buddy--history-view-mode 'display)
+      (erase-buffer)
+      (emacs-lisp-mode)
+      (visual-line-mode 1)
+      
+      ;; Convert the hashtable to an alist for easier editing
+      (let ((history-alist nil))
+        (maphash (lambda (k v)
+                   (push (cons k v) history-alist))
+                 ollama-buddy--conversation-history-by-model)
+        
+        ;; Insert the pretty-printed history
+        (let ((print-level nil)
+              (print-length nil))
+          (pp (nreverse history-alist) (current-buffer))))
+      
+      ;; Update mode and keys
+      (setq-local ollama-buddy--history-view-mode 'edit)
+      (setq-local ollama-buddy-editing-history t)
+      (local-set-key (kbd "C-c C-c") 'ollama-buddy-history-save)
+      (setq header-line-format "Edit history and press C-c C-c to save, C-x C-q to cancel edit mode, C-c C-k to cancel")
+      (message "Now in edit mode. Press C-c C-c to save, C-x C-q to go back to view mode, C-c C-k to cancel"))
+     
+     ;; Switch from edit to display mode
+     ((eq ollama-buddy--history-view-mode 'edit)
+      ;; If there are unsaved changes, confirm before switching back
+      (when (and (buffer-modified-p)
+                 (not (y-or-n-p "Discard unsaved changes? ")))
+        (message "Edit mode maintained")
+        (cl-return-from ollama-buddy-history-toggle-edit-mode))
+      
+      ;; Switch back to display mode
+      (erase-buffer)
+      (fundamental-mode)
+      (visual-line-mode 1)
+      
+      ;; Re-display the history in human-readable format
+      (if (= (hash-table-count ollama-buddy--conversation-history-by-model) 0)
+          (insert "No conversation history available for any model.")
+        ;; Show all model histories
+        (insert "Ollama Conversation History:\n\n")
+        (maphash
+         (lambda (model history)
+           (let ((history-count (/ (length history) 2)))
+             (insert (format "== Model: %s (%d message pairs) ==\n\n"
+                             model history-count))
+             (dolist (msg history)
+               (let* ((role (alist-get 'role msg))
+                      (content (alist-get 'content msg))
+                      (role-face (if (string= role "user")
+                                     '(:inherit bold)
+                                   '(:inherit bold))))
+                 (insert (propertize (format "[%s]: " (upcase role)) 'face role-face))
+                 (insert (format "%s\n\n" content))))
+             (insert "\n")))
+         ollama-buddy--conversation-history-by-model))
+      
+      ;; Update mode and header
+      (setq-local ollama-buddy--history-view-mode 'display)
+      (setq-local ollama-buddy-editing-history nil)
+      (setq header-line-format "Press C-x C-q to edit, C-c C-k to cancel")
+      (message "Viewing mode. Press C-x C-q to edit, C-c C-k to cancel")))))
+
 (defun ollama-buddy-history-edit ()
-  "Edit the conversation history in a buffer."
+  "View and edit the conversation history in a buffer.
+Initially displays a human-readable format.
+Press C-x C-q to toggle between viewing and editing modes."
   (interactive)
   (cond
+   ;; C-u M-x ollama-buddy-history-edit - Edit a specific model's history
    ((= (prefix-numeric-value current-prefix-arg) 4)
     (call-interactively 'ollama-buddy-history-edit-model))
    (t
     (let ((buf (get-buffer-create ollama-buddy--history-edit-buffer)))
       (with-current-buffer buf
         (erase-buffer)
-        (emacs-lisp-mode)
+        (view-mode -1) ;; Ensure view-mode is off
         (visual-line-mode 1)
+        (setq-local ollama-buddy--history-view-mode 'display)
         
-        (when (= (hash-table-count ollama-buddy--conversation-history-by-model) 0)
-          (insert "No conversation history available for any model. "))
+        ;; Display the history in human-readable format initially
+        (if (= (hash-table-count ollama-buddy--conversation-history-by-model) 0)
+            (insert "No conversation history available for any model.")
+          ;; Show all model histories
+          (insert "Ollama Conversation History:\n\n")
+          (maphash
+           (lambda (model history)
+             (let ((history-count (/ (length history) 2)))
+               (insert (format "== Model: %s (%d message pairs) ==\n\n"
+                               model history-count))
+               (dolist (msg history)
+                 (let* ((role (alist-get 'role msg))
+                        (content (alist-get 'content msg))
+                        (role-face (if (string= role "user")
+                                       '(:inherit bold)
+                                     '(:inherit bold))))
+                   (insert (propertize (format "[%s]: " (upcase role)) 'face role-face))
+                   (insert (format "%s\n\n" content))))
+               (insert "\n")))
+           ollama-buddy--conversation-history-by-model))
         
-        ;; Convert the hashtable to an alist for easier editing
-        (let ((history-alist nil))
-          (maphash (lambda (k v)
-                     (push (cons k v) history-alist))
-                   ollama-buddy--conversation-history-by-model)
-          
-          ;; Insert the pretty-printed history
-          (let ((print-level nil)
-                (print-length nil))
-            (pp (nreverse history-alist) (current-buffer))))
+        ;; Set up local keys for toggle and canceling
+        (use-local-map ollama-buddy-history-view-mode-map)
         
-        ;; Set up local keys for saving or canceling
-        (use-local-map (copy-keymap emacs-lisp-mode-map))
-        (local-set-key (kbd "C-c C-c") 'ollama-buddy-history-save)
-        (local-set-key (kbd "C-c C-k") 'ollama-buddy-history-cancel)
-        
-        ;; Set buffer-local variables to identify this as a history edit buffer
-        (setq-local ollama-buddy-editing-history t)
-        (setq header-line-format "Edit history and press C-c C-c to save, C-c C-k to cancel"))
+        ;; Set buffer-local variables
+        (setq-local ollama-buddy-editing-history nil)
+        (setq header-line-format "Press C-x C-q to edit, C-c C-k to cancel"))
       
       ;; Display the buffer
       (pop-to-buffer buf)
       (goto-char (point-min))
-      (message "Edit history and press C-c C-c to save, C-c C-k to cancel")))))
+      (message "Press C-x C-q to edit history, C-c C-k to cancel")))))
 
 (defun ollama-buddy-history-save ()
   "Save the edited history back to `ollama-buddy--conversation-history-by-model'."
@@ -299,8 +394,80 @@
     (kill-buffer)
     (message "History editing cancelled")))
 
+(defun ollama-buddy-history-toggle-edit-model (model)
+  "Toggle between viewing and editing modes for MODEL history."
+  (interactive)
+  (let ((inhibit-read-only t))
+    (cond
+     ;; Switch from display to edit mode
+     ((eq ollama-buddy--history-view-mode 'display)
+      (erase-buffer)
+      (emacs-lisp-mode)
+      (visual-line-mode 1)
+      
+      ;; Get just this model's history
+      (let ((model-history (gethash model ollama-buddy--conversation-history-by-model nil)))
+        (insert (format ";; Ollama Buddy Conversation History Editor for model: %s\n" model))
+        
+        ;; Insert the pretty-printed history
+        (let ((print-level nil)
+              (print-length nil))
+          (pp model-history (current-buffer))))
+      
+      ;; Update mode and keys
+      (setq-local ollama-buddy--history-view-mode 'edit)
+      (setq-local ollama-buddy-editing-history t)
+      (local-set-key (kbd "C-c C-c")
+                     (lambda () (interactive)
+                       (ollama-buddy-history-save-model model)))
+      
+      (setq header-line-format
+            (format "Edit history for %s - Press C-c C-c to save, C-x C-q to cancel edit mode, C-c C-k to cancel" model))
+      (message "Now in edit mode. Press C-c C-c to save, C-x C-q to go back to view mode, C-c C-k to cancel"))
+     
+     ;; Switch from edit to display mode
+     ((eq ollama-buddy--history-view-mode 'edit)
+      ;; If there are unsaved changes, confirm before switching back
+      (when (and (buffer-modified-p)
+                 (not (y-or-n-p "Discard unsaved changes? ")))
+        (message "Edit mode maintained")
+        (cl-return-from ollama-buddy-history-toggle-edit-model))
+      
+      ;; Switch back to display mode
+      (erase-buffer)
+      (fundamental-mode)
+      (visual-line-mode 1)
+      
+      ;; Get this model's history
+      (let ((model-history (gethash model ollama-buddy--conversation-history-by-model nil)))
+        ;; Display the history in human-readable format
+        (insert (format "Conversation History for model: %s\n\n" model))
+        
+        (if (null model-history)
+            (insert (format "No conversation history available for model %s." model))
+          (let ((history-count (/ (length model-history) 2)))
+            (insert (format "History contains %d message pairs\n\n" history-count))
+            ;; Display the history in chronological order
+            (dolist (msg model-history)
+              (let* ((role (alist-get 'role msg))
+                     (content (alist-get 'content msg))
+                     (role-face (if (string= role "user")
+                                    '(:inherit bold)
+                                  '(:inherit bold))))
+                (insert (propertize (format "[%s]: " (upcase role)) 'face role-face))
+                (insert (format "%s\n\n" content)))))))
+      
+      ;; Update mode and header
+      (setq-local ollama-buddy--history-view-mode 'display)
+      (setq-local ollama-buddy-editing-history nil)
+      (setq header-line-format 
+            (format "History for %s - Press C-x C-q to edit, C-c C-k to cancel" model))
+      (message "Viewing mode. Press C-x C-q to edit, C-c C-k to cancel")))))
+
 (defun ollama-buddy-history-edit-model (model)
-  "Edit the conversation history for a specific MODEL."
+  "Edit the conversation history for a specific MODEL.
+Initially displays a human-readable format.
+Press C-x C-q to toggle between viewing and editing modes."
   (interactive
    (list (completing-read "Edit history for model: "
                           (let ((models nil))
@@ -311,37 +478,45 @@
   (let ((buf (get-buffer-create ollama-buddy--history-edit-buffer)))
     (with-current-buffer buf
       (erase-buffer)
-      (emacs-lisp-mode)
+      (view-mode -1) ;; Ensure view-mode is off
       (visual-line-mode 1)
-      (insert (format ";; Ollama Buddy Conversation History Editor for model: %s\n" model))
+      (setq-local ollama-buddy--history-view-mode 'display)
 
-      (when (= (hash-table-count ollama-buddy--conversation-history-by-model) 0)
-        (insert "No conversation history available for any model. "))
-      
-      ;; Get just this model's history
+      ;; Get this model's history
       (let ((model-history (gethash model ollama-buddy--conversation-history-by-model nil)))
-        ;; Insert the pretty-printed history
-        (let ((print-level nil)
-              (print-length nil))
-          (pp model-history (current-buffer))))
+        ;; Display the history in human-readable format initially
+        (insert (format "Conversation History for model: %s\n\n" model))
+        
+        (if (null model-history)
+            (insert (format "No conversation history available for model %s." model))
+          (let ((history-count (/ (length model-history) 2)))
+            (insert (format "History contains %d message pairs\n\n" history-count))
+            ;; Display the history in chronological order
+            (dolist (msg model-history)
+              (let* ((role (alist-get 'role msg))
+                     (content (alist-get 'content msg))
+                     (role-face (if (string= role "user")
+                                    '(:inherit bold)
+                                  '(:inherit bold))))
+                (insert (propertize (format "[%s]: " (upcase role)) 'face role-face))
+                (insert (format "%s\n\n" content)))))))
       
-      ;; Set up local keys for saving or canceling
-      (use-local-map (copy-keymap emacs-lisp-mode-map))
-      (local-set-key (kbd "C-c C-c")
+      ;; Set up local keys for toggle and canceling
+      (use-local-map ollama-buddy-history-model-view-mode-map)
+      (local-set-key (kbd "C-x C-q") 
                      (lambda () (interactive)
-                       (ollama-buddy-history-save-model model)))
-      (local-set-key (kbd "C-c C-k") 'ollama-buddy-history-cancel)
+                       (ollama-buddy-history-toggle-edit-model model)))
       
-      ;; Set buffer-local variables to identify this as a history edit buffer
-      (setq-local ollama-buddy-editing-history t)
+      ;; Set buffer-local variables
+      (setq-local ollama-buddy-editing-history nil)
       (setq-local ollama-buddy-editing-model model)
-      (setq header-line-format
-            (format "Edit history for %s and press C-c C-c to save, C-c C-k to cancel" model)))
+      (setq header-line-format 
+            (format "History for %s - Press C-x C-q to edit, C-c C-k to cancel" model)))
     
     ;; Display the buffer
     (pop-to-buffer buf)
     (goto-char (point-min))
-    (message "Edit history and press C-c C-c to save, C-c C-k to cancel")))
+    (message "Press C-x C-q to edit history, C-c C-k to cancel")))
 
 (defun ollama-buddy-history-save-model (model)
   "Save the edited history for MODEL back to variable."
