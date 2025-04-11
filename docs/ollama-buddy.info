@@ -767,8 +767,8 @@ To see a list of all saved sessions:
 Sessions save the conversation history for each model separately.
 
    To view the current conversation history:
-     M-x ollama-buddy-display-history
-   or press ‘C-c V’ in the chat buffer.
+     M-x ollama-buddy-history-edit
+   or press ‘C-c J’ in the chat buffer.
 
    To clear the history:
      M-x ollama-buddy-clear-history
@@ -1328,7 +1328,7 @@ File: ollama-buddy.info,  Node: API Reference,  Next: FAQ,  Prev: Advanced Usage
 ‘ollama-buddy-clear-history’
      Clear the conversation history.
 
-‘ollama-buddy-display-history’
+‘ollama-buddy-history-edit’
      Display the conversation history.
 
 ‘ollama-buddy-roles-switch-role’
@@ -1710,16 +1710,16 @@ Node: Chat Interface14249
 Node: Working with Models16292
 Node: Parameter Control18986
 Node: Session Management21376
-Node: Roles and Commands23373
-Node: Fabric Pattern Integration25800
-Node: Awesome ChatGPT Prompts28027
-Node: ChatGPT and Claude Support31887
-Node: Advanced Usage35342
-Node: API Reference38040
-Node: FAQ41813
-Node: Troubleshooting45745
-Node: Contributing48250
-Node: Index50207
+Node: Roles and Commands23370
+Node: Fabric Pattern Integration25797
+Node: Awesome ChatGPT Prompts28024
+Node: ChatGPT and Claude Support31884
+Node: Advanced Usage35339
+Node: API Reference38037
+Node: FAQ41807
+Node: Troubleshooting45739
+Node: Contributing48244
+Node: Index50201
 
 End Tag Table
 

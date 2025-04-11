@@ -832,9 +832,9 @@ Sessions save the conversation history for each model separately.
 
 To view the current conversation history:
 @example
-M-x ollama-buddy-display-history
+M-x ollama-buddy-history-edit
 @end example
-or press @code{C-c V} in the chat buffer.
+or press @code{C-c J} in the chat buffer.
 
 To clear the history:
 @example
@@ -1435,7 +1435,7 @@ Toggle conversation history on/off.
 @item ollama-buddy-clear-history
 Clear the conversation history.
 
-@item ollama-buddy-display-history
+@item ollama-buddy-history-edit
 Display the conversation history.
 
 @item ollama-buddy-roles-switch-role

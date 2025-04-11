@@ -1305,10 +1305,10 @@ Sessions save the conversation history for each model separately.
 To view the current conversation history:
 
 #+begin_src example-preformatted
-M-x ollama-buddy-display-history
+M-x ollama-buddy-history-edit
 #+end_src
 
-or press =C-c V= in the chat buffer.
+or press =C-c J= in the chat buffer.
 
 To clear the history:
 
@@ -2239,7 +2239,7 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 
 - =ollama-buddy-clear-history= :: Clear the conversation history.
 
-- =ollama-buddy-display-history= :: Display the conversation history.
+- =ollama-buddy-history-edit= :: Display the conversation history.
 
 - =ollama-buddy-roles-switch-role= :: Switch to a different role.
 
