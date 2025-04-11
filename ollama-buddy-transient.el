@@ -46,7 +46,6 @@
 (declare-function ollama-buddy-display-token-graph "ollama-buddy")
 (declare-function ollama-buddy-toggle-history "ollama-buddy")
 (declare-function ollama-buddy-clear-history "ollama-buddy")
-(declare-function ollama-buddy-display-history "ollama-buddy")
 (declare-function ollama-buddy-history-edit "ollama-buddy")
 (declare-function ollama-buddy-sessions-new "ollama-buddy")
 (declare-function ollama-buddy-sessions-load "ollama-buddy")
@@ -120,7 +119,6 @@
    ["History"
     ("H" "Toggle History" ollama-buddy-toggle-history)
     ("X" "Clear History" ollama-buddy-clear-history)
-    ("V" "Display History" ollama-buddy-display-history)
     ("J" "Edit History" ollama-buddy-history-edit)
     ]
    
