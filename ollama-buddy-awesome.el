@@ -316,8 +316,8 @@ of the awesome-chatgpt-prompts CSV file."
                         ;; The rest is the prompt content
                         (when (< (point) (point-max))
                           (let* ((start (if (eq (char-after) ?\")
-                                           (progn (forward-char) (point))
-                                         (point)))
+                                            (progn (forward-char) (point))
+                                          (point)))
                                  (content (buffer-substring-no-properties
                                            start (point-max))))
                             ;; Remove trailing quote if present
@@ -332,8 +332,8 @@ of the awesome-chatgpt-prompts CSV file."
                         (let* ((act (car parts))
                                (prompt (cadr parts))
                                (category (if ollama-buddy-awesome-categorize-prompts
-                                            (ollama-buddy-awesome--categorize-prompt act prompt)
-                                          "general"))
+                                             (ollama-buddy-awesome--categorize-prompt act prompt)
+                                           "general"))
                                (entry (list :title act
                                             :content prompt
                                             :category category)))
@@ -452,9 +452,9 @@ of the awesome-chatgpt-prompts CSV file."
                                   ollama-buddy-awesome--prompts))))
   
   (let* ((prompt-alist (cl-mapcar #'cons
-                                 (mapcar #'ollama-buddy-awesome--format-prompt-name
-                                         ollama-buddy-awesome--prompts)
-                                 ollama-buddy-awesome--prompts))
+                                  (mapcar #'ollama-buddy-awesome--format-prompt-name
+                                          ollama-buddy-awesome--prompts)
+                                  ollama-buddy-awesome--prompts))
          (selected-prompt (cdr (assoc formatted-name prompt-alist))))
     
     (with-current-buffer (get-buffer-create "*Awesome ChatGPT Prompt*")

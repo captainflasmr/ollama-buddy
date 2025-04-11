@@ -132,7 +132,7 @@ Use nil for API default behavior (adaptive)."
               (messages . ,messages)
               (temperature . ,ollama-buddy-openai-temperature)
               (max_tokens . ,max-tokens)))
-           ;; Create the JSON string 
+           ;; Create the JSON string
            (json-str (let ((json-encoding-pretty-print nil))
                        (ollama-buddy-escape-unicode (json-encode json-payload)))))
 
@@ -168,7 +168,7 @@ Use nil for API default behavior (adaptive)."
                   (url-mime-language-string nil)
                   (url-mime-encoding-string nil)
                   (url-mime-accept-string "application/json"))
-               
+              
               (url-retrieve
                ollama-buddy-openai-api-endpoint
                (lambda (status)
@@ -203,7 +203,7 @@ Use nil for API default behavior (adaptive)."
                                (if error-message
                                    (setq content (format "Error: %s" (alist-get 'message error-message)))
                                  (when choices
-                                   (setq content (ollama-buddy-fix-encoding-issues 
+                                   (setq content (ollama-buddy-fix-encoding-issues
                                                   (alist-get 'content (alist-get 'message (aref choices 0)))))))
                                
                                ;; Update the chat buffer

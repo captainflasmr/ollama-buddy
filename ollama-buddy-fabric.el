@@ -132,7 +132,7 @@
     (make-process
      :name "fabric-sync"
      :buffer sync-buffer
-     :command (list "bash" "-c" 
+     :command (list "bash" "-c"
                     (format "mkdir -p %s && cd %s && \
                            (git -c advice.detachedHead=false fetch origin main && \
                             git -c advice.detachedHead=false checkout FETCH_HEAD -- %s \
@@ -147,7 +147,7 @@
                        (goto-char (point-max))
                        (insert "\n\n=== Sync completed ===\n")
                        (ollama-buddy-fabric-populate-patterns)
-                       (insert (format "\nFound %d patterns\n" 
+                       (insert (format "\nFound %d patterns\n"
                                        (length ollama-buddy-fabric--patterns)))
                        (view-mode 1)))
                    (setq ollama-buddy-fabric--last-sync-time (current-time))
@@ -162,7 +162,7 @@
   (unless (file-exists-p (ollama-buddy-fabric--patterns-path))
     (ollama-buddy-fabric--ensure-repo-exists))
   
-  (setq ollama-buddy-fabric--patterns 
+  (setq ollama-buddy-fabric--patterns
         (cl-remove-if-not
          (lambda (pattern)
            (let ((pattern-dir (expand-file-name pattern (ollama-buddy-fabric--patterns-path))))
@@ -193,7 +193,7 @@
   (let* ((parts (split-string pattern "_"))
          (category (if (> (length parts) 0) (car parts) ""))
          (name (mapconcat #'identity (cdr parts) "_")))
-    (format "%s: %s" 
+    (format "%s: %s"
             (propertize category 'face 'font-lock-type-face)
             (propertize name 'face 'font-lock-function-name-face))))
 
@@ -202,17 +202,17 @@
   (unless ollama-buddy-fabric--patterns
     (ollama-buddy-fabric-populate-patterns))
   
-  (let* ((formatted-patterns (mapcar #'ollama-buddy-fabric--format-pattern-name 
+  (let* ((formatted-patterns (mapcar #'ollama-buddy-fabric--format-pattern-name
                                      ollama-buddy-fabric--patterns))
-         (pattern-alist (cl-mapcar #'cons formatted-patterns 
+         (pattern-alist (cl-mapcar #'cons formatted-patterns
                                    ollama-buddy-fabric--patterns))
          (selected-formatted (completing-read "Fabric pattern: " formatted-patterns nil t))
          (selected-pattern (cdr (assoc selected-formatted pattern-alist)))
-         (system-file (expand-file-name (format "%s/%s/system.md" 
-                                                (ollama-buddy-fabric--patterns-path) 
+         (system-file (expand-file-name (format "%s/%s/system.md"
+                                                (ollama-buddy-fabric--patterns-path)
                                                 selected-pattern))))
     
-    (with-temp-buffer 
+    (with-temp-buffer
       (insert-file-contents system-file)
       (let ((content (buffer-string)))
         content))))
@@ -243,9 +243,9 @@
 (defun ollama-buddy-fabric--extract-description-from-system (pattern)
   "Extract a brief description from PATTERN's system.md file.
 Returns the first paragraph (up to 250 chars) as a description."
-  (let ((system-file (expand-file-name (format "%s/%s/system.md" 
-                                              (ollama-buddy-fabric--patterns-path) 
-                                              pattern))))
+  (let ((system-file (expand-file-name (format "%s/%s/system.md"
+                                               (ollama-buddy-fabric--patterns-path)
+                                               pattern))))
     (when (file-exists-p system-file)
       (with-temp-buffer
         (insert-file-contents system-file)
@@ -287,8 +287,8 @@ Returns the first paragraph (up to 250 chars) as a description."
         (insert "* Fabric Patterns\n\n")
         
         (if ollama-buddy-fabric--last-sync-time
-            (insert (format "Last synced: %s\n\n" 
-                            (format-time-string "%Y-%m-%d %H:%M:%S" 
+            (insert (format "Last synced: %s\n\n"
+                            (format-time-string "%Y-%m-%d %H:%M:%S"
                                                 ollama-buddy-fabric--last-sync-time)))
           (insert "Never synced with GitHub repository\n\n"))
         
@@ -299,9 +299,9 @@ Returns the first paragraph (up to 250 chars) as a description."
             (let* ((parts (split-string pattern "_"))
                    (category (if (> (length parts) 0) (car parts) ""))
                    (name (mapconcat #'identity (cdr parts) "_"))
-                   (desc-file (expand-file-name 
-                               (format "%s/%s/description.md" 
-                                       (ollama-buddy-fabric--patterns-path) 
+                   (desc-file (expand-file-name
+                               (format "%s/%s/description.md"
+                                       (ollama-buddy-fabric--patterns-path)
                                        pattern))))
               
               ;; Add category header if changed
@@ -318,7 +318,7 @@ Returns the first paragraph (up to 250 chars) as a description."
                 (insert
                  (string-trim
                   (ollama-buddy-fabric--extract-description-from-system pattern))
-                  "\n"))
+                 "\n"))
               (goto-char (point-max))))))
       (view-mode 1)
       (goto-char (point-min)))
@@ -327,15 +327,15 @@ Returns the first paragraph (up to 250 chars) as a description."
 (defun ollama-buddy-fabric-show-pattern (pattern)
   "Display the full content of a PATTERN."
   (interactive
-   (list (completing-read "Show pattern: " 
-                          (mapcar #'ollama-buddy-fabric--format-pattern-name 
+   (list (completing-read "Show pattern: "
+                          (mapcar #'ollama-buddy-fabric--format-pattern-name
                                   ollama-buddy-fabric--patterns))))
   
   (let* ((pattern-name (car (last (split-string pattern ": "))))
-         (real-pattern (seq-find (lambda (p) (string-match-p pattern-name p)) 
+         (real-pattern (seq-find (lambda (p) (string-match-p pattern-name p))
                                  ollama-buddy-fabric--patterns))
-         (system-file (expand-file-name (format "%s/%s/system.md" 
-                                                (ollama-buddy-fabric--patterns-path) 
+         (system-file (expand-file-name (format "%s/%s/system.md"
+                                                (ollama-buddy-fabric--patterns-path)
                                                 real-pattern))))
     
     (with-current-buffer (get-buffer-create "*Fabric Pattern*")

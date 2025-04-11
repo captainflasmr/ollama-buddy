@@ -175,7 +175,7 @@ Use nil for API default behavior (adaptive)."
                   (url-mime-language-string nil)
                   (url-mime-encoding-string nil)
                   (url-mime-accept-string "application/json"))
-               
+              
               (url-retrieve
                endpoint
                (lambda (status)

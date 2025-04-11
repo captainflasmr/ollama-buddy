@@ -175,8 +175,8 @@
      (format "Fabric Patterns (%d available%s)"
              (length ollama-buddy-fabric--patterns)
              (if ollama-buddy-fabric--last-sync-time
-                 (format ", last synced: %s" 
-                         (format-time-string "%Y-%m-%d %H:%M" 
+                 (format ", last synced: %s"
+                         (format-time-string "%Y-%m-%d %H:%M"
                                              ollama-buddy-fabric--last-sync-time))
                ", never synced")))]
   
@@ -262,13 +262,13 @@
     ("C" "Num Thread" (lambda () (interactive) (ollama-buddy-params-edit 'num_thread)))]
 
    ["Profiles"
-    ("d" "Default Profile" (lambda () (interactive) 
+    ("d" "Default Profile" (lambda () (interactive)
                              (ollama-buddy-apply-param-profile "Default")
                              (message "Applied Default profile")))
-    ("a" "Creative Profile" (lambda () (interactive) 
+    ("a" "Creative Profile" (lambda () (interactive)
                               (ollama-buddy-apply-param-profile "Creative")
                               (message "Applied Creative profile")))
-    ("e" "Precise Profile" (lambda () (interactive) 
+    ("e" "Precise Profile" (lambda () (interactive)
                              (ollama-buddy-apply-param-profile "Precise")
                              (message "Applied Precise profile")))
     ("A" "All Profiles" ollama-buddy-transient-profile-menu)]
@@ -308,7 +308,7 @@
    (category    :initarg :category)))
 
 (defun ollama-buddy-awesome-show-prompts-menu ()
-  "Show a transient menu of Awesome ChatGPT Prompts organized by category."
+  "Show a transient menu of Awesome ChatGPT Prompt organized by category."
   (interactive)
   (unless ollama-buddy-awesome--prompts
     (ollama-buddy-awesome-populate-prompts))
@@ -342,7 +342,7 @@
                                      (string< (plist-get a :title)
                                               (plist-get b :title)))))
                (let* ((prompt-sym (intern (format "ollama-buddy-awesome-prompt-%d-%d"
-                                                 cat-count prompt-count)))
+                                                  cat-count prompt-count)))
                       (title (plist-get prompt :title))
                       (content (plist-get prompt :content))
                       (prompt-key (if (< prompt-count (length alphabet))
@@ -404,12 +404,12 @@
   :info-manual "(ollama-buddy)Awesome ChatGPT Prompts"
   :man-page "ollama-buddy-awesome"
   [["Actions"
-   ("s" "Send with Prompt" ollama-buddy-awesome-send)
-   ("p" "Set as System Prompt" ollama-buddy-awesome-set-system-prompt)
-   ("l" "List All Prompts" ollama-buddy-awesome-list-prompts)
-   ("c" "Category Browser" ollama-buddy-awesome-show-prompts-menu)
-   ("S" "Sync Latest Prompts" ollama-buddy-awesome-sync-prompts)
-   ("q" "Back to Main Menu" transient-quit-one)]])
+    ("s" "Send with Prompt" ollama-buddy-awesome-send)
+    ("p" "Set as System Prompt" ollama-buddy-awesome-set-system-prompt)
+    ("l" "List All Prompts" ollama-buddy-awesome-list-prompts)
+    ("c" "Category Browser" ollama-buddy-awesome-show-prompts-menu)
+    ("S" "Sync Latest Prompts" ollama-buddy-awesome-sync-prompts)
+    ("q" "Back to Main Menu" transient-quit-one)]])
 
 ;;;###autoload
 (defun ollama-buddy-transient-menu-wrapper ()

@@ -99,7 +99,7 @@
     (beginning-of-line)))
 
 (defun ollama-buddy-advice-beginning-of-line (orig-fun &rest args)
-  "Advice to modify beginning-of-line behavior in Ollama Buddy chat buffer."
+  "Advice to modify beginning-of-line behavior with ORIG-FUN Optional ARGS ."
   (if (and (boundp 'ollama-buddy-mode)
            ollama-buddy-mode
            (eq (current-buffer) (get-buffer ollama-buddy--chat-buffer)))
@@ -1869,7 +1869,7 @@ With prefix argument ALL-MODELS, clear history for all models."
       (user-error "This command requires selected text"))
     
     (ollama-buddy--open-chat)
-        
+    
     ;; Apply command-specific parameters if provided
     (when params-alist
       (ollama-buddy--apply-command-parameters params-alist))
@@ -2121,7 +2121,7 @@ With prefix argument ALL-MODELS, clear history for all models."
            "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n"
            "#+end_example\n\n"
            (when (not (ollama-buddy--check-status))
-               "** *THERE IS NO OLLAMA RUNNING*\n
+             "** *THERE IS NO OLLAMA RUNNING*\n
 please run =ollama serve=\n\n")
            models-management-section
            models-to-pull-section
