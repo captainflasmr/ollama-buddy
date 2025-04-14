@@ -971,8 +971,10 @@ If SESSION-NAME is not provided, prompt for a name."
   (ollama-buddy--ensure-sessions-directory)
   
   (let* ((current-name (or ollama-buddy--current-session ""))
+         (current-date (format-time-string "%Y-%m-%d"))
+         (current-model (or ollama-buddy--current-model "unknown-model"))
          (default-name (if (string-empty-p current-name)
-                           "default-session"
+                           (format "%s-%s" current-date current-model)
                          current-name))
          (session-name (or session-name
                            (read-string
