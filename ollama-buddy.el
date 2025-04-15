@@ -1103,22 +1103,6 @@ Returns the full prompt text ready to be sent."
         (view-mode 1)))
     (display-buffer buf)))
 
-(defun ollama-buddy-sessions-list ()
-  "List all saved Ollama Buddy sessions."
-  (interactive)
-  (let* ((session-files (directory-files ollama-buddy-sessions-directory t "\\.el$"))
-         (session-names (mapcar #'file-name-base session-files))
-         (buf (get-buffer-create "*Ollama Buddy Sessions*")))
-    (with-current-buffer buf
-      (let ((inhibit-read-only t))
-        (erase-buffer)
-        (insert "Ollama Buddy Sessions:\n\n")
-        (dolist (session session-names)
-          (insert (format "- %s\n" session)))
-        (goto-char (point-min))
-        (special-mode)))
-    (switch-to-buffer buf)))
-
 (defun ollama-buddy-sessions-delete ()
   "Delete an Ollama Buddy session."
   (interactive)
