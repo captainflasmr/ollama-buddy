@@ -1330,16 +1330,19 @@ All interactive functions available in ollama-buddy are listed in the original R
 #+RESULTS:
 | TODO                                                                         | DOING                                      | DONE                                                          |
 |------------------------------------------------------------------------------+--------------------------------------------+---------------------------------------------------------------|
-| transient-setup: Key sequence 1 0 starts with non-prefix key 1               | Kill online AI process with cancel request | =C-a= beginning-of-line to jump to prompt start like comint   |
-| I think some hard coded Claude models currently don't work                   | GGUF to use new syncing option             | As shell generally C-n to end of list to clear prompt history |
-| Claude request and connection can sometimes take time and it blocks!         |                                            | Add Texinfo to MELPA recipe                                   |
-| Pushing hundreds or even thousands of lines to the chat buffer takes a while |                                            | System prompt not cleared on new session                      |
-| Still some encoding issues on returns from online AI                         |                                            | Remove fabric from Commands transient menu                    |
-| Conversation history to display with Claude/ChatGPT                          |                                            | External AI to copy to register                               |
-| ChatGPT request/response too long                                            |                                            | First request with no chat buffer fails                       |
+| register contents to be converted to org, currently it is in markdown        | Kill online AI process with cancel request | =C-a= beginning-of-line to jump to prompt start like comint   |
+| transient-setup: Key sequence 1 0 starts with non-prefix key 1               | GGUF to use new syncing option             | As shell generally C-n to end of list to clear prompt history |
+| I think some hard coded Claude models currently don't work                   |                                            | Add Texinfo to MELPA recipe                                   |
+| Claude request and connection can sometimes take time and it blocks!         |                                            | System prompt not cleared on new session                      |
+| Pushing hundreds or even thousands of lines to the chat buffer takes a while |                                            | Remove fabric from Commands transient menu                    |
+| Still some encoding issues on returns from online AI                         |                                            | External AI to copy to register                               |
+| Conversation history to display with Claude/ChatGPT                          |                                            | First request with no chat buffer fails                       |
+| ChatGPT request/response too long                                            |                                            |                                                               |
 | Check tags caching                                                           |                                            |                                                               |
 | Save system prompts as part of session                                       |                                            |                                                               |
 | keybindings in ollama chat buffer are reserved                               |                                            |                                                               |
+
+** TODO register contents to be converted to org, currently it is in markdown
 
 ** TODO transient-setup: Key sequence 1 0 starts with non-prefix key 1
 
