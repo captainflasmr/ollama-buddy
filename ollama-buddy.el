@@ -77,6 +77,9 @@
 (declare-function ollama-buddy-openai--send "ollama-buddy-openai")
 (declare-function ollama-buddy-claude--send "ollama-buddy-claude")
 
+(defvar ollama-buddy-mode-line-segment nil
+  "Mode line segment for Ollama Buddy.")
+
 (defvar-local ollama-buddy--history-view-mode 'display
   "Current mode of the history buffer.")
 
@@ -965,7 +968,7 @@ Returns the full prompt text ready to be sent."
     (make-directory ollama-buddy-sessions-directory t)))
 
 (defun ollama-buddy-sessions-save ()
-  "Save the current Ollama Buddy session with improved naming and org file snapshot."
+  "Save the current Ollama Buddy session."
   (interactive)
   (let* ((default-name (concat (format-time-string "%F-%H%M%S--")
                                (replace-regexp-in-string " " "-" ollama-buddy--current-model)))
@@ -1952,8 +1955,7 @@ With prefix argument ALL-MODELS, clear history for all models."
         
         ;; Restore default parameters if we changed them
         (when params-alist
-          (ollama-buddy--restore-default-parameters))))
-    ))
+          (ollama-buddy--restore-default-parameters))))))
 
 (defun ollama-buddy--send (&optional prompt specified-model)
   "Send PROMPT with optional SYSTEM-PROMPT, SUFFIX and SPECIFIED-MODEL."
