@@ -375,6 +375,9 @@ Each command is defined with:
   :type '(repeat string)
   :group 'ollama-buddy-claude)
 
+(defvar ollama-buddy-current-session-name nil
+  "The name of the currently loaded session.")
+
 (defvar ollama-buddy-claude--current-model nil
   "The currently selected Claude model.")
 

@@ -964,25 +964,16 @@ Returns the full prompt text ready to be sent."
   (unless (file-directory-p ollama-buddy-sessions-directory)
     (make-directory ollama-buddy-sessions-directory t)))
 
-(defun ollama-buddy-sessions-save (&optional session-name)
-  "Save the current conversation state to a session file.
-If SESSION-NAME is not provided, prompt for a name."
+(defun ollama-buddy-sessions-save ()
+  "Save the current Ollama Buddy session with improved naming and org file snapshot."
   (interactive)
-  (ollama-buddy--ensure-sessions-directory)
-  
-  (let* ((current-name (or ollama-buddy--current-session ""))
-         (current-date (format-time-string "%Y-%m-%d"))
-         (current-model (or ollama-buddy--current-model "unknown-model"))
-         (default-name (if (string-empty-p current-name)
-                           (format "%s-%s" current-date current-model)
-                         current-name))
-         (session-name (or session-name
-                           (read-string
-                            (format "Session name (default: %s): " default-name)
-                            nil nil default-name)))
-         (session-file (expand-file-name
-                        (format "ollama-buddy-session--%s.el" session-name)
-                        ollama-buddy-sessions-directory)))
+  (let* ((default-name (concat (format-time-string "%F-%H%M%S--")
+                               (replace-regexp-in-string " " "-" ollama-buddy--current-model)))
+         (session-name (read-string "Session name/description: " default-name))
+         (session-file (expand-file-name (concat session-name ".el") ollama-buddy-sessions-directory))
+         (org-file (expand-file-name (concat session-name ".org") ollama-buddy-sessions-directory)))
+
+    (ollama-buddy--ensure-sessions-directory)
     
     ;; Write the session file
     (with-temp-file session-file
@@ -1013,120 +1004,57 @@ If SESSION-NAME is not provided, prompt for a name."
       ;; Set current session name
       (insert (format "(setq ollama-buddy--current-session %S)\n" session-name)))
     
-    ;; Update current session name
-    (setq ollama-buddy--current-session session-name)
+    ;; Save the chat buffer contents to an org file
+    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+      (write-region (point-min) (point-max) org-file))
     
-    ;; Provide feedback
-    (message "Session saved as '%s'" session-name)
-    session-file))
+    (setq ollama-buddy-current-session-name session-name)
+    (ollama-buddy-update-mode-line)
+    
+    (message "Session saved as %s" session-name)))
 
-(defun ollama-buddy-sessions-load (&optional session-name)
-  "Load a saved conversation session.
-If SESSION-NAME is not provided, prompt for a name."
+(defun ollama-buddy-update-mode-line ()
+  "Update the mode line to show the current session name."
+  (setq mode-line-format
+        (list
+         '(:eval (format " OB[%s]" (or ollama-buddy-current-session-name "No Session")))
+         mode-line-format))
+  (force-mode-line-update t))
+
+(defun ollama-buddy-sessions-load ()
+  "Load an Ollama Buddy session with improved org file handling."
   (interactive)
-  (ollama-buddy--ensure-sessions-directory)
-  
-  (let* ((session-files (directory-files
-                         ollama-buddy-sessions-directory nil
-                         "^ollama-buddy-session--.*\\.el$"))
-         (session-names (mapcar
-                         (lambda (file)
-                           (when (string-match "ollama-buddy-session--\\(.*\\)\\.el$" file)
-                             (match-string 1 file)))
-                         session-files)))
+  (let* ((session-files (directory-files ollama-buddy-sessions-directory t "\\.el$"))
+         (session-names (mapcar #'file-name-base session-files))
+         (chosen-session (completing-read "Choose a session to load: " session-names nil t))
+         (session-file (expand-file-name (concat chosen-session ".el") ollama-buddy-sessions-directory))
+         (org-file (expand-file-name (concat chosen-session ".org") ollama-buddy-sessions-directory)))
     
-    ;; Check if we have any sessions
-    (if (null session-names)
-        (message "No saved sessions found in %s" ollama-buddy-sessions-directory)
-      
-      (let* ((chosen-name (or session-name
-                              (completing-read
-                               "Load session: "
-                               session-names nil t)))
-             (session-file (expand-file-name
-                            (format "ollama-buddy-session--%s.el" chosen-name)
-                            ollama-buddy-sessions-directory)))
-        
-        ;; Check if file exists
-        (if (not (file-exists-p session-file))
-            (message "Session file not found: %s" session-file)
-          (progn
-            ;; Load the session
-            (load-file session-file)
-
-            ;; Clear current system prompt
-            (setq ollama-buddy--current-system-prompt nil)
-            
-            ;; Update the chat buffer to reflect restored state
-            (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-              (let ((inhibit-read-only t))
-                (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
-                (org-mode)
-                (visual-line-mode 1)
-                ;; Clear the buffer and reinitialize
-                (erase-buffer)
-                (ollama-buddy-mode 1)
-                
-                ;; Add session header
-                (insert (ollama-buddy--create-intro-message))
-                (insert (format "\n\n[Session '%s' restored]" chosen-name))
-                
-                ;; Collect all messages from all models into a single timeline
-                (let* ((all-messages '()))
-                  ;; Gather messages from all models
-                  (maphash
-                   (lambda (model history)
-                     (dolist (msg history)
-                       ;; Add model information to each message for display
-                       (let ((msg-with-model (copy-alist msg)))
-                         (setq msg-with-model (cons (cons 'model model) msg-with-model))
-                         ;; Add timestamp if available, or use a counter for ordering
-                         (unless (assoc 'timestamp msg-with-model)
-                           (setq msg-with-model (cons (cons 'timestamp 0) msg-with-model)))
-                         ;; (push msg-with-model all-messages)
-                         (setq all-messages (append all-messages (list msg-with-model))))))
-                   ollama-buddy--conversation-history-by-model)
-                  
-                  ;; (setq all-messages (nreverse all-messages))
-                  
-                  ;; Display all messages in order
-                  (dolist (msg all-messages)
-                    (let* ((role (alist-get 'role msg))
-                           (model (alist-get 'model msg))
-                           (content (alist-get 'content msg))
-                           (color (ollama-buddy--get-model-color model)))
-                      
-                      (when (string= role "user")
-                        (let ((start (point)))
-                          (insert (format "\n\n* %s %s %s"
-                                          model
-                                          ">> PROMPT: "
-                                          content))
-                          (let ((overlay (make-overlay start (+ start 4 (length model)))))
-                            (overlay-put overlay 'face `(:foreground ,color :weight bold)))))
-                      
-                      (when (string= role "assistant")
-                        (let ((start-pos (point-max)))
-                          (insert (format "\n\n%s\n\n%s"
-                                          (concat "** [" model ": RESPONSE]")
-                                          content))
-                          ;; Now convert from markdown to org if enabled
-                          (when ollama-buddy-convert-markdown-to-org
-                            (ollama-buddy--md-to-org-convert-region start-pos (point-max))))))))
-                ;; Show a prompt at the end
-                (ollama-buddy--prepare-prompt-area)))))
-        ;; Update status
-        (ollama-buddy--update-status (format "Session '%s' loaded" chosen-name))
-        (message "Loaded session: %s" chosen-name)))))
+    ;; Load the session data
+    (load-file session-file)
+    
+    ;; Load the org file contents into the chat buffer
+    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+      (let ((inhibit-read-only t))
+        (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
+        (erase-buffer)
+        (insert-file-contents org-file)
+        (org-mode)
+        (visual-line-mode 1)
+        (ollama-buddy-mode 1)
+        (goto-char (point-max))
+        (ollama-buddy--apply-model-colors-to-buffer)))
+    
+    (ollama-buddy-update-mode-line)
+    (ollama-buddy--update-status (format "Session '%s' loaded" chosen-session))
+    (message "Session %s loaded" chosen-session)))
 
 (defun ollama-buddy-sessions-list ()
   "Display a list of saved sessions."
   (interactive)
   (ollama-buddy--ensure-sessions-directory)
   
-  (let* ((session-files (directory-files
-                         ollama-buddy-sessions-directory nil
-                         "^ollama-buddy-session--.*\\.el$"))
+  (let* ((session-files (directory-files ollama-buddy-sessions-directory t "\\.el$"))
          (buf (get-buffer-create "*Ollama Buddy Sessions*")))
     
     (with-current-buffer buf
@@ -1137,7 +1065,7 @@ If SESSION-NAME is not provided, prompt for a name."
         (if (null session-files)
             (insert "No saved sessions found.\n")
           (dolist (file session-files)
-            (when (string-match "ollama-buddy-session--\\(.*\\)\\.el$" file)
+            (when (string-match "\\(.*\\)\\.el$" file)
               (let* ((session-name (match-string 1 file))
                      (file-path (expand-file-name file ollama-buddy-sessions-directory))
                      (attrs (file-attributes file-path))
@@ -1172,54 +1100,38 @@ If SESSION-NAME is not provided, prompt for a name."
                            ", "))
                   (insert "\n"))
                 (insert "\n")))))
-        
-        (insert "\nUse M-x ollama-buddy-sessions-load to load a session")
-        (insert "\nUse M-x ollama-buddy-sessions-save to save the current session")
-        (insert "\nUse M-x ollama-buddy-sessions-delete to delete a session")
         (view-mode 1)))
-    
     (display-buffer buf)))
 
-(defun ollama-buddy-sessions-delete (&optional session-name)
-  "Delete a saved session.
-If SESSION-NAME is not provided, prompt for a name."
+(defun ollama-buddy-sessions-list ()
+  "List all saved Ollama Buddy sessions."
   (interactive)
-  (ollama-buddy--ensure-sessions-directory)
-  
-  (let* ((session-files (directory-files
-                         ollama-buddy-sessions-directory nil
-                         "^ollama-buddy-session--.*\\.el$"))
-         (session-names (mapcar
-                         (lambda (file)
-                           (when (string-match "ollama-buddy-session--\\(.*\\)\\.el$" file)
-                             (match-string 1 file)))
-                         session-files)))
-    
-    ;; Check if we have any sessions
-    (if (null session-names)
-        (message "No saved sessions found in %s" ollama-buddy-sessions-directory)
-      
-      (let* ((chosen-name (or session-name
-                              (completing-read
-                               "Delete session: "
-                               session-names nil t)))
-             (session-file (expand-file-name
-                            (format "ollama-buddy-session--%s.el" chosen-name)
-                            ollama-buddy-sessions-directory)))
-        
-        ;; Check if file exists
-        (if (not (file-exists-p session-file))
-            (message "Session file not found: %s" session-file)
-          
-          ;; Confirm deletion
-          (when (yes-or-no-p (format "Really delete session '%s'? " chosen-name))
-            (delete-file session-file)
-            
-            ;; Reset current session if we just deleted it
-            (when (string= chosen-name ollama-buddy--current-session)
-              (setq ollama-buddy--current-session nil))
-            
-            (message "Deleted session: %s" chosen-name)))))))
+  (let* ((session-files (directory-files ollama-buddy-sessions-directory t "\\.el$"))
+         (session-names (mapcar #'file-name-base session-files))
+         (buf (get-buffer-create "*Ollama Buddy Sessions*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert "Ollama Buddy Sessions:\n\n")
+        (dolist (session session-names)
+          (insert (format "- %s\n" session)))
+        (goto-char (point-min))
+        (special-mode)))
+    (switch-to-buffer buf)))
+
+(defun ollama-buddy-sessions-delete ()
+  "Delete an Ollama Buddy session."
+  (interactive)
+  (let* ((session-files (directory-files ollama-buddy-sessions-directory t "\\.el$"))
+         (session-names (mapcar #'file-name-base session-files))
+         (chosen-session (completing-read "Choose a session to delete: " session-names nil t))
+         (session-file (expand-file-name (concat chosen-session ".el") ollama-buddy-sessions-directory))
+         (org-file (expand-file-name (concat chosen-session ".org") ollama-buddy-sessions-directory)))
+    (when (yes-or-no-p (format "Really delete session %s? " chosen-session))
+      (delete-file session-file)
+      (when (file-exists-p org-file)
+        (delete-file org-file))
+      (message "Session %s deleted" chosen-session))))
 
 (defun ollama-buddy-sessions-new ()
   "Start a new session by clearing history and buffer."
