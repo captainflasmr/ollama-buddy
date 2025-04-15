@@ -1015,10 +1015,28 @@ Returns the full prompt text ready to be sent."
 
 (defun ollama-buddy-update-mode-line ()
   "Update the mode line to show the current session name."
-  (setq mode-line-format
-        (list
-         '(:eval (format " OB[%s]" (or ollama-buddy-current-session-name "No Session")))
-         mode-line-format))
+  (let ((session-name (or ollama-buddy-current-session-name "No Session"))
+        (segment-name 'ollama-buddy-mode-line-segment))
+    
+    ;; Define a new mode line segment
+    (setq ollama-buddy-mode-line-segment
+          `(:eval (format "[%s]" ,session-name)))
+    
+    ;; Search and replace the existing segment in the mode line
+    (setq mode-line-format
+          (mapcar (lambda (segment)
+                    (if (and (listp segment)
+                             (eq (car segment) segment-name))
+                        ollama-buddy-mode-line-segment
+                      segment))
+                  mode-line-format))
+    
+    ;; If the segment isn't already present, add it at the beginning
+    (unless (member ollama-buddy-mode-line-segment mode-line-format)
+      (setq mode-line-format
+            (cons ollama-buddy-mode-line-segment mode-line-format))))
+
+  ;; Force an update of the mode line
   (force-mode-line-update t))
 
 (defun ollama-buddy-sessions-load ()
@@ -1044,7 +1062,8 @@ Returns the full prompt text ready to be sent."
         (ollama-buddy-mode 1)
         (goto-char (point-max))
         (ollama-buddy--apply-model-colors-to-buffer)))
-    
+
+    (setq ollama-buddy-current-session-name chosen-session)
     (ollama-buddy-update-mode-line)
     (ollama-buddy--update-status (format "Session '%s' loaded" chosen-session))
     (message "Session %s loaded" chosen-session)))
