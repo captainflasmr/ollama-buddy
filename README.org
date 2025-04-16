@@ -1328,21 +1328,18 @@ All interactive functions available in ollama-buddy are listed in the original R
 #+end_src
 
 #+RESULTS:
-| TODO                                                                         | DOING                                      | DONE                                                          |
-|------------------------------------------------------------------------------+--------------------------------------------+---------------------------------------------------------------|
-| register contents to be converted to org, currently it is in markdown        | Kill online AI process with cancel request | =C-a= beginning-of-line to jump to prompt start like comint   |
-| transient-setup: Key sequence 1 0 starts with non-prefix key 1               | GGUF to use new syncing option             | As shell generally C-n to end of list to clear prompt history |
-| I think some hard coded Claude models currently don't work                   |                                            | Add Texinfo to MELPA recipe                                   |
-| Claude request and connection can sometimes take time and it blocks!         |                                            | System prompt not cleared on new session                      |
-| Pushing hundreds or even thousands of lines to the chat buffer takes a while |                                            | Remove fabric from Commands transient menu                    |
-| Still some encoding issues on returns from online AI                         |                                            | External AI to copy to register                               |
-| Conversation history to display with Claude/ChatGPT                          |                                            | First request with no chat buffer fails                       |
-| ChatGPT request/response too long                                            |                                            |                                                               |
-| Check tags caching                                                           |                                            |                                                               |
-| Save system prompts as part of session                                       |                                            |                                                               |
-| keybindings in ollama chat buffer are reserved                               |                                            |                                                               |
-
-** TODO register contents to be converted to org, currently it is in markdown
+| TODO                                                                         | DOING                                      | DONE                                                                  |
+|------------------------------------------------------------------------------+--------------------------------------------+-----------------------------------------------------------------------|
+| transient-setup: Key sequence 1 0 starts with non-prefix key 1               | Kill online AI process with cancel request | register contents to be converted to org, currently it is in markdown |
+| I think some hard coded Claude models currently don't work                   | GGUF to use new syncing option             | =C-a= beginning-of-line to jump to prompt start like comint           |
+| Claude request and connection can sometimes take time and it blocks!         |                                            | As shell generally C-n to end of list to clear prompt history         |
+| Pushing hundreds or even thousands of lines to the chat buffer takes a while |                                            | Add Texinfo to MELPA recipe                                           |
+| Still some encoding issues on returns from online AI                         |                                            | System prompt not cleared on new session                              |
+| Conversation history to display with Claude/ChatGPT                          |                                            | Remove fabric from Commands transient menu                            |
+| ChatGPT request/response too long                                            |                                            | External AI to copy to register                                       |
+| Check tags caching                                                           |                                            | First request with no chat buffer fails                               |
+| Save system prompts as part of session                                       |                                            |                                                                       |
+| keybindings in ollama chat buffer are reserved                               |                                            |                                                                       |
 
 ** TODO transient-setup: Key sequence 1 0 starts with non-prefix key 1
 
@@ -1382,6 +1379,9 @@ For some reason this is more difficult than it looks
 
 Do I even care?
 
+** DONE register contents to be converted to org, currently it is in markdown
+CLOSED: [2025-04-16 Wed 14:11]
+
 ** DONE =C-a= beginning-of-line to jump to prompt start like comint
 CLOSED: [2025-04-09 Wed 13:12]
 
@@ -1411,34 +1411,40 @@ CLOSED: [2025-03-29 Sat 13:34]
 #+end_src
 
 #+RESULTS:
-| TODO                                | DOING                              | DONE                                       |
-|-------------------------------------+------------------------------------+--------------------------------------------|
-| Add new ChatGPT 4.1                 | Merge history buffer functionality | Method for securely storing API keys       |
-| Pull ChatGPT and Claude model names | Core Params - suffix               | Core API - Delete Model                    |
-| Autogenerate session save name      | Show incoming ollama messages      | Core API - Copy a model                    |
-| Add gemini?                         | Add chatGPT awesome prompt support | Core API - stream                          |
-| Core API - Embeddings               | Add fabric pattern/prompt support  | Core API - Pull/Info/Pull/Delete a model   |
-| Core Params - format                | ChatGPT support                    | Core API - Show running models             |
-| Core Params - template              | Claude support                     | Core API - Create a model from a GGUF file |
-| Core Params - raw                   |                                    | Add transient menu                         |
-| Test on Windows                     |                                    | History editing                            |
-|                                     |                                    | Core API - options - parameter editing     |
-|                                     |                                    | Core API - show model information          |
-|                                     |                                    | Core API - system prompt                   |
-|                                     |                                    | Chat buffer to use org-mode                |
-|                                     |                                    | Chat export options                        |
-|                                     |                                    | Core Params - options:temperature          |
-|                                     |                                    | Managing Sessions                          |
-|                                     |                                    | Sparse minified version                    |
-|                                     |                                    | Role-Based Menu Preset System              |
-|                                     |                                    | Add to MELPA                               |
-|                                     |                                    | Enhancing Menu Clarity                     |
-|                                     |                                    | Real time token tracking                   |
-|                                     |                                    | Managing chat history and context          |
+| TODO                                                           | DOING                              | DONE                                       |
+|----------------------------------------------------------------+------------------------------------+--------------------------------------------|
+| Add new ChatGPT 4.1                                            | Merge history buffer functionality | Method for securely storing API keys       |
+| Show processing / response time                                | Core Params - suffix               | Core API - Delete Model                    |
+| Unload all models?, to free up RAM if you are switching a lot? | Show incoming ollama messages      | Core API - Copy a model                    |
+| Autoload intelligently to speed up initial reponse times?      | Add chatGPT awesome prompt support | Core API - stream                          |
+| Pull ChatGPT and Claude model names                            | Add fabric pattern/prompt support  | Core API - Pull/Info/Pull/Delete a model   |
+| Autogenerate session save name                                 | ChatGPT support                    | Core API - Show running models             |
+| Add gemini?                                                    | Claude support                     | Core API - Create a model from a GGUF file |
+| Core API - Embeddings                                          |                                    | Add transient menu                         |
+| Core Params - format                                           |                                    | History editing                            |
+| Core Params - template                                         |                                    | Core API - options - parameter editing     |
+| Core Params - raw                                              |                                    | Core API - show model information          |
+| Test on Windows                                                |                                    | Core API - system prompt                   |
+|                                                                |                                    | Chat buffer to use org-mode                |
+|                                                                |                                    | Chat export options                        |
+|                                                                |                                    | Core Params - options:temperature          |
+|                                                                |                                    | Managing Sessions                          |
+|                                                                |                                    | Sparse minified version                    |
+|                                                                |                                    | Role-Based Menu Preset System              |
+|                                                                |                                    | Add to MELPA                               |
+|                                                                |                                    | Enhancing Menu Clarity                     |
+|                                                                |                                    | Real time token tracking                   |
+|                                                                |                                    | Managing chat history and context          |
 
 ** DOING Merge history buffer functionality
 
 ** TODO Add new ChatGPT 4.1
+
+** TODO Show processing / response time
+
+** TODO Unload all models?, to free up RAM if you are switching a lot?
+
+** TODO Autoload intelligently to speed up initial reponse times?
 
 ** TODO Pull ChatGPT and Claude model names
 

@@ -1659,7 +1659,12 @@ With prefix argument ALL-MODELS, clear history for all models."
              (window (get-buffer-window ollama-buddy--chat-buffer t))
              (old-point (and window (window-point window)))
              (at-end (and window (>= old-point (point-max))))
-             (old-window-start (and window (window-start window))))
+             (old-window-start (and window (window-start window)))
+             (reg-char (if ollama-buddy--multishot-sequence
+                           (if (< ollama-buddy--multishot-progress (length ollama-buddy--multishot-sequence))
+                               (aref ollama-buddy--multishot-sequence ollama-buddy--multishot-progress)
+                             ollama-buddy-default-register)
+                         ollama-buddy-default-register)))
         (save-excursion
           (goto-char (point-max))
 
@@ -1678,19 +1683,22 @@ With prefix argument ALL-MODELS, clear history for all models."
             (setq ollama-buddy--current-response text))
 
           ;; Write to register - if multishot is enabled, use that register, otherwise use default
-          (let* ((reg-char (if ollama-buddy--multishot-sequence
-                               (if (< ollama-buddy--multishot-progress (length ollama-buddy--multishot-sequence))
-                                   (aref ollama-buddy--multishot-sequence ollama-buddy--multishot-progress)
-                                 ollama-buddy-default-register)
-                             ollama-buddy-default-register))
-                 (current (get-register reg-char))
-                 (new-content (concat (if (stringp current) current "") text)))
-            (set-register reg-char new-content))
+          (set-register reg-char
+                        (concat
+                         (if (stringp (get-register reg-char))
+                             (get-register reg-char) "") text))
           
           ;; Check if this response is complete
           (when (eq (alist-get 'done json-data) t)
             ;; Convert the response from markdown to org format if enabled
             (when ollama-buddy-convert-markdown-to-org
+              ;; first convert the register contents
+              (let* ((content (get-register reg-char))
+                     (converted-content (with-temp-buffer
+                                          (insert content)
+                                          (ollama-buddy--md-to-org-convert-region (point-min) (point-max))
+                                          (buffer-string))))
+                (set-register reg-char converted-content))
               (let ((response-end (point-max)))
                 (when (and (boundp 'ollama-buddy--response-start-position)
                            ollama-buddy--response-start-position)
@@ -2019,7 +2027,8 @@ With prefix argument ALL-MODELS, clear history for all models."
                             with-suffix))
            (payload (json-encode final-payload)))
 
-      (set-register ollama-buddy-default-register "")
+      (unless ollama-buddy--multishot-sequence
+        (set-register ollama-buddy-default-register ""))
       
       (setq ollama-buddy--current-model model)
       (setq ollama-buddy--current-prompt prompt)
@@ -2798,7 +2807,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
 
     (ollama-buddy--register-background-operation
      operation-id
-     (format "Pulling model %s" model))
+     (format "Pulling %s" model))
     
     (ollama-buddy--make-request-async
      "/api/pull"
@@ -2807,7 +2816,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
      (lambda (status _result)
        (if (plist-get status :error)
            (progn
-             (message "Error pulling model %s: %s" model (cdr (plist-get status :error)))
+             (message "Error pulling %s: %s" model (cdr (plist-get status :error)))
              (ollama-buddy--complete-background-operation
               operation-id
               (format "Error pulling %s" model)))
@@ -2826,7 +2835,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
 
     (ollama-buddy--register-background-operation
      operation-id
-     (format "Copying model to %s" model))
+     (format "Copying to %s" model))
     
     (ollama-buddy--make-request-async
      "/api/copy"
@@ -2835,7 +2844,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
      (lambda (status _result)
        (if (plist-get status :error)
            (progn
-             (message "Error copying model: %s" (cdr (plist-get status :error)))
+             (message "Error copying: %s" (cdr (plist-get status :error)))
              (ollama-buddy--complete-background-operation
               operation-id
               (format "Error copying %s" model)))
@@ -2852,7 +2861,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
 
     (ollama-buddy--register-background-operation
      operation-id
-     (format "Deleting model %s" model))
+     (format "Deleting %s" model))
     
     (ollama-buddy--make-request-async
      "/api/delete"
@@ -2861,7 +2870,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
      (lambda (status _result)
        (if (plist-get status :error)
            (progn
-             (message "Error deleting model: %s" (cdr (plist-get status :error)))
+             (message "Error deleting: %s" (cdr (plist-get status :error)))
              (ollama-buddy--complete-background-operation
               operation-id
               (format "Error deleting %s" model)))
