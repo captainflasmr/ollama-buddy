@@ -100,7 +100,8 @@ See *Screenshots / Demos* section for more videos/demonstration.
 
 Refactored history and model management for remote LLMs
 
-Removed redundant history and model management functions from =ollama-buddy-claude.el= and =ollama-buddy-openai.el=. Replaced them with shared implementations to streamline code and reduce duplication
+- Now pulling in latest model list for remote LLMs (so now ChatGPT 4.1 is available!)
+- Removed redundant history and model management functions from =ollama-buddy-claude.el= and =ollama-buddy-openai.el=. Replaced them with shared implementations to streamline code and reduce duplication
 
 ** <2025-04-15> *0.9.22*
 
