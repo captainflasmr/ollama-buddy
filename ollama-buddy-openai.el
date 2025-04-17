@@ -51,6 +51,7 @@ Use nil for API default behavior (adaptive)."
   :group 'ollama-buddy-openai)
 
 ;; Internal variables
+
 (defvar ollama-buddy-openai--current-token-count 0
   "Counter for tokens in the current OpenAI response.")
 
@@ -103,7 +104,6 @@ Use nil for API default behavior (adaptive)."
               (messages . ,messages)
               (temperature . ,ollama-buddy-openai-temperature)
               (max_tokens . ,max-tokens)))
-           ;; Create the JSON string
            (json-str (let ((json-encoding-pretty-print nil))
                        (ollama-buddy-escape-unicode (json-encode json-payload)))))
 

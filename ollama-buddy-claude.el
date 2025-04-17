@@ -50,35 +50,10 @@ Use nil for API default behavior (adaptive)."
   :type '(choice integer (const nil))
   :group 'ollama-buddy-claude)
 
-(defcustom ollama-buddy-claude-show-loading t
-  "Whether to show a loading indicator during API requests."
-  :type 'boolean
-  :group 'ollama-buddy-claude)
-
 ;; Internal variables
-(defvar ollama-buddy-claude--model-colors (make-hash-table :test 'equal)
-  "Hash table for storing Claude model colors.")
-
-(defvar ollama-buddy-claude--conversation-history-by-model (make-hash-table :test 'equal)
-  "Hash table mapping model names to their conversation histories.")
-
-(defvar ollama-buddy-claude--current-response nil
-  "Accumulates the current response content.")
-
-(defvar ollama-buddy-claude--current-prompt nil
-  "The current prompt sent to Claude.")
 
 (defvar ollama-buddy-claude--current-token-count 0
   "Counter for tokens in the current Claude response.")
-
-;; Model display and management functions
-
-(defun ollama-buddy-claude--get-model-color (model)
-  "Get color for Claude MODEL."
-  (or (gethash model ollama-buddy-claude--model-colors)
-      (let ((color (ollama-buddy--hash-string-to-color model)))
-        (puthash model color ollama-buddy-claude--model-colors)
-        color)))
 
 (defun ollama-buddy-claude--get-real-model-name (model)
   "Extract the actual model name from the prefixed MODEL string."
@@ -106,17 +81,14 @@ Use nil for API default behavior (adaptive)."
               (ollama-buddy-claude--get-full-model-name
                ollama-buddy-claude-default-model)))
 
-    ;; Store the prompt and initialize response
-    (setq ollama-buddy-claude--current-prompt prompt
-          ollama-buddy-claude--current-response "")
-
     ;; Initialize token counter
     (setq ollama-buddy-claude--current-token-count 0)
 
     ;; Get history and system prompt
-    (let* ((history (when ollama-buddy-history-enabled
+    (let* ((model ollama-buddy-claude--current-model)
+           (history (when ollama-buddy-history-enabled
                       (gethash ollama-buddy-claude--current-model
-                               ollama-buddy-claude--conversation-history-by-model
+                               ollama-buddy--conversation-history-by-model
                                nil)))
            (system-prompt ollama-buddy--current-system-prompt)
            (messages (vconcat []
@@ -125,18 +97,15 @@ Use nil for API default behavior (adaptive)."
                                history
                                `(((role . "user") (content . ,prompt))))))
            (max-tokens (or ollama-buddy-claude-max-tokens 4096))
-           ;; Create base JSON payload
            (json-payload
             `((model . ,(ollama-buddy-claude--get-real-model-name
                          ollama-buddy-claude--current-model))
               (messages . ,messages)
               (temperature . ,ollama-buddy-claude-temperature)
               (max_tokens . ,max-tokens)))
-           ;; Add system parameter if it exists and is not empty
            (json-payload (if (and system-prompt (not (string-empty-p system-prompt)))
                              (append json-payload `((system . ,system-prompt)))
                            json-payload))
-           ;; Create the JSON string with unicode escaping
            (json-str (let ((json-encoding-pretty-print nil))
                        (ollama-buddy-escape-unicode (json-encode json-payload))))
            (endpoint "https://api.anthropic.com/v1/messages"))
@@ -145,14 +114,15 @@ Use nil for API default behavior (adaptive)."
       (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
         (pop-to-buffer (current-buffer))
         (goto-char (point-max))
-        (let (start-point
-              (inhibit-read-only t)
-              (display-name ollama-buddy-claude--current-model))
 
-          (insert (propertize (format "\n\n** [%s: RESPONSE]" display-name)
-                              'face `(:inherit bold :foreground
-                                               ,(ollama-buddy-claude--get-model-color display-name)))
-                  "\n\n")
+        (unless (> (buffer-size) 0)
+          (insert (ollama-buddy--create-intro-message)))
+                
+        (let (start-point
+              (inhibit-read-only t))
+
+          (insert (propertize (format "\n\n** [%s: RESPONSE]" model) 'face
+                              `(:inherit bold :foreground ,(ollama-buddy--get-model-color model))) "\n\n")
 
           (setq start-point (point))
           
@@ -262,8 +232,8 @@ Use nil for API default behavior (adaptive)."
                                    ;; Add to history
                                    (setq ollama-buddy-claude--current-response content)
                                    (when ollama-buddy-history-enabled
-                                     (ollama-buddy-claude--add-to-history "user" prompt)
-                                     (ollama-buddy-claude--add-to-history "assistant" content))
+                                     (ollama-buddy--add-to-history "user" prompt)
+                                     (ollama-buddy--add-to-history "assistant" content))
                                    
                                    ;; Calculate token count
                                    (setq ollama-buddy-claude--current-token-count
@@ -289,136 +259,6 @@ Use nil for API default behavior (adaptive)."
                                 (insert "\n\n*** FAILED")
                                 (ollama-buddy--prepare-prompt-area)
                                 (ollama-buddy--update-status "Failed - JSON parse error"))))))))))))))))))
-
-;; History management functions
-
-(defun ollama-buddy-claude--add-to-history (role content)
-  "Add message with ROLE and CONTENT to Claude conversation history."
-  (when ollama-buddy-history-enabled
-    (let* ((model ollama-buddy-claude--current-model)
-           (history (gethash model ollama-buddy-claude--conversation-history-by-model nil)))
-      
-      ;; Create new history entry for this model if it doesn't exist
-      (unless history
-        (setq history nil))
-      
-      ;; Add the new message to this model's history
-      (setq history
-            (append history
-                    (list `((role . ,role)
-                            (content . ,content)))))
-      
-      ;; Truncate history if needed
-      (when (and (boundp 'ollama-buddy-max-history-length)
-                 (> (length history) (* 2 ollama-buddy-max-history-length)))
-        (setq history (seq-take history (* 2 ollama-buddy-max-history-length))))
-      
-      ;; Update the hash table with the modified history
-      (puthash model history ollama-buddy-claude--conversation-history-by-model))))
-
-(defun ollama-buddy-claude-select-model ()
-  "Select a Claude model to use."
-  (interactive)
-  (let* ((models (mapcar (lambda (m) (ollama-buddy-claude--get-full-model-name m))
-                         ollama-buddy-claude-models))
-         (selected (completing-read "Select Claude model: " models nil t)))
-    (setq ollama-buddy-claude--current-model selected)
-    (setq ollama-buddy--current-model selected) ; Share with main package
-    
-    ;; Update the chat buffer
-    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-      (pop-to-buffer (current-buffer))
-      (ollama-buddy--prepare-prompt-area)
-      (goto-char (point-max)))
-    
-    (message "Selected Claude model: %s"
-             (ollama-buddy-claude--get-real-model-name selected))))
-
-(defun ollama-buddy-claude-clear-history ()
-  "Clear the conversation history for the current Claude model."
-  (interactive)
-  (let ((model ollama-buddy-claude--current-model))
-    (remhash model ollama-buddy-claude--conversation-history-by-model)
-    (message "Claude conversation history cleared for %s" model)))
-
-(defun ollama-buddy-claude-display-history ()
-  "Display the conversation history for the current Claude model."
-  (interactive)
-  (let* ((model ollama-buddy-claude--current-model)
-         (history (gethash model ollama-buddy-claude--conversation-history-by-model nil))
-         (buf (get-buffer-create "*Claude Conversation History*")))
-    
-    (with-current-buffer buf
-      (let ((inhibit-read-only t))
-        (erase-buffer)
-        (insert (format "Claude Conversation History for %s:\n\n" model))
-        
-        (if (null history)
-            (insert "No conversation history available.")
-          (let ((history-count (/ (length history) 2)))
-            (insert (format "Current history: %d message pairs\n\n" history-count))
-            
-            ;; Display the history in chronological order
-            (dolist (msg history)
-              (let* ((role (alist-get 'role msg))
-                     (content (alist-get 'content msg))
-                     (role-face (if (string= role "user")
-                                    '(:inherit bold)
-                                  '(:inherit bold))))
-                (insert (propertize (format "[%s]: " (upcase role)) 'face role-face))
-                (insert (format "%s\n\n" content))))))
-        
-        (view-mode 1)))
-    
-    (display-buffer buf)))
-
-(defun ollama-buddy-claude-configure ()
-  "Configure Claude integration settings."
-  (interactive)
-  (customize-group 'ollama-buddy-claude))
-
-;; Integration with the main package
-
-(defun ollama-buddy-claude-initialize ()
-  "Initialize Claude integration for ollama-buddy."
-  (interactive)
-  
-  ;; Add Claude models to the available models list for completion
-  (dolist (model ollama-buddy-claude-models)
-    (let ((full-name (ollama-buddy-claude--get-full-model-name model)))
-      ;; Generate and store a color for this model
-      (puthash full-name (ollama-buddy--hash-string-to-color full-name)
-               ollama-buddy-claude--model-colors)))
-  
-  ;; Set up the key for API authentication if not set
-  (when (string-empty-p ollama-buddy-claude-api-key)
-    (message "Claude API key not set. Use M-x ollama-buddy-claude-configure to set it"))
-  
-  (message "Claude integration initialized. Use M-x ollama-buddy-claude-select-model to choose a model"))
-
-;; User commands to expose
-
-;;;###autoload
-(defun ollama-buddy-claude-setup ()
-  "Setup the Claude integration."
-  (interactive)
-  (ollama-buddy-claude-initialize)
-  (ollama-buddy-claude-configure))
-
-;; Hook into ollama-buddy's model selection and invoke functions
-;; This function should be called when ollama-buddy is loaded
-(defun ollama-buddy-claude--hook-into-ollama-buddy ()
-  "Hook Claude functionality into the main ollama-buddy package."
-  ;; Add handler for Claude models to the send-prompt function
-  (advice-add 'ollama-buddy--send-prompt :around
-              (lambda (orig-fun prompt &optional model)
-                (let ((model-to-use (or model ollama-buddy--current-model)))
-                  (if (and model-to-use (ollama-buddy-claude--is-claude-model model-to-use))
-                      (ollama-buddy-claude--send prompt model-to-use)
-                    (funcall orig-fun prompt model-to-use))))))
-
-;; Register the hook function to be called when ollama-buddy is loaded
-(add-hook 'ollama-buddy-after-load-hook 'ollama-buddy-claude--hook-into-ollama-buddy)
 
 (provide 'ollama-buddy-claude)
 ;;; ollama-buddy-claude.el ends here

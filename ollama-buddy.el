@@ -2045,11 +2045,12 @@ With prefix argument ALL-MODELS, clear history for all models."
       (setq ollama-buddy--current-prompt prompt)
       
       (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+        (pop-to-buffer (current-buffer))
         (goto-char (point-max))
+        
         (unless (> (buffer-size) 0)
           (insert (ollama-buddy--create-intro-message)))
         
-        ;; Add model info to response header
         (insert (propertize (format "\n\n** [%s: RESPONSE]" model) 'face
                             `(:inherit bold :foreground ,(ollama-buddy--get-model-color model))) "\n\n")
         
