@@ -11,6 +11,12 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-04-17> *0.9.23*
+
+Refactored history and model management for remote LLMs
+
+Removed redundant history and model management functions from =ollama-buddy-claude.el= and =ollama-buddy-openai.el=. Replaced them with shared implementations to streamline code and reduce duplication
+
 ** <2025-04-15> *0.9.22*
 
 Enhanced session management
