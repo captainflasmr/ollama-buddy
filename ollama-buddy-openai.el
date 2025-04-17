@@ -1,7 +1,6 @@
 ;;; ollama-buddy-openai.el --- OpenAI integration for ollama-buddy -*- lexical-binding: t; -*-
 
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.9.23
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
 ;; Package-Requires: ((emacs "28.1"))
