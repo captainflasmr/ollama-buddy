@@ -76,6 +76,7 @@
 
 (declare-function ollama-buddy-openai--send "ollama-buddy-openai")
 (declare-function ollama-buddy-claude--send "ollama-buddy-claude")
+(declare-function ollama-buddy-gemini--send "ollama-buddy-gemini")
 
 (defvar ollama-buddy-mode-line-segment nil
   "Mode line segment for Ollama Buddy.")
@@ -1869,6 +1870,13 @@ With prefix argument ALL-MODELS, clear history for all models."
           (setq ollama-buddy--current-model new-model)
           (setq ollama-buddy-claude--current-model new-model)
           (message "Switched to Claude model: %s" new-model)))
+       ((and (featurep 'ollama-buddy-gemini)
+             (ollama-buddy-gemini--is-gemini-model new-model))
+        (progn
+          (setq ollama-buddy-default-model new-model)
+          (setq ollama-buddy--current-model new-model)
+          (setq ollama-buddy-gemini--current-model new-model)
+          (message "Switched to Gemini model: %s" new-model)))
        (t
         (progn
           (setq ollama-buddy-default-model new-model)
@@ -2001,6 +2009,11 @@ With prefix argument ALL-MODELS, clear history for all models."
           (or specified-model ollama-buddy--current-model)))
     (ollama-buddy--open-chat)
     (ollama-buddy-claude--send prompt specified-model))
+   ((and (featurep 'ollama-buddy-gemini)
+         (ollama-buddy-gemini--is-gemini-model
+          (or specified-model ollama-buddy--current-model)))
+    (ollama-buddy--open-chat)
+    (ollama-buddy-gemini--send prompt specified-model))
    (t
     ;; Original Ollama send code
     (let* ((model-info (ollama-buddy--get-valid-model specified-model))

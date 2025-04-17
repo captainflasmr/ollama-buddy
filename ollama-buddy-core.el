@@ -361,6 +361,26 @@ Each command is defined with:
   :group 'ollama-buddy)
 
 ;; Shared variables
+(defcustom ollama-buddy-gemini-marker-prefix "gemini:"
+  "Prefix used to identify Gemini models in the ollama-buddy interface."
+  :type 'string
+  :group 'ollama-buddy-gemini)
+
+;; Internal variables
+
+(defvar ollama-buddy-gemini--current-model nil
+  "The currently selected Gemini model.")
+
+(defvar ollama-buddy-gemini--current-token-count 0
+  "Counter for tokens in the current Gemini response.")
+
+(defvar ollama-buddy-gemini--available-models
+  '("gemini-1.5-pro"
+    "gemini-1.5-flash"
+    "gemini-1.0-pro"
+    "gemini-1.0-pro-vision")
+  "List of available Gemini models.")
+
 (defcustom ollama-buddy-claude-marker-prefix "claude:"
   "Prefix used to identify Claude models in the model list."
   :type 'string
@@ -541,6 +561,23 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
   "Hash table mapping model names to their colors.")
 
 ;; Core utility functions
+
+(defun ollama-buddy-gemini--is-gemini-model (model)
+  "Check if MODEL is a Gemini model (starts with the marker prefix)."
+  (and model (string-prefix-p ollama-buddy-gemini-marker-prefix model)))
+
+(defun ollama-buddy-gemini--get-full-model-name (model)
+  "Get the full model name with prefix for MODEL."
+  (if (ollama-buddy-gemini--is-gemini-model model)
+      model
+    (concat ollama-buddy-gemini-marker-prefix model)))
+
+(defun ollama-buddy-gemini--get-real-model-name (model)
+  "Extract the actual model name from the prefixed MODEL string."
+  (if (ollama-buddy-gemini--is-gemini-model model)
+      (string-trim (substring model (length ollama-buddy-gemini-marker-prefix)))
+    model))
+
 (defun ollama-buddy-open-info ()
   "Open the Info manual for the ollama-buddy package."
   (interactive)
@@ -984,6 +1021,9 @@ When complete, CALLBACK is called with the status response and result."
     (when (featurep 'ollama-buddy-claude)
       (dolist (model ollama-buddy-claude-models)
         (push (ollama-buddy-claude--get-full-model-name model) models)))
+    (when (featurep 'ollama-buddy-gemini)
+      (dolist (model ollama-buddy-gemini--available-models)
+        (push (ollama-buddy-gemini--get-full-model-name model) models)))
     models))
 
 (defun ollama-buddy--get-models ()
