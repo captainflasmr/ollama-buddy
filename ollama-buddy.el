@@ -967,7 +967,7 @@ Returns the full prompt text ready to be sent."
   (unless (file-directory-p ollama-buddy-sessions-directory)
     (make-directory ollama-buddy-sessions-directory t)))
 
-(defun get-first-words-of-first-user-content ()
+(defun ollama-buddy--get-first-words-of-first-user-content ()
   (if (gethash ollama-buddy--current-model ollama-buddy--conversation-history-by-model nil)
       (progn
         (let* ((content
@@ -982,7 +982,7 @@ Returns the full prompt text ready to be sent."
   (interactive)
   (let* ((default-name (concat (format-time-string "%F-%H%M%S--")
                                (replace-regexp-in-string " " "-" (concat ollama-buddy--current-model
-                                                                         (get-first-words-of-first-user-content)))))
+                                                                         (ollama-buddy--get-first-words-of-first-user-content)))))
          (session-name (read-string "Session name/description: " default-name))
          (session-file (expand-file-name (concat session-name ".el") ollama-buddy-sessions-directory))
          (org-file (expand-file-name (concat session-name ".org") ollama-buddy-sessions-directory)))

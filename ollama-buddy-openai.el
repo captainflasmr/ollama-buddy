@@ -1,10 +1,13 @@
 ;;; ollama-buddy-openai.el --- OpenAI integration for ollama-buddy -*- lexical-binding: t; -*-
 
 ;; Author: James Dyer <captainflasmr@gmail.com>
+;; Version: 0.9.22
 ;; Keywords: applications, tools, convenience
-;; Package-Requires: ((emacs "28.1") (url "1.2"))
+;; URL: https://github.com/captainflasmr/ollama-buddy
+;; Package-Requires: ((emacs "28.1"))
 
 ;;; Commentary:
+;;
 ;; This extension provides OpenAI (ChatGPT) integration for the ollama-buddy package.
 ;; It allows users to interact with OpenAI's language models using the same interface
 ;; as ollama-buddy, providing seamless switching between local Ollama models and

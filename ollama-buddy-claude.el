@@ -1,8 +1,10 @@
 ;;; ollama-buddy-claude.el --- Anthropic Claude integration for ollama-buddy -*- lexical-binding: t; -*-
 
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Keywordsisend: applications, tools, convenience
-;; Package-Requires: ((emacs "28.1") (url "1.2"))
+;; Version: 0.9.22
+;; Keywords: applications, tools, convenience
+;; URL: https://github.com/captainflasmr/ollama-buddy
+;; Package-Requires: ((emacs "28.1"))
 
 ;;; Commentary:
 ;; This extension provides Anthropic Claude integration for the ollama-buddy package.
@@ -117,7 +119,7 @@ Use nil for API default behavior (adaptive)."
 
         (unless (> (buffer-size) 0)
           (insert (ollama-buddy--create-intro-message)))
-                
+        
         (let (start-point
               (inhibit-read-only t))
 
@@ -230,7 +232,6 @@ Use nil for API default behavior (adaptive)."
                                      (set-register reg-char new-content))
                                    
                                    ;; Add to history
-                                   (setq ollama-buddy-claude--current-response content)
                                    (when ollama-buddy-history-enabled
                                      (ollama-buddy--add-to-history "user" prompt)
                                      (ollama-buddy--add-to-history "assistant" content))
