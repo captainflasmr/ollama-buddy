@@ -555,6 +555,124 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
 
 ;; Core utility functions
 
+(defun ollama-buddy--create-intro-message ()
+  "Create welcome message with model management capabilities in org format."
+  (ollama-buddy--assign-model-letters)
+  (let* ((available-models (when (ollama-buddy--ollama-running)
+                             (ollama-buddy--get-models)))
+         ;; Get models available for pull but not yet downloaded
+         (models-to-pull (when (ollama-buddy--ollama-running)
+                           (cl-set-difference
+                            ollama-buddy-available-models
+                            available-models
+                            :test #'string=)))
+         ;; Basic tips for beginners
+         (basic-tips
+          "- Ask me anything!                    C-c C-c
+- Main transient menu                 C-c O
+- Cancel request                      C-c C-k
+- Change model                        C-c m
+- Browse prompt history               M-p/n/r
+- Browse ollama-buddy manual          C-c ?
+- Advanced interface (show all tips)  C-c A")
+         ;; Advanced tips for experienced users
+         (advanced-tips
+          "- Ask me anything!                    C-c C-c
+- Cancel request                      C-c C-k
+- Main transient menu                 C-c O
+- Manage models                       C-c W
+- Browse prompt history               M-p/n/r
+- Browse ollama-buddy manual          C-c ?
+- Show Help/Status/Debug              C-c h/v/B
+- Show Token Stats/Graph/Report       C-c u/U/T
+- Model Change/Info/Multishot         C-c m/i/M
+- Toggle Streaming                    C-c x
+- System Prompt Set/Show/Reset        C-c s/C-s/r
+- Param Menu/Profiles/Show/Help/Reset C-c P/p/G/I/K
+- History Toggle/Clear/Show/Edit      C-c H/X/J
+- Session New/Load/Save/List/Delete   C-c N/L/S/Q/Z
+- Role Switch/Create/Directory        C-c R/E/D
+- Fabric Patterns Menu                C-c f
+- Awesome ChatGPT Patterns Menu       C-c w
+- Toggle Display Colors/Markdown      C-c c/C-o
+- Show Buddy custom menu              C-c b
+- Basic interface (simpler display)   C-c A
+
+[[elisp:(call-interactively #'ollama-buddy-import-gguf-file)][Import-GGUF-File]] [[elisp:(call-interactively #'ollama-buddy-pull-model)][Pull-Any-Model]]")
+         ;; Choose tips based on interface level
+         (tips-section (if (eq ollama-buddy-interface-level 'basic)
+                           basic-tips
+                         advanced-tips))
+         ;; Create model management section
+         (models-management-section
+          (when available-models
+            (concat
+             (mapconcat
+              (lambda (model)
+                (let ((model-letter (ollama-buddy--get-model-letter model)))
+                  (concat
+                   (format
+                    "(%c) %s [[elisp:(ollama-buddy-select-model \"%s\")][Select]] "
+                    model-letter model model)
+                   (format
+                    "[[elisp:(ollama-buddy-show-raw-model-info \"%s\")][Info]] " model)
+                   (format "[[elisp:(ollama-buddy-pull-model \"%s\")][Pull]] " model)
+                   (format "[[elisp:(ollama-buddy-copy-model \"%s\")][Copy]] " model)
+                   (format
+                    "[[elisp:(ollama-buddy-delete-model \"%s\"))][Delete]]"
+                    model))))
+              available-models
+              "\n")
+             "\n\n")))
+         
+         ;; Create section for models available to pull but not yet downloaded
+         (models-to-pull-section
+          (when (and models-to-pull (not (null models-to-pull)))
+            (concat
+             (mapconcat
+              (lambda (model)
+                (format "[[elisp:(ollama-buddy-pull-model \"%s\")][%s]]"
+                        model model))
+              models-to-pull
+              " ")
+             "\n\n")))
+
+         ;; Models with letters (the original section)
+         (message-text
+          (concat
+           (when (= (buffer-size) 0)
+             (concat "#+TITLE: Ollama Buddy Chat"))
+           "\n\n* Welcome to OLLAMA BUDDY\n\n"
+           "#+begin_example\n"
+           " ___ _ _      n _ n      ___       _   _ _ _\n"
+           "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |\n"
+           "| | | | | .  |     | .  | . | | | . | . |__ |\n"
+           "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n"
+           "#+end_example\n\n"
+           (when (not (ollama-buddy--check-status))
+             "** *THERE IS NO OLLAMA RUNNING*\n
+please run =ollama serve=\n\n")
+           models-management-section
+           models-to-pull-section
+           tips-section)))
+
+    ;; Apply overlay colors to model names
+    (with-temp-buffer
+      (insert message-text)
+      (goto-char (point-min))
+      ;; Find model names in the format "=model-name=" and apply face
+      (while (re-search-forward "=\\([^=]+\\)=" nil t)
+        (let* ((model-name (match-string 1))
+               (color (ollama-buddy--get-model-color model-name))
+               (start (match-beginning 0))
+               (end (match-end 0)))
+          (add-text-properties start end `(face (:foreground ,color :weight bold)) (current-buffer))))
+      (setq message-text (buffer-string)))
+    
+    ;; Add bold face to the entire message
+    (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
+    message-text))
+
 (defun ollama-buddy-gemini--is-gemini-model (model)
   "Check if MODEL is a Gemini model (starts with the marker prefix)."
   (and model (string-prefix-p ollama-buddy-gemini-marker-prefix model)))
