@@ -374,11 +374,16 @@ Each command is defined with:
 (defvar ollama-buddy-gemini--current-token-count 0
   "Counter for tokens in the current Gemini response.")
 
+;; https://ai.google.dev/gemini-api/docs/models
+;; https://ai.google.dev/gemini-api/docs/models#gemini-2.5-pro-preview-03-25
 (defvar ollama-buddy-gemini--available-models
-  '("gemini-1.5-pro"
+  '(
+    "gemini-2.0-flash"
+    "gemini-2.0-flash-lite"
     "gemini-1.5-flash"
-    "gemini-1.0-pro"
-    "gemini-1.0-pro-vision")
+    "gemini-1.5-flash-8b"
+    "gemini-1.5-pro"
+    )
   "List of available Gemini models.")
 
 (defcustom ollama-buddy-claude-marker-prefix "claude:"
@@ -444,7 +449,10 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
   "The currently active OpenAI model.")
 
 (defcustom ollama-buddy-openai-models
-  '("gpt-4o-mini" "gpt-4o" "gpt-3.5-turbo")
+  '(
+    "gpt-4o-mini"
+    "gpt-4o"
+    "gpt-3.5-turbo")
   "List of available OpenAI models."
   :type '(repeat string)
   :group 'ollama-buddy-openai)

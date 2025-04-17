@@ -234,5 +234,50 @@ Use nil for API default behavior (adaptive)."
                                 (ollama-buddy--prepare-prompt-area)
                                 (ollama-buddy--update-status "Failed - JSON parse error"))))))))))))))))))
 
+(defun ollama-buddy-openai--fetch-models ()
+  "Fetch available models from OpenAI API."
+  (when (ollama-buddy-openai--verify-api-key)
+    (ollama-buddy--update-status "Fetching OpenAI models...")
+    (let* ((url-request-method "GET")
+           (url-request-extra-headers
+            `(("Authorization" . ,(concat "Bearer " ollama-buddy-openai-api-key)))))
+      
+      (url-retrieve
+       "https://api.openai.com/v1/models"
+       (lambda (status)
+         (if (plist-get status :error)
+             (progn
+               (message "Error fetching OpenAI models: %s" (prin1-to-string (plist-get status :error)))
+               (ollama-buddy--update-status "Failed to fetch OpenAI models"))
+           
+           ;; Success - process the response
+           (progn
+             (goto-char (point-min))
+             (when (re-search-forward "\n\n" nil t)
+               (let* ((json-response-raw (buffer-substring (point) (point-max)))
+                      (json-object-type 'alist)
+                      (json-array-type 'vector)
+                      (json-key-type 'symbol))
+                 
+                 (condition-case err
+                     (let* ((json-response (json-read-from-string json-response-raw))
+                            (models-data (alist-get 'data json-response))
+                            (models (mapcar (lambda (model-info)
+                                              (alist-get 'id model-info))
+                                            (append models-data nil)))
+                            (chat-models (cl-remove-if-not
+                                          (lambda (model)
+                                            (string-match-p "\\(gpt\\|claude\\)" model))
+                                          models)))
+                       
+                       ;; Store models and update status
+                       (setq ollama-buddy-openai-models chat-models)
+                       (ollama-buddy--update-status (format "Fetched %d OpenAI models" (length chat-models))))
+                   (error
+                    (message "Error parsing OpenAI models response: %s" (error-message-string err))
+                    (ollama-buddy--update-status "Failed to parse OpenAI models response"))))))))))))
+
+(ollama-buddy-openai--fetch-models)
+
 (provide 'ollama-buddy-openai)
 ;;; ollama-buddy-openai.el ends here
