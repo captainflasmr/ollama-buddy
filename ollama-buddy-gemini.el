@@ -277,23 +277,57 @@ Use nil for API default behavior (adaptive)."
                                 (ollama-buddy--prepare-prompt-area)
                                 (ollama-buddy--update-status "Failed - JSON parse error"))))))))))))))))))
 
-;; Integration with ollama-buddy
+(defun ollama-buddy-gemini--fetch-models ()
+  "Fetch available models from Google Gemini API."
+  (when (ollama-buddy-gemini--verify-api-key)
+    (ollama-buddy--update-status "Fetching Gemini models...")
+    (let* ((url-request-method "GET")
+           (url-request-extra-headers
+            `(("x-goog-api-key" . ,ollama-buddy-gemini-api-key))))
+      
+      (url-retrieve
+       "https://generativelanguage.googleapis.com/v1/models"
+       (lambda (status)
+         (if (plist-get status :error)
+             (progn
+               (message "Error fetching Gemini models: %s" (prin1-to-string (plist-get status :error)))
+               (ollama-buddy--update-status "Failed to fetch Gemini models"))
+           
+           ;; Success - process the response
+           (progn
+             (goto-char (point-min))
+             (when (re-search-forward "\n\n" nil t)
+               (let* ((json-response-raw (buffer-substring (point) (point-max)))
+                      (json-object-type 'alist)
+                      (json-array-type 'vector)
+                      (json-key-type 'symbol))
+                 
+                 (condition-case err
+                     (let* ((json-response (json-read-from-string json-response-raw))
+                            (models-data (alist-get 'models json-response))
+                            (models (mapcar (lambda (model-info)
+                                              (alist-get 'name model-info))
+                                            (append models-data nil)))
+                            ;; Extract just the model name part, removing the "models/" prefix
+                            (processed-models (mapcar (lambda (model)
+                                                        (if (string-match "models/\\(.*\\)" model)
+                                                            (match-string 1 model)
+                                                          model))
+                                                      models))
+                            ;; Filter to include only gemini models
+                            (gemini-models (cl-remove-if-not
+                                           (lambda (model)
+                                             (string-match-p "gemini" model))
+                                           processed-models)))
+                       
+                       ;; Store models and update status
+                       (setq ollama-buddy-gemini--available-models gemini-models)
+                       (ollama-buddy--update-status (format "Fetched %d Gemini models" (length gemini-models))))
+                   (error
+                    (message "Error parsing Gemini models response: %s" (error-message-string err))
+                    (ollama-buddy--update-status "Failed to parse Gemini models response"))))))))))))
 
-(defun ollama-buddy-gemini--get-models ()
-  "Return list of Gemini models with proper prefix."
-  (mapcar (lambda (model)
-            (ollama-buddy-gemini--get-full-model-name model))
-          ollama-buddy-gemini--available-models))
-
-;; Hook to add Gemini models to the available models list
-(defun ollama-buddy-gemini--add-models-to-list ()
-  "Add Gemini models to the available models list."
-  (setq ollama-buddy-available-models 
-        (append ollama-buddy-available-models 
-                (ollama-buddy-gemini--get-models))))
-
-;; Load hook
-(add-hook 'ollama-buddy-after-init-hook #'ollama-buddy-gemini--add-models-to-list)
+(ollama-buddy-gemini--fetch-models)
 
 ;; Initialize
 (provide 'ollama-buddy-gemini)

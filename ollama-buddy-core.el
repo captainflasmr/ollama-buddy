@@ -376,14 +376,7 @@ Each command is defined with:
 
 ;; https://ai.google.dev/gemini-api/docs/models
 ;; https://ai.google.dev/gemini-api/docs/models#gemini-2.5-pro-preview-03-25
-(defvar ollama-buddy-gemini--available-models
-  '(
-    "gemini-2.0-flash"
-    "gemini-2.0-flash-lite"
-    "gemini-1.5-flash"
-    "gemini-1.5-flash-8b"
-    "gemini-1.5-pro"
-    )
+(defvar ollama-buddy-gemini--available-models nil
   "List of available Gemini models.")
 
 (defcustom ollama-buddy-claude-marker-prefix "claude:"
@@ -391,11 +384,7 @@ Each command is defined with:
   :type 'string
   :group 'ollama-buddy-claude)
 
-(defcustom ollama-buddy-claude-models
-  '("claude-3-7-sonnet-20250219"
-    "claude-3-5-sonnet-20240620"
-    "claude-3-opus-20240229"
-    "claude-3-5-haiku-20240307")
+(defcustom ollama-buddy-claude-models nil
   "List of available Claude models."
   :type '(repeat string)
   :group 'ollama-buddy-claude)
@@ -448,11 +437,7 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
 (defvar ollama-buddy-openai--current-model nil
   "The currently active OpenAI model.")
 
-(defcustom ollama-buddy-openai-models
-  '(
-    "gpt-4o-mini"
-    "gpt-4o"
-    "gpt-3.5-turbo")
+(defcustom ollama-buddy-openai-models nil
   "List of available OpenAI models."
   :type '(repeat string)
   :group 'ollama-buddy-openai)

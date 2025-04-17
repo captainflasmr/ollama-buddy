@@ -261,5 +261,55 @@ Use nil for API default behavior (adaptive)."
                                 (ollama-buddy--prepare-prompt-area)
                                 (ollama-buddy--update-status "Failed - JSON parse error"))))))))))))))))))
 
+(defun ollama-buddy-claude--fetch-models ()
+  "Fetch available models from Anthropic's Claude API."
+  (when (ollama-buddy-claude--verify-api-key)
+    (ollama-buddy--update-status "Fetching Claude models...")
+    (let* ((url-request-method "GET")
+           (url-request-extra-headers
+            `(("x-api-key" . ,ollama-buddy-claude-api-key)
+              ("anthropic-version" . "2023-06-01"))))
+      
+      (url-retrieve
+       "https://api.anthropic.com/v1/models"
+       (lambda (status)
+         (if (plist-get status :error)
+             (progn
+               (message "Error fetching Claude models: %s" (prin1-to-string (plist-get status :error)))
+               (ollama-buddy--update-status "Failed to fetch Claude models"))
+           
+           ;; Success - process the response
+           (progn
+             (goto-char (point-min))
+             (when (re-search-forward "\n\n" nil t)
+               (let* ((json-response-raw (buffer-substring (point) (point-max)))
+                      (json-object-type 'alist)
+                      (json-array-type 'vector)
+                      (json-key-type 'symbol))
+                 
+                 (condition-case err
+                     (let* ((json-response (json-read-from-string json-response-raw))
+                            (models-data (alist-get 'data json-response))
+                            (models (mapcar (lambda (model-info)
+                                              (alist-get 'id model-info))
+                                            (append models-data nil)))
+                            ;; Filter to only include Claude models (should be all of them)
+                            (claude-models (cl-remove-if-not
+                                            (lambda (model)
+                                              (string-match-p "claude" model))
+                                            models)))
+                       
+                       ;; Store models and update status
+                       (setq ollama-buddy-claude-models claude-models)
+                       (ollama-buddy--update-status (format "Fetched %d Claude models" (length claude-models)))
+                       (message "Available Claude models: %s" 
+                                (mapconcat #'identity claude-models ", ")))
+                   
+                   (error
+                    (message "Error parsing Claude models response: %s" (error-message-string err))
+                    (ollama-buddy--update-status "Failed to parse Claude models response"))))))))))))
+
+(ollama-buddy-claude--fetch-models)
+
 (provide 'ollama-buddy-claude)
 ;;; ollama-buddy-claude.el ends here
