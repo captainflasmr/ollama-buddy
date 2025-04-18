@@ -2227,26 +2227,16 @@ With prefix argument ALL-MODELS, clear history for all models."
                 (model (or ollama-buddy--current-model
                            ollama-buddy-default-model "NONE"))
                 
-                (available-models-text
-                 (if (ollama-buddy--ollama-running)
-                     (mapconcat (lambda (model)
-                                  (propertize model 'face
-                                              `(:inherit bold :foreground
-                                                         ,(ollama-buddy--get-model-color model))))
-                                (ollama-buddy--get-models) " ")
-                   "No models available"))
-                
                 (colored-current-model
                  (propertize model 'face `(:foreground
                                            ,(ollama-buddy--get-model-color
                                              model)
                                            :weight bold)))
                 (prompt
-                 (format "%s %s%s\nAvailable: %s\n%s"
+                 (format "%s %s%s\n%s"
                          (if ollama-status "RUNNING" "NOT RUNNING")
                          colored-current-model
                          (if (use-region-p) "" " (NO SELECTION)")
-                         available-models-text
                          (mapconcat
                           (lambda (row)
                             (if format-string
