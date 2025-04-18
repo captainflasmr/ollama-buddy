@@ -331,8 +331,8 @@ Use nil for API default behavior (adaptive)."
                                            processed-models)))
                        
                        ;; Store models and update status
-                       (setq ollama-buddy-gemini-models gemini-models)
-                       (ollama-buddy--update-status (format "Fetched %d Gemini models" (length gemini-models))))
+                       (setq ollama-buddy-gemini-models gemini-models))
+                       ;; (ollama-buddy--update-status (format "Fetched %d Gemini models" (length gemini-models)))
                    (error
                     (message "Error parsing Gemini models response: %s" (error-message-string err))
                     (ollama-buddy--update-status "Failed to parse Gemini models response"))))))))))))

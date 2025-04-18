@@ -272,8 +272,8 @@ Use nil for API default behavior (adaptive)."
                                           models)))
                        
                        ;; Store models and update status
-                       (setq ollama-buddy-openai-models chat-models)
-                       (ollama-buddy--update-status (format "Fetched %d OpenAI models" (length chat-models))))
+                       (setq ollama-buddy-openai-models chat-models))
+                       ;; (ollama-buddy--update-status (format "Fetched %d OpenAI models" (length chat-models)))
                    (error
                     (message "Error parsing OpenAI models response: %s" (error-message-string err))
                     (ollama-buddy--update-status "Failed to parse OpenAI models response"))))))))))))

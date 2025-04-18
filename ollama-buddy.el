@@ -1953,10 +1953,7 @@ With prefix argument ALL-MODELS, clear history for all models."
 (defun ollama-buddy--send (&optional prompt specified-model)
   "Send PROMPT with optional SYSTEM-PROMPT, SUFFIX and SPECIFIED-MODEL."
   ;; Check status and update UI if offline
-  (unless (or (ollama-buddy--check-status)
-              (and (featurep 'ollama-buddy-openai)
-                   (ollama-buddy-openai--is-openai-model
-                    (or specified-model ollama-buddy--current-model))))
+  (unless (or (ollama-buddy--check-status))
     (ollama-buddy--update-status "OFFLINE")
     (user-error "Ensure Ollama is running"))
 

@@ -301,11 +301,8 @@ Use nil for API default behavior (adaptive)."
                                             models)))
                        
                        ;; Store models and update status
-                       (setq ollama-buddy-claude-models claude-models)
-                       (ollama-buddy--update-status (format "Fetched %d Claude models" (length claude-models)))
-                       (message "Available Claude models: %s" 
-                                (mapconcat #'identity claude-models ", ")))
-                   
+                       (setq ollama-buddy-claude-models claude-models))
+                       ;; (ollama-buddy--update-status (format "Fetched %d Claude models" (length claude-models)))
                    (error
                     (message "Error parsing Claude models response: %s" (error-message-string err))
                     (ollama-buddy--update-status "Failed to parse Claude models response"))))))))))))
