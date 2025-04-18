@@ -8,6 +8,16 @@
 
 * Features as they come in
 
+** <2025-04-18> *0.9.31*
+
+Refactored model prefixing logic and cleaned up
+
+- Standardized model prefixing by introducing distinct prefixes for Ollama (=o:=), OpenAI (=g:=), Claude (=c:=), and Gemini (=e:=) models.
+- Centralized functions to get full model names with prefixes across different model types.
+- Removed redundant and unused variables related to model management.
+
+Note that there may be some breaking changes here especially regarding session recall as all models will now have a prefix to uniquely identify their type.  For =ollama= recall, just edit the session files to prepend the ollama prefix of "o:"
+
 ** <2025-04-17> *0.9.30*
 
 Added Gemini integration!
