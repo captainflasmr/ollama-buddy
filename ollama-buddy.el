@@ -1980,8 +1980,8 @@ With prefix argument ALL-MODELS, clear history for all models."
    (t
     ;; Original Ollama send code
     (let* ((model-info (ollama-buddy--get-valid-model specified-model))
-           (model (ollama-buddy--get-real-model-name (car model-info)))
-           (original-model (ollama-buddy--get-real-model-name (cdr model-info)))
+           (model (car model-info))
+           (original-model (cdr model-info))
            (messages (ollama-buddy--get-history-for-request))
            ;; If we have a system prompt, add it to the request
            (messages-with-system
@@ -1997,7 +1997,7 @@ With prefix argument ALL-MODELS, clear history for all models."
            ;; Get only the modified parameters
            (modified-options (ollama-buddy-params-get-for-request))
            ;; Build the base payload
-           (base-payload `((model . ,model)
+           (base-payload `((model . ,(ollama-buddy--get-real-model-name model))
                            (messages . ,(vconcat [] messages-all))
                            (stream . ,(if ollama-buddy-streaming-enabled t :json-false))))
            ;; Add system prompt if present
@@ -2014,12 +2014,10 @@ With prefix argument ALL-MODELS, clear history for all models."
                             with-suffix))
            (payload (json-encode final-payload)))
 
-      (message "##send %s %s\n" model original-model)
-
       (unless ollama-buddy--multishot-sequence
         (set-register ollama-buddy-default-register ""))
       
-      (setq ollama-buddy--current-model (car model-info))
+      (setq ollama-buddy--current-model model)
       (setq ollama-buddy--current-prompt prompt)
       
       (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
