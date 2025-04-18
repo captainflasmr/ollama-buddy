@@ -1606,7 +1606,7 @@ With prefix argument ALL-MODELS, clear history for all models."
       (setq ollama-buddy--current-model ollama-buddy-default-model)
       (when (not ollama-buddy-default-model)
         ;; just get the first model
-        (let ((model (car (ollama-buddy--get-models))))
+        (let ((model (ollama-buddy--get-full-model-name (car (ollama-buddy--get-models)))))
           (setq ollama-buddy--current-model model)
           (setq ollama-buddy-default-model model)
           (insert (format "\n\n* NO DEFAULT MODEL : Using best guess : %s" model))))
