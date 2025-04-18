@@ -44,13 +44,6 @@ When disabled, responses only appear after completion."
   :type 'boolean
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-params-modified
-  nil
-  "Set of parameters that have been explicitly modified by the user.
-These are the only parameters that will be sent to Ollama."
-  :type '(set symbol)
-  :group 'ollama-buddy-params)
-
 (defcustom ollama-buddy-interface-level 'basic
   "Level of interface complexity to display."
   :type '(choice (const :tag "Basic (for beginners)" basic)
@@ -298,11 +291,6 @@ Each command is defined with:
   :type 'directory
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-connection-check-interval 5
-  "Interval in seconds to check Ollama connection status."
-  :type 'integer
-  :group 'ollama-buddy)
-
 (defcustom ollama-buddy-history-enabled t
   "Whether to use conversation history in Ollama requests."
   :type 'boolean
@@ -316,17 +304,6 @@ Each command is defined with:
 (defcustom ollama-buddy-show-history-indicator t
   "Whether to show the history indicator in the header line."
   :type 'boolean
-  :group 'ollama-buddy)
-
-;; Auto-save session functionality
-(defcustom ollama-buddy-auto-save-session nil
-  "Whether to automatically save session on exit."
-  :type 'boolean
-  :group 'ollama-buddy)
-
-(defcustom ollama-buddy-auto-save-session-name "autosave"
-  "Name to use for auto-saved sessions."
-  :type 'string
   :group 'ollama-buddy)
 
 (defcustom ollama-buddy-display-token-stats nil
@@ -360,31 +337,40 @@ Each command is defined with:
   :type '(repeat string)
   :group 'ollama-buddy)
 
-;; Shared variables
-(defcustom ollama-buddy-gemini-marker-prefix "gemini:"
-  "Prefix used to identify Gemini models in the ollama-buddy interface."
+(defcustom ollama-buddy-ollama-marker-prefix "ollama:"
+  "Prefix used to identify Ollama models in the ollama-buddy interface."
   :type 'string
-  :group 'ollama-buddy-gemini)
+  :group 'ollama-buddy)
 
-;; Internal variables
-
-(defvar ollama-buddy-gemini--current-token-count 0
-  "Counter for tokens in the current Gemini response.")
-
-;; https://ai.google.dev/gemini-api/docs/models
-;; https://ai.google.dev/gemini-api/docs/models#gemini-2.5-pro-preview-03-25
-(defvar ollama-buddy-gemini--available-models nil
-  "List of available Gemini models.")
+(defcustom ollama-buddy-openai-marker-prefix "gpt:"
+  "Prefix to indicate that a model is from OpenAI rather than Ollama."
+  :type 'string
+  :group 'ollama-buddy-openai)
 
 (defcustom ollama-buddy-claude-marker-prefix "claude:"
   "Prefix used to identify Claude models in the model list."
   :type 'string
   :group 'ollama-buddy-claude)
 
+(defcustom ollama-buddy-gemini-marker-prefix "gemini:"
+  "Prefix used to identify Gemini models in the ollama-buddy interface."
+  :type 'string
+  :group 'ollama-buddy-gemini)
+
+(defcustom ollama-buddy-openai-models nil
+  "List of available OpenAI models."
+  :type '(repeat string)
+  :group 'ollama-buddy-openai)
+
 (defcustom ollama-buddy-claude-models nil
   "List of available Claude models."
   :type '(repeat string)
   :group 'ollama-buddy-claude)
+
+(defcustom ollama-buddy-gemini-models nil
+  "List of available Gemini models."
+  :type '(repeat string)
+  :group 'ollama-buddy-gemini)
 
 (defvar ollama-buddy-current-session-name nil
   "The name of the currently loaded session.")
@@ -422,16 +408,6 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
 
 (defvar ollama-buddy--models-cache-ttl 5
   "Time-to-live for models cache in seconds.")
-
-(defcustom ollama-buddy-openai-marker-prefix "GPT"
-  "Prefix to indicate that a model is from OpenAI rather than Ollama."
-  :type 'string
-  :group 'ollama-buddy-openai)
-
-(defcustom ollama-buddy-openai-models nil
-  "List of available OpenAI models."
-  :type '(repeat string)
-  :group 'ollama-buddy-openai)
 
 (defvar ollama-buddy-roles--current-role "default"
   "The currently active ollama-buddy role.")
@@ -684,12 +660,6 @@ please run =ollama serve=\n\n")
   (if (ollama-buddy-gemini--is-gemini-model model)
       model
     (concat ollama-buddy-gemini-marker-prefix model)))
-
-(defun ollama-buddy-gemini--get-real-model-name (model)
-  "Extract the actual model name from the prefixed MODEL string."
-  (if (ollama-buddy-gemini--is-gemini-model model)
-      (string-trim (substring model (length ollama-buddy-gemini-marker-prefix)))
-    model))
 
 (defun ollama-buddy-open-info ()
   "Open the Info manual for the ollama-buddy package."
@@ -1135,7 +1105,7 @@ When complete, CALLBACK is called with the status response and result."
       (dolist (model ollama-buddy-claude-models)
         (push (ollama-buddy-claude--get-full-model-name model) models)))
     (when (featurep 'ollama-buddy-gemini)
-      (dolist (model ollama-buddy-gemini--available-models)
+      (dolist (model ollama-buddy-gemini-models)
         (push (ollama-buddy-gemini--get-full-model-name model) models)))
     models))
 

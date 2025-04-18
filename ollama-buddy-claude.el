@@ -56,6 +56,8 @@ Use nil for API default behavior (adaptive)."
 (defvar ollama-buddy-claude--current-token-count 0
   "Counter for tokens in the current Claude response.")
 
+;; Helper functions
+
 (defun ollama-buddy-claude--get-real-model-name (model)
   "Extract the actual model name from the prefixed MODEL string."
   (if (ollama-buddy-claude--is-claude-model model)
@@ -109,7 +111,7 @@ Use nil for API default behavior (adaptive)."
                            json-payload))
            (json-str (let ((json-encoding-pretty-print nil))
                        (ollama-buddy-escape-unicode (json-encode json-payload))))
-           (endpoint "https://api.anthropic.com/v1/messages"))
+           (endpoint ollama-buddy-claude-api-endpoint))
 
       ;; Prepare chat buffer
       (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)

@@ -57,6 +57,8 @@ Use nil for API default behavior (adaptive)."
 (defvar ollama-buddy-openai--current-token-count 0
   "Counter for tokens in the current OpenAI response.")
 
+;; Helper functions
+
 (defun ollama-buddy-openai--get-real-model-name (model)
   "Extract the actual model name from the prefixed MODEL string."
   (if (ollama-buddy-openai--is-openai-model model)

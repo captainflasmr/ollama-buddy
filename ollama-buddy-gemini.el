@@ -53,7 +53,28 @@ Use nil for API default behavior (adaptive)."
   :type '(choice integer (const nil))
   :group 'ollama-buddy-gemini)
 
+;; Internal variables
+
+(defvar ollama-buddy-gemini--current-token-count 0
+  "Counter for tokens in the current Gemini response.")
+
 ;; Helper functions
+
+(defun ollama-buddy-gemini--get-real-model-name (model)
+  "Extract the actual model name from the prefixed MODEL string."
+  (if (ollama-buddy-gemini--is-gemini-model model)
+      (string-trim (substring model (length ollama-buddy-gemini-marker-prefix)))
+    model))
+
+;; API interaction functions
+
+(defun ollama-buddy-gemini--verify-api-key ()
+  "Verify that the API key is set."
+  (if (string-empty-p ollama-buddy-gemini-api-key)
+      (progn
+        (customize-variable 'ollama-buddy-gemini-api-key)
+        (error "Please set your Google Gemini API key"))
+    t))
 
 (defun ollama-buddy-gemini--format-messages (messages)
   "Format chat MESSAGES for the Gemini API."
@@ -75,16 +96,6 @@ Use nil for API default behavior (adaptive)."
                   (parts . [((text . ,content))]))
                 formatted-contents))))
     (vconcat [] (reverse formatted-contents))))
-
-;; API interaction functions
-
-(defun ollama-buddy-gemini--verify-api-key ()
-  "Verify that the API key is set."
-  (if (string-empty-p ollama-buddy-gemini-api-key)
-      (progn
-        (customize-variable 'ollama-buddy-gemini-api-key)
-        (error "Please set your Google Gemini API key"))
-    t))
 
 (defun ollama-buddy-gemini--send (prompt &optional model)
   "Send PROMPT to Gemini's API using MODEL or default model asynchronously."
@@ -320,7 +331,7 @@ Use nil for API default behavior (adaptive)."
                                            processed-models)))
                        
                        ;; Store models and update status
-                       (setq ollama-buddy-gemini--available-models gemini-models)
+                       (setq ollama-buddy-gemini-models gemini-models)
                        (ollama-buddy--update-status (format "Fetched %d Gemini models" (length gemini-models))))
                    (error
                     (message "Error parsing Gemini models response: %s" (error-message-string err))
