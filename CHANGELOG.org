@@ -15,7 +15,7 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 Refactored model prefixing logic and cleaned up
 
-- Standardized model prefixing by introducing distinct prefixes for Ollama (=o:=), OpenAI (=g:=), Claude (=c:=), and Gemini (=e:=) models.
+- Standardized model prefixing by introducing distinct prefixes for Ollama (=o:=), OpenAI (=a:=), Claude (=c:=), and Gemini (=g:=) models.
 - Centralized functions to get full model names with prefixes across different model types.
 - Removed redundant and unused variables related to model management.
 
