@@ -90,9 +90,9 @@ Use nil for API default behavior (adaptive)."
   "Send PROMPT to Gemini's API using MODEL or default model asynchronously."
   (when (ollama-buddy-gemini--verify-api-key)
     ;; Set up the current model
-    (setq ollama-buddy-gemini--current-model
+    (setq ollama-buddy--current-model
           (or model
-              ollama-buddy-gemini--current-model
+              ollama-buddy--current-model
               (ollama-buddy-gemini--get-full-model-name
                ollama-buddy-gemini-default-model)))
 
@@ -101,9 +101,9 @@ Use nil for API default behavior (adaptive)."
 
     ;; Get history and system prompt
     (let* ((model-name (ollama-buddy-gemini--get-real-model-name
-                        ollama-buddy-gemini--current-model))
+                        ollama-buddy--current-model))
            (history (when ollama-buddy-history-enabled
-                      (gethash ollama-buddy-gemini--current-model
+                      (gethash ollama-buddy--current-model
                                ollama-buddy--conversation-history-by-model
                                nil)))
            (system-prompt ollama-buddy--current-system-prompt)
@@ -151,11 +151,11 @@ Use nil for API default behavior (adaptive)."
               (inhibit-read-only t))
           
           (insert (propertize (format "\n\n** [%s: RESPONSE]" 
-                                      ollama-buddy-gemini--current-model) 
+                                      ollama-buddy--current-model) 
                               'face
                               `(:inherit bold :foreground 
                                          ,(ollama-buddy--get-model-color 
-                                           ollama-buddy-gemini--current-model))) 
+                                           ollama-buddy--current-model))) 
                   "\n\n")
           
           (setq start-point (point))

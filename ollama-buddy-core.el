@@ -368,9 +368,6 @@ Each command is defined with:
 
 ;; Internal variables
 
-(defvar ollama-buddy-gemini--current-model nil
-  "The currently selected Gemini model.")
-
 (defvar ollama-buddy-gemini--current-token-count 0
   "Counter for tokens in the current Gemini response.")
 
@@ -391,9 +388,6 @@ Each command is defined with:
 
 (defvar ollama-buddy-current-session-name nil
   "The name of the currently loaded session.")
-
-(defvar ollama-buddy-claude--current-model nil
-  "The currently selected Claude model.")
 
 (defvar ollama-buddy--background-operations nil
   "Alist of active background operations.
@@ -433,9 +427,6 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
   "Prefix to indicate that a model is from OpenAI rather than Ollama."
   :type 'string
   :group 'ollama-buddy-openai)
-
-(defvar ollama-buddy-openai--current-model nil
-  "The currently active OpenAI model.")
 
 (defcustom ollama-buddy-openai-models nil
   "List of available OpenAI models."
@@ -554,6 +545,17 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
   "Hash table mapping model names to their colors.")
 
 ;; Core utility functions
+
+(defun ollama-buddy--assign-model-letters ()
+  "Assign letters to available models and update the intro message."
+  (setq ollama-buddy--model-letters
+        (cl-loop for model in (ollama-buddy--get-models)
+                 for letter across "abcdefghijklmnopqrstuvwxyz"
+                 collect (cons letter model))))
+
+(defun ollama-buddy--get-model-letter (model-name)
+  "Return the letter assigned to MODEL-NAME from `ollama-buddy--model-letters`."
+  (car (rassoc model-name ollama-buddy--model-letters)))
 
 (defun ollama-buddy--create-intro-message ()
   "Create welcome message with model management capabilities in org format."

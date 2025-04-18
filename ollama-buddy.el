@@ -1299,17 +1299,6 @@ With prefix argument ALL-MODELS, clear history for all models."
   (message "Ollama Buddy Model Colors: %s"
            (if ollama-buddy-enable-model-colors "Enabled" "Disabled")))
 
-(defun ollama-buddy--assign-model-letters ()
-  "Assign letters to available models and update the intro message."
-  (setq ollama-buddy--model-letters
-        (cl-loop for model in (ollama-buddy--get-models)
-                 for letter across "abcdefghijklmnopqrstuvwxyz"
-                 collect (cons letter model))))
-
-(defun ollama-buddy--get-model-letter (model-name)
-  "Return the letter assigned to MODEL-NAME from `ollama-buddy--model-letters`."
-  (car (rassoc model-name ollama-buddy--model-letters)))
-
 (defun ollama-buddy--format-models-with-letters-plain ()
   "Format models with letter assignments for display without color properties."
   (when-let* ((models-alist ollama-buddy--model-letters)
@@ -1848,45 +1837,40 @@ With prefix argument ALL-MODELS, clear history for all models."
 (defun ollama-buddy--swap-model ()
   "Swap ollama model, including OpenAI models if available."
   (interactive)
-  (if (and (not (ollama-buddy--ollama-running))
-           (not (featurep 'ollama-buddy-openai)))
-      (error "!!WARNING!! ollama server not running")
-    (let* ((models (ollama-buddy--get-models-with-others))
-           (new-model (completing-read "Model: " models nil t)))
-      
-      ;; Check if it's an OpenAI model and set it accordingly
-      (cond
-       ((and (featurep 'ollama-buddy-openai)
-             (ollama-buddy-openai--is-openai-model new-model))
-        (progn
-          (setq ollama-buddy-default-model new-model)
-          (setq ollama-buddy--current-model new-model)
-          (setq ollama-buddy-openai--current-model new-model)
-          (message "Switched to OpenAI model: %s" new-model)))
-       ((and (featurep 'ollama-buddy-claude)
-             (ollama-buddy-claude--is-claude-model new-model))
-        (progn
-          (setq ollama-buddy-default-model new-model)
-          (setq ollama-buddy--current-model new-model)
-          (setq ollama-buddy-claude--current-model new-model)
-          (message "Switched to Claude model: %s" new-model)))
-       ((and (featurep 'ollama-buddy-gemini)
-             (ollama-buddy-gemini--is-gemini-model new-model))
-        (progn
-          (setq ollama-buddy-default-model new-model)
-          (setq ollama-buddy--current-model new-model)
-          (setq ollama-buddy-gemini--current-model new-model)
-          (message "Switched to Gemini model: %s" new-model)))
-       (t
-        (progn
-          (setq ollama-buddy-default-model new-model)
-          (setq ollama-buddy--current-model new-model)
-          (message "Switched to Ollama model: %s" new-model))))
-      
-      (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
-      (ollama-buddy--prepare-prompt-area t t)
-      (goto-char (point-max))
-      (ollama-buddy--update-status "Idle"))))
+  (unless (ollama-buddy--ollama-running)
+    (error "!!WARNING!! ollama server not running"))
+  
+  (let* ((models (ollama-buddy--get-models-with-others))
+         (new-model (completing-read "Model: " models nil t)))
+    (cond
+     ((and (featurep 'ollama-buddy-openai)
+           (ollama-buddy-openai--is-openai-model new-model))
+      (progn
+        (setq ollama-buddy-default-model new-model)
+        (setq ollama-buddy--current-model new-model)
+        (message "Switched to OpenAI model: %s" new-model)))
+     ((and (featurep 'ollama-buddy-claude)
+           (ollama-buddy-claude--is-claude-model new-model))
+      (progn
+        (setq ollama-buddy-default-model new-model)
+        (setq ollama-buddy--current-model new-model)
+        (message "Switched to Claude model: %s" new-model)))
+     ((and (featurep 'ollama-buddy-gemini)
+           (ollama-buddy-gemini--is-gemini-model new-model))
+      (progn
+        (setq ollama-buddy-default-model new-model)
+        (setq ollama-buddy--current-model new-model)
+        (message "Switched to Gemini model: %s" new-model)))
+     (t
+      (progn
+        (setq ollama-buddy-default-model new-model)
+        (setq ollama-buddy--current-model new-model)
+        (message "Switched to Ollama model: %s" new-model))))
+    
+    (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
+    (ollama-buddy--prepare-prompt-area t t)
+    (goto-char (point-max))
+    (ollama-buddy--update-status "Idle")))
 
 ;; Update buffer initialization to check status
 (defun ollama-buddy--open-chat ()
@@ -2652,17 +2636,10 @@ Modifies the variable in place."
     
     (display-buffer buf)))
 
-                                        ; Helper functions for actions
 (defun ollama-buddy-select-model (model)
-  "Set MODEL as the current model, handling both Ollama and OpenAI models."
+  "Set MODEL as the current model."
   (setq ollama-buddy-default-model model)
   (setq ollama-buddy--current-model model)
-  
-  ;; If it's an OpenAI model, update the openai current model as well
-  (when (and (featurep 'ollama-buddy-openai)
-             (ollama-buddy-openai--is-openai-model model))
-    (setq ollama-buddy-openai--current-model model))
-  
   (message "Selected model: %s" model)
   (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
   (ollama-buddy--prepare-prompt-area)

@@ -77,9 +77,9 @@ Use nil for API default behavior (adaptive)."
   "Send PROMPT to OpenAI's API using MODEL or default model asynchronously."
   (when (ollama-buddy-openai--verify-api-key)
     ;; Set up the current model
-    (setq ollama-buddy-openai--current-model
+    (setq ollama-buddy--current-model
           (or model
-              ollama-buddy-openai--current-model
+              ollama-buddy--current-model
               (ollama-buddy-openai--get-full-model-name
                ollama-buddy-openai-default-model)))
 
@@ -87,9 +87,9 @@ Use nil for API default behavior (adaptive)."
     (setq ollama-buddy-openai--current-token-count 0)
 
     ;; Get history and system prompt
-    (let* ((model ollama-buddy-openai--current-model)
+    (let* ((model ollama-buddy--current-model)
            (history (when ollama-buddy-history-enabled
-                      (gethash ollama-buddy-openai--current-model
+                      (gethash ollama-buddy--current-model
                                ollama-buddy--conversation-history-by-model
                                nil)))
            (system-prompt ollama-buddy--current-system-prompt)
@@ -102,7 +102,7 @@ Use nil for API default behavior (adaptive)."
            (max-tokens (or ollama-buddy-openai-max-tokens 4096))
            (json-payload
             `((model . ,(ollama-buddy-openai--get-real-model-name
-                         ollama-buddy-openai--current-model))
+                         ollama-buddy--current-model))
               (messages . ,messages)
               (temperature . ,ollama-buddy-openai-temperature)
               (max_tokens . ,max-tokens)))

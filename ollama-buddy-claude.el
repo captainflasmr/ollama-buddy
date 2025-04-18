@@ -76,9 +76,9 @@ Use nil for API default behavior (adaptive)."
   "Send PROMPT to Claude's API using MODEL."
   (when (ollama-buddy-claude--verify-api-key)
     ;; Set up the current model
-    (setq ollama-buddy-claude--current-model
+    (setq ollama-buddy--current-model
           (or model
-              ollama-buddy-claude--current-model
+              ollama-buddy--current-model
               (ollama-buddy-claude--get-full-model-name
                ollama-buddy-claude-default-model)))
 
@@ -86,9 +86,9 @@ Use nil for API default behavior (adaptive)."
     (setq ollama-buddy-claude--current-token-count 0)
 
     ;; Get history and system prompt
-    (let* ((model ollama-buddy-claude--current-model)
+    (let* ((model ollama-buddy--current-model)
            (history (when ollama-buddy-history-enabled
-                      (gethash ollama-buddy-claude--current-model
+                      (gethash ollama-buddy--current-model
                                ollama-buddy--conversation-history-by-model
                                nil)))
            (system-prompt ollama-buddy--current-system-prompt)
@@ -100,7 +100,7 @@ Use nil for API default behavior (adaptive)."
            (max-tokens (or ollama-buddy-claude-max-tokens 4096))
            (json-payload
             `((model . ,(ollama-buddy-claude--get-real-model-name
-                         ollama-buddy-claude--current-model))
+                         ollama-buddy--current-model))
               (messages . ,messages)
               (temperature . ,ollama-buddy-claude-temperature)
               (max_tokens . ,max-tokens)))
