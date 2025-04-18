@@ -337,7 +337,7 @@ Each command is defined with:
   :type '(repeat string)
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-ollama-marker-prefix "ollama:"
+(defcustom ollama-buddy-marker-prefix "ollama:"
   "Prefix used to identify Ollama models in the ollama-buddy interface."
   :type 'string
   :group 'ollama-buddy)
@@ -522,6 +522,22 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
 
 ;; Core utility functions
 
+(defun ollama-buddy--get-full-model-name (model)
+  "Get the full display name for MODEL with prefix."
+  (concat ollama-buddy-marker-prefix model))
+
+(defun ollama-buddy-openai--get-full-model-name (model)
+  "Get the full display name for MODEL with prefix."
+  (concat ollama-buddy-openai-marker-prefix model))
+
+(defun ollama-buddy-claude--get-full-model-name (model)
+  "Get the full model name with prefix for MODEL."
+  (concat ollama-buddy-claude-marker-prefix model))
+
+(defun ollama-buddy-gemini--get-full-model-name (model)
+  "Get the full model name with prefix for MODEL."
+  (concat ollama-buddy-gemini-marker-prefix model))
+
 (defun ollama-buddy--assign-model-letters ()
   "Assign letters to available models and update the intro message."
   (setq ollama-buddy--model-letters
@@ -655,20 +671,10 @@ please run =ollama serve=\n\n")
   "Check if MODEL is a Gemini model (starts with the marker prefix)."
   (and model (string-prefix-p ollama-buddy-gemini-marker-prefix model)))
 
-(defun ollama-buddy-gemini--get-full-model-name (model)
-  "Get the full model name with prefix for MODEL."
-  (if (ollama-buddy-gemini--is-gemini-model model)
-      model
-    (concat ollama-buddy-gemini-marker-prefix model)))
-
 (defun ollama-buddy-open-info ()
   "Open the Info manual for the ollama-buddy package."
   (interactive)
   (info "(ollama-buddy)"))
-
-(defun ollama-buddy-claude--get-full-model-name (model)
-  "Get the full model name with prefix for MODEL."
-  (concat ollama-buddy-claude-marker-prefix model))
 
 (defun ollama-buddy-claude--is-claude-model (model)
   "Check if MODEL is a Claude model by checking for the prefix."
@@ -861,10 +867,6 @@ When disabled, responses only appear after completion."
               (goto-char (point-min))
               (when (search-forward placeholder nil t)
                 (replace-match (format "#+begin_src %s\n%s#+end_src" lang content) t t)))))))))
-
-(defun ollama-buddy-openai--get-full-model-name (model)
-  "Get the full display name for MODEL with prefix."
-  (concat ollama-buddy-openai-marker-prefix " " model))
 
 (defun ollama-buddy--text-after-prompt ()
   "Get the text after the prompt:."
@@ -1097,7 +1099,9 @@ When complete, CALLBACK is called with the status response and result."
 
 (defun ollama-buddy--get-models-with-others ()
   "Get all available models, including non ollama models."
-  (let ((models (ollama-buddy--get-models)))
+  (let ((models '()))
+    (dolist (model (ollama-buddy--get-models))
+      (push (ollama-buddy--get-full-model-name model) models))
     (when (featurep 'ollama-buddy-openai)
       (dolist (model ollama-buddy-openai-models)
         (push (ollama-buddy-openai--get-full-model-name model) models)))
@@ -1121,10 +1125,8 @@ When complete, CALLBACK is called with the status response and result."
           (setq ollama-buddy--models-cache
                 (mapcar #'car (ollama-buddy--get-models-with-colors-from-result response))
                 ollama-buddy--models-cache-timestamp current-time)
-          
           ;; Also refresh in background for next time
           (ollama-buddy--refresh-models-cache)))
-      
       ollama-buddy--models-cache)))
 
 (defun ollama-buddy--refresh-models-cache ()
@@ -1216,15 +1218,17 @@ When complete, CALLBACK is called with the status response and result."
   "Validate MODEL availability."
   (when (and model (ollama-buddy--ollama-running))
     (when (member model (ollama-buddy--get-models-with-others))
+      (message "#valmod %s" model)
       model)))
 
 (defun ollama-buddy--get-valid-model (specified-model)
   "Get valid model from SPECIFIED-MODEL with fallback handling."
+  (message "#1 ollama-buddy--get-valid-model : %s\n" specified-model)
   (let* ((valid-model (or (ollama-buddy--validate-model specified-model)
                           (ollama-buddy--validate-model ollama-buddy-default-model))))
     (if valid-model
         (cons valid-model specified-model)
-      (let ((models (ollama-buddy--get-models)))
+      (let ((models (ollama-buddy--get-models-with-others)))
         (if models
             (let ((selected (completing-read
                              (format "%s not available. Select model: "

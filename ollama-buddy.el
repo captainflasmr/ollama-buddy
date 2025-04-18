@@ -103,6 +103,10 @@
 (defvar ollama-buddy--current-response nil
   "The current response text being accumulated.")
 
+(defun ollama-buddy--get-real-model-name (model)
+  "Extract the actual model name from the prefixed MODEL string."
+  (string-trim (substring model (length ollama-buddy-marker-prefix))))
+
 (defun ollama-buddy-beginning-of-prompt ()
   "Move point to the beginning of the current prompt."
   (interactive)
@@ -1839,33 +1843,11 @@ With prefix argument ALL-MODELS, clear history for all models."
   (interactive)
   (unless (ollama-buddy--ollama-running)
     (error "!!WARNING!! ollama server not running"))
-  
   (let* ((models (ollama-buddy--get-models-with-others))
          (new-model (completing-read "Model: " models nil t)))
-    (cond
-     ((and (featurep 'ollama-buddy-openai)
-           (ollama-buddy-openai--is-openai-model new-model))
-      (progn
-        (setq ollama-buddy-default-model new-model)
-        (setq ollama-buddy--current-model new-model)
-        (message "Switched to OpenAI model: %s" new-model)))
-     ((and (featurep 'ollama-buddy-claude)
-           (ollama-buddy-claude--is-claude-model new-model))
-      (progn
-        (setq ollama-buddy-default-model new-model)
-        (setq ollama-buddy--current-model new-model)
-        (message "Switched to Claude model: %s" new-model)))
-     ((and (featurep 'ollama-buddy-gemini)
-           (ollama-buddy-gemini--is-gemini-model new-model))
-      (progn
-        (setq ollama-buddy-default-model new-model)
-        (setq ollama-buddy--current-model new-model)
-        (message "Switched to Gemini model: %s" new-model)))
-     (t
-      (progn
-        (setq ollama-buddy-default-model new-model)
-        (setq ollama-buddy--current-model new-model)
-        (message "Switched to Ollama model: %s" new-model))))
+    (setq ollama-buddy-default-model new-model)
+    (setq ollama-buddy--current-model new-model)
+    (message "Switched to Ollama model: %s" new-model)
     
     (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
     (ollama-buddy--prepare-prompt-area t t)
@@ -2001,8 +1983,8 @@ With prefix argument ALL-MODELS, clear history for all models."
    (t
     ;; Original Ollama send code
     (let* ((model-info (ollama-buddy--get-valid-model specified-model))
-           (model (car model-info))
-           (original-model (cdr model-info))
+           (model (ollama-buddy--get-real-model-name (car model-info)))
+           (original-model (ollama-buddy--get-real-model-name (cdr model-info)))
            (messages (ollama-buddy--get-history-for-request))
            ;; If we have a system prompt, add it to the request
            (messages-with-system
@@ -2035,10 +2017,12 @@ With prefix argument ALL-MODELS, clear history for all models."
                             with-suffix))
            (payload (json-encode final-payload)))
 
+      (message "##send %s %s\n" model original-model)
+
       (unless ollama-buddy--multishot-sequence
         (set-register ollama-buddy-default-register ""))
       
-      (setq ollama-buddy--current-model model)
+      (setq ollama-buddy--current-model (car model-info))
       (setq ollama-buddy--current-prompt prompt)
       
       (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
