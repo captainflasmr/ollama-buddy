@@ -337,22 +337,22 @@ Each command is defined with:
   :type '(repeat string)
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-marker-prefix "ollama:"
+(defcustom ollama-buddy-marker-prefix "o:"
   "Prefix used to identify Ollama models in the ollama-buddy interface."
   :type 'string
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-openai-marker-prefix "gpt:"
+(defcustom ollama-buddy-openai-marker-prefix "g:"
   "Prefix to indicate that a model is from OpenAI rather than Ollama."
   :type 'string
   :group 'ollama-buddy-openai)
 
-(defcustom ollama-buddy-claude-marker-prefix "claude:"
+(defcustom ollama-buddy-claude-marker-prefix "c:"
   "Prefix used to identify Claude models in the model list."
   :type 'string
   :group 'ollama-buddy-claude)
 
-(defcustom ollama-buddy-gemini-marker-prefix "gemini:"
+(defcustom ollama-buddy-gemini-marker-prefix "e:"
   "Prefix used to identify Gemini models in the ollama-buddy interface."
   :type 'string
   :group 'ollama-buddy-gemini)
