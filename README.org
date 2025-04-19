@@ -96,6 +96,10 @@ See *Screenshots / Demos* section for more videos/demonstration.
 
 * Whats New
 
+** <2025-04-19> *0.9.32*
+
+Finished the remote LLM decoupling process, meaning that the core =ollama-buddy= logic is now not dependent on any remote LLM, and each remote LLM package is self-contained and functions as a unique extension.
+
 ** <2025-04-18> *0.9.31*
 
 Refactored model prefixing logic and cleaned up
