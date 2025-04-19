@@ -282,14 +282,19 @@ Use nil for API default behavior (adaptive)."
                             (chat-models (cl-remove-if-not
                                           (lambda (model)
                                             (string-match-p "\\(gpt\\|claude\\)" model))
-                                          models)))
+                                          models))
+                            ;; Prepend the marker prefix to each model name
+                            (prefixed-models (mapcar (lambda (model-name)
+                                                       (concat ollama-buddy-openai-marker-prefix model-name))
+                                                     chat-models)))
+
                        ;; Register the Claude handler with ollama-buddy
                        (when (fboundp 'ollama-buddy-register-model-handler)
                          (ollama-buddy-register-model-handler 
                           ollama-buddy-openai-marker-prefix 
                           #'ollama-buddy-openai--send))
                        ;; Store models and update status
-                       (setq ollama-buddy-remote-models (append ollama-buddy-remote-models chat-models)))
+                       (setq ollama-buddy-remote-models (append ollama-buddy-remote-models prefixed-models)))
                    (error
                     (message "Error parsing OpenAI models response: %s" (error-message-string err))
                     (ollama-buddy--update-status "Failed to parse OpenAI models response"))))))))))))

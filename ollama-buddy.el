@@ -1843,8 +1843,7 @@ With prefix argument ALL-MODELS, clear history for all models."
          (new-model (completing-read "Model: " models nil t)))
     (setq ollama-buddy-default-model new-model)
     (setq ollama-buddy--current-model new-model)
-    (message "Switched to Ollama model: %s" new-model)
-    
+    (message "Switched to model: %s" new-model)
     (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
     (ollama-buddy--prepare-prompt-area t t)
     (goto-char (point-max))
