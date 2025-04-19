@@ -72,6 +72,10 @@ Use nil for API default behavior (adaptive)."
   (and model
        (string-match-p (concat "^" (regexp-quote ollama-buddy-openai-marker-prefix)) model)))
 
+(defun ollama-buddy-openai--get-full-model-name (model)
+  "Get the full model name with prefix for MODEL."
+  (concat ollama-buddy-openai-marker-prefix model))
+
 (defun ollama-buddy-openai--get-real-model-name (model)
   "Extract the actual model name from the prefixed MODEL string."
   (if (ollama-buddy-openai--is-openai-model model)
