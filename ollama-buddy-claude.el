@@ -70,10 +70,6 @@ Use nil for API default behavior (adaptive)."
   "Check if MODEL is a Claude model by checking for the prefix."
   (and model (string-prefix-p ollama-buddy-claude-marker-prefix model)))
 
-(defun ollama-buddy-openai--get-full-model-name (model)
-  "Get the full display name for MODEL with prefix."
-  (concat ollama-buddy-openai-marker-prefix model))
-
 (defun ollama-buddy-claude--get-full-model-name (model)
   "Get the full model name with prefix for MODEL."
   (concat ollama-buddy-claude-marker-prefix model))
@@ -154,7 +150,6 @@ Use nil for API default behavior (adaptive)."
 
           (set-register ollama-buddy-default-register "")
           
-          ;; Using the same approach as the successful OpenAI implementation
           (let* ((url-request-method "POST")
                  (url-request-extra-headers
                   `(("Content-Type" . "application/json")
