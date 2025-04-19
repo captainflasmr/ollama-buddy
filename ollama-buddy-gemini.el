@@ -58,7 +58,14 @@ Use nil for API default behavior (adaptive)."
 (defvar ollama-buddy-gemini--current-token-count 0
   "Counter for tokens in the current Gemini response.")
 
+(defvar ollama-buddy-remote-models nil
+  "List of available remote models.")
+
 ;; Helper functions
+
+(defun ollama-buddy-gemini--get-full-model-name (model)
+  "Get the full model name with prefix for MODEL."
+  (concat ollama-buddy-gemini-marker-prefix model))
 
 (defun ollama-buddy-gemini--get-real-model-name (model)
   "Extract the actual model name from the prefixed MODEL string."
@@ -325,14 +332,13 @@ Use nil for API default behavior (adaptive)."
                                                           model))
                                                       models))
                             ;; Filter to include only gemini models
-                            (gemini-models (cl-remove-if-not
+                            (chat-models (cl-remove-if-not
                                            (lambda (model)
                                              (string-match-p "gemini" model))
                                            processed-models)))
                        
                        ;; Store models and update status
-                       (setq ollama-buddy-gemini-models gemini-models))
-                       ;; (ollama-buddy--update-status (format "Fetched %d Gemini models" (length gemini-models)))
+                       (setq ollama-buddy-remote-models (append ollama-buddy-remote-models chat-models)))
                    (error
                     (message "Error parsing Gemini models response: %s" (error-message-string err))
                     (ollama-buddy--update-status "Failed to parse Gemini models response"))))))))))))

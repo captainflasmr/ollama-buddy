@@ -57,6 +57,9 @@ Use nil for API default behavior (adaptive)."
 (defvar ollama-buddy-openai--current-token-count 0
   "Counter for tokens in the current OpenAI response.")
 
+(defvar ollama-buddy-remote-models nil
+  "List of available remote models.")
+
 ;; Helper functions
 
 (defun ollama-buddy-openai--get-real-model-name (model)
@@ -272,8 +275,7 @@ Use nil for API default behavior (adaptive)."
                                           models)))
                        
                        ;; Store models and update status
-                       (setq ollama-buddy-openai-models chat-models))
-                       ;; (ollama-buddy--update-status (format "Fetched %d OpenAI models" (length chat-models)))
+                       (setq ollama-buddy-remote-models (append ollama-buddy-remote-models chat-models)))
                    (error
                     (message "Error parsing OpenAI models response: %s" (error-message-string err))
                     (ollama-buddy--update-status "Failed to parse OpenAI models response"))))))))))))

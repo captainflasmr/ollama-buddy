@@ -56,7 +56,18 @@ Use nil for API default behavior (adaptive)."
 (defvar ollama-buddy-claude--current-token-count 0
   "Counter for tokens in the current Claude response.")
 
+(defvar ollama-buddy-remote-models nil
+  "List of available remote models.")
+
 ;; Helper functions
+
+(defun ollama-buddy-openai--get-full-model-name (model)
+  "Get the full display name for MODEL with prefix."
+  (concat ollama-buddy-openai-marker-prefix model))
+
+(defun ollama-buddy-claude--get-full-model-name (model)
+  "Get the full model name with prefix for MODEL."
+  (concat ollama-buddy-claude-marker-prefix model))
 
 (defun ollama-buddy-claude--get-real-model-name (model)
   "Extract the actual model name from the prefixed MODEL string."
@@ -295,14 +306,12 @@ Use nil for API default behavior (adaptive)."
                                               (alist-get 'id model-info))
                                             (append models-data nil)))
                             ;; Filter to only include Claude models (should be all of them)
-                            (claude-models (cl-remove-if-not
+                            (chat-models (cl-remove-if-not
                                             (lambda (model)
                                               (string-match-p "claude" model))
                                             models)))
-                       
                        ;; Store models and update status
-                       (setq ollama-buddy-claude-models claude-models))
-                       ;; (ollama-buddy--update-status (format "Fetched %d Claude models" (length claude-models)))
+                       (setq ollama-buddy-remote-models (append ollama-buddy-remote-models chat-models)))
                    (error
                     (message "Error parsing Claude models response: %s" (error-message-string err))
                     (ollama-buddy--update-status "Failed to parse Claude models response"))))))))))))

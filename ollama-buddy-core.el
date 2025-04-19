@@ -357,20 +357,13 @@ Each command is defined with:
   :type 'string
   :group 'ollama-buddy-gemini)
 
-(defcustom ollama-buddy-openai-models nil
-  "List of available OpenAI models."
-  :type '(repeat string)
-  :group 'ollama-buddy-openai)
+(defcustom ollama-buddy-status-update-interval 1.0
+  "Interval in seconds to update the status line with background operations."
+  :type 'float
+  :group 'ollama-buddy)
 
-(defcustom ollama-buddy-claude-models nil
-  "List of available Claude models."
-  :type '(repeat string)
-  :group 'ollama-buddy-claude)
-
-(defcustom ollama-buddy-gemini-models nil
-  "List of available Gemini models."
-  :type '(repeat string)
-  :group 'ollama-buddy-gemini)
+(defvar ollama-buddy-remote-models nil
+  "List of available remote models.")
 
 (defvar ollama-buddy-current-session-name nil
   "The name of the currently loaded session.")
@@ -382,11 +375,6 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
 
 (defvar ollama-buddy--status-update-timer nil
   "Timer for updating the status line with background operations.")
-
-(defcustom ollama-buddy-status-update-interval 1.0
-  "Interval in seconds to update the status line with background operations."
-  :type 'float
-  :group 'ollama-buddy)
 
 (defvar ollama-buddy--running-models-cache nil
   "Cache for running Ollama models.")
@@ -525,18 +513,6 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
 (defun ollama-buddy--get-full-model-name (model)
   "Get the full display name for MODEL with prefix."
   (concat ollama-buddy-marker-prefix model))
-
-(defun ollama-buddy-openai--get-full-model-name (model)
-  "Get the full display name for MODEL with prefix."
-  (concat ollama-buddy-openai-marker-prefix model))
-
-(defun ollama-buddy-claude--get-full-model-name (model)
-  "Get the full model name with prefix for MODEL."
-  (concat ollama-buddy-claude-marker-prefix model))
-
-(defun ollama-buddy-gemini--get-full-model-name (model)
-  "Get the full model name with prefix for MODEL."
-  (concat ollama-buddy-gemini-marker-prefix model))
 
 (defun ollama-buddy--assign-model-letters ()
   "Assign letters to available models and update the intro message."
@@ -1102,15 +1078,7 @@ When complete, CALLBACK is called with the status response and result."
   (let ((models '()))
     (dolist (model (ollama-buddy--get-models))
       (push (ollama-buddy--get-full-model-name model) models))
-    (when (featurep 'ollama-buddy-openai)
-      (dolist (model ollama-buddy-openai-models)
-        (push (ollama-buddy-openai--get-full-model-name model) models)))
-    (when (featurep 'ollama-buddy-claude)
-      (dolist (model ollama-buddy-claude-models)
-        (push (ollama-buddy-claude--get-full-model-name model) models)))
-    (when (featurep 'ollama-buddy-gemini)
-      (dolist (model ollama-buddy-gemini-models)
-        (push (ollama-buddy-gemini--get-full-model-name model) models)))
+    (setq models (append models ollama-buddy-remote-models))
     models))
 
 (defun ollama-buddy--get-models ()
