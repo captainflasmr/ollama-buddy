@@ -23,6 +23,11 @@
   :group 'ollama-buddy
   :prefix "ollama-buddy-claude-")
 
+(defcustom ollama-buddy-claude-marker-prefix "c:"
+  "Prefix used to identify Claude models in the model list."
+  :type 'string
+  :group 'ollama-buddy-claude)
+
 (defcustom ollama-buddy-claude-api-key ""
   "API key for accessing Anthropic Claude services.
 Get your key from https://console.anthropic.com/."
@@ -60,6 +65,10 @@ Use nil for API default behavior (adaptive)."
   "List of available remote models.")
 
 ;; Helper functions
+
+(defun ollama-buddy-claude--is-claude-model (model)
+  "Check if MODEL is a Claude model by checking for the prefix."
+  (and model (string-prefix-p ollama-buddy-claude-marker-prefix model)))
 
 (defun ollama-buddy-openai--get-full-model-name (model)
   "Get the full display name for MODEL with prefix."
@@ -310,6 +319,11 @@ Use nil for API default behavior (adaptive)."
                                             (lambda (model)
                                               (string-match-p "claude" model))
                                             models)))
+                       ;; Register the Claude handler with ollama-buddy
+                       (when (fboundp 'ollama-buddy-register-model-handler)
+                         (ollama-buddy-register-model-handler 
+                          ollama-buddy-claude-marker-prefix 
+                          #'ollama-buddy-claude--send))
                        ;; Store models and update status
                        (setq ollama-buddy-remote-models (append ollama-buddy-remote-models chat-models)))
                    (error

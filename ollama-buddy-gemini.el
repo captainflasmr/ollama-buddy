@@ -24,6 +24,11 @@
   :group 'ollama-buddy
   :prefix "ollama-buddy-gemini-")
 
+(defcustom ollama-buddy-gemini-marker-prefix "g:"
+  "Prefix used to identify Gemini models in the ollama-buddy interface."
+  :type 'string
+  :group 'ollama-buddy-gemini)
+
 (defcustom ollama-buddy-gemini-api-key ""
   "API key for accessing Google Gemini services.
 Get your key from https://ai.google.dev/."
@@ -62,6 +67,10 @@ Use nil for API default behavior (adaptive)."
   "List of available remote models.")
 
 ;; Helper functions
+
+(defun ollama-buddy-gemini--is-gemini-model (model)
+  "Check if MODEL is a Gemini model (starts with the marker prefix)."
+  (and model (string-prefix-p ollama-buddy-gemini-marker-prefix model)))
 
 (defun ollama-buddy-gemini--get-full-model-name (model)
   "Get the full model name with prefix for MODEL."
@@ -336,7 +345,11 @@ Use nil for API default behavior (adaptive)."
                                            (lambda (model)
                                              (string-match-p "gemini" model))
                                            processed-models)))
-                       
+                       ;; Register the Claude handler with ollama-buddy
+                       (when (fboundp 'ollama-buddy-register-model-handler)
+                         (ollama-buddy-register-model-handler 
+                          ollama-buddy-gemini-marker-prefix 
+                          #'ollama-buddy-gemini--send))
                        ;; Store models and update status
                        (setq ollama-buddy-remote-models (append ollama-buddy-remote-models chat-models)))
                    (error

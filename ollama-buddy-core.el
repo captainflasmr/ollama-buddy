@@ -342,21 +342,6 @@ Each command is defined with:
   :type 'string
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-openai-marker-prefix "a:"
-  "Prefix to indicate that a model is from OpenAI rather than Ollama."
-  :type 'string
-  :group 'ollama-buddy-openai)
-
-(defcustom ollama-buddy-claude-marker-prefix "c:"
-  "Prefix used to identify Claude models in the model list."
-  :type 'string
-  :group 'ollama-buddy-claude)
-
-(defcustom ollama-buddy-gemini-marker-prefix "g:"
-  "Prefix used to identify Gemini models in the ollama-buddy interface."
-  :type 'string
-  :group 'ollama-buddy-gemini)
-
 (defcustom ollama-buddy-status-update-interval 1.0
   "Interval in seconds to update the status line with background operations."
   :type 'float
@@ -508,7 +493,37 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
 (defvar ollama-buddy--model-colors (make-hash-table :test 'equal)
   "Hash table mapping model names to their colors.")
 
+(defvar ollama-buddy--model-handlers (make-hash-table :test 'equal)
+  "Map of model prefixes to handler functions.")
+
 ;; Core utility functions
+
+(defun ollama-buddy-register-model-handler (prefix handler-function)
+  "Register HANDLER-FUNCTION for models with PREFIX.
+The handler function should accept the same arguments as `ollama-buddy--send`."
+  (puthash prefix handler-function ollama-buddy--model-handlers))
+
+(defun ollama-buddy--dispatch-to-handler (orig-fun prompt &optional specified-model)
+  "Dispatch to appropriate handler based on model prefix.
+ORIG-FUN is the original function being advised.
+PROMPT and SPECIFIED-MODEL are passed to the handler or original function."
+  (let* ((model (or specified-model 
+                    ollama-buddy--current-model
+                    ollama-buddy-default-model))
+         (handler nil))
+    ;; Find a matching handler based on model prefix
+    (maphash (lambda (prefix func)
+               (when (and (not handler) 
+                          (string-prefix-p prefix model))
+                 (setq handler func)))
+             ollama-buddy--model-handlers)
+    ;; Call the handler or original function
+    (if handler
+        (funcall handler prompt model)
+      (funcall orig-fun prompt specified-model))))
+
+;; Apply the advice to ollama-buddy--send
+(advice-add 'ollama-buddy--send :around #'ollama-buddy--dispatch-to-handler)
 
 (defun ollama-buddy--get-full-model-name (model)
   "Get the full display name for MODEL with prefix."
@@ -643,18 +658,10 @@ please run =ollama serve=\n\n")
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
 
-(defun ollama-buddy-gemini--is-gemini-model (model)
-  "Check if MODEL is a Gemini model (starts with the marker prefix)."
-  (and model (string-prefix-p ollama-buddy-gemini-marker-prefix model)))
-
 (defun ollama-buddy-open-info ()
   "Open the Info manual for the ollama-buddy package."
   (interactive)
   (info "(ollama-buddy)"))
-
-(defun ollama-buddy-claude--is-claude-model (model)
-  "Check if MODEL is a Claude model by checking for the prefix."
-  (and model (string-prefix-p ollama-buddy-claude-marker-prefix model)))
 
 (defun ollama-buddy-escape-unicode (string)
   "Convert all non-ASCII characters in STRING to Unicode escape sequences."
@@ -742,11 +749,6 @@ When disabled, responses only appear after completion."
    (if ollama-buddy-streaming-enabled "Streaming enabled" "Streaming disabled"))
   (message "Ollama Buddy streaming mode: %s"
            (if ollama-buddy-streaming-enabled "enabled" "disabled")))
-
-(defun ollama-buddy-openai--is-openai-model (model)
-  "Check if MODEL is an OpenAI model based on prefix."
-  (and model
-       (string-match-p (concat "^" (regexp-quote ollama-buddy-openai-marker-prefix)) model)))
 
 (defun ollama-buddy--md-to-org-convert-region (start end)
   "Convert the region from START to END from Markdown to Org-mode format."

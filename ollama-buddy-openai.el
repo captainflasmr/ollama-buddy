@@ -24,6 +24,11 @@
   :group 'ollama-buddy
   :prefix "ollama-buddy-openai-")
 
+(defcustom ollama-buddy-openai-marker-prefix "a:"
+  "Prefix to indicate that a model is from OpenAI rather than Ollama."
+  :type 'string
+  :group 'ollama-buddy-openai)
+
 (defcustom ollama-buddy-openai-api-key ""
   "API key for accessing OpenAI services.
 Get your key from https://platform.openai.com/api-keys."
@@ -61,6 +66,11 @@ Use nil for API default behavior (adaptive)."
   "List of available remote models.")
 
 ;; Helper functions
+
+(defun ollama-buddy-openai--is-openai-model (model)
+  "Check if MODEL is an OpenAI model based on prefix."
+  (and model
+       (string-match-p (concat "^" (regexp-quote ollama-buddy-openai-marker-prefix)) model)))
 
 (defun ollama-buddy-openai--get-real-model-name (model)
   "Extract the actual model name from the prefixed MODEL string."
@@ -273,7 +283,11 @@ Use nil for API default behavior (adaptive)."
                                           (lambda (model)
                                             (string-match-p "\\(gpt\\|claude\\)" model))
                                           models)))
-                       
+                       ;; Register the Claude handler with ollama-buddy
+                       (when (fboundp 'ollama-buddy-register-model-handler)
+                         (ollama-buddy-register-model-handler 
+                          ollama-buddy-openai-marker-prefix 
+                          #'ollama-buddy-openai--send))
                        ;; Store models and update status
                        (setq ollama-buddy-remote-models (append ollama-buddy-remote-models chat-models)))
                    (error

@@ -74,10 +74,6 @@
 (require 'ollama-buddy-core)
 (require 'ollama-buddy-transient)
 
-(declare-function ollama-buddy-openai--send "ollama-buddy-openai")
-(declare-function ollama-buddy-claude--send "ollama-buddy-claude")
-(declare-function ollama-buddy-gemini--send "ollama-buddy-gemini")
-
 (defvar ollama-buddy-mode-line-segment nil
   "Mode line segment for Ollama Buddy.")
 
@@ -1960,124 +1956,106 @@ With prefix argument ALL-MODELS, clear history for all models."
   (unless (> (length prompt) 0)
     (user-error "Ensure prompt is defined"))
 
-  ;; For OpenAI models, use the OpenAI send function
-  (cond
-   ((and (featurep 'ollama-buddy-openai)
-         (ollama-buddy-openai--is-openai-model
-          (or specified-model ollama-buddy--current-model)))
-    (ollama-buddy--open-chat)
-    (ollama-buddy-openai--send prompt specified-model))
-   ((and (featurep 'ollama-buddy-claude)
-         (ollama-buddy-claude--is-claude-model
-          (or specified-model ollama-buddy--current-model)))
-    (ollama-buddy--open-chat)
-    (ollama-buddy-claude--send prompt specified-model))
-   ((and (featurep 'ollama-buddy-gemini)
-         (ollama-buddy-gemini--is-gemini-model
-          (or specified-model ollama-buddy--current-model)))
-    (ollama-buddy--open-chat)
-    (ollama-buddy-gemini--send prompt specified-model))
-   (t
-    ;; Original Ollama send code
-    (let* ((model-info (ollama-buddy--get-valid-model specified-model))
-           (model (car model-info))
-           (original-model (cdr model-info))
-           (messages (ollama-buddy--get-history-for-request))
-           ;; If we have a system prompt, add it to the request
-           (messages-with-system
-            (if ollama-buddy--current-system-prompt
-                (append `(((role . "system")
-                           (content . ,ollama-buddy--current-system-prompt)))
-                        messages)
-              messages))
-           ;; Add the current prompt to the messages
-           (messages-all (append messages-with-system
-                                 `(((role . "user")
-                                    (content . ,prompt)))))
-           ;; Get only the modified parameters
-           (modified-options (ollama-buddy-params-get-for-request))
-           ;; Build the base payload
-           (base-payload `((model . ,(ollama-buddy--get-real-model-name model))
-                           (messages . ,(vconcat [] messages-all))
-                           (stream . ,(if ollama-buddy-streaming-enabled t :json-false))))
-           ;; Add system prompt if present
-           (with-system (if ollama-buddy--current-system-prompt
-                            (append base-payload `((system . ,ollama-buddy--current-system-prompt)))
-                          base-payload))
-           ;; Add suffix if present
-           (with-suffix (if ollama-buddy--current-suffix
-                            (append with-system `((suffix . ,ollama-buddy--current-suffix)))
-                          with-system))
-           ;; Add modified parameters if present
-           (final-payload (if modified-options
-                              (append with-suffix `((options . ,modified-options)))
-                            with-suffix))
-           (payload (json-encode final-payload)))
+  ;; Original Ollama send code
+  (let* ((model-info (ollama-buddy--get-valid-model specified-model))
+         (model (car model-info))
+         (original-model (cdr model-info))
+         (messages (ollama-buddy--get-history-for-request))
+         ;; If we have a system prompt, add it to the request
+         (messages-with-system
+          (if ollama-buddy--current-system-prompt
+              (append `(((role . "system")
+                         (content . ,ollama-buddy--current-system-prompt)))
+                      messages)
+            messages))
+         ;; Add the current prompt to the messages
+         (messages-all (append messages-with-system
+                               `(((role . "user")
+                                  (content . ,prompt)))))
+         ;; Get only the modified parameters
+         (modified-options (ollama-buddy-params-get-for-request))
+         ;; Build the base payload
+         (base-payload `((model . ,(ollama-buddy--get-real-model-name model))
+                         (messages . ,(vconcat [] messages-all))
+                         (stream . ,(if ollama-buddy-streaming-enabled t :json-false))))
+         ;; Add system prompt if present
+         (with-system (if ollama-buddy--current-system-prompt
+                          (append base-payload `((system . ,ollama-buddy--current-system-prompt)))
+                        base-payload))
+         ;; Add suffix if present
+         (with-suffix (if ollama-buddy--current-suffix
+                          (append with-system `((suffix . ,ollama-buddy--current-suffix)))
+                        with-system))
+         ;; Add modified parameters if present
+         (final-payload (if modified-options
+                            (append with-suffix `((options . ,modified-options)))
+                          with-suffix))
+         (payload (json-encode final-payload)))
 
-      (unless ollama-buddy--multishot-sequence
-        (set-register ollama-buddy-default-register ""))
+    (unless ollama-buddy--multishot-sequence
+      (set-register ollama-buddy-default-register ""))
+    
+    (setq ollama-buddy--current-model model)
+    (setq ollama-buddy--current-prompt prompt)
+    
+    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+      (pop-to-buffer (current-buffer))
+      (goto-char (point-max))
       
-      (setq ollama-buddy--current-model model)
-      (setq ollama-buddy--current-prompt prompt)
+      (unless (> (buffer-size) 0)
+        (insert (ollama-buddy--create-intro-message)))
       
-      (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-        (pop-to-buffer (current-buffer))
-        (goto-char (point-max))
-        
-        (unless (> (buffer-size) 0)
-          (insert (ollama-buddy--create-intro-message)))
-        
-        (insert (propertize (format "\n\n** [%s: RESPONSE]" model) 'face
-                            `(:inherit bold :foreground ,(ollama-buddy--get-model-color model))) "\n\n")
-        
-        (when (and original-model model (not (string= original-model model)))
-          (insert (propertize (format "[Using %s instead of %s]" model original-model)
-                              'face '(:inherit error :weight bold)) "\n\n"))
-        
-        ;; Enable visual-line-mode for better text wrapping
-        (visual-line-mode 1))
+      (insert (propertize (format "\n\n** [%s: RESPONSE]" model) 'face
+                          `(:inherit bold :foreground ,(ollama-buddy--get-model-color model))) "\n\n")
+      
+      (when (and original-model model (not (string= original-model model)))
+        (insert (propertize (format "[Using %s instead of %s]" model original-model)
+                            'face '(:inherit error :weight bold)) "\n\n"))
+      
+      ;; Enable visual-line-mode for better text wrapping
+      (visual-line-mode 1))
 
-      (when (not ollama-buddy-streaming-enabled)
-        (setq ollama-buddy--start-point (point))
-        (insert "Loading response..."))
-      
-      (ollama-buddy--update-status "Processing..." original-model model)
+    (when (not ollama-buddy-streaming-enabled)
+      (setq ollama-buddy--start-point (point))
+      (insert "Loading response..."))
+    
+    (ollama-buddy--update-status "Processing..." original-model model)
 
-      (when (and ollama-buddy--active-process
-                 (process-live-p ollama-buddy--active-process))
-        (set-process-sentinel ollama-buddy--active-process nil)
-        (delete-process ollama-buddy--active-process)
-        (setq ollama-buddy--active-process nil))
-      
-      ;; Add error handling for network process creation
-      (condition-case err
-          (setq ollama-buddy--active-process
-                (make-network-process
-                 :name "ollama-chat-stream"
-                 :buffer nil
-                 :host ollama-buddy-host
-                 :service ollama-buddy-port
-                 :coding 'utf-8
-                 :filter #'ollama-buddy--stream-filter
-                 :sentinel #'ollama-buddy--stream-sentinel))
-        (error
-         (ollama-buddy--update-status "OFFLINE - Connection failed")
-         (error "Failed to connect to Ollama: %s" (error-message-string err))))
+    (when (and ollama-buddy--active-process
+               (process-live-p ollama-buddy--active-process))
+      (set-process-sentinel ollama-buddy--active-process nil)
+      (delete-process ollama-buddy--active-process)
+      (setq ollama-buddy--active-process nil))
+    
+    ;; Add error handling for network process creation
+    (condition-case err
+        (setq ollama-buddy--active-process
+              (make-network-process
+               :name "ollama-chat-stream"
+               :buffer nil
+               :host ollama-buddy-host
+               :service ollama-buddy-port
+               :coding 'utf-8
+               :filter #'ollama-buddy--stream-filter
+               :sentinel #'ollama-buddy--stream-sentinel))
+      (error
+       (ollama-buddy--update-status "OFFLINE - Connection failed")
+       (error "Failed to connect to Ollama: %s" (error-message-string err))))
 
-      (condition-case err
-          (process-send-string
-           ollama-buddy--active-process
-           (concat "POST /api/chat HTTP/1.1\r\n"
-                   (format "Host: %s:%d\r\n" ollama-buddy-host ollama-buddy-port)
-                   "Content-Type: application/json\r\n"
-                   (format "Content-Length: %d\r\n\r\n" (string-bytes payload))
-                   payload))
-        (error
-         (ollama-buddy--update-status "OFFLINE - Send failed")
-         (when (and ollama-buddy--active-process
-                    (process-live-p ollama-buddy--active-process))
-           (delete-process ollama-buddy--active-process))
-         (error "Failed to send request to Ollama: %s" (error-message-string err))))))))
+    (condition-case err
+        (process-send-string
+         ollama-buddy--active-process
+         (concat "POST /api/chat HTTP/1.1\r\n"
+                 (format "Host: %s:%d\r\n" ollama-buddy-host ollama-buddy-port)
+                 "Content-Type: application/json\r\n"
+                 (format "Content-Length: %d\r\n\r\n" (string-bytes payload))
+                 payload))
+      (error
+       (ollama-buddy--update-status "OFFLINE - Send failed")
+       (when (and ollama-buddy--active-process
+                  (process-live-p ollama-buddy--active-process))
+         (delete-process ollama-buddy--active-process))
+       (error "Failed to send request to Ollama: %s" (error-message-string err))))))
 
 (defun ollama-buddy--multishot-send (prompt sequence)
   "Send PROMPT to multiple models specified by SEQUENCE of letters."
