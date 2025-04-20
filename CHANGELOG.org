@@ -11,6 +11,10 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-04-20> *0.9.33*
+
+Fixed utf-8 encoding stream response issues from remote LLMs.
+
 ** <2025-04-19> *0.9.32*
 
 Finished the remote LLM decoupling process, meaning that the core =ollama-buddy= logic is now not dependent on any remote LLM, and each remote LLM package is self-contained and functions as a unique extension.

@@ -96,6 +96,10 @@ See *Screenshots / Demos* section for more videos/demonstration.
 
 * Whats New
 
+** <2025-04-20> *0.9.33*
+
+Fixed utf-8 encoding stream response issues from remote LLMs.
+
 ** <2025-04-19> *0.9.32*
 
 Finished the remote LLM decoupling process, meaning that the core =ollama-buddy= logic is now not dependent on any remote LLM, and each remote LLM package is self-contained and functions as a unique extension.
@@ -1377,15 +1381,16 @@ All interactive functions available in ollama-buddy are listed in the original R
 #+RESULTS:
 | TODO                                                                         | DOING                                      | DONE                                                                  |
 |------------------------------------------------------------------------------+--------------------------------------------+-----------------------------------------------------------------------|
-| chat ollama names to include prefix                                          | Kill online AI process with cancel request | Conversation history to display with Claude/ChatGPT                   |
-| transient-setup: Key sequence 1 0 starts with non-prefix key 1               | GGUF to use new syncing option             | I think some hard coded Claude models currently don't work            |
-| Claude request and connection can sometimes take time and it blocks!         |                                            | register contents to be converted to org, currently it is in markdown |
-| Pushing hundreds or even thousands of lines to the chat buffer takes a while |                                            | =C-a= beginning-of-line to jump to prompt start like comint           |
-| Still some encoding issues on returns from online AI                         |                                            | As shell generally C-n to end of list to clear prompt history         |
-| ChatGPT request/response too long                                            |                                            | Add Texinfo to MELPA recipe                                           |
-| Check tags caching                                                           |                                            | System prompt not cleared on new session                              |
-| Save system prompts as part of session                                       |                                            | Remove fabric from Commands transient menu                            |
-| keybindings in ollama chat buffer are reserved                               |                                            | External AI to copy to register                                       |
+| chat ollama names to include prefix                                          | Kill online AI process with cancel request | Still some encoding issues on returns from online AI                  |
+| transient-setup: Key sequence 1 0 starts with non-prefix key 1               | GGUF to use new syncing option             | Conversation history to display with Claude/ChatGPT                   |
+| Claude request and connection can sometimes take time and it blocks!         |                                            | I think some hard coded Claude models currently don't work            |
+| Pushing hundreds or even thousands of lines to the chat buffer takes a while |                                            | register contents to be converted to org, currently it is in markdown |
+| ChatGPT request/response too long                                            |                                            | =C-a= beginning-of-line to jump to prompt start like comint           |
+| Check tags caching                                                           |                                            | As shell generally C-n to end of list to clear prompt history         |
+| Save system prompts as part of session                                       |                                            | Add Texinfo to MELPA recipe                                           |
+| keybindings in ollama chat buffer are reserved                               |                                            | System prompt not cleared on new session                              |
+|                                                                              |                                            | Remove fabric from Commands transient menu                            |
+|                                                                              |                                            | External AI to copy to register                                       |
 |                                                                              |                                            | First request with no chat buffer fails                               |
 
 ** TODO chat ollama names to include prefix
@@ -1397,8 +1402,6 @@ All interactive functions available in ollama-buddy are listed in the original R
 ** TODO Pushing hundreds or even thousands of lines to the chat buffer takes a while
 
 For example large diffs, although a 4000 lines diff is unusual?
-
-** TODO Still some encoding issues on returns from online AI
 
 ** TODO ChatGPT request/response too long
 
@@ -1423,6 +1426,9 @@ For some reason this is more difficult than it looks
 #+end_src
 
 Do I even care?
+
+** DONE Still some encoding issues on returns from online AI
+CLOSED: [2025-04-20 Sun 20:25]
 
 ** DONE Conversation history to display with Claude/ChatGPT
 CLOSED: [2025-04-18 Fri 16:41]

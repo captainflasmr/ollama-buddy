@@ -184,12 +184,13 @@ Use nil for API default behavior (adaptive)."
                      (goto-char (point-min))
                      (when (re-search-forward "\n\n" nil t)
                        (let* ((json-response-raw (buffer-substring (point) (point-max)))
+                              (json-response-decoded (decode-coding-string json-response-raw 'utf-8))
                               (json-object-type 'alist)
                               (json-array-type 'vector)
                               (json-key-type 'symbol))
                          
                          (condition-case err
-                             (let* ((response (json-read-from-string json-response-raw))
+                             (let* ((response (json-read-from-string json-response-decoded))
                                     (error-message (alist-get 'error response))
                                     (content ""))
 
@@ -222,7 +223,7 @@ Use nil for API default behavior (adaptive)."
                                                (when (and (string= item-type "text") item-text)
                                                  (setq extracted-text (concat extracted-text item-text)))))
                                          (message "Unexpected response format: %S" content-obj))))
-                                   (setq content (ollama-buddy-fix-encoding-issues extracted-text))))
+                                   (setq content extracted-text)))
                                
                                ;; Update the chat buffer
                                (with-current-buffer ollama-buddy--chat-buffer

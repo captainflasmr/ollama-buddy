@@ -182,12 +182,13 @@ Use nil for API default behavior (adaptive)."
                      (goto-char (point-min))
                      (when (re-search-forward "\n\n" nil t)
                        (let* ((json-response-raw (buffer-substring (point) (point-max)))
+                              (json-response-decoded (decode-coding-string json-response-raw 'utf-8))
                               (json-object-type 'alist)
                               (json-array-type 'vector)
                               (json-key-type 'symbol))
                          
                          (condition-case err
-                             (let* ((json-response (json-read-from-string json-response-raw))
+                             (let* ((json-response (json-read-from-string json-response-decoded))
                                     (error-message (alist-get 'error json-response))
                                     (content "")
                                     (choices (alist-get 'choices json-response)))
@@ -196,8 +197,7 @@ Use nil for API default behavior (adaptive)."
                                (if error-message
                                    (setq content (format "Error: %s" (alist-get 'message error-message)))
                                  (when choices
-                                   (setq content (ollama-buddy-fix-encoding-issues
-                                                  (alist-get 'content (alist-get 'message (aref choices 0)))))))
+                                   (setq content (alist-get 'content (alist-get 'message (aref choices 0))))))
                                
                                ;; Update the chat buffer
                                (with-current-buffer ollama-buddy--chat-buffer
