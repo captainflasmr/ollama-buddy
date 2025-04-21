@@ -1,7 +1,7 @@
-;;; ollama-buddy.el --- Ollama LLM AI Assistant with ChatGPT and Claude Support -*- lexical-binding: t; -*-
+;;; ollama-buddy.el --- Ollama LLM AI Assistant with ChatGPT, Claude, Gemini and Grok Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.9.33
+;; Version: 0.9.35
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy

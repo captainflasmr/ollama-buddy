@@ -26,12 +26,13 @@ This file contains a description of my testing strategy for the =ollama-buddy= E
 # List of elisp files to compile
 elisp_files=(
   "ollama-buddy-awesome.el"
-  "ollama-buddy-claude.el"
   "ollama-buddy-core.el"
   "ollama-buddy.el"
   "ollama-buddy-fabric.el"
-  "ollama-buddy-gemini.el"
   "ollama-buddy-openai.el"
+  "ollama-buddy-claude.el"
+  "ollama-buddy-gemini.el"
+  "ollama-buddy-grok.el"
   "ollama-buddy-transient.el"
 )
 
@@ -44,6 +45,7 @@ for el in "${elisp_files[@]}"; do
     -f batch-byte-compile "$elisp_dir/$el"
 done
 #+end_src
+
 
 ** Run ollama-buddy with different Emacs versions
 

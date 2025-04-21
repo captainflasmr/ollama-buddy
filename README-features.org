@@ -8,6 +8,24 @@
 
 * Features as they come in
 
+** <2025-04-21> *0.9.35*
+
+Added Grok support
+
+Integration is very similar to other remote AIs:
+
+#+begin_src elisp
+(use-package ollama-buddy
+  :bind
+  ("C-c o" . ollama-buddy-menu)
+  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  :custom
+  (ollama-buddy-grok-api-key
+   (auth-source-pick-first-password :host "ollama-buddy-grok" :user "apikey"))
+  :config
+  (require 'ollama-buddy-grok nil t))
+#+end_src
+
 ** <2025-04-20> *0.9.33*
 
 Fixed utf-8 encoding stream response issues from remote LLMs.

@@ -40,7 +40,7 @@ Get your key from the Grok API dashboard."
   :type 'string
   :group 'ollama-buddy-grok)
 
-(defcustom ollama-buddy-grok-api-endpoint "https://api.grok.com/v1/chat/completions"
+(defcustom ollama-buddy-grok-api-endpoint "https://api.x.ai/v1/chat/completions"
   "Endpoint for Grok chat completions API."
   :type 'string
   :group 'ollama-buddy-grok)
@@ -105,7 +105,7 @@ Use nil for API default behavior (adaptive)."
     (setq ollama-buddy-grok--current-token-count 0)
 
     ;; Get history and system prompt
-    (let* ((model (ollama-buddy--current-model))
+    (let* ((model ollama-buddy--current-model)
            (history (when ollama-buddy-history-enabled
                       (gethash ollama-buddy--current-model
                                ollama-buddy--conversation-history-by-model
@@ -260,9 +260,8 @@ Use nil for API default behavior (adaptive)."
             `(("Authorization" . ,(concat "Bearer " ollama-buddy-grok-api-key)))))
       
       (url-retrieve
-       "https://api.grok.com/v1/models"
+       "https://api.x.ai/v1/models"
        (lambda (status)
-         (message "poop: 22") 
          (if (plist-get status :error)
              (progn
                (message "Error fetching Grok models: %s" (prin1-to-string (plist-get status :error)))
@@ -287,7 +286,6 @@ Use nil for API default behavior (adaptive)."
                             (prefixed-models (mapcar (lambda (model-name)
                                                        (concat ollama-buddy-grok-marker-prefix model-name))
                                                      models)))
-(message "poop: ") 
                        ;; Register the Grok handler with ollama-buddy
                        (when (fboundp 'ollama-buddy-register-model-handler)
                          (ollama-buddy-register-model-handler 

@@ -11,6 +11,10 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-04-21> *0.9.35*
+
+Added Grok support
+
 ** <2025-04-20> *0.9.33*
 
 Fixed utf-8 encoding stream response issues from remote LLMs.
