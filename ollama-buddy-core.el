@@ -31,6 +31,20 @@
   :group 'ollama-buddy
   :prefix "ollama-buddy-param-")
 
+(defcustom ollama-buddy-hide-reasoning t
+  "When non-nil, hide reasoning/thinking blocks from the stream output."
+  :type 'boolean
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-reasoning-markers
+  '(("<think>" . "</think>")
+    ("---" . "---"))
+  "List of marker pairs that encapsulate reasoning/thinking sections.
+Each element is a cons cell (START . END) with the start and end markers."
+  :type '(repeat (cons (string :tag "Start marker")
+                       (string :tag "End marker")))
+  :group 'ollama-buddy)
+
 ;; Core customization options
 (defcustom ollama-buddy-default-register ?a
   "Default register to store the current response when not in multishot mode."
@@ -572,6 +586,7 @@ PROMPT and SPECIFIED-MODEL are passed to the handler or original function."
 - Show Token Stats/Graph/Report       C-c u/U/T
 - Model Change/Info/Multishot         C-c m/i/M
 - Toggle Streaming                    C-c x
+- Toggle Reasoning Visibility         C-c V
 - System Prompt Set/Show/Reset        C-c s/C-s/r
 - Param Menu/Profiles/Show/Help/Reset C-c P/p/G/I/K
 - History Toggle/Clear/Show/Edit      C-c H/X/J
@@ -1347,6 +1362,10 @@ ACTUAL-MODEL is the model being used instead."
                                                       ollama-buddy--current-system-prompt)))
                                    (format "[%s]" system-text))
                                ""))
+           (reasoning-indicator (when ollama-buddy-hide-reasoning
+                                  (if ollama-buddy--in-reasoning-section
+                                      (propertize " [REASONING]" 'face '(:weight bold :foreground "yellow"))
+                                    " [R-]")))
            (params (when ollama-buddy-show-params-in-header
                      (let ((param-str
                             (mapconcat
@@ -1364,7 +1383,7 @@ ACTUAL-MODEL is the model being used instead."
                          (format " [%s]" param-str))))))
       (setq header-line-format
             (concat
-             (format " %s%s%s %s%s%s %s %s %s%s"
+             (format " %s%s%s %s%s%s %s %s %s%s%s"
                      (if ollama-buddy-display-token-stats "T" "")
                      (if ollama-buddy-streaming-enabled "" "X")
                      (or history "")
@@ -1377,6 +1396,7 @@ ACTUAL-MODEL is the model being used instead."
                        (propertize model 'face `(:weight bold :inherit shadow :box (:line-width 2 :style flat-button))))
                      status
                      system-indicator
+                     (or reasoning-indicator "")
                      (or params ""))
              (when (and original-model actual-model (not (string= original-model actual-model)))
                (propertize (format " [Using %s instead of %s]" actual-model original-model)

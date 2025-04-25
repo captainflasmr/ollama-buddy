@@ -1713,6 +1713,10 @@ Let's compare ollama-buddy to the existing solutions:
 
 Report issues on the [[https://github.com/captainflasmr/ollama-buddy/issues][GitHub Issues page]]
 
+** TODO 001.1 - Toggle reasoning/chain of thought
+
+** TODO 001.2 - Toggle parameters display in chat buffer
+
 * Contributing
 
 Contributions are welcome! Please:

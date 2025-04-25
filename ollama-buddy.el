@@ -74,6 +74,21 @@
 (require 'ollama-buddy-core)
 (require 'ollama-buddy-transient)
 
+(defvar ollama-buddy--current-reasoning-start nil
+  "Marker for the start of the current reasoning section.")
+
+(defvar ollama-buddy--current-reasoning-end nil
+  "Marker for the end of the current reasoning section.")
+
+(defvar ollama-buddy--in-reasoning-section nil
+  "Whether we are currently inside a reasoning section.")
+
+(defvar ollama-buddy--reasoning-buffer ""
+  "Buffer to collect reasoning text while hiding.")
+
+(defvar ollama-buddy--reasoning-status-message nil
+  "Current reasoning status message.")
+
 (defvar ollama-buddy-mode-line-segment nil
   "Mode line segment for Ollama Buddy.")
 
@@ -98,6 +113,31 @@
 
 (defvar ollama-buddy--current-response nil
   "The current response text being accumulated.")
+
+;; Function to toggle reasoning visibility
+(defun ollama-buddy-toggle-reasoning-visibility ()
+  "Toggle visibility of reasoning/thinking sections in responses."
+  (interactive)
+  (setq ollama-buddy-hide-reasoning (not ollama-buddy-hide-reasoning))
+  (ollama-buddy--update-status
+   (if ollama-buddy-hide-reasoning "Reasoning hidden" "Reasoning shown"))
+  (message "Reasoning sections: %s"
+           (if ollama-buddy-hide-reasoning "hidden" "shown")))
+
+;; Function to check if text contains a reasoning marker
+(defun ollama-buddy--find-reasoning-marker (text)
+  "Check if TEXT contains a reasoning marker.
+Returns a cons cell (TYPE . MARKER) where TYPE is either 'start or 'end,
+and MARKER is the matching marker pair from `ollama-buddy-reasoning-markers`."
+  (let ((found-marker nil))
+    (dolist (marker-pair ollama-buddy-reasoning-markers found-marker)
+      (when (and (not found-marker)
+                 (string-match-p (regexp-quote (car marker-pair)) text))
+        (setq found-marker (cons 'start marker-pair)))
+      (when (and (not found-marker)
+                 (string-match-p (regexp-quote (cdr marker-pair)) text))
+        (setq found-marker (cons 'end marker-pair))))
+    found-marker))
 
 (defun ollama-buddy--get-real-model-name (model)
   "Extract the actual model name from the prefixed MODEL string."
@@ -1655,6 +1695,35 @@ With prefix argument ALL-MODELS, clear history for all models."
     (when (not (string-empty-p text))
       (setq ollama-buddy--current-token-count (1+ ollama-buddy--current-token-count)))
     
+    ;; Check for reasoning markers only if reasoning hiding is enabled
+    (when ollama-buddy-hide-reasoning
+      (let ((marker-found (ollama-buddy--find-reasoning-marker text)))
+        (cond
+         ;; Found a start marker
+         ((and marker-found (eq (car marker-found) 'start))
+          (setq ollama-buddy--in-reasoning-section t
+                ollama-buddy--current-reasoning-start (car (cdr marker-found))
+                ollama-buddy--current-reasoning-end (cdr (cdr marker-found))
+                ollama-buddy--reasoning-buffer ""
+                ollama-buddy--reasoning-status-message 
+                (format "%s..." (substring ollama-buddy--current-reasoning-start 
+                                         (min 10 (length ollama-buddy--current-reasoning-start)))))
+          (ollama-buddy--update-status ollama-buddy--reasoning-status-message))
+         ;; Found an end marker
+         ((and marker-found (eq (car marker-found) 'end))
+          (setq ollama-buddy--in-reasoning-section nil
+                ollama-buddy--reasoning-buffer ""
+                ollama-buddy--reasoning-status-message nil)
+          (ollama-buddy--update-status ollama-buddy--status))
+         ;; Inside reasoning section - buffer the text instead of displaying
+         (ollama-buddy--in-reasoning-section
+          (setq ollama-buddy--reasoning-buffer 
+                (concat ollama-buddy--reasoning-buffer text))
+          ;; Don't insert text, just update status
+          (ollama-buddy--update-status ollama-buddy--reasoning-status-message)
+          (cl-return-from ollama-buddy--stream-filter)))))
+    
+    ;; Normal processing - insert text if not in reasoning section
     (with-current-buffer ollama-buddy--chat-buffer
       (let* ((inhibit-read-only t)
              (window (get-buffer-window ollama-buddy--chat-buffer t))
@@ -1674,7 +1743,8 @@ With prefix argument ALL-MODELS, clear history for all models."
             (setq ollama-buddy--start-point nil))
           
           ;; Insert the text directly - we'll convert it at the end of the response
-          (insert text)
+          (unless (and ollama-buddy-hide-reasoning ollama-buddy--in-reasoning-section)
+            (insert text))
 
           ;; Track the complete response for history
           (when (boundp 'ollama-buddy--current-response)
@@ -1684,10 +1754,11 @@ With prefix argument ALL-MODELS, clear history for all models."
             (setq ollama-buddy--current-response text))
 
           ;; Write to register - if multishot is enabled, use that register, otherwise use default
-          (set-register reg-char
+          (unless (and ollama-buddy-hide-reasoning ollama-buddy--in-reasoning-section)
+            (set-register reg-char
                         (concat
                          (if (stringp (get-register reg-char))
-                             (get-register reg-char) "") text))
+                             (get-register reg-char) "") text)))
           
           ;; Check if this response is complete
           (when (eq (alist-get 'done json-data) t)
@@ -1745,7 +1816,11 @@ With prefix argument ALL-MODELS, clear history for all models."
               (setq ollama-buddy--current-token-count 0
                     ollama-buddy--current-token-start-time nil
                     ollama-buddy--last-token-count 0
-                    ollama-buddy--last-update-time nil))
+                    ollama-buddy--last-update-time nil
+                    ;; Reset reasoning variables
+                    ollama-buddy--in-reasoning-section nil
+                    ollama-buddy--reasoning-buffer ""
+                    ollama-buddy--reasoning-status-message nil))
 
             ;; reset the current model if from external
             (when ollama-buddy--current-request-temporary-model
@@ -2797,6 +2872,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c U") #'ollama-buddy-display-token-graph)
     (define-key map (kbd "C-c C-o") #'ollama-buddy-toggle-markdown-conversion)
     (define-key map (kbd "C-c c") #'ollama-buddy-toggle-model-colors)
+    (define-key map (kbd "C-c V") #'ollama-buddy-toggle-reasoning-visibility)
     
     ;; History keybindings
     (define-key map (kbd "C-c H") #'ollama-buddy-toggle-history)

@@ -107,6 +107,7 @@
     ("U" "Token Usage Graph" ollama-buddy-display-token-graph)
     ("C-o" "Toggle Markdown->Org" ollama-buddy-toggle-markdown-conversion)
     ("c" "Toggle Model Colors" ollama-buddy-toggle-model-colors)
+    ("V" "Toggle reasoning visibility" ollama-buddy-toggle-reasoning-visibility)
     ]
    
    ["History"
