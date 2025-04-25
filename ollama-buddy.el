@@ -1714,7 +1714,6 @@ With prefix argument ALL-MODELS, clear history for all models."
              ;; Found a start marker
              ((and ollama-buddy--reasoning-marker-found (eq (car ollama-buddy--reasoning-marker-found) 'start))
               (setq ollama-buddy--in-reasoning-section t
-                    ollama-buddy--reasoning-buffer ""
                     ollama-buddy--reasoning-status-message
                     (format "%s..."
                             (capitalize
@@ -1771,8 +1770,7 @@ With prefix argument ALL-MODELS, clear history for all models."
             (when (and ollama-buddy-hide-reasoning
                        ollama-buddy--in-reasoning-section)
               (setq ollama-buddy--in-reasoning-section nil
-                    ollama-buddy--reasoning-status-message nil
-                    ollama-buddy--reasoning-start-time nil)
+                    ollama-buddy--reasoning-status-message nil)
               (when ollama-buddy--start-point
                 (delete-region ollama-buddy--start-point (point-max))
                 (setq ollama-buddy--start-point nil))
@@ -1844,7 +1842,6 @@ With prefix argument ALL-MODELS, clear history for all models."
                     ollama-buddy--last-update-time nil
                     ;; Reset reasoning variables
                     ollama-buddy--in-reasoning-section nil
-                    ollama-buddy--reasoning-buffer ""
                     ollama-buddy--reasoning-status-message nil
                     ollama-buddy--reasoning-skip-newlines nil))
 
