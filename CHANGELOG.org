@@ -11,6 +11,10 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-04-25> *0.9.36*
+
+Added Reasoning/Thinking section visibility toggle functionality
+
 ** <2025-04-21> *0.9.35*
 
 Added Grok support

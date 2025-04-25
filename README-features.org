@@ -8,6 +8,23 @@
 
 * Features as they come in
 
+** <2025-04-25> *0.9.36*
+
+Added Reasoning/Thinking section visibility toggle functionality
+
+- Introduced the ability to hide reasoning/thinking sections during AI responses, making the chat output cleaner and more focused on final results
+- Added a new customizable variable =ollama-buddy-hide-reasoning= (default: nil) which controls visibility of reasoning sections
+- Added =ollama-buddy-reasoning-markers= to configure marker pairs that encapsulate reasoning sections (supports multiple formats like <think></think> or ----)
+- Added =ollama-buddy-toggle-reasoning-visibility= interactive command to switch visibility on/off
+- Added keybinding =C-c V= for toggling reasoning visibility in chat buffer 
+- Added transient menu option "V" for toggling reasoning visibility
+- When reasoning is hidden, a status message shows which section is being processed (e.g., "Think..." or custom marker names)
+- Reasoning sections are automatically detected during streaming responses
+- Header line now indicates when reasoning is hidden with "REASONING HIDDEN" text
+- All changes preserve streaming response functionality while providing cleaner output
+
+This feature is particularly useful when working with AI models that output their "chain of thought" or reasoning process before providing the final answer, allowing users to focus on the end results while still having the option to see the full reasoning when needed.
+
 ** <2025-04-21> *0.9.35*
 
 Added Grok support
