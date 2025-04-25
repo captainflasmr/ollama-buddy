@@ -120,10 +120,7 @@
 
 ;; Function to check if text contains a reasoning marker
 (defun ollama-buddy--find-reasoning-marker (text)
-  "Check if TEXT contains a reasoning marker.
-Returns a cons cell (TYPE . MARKER) where TYPE is either 'start or 'end,
-and MARKER is the matching marker pair from `ollama-buddy-reasoning-markers`."
-  ;; (message "Marker check : %s" text)
+  "Check if TEXT contain a reasoning marker."
   (let ((found-marker nil))
     (dolist (marker-pair ollama-buddy-reasoning-markers found-marker)
       (when (and (not found-marker)
@@ -1004,6 +1001,7 @@ Returns the full prompt text ready to be sent."
     (make-directory ollama-buddy-sessions-directory t)))
 
 (defun ollama-buddy--get-first-words-of-first-user-content ()
+  "Extract first few words from user message."
   (if (gethash ollama-buddy--current-model ollama-buddy--conversation-history-by-model nil)
       (progn
         (let* ((content
@@ -1714,7 +1712,7 @@ With prefix argument ALL-MODELS, clear history for all models."
              ((and ollama-buddy--reasoning-marker-found (eq (car ollama-buddy--reasoning-marker-found) 'start))
               (setq ollama-buddy--in-reasoning-section t
                     ollama-buddy--reasoning-buffer ""
-                    ollama-buddy--reasoning-status-message 
+                    ollama-buddy--reasoning-status-message
                     (format "%s..."
                             (capitalize
                              (replace-regexp-in-string
