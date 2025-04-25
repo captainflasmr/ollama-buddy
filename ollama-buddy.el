@@ -854,7 +854,7 @@ PROPS should be a sequence of property-value pairs."
                     ollama-buddy-default-model
                     (error "No default model set")))
          (endpoint "/api/show")
-         (payload (json-encode `((model . ,model)))))
+         (payload (json-encode `((model . ,(ollama-buddy--get-real-model-name model))))))
     
     ;; Update status to show operation in progress
     (ollama-buddy--update-status (format "Fetching info for %s..." model))
