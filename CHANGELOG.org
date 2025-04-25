@@ -11,6 +11,10 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-04-25> *0.9.37*
+
+- Display modified parameters in token stats
+
 ** <2025-04-25> *0.9.36*
 
 Added Reasoning/Thinking section visibility toggle functionality

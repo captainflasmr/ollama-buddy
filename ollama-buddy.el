@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant with ChatGPT, Claude, Gemini and Grok Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.9.36
+;; Version: 0.9.37
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -1833,7 +1833,22 @@ With prefix argument ALL-MODELS, clear history for all models."
                 (insert (format "\n\n*** Token Stats\n[%d tokens in %.1fs, %.1f tokens/sec]"
                                 ollama-buddy--current-token-count
                                 elapsed-time
-                                token-rate)))
+                                token-rate))
+                ;; Add modified parameters to the display
+                (when ollama-buddy-params-modified
+                  (insert "\n\n*** Modified Parameters: ")
+                  (let ((param-strings
+                         (mapcar
+                          (lambda (param)
+                            (let ((value (alist-get param ollama-buddy-params-active)))
+                              (format "%s=%s"
+                                      param
+                                      (cond
+                                       ((floatp value) (format "%.2f" value))
+                                       ((vectorp value) (format "[%s]" (mapconcat #'identity value ", ")))
+                                       (t value)))))
+                          ollama-buddy-params-modified)))
+                    (insert (mapconcat #'identity param-strings ", ")))))
               
               ;; Reset tracking variables
               (setq ollama-buddy--current-token-count 0

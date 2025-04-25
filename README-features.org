@@ -8,6 +8,12 @@
 
 * Features as they come in
 
+** <2025-04-25> *0.9.37*
+
+- Display modified parameters in token stats
+
+Enhanced the token statistics section to include any modified parameters, providing a clearer insight into the active configurations. This update helps in debugging and understanding the runtime environment.
+
 ** <2025-04-25> *0.9.36*
 
 Added Reasoning/Thinking section visibility toggle functionality
