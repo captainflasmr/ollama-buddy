@@ -349,6 +349,10 @@ Generating a commit message
 Changing models
      Press ‘C-c o’ followed by ‘m’ to switch between available models.
 
+Toggling reasoning visibility
+     Press ‘C-c V’ to hide or show reasoning/thinking sections in
+     responses.
+
 Using Awesome ChatGPT Prompts
      Select text, press ‘C-c o’, then ‘a’ for the Awesome prompts menu,
      then ‘s’ to send with a prompt.
@@ -377,6 +381,7 @@ The chat interface is the main way to interact with Ollama Buddy:
    • Model-specific colors
    • System prompt support
    • Parameter customization
+   • Reasoning/thinking section visibility control
 
 5.2 Pre-built Commands
 ======================
@@ -517,6 +522,24 @@ syntax:
    To toggle this feature:
      M-x ollama-buddy-toggle-markdown-conversion
    or press ‘C-c C-o’ in the chat buffer.
+
+6.6 Reasoning Visibility Control
+================================
+
+Ollama Buddy can hide reasoning/thinking sections in responses, making
+the output cleaner:
+
+   • Toggle visibility with ‘C-c V’ or ‘M-x
+     ollama-buddy-toggle-reasoning-visibility’
+   • Configure markers with the ‘ollama-buddy-reasoning-markers’
+     variable
+   • When hidden, a status message shows the current reasoning section
+     (e.g., "Think...")
+   • Header line indicates when reasoning is hidden with "REASONING
+     HIDDEN" text
+
+   This feature helps focus on final answers while preserving the option
+to view the full reasoning process.
 
 
 File: ollama-buddy.info,  Node: Working with Models,  Next: Parameter Control,  Prev: Chat Interface,  Up: Top
@@ -1705,21 +1728,21 @@ Node: Introduction2058
 Node: Installation3866
 Node: Configuration6128
 Node: Quick Start10458
-Node: Core Features11969
-Node: Chat Interface14249
-Node: Working with Models16292
-Node: Parameter Control18986
-Node: Session Management21376
-Node: Roles and Commands23370
-Node: Fabric Pattern Integration25797
-Node: Awesome ChatGPT Prompts28024
-Node: ChatGPT and Claude Support31884
-Node: Advanced Usage35339
-Node: API Reference38037
-Node: FAQ41807
-Node: Troubleshooting45739
-Node: Contributing48244
-Node: Index50201
+Node: Core Features12086
+Node: Chat Interface14419
+Node: Working with Models17103
+Node: Parameter Control19797
+Node: Session Management22187
+Node: Roles and Commands24181
+Node: Fabric Pattern Integration26608
+Node: Awesome ChatGPT Prompts28835
+Node: ChatGPT and Claude Support32695
+Node: Advanced Usage36150
+Node: API Reference38848
+Node: FAQ42618
+Node: Troubleshooting46550
+Node: Contributing49055
+Node: Index51012
 
 End Tag Table
 

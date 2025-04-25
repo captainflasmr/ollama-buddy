@@ -108,6 +108,7 @@ allowing you to leverage powerful large language models (LLMs) directly within y
     <li><a id="toc-Sending-Prompts" href="#Sending-Prompts">6.3 Sending Prompts</a></li>
     <li><a id="toc-System-Prompts" href="#System-Prompts">6.4 System Prompts</a></li>
     <li><a id="toc-Markdown-to-Org-Conversion" href="#Markdown-to-Org-Conversion">6.5 Markdown to Org Conversion</a></li>
+    <li><a id="toc-Reasoning-Visibility-Control" href="#Reasoning-Visibility-Control">6.6 Reasoning Visibility Control</a></li>
   </ul></li>
   <li><a id="toc-Working-with-Models" href="#Working-with-Models">7 Working with Models</a>
   <ul class="toc-numbered-mark">
@@ -719,6 +720,10 @@ Next: <a href="#Core-Features" accesskey="n" rel="next">Core Features</a>, Previ
 <dd><p>Press <code class="code">C-c o</code> followed by <code class="code">m</code> to switch between available models.
 </p>
 </dd>
+<dt>Toggling reasoning visibility</dt>
+<dd><p>Press <code class="code">C-c V</code> to hide or show reasoning/thinking sections in responses.
+</p>
+</dd>
 <dt>Using Awesome ChatGPT Prompts</dt>
 <dd><p>Select text, press <code class="code">C-c o</code>, then <code class="code">a</code> for the Awesome prompts menu, then <code class="code">s</code> to send with a prompt.
 </p>
@@ -762,6 +767,7 @@ Next: <a href="#Chat-Interface" accesskey="n" rel="next">Chat Interface</a>, Pre
 </li><li>Model-specific colors
 </li><li>System prompt support
 </li><li>Parameter customization
+</li><li>Reasoning/thinking section visibility control
 </li></ul>
 
 </div>
@@ -869,6 +875,7 @@ Next: <a href="#Working-with-Models" accesskey="n" rel="next">Working with Model
 <li><a href="#Sending-Prompts" accesskey="3">Sending Prompts</a></li>
 <li><a href="#System-Prompts" accesskey="4">System Prompts</a></li>
 <li><a href="#Markdown-to-Org-Conversion" accesskey="5">Markdown to Org Conversion</a></li>
+<li><a href="#Reasoning-Visibility-Control" accesskey="6">Reasoning Visibility Control</a></li>
 </ul>
 <div class="section-level-extent" id="Opening-the-Chat">
 <h3 class="section"><span>6.1 Opening the Chat<a class="copiable-link" href="#Opening-the-Chat"> &para;</a></span></h3>
@@ -960,6 +967,21 @@ Provide concise, efficient solutions with explanations.
 <pre class="example-preformatted">M-x ollama-buddy-toggle-markdown-conversion
 </pre></div>
 <p>or press <code class="code">C-c C-o</code> in the chat buffer.
+</p>
+</div>
+<div class="section-level-extent" id="Reasoning-Visibility-Control">
+<h3 class="section"><span>6.6 Reasoning Visibility Control<a class="copiable-link" href="#Reasoning-Visibility-Control"> &para;</a></span></h3>
+
+<p>Ollama Buddy can hide reasoning/thinking sections in responses, making the output cleaner:
+</p>
+<ul class="itemize mark-bullet">
+<li>Toggle visibility with <code class="code">C-c V</code> or <code class="code">M-x ollama-buddy-toggle-reasoning-visibility</code>
+</li><li>Configure markers with the <code class="code">ollama-buddy-reasoning-markers</code> variable
+</li><li>When hidden, a status message shows the current reasoning section (e.g., &quot;Think...&quot;)
+</li><li>Header line indicates when reasoning is hidden with &quot;REASONING HIDDEN&quot; text
+</li></ul>
+
+<p>This feature helps focus on final answers while preserving the option to view the full reasoning process.
 </p>
 <hr>
 </div>

@@ -404,6 +404,9 @@ Select your changes, press @code{C-c o}, then choose "Git Commit Message" (or pr
 @item Changing models
 Press @code{C-c o} followed by @code{m} to switch between available models.
 
+@item Toggling reasoning visibility
+Press @code{C-c V} to hide or show reasoning/thinking sections in responses.
+
 @item Using Awesome ChatGPT Prompts
 Select text, press @code{C-c o}, then @code{a} for the Awesome prompts menu, then @code{s} to send with a prompt.
 
@@ -427,6 +430,7 @@ The chat interface is the main way to interact with Ollama Buddy:
 @item Model-specific colors
 @item System prompt support
 @item Parameter customization
+@item Reasoning/thinking section visibility control
 @end itemize
 
 @section Pre-built Commands
@@ -580,6 +584,19 @@ To toggle this feature:
 M-x ollama-buddy-toggle-markdown-conversion
 @end example
 or press @code{C-c C-o} in the chat buffer.
+
+@section Reasoning Visibility Control
+
+Ollama Buddy can hide reasoning/thinking sections in responses, making the output cleaner:
+
+@itemize @bullet
+@item Toggle visibility with @code{C-c V} or @code{M-x ollama-buddy-toggle-reasoning-visibility}
+@item Configure markers with the @code{ollama-buddy-reasoning-markers} variable
+@item When hidden, a status message shows the current reasoning section (e.g., "Think...")
+@item Header line indicates when reasoning is hidden with "REASONING HIDDEN" text
+@end itemize
+
+This feature helps focus on final answers while preserving the option to view the full reasoning process.
 
 @node Working with Models
 @chapter Working with Models

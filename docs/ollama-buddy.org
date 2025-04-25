@@ -57,6 +57,7 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Sending-Prompts][6.3 Sending Prompts]]
   - [[#System-Prompts][6.4 System Prompts]]
   - [[#Markdown-to-Org-Conversion][6.5 Markdown to Org Conversion]]
+  - [[#Reasoning-Visibility-Control][6.6 Reasoning Visibility Control]]
 - [[#Working-with-Models][7 Working with Models]]
   - [[#Available-Models][7.1 Available Models]]
   - [[#Switching-Models][7.2 Switching Models]]
@@ -678,6 +679,9 @@ Next: [[#Core-Features][Core Features]], Previous:
 - Changing models :: Press =C-c o= followed by =m= to switch between
   available models.
 
+- Toggling reasoning visibility :: Press =C-c V= to hide or show
+  reasoning/thinking sections in responses.
+
 - Using Awesome ChatGPT Prompts :: Select text, press =C-c o=, then =a=
   for the Awesome prompts menu, then =s= to send with a prompt.
 
@@ -721,6 +725,7 @@ The chat interface is the main way to interact with Ollama Buddy:
 - Model-specific colors
 - System prompt support
 - Parameter customization
+- Reasoning/thinking section visibility control
 
 <<Pre_002dbuilt-Commands>>
 *** 5.2 Pre-built Commands [[#Pre_002dbuilt-Commands][¶]]
@@ -818,6 +823,7 @@ Next: [[#Working-with-Models][Working with Models]], Previous:
 - [[#Sending-Prompts][Sending Prompts]]
 - [[#System-Prompts][System Prompts]]
 - [[#Markdown-to-Org-Conversion][Markdown to Org Conversion]]
+- [[#Reasoning-Visibility-Control][Reasoning Visibility Control]]
 
 <<Opening-the-Chat>>
 *** 6.1 Opening the Chat [[#Opening-the-Chat][¶]]
@@ -906,6 +912,26 @@ M-x ollama-buddy-toggle-markdown-conversion
 #+end_src
 
 or press =C-c C-o= in the chat buffer.
+
+<<Reasoning-Visibility-Control>>
+*** 6.6 Reasoning Visibility Control [[#Reasoning-Visibility-Control][¶]]
+:PROPERTIES:
+:CUSTOM_ID: reasoning-visibility-control
+:CLASS: section
+:END:
+Ollama Buddy can hide reasoning/thinking sections in responses, making
+the output cleaner:
+
+- Toggle visibility with =C-c V= or
+  =M-x ollama-buddy-toggle-reasoning-visibility=
+- Configure markers with the =ollama-buddy-reasoning-markers= variable
+- When hidden, a status message shows the current reasoning section
+  (e.g., "Think...")
+- Header line indicates when reasoning is hidden with "REASONING HIDDEN"
+  text
+
+This feature helps focus on final answers while preserving the option to
+view the full reasoning process.
 
 --------------
 
