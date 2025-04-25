@@ -1754,6 +1754,25 @@ With prefix argument ALL-MODELS, clear history for all models."
           
           ;; Check if this response is complete
           (when (eq (alist-get 'done json-data) t)
+            ;; If we're still in a reasoning section at the end, force exit
+            (when (and ollama-buddy-hide-reasoning
+                       ollama-buddy--in-reasoning-section)
+              (setq ollama-buddy--in-reasoning-section nil
+                    ollama-buddy--reasoning-status-message nil
+                    ollama-buddy--reasoning-start-time nil)
+              (when ollama-buddy--start-point
+                (delete-region ollama-buddy--start-point (point-max))
+                (setq ollama-buddy--start-point nil))
+              (insert "\n[Warning: Response ended with unclosed reasoning section]\n\n")
+              ;; Show any remaining content that wasn't displayed
+              (when (boundp 'ollama-buddy--current-response)
+                (let ((remaining-content (substring ollama-buddy--current-response
+                                                    (if ollama-buddy--start-point
+                                                        (- ollama-buddy--start-point (point-min))
+                                                      0))))
+                  (unless (string-empty-p remaining-content)
+                    (insert remaining-content)))))
+
             ;; Convert the response from markdown to org format if enabled
             (when ollama-buddy-convert-markdown-to-org
               ;; first convert the register contents
