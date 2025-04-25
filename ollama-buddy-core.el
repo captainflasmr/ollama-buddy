@@ -38,7 +38,28 @@
 
 (defcustom ollama-buddy-reasoning-markers
   '(("<think>" . "</think>")
-    ("---" . "---"))
+    ("---" . "---")
+    ("<thinking>" . "</thinking>")
+    ;; Common XML-style tags
+    ("<reasoning>" . "</reasoning>")
+    ("<cot>" . "</cot>")  ; chain-of-thought
+    ("<scratch>" . "</scratch>")
+    ("<workings>" . "</workings>")
+    ("<calculation>" . "</calculation>")
+    ("<process>" . "</process>")
+    ("<analysis>" . "</analysis>")
+    ("<reflection>" . "</reflection>")
+    ;; Common markdown patterns
+    ("```thinking" . "```")
+    ("```reasoning" . "```")
+    ("```internal" . "```")
+    ("```cot" . "```")
+    ;; ASCII-style delimiters
+    ("***THINKING***" . "***END THINKING***")
+    ("===REASONING===" . "===END REASONING===")
+    ;; More verbose patterns
+    ("Let me think step by step:" . "Therefore:")
+    ("Internal reasoning:" . "Conclusion:"))
   "List of marker pairs that encapsulate reasoning/thinking sections.
 Each element is a cons cell (START . END) with the start and end markers."
   :type '(repeat (cons (string :tag "Start marker")
