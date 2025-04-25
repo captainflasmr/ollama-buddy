@@ -31,7 +31,7 @@
   :group 'ollama-buddy
   :prefix "ollama-buddy-param-")
 
-(defcustom ollama-buddy-hide-reasoning t
+(defcustom ollama-buddy-hide-reasoning nil
   "When non-nil, hide reasoning/thinking blocks from the stream output."
   :type 'boolean
   :group 'ollama-buddy)
@@ -767,9 +767,15 @@ When disabled, responses only appear after completion."
 
 (defun ollama-buddy--md-to-org-convert-region (start end)
   "Convert the region from START to END from Markdown to Org-mode format."
+
   (save-excursion
     (save-restriction
       (narrow-to-region start end)
+
+        ;; Remove double blank lines
+      (goto-char (point-min))
+      (while (re-search-forward "\n\n\n+" nil t)
+        (replace-match "\n\n"))
       
       ;; First, handle code blocks by temporarily protecting their content
       (goto-char (point-min))
@@ -1362,10 +1368,6 @@ ACTUAL-MODEL is the model being used instead."
                                                       ollama-buddy--current-system-prompt)))
                                    (format "[%s]" system-text))
                                ""))
-           (reasoning-indicator (when ollama-buddy-hide-reasoning
-                                  (if ollama-buddy--in-reasoning-section
-                                      (propertize " [REASONING]" 'face '(:weight bold :foreground "yellow"))
-                                    " [R-]")))
            (params (when ollama-buddy-show-params-in-header
                      (let ((param-str
                             (mapconcat
@@ -1383,7 +1385,8 @@ ACTUAL-MODEL is the model being used instead."
                          (format " [%s]" param-str))))))
       (setq header-line-format
             (concat
-             (format " %s%s%s %s%s%s %s %s %s%s%s"
+             (format " %s%s%s%s %s%s%s %s %s %s%s"
+                     (if ollama-buddy-hide-reasoning "REASONING HIDDEN " "")
                      (if ollama-buddy-display-token-stats "T" "")
                      (if ollama-buddy-streaming-enabled "" "X")
                      (or history "")
@@ -1396,7 +1399,6 @@ ACTUAL-MODEL is the model being used instead."
                        (propertize model 'face `(:weight bold :inherit shadow :box (:line-width 2 :style flat-button))))
                      status
                      system-indicator
-                     (or reasoning-indicator "")
                      (or params ""))
              (when (and original-model actual-model (not (string= original-model actual-model)))
                (propertize (format " [Using %s instead of %s]" actual-model original-model)
