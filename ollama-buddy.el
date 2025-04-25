@@ -74,6 +74,9 @@
 (require 'ollama-buddy-core)
 (require 'ollama-buddy-transient)
 
+(defvar ollama-buddy--reasoning-skip-newlines nil
+  "Whether to skip leading newlines after reasoning section ends.")
+
 (defvar ollama-buddy--reasoning-marker-found nil
   "Whether we are currently inside a reasoning section.")
 
@@ -1722,7 +1725,8 @@ With prefix argument ALL-MODELS, clear history for all models."
              ;; Found an end marker
              ((and ollama-buddy--reasoning-marker-found (eq (car ollama-buddy--reasoning-marker-found) 'end))
               (setq ollama-buddy--in-reasoning-section nil
-                    ollama-buddy--reasoning-status-message nil)
+                    ollama-buddy--reasoning-status-message nil
+                    ollama-buddy--reasoning-skip-newlines t)  ; Flag to skip initial newlines
               ;; (message "end : %s" text)
               (when ollama-buddy--start-point
                 (delete-region ollama-buddy--start-point (point-max))
@@ -1735,7 +1739,16 @@ With prefix argument ALL-MODELS, clear history for all models."
           (unless (or (and ollama-buddy-hide-reasoning
                            ollama-buddy--in-reasoning-section)
                       ollama-buddy--reasoning-marker-found)
-            (insert text))
+            ;; If we just exited reasoning section and need to skip newlines
+            (if (and ollama-buddy--reasoning-skip-newlines
+                     (not ollama-buddy--in-reasoning-section)
+                     (string-match "^[\n\r]+" text))
+                (let ((cleaned-text (replace-regexp-in-string "^[\n\r]+" "" text)))
+                  ;; Only insert if there's content after removing newlines
+                  (unless (string-empty-p cleaned-text)
+                    (insert cleaned-text)
+                    (setq ollama-buddy--reasoning-skip-newlines nil)))
+              (insert text)))
 
           ;; Track the complete response for history
           (when (boundp 'ollama-buddy--current-response)
@@ -1832,7 +1845,8 @@ With prefix argument ALL-MODELS, clear history for all models."
                     ;; Reset reasoning variables
                     ollama-buddy--in-reasoning-section nil
                     ollama-buddy--reasoning-buffer ""
-                    ollama-buddy--reasoning-status-message nil))
+                    ollama-buddy--reasoning-status-message nil
+                    ollama-buddy--reasoning-skip-newlines nil))
 
             ;; reset the current model if from external
             (when ollama-buddy--current-request-temporary-model
