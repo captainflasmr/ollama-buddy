@@ -1416,15 +1416,15 @@ All interactive functions available in ollama-buddy are listed in the original R
 #+RESULTS:
 | TODO                                                                         | DOING                                      | DONE                                                                  |
 |------------------------------------------------------------------------------+--------------------------------------------+-----------------------------------------------------------------------|
-| transient-setup: Key sequence 1 0 starts with non-prefix key 1               | chat ollama names to include prefix        | Still some encoding issues on returns from online AI                  |
-| No streaming with hiding reasoning corrupts output                           | Kill online AI process with cancel request | Conversation history to display with Claude/ChatGPT                   |
-| Claude request and connection can sometimes take time and it blocks!         | GGUF to use new syncing option             | I think some hard coded Claude models currently don't work            |
-| Pushing hundreds or even thousands of lines to the chat buffer takes a while |                                            | register contents to be converted to org, currently it is in markdown |
-| ChatGPT request/response too long                                            |                                            | =C-a= beginning-of-line to jump to prompt start like comint           |
-| Check tags caching                                                           |                                            | As shell generally C-n to end of list to clear prompt history         |
-| Save system prompts as part of session                                       |                                            | Add Texinfo to MELPA recipe                                           |
-| keybindings in ollama chat buffer are reserved                               |                                            | System prompt not cleared on new session                              |
-|                                                                              |                                            | Remove fabric from Commands transient menu                            |
+| Modifying a parameter internal defaults would flag as not modified           | chat ollama names to include prefix        | Still some encoding issues on returns from online AI                  |
+| transient-setup: Key sequence 1 0 starts with non-prefix key 1               | Kill online AI process with cancel request | Conversation history to display with Claude/ChatGPT                   |
+| No streaming with hiding reasoning corrupts output                           | GGUF to use new syncing option             | I think some hard coded Claude models currently don't work            |
+| Claude request and connection can sometimes take time and it blocks!         |                                            | register contents to be converted to org, currently it is in markdown |
+| Pushing hundreds or even thousands of lines to the chat buffer takes a while |                                            | =C-a= beginning-of-line to jump to prompt start like comint           |
+| ChatGPT request/response too long                                            |                                            | As shell generally C-n to end of list to clear prompt history         |
+| Check tags caching                                                           |                                            | Add Texinfo to MELPA recipe                                           |
+| Save system prompts as part of session                                       |                                            | System prompt not cleared on new session                              |
+| keybindings in ollama chat buffer are reserved                               |                                            | Remove fabric from Commands transient menu                            |
 |                                                                              |                                            | External AI to copy to register                                       |
 |                                                                              |                                            | First request with no chat buffer fails                               |
 
@@ -1435,6 +1435,8 @@ All interactive functions available in ollama-buddy are listed in the original R
 ** DOING GGUF to use new syncing option
 
 For some reason this is more difficult than it looks
+
+** TODO Modifying a parameter internal defaults would flag as not modified
 
 ** TODO transient-setup: Key sequence 1 0 starts with non-prefix key 1
 
@@ -1505,44 +1507,43 @@ CLOSED: [2025-03-29 Sat 13:34]
 #+end_src
 
 #+RESULTS:
-| TODO                                                          | DOING                                       | DONE                                       |
-|---------------------------------------------------------------+---------------------------------------------+--------------------------------------------|
-| Show token parameters as part of token stats                  | Add option to hide reasoning in chat buffer | Autogenerate session save name             |
-| Unload all models?, to free up RAM if you are switching alot? | Core Params - suffix                        | Add gemini?                                |
-| Autoload intelligently? to speed up initial reponse times?    |                                             | Pull ChatGPT and Claude model names        |
-| Core API - Embeddings                                         |                                             | Merge history buffer functionality         |
-| Core Params - format                                          |                                             | Show incoming ollama messages              |
-| Core Params - template                                        |                                             | Add chatGPT awesome prompt support         |
-| Core Params - raw                                             |                                             | Add fabric pattern/prompt support          |
-| Test on Windows                                               |                                             | ChatGPT support                            |
-|                                                               |                                             | Claude support                             |
-|                                                               |                                             | Add new ChatGPT 4.1                        |
-|                                                               |                                             | Method for securely storing API keys       |
-|                                                               |                                             | Core API - Delete Model                    |
-|                                                               |                                             | Core API - Copy a model                    |
-|                                                               |                                             | Core API - stream                          |
-|                                                               |                                             | Core API - Pull/Info/Pull/Delete a model   |
-|                                                               |                                             | Core API - Show running models             |
-|                                                               |                                             | Core API - Create a model from a GGUF file |
-|                                                               |                                             | Add transient menu                         |
-|                                                               |                                             | History editing                            |
-|                                                               |                                             | Core API - options - parameter editing     |
-|                                                               |                                             | Core API - show model information          |
-|                                                               |                                             | Core API - system prompt                   |
-|                                                               |                                             | Chat buffer to use org-mode                |
-|                                                               |                                             | Chat export options                        |
-|                                                               |                                             | Core Params - options:temperature          |
-|                                                               |                                             | Managing Sessions                          |
-|                                                               |                                             | Sparse minified version                    |
-|                                                               |                                             | Role-Based Menu Preset System              |
-|                                                               |                                             | Add to MELPA                               |
-|                                                               |                                             | Enhancing Menu Clarity                     |
-|                                                               |                                             | Real time token tracking                   |
-|                                                               |                                             | Managing chat history and context          |
+| TODO                                                          | DOING                                       | DONE                                         |
+|---------------------------------------------------------------+---------------------------------------------+----------------------------------------------|
+| Unload all models?, to free up RAM if you are switching alot? | Add option to hide reasoning in chat buffer | Show token parameters as part of token stats |
+| Autoload intelligently? to speed up initial reponse times?    | Core Params - suffix                        | Autogenerate session save name               |
+| Core API - Embeddings                                         |                                             | Add gemini?                                  |
+| Core Params - format                                          |                                             | Pull ChatGPT and Claude model names          |
+| Core Params - template                                        |                                             | Merge history buffer functionality           |
+| Core Params - raw                                             |                                             | Show incoming ollama messages                |
+| Test on Windows                                               |                                             | Add chatGPT awesome prompt support           |
+|                                                               |                                             | Add fabric pattern/prompt support            |
+|                                                               |                                             | ChatGPT support                              |
+|                                                               |                                             | Claude support                               |
+|                                                               |                                             | Add new ChatGPT 4.1                          |
+|                                                               |                                             | Method for securely storing API keys         |
+|                                                               |                                             | Core API - Delete Model                      |
+|                                                               |                                             | Core API - Copy a model                      |
+|                                                               |                                             | Core API - stream                            |
+|                                                               |                                             | Core API - Pull/Info/Pull/Delete a model     |
+|                                                               |                                             | Core API - Show running models               |
+|                                                               |                                             | Core API - Create a model from a GGUF file   |
+|                                                               |                                             | Add transient menu                           |
+|                                                               |                                             | History editing                              |
+|                                                               |                                             | Core API - options - parameter editing       |
+|                                                               |                                             | Core API - show model information            |
+|                                                               |                                             | Core API - system prompt                     |
+|                                                               |                                             | Chat buffer to use org-mode                  |
+|                                                               |                                             | Chat export options                          |
+|                                                               |                                             | Core Params - options:temperature            |
+|                                                               |                                             | Managing Sessions                            |
+|                                                               |                                             | Sparse minified version                      |
+|                                                               |                                             | Role-Based Menu Preset System                |
+|                                                               |                                             | Add to MELPA                                 |
+|                                                               |                                             | Enhancing Menu Clarity                       |
+|                                                               |                                             | Real time token tracking                     |
+|                                                               |                                             | Managing chat history and context            |
 
 ** DOING Add option to hide reasoning in chat buffer
-
-** TODO Show token parameters as part of token stats
 
 ** TODO Unload all models?, to free up RAM if you are switching alot?
 
@@ -1561,6 +1562,9 @@ CLOSED: [2025-03-29 Sat 13:34]
 ** DOING Core Params - suffix
 
 I think this is only for generate, but I have quietly added it in.
+
+** DONE Show token parameters as part of token stats
+CLOSED: [2025-04-26 Sat 08:12]
 
 ** DONE Autogenerate session save name
 CLOSED: [2025-04-18 Fri 16:33]
@@ -1733,9 +1737,11 @@ Let's compare ollama-buddy to the existing solutions:
 
 Report issues on the [[https://github.com/captainflasmr/ollama-buddy/issues][GitHub Issues page]]
 
-** TODO 001.1 - Toggle reasoning/chain of thought
+** DONE 001.1 - Toggle reasoning/chain of thought
+CLOSED: [2025-04-26 Sat 08:12]
 
-** TODO 001.2 - Toggle parameters display in chat buffer
+** DONE 001.2 - Toggle parameters display in chat buffer
+CLOSED: [2025-04-26 Sat 08:12]
 
 * Contributing
 
