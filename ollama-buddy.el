@@ -2579,14 +2579,6 @@ Modifies the variable in place."
           (user-error "File is not a GGUF file: %s" file))
       (user-error "No file at point"))))
 
-(defun ollama-buddy-add-dired-integration ()
-  "Add Ollama integration to Dired mode."
-  (when (eq major-mode 'dired-mode)
-    (local-set-key (kbd "C-c i") #'ollama-buddy-dired-import-gguf)))
-
-;; Add hook to enable integration when entering dired mode
-(add-hook 'dired-mode-hook #'ollama-buddy-add-dired-integration)
-
 (defun ollama-buddy-manage-models ()
   "Display and manage Ollama models."
   (interactive)
