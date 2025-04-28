@@ -928,6 +928,436 @@ Prompts are integrated into the Emacs history mechanism and persist across sessi
 - Use =M-p= to navigate prompt history in the chat buffer
 - Use =M-p= / =M-n= within the minibuffer to insert previous prompts
 
+* Tutorial: Setting Up Roles and Custom Menus
+
+Roles in Ollama Buddy allow you to create different configurations of commands and models for specific use cases. This tutorial will guide you through setting up roles, creating custom menus, and effectively using them in your workflow.
+
+** Understanding Roles
+
+A role is essentially a preset configuration that defines:
+- Which commands are available in your menu
+- What models to use for specific commands
+- What prompts and system messages to use
+- Any special parameters for optimization
+
+For example, you might have a "programmer" role focused on coding tasks and a "writer" role with writing-focused commands.
+
+** Understanding Role File Naming Convention
+
+The *file naming convention* is critical to understand how roles, preset files, and menu configurations work together:
+
+- *Required filename format*: =ollama-buddy--preset__ROLE-NAME.el=
+  - The double underscore =__= separates the prefix from your role name
+  - The role name portion becomes the identifier shown when switching roles
+  - Example: =ollama-buddy--preset__programmer.el= creates a role named "programmer"
+
+This naming convention is how Ollama Buddy discovers and identifies role files in your roles directory. When you run =ollama-buddy-roles-switch-role=, the system:
+
+1. Scans the =ollama-buddy-roles-directory= for files matching the pattern
+2. Extracts the role name from each filename (the part after =__=)
+3. Presents these names in the role selection interface
+4. When selected, loads the corresponding file which redefines =ollama-buddy-command-definitions=
+5. This redefinition immediately changes the available commands in your Ollama Buddy menu
+
+The relationship chain works like this:
+#+begin_src 
+ollama-buddy--preset__ROLE-NAME.el → Defines ollama-buddy-command-definitions → Controls menu content
+#+end_src
+
+When creating roles using the interactive role creator (=C-c E=), this naming convention is automatically handled for you. When creating roles manually, you must follow this pattern for Ollama Buddy to recognize your role files correctly.
+
+You can locate your roles directory with:
+#+begin_src elisp
+;; Check where your roles are stored
+(message ollama-buddy-roles-directory)
+
+;; Or open the directory directly
+M-x ollama-buddy-roles-open-directory
+#+end_src
+
+By default, this is set to =~/.emacs.d/ollama-buddy-presets/=, but you can customize it:
+#+begin_src elisp
+(setq ollama-buddy-roles-directory "/your/custom/path/to/presets")
+#+end_src
+
+** Creating Custom Roles
+
+There are two ways to create custom roles:
+
+*** 1. Using the Interactive Role Creator
+
+The most user-friendly approach:
+
+1. Press =C-c E= or run =M-x ollama-buddy-role-creator-create-new-role=
+2. Enter a name for your role (e.g., "programmer")
+3. For each command you want to add:
+   - Specify a command name (e.g., "refactor-code")
+   - Choose a key shortcut for the menu
+   - Add a description
+   - Optionally specify a model
+   - Optionally add prompt prefixes and system messages
+
+*** 2. Creating Role Files Manually
+
+For more advanced customization, create role files manually:
+
+1. Create a file named =ollama-buddy--preset__your-role-name.el= in your =ollama-buddy-roles-directory=
+2. Structure your file like this:
+
+#+begin_src elisp
+;; ollama-buddy preset for role: programmer
+(require 'ollama-buddy)
+
+(setq ollama-buddy-command-definitions
+  '(
+    ;; Standard commands - always include these
+    (open-chat
+     :key ?o
+     :description "Open chat buffer"
+     :action ollama-buddy--open-chat)
+    
+    (show-models
+     :key ?v
+     :description "View model status"
+     :action ollama-buddy-show-model-status)
+    
+    (switch-role
+     :key ?R
+     :description "Switch roles"
+     :action ollama-buddy-roles-switch-role)
+    
+    (create-role
+     :key ?E
+     :description "Create new role"
+     :action ollama-buddy-role-creator-create-new-role)
+    
+    (open-roles-directory
+     :key ?D
+     :description "Open roles directory"
+     :action ollama-buddy-roles-open-directory)
+    
+    ;; Custom commands for this role
+    (refactor-code
+     :key ?r
+     :description "Refactor code"
+     :model "codellama:7b"
+     :prompt "Refactor this code to improve readability and efficiency:"
+     :system "You are an expert software engineer who improves code quality while maintaining functionality."
+     :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
+    
+    (explain-code
+     :key ?e
+     :description "Explain code"
+     :model "deepseek-r1:7b"
+     :prompt "Explain what this code does in detail:"
+     :system "You are a programming teacher who explains code clearly and thoroughly."
+     :action (lambda () (ollama-buddy--send-with-command 'explain-code)))
+    
+    (git-commit
+     :key ?g
+     :description "Git commit message"
+     :prompt "Write a concise git commit message for these changes:"
+     :system "You are a version control expert who creates clear, concise commit messages."
+     :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+    ))
+#+end_src
+
+** Switching Between Roles
+
+To switch between roles:
+
+1. Press =C-c R= or run =M-x ollama-buddy-roles-switch-role=
+2. Select a role from the completion list
+3. The menu will update with the commands defined in that role
+
+You can also switch roles from within the Ollama Buddy menu by pressing 'R'.
+
+** Advanced Customization Techniques
+
+*** Command-Specific Models
+
+Assign specific models to commands for optimal performance:
+
+#+begin_src elisp
+(ollama-buddy-add-model-to-menu-entry 'refactor-code "codellama:7b")
+#+end_src
+
+*** Command-Specific Parameters
+
+Optimize parameters for specific commands:
+
+#+begin_src elisp
+(ollama-buddy-add-parameters-to-command 'refactor-code
+  'temperature 0.2
+  'top_p 0.7
+  'repeat_penalty 1.3)
+#+end_src
+
+*** Creating New Commands
+
+Add entirely new commands to your menu:
+
+#+begin_src elisp
+(ollama-buddy-update-menu-entry 'my-new-command
+  :key ?z
+  :description "My new awesome command"
+  :prompt "Here is what I want you to do:"
+  :system "You are an expert system specialized in this task."
+  :action (lambda () (ollama-buddy--send-with-command 'my-new-command)))
+#+end_src
+
+** Example: Creating a "Writer" Role
+
+Here's a complete example of setting up a writing-focused role:
+
+#+begin_src elisp
+;; ollama-buddy preset for role: writer
+(require 'ollama-buddy)
+
+(setq ollama-buddy-command-definitions
+  '(
+    ;; Standard commands
+    (open-chat
+     :key ?o
+     :description "Open chat buffer"
+     :action ollama-buddy--open-chat)
+    
+    (show-models
+     :key ?v
+     :description "View model status"
+     :action ollama-buddy-show-model-status)
+    
+    (switch-role
+     :key ?R
+     :description "Switch roles"
+     :action ollama-buddy-roles-switch-role)
+    
+    (create-role
+     :key ?E
+     :description "Create new role"
+     :action ollama-buddy-role-creator-create-new-role)
+    
+    (open-roles-directory
+     :key ?D
+     :description "Open roles directory"
+     :action ollama-buddy-roles-open-directory)
+    
+    ;; Writing-focused commands
+    (summarize
+     :key ?s
+     :description "Summarize text"
+     :prompt "Summarize the following text in a concise manner:"
+     :system "You are an expert at extracting the key points from any text."
+     :action (lambda () (ollama-buddy--send-with-command 'summarize)))
+    
+    (proofread
+     :key ?p
+     :description "Proofread text"
+     :model "deepseek-r1:7b"
+     :prompt "Proofread the following text and correct any errors:"
+     :system "You are a professional editor who identifies and corrects grammar, spelling, and style errors."
+     :action (lambda () (ollama-buddy--send-with-command 'proofread)))
+    
+    (rewrite
+     :key ?r
+     :description "Rewrite text"
+     :prompt "Rewrite the following text to improve clarity and flow:"
+     :system "You are a skilled writer who can improve any text while preserving its meaning."
+     :action (lambda () (ollama-buddy--send-with-command 'rewrite)))
+    
+    (brainstorm
+     :key ?b
+     :description "Brainstorm ideas"
+     :model "llama3.2:3b"
+     :prompt "Generate creative ideas related to the following topic:"
+     :parameters ((temperature . 1.0) (top_p . 0.95))
+     :action (lambda () (ollama-buddy--send-with-command 'brainstorm)))
+    ))
+#+end_src
+
+Save this as =ollama-buddy--preset__writer.el= in your =ollama-buddy-roles-directory=.
+
+** Tips for Effective Role Usage
+
+1. *Group related commands*: Create roles around specific workflows or tasks
+2. *Match models to tasks*: Use lightweight models for simple tasks and more powerful models for complex ones
+3. *Customize system prompts*: Craft specific system prompts to guide the model for each command
+4. *Use the roles directory*: Press =C-c D= to quickly access and manage your role files
+5. *Create specialized roles*: Consider roles for programming, writing, translation, or domain-specific knowledge
+
+* Advanced Customizing the Ollama Buddy Menu System
+
+Ollama Buddy provides a flexible menu system that can be easily customized to match your workflow. The menu is built from =ollama-buddy-command-definitions=, which you can modify or extend in your Emacs configuration.
+
+** Basic Structure
+
+Each menu item is defined using a property list with these key attributes:
+
+#+begin_src elisp
+(command-name
+ :key ?k              ; Character for menu selection
+ :description "desc"  ; Menu item description
+ :model "model-name"  ; Specific Ollama model (optional)
+ :prompt "prompt"     ; System prompt (optional)
+ :system "system"     ; System prompt (optional)
+ :parameters ((param . value)) ; Command-specific parameters (optional)
+ :action function)    ; Command implementation
+#+end_src
+
+** Examples
+
+*** Adding New Commands
+
+You can add new commands to =ollama-buddy-command-definitions= in your config:
+
+#+begin_src elisp
+;; Add a single new command
+(add-to-list 'ollama-buddy-command-definitions
+               '(pirate
+                 :key ?i
+                 :description "R Matey!"
+                 :model "mistral:latest"
+                 :prompt "Translate the following as if I was a pirate:"
+                 :action (lambda () (ollama-buddy--send-with-command 'pirate))))
+
+;; Incorporate into a use-package
+(use-package ollama-buddy
+  :load-path "path/to/ollama-buddy"
+  :bind
+  ("C-c o" . ollama-buddy-menu)
+  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  (add-to-list 'ollama-buddy-command-definitions
+               '(pirate
+                 :key ?i
+                 :description "R Matey!"
+                 :model "mistral:latest"
+                 :prompt "Translate the following as if I was a pirate:"
+                 :action (lambda () (ollama-buddy--send-with-command 'pirate))))
+  :custom ollama-buddy-default-model "llama:latest")
+
+;; Add multiple commands at once
+(setq ollama-buddy-command-definitions
+      (append ollama-buddy-command-definitions
+              '((summarize
+                 :key ?u
+                 :description "Summarize text"
+                 :model "tinyllama:latest"
+                 :prompt "Provide a brief summary:"
+                 :action (lambda () 
+                          (ollama-buddy--send-with-command 'summarize)))
+                (translate-spanish
+                 :key ?t
+                 :description "Translate to Spanish"
+                 :model "mistral:latest"
+                 :prompt "Translate this text to Spanish:"
+                 :action (lambda () 
+                          (ollama-buddy--send-with-command 'translate-spanish))))))
+#+end_src
+
+*** Creating a Minimal Setup
+
+You can create a minimal configuration by defining only the commands you need:
+
+#+begin_src elisp
+;; Minimal setup with just essential commands
+(setq ollama-buddy-command-definitions
+      '((send-basic
+         :key ?l
+         :description "Send Basic Region"
+         :action (lambda () (ollama-buddy--send-with-command 'send-basic)))
+
+        (quick-define
+         :key ?d
+         :description "Define word"
+         :model "tinyllama:latest"
+         :prompt "Define this word:"
+         :action (lambda () 
+                  (ollama-buddy--send-with-command 'quick-define)))
+        (quit
+         :key ?q
+         :description "Quit"
+         :model nil
+         :action (lambda () 
+                  (message "Quit Ollama Shell menu.")))))
+#+end_src
+
+** Tips for Custom Commands
+
+1. Choose unique keys for menu items
+2. Match models to task complexity (small models for quick tasks)
+3. Use clear, descriptive names
+
+** Command Properties Reference
+
+| Property     | Description                              | Required |
+|--------------+------------------------------------------+----------|
+| :key         | Single character for menu selection      | Yes      |
+| :description | Menu item description                    | Yes      |
+| :model       | Specific Ollama model to use             | No       |
+| :prompt      | Static system prompt                     | No       |
+| :system      | System-level instruction                 | No       |
+| :parameters  | Command-specific parameters              | No       |
+| :action      | Function implementing the command        | Yes      |
+
+- Model Selection and Fallback Logic
+
+** Overview
+
+You can associate specific commands defined in the menu with an Ollama LLM to optimize performance for different tasks. For example, if speed is a priority over accuracy, such as when retrieving synonyms, you might use a lightweight model like TinyLlama or a 1B–3B model. On the other hand, for tasks that require higher precision, like code refactoring, a more capable model such as Qwen-Coder 7B can be assigned to the "refactor" command on the buddy menu system.
+
+Since this package enables seamless model switching through Ollama, the buddy menu can present a list of commands, each linked to an appropriate model. All Ollama interactions share the same chat buffer, ensuring that menu selections remain consistent. Additionally, the status bar on the header line and the prompt itself indicate the currently active model.
+
+Ollama Buddy also includes a model selection mechanism with a fallback system to ensure commands execute smoothly, even if the preferred model is unavailable.
+
+** Command-Specific Models
+
+Commands in =ollama-buddy-command-definitions= can specify preferred models using the =:model= property. This allows optimizing different commands for specific models:
+
+#+begin_src elisp
+(defcustom ollama-buddy-command-definitions
+  '((refactor-code
+     :key ?r
+     :description "Refactor code"
+     :model "qwen-coder:latest"
+     :prompt "refactor the following code:")
+    (git-commit
+     :key ?g
+     :description "Git commit message"
+     :model "tinyllama:latest"
+     :prompt "write a concise git commit message for the following:")
+    (send-region
+     :key ?l
+     :description "Send region"
+     :model "llama:latest"))
+  ...)
+#+end_src
+
+When =:model= is =nil=, the command will use whatever model is currently set as =ollama-buddy-default-model=.
+
+** Fallback Chain
+
+When executing a command, the model selection follows this fallback chain:
+
+1. Command-specific model (=:model= property)
+2. Current model (=ollama-buddy-default-model=)
+3. User selection from available models
+
+** Configuration Options
+
+*** Setting the Fallback Model
+
+#+begin_src elisp
+(setq ollama-buddy-default-model "llama:latest")
+#+end_src
+
+** User Interface Feedback
+
+When a fallback occurs, Ollama Buddy provides clear feedback:
+
+- The header line shows which model is being used
+- If using a fallback model, an orange warning appears showing both the requested and actual model
+- The model status can be viewed using the "View model status" command (v key)
+
 * Customization
 
 ** Basic Customization
@@ -1177,185 +1607,6 @@ Prompts are integrated into the Emacs history mechanism and persist across sessi
 | ollama-buddy-params-display               | Display the current Ollama parameter settings.                                 |
 | ollama-buddy-fabric-populate-patterns     | Populate the list of available patterns from the local repository.             |
 | ollama-buddy-sessions-save                | Save the current Ollama Buddy session.                                         |
-
-* Customizing the Ollama Buddy Menu System
-
-Ollama Buddy provides a flexible menu system that can be easily customized to match your workflow. The menu is built from =ollama-buddy-command-definitions=, which you can modify or extend in your Emacs configuration.
-
-** Basic Structure
-
-Each menu item is defined using a property list with these key attributes:
-
-#+begin_src elisp
-(command-name
- :key ?k              ; Character for menu selection
- :description "desc"  ; Menu item description
- :model "model-name"  ; Specific Ollama model (optional)
- :prompt "prompt"     ; System prompt (optional)
- :system "system"     ; System prompt (optional)
- :parameters ((param . value)) ; Command-specific parameters (optional)
- :action function)    ; Command implementation
-#+end_src
-
-** Examples
-
-*** Adding New Commands
-
-You can add new commands to =ollama-buddy-command-definitions= in your config:
-
-#+begin_src elisp
-;; Add a single new command
-(add-to-list 'ollama-buddy-command-definitions
-               '(pirate
-                 :key ?i
-                 :description "R Matey!"
-                 :model "mistral:latest"
-                 :prompt "Translate the following as if I was a pirate:"
-                 :action (lambda () (ollama-buddy--send-with-command 'pirate))))
-
-;; Incorporate into a use-package
-(use-package ollama-buddy
-  :load-path "path/to/ollama-buddy"
-  :bind
-  ("C-c o" . ollama-buddy-menu)
-  ("C-c O" . ollama-buddy-transient-menu-wrapper)
-  (add-to-list 'ollama-buddy-command-definitions
-               '(pirate
-                 :key ?i
-                 :description "R Matey!"
-                 :model "mistral:latest"
-                 :prompt "Translate the following as if I was a pirate:"
-                 :action (lambda () (ollama-buddy--send-with-command 'pirate))))
-  :custom ollama-buddy-default-model "llama:latest")
-
-;; Add multiple commands at once
-(setq ollama-buddy-command-definitions
-      (append ollama-buddy-command-definitions
-              '((summarize
-                 :key ?u
-                 :description "Summarize text"
-                 :model "tinyllama:latest"
-                 :prompt "Provide a brief summary:"
-                 :action (lambda () 
-                          (ollama-buddy--send-with-command 'summarize)))
-                (translate-spanish
-                 :key ?t
-                 :description "Translate to Spanish"
-                 :model "mistral:latest"
-                 :prompt "Translate this text to Spanish:"
-                 :action (lambda () 
-                          (ollama-buddy--send-with-command 'translate-spanish))))))
-#+end_src
-
-*** Creating a Minimal Setup
-
-You can create a minimal configuration by defining only the commands you need:
-
-#+begin_src elisp
-;; Minimal setup with just essential commands
-(setq ollama-buddy-command-definitions
-      '((send-basic
-         :key ?l
-         :description "Send Basic Region"
-         :action (lambda () (ollama-buddy--send-with-command 'send-basic)))
-
-        (quick-define
-         :key ?d
-         :description "Define word"
-         :model "tinyllama:latest"
-         :prompt "Define this word:"
-         :action (lambda () 
-                  (ollama-buddy--send-with-command 'quick-define)))
-        (quit
-         :key ?q
-         :description "Quit"
-         :model nil
-         :action (lambda () 
-                  (message "Quit Ollama Shell menu.")))))
-#+end_src
-
-** Tips for Custom Commands
-
-1. Choose unique keys for menu items
-2. Match models to task complexity (small models for quick tasks)
-3. Use clear, descriptive names
-
-** Command Properties Reference
-
-| Property     | Description                              | Required |
-|--------------+------------------------------------------+----------|
-| :key         | Single character for menu selection      | Yes      |
-| :description | Menu item description                    | Yes      |
-| :model       | Specific Ollama model to use             | No       |
-| :prompt      | Static system prompt                     | No       |
-| :system      | System-level instruction                 | No       |
-| :parameters  | Command-specific parameters              | No       |
-| :action      | Function implementing the command        | Yes      |
-
-- Model Selection and Fallback Logic
-
-** Overview
-
-You can associate specific commands defined in the menu with an Ollama LLM to optimize performance for different tasks. For example, if speed is a priority over accuracy, such as when retrieving synonyms, you might use a lightweight model like TinyLlama or a 1B–3B model. On the other hand, for tasks that require higher precision, like code refactoring, a more capable model such as Qwen-Coder 7B can be assigned to the "refactor" command on the buddy menu system.
-
-Since this package enables seamless model switching through Ollama, the buddy menu can present a list of commands, each linked to an appropriate model. All Ollama interactions share the same chat buffer, ensuring that menu selections remain consistent. Additionally, the status bar on the header line and the prompt itself indicate the currently active model.
-
-Ollama Buddy also includes a model selection mechanism with a fallback system to ensure commands execute smoothly, even if the preferred model is unavailable.
-
-** Command-Specific Models
-
-Commands in =ollama-buddy-command-definitions= can specify preferred models using the =:model= property. This allows optimizing different commands for specific models:
-
-#+begin_src elisp
-(defcustom ollama-buddy-command-definitions
-  '((refactor-code
-     :key ?r
-     :description "Refactor code"
-     :model "qwen-coder:latest"
-     :prompt "refactor the following code:")
-    (git-commit
-     :key ?g
-     :description "Git commit message"
-     :model "tinyllama:latest"
-     :prompt "write a concise git commit message for the following:")
-    (send-region
-     :key ?l
-     :description "Send region"
-     :model "llama:latest"))
-  ...)
-#+end_src
-
-When =:model= is =nil=, the command will use whatever model is currently set as =ollama-buddy-default-model=.
-
-** Fallback Chain
-
-When executing a command, the model selection follows this fallback chain:
-
-1. Command-specific model (=:model= property)
-2. Current model (=ollama-buddy-default-model=)
-3. User selection from available models
-
-** Configuration Options
-
-*** Setting the Fallback Model
-
-#+begin_src elisp
-(setq ollama-buddy-default-model "llama:latest")
-#+end_src
-
-** User Interface Feedback
-
-When a fallback occurs, Ollama Buddy provides clear feedback:
-
-- The header line shows which model is being used
-- If using a fallback model, an orange warning appears showing both the requested and actual model
-- The model status can be viewed using the "View model status" command (v key)
-
-* Connection monitoring
-
-Good ollama connection status visibility is maintained either by default using basic coding logic or if monitoring is desired then configure as thus:
-
-By default, strategic status checks should be enough to indicate a good consistent ollama running state.
 
 * Interactive functions
 
