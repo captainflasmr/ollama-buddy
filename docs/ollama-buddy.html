@@ -142,11 +142,27 @@ allowing you to leverage powerful large language models (LLMs) directly within y
   <li><a id="toc-Roles-and-Commands" href="#Roles-and-Commands">10 Roles and Commands</a>
   <ul class="toc-numbered-mark">
     <li><a id="toc-Understanding-Roles" href="#Understanding-Roles">10.1 Understanding Roles</a></li>
-    <li><a id="toc-Built_002din-Commands" href="#Built_002din-Commands">10.2 Built-in Commands</a></li>
-    <li><a id="toc-Creating-Custom-Roles" href="#Creating-Custom-Roles">10.3 Creating Custom Roles</a></li>
-    <li><a id="toc-Switching-Roles" href="#Switching-Roles">10.4 Switching Roles</a></li>
-    <li><a id="toc-Managing-Roles" href="#Managing-Roles">10.5 Managing Roles</a></li>
-    <li><a id="toc-Example-Custom-Role" href="#Example-Custom-Role">10.6 Example Custom Role</a></li>
+    <li><a id="toc-Role-File-Naming-Convention" href="#Role-File-Naming-Convention">10.2 Role File Naming Convention</a></li>
+    <li><a id="toc-Built_002din-Commands" href="#Built_002din-Commands">10.3 Built-in Commands</a></li>
+    <li><a id="toc-Creating-Custom-Roles" href="#Creating-Custom-Roles">10.4 Creating Custom Roles</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Interactive-Role-Creator" href="#Interactive-Role-Creator">10.4.1 Interactive Role Creator</a></li>
+      <li><a id="toc-Manual-Role-Creation" href="#Manual-Role-Creation">10.4.2 Manual Role Creation</a></li>
+    </ul></li>
+    <li><a id="toc-Switching-Roles" href="#Switching-Roles">10.5 Switching Roles</a></li>
+    <li><a id="toc-Managing-Role-Files" href="#Managing-Role-Files">10.6 Managing Role Files</a></li>
+    <li><a id="toc-Advanced-Role-Customization" href="#Advanced-Role-Customization">10.7 Advanced Role Customization</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Command_002dSpecific-Models" href="#Command_002dSpecific-Models">10.7.1 Command-Specific Models</a></li>
+      <li><a id="toc-Command_002dSpecific-Parameters-1" href="#Command_002dSpecific-Parameters-1">10.7.2 Command-Specific Parameters</a></li>
+      <li><a id="toc-Creating-New-Commands" href="#Creating-New-Commands">10.7.3 Creating New Commands</a></li>
+    </ul></li>
+    <li><a id="toc-Role-Examples" href="#Role-Examples">10.8 Role Examples</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Programming-Role" href="#Programming-Role">10.8.1 Programming Role</a></li>
+      <li><a id="toc-Writing-Role" href="#Writing-Role">10.8.2 Writing Role</a></li>
+    </ul></li>
+    <li><a id="toc-Tips-for-Effective-Role-Usage" href="#Tips-for-Effective-Role-Usage">10.9 Tips for Effective Role Usage</a></li>
   </ul></li>
   <li><a id="toc-Fabric-Pattern-Integration" href="#Fabric-Pattern-Integration">11 Fabric Pattern Integration</a>
   <ul class="toc-numbered-mark">
@@ -1353,11 +1369,14 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 
 <ul class="mini-toc">
 <li><a href="#Understanding-Roles" accesskey="1">Understanding Roles</a></li>
-<li><a href="#Built_002din-Commands" accesskey="2">Built-in Commands</a></li>
-<li><a href="#Creating-Custom-Roles" accesskey="3">Creating Custom Roles</a></li>
-<li><a href="#Switching-Roles" accesskey="4">Switching Roles</a></li>
-<li><a href="#Managing-Roles" accesskey="5">Managing Roles</a></li>
-<li><a href="#Example-Custom-Role" accesskey="6">Example Custom Role</a></li>
+<li><a href="#Role-File-Naming-Convention" accesskey="2">Role File Naming Convention</a></li>
+<li><a href="#Built_002din-Commands" accesskey="3">Built-in Commands</a></li>
+<li><a href="#Creating-Custom-Roles" accesskey="4">Creating Custom Roles</a></li>
+<li><a href="#Switching-Roles" accesskey="5">Switching Roles</a></li>
+<li><a href="#Managing-Role-Files" accesskey="6">Managing Role Files</a></li>
+<li><a href="#Advanced-Role-Customization" accesskey="7">Advanced Role Customization</a></li>
+<li><a href="#Role-Examples" accesskey="8">Role Examples</a></li>
+<li><a href="#Tips-for-Effective-Role-Usage" accesskey="9">Tips for Effective Role Usage</a></li>
 </ul>
 <div class="section-level-extent" id="Understanding-Roles">
 <h3 class="section"><span>10.1 Understanding Roles<a class="copiable-link" href="#Understanding-Roles"> &para;</a></span></h3>
@@ -1373,8 +1392,42 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 <p>This allows you to create specialized assistants for different workflows.
 </p>
 </div>
+<div class="section-level-extent" id="Role-File-Naming-Convention">
+<h3 class="section"><span>10.2 Role File Naming Convention<a class="copiable-link" href="#Role-File-Naming-Convention"> &para;</a></span></h3>
+
+<p>The file naming convention is critical to understand how roles, preset files, and menu configurations work together:
+</p>
+<dl class="table">
+<dt>Required filename format</dt>
+<dd><p><code class="code">ollama-buddy--preset__ROLE-NAME.el</code>
+</p><ul class="itemize mark-bullet">
+<li>The double underscore <code class="code">__</code> separates the prefix from your role name
+</li><li>The role name portion becomes the identifier shown when switching roles
+</li><li>Example: <code class="code">ollama-buddy--preset__programmer.el</code> creates a role named &quot;programmer&quot;
+</li></ul>
+</dd>
+</dl>
+
+<p>This naming convention is how Ollama Buddy discovers and identifies role files. When you run <code class="code">ollama-buddy-roles-switch-role</code>, the system:
+</p>
+<ol class="enumerate">
+<li> Scans the <code class="code">ollama-buddy-roles-directory</code> for files matching the pattern
+</li><li> Extracts the role name from each filename (the part after <code class="code">__</code>)
+</li><li> Presents these names in the role selection interface
+</li><li> When selected, loads the corresponding file which redefines <code class="code">ollama-buddy-command-definitions</code>
+</li><li> This redefinition immediately changes the available commands in your Ollama Buddy menu
+</li></ol>
+
+<p>The relationship chain works like this:
+</p><div class="example">
+<pre class="example-preformatted">ollama-buddy--preset__ROLE-NAME.el → Defines ollama-buddy-command-definitions → Controls menu content
+</pre></div>
+
+<p>When creating roles using the interactive role creator (<code class="code">C-c E</code>), this naming convention is automatically handled for you. When creating roles manually, you must follow this pattern for Ollama Buddy to recognize your role files correctly.
+</p>
+</div>
 <div class="section-level-extent" id="Built_002din-Commands">
-<h3 class="section"><span>10.2 Built-in Commands<a class="copiable-link" href="#Built_002din-Commands"> &para;</a></span></h3>
+<h3 class="section"><span>10.3 Built-in Commands<a class="copiable-link" href="#Built_002din-Commands"> &para;</a></span></h3>
 
 <p>Ollama Buddy comes with several built-in commands:
 </p>
@@ -1406,26 +1459,107 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 
 </div>
 <div class="section-level-extent" id="Creating-Custom-Roles">
-<h3 class="section"><span>10.3 Creating Custom Roles<a class="copiable-link" href="#Creating-Custom-Roles"> &para;</a></span></h3>
+<h3 class="section"><span>10.4 Creating Custom Roles<a class="copiable-link" href="#Creating-Custom-Roles"> &para;</a></span></h3>
 
-<p>To create a new role:
-</p><div class="example">
-<pre class="example-preformatted">M-x ollama-buddy-role-creator-create-new-role
-</pre></div>
-<p>or press <code class="code">C-c E</code> in the chat buffer.
+<p>There are two ways to create custom roles:
 </p>
-<p>The creation wizard will guide you through:
-</p><ol class="enumerate">
-<li> Naming your role
-</li><li> Adding commands (name, key, description)
-</li><li> Specifying models for each command
-</li><li> Setting system prompts for each command
-</li><li> Setting parameters for each command
+<ul class="mini-toc">
+<li><a href="#Interactive-Role-Creator" accesskey="1">Interactive Role Creator</a></li>
+<li><a href="#Manual-Role-Creation" accesskey="2">Manual Role Creation</a></li>
+</ul>
+<div class="subsection-level-extent" id="Interactive-Role-Creator">
+<h4 class="subsection"><span>10.4.1 Interactive Role Creator<a class="copiable-link" href="#Interactive-Role-Creator"> &para;</a></span></h4>
+
+<p>The most user-friendly approach:
+</p>
+<ol class="enumerate">
+<li> Press <code class="code">C-c E</code> or run <code class="code">M-x ollama-buddy-role-creator-create-new-role</code>
+</li><li> Enter a name for your role (e.g., &quot;programmer&quot;)
+</li><li> For each command you want to add:
+  <ul class="itemize mark-bullet">
+<li>Specify a command name (e.g., &quot;refactor-code&quot;)
+  </li><li>Choose a key shortcut for the menu
+  </li><li>Add a description
+  </li><li>Optionally specify a model
+  </li><li>Optionally add prompt prefixes and system messages
+  </li></ul>
 </li></ol>
 
+<p>The interactive creator automatically handles file naming and placement.
+</p>
+</div>
+<div class="subsection-level-extent" id="Manual-Role-Creation">
+<h4 class="subsection"><span>10.4.2 Manual Role Creation<a class="copiable-link" href="#Manual-Role-Creation"> &para;</a></span></h4>
+
+<p>For more advanced customization, create role files manually:
+</p>
+<ol class="enumerate">
+<li> Create a file named <code class="code">ollama-buddy--preset__your-role-name.el</code> in your <code class="code">ollama-buddy-roles-directory</code>
+</li><li> Structure your file like this:
+</li></ol>
+
+<div class="example">
+<pre class="example-preformatted">;; ollama-buddy preset for role: programmer
+(require 'ollama-buddy)
+
+(setq ollama-buddy-command-definitions
+  '(
+    ;; Standard commands - always include these
+    (open-chat
+     :key ?o
+     :description &quot;Open chat buffer&quot;
+     :action ollama-buddy--open-chat)
+    
+    (show-models
+     :key ?v
+     :description &quot;View model status&quot;
+     :action ollama-buddy-show-model-status)
+    
+    (switch-role
+     :key ?R
+     :description &quot;Switch roles&quot;
+     :action ollama-buddy-roles-switch-role)
+    
+    (create-role
+     :key ?E
+     :description &quot;Create new role&quot;
+     :action ollama-buddy-role-creator-create-new-role)
+    
+    (open-roles-directory
+     :key ?D
+     :description &quot;Open roles directory&quot;
+     :action ollama-buddy-roles-open-directory)
+    
+    ;; Custom commands for this role
+    (refactor-code
+     :key ?r
+     :description &quot;Refactor code&quot;
+     :model &quot;codellama:7b&quot;
+     :prompt &quot;Refactor this code to improve readability and efficiency:&quot;
+     :system &quot;You are an expert software engineer who improves code quality.&quot;
+     :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
+    
+    (explain-code
+     :key ?e
+     :description &quot;Explain code&quot;
+     :model &quot;deepseek-r1:7b&quot;
+     :prompt &quot;Explain what this code does in detail:&quot;
+     :system &quot;You are a programming teacher who explains code clearly.&quot;
+     :action (lambda () (ollama-buddy--send-with-command 'explain-code)))
+    
+    (git-commit
+     :key ?g
+     :description &quot;Git commit message&quot;
+     :prompt &quot;Write a concise git commit message for these changes:&quot;
+     :system &quot;You are a version control expert who creates clear commit messages.&quot;
+     :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+    ))
+</pre></div>
+
+</div>
 </div>
 <div class="section-level-extent" id="Switching-Roles">
-<h3 class="section"><span>10.4 Switching Roles<a class="copiable-link" href="#Switching-Roles"> &para;</a></span></h3>
+<h3 class="section"><span>10.5 Switching Roles<a class="copiable-link" href="#Switching-Roles"> &para;</a></span></h3>
 
 <p>To switch between roles:
 </p><div class="example">
@@ -1436,33 +1570,195 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 <p>You&rsquo;ll be presented with a list of available roles to choose from.
 </p>
 </div>
-<div class="section-level-extent" id="Managing-Roles">
-<h3 class="section"><span>10.5 Managing Roles<a class="copiable-link" href="#Managing-Roles"> &para;</a></span></h3>
+<div class="section-level-extent" id="Managing-Role-Files">
+<h3 class="section"><span>10.6 Managing Role Files<a class="copiable-link" href="#Managing-Role-Files"> &para;</a></span></h3>
 
 <p>Roles are stored as Elisp files in the <code class="code">ollama-buddy-roles-directory</code>.
 </p>
+<p>To locate your roles directory:
+</p><div class="example">
+<pre class="example-preformatted">;; Check where your roles are stored
+(message ollama-buddy-roles-directory)
+</pre></div>
+
+<p>By default, this is set to <code class="code">~/.emacs.d/ollama-buddy-presets/</code>, but you can customize it:
+</p><div class="example">
+<pre class="example-preformatted">(setq ollama-buddy-roles-directory &quot;/your/custom/path/to/presets&quot;)
+</pre></div>
+
 <p>To open this directory:
 </p><div class="example">
 <pre class="example-preformatted">M-x ollama-buddy-roles-open-directory
 </pre></div>
 <p>or press <code class="code">C-c D</code> in the chat buffer.
 </p>
-<p>You can manually edit these files to customize roles further or share them with others.
-</p>
 </div>
-<div class="section-level-extent" id="Example-Custom-Role">
-<h3 class="section"><span>10.6 Example Custom Role<a class="copiable-link" href="#Example-Custom-Role"> &para;</a></span></h3>
+<div class="section-level-extent" id="Advanced-Role-Customization">
+<h3 class="section"><span>10.7 Advanced Role Customization<a class="copiable-link" href="#Advanced-Role-Customization"> &para;</a></span></h3>
 
-<p>Here&rsquo;s what a custom &quot;Code Assistant&quot; role might include:
-</p><ul class="itemize mark-bullet">
-<li>A &quot;review-code&quot; command with a code review system prompt
-</li><li>A &quot;document-code&quot; command with a documentation generation system prompt
-</li><li>A &quot;fix-bugs&quot; command with a bug-fixing system prompt
-</li><li>Each command using a specific coding-focused model
-</li></ul>
+<ul class="mini-toc">
+<li><a href="#Command_002dSpecific-Models" accesskey="1">Command-Specific Models</a></li>
+<li><a href="#Command_002dSpecific-Parameters-1" accesskey="2">Command-Specific Parameters</a></li>
+<li><a href="#Creating-New-Commands" accesskey="3">Creating New Commands</a></li>
+</ul>
+<div class="subsection-level-extent" id="Command_002dSpecific-Models">
+<h4 class="subsection"><span>10.7.1 Command-Specific Models<a class="copiable-link" href="#Command_002dSpecific-Models"> &para;</a></span></h4>
 
-<p>This creates a specialized code assistant tailored to your needs.
+<p>Assign specific models to commands for optimal performance:
 </p>
+<div class="example">
+<pre class="example-preformatted">(ollama-buddy-add-model-to-menu-entry 'refactor-code &quot;codellama:7b&quot;)
+</pre></div>
+
+</div>
+<div class="subsection-level-extent" id="Command_002dSpecific-Parameters-1">
+<h4 class="subsection"><span>10.7.2 Command-Specific Parameters<a class="copiable-link" href="#Command_002dSpecific-Parameters-1"> &para;</a></span></h4>
+
+<p>Optimize parameters for specific commands:
+</p>
+<div class="example">
+<pre class="example-preformatted">(ollama-buddy-add-parameters-to-command 'refactor-code
+  'temperature 0.2
+  'top_p 0.7
+  'repeat_penalty 1.3)
+</pre></div>
+
+</div>
+<div class="subsection-level-extent" id="Creating-New-Commands">
+<h4 class="subsection"><span>10.7.3 Creating New Commands<a class="copiable-link" href="#Creating-New-Commands"> &para;</a></span></h4>
+
+<p>Add entirely new commands to your menu:
+</p>
+<div class="example">
+<pre class="example-preformatted">(ollama-buddy-update-menu-entry 'my-new-command
+  :key ?z
+  :description &quot;My new awesome command&quot;
+  :prompt &quot;Here is what I want you to do:&quot;
+  :system &quot;You are an expert system specialized in this task.&quot;
+  :action (lambda () (ollama-buddy--send-with-command 'my-new-command)))
+</pre></div>
+
+</div>
+</div>
+<div class="section-level-extent" id="Role-Examples">
+<h3 class="section"><span>10.8 Role Examples<a class="copiable-link" href="#Role-Examples"> &para;</a></span></h3>
+
+<ul class="mini-toc">
+<li><a href="#Programming-Role" accesskey="1">Programming Role</a></li>
+<li><a href="#Writing-Role" accesskey="2">Writing Role</a></li>
+</ul>
+<div class="subsection-level-extent" id="Programming-Role">
+<h4 class="subsection"><span>10.8.1 Programming Role<a class="copiable-link" href="#Programming-Role"> &para;</a></span></h4>
+
+<p>A complete example of a programming-focused role:
+</p>
+<div class="example">
+<pre class="example-preformatted">;; ollama-buddy preset for role: programmer
+(require 'ollama-buddy)
+
+(setq ollama-buddy-command-definitions
+  '(
+    ;; Standard commands (abbreviated for clarity)
+    (open-chat :key ?o :description &quot;Open chat buffer&quot; :action ollama-buddy--open-chat)
+    (show-models :key ?v :description &quot;View model status&quot; :action ollama-buddy-show-model-status)
+    (switch-role :key ?R :description &quot;Switch roles&quot; :action ollama-buddy-roles-switch-role)
+    
+    ;; Programming-specific commands
+    (refactor-code
+     :key ?r
+     :description &quot;Refactor code&quot;
+     :model &quot;codellama:7b&quot;
+     :prompt &quot;Refactor this code to improve readability and efficiency:&quot;
+     :system &quot;You are an expert software engineer who improves code quality.&quot;
+     :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
+    
+    (explain-code
+     :key ?e
+     :description &quot;Explain code&quot;
+     :model &quot;deepseek-r1:7b&quot;
+     :prompt &quot;Explain what this code does in detail:&quot;
+     :system &quot;You are a programming teacher who explains code clearly.&quot;
+     :action (lambda () (ollama-buddy--send-with-command 'explain-code)))
+    
+    (add-tests
+     :key ?t
+     :description &quot;Generate tests&quot;
+     :model &quot;qwen2.5-coder:7b&quot;
+     :prompt &quot;Generate unit tests for this code:&quot;
+     :system &quot;You are a test automation expert who creates comprehensive test cases.&quot;
+     :action (lambda () (ollama-buddy--send-with-command 'add-tests)))
+    
+    (git-commit
+     :key ?g
+     :description &quot;Git commit message&quot;
+     :prompt &quot;Write a concise git commit message for these changes:&quot;
+     :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+    ))
+</pre></div>
+
+</div>
+<div class="subsection-level-extent" id="Writing-Role">
+<h4 class="subsection"><span>10.8.2 Writing Role<a class="copiable-link" href="#Writing-Role"> &para;</a></span></h4>
+
+<p>A complete example of a writing-focused role:
+</p>
+<div class="example">
+<pre class="example-preformatted">;; ollama-buddy preset for role: writer
+(require 'ollama-buddy)
+
+(setq ollama-buddy-command-definitions
+  '(
+    ;; Standard commands (abbreviated for clarity)
+    (open-chat :key ?o :description &quot;Open chat buffer&quot; :action ollama-buddy--open-chat)
+    (show-models :key ?v :description &quot;View model status&quot; :action ollama-buddy-show-model-status)
+    (switch-role :key ?R :description &quot;Switch roles&quot; :action ollama-buddy-roles-switch-role)
+    
+    ;; Writing-focused commands
+    (summarize
+     :key ?s
+     :description &quot;Summarize text&quot;
+     :prompt &quot;Summarize the following text in a concise manner:&quot;
+     :system &quot;You are an expert at extracting the key points from any text.&quot;
+     :action (lambda () (ollama-buddy--send-with-command 'summarize)))
+    
+    (proofread
+     :key ?p
+     :description &quot;Proofread text&quot;
+     :model &quot;deepseek-r1:7b&quot;
+     :prompt &quot;Proofread the following text and correct any errors:&quot;
+     :system &quot;You are a professional editor who identifies and corrects grammar and style errors.&quot;
+     :action (lambda () (ollama-buddy--send-with-command 'proofread)))
+    
+    (rewrite
+     :key ?r
+     :description &quot;Rewrite text&quot;
+     :prompt &quot;Rewrite the following text to improve clarity and flow:&quot;
+     :system &quot;You are a skilled writer who can improve any text while preserving its meaning.&quot;
+     :action (lambda () (ollama-buddy--send-with-command 'rewrite)))
+    
+    (brainstorm
+     :key ?b
+     :description &quot;Brainstorm ideas&quot;
+     :model &quot;llama3.2:3b&quot;
+     :prompt &quot;Generate creative ideas related to the following topic:&quot;
+     :parameters ((temperature . 1.0) (top_p . 0.95))
+     :action (lambda () (ollama-buddy--send-with-command 'brainstorm)))
+    ))
+</pre></div>
+
+</div>
+</div>
+<div class="section-level-extent" id="Tips-for-Effective-Role-Usage">
+<h3 class="section"><span>10.9 Tips for Effective Role Usage<a class="copiable-link" href="#Tips-for-Effective-Role-Usage"> &para;</a></span></h3>
+
+<ol class="enumerate">
+<li> Group related commands: Create roles around specific workflows or tasks
+</li><li> Match models to tasks: Use lightweight models for simple tasks and more powerful models for complex ones
+</li><li> Customize system prompts: Craft specific system prompts to guide the model for each command
+</li><li> Use the roles directory: Press <code class="code">C-c D</code> to quickly access and manage your role files
+</li><li> Create specialized roles: Consider roles for programming, writing, translation, or domain-specific knowledge
+</li></ol>
+
 <hr>
 </div>
 </div>

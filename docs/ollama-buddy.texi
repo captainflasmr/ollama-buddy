@@ -880,6 +880,37 @@ Roles in Ollama Buddy are collections of commands with specific configurations:
 
 This allows you to create specialized assistants for different workflows.
 
+@section Role File Naming Convention
+
+The file naming convention is critical to understand how roles, preset files, and menu configurations work together:
+
+@table @asis
+@item Required filename format
+@code{ollama-buddy--preset__ROLE-NAME.el}
+@itemize @bullet
+@item The double underscore @code{__} separates the prefix from your role name
+@item The role name portion becomes the identifier shown when switching roles
+@item Example: @code{ollama-buddy--preset__programmer.el} creates a role named "programmer"
+@end itemize
+@end table
+
+This naming convention is how Ollama Buddy discovers and identifies role files. When you run @code{ollama-buddy-roles-switch-role}, the system:
+
+@enumerate
+@item Scans the @code{ollama-buddy-roles-directory} for files matching the pattern
+@item Extracts the role name from each filename (the part after @code{__})
+@item Presents these names in the role selection interface
+@item When selected, loads the corresponding file which redefines @code{ollama-buddy-command-definitions}
+@item This redefinition immediately changes the available commands in your Ollama Buddy menu
+@end enumerate
+
+The relationship chain works like this:
+@example
+ollama-buddy--preset__ROLE-NAME.el → Defines ollama-buddy-command-definitions → Controls menu content
+@end example
+
+When creating roles using the interactive role creator (@code{C-c E}), this naming convention is automatically handled for you. When creating roles manually, you must follow this pattern for Ollama Buddy to recognize your role files correctly.
+
 @section Built-in Commands
 
 Ollama Buddy comes with several built-in commands:
@@ -906,20 +937,93 @@ Corrects grammar, style, and spelling
 
 @section Creating Custom Roles
 
-To create a new role:
-@example
-M-x ollama-buddy-role-creator-create-new-role
-@end example
-or press @code{C-c E} in the chat buffer.
+There are two ways to create custom roles:
 
-The creation wizard will guide you through:
+@subsection Interactive Role Creator
+
+The most user-friendly approach:
+
 @enumerate
-@item Naming your role
-@item Adding commands (name, key, description)
-@item Specifying models for each command
-@item Setting system prompts for each command
-@item Setting parameters for each command
+@item Press @code{C-c E} or run @code{M-x ollama-buddy-role-creator-create-new-role}
+@item Enter a name for your role (e.g., "programmer")
+@item For each command you want to add:
+  @itemize @bullet
+  @item Specify a command name (e.g., "refactor-code")
+  @item Choose a key shortcut for the menu
+  @item Add a description
+  @item Optionally specify a model
+  @item Optionally add prompt prefixes and system messages
+  @end itemize
 @end enumerate
+
+The interactive creator automatically handles file naming and placement.
+
+@subsection Manual Role Creation
+
+For more advanced customization, create role files manually:
+
+@enumerate
+@item Create a file named @code{ollama-buddy--preset__your-role-name.el} in your @code{ollama-buddy-roles-directory}
+@item Structure your file like this:
+@end enumerate
+
+@example
+;; ollama-buddy preset for role: programmer
+(require 'ollama-buddy)
+
+(setq ollama-buddy-command-definitions
+  '(
+    ;; Standard commands - always include these
+    (open-chat
+     :key ?o
+     :description "Open chat buffer"
+     :action ollama-buddy--open-chat)
+    
+    (show-models
+     :key ?v
+     :description "View model status"
+     :action ollama-buddy-show-model-status)
+    
+    (switch-role
+     :key ?R
+     :description "Switch roles"
+     :action ollama-buddy-roles-switch-role)
+    
+    (create-role
+     :key ?E
+     :description "Create new role"
+     :action ollama-buddy-role-creator-create-new-role)
+    
+    (open-roles-directory
+     :key ?D
+     :description "Open roles directory"
+     :action ollama-buddy-roles-open-directory)
+    
+    ;; Custom commands for this role
+    (refactor-code
+     :key ?r
+     :description "Refactor code"
+     :model "codellama:7b"
+     :prompt "Refactor this code to improve readability and efficiency:"
+     :system "You are an expert software engineer who improves code quality."
+     :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
+    
+    (explain-code
+     :key ?e
+     :description "Explain code"
+     :model "deepseek-r1:7b"
+     :prompt "Explain what this code does in detail:"
+     :system "You are a programming teacher who explains code clearly."
+     :action (lambda () (ollama-buddy--send-with-command 'explain-code)))
+    
+    (git-commit
+     :key ?g
+     :description "Git commit message"
+     :prompt "Write a concise git commit message for these changes:"
+     :system "You are a version control expert who creates clear commit messages."
+     :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+    ))
+@end example
 
 @section Switching Roles
 
@@ -931,9 +1035,20 @@ or press @code{C-c R} in the chat buffer.
 
 You'll be presented with a list of available roles to choose from.
 
-@section Managing Roles
+@section Managing Role Files
 
 Roles are stored as Elisp files in the @code{ollama-buddy-roles-directory}.
+
+To locate your roles directory:
+@example
+;; Check where your roles are stored
+(message ollama-buddy-roles-directory)
+@end example
+
+By default, this is set to @code{~/.emacs.d/ollama-buddy-presets/}, but you can customize it:
+@example
+(setq ollama-buddy-roles-directory "/your/custom/path/to/presets")
+@end example
 
 To open this directory:
 @example
@@ -941,19 +1056,147 @@ M-x ollama-buddy-roles-open-directory
 @end example
 or press @code{C-c D} in the chat buffer.
 
-You can manually edit these files to customize roles further or share them with others.
+@section Advanced Role Customization
 
-@section Example Custom Role
+@subsection Command-Specific Models
 
-Here's what a custom "Code Assistant" role might include:
-@itemize @bullet
-@item A "review-code" command with a code review system prompt
-@item A "document-code" command with a documentation generation system prompt
-@item A "fix-bugs" command with a bug-fixing system prompt
-@item Each command using a specific coding-focused model
-@end itemize
+Assign specific models to commands for optimal performance:
 
-This creates a specialized code assistant tailored to your needs.
+@example
+(ollama-buddy-add-model-to-menu-entry 'refactor-code "codellama:7b")
+@end example
+
+@subsection Command-Specific Parameters
+
+Optimize parameters for specific commands:
+
+@example
+(ollama-buddy-add-parameters-to-command 'refactor-code
+  'temperature 0.2
+  'top_p 0.7
+  'repeat_penalty 1.3)
+@end example
+
+@subsection Creating New Commands
+
+Add entirely new commands to your menu:
+
+@example
+(ollama-buddy-update-menu-entry 'my-new-command
+  :key ?z
+  :description "My new awesome command"
+  :prompt "Here is what I want you to do:"
+  :system "You are an expert system specialized in this task."
+  :action (lambda () (ollama-buddy--send-with-command 'my-new-command)))
+@end example
+
+@section Role Examples
+
+@subsection Programming Role
+
+A complete example of a programming-focused role:
+
+@example
+;; ollama-buddy preset for role: programmer
+(require 'ollama-buddy)
+
+(setq ollama-buddy-command-definitions
+  '(
+    ;; Standard commands (abbreviated for clarity)
+    (open-chat :key ?o :description "Open chat buffer" :action ollama-buddy--open-chat)
+    (show-models :key ?v :description "View model status" :action ollama-buddy-show-model-status)
+    (switch-role :key ?R :description "Switch roles" :action ollama-buddy-roles-switch-role)
+    
+    ;; Programming-specific commands
+    (refactor-code
+     :key ?r
+     :description "Refactor code"
+     :model "codellama:7b"
+     :prompt "Refactor this code to improve readability and efficiency:"
+     :system "You are an expert software engineer who improves code quality."
+     :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
+    
+    (explain-code
+     :key ?e
+     :description "Explain code"
+     :model "deepseek-r1:7b"
+     :prompt "Explain what this code does in detail:"
+     :system "You are a programming teacher who explains code clearly."
+     :action (lambda () (ollama-buddy--send-with-command 'explain-code)))
+    
+    (add-tests
+     :key ?t
+     :description "Generate tests"
+     :model "qwen2.5-coder:7b"
+     :prompt "Generate unit tests for this code:"
+     :system "You are a test automation expert who creates comprehensive test cases."
+     :action (lambda () (ollama-buddy--send-with-command 'add-tests)))
+    
+    (git-commit
+     :key ?g
+     :description "Git commit message"
+     :prompt "Write a concise git commit message for these changes:"
+     :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+    ))
+@end example
+
+@subsection Writing Role
+
+A complete example of a writing-focused role:
+
+@example
+;; ollama-buddy preset for role: writer
+(require 'ollama-buddy)
+
+(setq ollama-buddy-command-definitions
+  '(
+    ;; Standard commands (abbreviated for clarity)
+    (open-chat :key ?o :description "Open chat buffer" :action ollama-buddy--open-chat)
+    (show-models :key ?v :description "View model status" :action ollama-buddy-show-model-status)
+    (switch-role :key ?R :description "Switch roles" :action ollama-buddy-roles-switch-role)
+    
+    ;; Writing-focused commands
+    (summarize
+     :key ?s
+     :description "Summarize text"
+     :prompt "Summarize the following text in a concise manner:"
+     :system "You are an expert at extracting the key points from any text."
+     :action (lambda () (ollama-buddy--send-with-command 'summarize)))
+    
+    (proofread
+     :key ?p
+     :description "Proofread text"
+     :model "deepseek-r1:7b"
+     :prompt "Proofread the following text and correct any errors:"
+     :system "You are a professional editor who identifies and corrects grammar and style errors."
+     :action (lambda () (ollama-buddy--send-with-command 'proofread)))
+    
+    (rewrite
+     :key ?r
+     :description "Rewrite text"
+     :prompt "Rewrite the following text to improve clarity and flow:"
+     :system "You are a skilled writer who can improve any text while preserving its meaning."
+     :action (lambda () (ollama-buddy--send-with-command 'rewrite)))
+    
+    (brainstorm
+     :key ?b
+     :description "Brainstorm ideas"
+     :model "llama3.2:3b"
+     :prompt "Generate creative ideas related to the following topic:"
+     :parameters ((temperature . 1.0) (top_p . 0.95))
+     :action (lambda () (ollama-buddy--send-with-command 'brainstorm)))
+    ))
+@end example
+
+@section Tips for Effective Role Usage
+
+@enumerate
+@item Group related commands: Create roles around specific workflows or tasks
+@item Match models to tasks: Use lightweight models for simple tasks and more powerful models for complex ones
+@item Customize system prompts: Craft specific system prompts to guide the model for each command
+@item Use the roles directory: Press @code{C-c D} to quickly access and manage your role files
+@item Create specialized roles: Consider roles for programming, writing, translation, or domain-specific knowledge
+@end enumerate
 
 @node Fabric Pattern Integration
 @chapter Fabric Pattern Integration
