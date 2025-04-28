@@ -2740,7 +2740,7 @@ Modifies the variable in place."
 (defun ollama-buddy-pull-model (model)
   "Pull or update MODEL from Ollama Hub asynchronously.
 When the operation completes, CALLBACK is called with no arguments if provided."
-  (let ((payload (json-encode `((model . ,model))))
+  (let ((payload (json-encode `((model . ,(ollama-buddy--get-real-model-name model)))))
         (operation-id (gensym "pull-")))
 
     (ollama-buddy--register-background-operation
@@ -2794,7 +2794,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
 
 (defun ollama-buddy-delete-model (model)
   "Delete MODEL from Ollama."
-  (let ((payload (json-encode `((model . ,model))))
+  (let ((payload (json-encode `((model . ,(ollama-buddy--get-real-model-name model)))))
         (operation-id (gensym "delete-")))
 
     (ollama-buddy--register-background-operation

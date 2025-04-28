@@ -354,19 +354,19 @@ Each command is defined with:
 
 (defcustom ollama-buddy-available-models
   '(
-    "llama3.2:1b"
-    "starcoder2:3b"
-    "codellama:7b"
-    "phi3:3.8b"
-    "gemma3:1b"
-    "gemma3:4b"
-    "qwen2.5-coder:7b"
-    "qwen2.5-coder:3b"
-    "mistral:7b"
-    "deepseek-r1:7b"
-    "deepseek-r1:1.5b"
-    "tinyllama:latest"
-    "llama3.2:3b"
+    "o:llama3.2:1b"
+    "o:starcoder2:3b"
+    "o:codellama:7b"
+    "o:phi3:3.8b"
+    "o:gemma3:1b"
+    "o:gemma3:4b"
+    "o:qwen2.5-coder:7b"
+    "o:qwen2.5-coder:3b"
+    "o:mistral:7b"
+    "o:deepseek-r1:7b"
+    "o:deepseek-r1:1.5b"
+    "o:tinyllama:latest"
+    "o:llama3.2:3b"
     )
   "List of available models to pull from Ollama Hub."
   :type '(repeat string)
@@ -1121,7 +1121,7 @@ When complete, CALLBACK is called with the status response and result."
   "Get all available models, including non ollama models."
   (let ((models '()))
     (dolist (model (ollama-buddy--get-models))
-      (push (ollama-buddy--get-full-model-name model) models))
+      (push model models))
     (setq models (append models ollama-buddy-remote-models))
     models))
 
@@ -1158,7 +1158,7 @@ When complete, CALLBACK is called with the status response and result."
   "Get available Ollama models with their associated colors from RESULT."
   (when result
     (mapcar (lambda (m)
-              (let ((name (alist-get 'name m)))
+              (let ((name (ollama-buddy--get-full-model-name (alist-get 'name m))))
                 (cons name (ollama-buddy--hash-string-to-color name))))
             (alist-get 'models result))))
 
@@ -1203,13 +1203,13 @@ When complete, CALLBACK is called with the status response and result."
         ;; Cache expired or not set - use synchronous version to refresh cache
         (when-let ((response (ollama-buddy--make-request "/api/ps" "GET")))
           (setq ollama-buddy--running-models-cache
-                (mapcar (lambda (m) (alist-get 'name m))
+                (mapcar (lambda (m)
+                          (ollama-buddy--get-full-model-name (alist-get 'name m)))
                         (alist-get 'models response))
                 ollama-buddy--running-models-cache-timestamp current-time)
           
           ;; Also refresh in background for next time
           (ollama-buddy--refresh-running-models-cache)))
-      
       ollama-buddy--running-models-cache)))
 
 (defun ollama-buddy--refresh-running-models-cache ()
