@@ -11,6 +11,14 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-04-29> *0.9.38*
+
+Added model unloading functionality to free system resources
+
+- Add unload capability for individual models via the model management UI
+- Create keyboard shortcut (C-c C-u) for quick unloading of all models
+- Display running model count and unload buttons in model management buffer
+  
 ** <2025-04-25> *0.9.37*
 
 - Display modified parameters in token stats

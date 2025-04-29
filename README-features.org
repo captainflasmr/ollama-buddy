@@ -8,6 +8,34 @@
 
 * Features as they come in
 
+** <2025-04-29> *0.9.38*
+
+Added model unloading functionality to free system resources
+
+- Add unload capability for individual models via the model management UI
+- Create keyboard shortcut (C-c C-u) for quick unloading of all models
+- Display running model count and unload buttons in model management buffer
+
+Large language models consume significant RAM and GPU memory while loaded. Until now, there wasn't an easy way to reclaim these resources without restarting the Ollama server entirely. This new functionality allows you to:
+
+- Free up GPU memory when you're done with your LLM sessions
+- Switch between resource-intensive tasks more fluidly
+- Manage multiple models more efficiently on machines with limited resources
+- Avoid having to restart the Ollama server just to clear memory
+
+There are several ways to unload models with the new functionality:
+
+1. *Unload All Models*: Press =C-c C-u= to unload all running models at once (with confirmation)
+
+2. *Model Management Interface*: Access the model management interface with =C-c W= where you'll find:
+   - A counter showing how many models are currently running
+   - An "Unload All" button to free all models at once
+   - Individual "Unload" buttons next to each running model
+
+3. *Quick Access in Management Buffer*: When in the model management buffer, simply press =u= to unload all models
+
+The unloading happens asynchronously in the background, with clear status indicators so you can see when the operation completes.
+
 ** <2025-04-25> *0.9.37*
 
 - Display modified parameters in token stats
