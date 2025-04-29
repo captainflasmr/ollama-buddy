@@ -152,8 +152,7 @@ with an empty messages array and keep_alive set to 0."
         (message "No models are currently running")
       (when (yes-or-no-p (format "Unload all %d running models? " (length running-models)))
         (dolist (model running-models)
-          (ollama-buddy-unload-model model))
-        (run-with-timer 1 nil #'ollama-buddy-manage-models)))))
+          (ollama-buddy-unload-model model))))))
 
 ;; Function to toggle reasoning visibility
 (defun ollama-buddy-toggle-reasoning-visibility ()
