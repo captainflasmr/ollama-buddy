@@ -1917,45 +1917,45 @@ CLOSED: [2025-03-29 Sat 13:34]
 #+end_src
 
 #+RESULTS:
-| TODO                                                          | DOING                                       | DONE                                         |
-|---------------------------------------------------------------+---------------------------------------------+----------------------------------------------|
-| Unload all models?, to free up RAM if you are switching alot? | Add option to hide reasoning in chat buffer | Show token parameters as part of token stats |
-| Autoload intelligently? to speed up initial reponse times?    | Core Params - suffix                        | Autogenerate session save name               |
-| Core API - Embeddings                                         |                                             | Add gemini?                                  |
-| Core Params - format                                          |                                             | Pull ChatGPT and Claude model names          |
-| Core Params - template                                        |                                             | Merge history buffer functionality           |
-| Core Params - raw                                             |                                             | Show incoming ollama messages                |
-| Test on Windows                                               |                                             | Add chatGPT awesome prompt support           |
-|                                                               |                                             | Add fabric pattern/prompt support            |
-|                                                               |                                             | ChatGPT support                              |
-|                                                               |                                             | Claude support                               |
-|                                                               |                                             | Add new ChatGPT 4.1                          |
-|                                                               |                                             | Method for securely storing API keys         |
-|                                                               |                                             | Core API - Delete Model                      |
-|                                                               |                                             | Core API - Copy a model                      |
-|                                                               |                                             | Core API - stream                            |
-|                                                               |                                             | Core API - Pull/Info/Pull/Delete a model     |
-|                                                               |                                             | Core API - Show running models               |
-|                                                               |                                             | Core API - Create a model from a GGUF file   |
-|                                                               |                                             | Add transient menu                           |
-|                                                               |                                             | History editing                              |
-|                                                               |                                             | Core API - options - parameter editing       |
-|                                                               |                                             | Core API - show model information            |
-|                                                               |                                             | Core API - system prompt                     |
-|                                                               |                                             | Chat buffer to use org-mode                  |
-|                                                               |                                             | Chat export options                          |
-|                                                               |                                             | Core Params - options:temperature            |
-|                                                               |                                             | Managing Sessions                            |
-|                                                               |                                             | Sparse minified version                      |
-|                                                               |                                             | Role-Based Menu Preset System                |
-|                                                               |                                             | Add to MELPA                                 |
-|                                                               |                                             | Enhancing Menu Clarity                       |
-|                                                               |                                             | Real time token tracking                     |
-|                                                               |                                             | Managing chat history and context            |
+| TODO                                                       | DOING                                                         | DONE                                         |
+|------------------------------------------------------------+---------------------------------------------------------------+----------------------------------------------|
+| Autoload intelligently? to speed up initial reponse times? | Add option to hide reasoning in chat buffer                   | Show token parameters as part of token stats |
+| Core API - Embeddings                                      | Unload all models?, to free up RAM if you are switching alot? | Autogenerate session save name               |
+| Core Params - format                                       | Core Params - suffix                                          | Add gemini?                                  |
+| Core Params - template                                     |                                                               | Pull ChatGPT and Claude model names          |
+| Core Params - raw                                          |                                                               | Merge history buffer functionality           |
+| Test on Windows                                            |                                                               | Show incoming ollama messages                |
+|                                                            |                                                               | Add chatGPT awesome prompt support           |
+|                                                            |                                                               | Add fabric pattern/prompt support            |
+|                                                            |                                                               | ChatGPT support                              |
+|                                                            |                                                               | Claude support                               |
+|                                                            |                                                               | Add new ChatGPT 4.1                          |
+|                                                            |                                                               | Method for securely storing API keys         |
+|                                                            |                                                               | Core API - Delete Model                      |
+|                                                            |                                                               | Core API - Copy a model                      |
+|                                                            |                                                               | Core API - stream                            |
+|                                                            |                                                               | Core API - Pull/Info/Pull/Delete a model     |
+|                                                            |                                                               | Core API - Show running models               |
+|                                                            |                                                               | Core API - Create a model from a GGUF file   |
+|                                                            |                                                               | Add transient menu                           |
+|                                                            |                                                               | History editing                              |
+|                                                            |                                                               | Core API - options - parameter editing       |
+|                                                            |                                                               | Core API - show model information            |
+|                                                            |                                                               | Core API - system prompt                     |
+|                                                            |                                                               | Chat buffer to use org-mode                  |
+|                                                            |                                                               | Chat export options                          |
+|                                                            |                                                               | Core Params - options:temperature            |
+|                                                            |                                                               | Managing Sessions                            |
+|                                                            |                                                               | Sparse minified version                      |
+|                                                            |                                                               | Role-Based Menu Preset System                |
+|                                                            |                                                               | Add to MELPA                                 |
+|                                                            |                                                               | Enhancing Menu Clarity                       |
+|                                                            |                                                               | Real time token tracking                     |
+|                                                            |                                                               | Managing chat history and context            |
 
 ** DOING Add option to hide reasoning in chat buffer
 
-** TODO Unload all models?, to free up RAM if you are switching alot?
+** DOING Unload all models?, to free up RAM if you are switching alot?
 
 ** TODO Autoload intelligently? to speed up initial reponse times?
 
