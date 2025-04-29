@@ -150,6 +150,11 @@ These are the only parameters that will be sent to Ollama."
      :key ?v
      :description "View model status"
      :action ollama-buddy-show-model-status)
+
+    (unload-all-models
+     :key ?U
+     :description "Unload all models"
+     :action ollama-buddy-unload-all-models)
     
     (send-region
      :key ?l

@@ -111,6 +111,50 @@
 (defvar ollama-buddy--current-response nil
   "The current response text being accumulated.")
 
+;; Function to unload a single model
+(defun ollama-buddy-unload-model (model)
+  "Unload MODEL from Ollama to free up resources.
+According to Ollama API, unloading is done by sending a chat request
+with an empty messages array and keep_alive set to 0."
+  (let* ((real-model-name (ollama-buddy--get-real-model-name model))
+         (payload (json-encode `((model . ,real-model-name)
+                               (messages . ,(vconcat []))
+                               (keep_alive . 0))))
+         (operation-id (gensym "unload-")))
+
+    (ollama-buddy--register-background-operation
+     operation-id
+     (format "Unloading %s" model))
+    
+    (ollama-buddy--make-request-async
+     "/api/chat"
+     "POST"
+     payload
+     (lambda (status _result)
+       (if (plist-get status :error)
+           (progn
+             (message "Error unloading %s: %s" model (cdr (plist-get status :error)))
+             (ollama-buddy--complete-background-operation
+              operation-id
+              (format "Error unloading %s" model)))
+         (progn
+           (message "Successfully unloaded model %s" model)
+           (ollama-buddy--complete-background-operation
+            operation-id
+            (format "Successfully unloaded model %s" model))))))))
+
+;; Function to unload all running models
+(defun ollama-buddy-unload-all-models ()
+  "Unload all currently running Ollama models to free up resources."
+  (interactive)
+  (let ((running-models (ollama-buddy--get-running-models)))
+    (if (null running-models)
+        (message "No models are currently running")
+      (when (yes-or-no-p (format "Unload all %d running models? " (length running-models)))
+        (dolist (model running-models)
+          (ollama-buddy-unload-model model))
+        (run-with-timer 1 nil #'ollama-buddy-manage-models)))))
+
 ;; Function to toggle reasoning visibility
 (defun ollama-buddy-toggle-reasoning-visibility ()
   "Toggle visibility of reasoning/thinking sections in responses."
@@ -2580,8 +2624,8 @@ Modifies the variable in place."
       (user-error "No file at point"))))
 
 (defun ollama-buddy-manage-models ()
-  "Display and manage Ollama models."
-  (interactive)
+  "Update the model management interface to include unload capabilities."
+  (interactive) 
   (let* ((available-models (ollama-buddy--get-models))
          (running-models (ollama-buddy--get-running-models))
          (buf (get-buffer-create "*Ollama Models Management*")))
@@ -2604,6 +2648,15 @@ Modifies the variable in place."
             (insert "Default Model: ")
             (insert (propertize ollama-buddy-default-model 'face `(:foreground ,color :weight bold)))
             (insert "\n\n")))
+        
+        ;; Show running models count with unload all button
+        (when running-models
+          (insert (format "Running Models: %d  " (length running-models)))
+          (insert-text-button
+           "[Unload All]"
+           'action (lambda (_) (ollama-buddy-unload-all-models))
+           'help-echo "Unload all running models to free up resources")
+          (insert "\n\n"))
         
         ;; List of models with status and actions
         (insert "Available Models:\n")
@@ -2632,14 +2685,24 @@ Modifies the variable in place."
             
             (insert "  ")
             
-            ;; Pull/Stop button
-            (insert-text-button
-             "Pull"
-             'action `(lambda (_)
-                        (ollama-buddy-pull-model ,model))
-             'help-echo "Pull/update this model")
-            
-            (insert "  ")
+            ;; Add Unload button for running models
+            (if is-running
+                (progn
+                  (insert-text-button
+                   "Unload"
+                   'action `(lambda (_)
+                              (ollama-buddy-unload-model ,model)
+                              (run-with-timer 1 nil #'ollama-buddy-manage-models))
+                   'help-echo "Unload this model to free up resources")
+                  (insert "  "))
+              ;; Pull button for non-running models
+              (progn
+                (insert-text-button
+                 "Pull"
+                 'action `(lambda (_)
+                            (ollama-buddy-pull-model ,model))
+                 'help-echo "Pull/update this model")
+                (insert "  ")))
 
             ;; Copy
             (insert-text-button
@@ -2647,7 +2710,7 @@ Modifies the variable in place."
              'action `(lambda (_)
                         (ollama-buddy-copy-model ,model)
                         (ollama-buddy-manage-models))
-             'help-echo "Delete this model")
+             'help-echo "Copy this model")
             
             (insert "  ")
 
@@ -2686,8 +2749,9 @@ Modifies the variable in place."
         (local-set-key (kbd "i") (lambda () (interactive)
                                    (call-interactively #'ollama-buddy-import-gguf-file)))
         (local-set-key (kbd "p") (lambda () (interactive)
-                                   (call-interactively #'ollama-buddy-pull-model)))))
-    
+                                   (call-interactively #'ollama-buddy-pull-model)))
+        (local-set-key (kbd "u") (lambda () (interactive)
+                                   (call-interactively #'ollama-buddy-unload-all-models)))))
     (display-buffer buf)))
 
 (defun ollama-buddy-select-model (model)
@@ -2866,10 +2930,12 @@ When the operation completes, CALLBACK is called with no arguments if provided."
 
 (defvar ollama-buddy-mode-map
   (let ((map (make-sparse-keymap)))
+    
     ;; Primary Transient Menu access
     (define-key map (kbd "C-c O") #'ollama-buddy-transient-menu)
     (define-key map (kbd "C-c W") #'ollama-buddy-manage-models)
     (define-key map (kbd "C-c ?") #'ollama-buddy-open-info)
+    (define-key map (kbd "C-c C-u") #'ollama-buddy-unload-all-models)
     
     ;; Chat section keybindings from transient
     (define-key map (kbd "C-c C-c") #'ollama-buddy--send-prompt)
