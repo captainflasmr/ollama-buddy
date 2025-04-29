@@ -1919,13 +1919,13 @@ CLOSED: [2025-03-29 Sat 13:34]
 #+RESULTS:
 | TODO                                                       | DOING                                                         | DONE                                         |
 |------------------------------------------------------------+---------------------------------------------------------------+----------------------------------------------|
-| Autoload intelligently? to speed up initial reponse times? | Add option to hide reasoning in chat buffer                   | Show token parameters as part of token stats |
-| Core API - Embeddings                                      | Unload all models?, to free up RAM if you are switching alot? | Autogenerate session save name               |
-| Core Params - format                                       | Core Params - suffix                                          | Add gemini?                                  |
-| Core Params - template                                     |                                                               | Pull ChatGPT and Claude model names          |
-| Core Params - raw                                          |                                                               | Merge history buffer functionality           |
-| Test on Windows                                            |                                                               | Show incoming ollama messages                |
-|                                                            |                                                               | Add chatGPT awesome prompt support           |
+| check context size of current model when querying          | Add option to hide reasoning in chat buffer                   | Show token parameters as part of token stats |
+| Autoload intelligently? to speed up initial reponse times? | Unload all models?, to free up RAM if you are switching alot? | Autogenerate session save name               |
+| Core API - Embeddings                                      | Core Params - suffix                                          | Add gemini?                                  |
+| Core Params - format                                       |                                                               | Pull ChatGPT and Claude model names          |
+| Core Params - template                                     |                                                               | Merge history buffer functionality           |
+| Core Params - raw                                          |                                                               | Show incoming ollama messages                |
+| Test on Windows                                            |                                                               | Add chatGPT awesome prompt support           |
 |                                                            |                                                               | Add fabric pattern/prompt support            |
 |                                                            |                                                               | ChatGPT support                              |
 |                                                            |                                                               | Claude support                               |
@@ -1956,6 +1956,8 @@ CLOSED: [2025-03-29 Sat 13:34]
 ** DOING Add option to hide reasoning in chat buffer
 
 ** DOING Unload all models?, to free up RAM if you are switching alot?
+
+** TODO check context size of current model when querying
 
 ** TODO Autoload intelligently? to speed up initial reponse times?
 
