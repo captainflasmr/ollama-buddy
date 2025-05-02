@@ -387,28 +387,54 @@ Each command is defined with:
 
 (defcustom ollama-buddy-available-models
   '(
-    "o:llama3.2:1b"
-    "o:starcoder2:3b"
-    "o:codellama:7b"
-    "o:phi3:3.8b"
-    "o:gemma3:1b"
-    "o:gemma3:4b"
-    "o:qwen2.5-coder:7b"
-    "o:qwen2.5-coder:3b"
-    "o:mistral:7b"
-    "o:deepseek-r1:7b"
-    "o:deepseek-r1:1.5b"
-    "o:tinyllama:latest"
-    "o:llama3.2:3b"
+    "llama3.2:1b"
+    "starcoder2:3b"
+    "codellama:7b"
+    "phi3:3.8b"
+    "gemma3:1b"
+    "gemma3:4b"
+    "qwen2.5-coder:7b"
+    "qwen2.5-coder:3b"
+    "mistral:7b"
+    "deepseek-r1:7b"
+    "deepseek-r1:1.5b"
+    "tinyllama:latest"
+    "llama3.2:3b"
     )
   "List of available models to pull from Ollama Hub."
-  :type '(repeat string)
+  :type '(repeat (string :tag "Model name"))
   :group 'ollama-buddy)
 
 (defcustom ollama-buddy-marker-prefix "o:"
   "Prefix used to identify Ollama models in the ollama-buddy interface."
   :type 'string
   :group 'ollama-buddy)
+
+(defun ollama-buddy--should-use-marker-prefix ()
+  "Determine if marker prefix should be used.
+Returns non-nil if any remote models are available."
+  (and (boundp 'ollama-buddy-remote-models)
+       ollama-buddy-remote-models))
+
+(defun ollama-buddy--get-effective-marker-prefix ()
+  "Get the effective marker prefix based on available remote models.
+Returns empty string if no remote models are available."
+  (if (ollama-buddy--should-use-marker-prefix)
+      ollama-buddy-marker-prefix
+    ""))
+
+(defun ollama-buddy--get-full-model-name (model)
+  "Get the full display name for MODEL with prefix if needed."
+  (if (ollama-buddy--should-use-marker-prefix)
+      (concat ollama-buddy-marker-prefix model)
+    model))
+
+(defun ollama-buddy--get-real-model-name (model)
+  "Extract the actual model name from the prefixed MODEL string."
+  (if (and (string-prefix-p ollama-buddy-marker-prefix model)
+           (ollama-buddy--should-use-marker-prefix))
+      (substring model (length ollama-buddy-marker-prefix))
+    model))
 
 (defcustom ollama-buddy-status-update-interval 1.0
   "Interval in seconds to update the status line with background operations."
@@ -593,10 +619,6 @@ PROMPT and SPECIFIED-MODEL are passed to the handler or original function."
 ;; Apply the advice to ollama-buddy--send
 (advice-add 'ollama-buddy--send :around #'ollama-buddy--dispatch-to-handler)
 
-(defun ollama-buddy--get-full-model-name (model)
-  "Get the full display name for MODEL with prefix."
-  (concat ollama-buddy-marker-prefix model))
-
 (defun ollama-buddy--assign-model-letters ()
   "Assign letters to available models and update the intro message."
   (setq ollama-buddy--model-letters
@@ -614,11 +636,20 @@ PROMPT and SPECIFIED-MODEL are passed to the handler or original function."
   (let* ((available-models (when (ollama-buddy--ollama-running)
                              (ollama-buddy--get-models)))
          ;; Get models available for pull but not yet downloaded
-         (models-to-pull (when (ollama-buddy--ollama-running)
-                           (cl-set-difference
-                            ollama-buddy-available-models
-                            available-models
-                            :test #'string=)))
+         (models-to-pull 
+          (when (ollama-buddy--ollama-running)
+            ;; Get models from ollama-buddy-available-models, potentially adding prefix
+            (let ((available-for-pull
+                   (mapcar (lambda (model)
+                             (if (ollama-buddy--should-use-marker-prefix)
+                                 (concat ollama-buddy-marker-prefix model)
+                               model))
+                           ollama-buddy-available-models)))
+              ;; Compare with models already available in the system
+              (cl-set-difference
+               available-for-pull
+               available-models
+               :test #'string=))))
          ;; Basic tips for beginners
          (basic-tips
           "- Ask me anything!                    C-c C-c
@@ -663,7 +694,10 @@ PROMPT and SPECIFIED-MODEL are passed to the handler or original function."
             (concat
              (mapconcat
               (lambda (model)
-                (let ((model-letter (ollama-buddy--get-model-letter model)))
+                (let ((model-letter (ollama-buddy--get-model-letter model))
+                      (display-model (if (ollama-buddy--should-use-marker-prefix) 
+                                         model 
+                                       (ollama-buddy--get-real-model-name model))))
                   (concat
                    (format
                     "(%c) %s [[elisp:(ollama-buddy-select-model \"%s\")][Select]] "
@@ -685,8 +719,11 @@ PROMPT and SPECIFIED-MODEL are passed to the handler or original function."
             (concat
              (mapconcat
               (lambda (model)
-                (format "[[elisp:(ollama-buddy-pull-model \"%s\")][%s]]"
-                        model model))
+                (let ((display-model (if (ollama-buddy--should-use-marker-prefix) 
+                                         model 
+                                       (ollama-buddy--get-real-model-name model))))
+                  (format "[[elisp:(ollama-buddy-pull-model \"%s\")][%s]]"
+                          model display-model)))
               models-to-pull
               " ")
              "\n\n")))

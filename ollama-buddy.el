@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant with ChatGPT, Claude, Gemini and Grok Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.9.40
+;; Version: 0.9.41
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -32,32 +32,44 @@
 ;;
 ;; (use-package ollama-buddy
 ;;    :ensure t
-;;    :bind ("C-c o" . ollama-buddy-menu))
+;;    :bind
+;;    ("C-c o" . ollama-buddy-menu)
+;;    ("C-c O" . ollama-buddy-transient-menu-wrapper))
 ;;
 ;; OR (to select the default model)
 ;;
 ;; (use-package ollama-buddy
 ;;    :ensure t
-;;    :bind ("C-c o" . ollama-buddy-menu)
-;;    :custom ollama-buddy-default-model "llama:latest")
+;;    :bind
+;;    ("C-c o" . ollama-buddy-menu)
+;;    ("C-c O" . ollama-buddy-transient-menu-wrapper)
+;;    :custom
+;;    ollama-buddy-default-model "tinyllama:latest")
 ;;
 ;; OR (use-package local)
 ;;
 ;; (use-package ollama-buddy
 ;;    :load-path "path/to/ollama-buddy"
-;;    :bind ("C-c o" . ollama-buddy-menu)
-;;    :custom ollama-buddy-default-model "llama:latest")
+;;    :bind
+;;    ("C-c o" . ollama-buddy-menu)
+;;    ("C-c O" . ollama-buddy-transient-menu-wrapper)
+;;    :custom ollama-buddy-default-model "tinyllama:latest")
 ;;
 ;; OR (the old way)
 ;;
 ;; (add-to-list 'load-path "path/to/ollama-buddy")
 ;; (require 'ollama-buddy)
 ;; (global-set-key (kbd "C-c o") #'ollama-buddy-menu)
-;; (setq ollama-buddy-default-model "llama:latest")
+;; (global-set-key (kbd "C-c O") #'ollama-buddy-transient-menu-wrapper)
+;; (setq ollama-buddy-default-model "tinyllama:latest")
 ;;
 ;;; Usage
 ;;
 ;; M-x ollama-buddy-menu / C-c o
+;;
+;; OR
+;;
+;; M-x ollama-buddy-transient-menu-wrapper / C-c O
 ;;
 ;; and the chat assistant buffer is presented and off you go!
 ;;
@@ -221,10 +233,6 @@ with an empty messages array and keep_alive set to 0."
                  (string-match-p (regexp-quote (cdr marker-pair)) text))
         (setq found-marker (cons 'end marker-pair))))
     found-marker))
-
-(defun ollama-buddy--get-real-model-name (model)
-  "Extract the actual model name from the prefixed MODEL string."
-  (string-trim (substring model (length ollama-buddy-marker-prefix))))
 
 (defun ollama-buddy-beginning-of-prompt ()
   "Move point to the beginning of the current prompt."

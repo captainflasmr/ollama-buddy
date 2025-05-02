@@ -8,6 +8,14 @@
 
 * Features as they come in
 
+** <2025-05-02> *0.9.41*
+
+Refactored model prefixing again so that when using only ollama models no prefix is applied and is only applied when online LLMs are selected (for example claude, chatGPT e.t.c)
+
+I think this makes more sense and is cleaner for I suspect the majority who may use this package are probably more interested in just using ollama models and the prefix will probably be a bit confusing.
+
+This could be a bit of a breaking change once again I'm afraid for those ollama users that have switched and are now familiar with prefixing "o:", sorry!
+
 ** <2025-05-02> *0.9.40*
 
 Added vision support for those ollama models that can support it!
