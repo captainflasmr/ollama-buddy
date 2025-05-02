@@ -694,10 +694,7 @@ PROMPT and SPECIFIED-MODEL are passed to the handler or original function."
             (concat
              (mapconcat
               (lambda (model)
-                (let ((model-letter (ollama-buddy--get-model-letter model))
-                      (display-model (if (ollama-buddy--should-use-marker-prefix) 
-                                         model 
-                                       (ollama-buddy--get-real-model-name model))))
+                (let ((model-letter (ollama-buddy--get-model-letter model)))
                   (concat
                    (format
                     "(%c) %s [[elisp:(ollama-buddy-select-model \"%s\")][Select]] "
