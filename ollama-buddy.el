@@ -111,7 +111,7 @@
 (defvar ollama-buddy--current-response nil
   "The current response text being accumulated.")
 
-;; Function to detect file paths in a prompt and check if they are image files
+;; creating vision payload
 (defun ollama-buddy--create-vision-message (prompt image-files)
   "Create a message with PROMPT and IMAGE-FILES for vision models."
   (if image-files
@@ -127,6 +127,7 @@
     `((role . "user")
       (content . ,prompt))))
 
+;; Function to detect file paths in a prompt and check if they are image files
 (defun ollama-buddy--detect-image-files (prompt)
   "Detect potential image file paths in PROMPT."
   (when (and ollama-buddy-vision-enabled prompt)
