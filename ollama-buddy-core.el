@@ -31,6 +31,21 @@
   :group 'ollama-buddy
   :prefix "ollama-buddy-param-")
 
+(defcustom ollama-buddy-vision-enabled t
+  "Whether to enable vision support for models that support it."
+  :type 'boolean
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-vision-models '("gemma3:4b" "llama3.2:3b" "llama3.2:8b")
+  "List of models known to support vision capabilities."
+  :type '(repeat string)
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-image-formats '("\\.png$" "\\.jpg$" "\\.jpeg$" "\\.webp$" "\\.gif$")
+  "List of regular expressions matching supported image file formats."
+  :type '(repeat string)
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-hide-reasoning nil
   "When non-nil, hide reasoning/thinking blocks from the stream output."
   :type 'boolean
@@ -244,6 +259,24 @@ These are the only parameters that will be sent to Ollama."
      :key ?i
      :description "Minibuffer Prompt"
      :action ollama-buddy--menu-minibuffer-prompt)
+
+    (toggle-vision
+     :key ?V
+     :description "Toggle vision support"
+     :action ollama-buddy-toggle-vision-support)
+
+    (analyze-image
+     :key ?I
+     :description "Analyze an image"
+     :prompt "Analyze this image and describe what you see in detail:"
+     :system "You are a vision assistant that can analyze images. Describe the content of the image in detail, noting any text, people, objects, colors, and context you can identify."
+     :action (lambda ()
+               (let ((file (read-file-name "Select image file: " nil nil t)))
+                 (when (and file (file-exists-p file))
+                   (ollama-buddy--open-chat)
+                   (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+                     (insert (format "Analyze this image and describe what you see in detail: %s" file)))
+                   (ollama-buddy--send (format "Analyze this image and describe what you see in detail: %s" file))))))
     
     (quit
      :key ?q
@@ -798,7 +831,7 @@ When disabled, responses only appear after completion."
     (save-restriction
       (narrow-to-region start end)
 
-        ;; Remove double blank lines
+      ;; Remove double blank lines
       (goto-char (point-min))
       (while (re-search-forward "\n\n\n+" nil t)
         (replace-match "\n\n"))

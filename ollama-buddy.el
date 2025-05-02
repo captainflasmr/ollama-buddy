@@ -111,6 +111,53 @@
 (defvar ollama-buddy--current-response nil
   "The current response text being accumulated.")
 
+;; Function to detect file paths in a prompt and check if they are image files
+(defun ollama-buddy--create-vision-message (prompt image-files)
+  "Create a message with PROMPT and IMAGE-FILES for vision models."
+  (if image-files
+      ;; Create a message with content array that includes text and images
+      `((role . "user")
+        (content . ,(vconcat 
+                    (list
+                     `((type . "text")
+                       (text . ,prompt)))
+                    (mapcar
+                     (lambda (file)
+                       `((type . "image")
+                         (image . ,(ollama-buddy--encode-image-to-base64 file))))
+                     image-files))))
+    ;; No images, just use text
+    `((role . "user")
+      (content . ,prompt))))
+
+(defun ollama-buddy--detect-image-files (prompt)
+  "Detect potential image file paths in PROMPT."
+  (when (and ollama-buddy-vision-enabled prompt)
+    (let ((words (split-string prompt))
+          (image-files nil))
+      (dolist (word words)
+        (when (and (file-exists-p word)
+                   (cl-some (lambda (format-regex)
+                              (string-match-p format-regex word))
+                            ollama-buddy-image-formats))
+          (push word image-files)))
+      (nreverse image-files))))
+
+;; Function to encode image file to base64
+(defun ollama-buddy--encode-image-to-base64 (file-path)
+  "Encode the image at FILE-PATH to base64 string."
+  (with-temp-buffer
+    (insert-file-contents-literally file-path)
+    (base64-encode-region (point-min) (point-max) t)
+    (buffer-string)))
+
+;; Function to check if the current model supports vision
+(defun ollama-buddy--model-supports-vision (model)
+  "Check if MODEL supports vision capabilities."
+  (when model
+    (let ((real-model (ollama-buddy--get-real-model-name model)))
+      (member real-model ollama-buddy-vision-models))))
+
 ;; Function to unload a single model
 (defun ollama-buddy-unload-model (model)
   "Unload MODEL from Ollama to free up resources.
@@ -118,8 +165,8 @@ According to Ollama API, unloading is done by sending a chat request
 with an empty messages array and keep_alive set to 0."
   (let* ((real-model-name (ollama-buddy--get-real-model-name model))
          (payload (json-encode `((model . ,real-model-name)
-                               (messages . ,(vconcat []))
-                               (keep_alive . 0))))
+                                 (messages . ,(vconcat []))
+                                 (keep_alive . 0))))
          (operation-id (gensym "unload-")))
 
     (ollama-buddy--register-background-operation
@@ -2101,7 +2148,9 @@ With prefix argument ALL-MODELS, clear history for all models."
           (ollama-buddy--restore-default-parameters))))))
 
 (defun ollama-buddy--send (&optional prompt specified-model)
-  "Send PROMPT with optional SYSTEM-PROMPT, SUFFIX and SPECIFIED-MODEL."
+  "Send PROMPT with optional SPECIFIED-MODEL.
+When PROMPT contains image file paths and the model supports vision, 
+those images will be included in the request."
   ;; Check status and update UI if offline
   (unless (or (ollama-buddy--check-status))
     (ollama-buddy--update-status "OFFLINE")
@@ -2110,22 +2159,34 @@ With prefix argument ALL-MODELS, clear history for all models."
   (unless (> (length prompt) 0)
     (user-error "Ensure prompt is defined"))
 
-  ;; Original Ollama send code
+  ;; Original Ollama send code with vision additions
   (let* ((model-info (ollama-buddy--get-valid-model specified-model))
          (model (car model-info))
          (original-model (cdr model-info))
-         (messages (ollama-buddy--get-history-for-request))
+         ;; Check if this model supports vision
+         (supports-vision (and ollama-buddy-vision-enabled
+                               (ollama-buddy--model-supports-vision model)))
+         ;; Check for image files in the prompt
+         (image-files (when supports-vision
+                        (ollama-buddy--detect-image-files prompt)))
+         ;; Flag indicating whether we have images to process
+         (has-images (and supports-vision image-files (not (null image-files))))
+         ;; Get history for the request
+         (history (ollama-buddy--get-history-for-request))
          ;; If we have a system prompt, add it to the request
          (messages-with-system
           (if ollama-buddy--current-system-prompt
               (append `(((role . "system")
                          (content . ,ollama-buddy--current-system-prompt)))
-                      messages)
-            messages))
-         ;; Add the current prompt to the messages
-         (messages-all (append messages-with-system
-                               `(((role . "user")
-                                  (content . ,prompt)))))
+                      history)
+            history))
+         ;; Create the current message, handling vision content if needed
+         (current-message (if has-images
+                              (ollama-buddy--create-vision-message prompt image-files)
+                            `((role . "user")
+                              (content . ,prompt))))
+         ;; Add the current message to the messages
+         (messages-all (append messages-with-system (list current-message)))
          ;; Get only the modified parameters
          (modified-options (ollama-buddy-params-get-for-request))
          ;; Build the base payload
@@ -2159,8 +2220,12 @@ With prefix argument ALL-MODELS, clear history for all models."
       (unless (> (buffer-size) 0)
         (insert (ollama-buddy--create-intro-message)))
       
-      (insert (propertize (format "\n\n** [%s: RESPONSE]" model) 'face
-                          `(:inherit bold :foreground ,(ollama-buddy--get-model-color model))))
+      ;; Show whether we're using vision if applicable
+      (if has-images
+          (insert (propertize (format "\n\n** [%s: RESPONSE with %d image(s)]" model (length image-files)) 'face
+                              `(:inherit bold :foreground ,(ollama-buddy--get-model-color model))))
+        (insert (propertize (format "\n\n** [%s: RESPONSE]" model) 'face
+                            `(:inherit bold :foreground ,(ollama-buddy--get-model-color model)))))
 
       (setq ollama-buddy--response-start-position (point))
 
@@ -2170,6 +2235,13 @@ With prefix argument ALL-MODELS, clear history for all models."
         (insert (propertize (format "[Using %s instead of %s]" model original-model)
                             'face '(:inherit error :weight bold)) "\n\n"))
 
+      ;; Display detected images if any
+      (when has-images
+        (insert "Detected images:\n")
+        (dolist (img image-files)
+          (insert (format "- %s\n" img)))
+        (insert "\n"))
+
       ;; Enable visual-line-mode for better text wrapping
       (visual-line-mode 1))
 
@@ -2177,7 +2249,10 @@ With prefix argument ALL-MODELS, clear history for all models."
       (setq ollama-buddy--start-point (point))
       (insert "Loading response..."))
     
-    (ollama-buddy--update-status "Model Processing..." original-model model)
+    (ollama-buddy--update-status (if has-images 
+                                     "Vision Model Processing..." 
+                                   "Model Processing...") 
+                                 original-model model)
 
     (when (and ollama-buddy--active-process
                (process-live-p ollama-buddy--active-process))
