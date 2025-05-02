@@ -3080,28 +3080,5 @@ When the operation completes, CALLBACK is called with no arguments if provided."
 
 (setq org-return-follows-link t)
 
-;; (advice-add 'beginning-of-line :around #'ollama-buddy-advice-beginning-of-line)
-
-(add-to-list 'display-buffer-alist
-             '("\\*Ollama Buddy Chat"
-               (lambda (buffer alist)
-                 (let ((chat-window (get-buffer-window "*Ollama Buddy Chat*")))
-                   (cond
-                    ;; If chat window exists, use it
-                    (chat-window
-                     (with-selected-window chat-window
-                       (set-window-buffer chat-window buffer t))
-                     chat-window)
-                    ;; If only one window, create a new one
-                    ((= (length (window-list)) 1)
-                     (display-buffer-pop-up-window buffer alist))
-                    ;; Otherwise, create a new window
-                    (t
-                     (display-buffer-pop-up-window buffer alist)))))))
-
-(add-to-list 'display-buffer-alist
-             '("\\*Ollama History Edit\\*"
-               (display-buffer-reuse-window)))
-
 (provide 'ollama-buddy)
 ;;; ollama-buddy.el ends here
