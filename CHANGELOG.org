@@ -11,6 +11,10 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-05-02> *0.9.40*
+
+Added vision support for those ollama models that can support it!
+
 ** <2025-04-29> *0.9.38*
 
 Added model unloading functionality to free system resources

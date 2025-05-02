@@ -8,6 +8,26 @@
 
 * Features as they come in
 
+** <2025-05-02> *0.9.40*
+
+Added vision support for those ollama models that can support it!
+
+Image files are now detected within a prompt and then processed if a model can support vision processing. Here's a quick overview of how it works:
+
+1. *Configuration*: Users can configure the application to enable vision support and specify which models and image formats are supported.  Vision support is enabled by default.
+   
+2. *Image Detection*: When a prompt is submitted, the system automatically detects any image files referenced in the prompt.
+   
+3. *Vision Processing*: If the model supports vision, the detected images are processed in relation to the defined prompt. Note that the detection of a model being vision capable is defined in =ollama-buddy-vision-models= and can be adjusted as required.
+
+4. In addition, a menu item has been added to the custom ollama buddy menu :
+
+   #+begin_src 
+   [I] Analyze an Image
+   #+end_src
+
+When selected, it will allow you to describe a chosen image. At some stage, I may allow integration into =dired=, which would be pretty neat. :)
+
 ** <2025-04-29> *0.9.38*
 
 Added model unloading functionality to free system resources
