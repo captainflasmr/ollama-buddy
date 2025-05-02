@@ -260,11 +260,6 @@ These are the only parameters that will be sent to Ollama."
      :description "Minibuffer Prompt"
      :action ollama-buddy--menu-minibuffer-prompt)
 
-    (toggle-vision
-     :key ?V
-     :description "Toggle vision support"
-     :action ollama-buddy-toggle-vision-support)
-
     (analyze-image
      :key ?I
      :description "Analyze an image"
