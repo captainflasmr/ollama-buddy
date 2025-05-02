@@ -115,16 +115,13 @@
 (defun ollama-buddy--create-vision-message (prompt image-files)
   "Create a message with PROMPT and IMAGE-FILES for vision models."
   (if image-files
-      ;; Create a message with content array that includes text and images
+      ;; Create a message with content and images array according to Ollama API
       `((role . "user")
-        (content . ,(vconcat 
-                    (list
-                     `((type . "text")
-                       (text . ,prompt)))
+        (content . ,prompt)
+        (images . ,(vconcat
                     (mapcar
                      (lambda (file)
-                       `((type . "image")
-                         (image . ,(ollama-buddy--encode-image-to-base64 file))))
+                       (ollama-buddy--encode-image-to-base64 file))
                      image-files))))
     ;; No images, just use text
     `((role . "user")
