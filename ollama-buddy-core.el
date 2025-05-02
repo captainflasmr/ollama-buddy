@@ -826,7 +826,6 @@ When disabled, responses only appear after completion."
     (save-restriction
       (narrow-to-region start end)
 
-      ;; Remove double blank lines
       (goto-char (point-min))
       (while (re-search-forward "\n\n\n+" nil t)
         (replace-match "\n\n"))
