@@ -3090,7 +3090,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
                     ;; If chat window exists, use it
                     (chat-window
                      (with-selected-window chat-window
-                       (switch-to-buffer buffer t))
+                       (set-window-buffer chat-window buffer t))
                      chat-window)
                     ;; If only one window, create a new one
                     ((= (length (window-list)) 1)
