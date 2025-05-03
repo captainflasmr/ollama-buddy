@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant with ChatGPT, Claude, Gemini and Grok Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.9.41
+;; Version: 0.9.42
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -2884,6 +2884,34 @@ Modifies the variable in place."
 (defun ollama-buddy-pull-model (model)
   "Pull or update MODEL from Ollama Hub asynchronously.
 When the operation completes, CALLBACK is called with no arguments if provided."
+  (interactive 
+   (let* ((available-models (ollama-buddy--get-models))
+          (models-to-pull 
+           (when (ollama-buddy--ollama-running)
+             ;; Get models from ollama-buddy-available-models, potentially adding prefix
+             (let ((available-for-pull
+                    (mapcar (lambda (model)
+                              (if (ollama-buddy--should-use-marker-prefix)
+                                  (concat ollama-buddy-marker-prefix model)
+                                model))
+                            ollama-buddy-available-models)))
+               ;; Compare with models already available in the system
+               (cl-set-difference
+                available-for-pull
+                available-models
+                :test #'string=)))))
+     (if models-to-pull
+         (list (completing-read 
+                "Pull model: " 
+                models-to-pull
+                nil 
+                nil  ; Allow custom input
+                nil
+                nil
+                (car models-to-pull)))
+       ;; If no models to pull or Ollama isn't running, still allow custom input
+       (list (read-string "Enter model name to pull: ")))))
+
   (let ((payload (json-encode `((model . ,(ollama-buddy--get-real-model-name model)))))
         (operation-id (gensym "pull-")))
 

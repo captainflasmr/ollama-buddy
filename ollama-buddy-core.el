@@ -400,6 +400,10 @@ Each command is defined with:
     "deepseek-r1:1.5b"
     "tinyllama:latest"
     "llama3.2:3b"
+    "qwen3:0.6b"
+    "qwen3:1.7b"
+    "qwen3:4b"
+    "qwen3:8b"
     )
   "List of available models to pull from Ollama Hub."
   :type '(repeat (string :tag "Model name"))

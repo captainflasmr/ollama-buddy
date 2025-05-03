@@ -8,6 +8,17 @@
 
 * Features as they come in
 
+** <2025-05-03> *0.9.42*
+
+Added the following to recommended models:
+
+- qwen3:0.6b
+- qwen3:1.7b
+- qwen3:4b
+- qwen3:8b
+
+and fixed pull model
+
 ** <2025-05-02> *0.9.41*
 
 Refactored model prefixing again so that when using only ollama models no prefix is applied and is only applied when online LLMs are selected (for example claude, chatGPT e.t.c)
