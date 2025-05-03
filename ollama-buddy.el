@@ -1748,247 +1748,258 @@ With prefix argument ALL-MODELS, clear history for all models."
 (defun ollama-buddy--stream-filter (_proc output)
   "Process stream OUTPUT while preserving cursor position."
 
-  ;; Log raw output to debug buffer if enabled
-  (when ollama-buddy-debug-mode
-    (with-current-buffer (get-buffer-create ollama-buddy--debug-buffer)
-      (goto-char (point-max))
-      (let ((inhibit-read-only t)
-            (start-point (point)))
-        (insert (format "\n=== MESSAGE %s ===\n"
-                        (format-time-string "%H:%M:%S.%3N")))
-        (insert output "\n")
-        (save-excursion
-          (goto-char start-point)
-          (when (search-forward "{" nil t)
-            (goto-char (match-beginning 0))
-            (let ((json-start (point)))
-              (when (ignore-errors (forward-sexp) t)
-                (let ((json-end (point)))
-                  (json-pretty-print json-start json-end)))))))))
+  ;; Save match data at the start to prevent clobbering
+  (save-match-data
+    ;; Log raw output to debug buffer if enabled
+    (when ollama-buddy-debug-mode
+      (with-current-buffer (get-buffer-create ollama-buddy--debug-buffer)
+        (goto-char (point-max))
+        (let ((inhibit-read-only t)
+              (start-point (point)))
+          (insert (format "\n=== MESSAGE %s ===\n"
+                          (format-time-string "%H:%M:%S.%3N")))
+          (insert output "\n")
+          (save-excursion
+            (save-match-data  ; Save match data for nested operations
+              (goto-char start-point)
+              (when (search-forward "{" nil t)
+                (goto-char (match-beginning 0))
+                (let ((json-start (point)))
+                  (when (ignore-errors (forward-sexp) t)
+                    (let ((json-end (point)))
+                      (json-pretty-print json-start json-end))))))))))
 
-  (when-let* ((json-str (replace-regexp-in-string "^[^\{]*" "" output))
-              (json-data (and (> (length json-str) 0) (json-read-from-string json-str)))
-              (text (alist-get 'content (alist-get 'message json-data))))
-    
-    ;; Set start time if this is the first token and start the update timer
-    (unless ollama-buddy--current-token-start-time
-      (setq ollama-buddy--current-token-start-time (float-time)
-            ollama-buddy--last-token-count 0
-            ollama-buddy--last-update-time nil)
+    ;; Parse JSON safely
+    (let* ((json-str (save-match-data 
+                       (replace-regexp-in-string "^[^\{]*" "" output)))
+           (json-data (when (and (stringp json-str) 
+                                 (> (length json-str) 0))
+                        (ignore-errors 
+                          (json-read-from-string json-str))))
+           (text (when json-data
+                   (alist-get 'content (alist-get 'message json-data)))))
       
-      ;; Start the real-time update timer
-      (when ollama-buddy--token-update-timer
-        (cancel-timer ollama-buddy--token-update-timer))
-      
-      (setq ollama-buddy--token-update-timer
-            (run-with-timer 0 ollama-buddy--token-update-interval
-                            #'ollama-buddy--update-token-rate-display)))
-    
-    ;; Increment token count when text is received
-    (when (not (string-empty-p text))
-      (setq ollama-buddy--current-token-count (1+ ollama-buddy--current-token-count)))
-    
-    (with-current-buffer ollama-buddy--chat-buffer
-      (let* ((inhibit-read-only t)
-             (window (get-buffer-window ollama-buddy--chat-buffer t))
-             (old-point (and window (window-point window)))
-             (at-end (and window (>= old-point (point-max))))
-             (old-window-start (and window (window-start window)))
-             (reg-char (if ollama-buddy--multishot-sequence
-                           (if (< ollama-buddy--multishot-progress (length ollama-buddy--multishot-sequence))
-                               (aref ollama-buddy--multishot-sequence ollama-buddy--multishot-progress)
-                             ollama-buddy-default-register)
-                         ollama-buddy-default-register)))
-        (save-excursion
-          (goto-char (point-max))
-
-          (setq ollama-buddy--reasoning-marker-found nil)
+      ;; Rest of the function remains the same...
+      (when text
+        ;; Set start time if this is the first token and start the update timer
+        (unless ollama-buddy--current-token-start-time
+          (setq ollama-buddy--current-token-start-time (float-time)
+                ollama-buddy--last-token-count 0
+                ollama-buddy--last-update-time nil)
           
-          (when ollama-buddy-hide-reasoning
-            (setq ollama-buddy--reasoning-marker-found (ollama-buddy--find-reasoning-marker text))
-            (cond
-             ;; Found a start marker
-             ((and ollama-buddy--reasoning-marker-found (eq (car ollama-buddy--reasoning-marker-found) 'start))
-              (setq ollama-buddy--in-reasoning-section t
-                    ollama-buddy--reasoning-status-message
-                    (format "%s..."
-                            (capitalize
-                             (replace-regexp-in-string
-                              "[<>]" "" (car (cdr ollama-buddy--reasoning-marker-found))))))
-              (setq ollama-buddy--start-point (point))
-              (insert ollama-buddy--reasoning-status-message))
-             ;; Found an end marker
-             ((and ollama-buddy--reasoning-marker-found (eq (car ollama-buddy--reasoning-marker-found) 'end))
-              (setq ollama-buddy--in-reasoning-section nil
-                    ollama-buddy--reasoning-status-message nil
-                    ollama-buddy--reasoning-skip-newlines t)  ; Flag to skip initial newlines
-              ;; (message "end : %s" text)
-              (when ollama-buddy--start-point
-                (delete-region ollama-buddy--start-point (point-max))
-                (setq ollama-buddy--start-point nil)))))
-
-          (when (and (not ollama-buddy-hide-reasoning) ollama-buddy--start-point)
-            (delete-region ollama-buddy--start-point (point-max))
-            (setq ollama-buddy--start-point nil))
+          ;; Start the real-time update timer
+          (when ollama-buddy--token-update-timer
+            (cancel-timer ollama-buddy--token-update-timer))
           
-          (unless (or (and ollama-buddy-hide-reasoning
-                           ollama-buddy--in-reasoning-section)
-                      ollama-buddy--reasoning-marker-found)
-            ;; If we just exited reasoning section and need to skip newlines
-            (if (and ollama-buddy--reasoning-skip-newlines
-                     (not ollama-buddy--in-reasoning-section)
-                     (string-match "^[\n\r]+" text))
-                (let ((cleaned-text (replace-regexp-in-string "^[\n\r]+" "" text)))
-                  ;; Only insert if there's content after removing newlines
-                  (unless (string-empty-p cleaned-text)
-                    (insert cleaned-text)
-                    (setq ollama-buddy--reasoning-skip-newlines nil)))
-              (insert text)))
-
-          ;; Track the complete response for history
-          (when (boundp 'ollama-buddy--current-response)
-            (setq ollama-buddy--current-response
-                  (concat (or ollama-buddy--current-response "") text)))
-          
-          (unless (boundp 'ollama-buddy--current-response)
-            (setq ollama-buddy--current-response text))
-
-          ;; Write to register - if multishot is enabled, use that register, otherwise use default
-          (unless (and ollama-buddy-hide-reasoning ollama-buddy--in-reasoning-section)
-            (set-register reg-char
-                          (concat
-                           (if (stringp (get-register reg-char))
-                               (get-register reg-char) "") text)))
-          
-          ;; Check if this response is complete
-          (when (eq (alist-get 'done json-data) t)
-            ;; If we're still in a reasoning section at the end, force exit
-            (when (and ollama-buddy-hide-reasoning
-                       ollama-buddy--in-reasoning-section)
-              (setq ollama-buddy--in-reasoning-section nil
-                    ollama-buddy--reasoning-status-message nil)
-              (when ollama-buddy--start-point
+          (setq ollama-buddy--token-update-timer
+                (run-with-timer 0 ollama-buddy--token-update-interval
+                                #'ollama-buddy--update-token-rate-display)))
+        
+        ;; Increment token count when text is received
+        (when (not (string-empty-p text))
+          (setq ollama-buddy--current-token-count (1+ ollama-buddy--current-token-count)))
+        
+        (with-current-buffer ollama-buddy--chat-buffer
+          (let* ((inhibit-read-only t)
+                 (window (get-buffer-window ollama-buddy--chat-buffer t))
+                 (old-point (and window (window-point window)))
+                 (at-end (and window (>= old-point (point-max))))
+                 (old-window-start (and window (window-start window)))
+                 (reg-char (if ollama-buddy--multishot-sequence
+                               (if (< ollama-buddy--multishot-progress (length ollama-buddy--multishot-sequence))
+                                   (aref ollama-buddy--multishot-sequence ollama-buddy--multishot-progress)
+                                 ollama-buddy-default-register)
+                             ollama-buddy-default-register)))
+            (save-excursion
+              (goto-char (point-max))
+              
+              (setq ollama-buddy--reasoning-marker-found nil)
+              
+              (when ollama-buddy-hide-reasoning
+                (setq ollama-buddy--reasoning-marker-found (ollama-buddy--find-reasoning-marker text))
+                (cond
+                 ;; Found a start marker
+                 ((and ollama-buddy--reasoning-marker-found (eq (car ollama-buddy--reasoning-marker-found) 'start))
+                  (setq ollama-buddy--in-reasoning-section t
+                        ollama-buddy--reasoning-status-message
+                        (format "%s..."
+                                (capitalize
+                                 (replace-regexp-in-string
+                                  "[<>]" "" (car (cdr ollama-buddy--reasoning-marker-found))))))
+                  (setq ollama-buddy--start-point (point))
+                  (insert ollama-buddy--reasoning-status-message))
+                 ;; Found an end marker
+                 ((and ollama-buddy--reasoning-marker-found (eq (car ollama-buddy--reasoning-marker-found) 'end))
+                  (setq ollama-buddy--in-reasoning-section nil
+                        ollama-buddy--reasoning-status-message nil
+                        ollama-buddy--reasoning-skip-newlines t)  ; Flag to skip initial newlines
+                  ;; (message "end : %s" text)
+                  (when ollama-buddy--start-point
+                    (delete-region ollama-buddy--start-point (point-max))
+                    (setq ollama-buddy--start-point nil)))))
+              
+              (when (and (not ollama-buddy-hide-reasoning) ollama-buddy--start-point)
                 (delete-region ollama-buddy--start-point (point-max))
                 (setq ollama-buddy--start-point nil))
-              (insert "\n[Warning: Response ended with unclosed reasoning section]\n\n")
-              ;; Show any remaining content that wasn't displayed
+              
+              (unless (or (and ollama-buddy-hide-reasoning
+                               ollama-buddy--in-reasoning-section)
+                          ollama-buddy--reasoning-marker-found)
+                ;; If we just exited reasoning section and need to skip newlines
+                (if (and ollama-buddy--reasoning-skip-newlines
+                         (not ollama-buddy--in-reasoning-section)
+                         (string-match "^[\n\r]+" text))
+                    (let ((cleaned-text (replace-regexp-in-string "^[\n\r]+" "" text)))
+                      ;; Only insert if there's content after removing newlines
+                      (unless (string-empty-p cleaned-text)
+                        (insert cleaned-text)
+                        (setq ollama-buddy--reasoning-skip-newlines nil)))
+                  (insert text)))
+              
+              ;; Track the complete response for history
               (when (boundp 'ollama-buddy--current-response)
-                (let ((remaining-content (substring ollama-buddy--current-response
-                                                    (if ollama-buddy--start-point
-                                                        (- ollama-buddy--start-point (point-min))
-                                                      0))))
-                  (unless (string-empty-p remaining-content)
-                    (insert remaining-content)))))
+                (setq ollama-buddy--current-response
+                      (concat (or ollama-buddy--current-response "") text)))
+              
+              (unless (boundp 'ollama-buddy--current-response)
+                (setq ollama-buddy--current-response text))
+              
+              ;; Write to register - if multishot is enabled, use that register, otherwise use default
+              (unless (and ollama-buddy-hide-reasoning ollama-buddy--in-reasoning-section)
+                (set-register reg-char
+                              (concat
+                               (if (stringp (get-register reg-char))
+                                   (get-register reg-char) "") text)))
+              
+              ;; Check if this response is complete
+              (when (eq (alist-get 'done json-data) t)
+                ;; If we're still in a reasoning section at the end, force exit
+                (when (and ollama-buddy-hide-reasoning
+                           ollama-buddy--in-reasoning-section)
+                  (setq ollama-buddy--in-reasoning-section nil
+                        ollama-buddy--reasoning-status-message nil)
+                  (when ollama-buddy--start-point
+                    (delete-region ollama-buddy--start-point (point-max))
+                    (setq ollama-buddy--start-point nil))
+                  (insert "\n[Warning: Response ended with unclosed reasoning section]\n\n")
+                  ;; Show any remaining content that wasn't displayed
+                  (when (boundp 'ollama-buddy--current-response)
+                    (let ((remaining-content (substring ollama-buddy--current-response
+                                                        (if ollama-buddy--start-point
+                                                            (- ollama-buddy--start-point (point-min))
+                                                          0))))
+                      (unless (string-empty-p remaining-content)
+                        (insert remaining-content)))))
 
-            ;; Convert the response from markdown to org format if enabled
-            (when ollama-buddy-convert-markdown-to-org
-              ;; first convert the register contents
-              (let* ((content (get-register reg-char))
-                     (converted-content (with-temp-buffer
-                                          (insert content)
-                                          (ollama-buddy--md-to-org-convert-region (point-min) (point-max))
-                                          (buffer-string))))
-                (set-register reg-char converted-content))
-              
-              (let ((response-end (point-max)))
-                (when (and (boundp 'ollama-buddy--response-start-position)
-                           ollama-buddy--response-start-position)
-                  (ollama-buddy--md-to-org-convert-region
-                   ollama-buddy--response-start-position
-                   response-end)
-                  ;; Reset the marker after conversion
-                  (makunbound 'ollama-buddy--response-start-position))))
-            
-            ;; Add the user message to history
-            (ollama-buddy--add-to-history "user" ollama-buddy--current-prompt)
-            ;; Add the complete response to history
-            (ollama-buddy--add-to-history "assistant" ollama-buddy--current-response)
-            (makunbound 'ollama-buddy--current-response)
-            
-            ;; Cancel the update timer
-            (when ollama-buddy--token-update-timer
-              (cancel-timer ollama-buddy--token-update-timer)
-              (setq ollama-buddy--token-update-timer nil))
-            
-            ;; Calculate final statistics
-            (let* ((elapsed-time (- (float-time) ollama-buddy--current-token-start-time))
-                   (token-rate (if (> elapsed-time 0)
-                                   (/ ollama-buddy--current-token-count elapsed-time)
-                                 0))
-                   (token-info (list :model ollama-buddy--current-model
-                                     :tokens ollama-buddy--current-token-count
-                                     :elapsed elapsed-time
-                                     :rate token-rate
-                                     :timestamp (current-time))))
-              
-              ;; Add to history
-              (push token-info ollama-buddy--token-usage-history)
-              
-              ;; Display token info if enabled
-              (when ollama-buddy-display-token-stats
-                (insert (format "\n\n*** Token Stats\n[%d tokens in %.1fs, %.1f tokens/sec]"
-                                ollama-buddy--current-token-count
-                                elapsed-time
-                                token-rate))
-                ;; Add modified parameters to the display
-                (when ollama-buddy-params-modified
-                  (insert "\n\n*** Modified Parameters: ")
-                  (let ((param-strings
-                         (mapcar
-                          (lambda (param)
-                            (let ((value (alist-get param ollama-buddy-params-active)))
-                              (format "%s=%s"
-                                      param
-                                      (cond
-                                       ((floatp value) (format "%.2f" value))
-                                       ((vectorp value) (format "[%s]" (mapconcat #'identity value ", ")))
-                                       (t value)))))
-                          ollama-buddy-params-modified)))
-                    (insert (mapconcat #'identity param-strings ", ")))))
-              
-              ;; Reset tracking variables
-              (setq ollama-buddy--current-token-count 0
-                    ollama-buddy--current-token-start-time nil
-                    ollama-buddy--last-token-count 0
-                    ollama-buddy--last-update-time nil
-                    ;; Reset reasoning variables
-                    ollama-buddy--in-reasoning-section nil
-                    ollama-buddy--reasoning-status-message nil
-                    ollama-buddy--reasoning-skip-newlines nil))
+                ;; Convert the response from markdown to org format if enabled
+                (when ollama-buddy-convert-markdown-to-org
+                  ;; first convert the register contents
+                  (let* ((content (get-register reg-char))
+                         (converted-content (with-temp-buffer
+                                              (insert content)
+                                              (ollama-buddy--md-to-org-convert-region (point-min) (point-max))
+                                              (buffer-string))))
+                    (set-register reg-char converted-content))
+                  
+                  (let ((response-end (point-max)))
+                    (when (and (boundp 'ollama-buddy--response-start-position)
+                               ollama-buddy--response-start-position)
+                      (ollama-buddy--md-to-org-convert-region
+                       ollama-buddy--response-start-position
+                       response-end)
+                      ;; Reset the marker after conversion
+                      (makunbound 'ollama-buddy--response-start-position))))
+                
+                ;; Add the user message to history
+                (ollama-buddy--add-to-history "user" ollama-buddy--current-prompt)
+                ;; Add the complete response to history
+                (ollama-buddy--add-to-history "assistant" ollama-buddy--current-response)
+                (makunbound 'ollama-buddy--current-response)
+                
+                ;; Cancel the update timer
+                (when ollama-buddy--token-update-timer
+                  (cancel-timer ollama-buddy--token-update-timer)
+                  (setq ollama-buddy--token-update-timer nil))
+                
+                ;; Calculate final statistics
+                (let* ((elapsed-time (- (float-time) ollama-buddy--current-token-start-time))
+                       (token-rate (if (> elapsed-time 0)
+                                       (/ ollama-buddy--current-token-count elapsed-time)
+                                     0))
+                       (token-info (list :model ollama-buddy--current-model
+                                         :tokens ollama-buddy--current-token-count
+                                         :elapsed elapsed-time
+                                         :rate token-rate
+                                         :timestamp (current-time))))
+                  
+                  ;; Add to history
+                  (push token-info ollama-buddy--token-usage-history)
+                  
+                  ;; Display token info if enabled
+                  (when ollama-buddy-display-token-stats
+                    (insert (format "\n\n*** Token Stats\n[%d tokens in %.1fs, %.1f tokens/sec]"
+                                    ollama-buddy--current-token-count
+                                    elapsed-time
+                                    token-rate))
+                    ;; Add modified parameters to the display
+                    (when ollama-buddy-params-modified
+                      (insert "\n\n*** Modified Parameters: ")
+                      (let ((param-strings
+                             (mapcar
+                              (lambda (param)
+                                (let ((value (alist-get param ollama-buddy-params-active)))
+                                  (format "%s=%s"
+                                          param
+                                          (cond
+                                           ((floatp value) (format "%.2f" value))
+                                           ((vectorp value) (format "[%s]" (mapconcat #'identity value ", ")))
+                                           (t value)))))
+                              ollama-buddy-params-modified)))
+                        (insert (mapconcat #'identity param-strings ", ")))))
+                  
+                  ;; Reset tracking variables
+                  (setq ollama-buddy--current-token-count 0
+                        ollama-buddy--current-token-start-time nil
+                        ollama-buddy--last-token-count 0
+                        ollama-buddy--last-update-time nil
+                        ;; Reset reasoning variables
+                        ollama-buddy--in-reasoning-section nil
+                        ollama-buddy--reasoning-status-message nil
+                        ollama-buddy--reasoning-skip-newlines nil))
 
-            ;; reset the current model if from external
-            (when ollama-buddy--current-request-temporary-model
-              (setq ollama-buddy--current-model ollama-buddy--current-request-temporary-model)
-              (setq ollama-buddy--current-request-temporary-model nil))
-            
-            (insert "\n\n*** FINISHED")
-            
-            ;; Handle multishot progression here
-            (if ollama-buddy--multishot-sequence
-                (progn
-                  ;; Increment progress
-                  (setq ollama-buddy--multishot-progress
-                        (1+ ollama-buddy--multishot-progress))
-                  ;; Check if there are more models to process
-                  (if (< ollama-buddy--multishot-progress
-                         (length ollama-buddy--multishot-sequence))
-                      (progn
-                        ;; Process next model after a short delay
-                        (run-with-timer 0.5 nil #'ollama-buddy--send-next-in-sequence))
+                ;; reset the current model if from external
+                (when ollama-buddy--current-request-temporary-model
+                  (setq ollama-buddy--current-model ollama-buddy--current-request-temporary-model)
+                  (setq ollama-buddy--current-request-temporary-model nil))
+                
+                (insert "\n\n*** FINISHED")
+                
+                ;; Handle multishot progression here
+                (if ollama-buddy--multishot-sequence
                     (progn
-                      (ollama-buddy--update-status "Multi Finished")
-                      (ollama-buddy--prepare-prompt-area))))
-              ;; Not in multishot mode, just show the prompt
-              (progn
-                (ollama-buddy--prepare-prompt-area)
-                (ollama-buddy--update-status (format "Finished [%d %.1f t/s]"
-                                                     (plist-get (car ollama-buddy--token-usage-history) :tokens)
-                                                     (plist-get (car ollama-buddy--token-usage-history) :rate)))))))
-        (when window
-          (if at-end
-              (set-window-point window (point-max))
-            (set-window-point window old-point))
-          (set-window-start window old-window-start t))))))
+                      ;; Increment progress
+                      (setq ollama-buddy--multishot-progress
+                            (1+ ollama-buddy--multishot-progress))
+                      ;; Check if there are more models to process
+                      (if (< ollama-buddy--multishot-progress
+                             (length ollama-buddy--multishot-sequence))
+                          (progn
+                            ;; Process next model after a short delay
+                            (run-with-timer 0.5 nil #'ollama-buddy--send-next-in-sequence))
+                        (progn
+                          (ollama-buddy--update-status "Multi Finished")
+                          (ollama-buddy--prepare-prompt-area))))
+                  ;; Not in multishot mode, just show the prompt
+                  (progn
+                    (ollama-buddy--prepare-prompt-area)
+                    (ollama-buddy--update-status (format "Finished [%d %.1f t/s]"
+                                                         (plist-get (car ollama-buddy--token-usage-history) :tokens)
+                                                         (plist-get (car ollama-buddy--token-usage-history) :rate)))))))
+            (when window
+              (if at-end
+                  (set-window-point window (point-max))
+                (set-window-point window old-point))
+              (set-window-start window old-window-start t))))))))
 
 (defun ollama-buddy--stream-sentinel (_proc event)
   "Handle stream completion EVENT."
