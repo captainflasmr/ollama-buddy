@@ -8,6 +8,12 @@
 
 * Features as they come in
 
+** <2025-05-05> *0.9.43*
+
+Fix model reference error exceeding 26 models #15
+
+Update =ollama-buddy= to handle more than 26 models by using prefixed combinations for model references beyond 'z'. This prevents errors in =create-intro-message= when the local server hosts a large number of models.
+
 ** <2025-05-03> *0.9.42*
 
 Added the following to recommended models:
