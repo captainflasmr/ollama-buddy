@@ -1509,8 +1509,7 @@ Supports both single letter and prefixed multi-character model references."
           (forward-line 1))))))
 
 (defun ollama-buddy--format-models-with-letters ()
-  "Format models with letter assignments for display.
-Clearly distinguishes between single-letter and prefixed multi-letter references."
+  "Format models with letter assignments for display."
   (when-let* ((models-alist ollama-buddy--model-letters)
               (total (length models-alist))
               (rows (ceiling (/ total 2.0))))
