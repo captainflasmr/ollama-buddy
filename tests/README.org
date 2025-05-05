@@ -46,7 +46,6 @@ for el in "${elisp_files[@]}"; do
 done
 #+end_src
 
-
 ** Run ollama-buddy with different Emacs versions
 
 - [X] emacs-28.1
@@ -103,237 +102,6 @@ echo "Cleaning up temporary directory..."
 rm -rf "$TEMP_DIR"
 #+end_src
 
-The script to build different versions of Emacs is as follows:
-
-#+begin_src bash
-#!/bin/bash
-
-# Directory for Emacs builds
-BUILD_ROOT="$HOME/emacs-builds"
-INSTALL_ROOT="$HOME/emacs-versions"
-
-# Build dependencies for different distributions
-ARCH_BUILD_DEPS="base-devel gtk2 gtk3 libxpm libjpeg-turbo libpng libtiff giflib libxml2 gnutls librsvg"
-SLES_BUILD_DEPS="gcc gcc-c++ make automake gtk2-devel gtk3-devel libXpm-devel libjpeg8-devel libpng16-devel libtiff-devel giflib-devel libxml2-devel gnutls-devel cairo-devel harfbuzz-devel librsvg-devel"
-
-# 27.2 2021-03-25
-# 28.2 2022-09-12
-# 29.4 2024-06-22
-VERSIONS=(
-    # "emacs-27.1"
-    # "emacs-28.1"
-    # "emacs-29.1"
-    "emacs-29.3"
-    # "emacs-29.4"
-    "emacs-30.1"
-)
-
-# Detect OS
-detect_os() {
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        OS=$NAME
-    else
-        OS=$(uname -s)
-    fi
-}
-
-function prepare_environment() {
-    echo "Creating build directories..."
-    mkdir -p "$BUILD_ROOT"
-    mkdir -p "$INSTALL_ROOT"
-    
-    detect_os
-    echo "Detected OS: $OS"
-    
-    case "$OS" in
-        ,*"SLED"*|"SLES"*|*"SUSE"*)
-            echo "Installing build dependencies for SUSE SLES..."
-            sudo zypper refresh
-            sudo zypper install -y pattern-devel-base-devel
-            sudo zypper install -y $SLES_BUILD_DEPS
-            ;;
-        ,*"Garuda"*)
-            echo "Installing build dependencies for Arch Linux..."
-            sudo pacman -Syu --needed --noconfirm $ARCH_BUILD_DEPS
-            
-            # Check if we have yay for AUR access (optional)
-            if ! command -v yay &> /dev/null; then
-                echo "Installing yay (AUR helper)..."
-                cd /tmp
-                git clone https://aur.archlinux.org/yay.git
-                cd yay
-                makepkg -si --noconfirm
-            fi
-            ;;
-        ,*)
-            echo "Unsupported OS detected: $OS"
-            echo "Please install build dependencies manually and continue."
-            read -p "Press Enter to continue or Ctrl+C to abort..."
-            ;;
-    esac
-}
-
-function build_emacs() {
-    local version=$1
-    local build_dir="$BUILD_ROOT/$version"
-    local install_dir="$INSTALL_ROOT/$version"
-    
-    echo "Building $version..."
-    
-    # Download and extract
-    cd "$BUILD_ROOT"
-    if [ ! -f "$version.tar.gz" ]; then
-        wget "https://ftp.gnu.org/gnu/emacs/$version.tar.gz"
-    fi
-    
-    # Clean previous build if exists
-    rm -rf "$build_dir"
-    tar xzf "$version.tar.gz"
-    
-    # Configure and build
-    cd "$version"
-    
-    # Different configure flags for different versions
-    if [[ "$version" == "emacs-24.5" || "$version" == "emacs-25.3" ]]; then
-        # Older versions use GTK2
-        ./configure \
-            --prefix="$install_dir" \
-            --with-x-toolkit=gtk2 \
-            --with-xpm \
-            --with-jpeg \
-            --with-png \
-            --with-gif \
-            --with-tiff \
-            --with-gnutls \
-            --with-xml2 \
-            --with-rsvg
-    else
-        # Newer versions use GTK3
-        ./configure \
-            --prefix="$install_dir" \
-            --with-x-toolkit=gtk3 \
-            --with-xpm \
-            --with-jpeg \
-            --with-png \
-            --with-gif \
-            --with-tiff \
-            --with-gnutls \
-            --with-xml2 \
-            --with-cairo \
-            --with-harfbuzz \
-            --with-rsvg
-    fi
-    
-    # Use all available cores for compilation
-    make -j$(nproc)
-    make install
-    
-    echo "$version installed to $install_dir"
-}
-
-function create_pkgbuild() {
-    # Only create PKGBUILD for Arch Linux
-    if [[ "$OS" != *"Arch Linux"* ]]; then
-        echo "PKGBUILD creation is only supported on Arch Linux"
-        return 1
-    fi
-
-    local version=$1
-    local version_num=${version#emacs-}
-    
-    echo "Creating PKGBUILD for $version..."
-    mkdir -p "$BUILD_ROOT/pkgbuilds/$version"
-    cd "$BUILD_ROOT/pkgbuilds/$version"
-    
-    cat > PKGBUILD << EOF
-# Maintainer: Your Name <your.email@example.com>
-pkgname=$version
-pkgver=$version_num
-pkgrel=1
-pkgdesc="GNU Emacs version $version_num"
-arch=('x86_64')
-url="https://www.gnu.org/software/emacs/"
-license=('GPL3')
-depends=('gtk3' 'libxpm' 'libjpeg-turbo' 'libpng' 'giflib' 'libtiff' 'libxml2' 'gnutls')
-makedepends=('base-devel')
-provides=("emacs-$version_num")
-conflicts=("emacs")
-source=("https://ftp.gnu.org/gnu/emacs/emacs-\$pkgver.tar.gz")
-sha256sums=('SKIP')
-
-build() {
-    cd "\$srcdir/emacs-\$pkgver"
-    ./configure \\
-        --prefix=/usr \\
-        --sysconfdir=/etc \\
-        --libexecdir=/usr/lib \\
-        --localstatedir=/var \\
-        --with-x-toolkit=gtk3 \\
-        --with-xpm \\
-        --with-jpeg \\
-        --with-png \\
-        --with-gif \\
-        --with-tiff \\
-        --with-gnutls \\
-        --with-xml2
-    make
-}
-
-package() {
-    cd "\$srcdir/emacs-\$pkgver"
-    make DESTDIR="\$pkgdir" install
-}
-EOF
-}
-
-# Main execution
-echo "This script provides two methods to build Emacs:"
-echo "1. Direct compilation (traditional)"
-echo "2. Using makepkg (Arch Linux only)"
-read -p "Which method do you prefer? (1/2): " build_method
-
-case $build_method in
-    1)
-        prepare_environment
-        for version in "${VERSIONS[@]}"; do
-            build_emacs "$version"
-        done
-        
-        # Create convenience symlinks
-        mkdir -p "$HOME/bin"
-        echo "Creating version-specific symlinks..."
-        for version in "${VERSIONS[@]}"; do
-            ln -sf "$INSTALL_ROOT/$version/bin/emacs" "$HOME/bin/emacs-${version#emacs-}"
-        done
-        ;;
-        
-    2)
-        detect_os
-        if [[ "$OS" != *"Arch Linux"* ]]; then
-            echo "makepkg method is only supported on Arch Linux"
-            exit 1
-        fi
-        prepare_environment
-        for version in "${VERSIONS[@]}"; do
-            create_pkgbuild "$version"
-            echo "PKGBUILD created for $version"
-            echo "To build, cd to $BUILD_ROOT/pkgbuilds/$version and run 'makepkg -si'"
-        done
-        ;;
-        
-    ,*)
-        echo "Invalid option selected"
-        exit 1
-        ;;
-esac
-
-echo "Build complete. You can run specific versions using:"
-for version in "${VERSIONS[@]}"; do
-    echo "emacs-${version#emacs-}"
-done
-#+end_src
-
 ** Prompt Text Edge Cases
 
 Sending weird characters in the file =prompt-edge-text-cases.txt= with various edge cases and challenging content to test =ollama-buddy= text handling capabilities.
@@ -353,13 +121,61 @@ This test text src includes:
 
 ** Prompting
 
+*** Logic & Reasoning
+
+If all bloops are razzles, and all razzles are lazzles, are all bloops lazzles?
+
+Which is heavier: a ton of feathers or a ton of bricks?
+
+A bat and ball cost $1.10. The bat costs $1 more than the ball. How much does the ball cost?
+
+*** Common Sense
+
+What happens when you put ice cubes in warm water?
+
+Can you fold a piece of paper in half more than 7 times?
+
+Why do we use umbrellas?
+
+*** Pattern Recognition
+
+What comes next: 2, 4, 8, 16, ?
+
+Complete the pattern: circle, triangle, circle, square, circle, ?
+
+If APPLE = 65, what does DOG equal?
+
+*** Language Understanding
+
+"The quick brown fox jumps over the lazy dog" - what's special about this sentence?
+
+Explain the joke: "Why don't scientists trust atoms? Because they make up everything!"
+
+What's the difference between "their," "there," and "they're"?
+
+*** Simple Mathematics
+
+What's 17% of 200?
+
+If a pizza has 8 slices and 3 people share it equally, how many slices does each person get?
+
+Simplify: (3 + 5) × 2 - 4
+
+*** Creative Thinking
+
+Write a 2-sentence horror story
+
+Give me 3 unusual uses for a paperclip
+
+If you were a color, what color would you be and why?
+
 *** Bad Sentence
 
-*This aint a good sentence, pleez rewrite!*
+This aint a good sentence, pleez rewrite!
 
 *** Temperature
 
-*This aint a good sentence, pleez rewrite!*
+This aint a good sentence, pleez rewrite!
 
 Temperature 0.0:
 
@@ -373,13 +189,13 @@ More casual, with a slangish alternative given.
 
 History turned on:
 
-*What is the capital of the UK?*
+What is the capital of the UK?
 
-*and of France*
+and of France
 
 Now turn off History:
 
-*and of Germany*
+and of Germany
 
 *** elisp structure to org-table
 
@@ -448,48 +264,3 @@ There is a test server written in python that can simulate many =ollama= respons
 See =server.py= and run with:
 
 ~python3 ./server.py~
-
-** ERT Unit Testing
-
-To run these tests, you'll need:
-
-1. Emacs (26.1 or higher)
-2. The main package files
-3. The test files in this directory
-
-*** Running Tests
-
-You can run all tests with (from the top level of this repo):
-
-#+begin_src bash
-make test
-#+end_src
-
-To run a specific test:
-
-#+begin_src bash
-make test-NAME
-#+end_src
-
-Replace =NAME= with the name of the test tag or test function.
-
-*** Test Files
-
-- =ollama-buddy-test.el= - Main test file containing all unit tests
-- =savehist-mock.el= - Mock implementation of savehist for testing
-
-*** Mock Setup
-
-The tests use mocks to avoid making real network calls to the Ollama server:
-
-- Network functions are mocked using =advice-add=
-- Mock data is provided for models and API responses
-- UI interactions are tested in temporary buffers
-
-*** Adding New Tests
-
-When adding new tests:
-1. Use the =ert-deftest= macro to define your test
-2. Group related tests with tags
-3. Add appropriate mocks for external dependencies
-4. Use the =ollama-buddy-test--with-mock-buffer= macro for UI tests
