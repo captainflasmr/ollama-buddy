@@ -1230,7 +1230,9 @@ When complete, CALLBACK is called with the status response and result."
         ;; Cache expired or not set - use synchronous version to refresh cache
         (when-let ((response (ollama-buddy--make-request "/api/tags" "GET")))
           (setq ollama-buddy--models-cache
-                (mapcar #'car (ollama-buddy--get-models-with-colors-from-result response))
+                (sort
+                 (mapcar #'car (ollama-buddy--get-models-with-colors-from-result response))
+                 #'string<)
                 ollama-buddy--models-cache-timestamp current-time)
           ;; Also refresh in background for next time
           (ollama-buddy--refresh-models-cache)))
@@ -1246,7 +1248,9 @@ When complete, CALLBACK is called with the status response and result."
      (unless (plist-get status :error)
        (when result
          (setq ollama-buddy--models-cache
-               (mapcar #'car (ollama-buddy--get-models-with-colors-from-result result))
+               (sort
+                (mapcar #'car (ollama-buddy--get-models-with-colors-from-result result))
+                #'string<)
                ollama-buddy--models-cache-timestamp (float-time)))))))
 
 (defun ollama-buddy--get-models-with-colors-from-result (result)
