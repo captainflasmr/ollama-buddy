@@ -2373,10 +2373,10 @@ those images will be included in the request."
          (letter-display
           (mapconcat
            (lambda (pair)
-             (format "%s=%s" (car pair) (cdr pair)))
+             (format "%s" (car pair)))
            model-alist
            ", "))
-         (prompt (format "Enter model sequence (separate with commas) - available models: %s\nSequence: " letter-display))
+         (prompt (format "Enter model sequence (separate with commas) - %s\nSequence: " letter-display))
          (input-sequence (read-string prompt))
          ;; Split by commas for clear separation
          (sequence-parts (split-string input-sequence "," t "\\s-*"))
