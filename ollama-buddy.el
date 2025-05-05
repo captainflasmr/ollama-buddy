@@ -1806,11 +1806,7 @@ Supports both single letter and prefixed multi-character model references."
                  (old-point (and window (window-point window)))
                  (at-end (and window (>= old-point (point-max))))
                  (old-window-start (and window (window-start window)))
-                 (reg-char (if ollama-buddy--multishot-sequence
-                               (if (< ollama-buddy--multishot-progress (length ollama-buddy--multishot-sequence))
-                                   (nth ollama-buddy--multishot-progress ollama-buddy--multishot-sequence)
-                                 ollama-buddy-default-register)
-                             ollama-buddy-default-register)))
+                 (reg-char ollama-buddy-default-register))
             (save-excursion
               (goto-char (point-max))
               
@@ -2313,11 +2309,8 @@ those images will be included in the request."
         ollama-buddy--multishot-prompt prompt
         ollama-buddy--multishot-progress 0)
   
-  ;; Reset registers for letter references
-  (dolist (key sequences)
-    (if (= (length key) 1)
-        (set-register (string-to-char key) "")
-      (set-register (intern key) "")))
+  ;; Reset register
+  (set-register ollama-buddy-default-register "")
   
   (setq ollama-buddy--current-request-temporary-model ollama-buddy--current-model)
   (ollama-buddy--send-next-in-sequence))

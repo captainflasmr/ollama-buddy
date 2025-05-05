@@ -212,11 +212,7 @@ Use nil for API default behavior (adaptive)."
                                      (ollama-buddy--md-to-org-convert-region start-point (point-max)))
                                    
                                    ;; Write to register
-                                   (let* ((reg-char (if ollama-buddy--multishot-sequence
-                                                        (if (< ollama-buddy--multishot-progress (length ollama-buddy--multishot-sequence))
-                                                            (aref ollama-buddy--multishot-sequence ollama-buddy--multishot-progress)
-                                                          ollama-buddy-default-register)
-                                                      ollama-buddy-default-register))
+                                   (let* ((reg-char ollama-buddy-default-register)
                                           (current (get-register reg-char))
                                           (new-content (concat (if (stringp current) current "") content)))
                                      (set-register reg-char new-content))

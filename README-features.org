@@ -8,6 +8,15 @@
 
 * Features as they come in
 
+** <2025-05-05> *0.9.44*
+
+- Sorted model names alphabetically in intro message
+- Removed multishot writing to register name letters
+
+For some reason, when I moved the .ollama folder to an external disk, the models returned with api/tags were inconsistent, which meant it broke consistent letter assignment. I'm not sure why this happened, but it is probably sensible to sort the models alphabetically anyway, as this has the benefit of naturally grouping together model families.
+
+I also removed the multishot feature of writing to the associated model letter. Now that I have to accommodate more than 26 models, incorporating them into the single-letter Emacs register system is all but impossible. I suspect this feature was not much used, and if you think about it, it wouldn't have worked anyway with multiple model shots, as the register letter associated with the model would just show the most recent response. Due to these factors, I think I should remove this feature. If someone wants it back, I will probably have to design a bespoke version fully incorporated into the ollama-buddy system, as I can't think of any other Emacs mechanism that could accommodate this.
+
 ** <2025-05-05> *0.9.43*
 
 Fix model reference error exceeding 26 models #15
