@@ -1809,7 +1809,7 @@ Clearly distinguishes between single-letter and prefixed multi-letter references
                  (old-window-start (and window (window-start window)))
                  (reg-char (if ollama-buddy--multishot-sequence
                                (if (< ollama-buddy--multishot-progress (length ollama-buddy--multishot-sequence))
-                                   (aref ollama-buddy--multishot-sequence ollama-buddy--multishot-progress)
+                                   (nth ollama-buddy--multishot-progress ollama-buddy--multishot-sequence)
                                  ollama-buddy-default-register)
                              ollama-buddy-default-register)))
             (save-excursion
@@ -1980,9 +1980,6 @@ Clearly distinguishes between single-letter and prefixed multi-letter references
                 (if ollama-buddy--multishot-sequence
                     (progn
                       ;; Increment progress
-                      (setq ollama-buddy--multishot-progress
-                            (1+ ollama-buddy--multishot-progress))
-                      ;; Check if there are more models to process
                       (if (< ollama-buddy--multishot-progress
                              (length ollama-buddy--multishot-sequence))
                           (progn
@@ -2335,7 +2332,8 @@ those images will be included in the request."
     ;; Get the next model key from the list
     (let* ((current-key (nth ollama-buddy--multishot-progress ollama-buddy--multishot-sequence))
            (model (cdr (assoc current-key ollama-buddy--model-letters))))
-      
+      (prin1 "################1")
+      (prin1 ollama-buddy--multishot-progress)
       (when model
         ;; Set current model and prepare prompt
         (setq ollama-buddy--current-model model)
