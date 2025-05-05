@@ -1466,7 +1466,8 @@ With prefix argument ALL-MODELS, clear history for all models."
               "\n\n"))))
 
 (defun ollama-buddy--apply-model-colors-to-buffer ()
-  "Apply color overlays to models in the buffer after text insertion."
+  "Apply color overlays to models in the buffer after text insertion.
+Supports both single letter and prefixed multi-character model references."
   (save-excursion
     ;; First, find the Available Models section
     (goto-char (point-max))
@@ -1481,9 +1482,9 @@ With prefix argument ALL-MODELS, clear history for all models."
         
         ;; Iterate through the model letters section
         (while (< (point) models-end)
-          ;; Look for a pattern that captures both columns in one regex
-          ;; Format: (a) model1  (b) model2
-          (when (looking-at "\\s-*(\\([a-z]\\)) \\([^ \t\n]+\\)\\(.*?(\\([a-z]\\)) \\([^ \t\n]+\\)\\)?")
+          ;; Updated regex pattern to capture both forms of model references
+          ;; Format: (a) model1  (b) model2  or  (@a) model1  (@b) model2
+          (when (looking-at "\\s-*(\\(@?[a-z]\\)) \\([^ \t\n]+\\)\\(.*?(\\(@?[a-z]\\)) \\([^ \t\n]+\\)\\)?")
             ;; First column
             (let* ((model1 (match-string 2))
                    (model1-start (match-beginning 2))
@@ -1508,7 +1509,8 @@ With prefix argument ALL-MODELS, clear history for all models."
           (forward-line 1))))))
 
 (defun ollama-buddy--format-models-with-letters ()
-  "Format models with letter assignments for display."
+  "Format models with letter assignments for display.
+Clearly distinguishes between single-letter and prefixed multi-letter references."
   (when-let* ((models-alist ollama-buddy--model-letters)
               (total (length models-alist))
               (rows (ceiling (/ total 2.0))))
@@ -1523,18 +1525,18 @@ With prefix argument ALL-MODELS, clear history for all models."
                              (mapcar (lambda (pair)
                                        (length (cdr pair)))
                                      models-alist)))
-           (format-str (format "  (%%c) %%-%ds  %%s" max-width)))
+           (format-str (format "  (%%s) %%-%ds  %%s" max-width)))
       (concat (mapconcat
                (lambda (row)
                  (format format-str
-                         (caar row)
+                         (car (car row))
                          (if (cdar row)
                              (let ((color (ollama-buddy--get-model-color (cdar row))))
                                (propertize (cdar row) 'face `(:foreground ,color)))
                            "")
                          (if (cdr row)
                              (let ((color (ollama-buddy--get-model-color (cdadr row))))
-                               (format "(%c) %s" (caadr row)
+                               (format "(%s) %s" (caadr row)
                                        (propertize (cdadr row) 'face `(:foreground ,color))))
                            "")))
                formatted-pairs
@@ -2008,6 +2010,7 @@ With prefix argument ALL-MODELS, clear history for all models."
               (msg (format "\n\n[Stream %s]" status)))
     ;; Clean up multishot variables but ensure we don't create out-of-range conditions
     (setq ollama-buddy--multishot-prompt nil)
+    
     ;; Only set sequence to nil if we're done with it or interrupted
     (when (or (string= status "Interrupted")
               (not ollama-buddy--multishot-sequence)
@@ -2020,7 +2023,7 @@ With prefix argument ALL-MODELS, clear history for all models."
       (cancel-timer ollama-buddy--token-update-timer)
       (setq ollama-buddy--token-update-timer nil))
 
-    ;; reset the current model if from external
+    ;; Reset the current model if from external
     (when ollama-buddy--current-request-temporary-model
       (setq ollama-buddy--current-model ollama-buddy--current-request-temporary-model)
       (setq ollama-buddy--current-request-temporary-model nil))
@@ -2307,16 +2310,19 @@ those images will be included in the request."
          (delete-process ollama-buddy--active-process))
        (error "Failed to send request to Ollama: %s" (error-message-string err))))))
 
-(defun ollama-buddy--multishot-send (prompt sequence)
-  "Send PROMPT to multiple models specified by SEQUENCE of letters."
-  ;; Store sequence and prompt for use across multiple calls
-  (setq ollama-buddy--multishot-sequence sequence
+(defun ollama-buddy--multishot-send (prompt sequences)
+  "Send PROMPT to multiple models specified by SEQUENCES list of model references."
+  ;; Store sequences and prompt for use across multiple calls
+  (setq ollama-buddy--multishot-sequence sequences
         ollama-buddy--multishot-prompt prompt
         ollama-buddy--multishot-progress 0)
-  ;; reset registers
-  (mapc (lambda (ch)
-          (set-register ch ""))
-        sequence)
+  
+  ;; Reset registers for letter references
+  (dolist (key sequences)
+    (if (= (length key) 1)
+        (set-register (string-to-char key) "")
+      (set-register (intern key) "")))
+  
   (setq ollama-buddy--current-request-temporary-model ollama-buddy--current-model)
   (ollama-buddy--send-next-in-sequence))
 
@@ -2324,14 +2330,16 @@ those images will be included in the request."
   "Send prompt to next model in the multishot sequence."
   (when (and ollama-buddy--multishot-sequence
              ollama-buddy--multishot-prompt
-             (< ollama-buddy--multishot-progress
-                (length ollama-buddy--multishot-sequence)))
-    (let* ((current-letter (aref ollama-buddy--multishot-sequence
-                                 ollama-buddy--multishot-progress))
-           (model (cdr (assoc current-letter ollama-buddy--model-letters))))
+             (< ollama-buddy--multishot-progress (length ollama-buddy--multishot-sequence)))
+    
+    ;; Get the next model key from the list
+    (let* ((current-key (nth ollama-buddy--multishot-progress ollama-buddy--multishot-sequence))
+           (model (cdr (assoc current-key ollama-buddy--model-letters))))
+      
       (when model
+        ;; Set current model and prepare prompt
         (setq ollama-buddy--current-model model)
-        (if (eq ollama-buddy--multishot-progress 0)
+        (if (= ollama-buddy--multishot-progress 0) ;; First model
             (ollama-buddy--prepare-prompt-area t t)
           (progn
             (ollama-buddy--prepare-prompt-area)
@@ -2339,6 +2347,12 @@ those images will be included in the request."
               (with-current-buffer buf
                 (let ((inhibit-read-only t))
                   (insert ollama-buddy--multishot-prompt))))))
+        
+        ;; Increment progress counter BEFORE sending the prompt
+        ;; This is crucial to avoid access errors during the stream filter
+        (setq ollama-buddy--multishot-progress (1+ ollama-buddy--multishot-progress))
+        
+        ;; Send the prompt
         (ollama-buddy--send ollama-buddy--multishot-prompt model)))))
 
 (defun ollama-buddy--multishot-prepare ()
@@ -2354,22 +2368,39 @@ those images will be included in the request."
     prompt-text))
 
 (defun ollama-buddy--multishot-prompt ()
-  "Prompt for and execute multishot sequence."
+  "Prompt for and execute multishot sequence using comma separation."
   (interactive)
   (let* ((prompt-text (ollama-buddy--multishot-prepare))
-         (available-letters (mapcar #'car ollama-buddy--model-letters))
-         (prompt (concat "Enter model sequence - available ["
-                         (apply #'string available-letters) "]: "))
-         (sequence (read-string prompt))
-         (valid-sequence (cl-remove-if-not
-                          (lambda (c) (memq c available-letters))
-                          (string-to-list sequence))))
+         (model-alist ollama-buddy--model-letters)
+         (letter-display
+          (mapconcat
+           (lambda (pair)
+             (format "%s=%s" (car pair) (cdr pair)))
+           model-alist
+           ", "))
+         (prompt (format "Enter model sequence (separate with commas) - available models: %s\nSequence: " letter-display))
+         (input-sequence (read-string prompt))
+         ;; Split by commas for clear separation
+         (sequence-parts (split-string input-sequence "," t "\\s-*"))
+         (valid-sequences '()))
     
-    (when valid-sequence
-      (let ((sequence-str (apply #'string valid-sequence)))
+    ;; Process each part of the input sequence
+    (dolist (part sequence-parts)
+      (let ((trimmed (string-trim part)))
+        (when (member trimmed (mapcar 'car model-alist))
+          (push trimmed valid-sequences))))
+    
+    ;; Reverse the list since we pushed elements
+    (setq valid-sequences (nreverse valid-sequences))
+    
+    (when valid-sequences
+      (let ((model-names (mapcar (lambda (key) (cdr (assoc key model-alist))) valid-sequences)))
         (message "Running multishot with %d models: %s"
-                 (length valid-sequence) sequence-str)
-        (ollama-buddy--multishot-send prompt-text sequence-str)))))
+                 (length valid-sequences)
+                 (mapconcat 'identity model-names ", "))
+        
+        ;; Start the multishot sequence
+        (ollama-buddy--multishot-send prompt-text valid-sequences)))))
 
 (defun ollama-buddy--cycle-prompt-history (direction)
   "Cycle through prompt history in DIRECTION (1=forward, -1=backward)."
@@ -2408,7 +2439,7 @@ those images will be included in the request."
 
 ;;;###autoload
 (defun ollama-buddy-menu ()
-  "Display Ollama Buddy menu."
+  "Display Ollama Buddy menu with support for prefixed model references."
   (interactive)
   (let ((ollama-status (ollama-buddy--check-status))
         (inhibit-message t)
@@ -2432,7 +2463,10 @@ those images will be included in the request."
                                ollama-buddy-command-definitions))
                 (formatted-items
                  (mapcar (lambda (item)
-                           (format "[%c] %s" (car item) (cadr item)))
+                           ;; Updated format to handle characters vs. strings
+                           (if (stringp (car item))
+                               (format "[%s] %s" (car item) (cadr item))
+                             (format "[%c] %s" (car item) (cadr item))))
                          items))
                 (total (length formatted-items))
                 (rows (ceiling (/ total (float ollama-buddy-menu-columns))))

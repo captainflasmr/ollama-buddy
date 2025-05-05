@@ -2190,11 +2190,44 @@ Let's compare ollama-buddy to the existing solutions:
 
 Report issues on the [[https://github.com/captainflasmr/ollama-buddy/issues][GitHub Issues page]]
 
-** DONE 001.1 - Toggle reasoning/chain of thought
-CLOSED: [2025-04-26 Sat 08:12]
+** DOING Error when model numbers is more than alphabet letters #15
 
-** DONE 001.2 - Toggle parameters display in chat buffer
-CLOSED: [2025-04-26 Sat 08:12]
+If the local ollama server has more than 26 models the create-intro-message function produce an error due to the fact that alphabet letter are just 26.
+
+** DONE Not possible to pass path to image? #14
+
+in the ollama cli when using models with vision support (ex. ollama run gemma3:4b) you can say something like "extract the text from this image: /home/user/Downloads/screenshot.png") then the ollama cli will detect this valid path and pass it to the gemma model as a file parameter somehow and the model will then be able to analize the actual file, when using ollama-buddy this is not possible
+
+** DONE Role stuff is difficult to understand #13
+
+I am simply trying to add a new role which should by default add the missing turkish letters to any of the paragraph of text I send to it. However, ollama-buddy's Role stuff is quite confusing to me. How do I set it up? I see no explanation about what I am doing when I try to add a role like that.
+
+** DONE Getting constant lisp nesting exceeds errors in latest versions #12
+
+I just updated ollama-buddy's source to its latest version, here's my use-package config:
+
+#+begin_src elisp
+(use-package ollama-buddy
+  :if (file-directory-p "/home/user/.local/gits/emacs/ollama-buddy")
+  :vc (:url "file:///home/user/.local/gits/emacs/ollama-buddy"
+			:rev "870233e5d83da133b42fa7e9f57fcd6909f74502")
+  :config
+  (setq ollama-buddy-current-model "gemma3:12b-it-qat")
+  (setq ollama-buddy-menu-columns 4)
+  (setq ollama-buddy-host "localhost")
+  (setq ollama-buddy-port 11434)
+  (setq ollama-buddy-connection-check-interval 1))
+#+end_src
+
+After byte-compiling, I cannot use ollama-buddy. When I send a prompt to my ollama backend, I constantly get Debugger entered--Lisp error: (excessive-lisp-nesting 1601). Older versions of ollama-buddy have been working without such an error.
+
+** DONE stopping the thinking text output #11
+
+Thanks for the package, I'm slowly getting into the grove of using it regularly.
+
+I have a laptop without graphics cards for LLM work. I get about 2-3 tokens/sec. The newer models seem to be doing reasoning/thinking text output that are huge and takes up time. Is there a way to toggle it off during the session or through config on a per model basis. Either as a binary switch or a config parameter.
+
+While at it, how do I set the context length to larger sizes than the default one and how do I check if it's respected? On a per model basis, when you report the token stats, would you consider plugging in info about temp, top-k, context length that was active during the session?
 
 * Contributing
 

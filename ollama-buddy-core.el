@@ -624,18 +624,43 @@ PROMPT and SPECIFIED-MODEL are passed to the handler or original function."
 (advice-add 'ollama-buddy--send :around #'ollama-buddy--dispatch-to-handler)
 
 (defun ollama-buddy--assign-model-letters ()
-  "Assign letters to available models and update the intro message."
-  (setq ollama-buddy--model-letters
-        (cl-loop for model in (ollama-buddy--get-models)
-                 for letter across "abcdefghijklmnopqrstuvwxyz"
-                 collect (cons letter model))))
+  "Assign letters to available models and update the intro message.
+This supports more than 26 models by using single letters for the first 26
+and prefixed combinations like '@a', '@b', etc. for additional models."
+  (let* ((models (ollama-buddy--get-models))
+         (model-count (length models))
+         (alphabet "abcdefghijklmnopqrstuvwxyz")
+         (alphabet-length (length alphabet))
+         letter-alist)
+    
+    ;; First assign single letters a-z for the first 26 models (or fewer)
+    (dotimes (i (min model-count alphabet-length))
+      (push (cons (char-to-string (aref alphabet i))
+                  (nth i models))
+            letter-alist))
+    
+    ;; For additional models beyond 26, use prefixed combinations like '@a', '@b', etc.
+    (when (> model-count alphabet-length)
+      (let ((remaining-models (nthcdr alphabet-length models))
+            (index 0))
+        
+        (dolist (model remaining-models)
+          (when (< index alphabet-length) ;; Limit to 26 more models for now (can be expanded)
+            ;; Create a prefixed letter
+            (let ((letter-combo (concat "@" (char-to-string (aref alphabet index)))))
+              (push (cons letter-combo model) letter-alist)
+              (setq index (1+ index)))))))
+    
+    ;; Store the letter assignments
+    (setq ollama-buddy--model-letters (nreverse letter-alist))))
 
 (defun ollama-buddy--get-model-letter (model-name)
   "Return the letter assigned to MODEL-NAME from `ollama-buddy--model-letters`."
   (car (rassoc model-name ollama-buddy--model-letters)))
 
 (defun ollama-buddy--create-intro-message ()
-  "Create welcome message with model management capabilities in org format."
+  "Create welcome message with model management capabilities in org format.
+Supports both single and prefixed multi-character model references."
   (ollama-buddy--assign-model-letters)
   (let* ((available-models (when (ollama-buddy--ollama-running)
                              (ollama-buddy--get-models)))
@@ -701,7 +726,7 @@ PROMPT and SPECIFIED-MODEL are passed to the handler or original function."
                 (let ((model-letter (ollama-buddy--get-model-letter model)))
                   (concat
                    (format
-                    "(%c) %s [[elisp:(ollama-buddy-select-model \"%s\")][Select]] "
+                    "(%s) %s [[elisp:(ollama-buddy-select-model \"%s\")][Select]] "
                     model-letter model model)
                    (format
                     "[[elisp:(ollama-buddy-show-raw-model-info \"%s\")][Info]] " model)
@@ -1496,16 +1521,33 @@ ACTUAL-MODEL is the model being used instead."
                            'face '(:foreground "orange" :weight bold))))))))
 
 (defun ollama-buddy--update-multishot-status ()
-  "Update status line to show multishot progress."
-  (if ollama-buddy--multishot-sequence
-      (let* ((completed (upcase (substring ollama-buddy--multishot-sequence
-                                           0 ollama-buddy--multishot-progress)))
-             (remaining (substring ollama-buddy--multishot-sequence
-                                   ollama-buddy--multishot-progress)))
-        (concat (propertize " Multishot: " 'face '(:weight bold))
-                (propertize completed 'face '(:weight bold))
-                (propertize remaining 'face '(:weight normal))))
-    ""))
+  "Update status line to show multishot progress.
+Works with the list-based multishot sequence without using array operations."
+  (if (not ollama-buddy--multishot-sequence)
+      ""
+    (let ((completed '())
+          (remaining '())
+          (i 0))
+      ;; Build completed and remaining lists manually
+      (dolist (key ollama-buddy--multishot-sequence)
+        (if (< i ollama-buddy--multishot-progress)
+            (push key completed)
+          (push key remaining))
+        (setq i (1+ i)))
+      
+      ;; Reverse the lists since we pushed elements
+      (setq completed (nreverse completed))
+      (setq remaining (nreverse remaining))
+      
+      ;; Format the status display
+      (concat (propertize " Multishot: " 'face '(:weight bold))
+              (if completed
+                  (propertize (mapconcat 'upcase completed ",") 'face '(:weight bold))
+                "")
+              (when remaining
+                (concat (if completed "," "")
+                        (propertize (mapconcat 'identity remaining ",") 
+                                    'face '(:weight normal))))))))
 
 ;; Command handling functions
 (defun ollama-buddy--display-system-prompt (system-prompt &optional timeout)
