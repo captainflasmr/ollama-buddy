@@ -1,0 +1,246 @@
+#+title: Ollama Buddy: Code Review
+#+author: James Dyer
+#+email: captainflasmr@gmail.com
+#+language: en
+#+options: ':t toc:nil author:nil email:nil num:nil title:nil
+#+todo: TODO DOING | DONE
+#+startup: showall
+
+* General Observations
+
+** 1. Code Organization and Structure
+
+There are several areas that could be improved:
+
+1. *Function Naming Conventions*
+   - Many functions have inconsistent prefixes (=ollama-buddy--= vs =ollama-buddy-=)
+   - The distinction between private and public functions is sometimes blurred
+
+2. *Redundant Code Patterns*
+   - Several utility functions perform similar operations with slight variations
+   - There's duplication in model handling logic
+
+3. *Error Handling and Robustness*
+   - Error handling is inconsistent across network requests
+   - Some functions don't properly handle edge cases
+
+Let me break this down into specific improvement areas:
+
+* Specific Improvement Areas
+
+** 1. Cache Management
+
+The caching system is implemented multiple times with similar patterns:
+
+#+begin_src elisp
+(defun ollama-buddy--get-models ()
+  "Get available Ollama models with caching."
+  (when (ollama-buddy--ollama-running)
+    (let ((current-time (float-time)))
+      (when (or (null ollama-buddy--models-cache-timestamp)
+                (> (- current-time ollama-buddy--models-cache-timestamp)
+                   ollama-buddy--models-cache-ttl))
+        ;; Cache expired or not set - use synchronous version to refresh cache
+        (when-let ((response (ollama-buddy--make-request "/api/tags" "GET")))
+          (setq ollama-buddy--models-cache
+                (sort
+                 (mapcar #'car (ollama-buddy--get-models-with-colors-from-result response))
+                 #'string<)
+                ollama-buddy--models-cache-timestamp current-time)
+          ;; Also refresh in background for next time
+          (ollama-buddy--refresh-models-cache)))
+      ollama-buddy--models-cache)))
+#+end_src
+
+Similar patterns exist for =ollama-buddy--get-running-models=, =ollama-buddy--get-models-with-colors=, etc. 
+
+*Recommendation*: Create a generic caching mechanism that can be reused for different types of data:
+
+#+begin_src elisp
+(defun ollama-buddy--with-cache (cache-var timestamp-var ttl fetch-func)
+  "Generic function for cached data retrieval."
+  (let ((current-time (float-time)))
+    (when (or (null (symbol-value timestamp-var))
+              (> (- current-time (symbol-value timestamp-var)) ttl))
+      (when-let ((data (funcall fetch-func)))
+        (set cache-var data)
+        (set timestamp-var current-time)))
+    (symbol-value cache-var)))
+#+end_src
+
+** 2. Asynchronous HTTP Requests
+
+The current implementation mixes synchronous and asynchronous HTTP requests, which can lead to UI freezes:
+
+#+begin_src elisp
+(defun ollama-buddy--make-request (endpoint method &optional payload)
+  "Generic request function for ENDPOINT with METHOD and optional PAYLOAD."
+  (when (ollama-buddy--ollama-running)
+    (let ((url-request-method method)
+          (url-request-extra-headers '(("Content-Type" . "application/json")
+                                       ("Connection" . "close")))
+          (url (format "http://%s:%d%s"
+                       ollama-buddy-host ollama-buddy-port endpoint)))
+      (with-temp-buffer
+        (if payload
+            (let ((url-request-data (encode-coding-string payload 'utf-8)))
+              (url-insert-file-contents url))
+          (url-insert-file-contents url))
+        (when (not (string-empty-p (buffer-string)))
+          (json-read-from-string (buffer-string)))))))
+#+end_src
+
+*Recommendation*: Use asynchronous requests consistently throughout the codebase with proper callbacks.
+
+** 3. Redundant String Processing
+
+Several functions manipulate strings in similar ways:
+
+#+begin_src elisp
+(defun ollama-buddy-fix-encoding-issues (string)
+  "Fix common encoding issues with STRING."
+  (let* ((string (replace-regexp-in-string "â" ", " string))      ;; em dash
+         (string (replace-regexp-in-string "" "" string)) ;; alternative em dash
+         ;; many more replacements...
+         )
+    string))
+#+end_src
+
+*Recommendation*: Create a single table-driven approach for string replacements:
+
+#+begin_src elisp
+(defvar ollama-buddy--encoding-replacements
+  '(("â" . ", ")
+    ("" . "")
+    ;; etc.
+    ))
+
+(defun ollama-buddy-fix-encoding-issues (string)
+  "Fix common encoding issues with STRING using replacement table."
+  (let ((result string))
+    (dolist (pair ollama-buddy--encoding-replacements result)
+      (setq result (replace-regexp-in-string (car pair) (cdr pair) result)))))
+#+end_src
+
+** 4. Global State Management
+
+The codebase uses many global variables, which can lead to hard-to-debug issues:
+
+#+begin_src elisp
+(defvar ollama-buddy--active-process nil)
+(defvar ollama-buddy--current-model nil)
+(defvar ollama-buddy--multishot-sequence nil)
+;; many more...
+#+end_src
+
+*Recommendation*: Group related state variables into structures or objects, and consider buffer-local variables for buffer-specific state:
+
+#+begin_src elisp
+(defvar-local ollama-buddy--buffer-state 
+  (list :active-process nil
+        :current-model nil
+        :multishot-sequence nil))
+
+(defun ollama-buddy--get-state (key)
+  (plist-get ollama-buddy--buffer-state key))
+
+(defun ollama-buddy--set-state (key value)
+  (setq ollama-buddy--buffer-state 
+        (plist-put ollama-buddy--buffer-state key value)))
+#+end_src
+
+** 5. Markdown to Org Conversion
+
+The Markdown to Org conversion function is quite complex and handles many cases separately:
+
+#+begin_src elisp
+(defun ollama-buddy--md-to-org-convert-region (start end)
+  "Convert the region from START to END from Markdown to Org-mode format."
+  (save-excursion
+    (save-restriction
+      (narrow-to-region start end)
+      ;; Many regex replacements...
+      )))
+#+end_src
+
+*Recommendation*: Consider using an existing Markdown to Org converter like =pandoc= through a shell command, or refactor the current implementation to use a more declarative approach with a list of transformation rules.
+
+** 6. Redundant Color Handling
+
+There are multiple functions for calculating and managing colors:
+
+#+begin_src elisp
+(defun ollama-buddy--color-contrast (color1 color2) ...)
+(defun ollama-buddy--relative-luminance (rgb) ...)
+(defun ollama-buddy--hash-string-to-color (str) ...)
+#+end_src
+
+*Recommendation*: Refactor into a more cohesive color management system, possibly as a separate module.
+
+** 7. Performance Concerns
+
+Several operations could be expensive, especially in the UI rendering paths:
+
+#+begin_src elisp
+(defun ollama-buddy--update-status (status &optional original-model actual-model)
+  ;; Complex string formatting and calculations in UI update path
+  ...)
+#+end_src
+
+*Recommendation*: Optimize frequently called UI functions, defer calculations where possible, and consider using idle timers for non-critical updates.
+
+** 8. Repetitive Buffer Management
+
+Buffer handling is repeated throughout the codebase:
+
+#+begin_src elisp
+(with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+  (let ((inhibit-read-only t))
+    ;; Buffer operations
+    ))
+#+end_src
+
+*Recommendation*: Create helper functions for common buffer operations:
+
+#+begin_src elisp
+(defun ollama-buddy--with-chat-buffer (&rest body)
+  "Execute BODY in the chat buffer with read-only inhibited."
+  (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+    (let ((inhibit-read-only t))
+      (progn ,@body))))
+#+end_src
+
+** 9. Error Handling
+
+Error handling is sometimes inconsistent:
+
+#+begin_src elisp
+(condition-case err
+    (process-send-string
+     ollama-buddy--active-process
+     (concat "POST /api/chat HTTP/1.1\r\n"
+             ;; Headers and payload
+             ))
+  (error
+   (ollama-buddy--update-status "OFFLINE - Send failed")
+   (when (and ollama-buddy--active-process
+              (process-live-p ollama-buddy--active-process))
+     (delete-process ollama-buddy--active-process))
+   (error "Failed to send request to Ollama: %s" (error-message-string err))))
+#+end_src
+
+*Recommendation*: Standardize error handling patterns, possibly with macros for common patterns.
+
+* Summary of Recommendations
+
+1. *Implement a generic caching mechanism* to reduce code duplication
+2. *Use asynchronous requests consistently* throughout the codebase
+3. *Refactor string processing* to be more table-driven
+4. *Improve state management* by grouping related variables
+5. *Consider alternative approaches* for complex transformations like Markdown to Org
+6. *Create a cohesive color management system*
+7. *Optimize UI update functions* for better performance
+8. *Create helpers for common buffer operations*
+9. *Standardize error handling patterns*
+
+These improvements would make the codebase more maintainable, efficient, and robust without changing its core functionality. The package already has a good structure, but these refinements would help it scale better and be easier to maintain in the long run.
