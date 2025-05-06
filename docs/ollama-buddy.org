@@ -1074,13 +1074,11 @@ simultaneously:
 
 1. Type your prompt in the chat buffer
 2. Press =C-c M=
-3. Enter the sequence of model letters you want to use (e.g., "abc" to
+3. Enter the sequence of model letters you want to use (e.g., "a,b,c" to
    use models a, b, and c)
-4. Watch as Ollama Buddy processes your request with each model in
+4. Note that each item should be separated with a comma
+5. Watch as Ollama Buddy processes your request with each model in
    sequence
-
-The responses are stored in Emacs registers corresponding to the model
-letters for easy comparison.
 
 --------------
 

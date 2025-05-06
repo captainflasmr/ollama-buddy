@@ -1349,15 +1349,13 @@ Real-time token tracking helps you monitor usage and performance:
 With the multishot mode, you can send a prompt to multiple models in sequence and compare their responses:
 
 - Models are assigned letters for quick selection (e.g., =(a) mistral=, =(b) gemini=)
-- Use =C-c l= to initiate a multishot sequence
-- Responses are stored in registers named after the assigned letters
+- Use =C-c M= to initiate a multishot sequence
 - Status updates track progress during multishot execution
 
 To use multishot mode:
-1. =C-c l= to start a multishot session
+1. =C-c M= to start a multishot session
 2. Type a sequence of model letters (e.g., =abc= to use models a, b, and c)
 3. The selected models process the prompt one by one
-4. Responses are saved to registers for later recall
 
 ** Role-Based Presets
 

@@ -683,11 +683,10 @@ Multishot mode allows you to send the same prompt to multiple models simultaneou
 @enumerate
 @item Type your prompt in the chat buffer
 @item Press @code{C-c M}
-@item Enter the sequence of model letters you want to use (e.g., "abc" to use models a, b, and c)
+@item Enter the sequence of model letters you want to use (e.g., "a,b,c" to use models a, b, and c)
+@item Note that each item should be separated with a comma
 @item Watch as Ollama Buddy processes your request with each model in sequence
 @end enumerate
-
-The responses are stored in Emacs registers corresponding to the model letters for easy comparison.
 
 @node Parameter Control
 @chapter Parameter Control

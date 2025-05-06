@@ -625,13 +625,11 @@ simultaneously:
 
   1. Type your prompt in the chat buffer
   2. Press ‘C-c M’
-  3. Enter the sequence of model letters you want to use (e.g., "abc" to
-     use models a, b, and c)
-  4. Watch as Ollama Buddy processes your request with each model in
+  3. Enter the sequence of model letters you want to use (e.g., "a,b,c"
+     to use models a, b, and c)
+  4. Note that each item should be separated with a comma
+  5. Watch as Ollama Buddy processes your request with each model in
      sequence
-
-   The responses are stored in Emacs registers corresponding to the
-model letters for easy comparison.
 
 
 File: ollama-buddy.info,  Node: Parameter Control,  Next: Session Management,  Prev: Working with Models,  Up: Top
@@ -1976,18 +1974,18 @@ Node: Quick Start10458
 Node: Core Features12086
 Node: Chat Interface14419
 Node: Working with Models17103
-Node: Parameter Control19797
-Node: Session Management22187
-Node: Roles and Commands24181
-Node: Fabric Pattern Integration35758
-Node: Awesome ChatGPT Prompts37985
-Node: ChatGPT and Claude Support41845
-Node: Advanced Usage45300
-Node: API Reference47998
-Node: FAQ51768
-Node: Troubleshooting55700
-Node: Contributing58205
-Node: Index60162
+Node: Parameter Control19753
+Node: Session Management22143
+Node: Roles and Commands24137
+Node: Fabric Pattern Integration35714
+Node: Awesome ChatGPT Prompts37941
+Node: ChatGPT and Claude Support41801
+Node: Advanced Usage45256
+Node: API Reference47954
+Node: FAQ51724
+Node: Troubleshooting55656
+Node: Contributing58161
+Node: Index60118
 
 End Tag Table
 

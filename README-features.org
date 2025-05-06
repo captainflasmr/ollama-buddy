@@ -1395,11 +1395,10 @@ Added multishot execution with model selection  (See multishot section for descr
 
 - Assign letters to models for quick selection
 - Implement multishot mode for sequential requests to multiple models
-- Store responses per model in registers named after assigned letters
 - Display multishot progress in status
-- Bind `C-c C-l` to trigger multishot prompt
+- Bind `C-c M` to trigger multishot prompt
 
-With the new *multishot mode*, you can now send a prompt to multiple models in sequence, and compare their responses, the results are also available in named registers.
+With the new *multishot mode*, you can now send a prompt to multiple models in sequence, and compare their responses.
 
 *Key Features*
 
@@ -1413,7 +1412,6 @@ Ever wondered how different models would answer the same question? With *Multish
 
 - Send your prompt to a sequence of models in one shot.  
 - Track progress as responses come in.  
-- Store each model’s response in a *register*, making it easy to reference later, each assigned model letter corresponds to the named register.
 
 *3. Status Updates*
 
@@ -1428,7 +1426,6 @@ When running a multishot execution, the status now updates dynamically:
 1. *=C-c C-l=* to start a multishot session in the chat buffer.
 2. Type a sequence of model letters (e.g., =abc= to use models =mistral=, =gemini=, and =llama=).  
 3. The selected models will process the prompt *one by one*.  
-4. The responses will be saved to registers of the same named letter for recalling later.
   
 ** <2025-02-19> *0.2.0*
 
