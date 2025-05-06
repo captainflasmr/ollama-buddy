@@ -18,6 +18,7 @@
 (defvar ollama-buddy--current-model nil "Timer for checking Ollama connection status.")
 (defvar ollama-buddy--chat-buffer "*Ollama Buddy Chat*" "Chat interaction buffer.")
 (defvar ollama-buddy--active-process nil "Active Ollama process.")
+(defvar ollama-buddy--prompt-history nil "History of prompts used in ollama-buddy.")
 
 (defun ollama-buddy--add-to-history (role content)
   "Add message with ROLE and CONTENT to conversation history."
@@ -98,8 +99,8 @@
   (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
     (when (= (buffer-size) 0)
       (ollama-buddy-mode 1)
-      (insert "Commands:\n\nSend   : C-c C-c\nCancel : C-c k\nModel  : C-c m\n\n")
-      (insert "Models Available:\n\n" (mapconcat 'identity (ollama-buddy--get-models) "\n"))
+      (insert "Send   : C-c C-c\nCancel : C-c C-k\nModel  : C-c m\n\n")
+      (insert (mapconcat 'identity (ollama-buddy--get-models) "\n"))
       (ollama-buddy--show-prompt))
     (ollama-buddy--update-status "Idle"))
   (goto-char (point-max)))
@@ -107,6 +108,12 @@
 (defun ollama-buddy--show-prompt ()
   "Show the prompt with optionally a MODEL."
   (interactive)
+  (when (not ollama-buddy-default-model)
+    ;; just get the first model
+    (let ((model (car (ollama-buddy--get-models))))
+      (setq ollama-buddy--current-model model)
+      (setq ollama-buddy-default-model model)
+      (insert (format "\n\n* NO DEFAULT MODEL : Using best guess : %s" model))))
   (let* ((model (or ollama-buddy--current-model ollama-buddy-default-model "Default:latest")))
     (insert (format "\n\n%s\n\n%s %s"
                     (propertize "------------------" 'face '(:inherit bold))
@@ -210,7 +217,7 @@
 (defvar ollama-buddy-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-c") #'ollama-buddy--send-prompt)
-    (define-key map (kbd "C-c k") #'ollama-buddy--cancel-request)
+    (define-key map (kbd "C-c C-k") #'ollama-buddy--cancel-request)
     (define-key map (kbd "C-c m") #'ollama-buddy--swap-model)
     map)
   "Keymap for ollama-buddy mode.")
