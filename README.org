@@ -2203,7 +2203,7 @@ Let's compare ollama-buddy to the existing solutions:
 
 Report issues on the [[https://github.com/captainflasmr/ollama-buddy/issues][GitHub Issues page]]
 
-** DOING Error when model numbers is more than alphabet letters #15
+** DONE Error when model numbers is more than alphabet letters #15
 
 If the local ollama server has more than 26 models the create-intro-message function produce an error due to the fact that alphabet letter are just 26.
 
@@ -2233,6 +2233,10 @@ I just updated ollama-buddy's source to its latest version, here's my use-packag
 #+end_src
 
 After byte-compiling, I cannot use ollama-buddy. When I send a prompt to my ollama backend, I constantly get Debugger entered--Lisp error: (excessive-lisp-nesting 1601). Older versions of ollama-buddy have been working without such an error.
+
+** DONE stopping the thinking text output #11 #2
+
+As for context size, all I want the model to report it's max size it can handle, what was the context size received, what it considered as input context, what it dropped and output context size for each call. Visually, all I was want is red, green amber colouring to know where it cut off(red), was ok(green) or slightly exceeded the context size(amber). whatever the model reports on the metrics(if at all, it does track that on a per API call)
 
 ** DONE stopping the thinking text output #11
 
