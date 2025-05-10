@@ -207,7 +207,6 @@ ARGS are passed to use-package based on the current mode."
 
 (setup-my-package "ellama-main" "ellama")
 (use-package-local-or-melpa ellama
-  :bind ("C-c e" . ellama-transient-main-menu)
   :init
   (setopt ellama-language "English")
   (require 'llm-ollama)
