@@ -3111,6 +3111,19 @@ When the operation completes, CALLBACK is called with no arguments if provided."
         (view-mode 1)))
     (display-buffer buf)))
 
+(defun ollama-buddy-set-model-context-size (model size)
+  "Manually set the context size for MODEL to SIZE."
+  (interactive
+   (let* ((models (ollama-buddy--get-models))
+          (model (completing-read "Model: " models nil t))
+          (size (read-number "Context size: " 
+                            (or (gethash model ollama-buddy--model-context-sizes)
+                                4096))))
+     (list model size)))
+  
+  (puthash model size ollama-buddy--model-context-sizes)
+  (message "Context size for %s set to %d" model size))
+
 (defvar ollama-buddy-mode-map
   (let ((map (make-sparse-keymap)))
     
@@ -3179,6 +3192,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c F") #'ollama-buddy-toggle-params-in-header)
     (define-key map (kbd "C-c p") #'ollama-buddy-transient-profile-menu)
 
+    (define-key map (kbd "C-c $") #'ollama-buddy-set-model-context-size)
     (define-key map (kbd "C-c %") #'ollama-buddy-toggle-context-percentage)
     (define-key map (kbd "C-c C") #'ollama-buddy-context-usage)
     (define-key map (kbd "C-c I") #'ollama-buddy-show-context-info)
