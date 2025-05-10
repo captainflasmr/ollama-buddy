@@ -31,6 +31,19 @@
   :group 'ollama-buddy
   :prefix "ollama-buddy-param-")
 
+(defcustom ollama-buddy-show-context-percentage t
+  "Whether to show context percentage in the status bar."
+  :type 'boolean
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-context-size-thresholds '(0.85 1.0)
+  "Thresholds for context usage warnings.
+First value (0.85) is the amber threshold (approaching limit).
+Second value (1.0) is the red threshold (at or exceeding limit)."
+  :type '(list (float :tag "Amber threshold")
+               (float :tag "Red threshold"))
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-vision-enabled t
   "Whether to enable vision support for models that support it."
   :type 'boolean
@@ -445,6 +458,21 @@ Returns empty string if no remote models are available."
   :type 'float
   :group 'ollama-buddy)
 
+(defvar ollama-buddy--model-context-sizes (make-hash-table :test 'equal)
+  "Hash table mapping model names to their maximum context window sizes.")
+
+(defvar ollama-buddy--current-context-percentage nil
+  "The current context window percentage used.")
+  
+(defvar ollama-buddy--current-context-tokens nil
+  "The current token count used in the context window.")
+
+(defvar ollama-buddy--current-context-max-size nil
+  "The maximum context size for the current model.")
+
+(defvar ollama-buddy--current-context-breakdown nil
+  "Breakdown of token counts by type (history, system prompt, current prompt).")
+
 (defvar ollama-buddy-remote-models nil
   "List of available remote models.")
 
@@ -595,6 +623,128 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
   "Map of model prefixes to handler functions.")
 
 ;; Core utility functions
+
+(defun ollama-buddy-display-context-details ()
+  "Display details about the current context usage."
+  (interactive)
+  (when ollama-buddy--current-context-breakdown
+    (let ((breakdown ollama-buddy--current-context-breakdown))
+      (message "Context breakdown: History:%d tokens | System:%d tokens | Current prompt:%d tokens | Total:%d/%d tokens (%.1f%%)"
+               (plist-get breakdown :history-tokens)
+               (plist-get breakdown :system-tokens)
+               (plist-get breakdown :prompt-tokens)
+               (plist-get breakdown :total-tokens)
+               ollama-buddy--current-context-max-size
+               (* 100 ollama-buddy--current-context-percentage)))))
+
+(defun ollama-buddy-calculate-context-display ()
+  "Calculate context percentage and display details in the minibuffer."
+  (interactive)
+  (ollama-buddy--calculate-prompt-context-percentage)
+  (when (fboundp 'ollama-buddy-display-context-details)
+    (ollama-buddy-display-context-details)))
+
+;; Function to show context usage without changing mode
+(defalias 'ollama-buddy-context-usage 'ollama-buddy-calculate-context-display)
+
+(defun ollama-buddy--get-model-context-size (model)
+  "Get the context window size for MODEL.
+If not available, retrieve it from the Ollama API."
+  (or (gethash model ollama-buddy--model-context-sizes)
+      (ollama-buddy--fetch-model-context-size model)))
+
+(defun ollama-buddy--fetch-model-context-size (model)
+  "Fetch the context window size for MODEL from Ollama API."
+  (let* ((real-model-name (ollama-buddy--get-real-model-name model))
+         (endpoint "/api/show")
+         (payload (json-encode `((model . ,real-model-name))))
+         (context-size nil))
+    
+    ;; Make synchronous request to get model info
+    (condition-case nil
+        (let ((result (ollama-buddy--make-request endpoint "POST" payload)))
+          (when result
+            ;; Extract context size from parameters (num_ctx)
+            (let ((parameters (alist-get 'parameters result)))
+              (when parameters
+                (setq context-size (or (alist-get 'num_ctx parameters)
+                                       (alist-get 'context_length parameters)
+                                       ;; Fallback values based on common models
+                                       (cond
+                                        ((string-match-p "llama3.2:1b" model) 2048)
+                                        ((string-match-p "gemma3:1b" model) 4096)
+                                        ((string-match-p "gemma3:4b" model) 8192)
+                                        ((string-match-p "llama3.2" model) 8192)
+                                        ((string-match-p "starcoder2" model) 8192)
+                                        ((string-match-p "mistral\\|codellama\\|qwen" model) 8192)
+                                        (t 4096)))))
+              
+              ;; Store in cache
+              (when context-size
+                (puthash model context-size ollama-buddy--model-context-sizes)))))
+      (error nil))
+    
+    ;; Return the discovered context size or default
+    (or context-size 4096)))
+
+(defun ollama-buddy--estimate-token-count (text)
+  "Estimate the number of tokens in TEXT.
+This is a rough approximation based on word count."
+  ;; Basic estimation: ~1.3 tokens per word for English
+  (round (* 1.3 (length (split-string text)))))
+
+(defun ollama-buddy--calculate-prompt-context-percentage ()
+  "Calculate and return the context percentage for the current prompt."
+  (let* ((model (or ollama-buddy--current-model 
+                    ollama-buddy-default-model))
+         (max-context-size (ollama-buddy--get-model-context-size model))
+         (prompt-data (ollama-buddy--get-prompt-content))
+         (prompt-text (car prompt-data))
+         (history (ollama-buddy--get-history-for-request))
+         (history-tokens 0)
+         (prompt-tokens (ollama-buddy--estimate-token-count prompt-text))
+         (system-prompt-tokens 
+          (if ollama-buddy--current-system-prompt
+              (ollama-buddy--estimate-token-count ollama-buddy--current-system-prompt)
+            0)))
+    
+    ;; Calculate history tokens
+    (when history
+      (dolist (msg history)
+        (let ((content (alist-get 'content msg)))
+          (when content
+            (setq history-tokens (+ history-tokens 
+                                    (ollama-buddy--estimate-token-count content)))))))
+    
+    ;; Add system prompt tokens if not already in history
+    (when (and ollama-buddy--current-system-prompt
+               (not (seq-find (lambda (msg) 
+                                (string= (alist-get 'role msg) "system"))
+                              history)))
+      (setq history-tokens (+ history-tokens system-prompt-tokens)))
+    
+    ;; Calculate total tokens and percentage
+    (let* ((total-tokens (+ history-tokens prompt-tokens))
+           (context-percentage (/ (float total-tokens) max-context-size)))
+           
+      ;; Save the current percentage
+      (setq ollama-buddy--current-context-percentage context-percentage)
+      
+      ;; Save the total token count
+      (setq ollama-buddy--current-context-tokens total-tokens)
+      
+      ;; Save the maximum context size
+      (setq ollama-buddy--current-context-max-size max-context-size)
+      
+      ;; Save the breakdown for detailed display
+      (setq ollama-buddy--current-context-breakdown
+            (list :history-tokens history-tokens
+                  :prompt-tokens prompt-tokens
+                  :system-tokens system-prompt-tokens
+                  :total-tokens total-tokens))
+      
+      ;; Return the percentage
+      context-percentage)))
 
 (defun ollama-buddy-register-model-handler (prefix handler-function)
   "Register HANDLER-FUNCTION for models with PREFIX.
@@ -1463,13 +1613,44 @@ When complete, CALLBACK is called with the status response and result."
     
     ollama-buddy--model-colors))
 
-;; Status update function
+;; Status update functions
+
+(defun ollama-buddy--add-context-to-status-format ()
+  "Calculate context percentage if enabled."
+  (if (and ollama-buddy-show-context-percentage
+           ollama-buddy--current-context-percentage)
+      (let* ((percentage (* 100 ollama-buddy--current-context-percentage))
+             (total-tokens ollama-buddy--current-context-tokens)
+             (max-size ollama-buddy--current-context-max-size)
+             (amber-threshold (nth 0 ollama-buddy-context-size-thresholds))
+             (red-threshold (nth 1 ollama-buddy-context-size-thresholds))
+             (status-face (cond
+                          ((>= ollama-buddy--current-context-percentage red-threshold)
+                           '(:foreground "red" :weight bold))
+                          ((>= ollama-buddy--current-context-percentage amber-threshold)
+                           '(:foreground "orange" :weight bold))
+                          (t '(:foreground "green"))))
+             ;; Format the percentage value
+             (percentage-text (format " %d%%" (round percentage)))
+             
+             ;; Show both token count and percentage - colorize the entire metric based on status
+             (context-text (format "%d/%d" 
+                                   (or total-tokens 0) 
+                                   (or max-size 4096))))
+        
+        ;; Return the formatted context info with appropriate color
+        (propertize (format "CTX:%s %s" context-text percentage-text)
+                    'face status-face))
+    ""))
+
 (defun ollama-buddy--update-status (status &optional original-model actual-model)
   "Update the Ollama status and refresh the display.
 STATUS is the current operation status.
 ORIGINAL-MODEL is the model that was requested.
 ACTUAL-MODEL is the model being used instead."
   (setq ollama-buddy--status status)
+  (when ollama-buddy-show-context-percentage
+    (ollama-buddy--calculate-prompt-context-percentage))
   (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
     (let* ((model (or ollama-buddy--current-model
                       ollama-buddy-default-model
@@ -1505,20 +1686,27 @@ ACTUAL-MODEL is the model being used instead."
                          (format " [%s]" param-str))))))
       (setq header-line-format
             (concat
-             (format " %s%s%s%s %s%s%s %s %s %s%s"
+             (format " %s%s%s%s %s%s%s %s %s %s %s%s"
                      (if ollama-buddy-hide-reasoning "REASONING HIDDEN " "")
                      (if ollama-buddy-display-token-stats "T" "")
                      (if ollama-buddy-streaming-enabled "" "X")
                      (or history "")
+                     
                      (if ollama-buddy-convert-markdown-to-org "ORG" "Markdown")
                      (ollama-buddy--update-multishot-status)
                      (propertize (if (ollama-buddy--check-status) "" " OFFLINE")
                                  'face '(:weight bold))
+                     
                      (if (ollama-buddy--check-status)
                          (propertize model 'face `(:weight bold :box (:line-width 2 :style flat-button)))
                        (propertize model 'face `(:weight bold :inherit shadow :box (:line-width 2 :style flat-button))))
+
                      status
+
+                     (ollama-buddy--add-context-to-status-format)
+                     
                      system-indicator
+                     
                      (or params ""))
              (when (and original-model actual-model (not (string= original-model actual-model)))
                (propertize (format " [Using %s instead of %s]" actual-model original-model)

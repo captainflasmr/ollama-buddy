@@ -2159,10 +2159,47 @@ Supports both single letter and prefixed multi-character model references."
         (when params-alist
           (ollama-buddy--restore-default-parameters))))))
 
+(defun ollama-buddy-toggle-context-percentage ()
+  "Toggle display of context percentage in the status bar."
+  (interactive)
+  (setq ollama-buddy-show-context-percentage 
+        (not ollama-buddy-show-context-percentage))
+  (ollama-buddy--update-status 
+   (concat "Context percentage " 
+           (if ollama-buddy-show-context-percentage "shown" "hidden")))
+  (message "Ollama context percentage display: %s"
+           (if ollama-buddy-show-context-percentage "enabled" "disabled")))
+
+(defun ollama-buddy-calculate-context-display ()
+  "Calculate context percentage and display details in the minibuffer."
+  (interactive)
+  (ollama-buddy--calculate-prompt-context-percentage)
+  (when (fboundp 'ollama-buddy-display-context-details)
+    (ollama-buddy-display-context-details)))
+
+;; Function to show context usage without changing mode
+(defalias 'ollama-buddy-context-usage 'ollama-buddy-calculate-context-display)
+
+(defun ollama-buddy--check-context-before-send ()
+  "Check context size before sending and warn if it's too large.
+Returns nil if user cancels, t otherwise."
+  (let* ((percentage (ollama-buddy--calculate-prompt-context-percentage))
+         (red-threshold (nth 1 ollama-buddy-context-size-thresholds)))
+    
+    (if (>= percentage red-threshold)
+        ;; Context exceeds limit, ask for confirmation
+        (yes-or-no-p 
+         (format "Warning: Your prompt exceeds the model's context limit (%.0f%%). Send anyway? " 
+                 (* 100 percentage)))
+      
+      ;; Context is within limits
+      t)))
+
 (defun ollama-buddy--send (&optional prompt specified-model)
   "Send PROMPT with optional SPECIFIED-MODEL.
 When PROMPT contains image file paths and the model supports vision, 
 those images will be included in the request."
+  
   ;; Check status and update UI if offline
   (unless (or (ollama-buddy--check-status))
     (ollama-buddy--update-status "OFFLINE")
@@ -2171,6 +2208,9 @@ those images will be included in the request."
   (unless (> (length prompt) 0)
     (user-error "Ensure prompt is defined"))
 
+  (unless (ollama-buddy--check-context-before-send)
+    (user-error "Context too far over limit to send"))
+  
   ;; Original Ollama send code with vision additions
   (let* ((model-info (ollama-buddy--get-valid-model specified-model))
          (model (car model-info))
@@ -3138,6 +3178,10 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c K") #'ollama-buddy-params-reset)
     (define-key map (kbd "C-c F") #'ollama-buddy-toggle-params-in-header)
     (define-key map (kbd "C-c p") #'ollama-buddy-transient-profile-menu)
+
+    (define-key map (kbd "C-c %") #'ollama-buddy-toggle-context-percentage)
+    (define-key map (kbd "C-c C") #'ollama-buddy-context-usage)
+    
     (define-key map [remap move-beginning-of-line] #'ollama-buddy-beginning-of-prompt)
     map)
   "Keymap for ollama-buddy mode.")
