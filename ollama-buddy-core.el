@@ -655,22 +655,10 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
 
 ;; Core utility functions
 
-(defun ollama-buddy-display-context-details ()
-  "Display details about the current context usage."
-  (interactive)
-  (when ollama-buddy--current-context-breakdown
-    (let ((breakdown ollama-buddy--current-context-breakdown))
-      (message "Context breakdown: History:%d tokens | System:%d tokens | Current prompt:%d tokens | Total:%d/%d tokens (%.1f%%)"
-               (plist-get breakdown :history-tokens)
-               (plist-get breakdown :system-tokens)
-               (plist-get breakdown :prompt-tokens)
-               (plist-get breakdown :total-tokens)
-               ollama-buddy--current-context-max-size
-               (* 100 ollama-buddy--current-context-percentage)))))
-
 (defun ollama-buddy-show-context-info ()
   "Show detailed information about context sizes for all models."
   (interactive)
+  (ollama-buddy--calculate-prompt-context-percentage)
   (let ((buf (get-buffer-create "*Ollama Context Sizes*")))
     (with-current-buffer buf
       (let ((inhibit-read-only t))

@@ -2170,16 +2170,6 @@ Supports both single letter and prefixed multi-character model references."
   (message "Ollama context percentage display: %s"
            (if ollama-buddy-show-context-percentage "enabled" "disabled")))
 
-(defun ollama-buddy-calculate-context-display ()
-  "Calculate context percentage and display details in the minibuffer."
-  (interactive)
-  (ollama-buddy--calculate-prompt-context-percentage)
-  (when (fboundp 'ollama-buddy-display-context-details)
-    (ollama-buddy-display-context-details)))
-
-;; Function to show context usage without changing mode
-(defalias 'ollama-buddy-context-usage 'ollama-buddy-calculate-context-display)
-
 (defun ollama-buddy--check-context-before-send ()
   "Check context size before sending and warn if it's too large.
 Returns nil if user cancels, t otherwise."
@@ -3194,8 +3184,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
 
     (define-key map (kbd "C-c $") #'ollama-buddy-set-model-context-size)
     (define-key map (kbd "C-c %") #'ollama-buddy-toggle-context-percentage)
-    (define-key map (kbd "C-c C") #'ollama-buddy-context-usage)
-    (define-key map (kbd "C-c I") #'ollama-buddy-show-context-info)
+    (define-key map (kbd "C-c C") #'ollama-buddy-show-context-info)
     
     (define-key map [remap move-beginning-of-line] #'ollama-buddy-beginning-of-prompt)
     map)
