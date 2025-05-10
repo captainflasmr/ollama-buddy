@@ -3181,6 +3181,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
 
     (define-key map (kbd "C-c %") #'ollama-buddy-toggle-context-percentage)
     (define-key map (kbd "C-c C") #'ollama-buddy-context-usage)
+    (define-key map (kbd "C-c I") #'ollama-buddy-show-context-info)
     
     (define-key map [remap move-beginning-of-line] #'ollama-buddy-beginning-of-prompt)
     map)

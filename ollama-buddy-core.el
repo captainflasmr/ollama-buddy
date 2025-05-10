@@ -637,6 +637,51 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
                ollama-buddy--current-context-max-size
                (* 100 ollama-buddy--current-context-percentage)))))
 
+(defun ollama-buddy-show-context-info ()
+  "Show detailed information about context sizes for all models."
+  (interactive)
+  (let ((buf (get-buffer-create "*Ollama Context Sizes*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert "Ollama Model Context Sizes:\n\n")
+        
+        ;; Check if model-context-sizes has any entries
+        (if (= (hash-table-count ollama-buddy--model-context-sizes) 0)
+            (insert "No model context sizes have been retrieved yet.\n")
+          
+          ;; Display context sizes for each model in model-context-sizes
+          (maphash (lambda (model size)
+                     (let ((color (ollama-buddy--get-model-color model)))
+                       (insert "  ")
+                       (insert (propertize model 'face `(:foreground ,color)))
+                       (insert (format ": %d tokens\n" size))))
+                   ollama-buddy--model-context-sizes))
+        
+        ;; Show current context info if available
+        (when ollama-buddy--current-context-percentage
+          (insert "\nCurrent context usage:\n")
+          (insert (format "  Model: %s\n" 
+                          (or ollama-buddy--current-model "unknown")))
+          (insert (format "  Context size: %d tokens\n" 
+                          (or ollama-buddy--current-context-max-size 4096)))
+          (insert (format "  Current usage: %d tokens (%.1f%%)\n"
+                          (or ollama-buddy--current-context-tokens 0)
+                          (* 100 (or ollama-buddy--current-context-percentage 0))))
+          
+          ;; Show breakdown if available
+          (when ollama-buddy--current-context-breakdown
+            (let ((breakdown ollama-buddy--current-context-breakdown))
+              (insert (format "  History: %d tokens\n" 
+                              (plist-get breakdown :history-tokens)))
+              (insert (format "  System prompt: %d tokens\n" 
+                              (plist-get breakdown :system-tokens)))
+              (insert (format "  Current prompt: %d tokens\n" 
+                              (plist-get breakdown :prompt-tokens))))))
+        
+        (view-mode 1)))
+    (display-buffer buf)))
+
 (defun ollama-buddy-calculate-context-display ()
   "Calculate context percentage and display details in the minibuffer."
   (interactive)
@@ -654,7 +699,8 @@ If not available, retrieve it from the Ollama API."
       (ollama-buddy--fetch-model-context-size model)))
 
 (defun ollama-buddy--fetch-model-context-size (model)
-  "Fetch the context window size for MODEL from Ollama API."
+  "Fetch the context window size for MODEL from Ollama API.
+Uses a more robust approach to extract context size from various model formats."
   (let* ((real-model-name (ollama-buddy--get-real-model-name model))
          (endpoint "/api/show")
          (payload (json-encode `((model . ,real-model-name))))
@@ -664,25 +710,64 @@ If not available, retrieve it from the Ollama API."
     (condition-case nil
         (let ((result (ollama-buddy--make-request endpoint "POST" payload)))
           (when result
-            ;; Extract context size from parameters (num_ctx)
+            ;; Try multiple paths to find context size
+            
+            ;; 1. Try from parameters section
             (let ((parameters (alist-get 'parameters result)))
               (when parameters
                 (setq context-size (or (alist-get 'num_ctx parameters)
-                                       (alist-get 'context_length parameters)
-                                       ;; Fallback values based on common models
-                                       (cond
-                                        ((string-match-p "llama3.2:1b" model) 2048)
-                                        ((string-match-p "gemma3:1b" model) 4096)
-                                        ((string-match-p "gemma3:4b" model) 8192)
-                                        ((string-match-p "llama3.2" model) 8192)
-                                        ((string-match-p "starcoder2" model) 8192)
-                                        ((string-match-p "mistral\\|codellama\\|qwen" model) 8192)
-                                        (t 4096)))))
-              
-              ;; Store in cache
-              (when context-size
-                (puthash model context-size ollama-buddy--model-context-sizes)))))
-      (error nil))
+                                       (alist-get 'context_length parameters)))))
+            
+            ;; 2. If not found, check model_info section
+            (unless context-size
+              (let ((model-info (alist-get 'model_info result)))
+                (when model-info
+                  (setq context-size (or (alist-get 'llama.context_length model-info)
+                                         (alist-get 'general.context_length model-info)
+                                         (alist-get 'context_length model-info))))))
+            
+            ;; 3. If still not found, check the details section
+            (unless context-size
+              (let* ((details (alist-get 'details result))
+                     (family (when details (alist-get 'family details))))
+                (when family
+                  ;; Common context sizes by model family as a fallback
+                  (setq context-size (cond
+                                      ((string= family "llama") 2048)
+                                      ((string= family "mistral") 8192)
+                                      ((string= family "phi") 2048)
+                                      ((string= family "gemma") 8192)
+                                      ((string= family "qwen") 8192))))))
+            
+            ;; 4. Fallback: Use model name to guess context size
+            (unless context-size
+              (setq context-size (cond
+                                  ((string-match-p "llama3.2:1b" model) 2048)
+                                  ((string-match-p "tinyllama" model) 2048)
+                                  ((string-match-p "gemma3:1b" model) 4096)
+                                  ((string-match-p "gemma3:4b" model) 8192)
+                                  ((string-match-p "llama3.2" model) 8192)
+                                  ((string-match-p "starcoder2" model) 8192)
+                                  ((string-match-p "mistral\\|codellama\\|qwen" model) 8192)
+                                  (t 4096))))
+            
+            ;; Debug logging for context size determination
+            (when ollama-buddy-debug-mode
+              (with-current-buffer (get-buffer-create ollama-buddy--debug-buffer)
+                (goto-char (point-max))
+                (let ((inhibit-read-only t))
+                  (insert (format "\n=== CONTEXT SIZE FOR %s: %s ===\n"
+                                  model (or context-size "Not found"))))))
+            
+            ;; Store in cache
+            (when context-size
+              (puthash model context-size ollama-buddy--model-context-sizes))))
+      (error 
+       (when ollama-buddy-debug-mode
+         (with-current-buffer (get-buffer-create ollama-buddy--debug-buffer)
+           (goto-char (point-max))
+           (let ((inhibit-read-only t))
+             (insert (format "\n=== ERROR GETTING CONTEXT SIZE FOR %s ===\n" model)))))))
     
     ;; Return the discovered context size or default
     (or context-size 4096)))
@@ -1639,7 +1724,7 @@ When complete, CALLBACK is called with the status response and result."
                                    (or max-size 4096))))
         
         ;; Return the formatted context info with appropriate color
-        (propertize (format "CTX:%s %s" context-text percentage-text)
+        (propertize (format "CTX:%s" context-text)
                     'face status-face))
     ""))
 
