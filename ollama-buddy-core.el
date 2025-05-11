@@ -1709,8 +1709,7 @@ When complete, CALLBACK is called with the status response and result."
                                    (or max-size 4096))))
         
         ;; Return the formatted context info with appropriate color
-        (propertize (format "CTX:%s" context-text)
-                    'face status-face))
+        (format "CTX:%s" context-text))
     ""))
 
 (defun ollama-buddy--update-status (status &optional original-model actual-model)
