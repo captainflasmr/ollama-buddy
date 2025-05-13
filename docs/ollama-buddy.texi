@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 0.9.20
+@subtitle For Ollama Buddy version 0.9.50
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -51,6 +51,7 @@ allowing you to leverage powerful large language models (LLMs) directly within y
 * Core Features::               Explanation of main capabilities
 * Chat Interface::              Using the chat UI
 * Working with Models::         Managing and using different models
+* Context Management::          Managing context
 * Parameter Control::           Customizing AI behavior with parameters
 * Session Management::          Saving and loading conversations
 * Roles and Commands::          Creating custom commands and roles
@@ -63,6 +64,7 @@ allowing you to leverage powerful large language models (LLMs) directly within y
 * Troubleshooting::             Common problems and solutions
 * Contributing::                How to contribute to Ollama Buddy
 * Index::                       Complete index
+
 @end menu
 
 @node Introduction
@@ -314,6 +316,32 @@ Whether to show the history indicator in the header line (default: t).
 @end example
 @end table
 
+@section Context Management Configuration
+
+Configure how Ollama Buddy handles context management:
+
+@table @code
+@item ollama-buddy-show-context-percentage
+Whether to show context percentage in the status bar (default: nil).
+@example
+(setq ollama-buddy-show-context-percentage t)
+@end example
+
+@item ollama-buddy-fallback-context-sizes
+Mapping of model names to their default context sizes.
+@example
+(setq ollama-buddy-fallback-context-sizes
+  '(("llama3:8b" . 4096)
+    ("codellama:7b" . 8192)))
+@end example
+
+@item ollama-buddy-max-history-length
+Maximum number of message pairs to keep (affects context usage).
+@example
+(setq ollama-buddy-max-history-length 10)
+@end example
+@end table
+
 @section External API Configuration
 
 For OpenAI and Claude integration:
@@ -431,6 +459,10 @@ The chat interface is the main way to interact with Ollama Buddy:
 @item System prompt support
 @item Parameter customization
 @item Reasoning/thinking section visibility control
+@item Context window management and monitoring
+@item Real-time context usage display
+@item Context size validation before sending prompts
+@item Customizable context thresholds and warnings
 @end itemize
 
 @section Pre-built Commands
@@ -526,6 +558,8 @@ The chat interface consists of:
 @item Conversation history (previous prompts and responses)
 @item A prompt area for entering your queries
 @item A header line with status information
+@item A status bar showing context usage (when enabled)
+@item Context warnings and validation
 @end itemize
 
 @section Sending Prompts
@@ -687,6 +721,172 @@ Multishot mode allows you to send the same prompt to multiple models simultaneou
 @item Note that each item should be separated with a comma
 @item Watch as Ollama Buddy processes your request with each model in sequence
 @end enumerate
+
+@node Context Management
+@chapter Context Management
+
+@section Understanding Context Windows
+
+Context windows define how much text (measured in tokens) a model can process at once. This includes your current prompt, conversation history, and any system prompts. Understanding and managing context is crucial for:
+
+@itemize @bullet
+@item Preventing errors when context limits are exceeded
+@item Optimizing model performance for different tasks
+@item Managing longer conversations efficiently
+@end itemize
+
+@section Context Size Detection
+
+Ollama Buddy uses multiple methods to determine a model's context size:
+
+@enumerate
+@item Built-in mappings for popular models (llama3, mistral, codellama, etc.)
+@item Custom context sizes set via the @code{num_ctx} parameter
+@item Manual configuration through interactive commands
+@item Fallback to reasonable defaults (4096 tokens) for unknown models
+@end enumerate
+
+@section Enabling Context Monitoring
+
+Context monitoring is disabled by default. To enable it:
+
+@example
+(setq ollama-buddy-show-context-percentage t)
+@end example
+
+With context monitoring enabled:
+@itemize @bullet
+@item The status bar shows current/max context usage (e.g., "2048/8192")
+@item Text formatting indicates usage levels:
+  @itemize @minus
+  @item Normal font: Under 85% usage
+  @item Bold and underlined: 85-100% usage
+  @item Inverted: At or exceeding 100% usage
+  @end itemize
+@item Warnings appear before sending prompts that exceed limits
+@end itemize
+
+@section Context Management Commands
+
+@table @asis
+@item Show Context Information (@kbd{C-c C})
+Displays a breakdown of current context usage, including:
+@itemize @bullet
+@item Conversation history token count
+@item System prompt token count
+@item Current prompt token count
+@item Total usage percentage
+@end itemize
+
+@item Set Model Context Size (@kbd{C-c $})
+Manually configure the context size for a specific model.
+
+@item Toggle Context Display (@kbd{C-c %})
+Show or hide the context percentage in the status bar.
+@end table
+
+@section Token Estimation
+
+Ollama Buddy estimates token counts using a heuristic approach:
+@itemize @bullet
+@item Each word is multiplied by 1.3 (following common approximations)
+@item This provides a reasonable estimate for most use cases
+@item Actual token counts may vary slightly between models
+@end itemize
+
+@section Managing Context in Practice
+
+@subsection Workflow Strategies
+
+@subsubsection Paste-and-Send Approach
+@enumerate
+@item Paste your content into the chat buffer
+@item Press the send keybinding
+@item If context is exceeded, you'll get a warning dialog
+@item Choose whether to proceed or modify your content
+@end enumerate
+
+@subsubsection Preemptive Checking
+@enumerate
+@item Paste your content
+@item Use @kbd{C-c C} to check context usage
+@item If too high:
+  @itemize @bullet
+  @item Trim your current prompt
+  @item Edit conversation history (@kbd{C-c J})
+  @item Switch to a larger context model
+  @item Adjust system prompt length
+  @end itemize
+@end enumerate
+
+@subsubsection History Length Management
+Control context by limiting conversation history:
+@example
+(setq ollama-buddy-max-history-length 5)
+@end example
+
+This keeps only the last 5 message pairs, reducing context usage.
+
+@subsection Using num_ctx Parameter
+
+The @code{num_ctx} parameter allows you to set a specific context size:
+@enumerate
+@item Access the parameter menu with @kbd{C-c P}
+@item Select @code{num_ctx}
+@item Enter your desired context size
+@item Ollama Buddy will respect this limit
+@end enumerate
+
+@section Context Display Configuration
+
+Customize how context information is displayed:
+
+@table @code
+@item ollama-buddy-show-context-percentage
+Whether to show context percentage in the status bar (default: nil).
+
+@item ollama-buddy-context-warning-threshold
+Percentage at which to warn about high context usage (default: 90).
+
+@item ollama-buddy-context-error-threshold
+Percentage at which to block sending (default: 100).
+@end table
+
+@section Fallback Context Sizes
+
+Ollama Buddy includes predefined context sizes for popular models. You can customize these via:
+
+@example
+(setq ollama-buddy-fallback-context-sizes
+  '(("llama3:8b" . 4096)
+    ("codellama:7b" . 8192)
+    ("mistral:7b" . 8192)))
+@end example
+
+@section Troubleshooting Context Issues
+
+@table @asis
+@item Context warnings appear unexpectedly
+@itemize @bullet
+@item Check if you have a long system prompt
+@item Review conversation history length
+@item Verify the model's actual context size
+@end itemize
+
+@item Model responses are truncated
+@itemize @bullet
+@item Increase the @code{num_ctx} parameter
+@item Reduce history length with @kbd{C-c Y}
+@item Clear some conversation history
+@end itemize
+
+@item Context calculations seem inaccurate
+@itemize @bullet
+@item Remember that token estimation is approximate
+@item Different models may tokenize text differently
+@item Use @kbd{C-c C} to see detailed breakdowns
+@end itemize
+@end table
 
 @node Parameter Control
 @chapter Parameter Control
@@ -1741,6 +1941,19 @@ Toggle Markdown to Org conversion.
 
 @item ollama-buddy-toggle-debug-mode
 Toggle display of debug information.
+
+@item ollama-buddy-set-model-context-size
+Set the context size for a specific model.
+
+@item ollama-buddy-toggle-context-percentage
+Toggle context percentage display in the status bar.
+
+@item ollama-buddy-show-context-info
+Display detailed context usage information.
+
+@item ollama-buddy-set-max-history-length
+Set the maximum number of message pairs to keep in history.
+
 @end table
 
 @section Core Functions
@@ -1833,6 +2046,23 @@ Press @code{C-c X} to clear history, or @code{C-c N} to start a completely new s
 
 @subsection How can I create a custom command?
 The easiest way is through the role creator: press @code{C-c E} and follow the prompts to create commands with specific prompts, models, and parameters.
+
+@subsection How can I manage context windows?
+Ollama Buddy provides several options:
+@itemize @bullet
+@item Enable context monitoring with @code{(setq ollama-buddy-show-context-percentage t)}
+@item Use @kbd{C-c C} to check current context usage
+@item Limit history length with @kbd{C-c Y}
+@item Set model-specific context sizes with @kbd{C-c $}
+@end itemize
+
+@subsection What happens when I exceed the context limit?
+When context monitoring is enabled:
+@itemize @bullet
+@item You'll get a warning when approaching the limit (85-100%)
+@item You'll get an error dialog at or above 100%
+@item You can choose to proceed anyway or modify your content
+@end itemize
 
 @section Troubleshooting
 
