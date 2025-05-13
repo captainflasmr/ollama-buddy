@@ -96,6 +96,181 @@ See *Screenshots / Demos* section for more videos/demonstration.
 
 * Whats New
 
+** <2025-05-12> *0.9.50*
+
+Added context size management and monitoring
+
+- Added configurable context sizes for popular models (llama3.2, mistral, qwen, etc.)
+- Implemented real-time context usage display in status bar
+- Added context size thresholds with visual warnings
+- Added interactive commands for context management:
+  - =ollama-buddy-show-context-info=: View all model context sizes
+  - =ollama-buddy-set-model-context-size=: Manually configure model context
+  - =ollama-buddy-toggle-context-percentage=: Toggle context display
+- Implemented context size validation before sending prompts
+- Added token estimation and breakdown (history/system/current prompt)
+- Added keybindings: C-c $ (set context), C-c % (toggle display), C-c C (show info)
+- Updated status bar to show current/max context with fontification
+
+I've added context window management and monitoring capabilities to Ollama Buddy!
+
+This update helps you better understand and manage your model's context usage, preventing errors and optimizing your conversations.
+
+Enable it with the following:
+
+#+begin_src elisp
+(setq ollama-buddy-show-context-percentage t)
+#+end_src
+
+*** Design Philosophy
+
+My approach prioritized simplicity while fitting naturally into Ollama Buddy's design ethos. This means:
+
+- *Streamlined interface*: Minimal status line additions that don't clutter the display
+- *Immediate accessibility*: Simple keybindings directly from the chat buffer
+- *Text-first design*: Using fontification instead of colors for boundary indicators (keeping with Emacs' aesthetic)
+
+*** Implementation Details
+
+**** Context Size Detection
+
+Determining a model's context size proved more complex than expected. While experimenting with parsing model info JSON, I discovered that context size information can be scattered across different fields. Rather than implementing a complex JSON parser (which may come later), I chose a pragmatic approach:
+
+I created a new =defcustom= variable =ollama-buddy-fallback-context-sizes= that includes hard-coded values for popular Ollama models. The fallback mechanism is deliberately simple: substring matching followed by a sensible default of 4096 tokens.
+
+#+begin_src elisp
+(defcustom ollama-buddy-fallback-context-sizes
+  '(("llama3.2:1b" . 2048)
+    ("llama3:8b" . 4096)
+    ("tinyllama" . 2048)
+    ("phi3:3.8b" . 4096)
+    ("gemma3:1b" . 4096)
+    ("gemma3:4b" . 8192)
+    ("llama3.2:3b" . 8192)
+    ("llama3.2:8b" . 8192)
+    ("llama3.2:70b" . 8192)
+    ("starcoder2:3b" . 8192)
+    ("starcoder2:7b" . 8192)
+    ("starcoder2:15b" . 8192)
+    ("mistral:7b" . 8192)
+    ("mistral:8x7b" . 32768)
+    ("codellama:7b" . 8192)
+    ("codellama:13b" . 8192)
+    ("codellama:34b" . 8192)
+    ("qwen2.5-coder:7b" . 8192)
+    ("qwen2.5-coder:3b" . 8192)
+    ("qwen3:0.6b" . 4096)
+    ("qwen3:1.7b" . 8192)
+    ("qwen3:4b" . 8192)
+    ("qwen3:8b" . 8192)
+    ("deepseek-r1:7b" . 8192)
+    ("deepseek-r1:1.5b" . 4096))
+  "Mapping of model names to their default context sizes.
+Used as a fallback when context size can't be determined from the API."
+  :type '(alist :key-type string :value-type integer)
+  :group 'ollama-buddy)
+#+end_src
+
+This approach may not be perfectly accurate for all models, but it's sufficient for getting the core functionality working. More importantly, as a =defcustom=, users can easily customize these values for complete accuracy with their specific models. Users can also set context values within the chat buffer through =C-c C= (Show Context Information) for each individual model if desired.
+
+This design choice allowed me to focus on the essential features without getting stuck on complex context retrieval logic.
+
+One final thing!, if the ~num_ctx: Context window size in tokens~ is set, then that number will also be taken into consideration.  An assumption will be made that the model is honouring the context size requested and will incorporated into the context calculations accordingly.
+
+**** Token Estimation
+
+For token counting, I've implemented a simple heuristic: each word (using string-split) is multiplied by 1.3. This follows commonly recommended approximations and works well enough in practice. While this isn't currently configurable, I may add it as a customization option in the future.
+
+*** How to Use Context Management in Practice
+
+The =C-c C= (Show Context Information) command is central to this feature. Rather than continuously monitoring context size while you type (which would be computationally expensive and potentially distracting), I've designed the system to calculate context on-demand when you choose.
+
+**** Typical Workflows
+
+*Scenario 1: Paste-and-Send Approach*
+
+Let's say you want to paste a large block of text into the chat buffer. You can simply:
+
+1. Paste your content
+2. Press the send keybinding
+3. If the context limit is exceeded, you'll get a warning dialog asking whether to proceed anyway
+
+*Scenario 2: Preemptive Checking*
+
+For more control, you can check context usage before sending:
+
+1. Paste your content
+2. Run =C-c C= to see the current context breakdown
+3. If the context looks too high, you have several options:
+   - Trim your current prompt
+   - Remove or simplify your system prompt
+   - Edit conversation history using Ollama Buddy's history modification features
+   - Switch to a model with a larger context window
+
+*Scenario 3: Manage the Max History Length*
+
+Want tight control over context size without constantly monitoring the real-time display? Since conversation history is part of the context, you can simply limit =ollama-buddy-max-history-length= to control the total context size.
+
+For example, when working with small context windows, set =ollama-buddy-max-history-length= to 1. This keeps only the last exchange (your prompt + model response), ensuring your context remains small and predictable, perfect for maintaining control without manual monitoring.
+
+*Scenario 4: Parameter num_ctx: Context window size in tokens*
+
+Simply set this parameter and off you go!
+
+*** Current Status: Experimental
+
+Given the potentially limiting nature of context management, I've set this feature to *disabled by default*.
+
+But to enable set the following :
+
+#+begin_src elisp
+(setq ollama-buddy-show-context-percentage t)
+#+end_src
+
+This means:
+
+- Context checks won't prevent sending prompts
+- Context usage won't appear in the status line
+- However, calculations still run in the background, so =C-c C= (Show Context Information) remains functional
+
+As the feature matures and proves its value, I may enable it by default. For now, consider it an experimental addition that users can opt into.
+
+*** More Details
+
+The status bar now displays your current context usage in real-time. You'll see a fraction showing used tokens versus the model's maximum context size (e.g., "2048/8192"). The display automatically updates as your conversation grows.
+
+Context usage changes fontification to help you stay within limits:
+
+- *Normal font*: Normal usage (under 85%)
+- *Bold and Underlined*: Approaching limit (85-100%)
+- *Inversed*: At or exceeding limit (100%+)
+
+Before sending prompts that exceed the context limit, Ollama Buddy now warns you and asks for confirmation. This prevents unexpected errors and helps you manage long conversations more effectively.
+
+There are now three new interactive commands:
+
+=C-c $= - Set Model Context Size. Manually configure context sizes for custom or fine-tuned models.
+
+=C-c %= - Toggle Context Display. Show or hide the context percentage in the status bar.
+  
+=C-c C= - Show Context Information. View a detailed breakdown of:
+
+- All model context sizes
+- Current token usage by category (history, system prompt, current prompt)
+- Percentage usage
+
+-----
+
+The system estimates token counts for:
+
+- *Conversation history*: All previous messages
+- *System prompts*: Your custom instructions
+- *Current input*: The message you're about to send
+
+This gives you a complete picture of your context usage before hitting send.
+
+The context monitoring is not enabled by default.
+
 ** <2025-05-05> *0.9.44*
 
 - Sorted model names alphabetically in intro message
@@ -1652,7 +1827,6 @@ When a fallback occurs, Ollama Buddy provides clear feedback:
 |------------------------------------------+------------------------------------------------------------------------------|
 | ollama-buddy-awesome-categorize-prompts  | Whether to categorize prompts based on common keywords.                      |
 | ollama-buddy-awesome-prompts-file        | Filename containing the prompts within the repository.                       |
-| ollama-buddy-grok-api-endpoint           | Endpoint for Grok chat completions API.                                      |
 | ollama-buddy-remote-models               | List of available remote models.                                             |
 | ollama-buddy-command-definitions         | Comprehensive command definitions for Ollama Buddy.                          |
 | ollama-buddy-enable-model-colors         | Whether to show model colors.                                                |
@@ -1660,13 +1834,11 @@ When a fallback occurs, Ollama Buddy provides clear feedback:
 | ollama-buddy-show-params-in-header       | Whether to show modified parameters in the header line.                      |
 | ollama-buddy-debug-mode                  | When non-nil, show raw JSON messages in a debug buffer.                      |
 | ollama-buddy-mode                        | Non-nil if Ollama-Buddy mode is enabled.                                     |
-| ollama-buddy-grok-marker-prefix          | Prefix used to identify Grok models in the ollama-buddy interface.           |
 | ollama-buddy-reasoning-markers           | List of marker pairs that encapsulate reasoning/thinking sections.           |
 | ollama-buddy-awesome-update-on-startup   | Whether to automatically update prompts when Emacs starts.                   |
 | ollama-buddy-sessions-directory          | Directory containing ollama-buddy session files.                             |
 | ollama-buddy-history-model-view-mode-map | Keymap for model-specific history viewing mode.                              |
 | ollama-buddy-menu-columns                | Number of columns to display in the Ollama Buddy menu.                       |
-| ollama-buddy-gemini-api-endpoint         | Endpoint format for Google Gemini API.                                       |
 | ollama-buddy-fabric-pattern-categories   | List of pattern categories to focus on when listing patterns.                |
 | ollama-buddy-status-update-interval      | Interval in seconds to update the status line with background operations.    |
 | ollama-buddy-fabric-update-on-startup    | Whether to automatically update patterns when Emacs starts.                  |
@@ -1742,80 +1914,10 @@ When a fallback occurs, Ollama Buddy provides clear feedback:
 #+end_src
 
 #+RESULTS:
-| Command                                   | Description                                                                    |
-|-------------------------------------------+--------------------------------------------------------------------------------|
-| ollama-buddy-open-info                    | Open the Info manual for the ollama-buddy package.                             |
-| ollama-buddy-dired-import-gguf            | Import the GGUF file at point in Dired into Ollama.                            |
-| ollama-buddy-toggle-markdown-conversion   | Toggle automatic conversion of markdown to ‘org-mode’ format.                  |
-| ollama-buddy-fabric-send                  | Apply a Fabric pattern to the selected text and send to Ollama.                |
-| ollama-buddy-reset-system-prompt          | Reset the system prompt to default (none).                                     |
-| ollama-buddy-beginning-of-prompt          | Move point to the beginning of the current prompt.                             |
-| ollama-buddy-toggle-streaming             | Toggle streaming mode for Ollama responses.                                    |
-| ollama-buddy-toggle-reasoning-visibility  | Toggle visibility of reasoning/thinking sections in responses.                 |
-| ollama-buddy-history-toggle-edit-mode     | Toggle between viewing and editing modes for history.                          |
-| ollama-buddy-mode                         | Minor mode for ollama-buddy keybindings.                                       |
-| ollama-buddy-roles-switch-role            | Switch to a different ollama-buddy role.                                       |
-| ollama-buddy-history-edit                 | View and edit the conversation history in a buffer.                            |
-| ollama-buddy-previous-history             | Navigate to previous item in prompt history.                                   |
-| ollama-buddy-toggle-params-in-header      | Toggle display of modified parameters in the header line.                      |
-| ollama-buddy-display-token-graph          | Display a visual graph of token usage statistics.                              |
-| ollama-buddy-toggle-token-display         | Toggle display of token statistics after each response.                        |
-| ollama-buddy-show-raw-model-info          | Retrieve and display raw JSON information about the current default MODEL.     |
-| ollama-buddy-history-cancel               | Cancel editing the history.                                                    |
-| ollama-buddy-sessions-load                | Load an Ollama Buddy session with improved org file handling.                  |
-| ollama-buddy-transient-menu-wrapper       | Wrapper function for safely loading the Ollama Buddy transient menu.           |
-| ollama-buddy-sessions-list                | Display a list of saved sessions.                                              |
-| ollama-buddy-transient-awesome-menu       | Awesome ChatGPT Prompts for ollama-buddy.                                      |
-| ollama-buddy-fabric-set-system-prompt     | Set the system prompt to a Fabric pattern without sending a request.           |
-| ollama-buddy-params-help                  | Display help for Ollama parameters.                                            |
-| ollama-buddy-awesome-send                 | Apply an Awesome ChatGPT Prompt to the selected text and send to Ollama.       |
-| ollama-buddy-sessions-new                 | Start a new session by clearing history and buffer.                            |
-| ollama-buddy-show-system-prompt           | Display the current system prompt in a buffer.                                 |
-| ollama-buddy-awesome-show-prompts-menu    | Show a transient menu of Awesome ChatGPT Prompt organized by category.         |
-| ollama-buddy-awesome-populate-prompts     | Populate the list of available prompt from the local repository.               |
-| ollama-buddy-awesome-set-system-prompt    | Set the system prompt to an Awesome ChatGPT Prompt without sending a request.  |
-| ollama-buddy-params-edit                  | Edit a specific parameter PARAM interactively.                                 |
-| ollama-buddy-awesome-list-prompts         | Display a list of available Awesome ChatGPT Prompt.                            |
-| ollama-buddy-transient-parameter-menu     | Parameter menu for Ollama Buddy.                                               |
-| ollama-buddy-toggle-debug-mode            | Toggle display of raw JSON messages in a debug buffer.                         |
-| ollama-buddy-awesome-show-prompt          | Display the full content of a prompt with FORMATTED-NAME.                      |
-| ollama-buddy-toggle-model-colors          | Toggle the use of model-specific colors in ollama-buddy.                       |
-| ollama-buddy-awesome-setup                | Set up the ollama-buddy-awesome package.                                       |
-| ollama-buddy-fabric-show-pattern          | Display the full content of a PATTERN.                                         |
-| ollama-buddy-fabric-sync-patterns         | Sync the latest patterns from the Fabric GitHub repository.                    |
-| ollama-buddy-reset-all-prompts            | Reset both system prompt and suffix to default (none).                         |
-| ollama-buddy-fabric-list-patterns         | Display a list of available Fabric patterns with descriptions.                 |
-| ollama-buddy-history-search               | Search through the prompt history using a ‘completing-read’ interface.         |
-| ollama-buddy-toggle-history               | Toggle conversation history on/off.                                            |
-| ollama-buddy-display-token-stats          | Display token usage statistics.                                                |
-| ollama-buddy-role-creator-create-new-role | Create a new role interactively.                                               |
-| ollama-buddy-roles-open-directory         | Open the ollama-buddy roles directory in Dired.                                |
-| ollama-buddy-params-reset                 | Reset all parameters to default values and clear modification tracking.        |
-| ollama-buddy-menu                         | Display Ollama Buddy menu.                                                     |
-| ollama-buddy-history-toggle-edit-model    | Toggle between viewing and editing modes for MODEL history.                    |
-| ollama-buddy-transient-menu               | Ollama Buddy main menu.                                                        |
-| ollama-buddy-fabric-setup                 | Set up the ollama-buddy-fabric package.                                        |
-| ollama-buddy-manage-models                | Display and manage Ollama models.                                              |
-| ollama-buddy-history-edit-model           | Edit the conversation history for a specific MODEL.                            |
-| ollama-buddy-roles-create-directory       | Create the ollama-buddy roles directory if it doesn’t exist.                   |
-| ollama-buddy-history-save-model           | Save the edited history for MODEL back to variable.                            |
-| ollama-buddy-reset-suffix                 | Reset the suffix to default (none).                                            |
-| ollama-buddy-show-model-status            | Display status of models referenced in command definitions with color coding.  |
-| ollama-buddy-next-history                 | Navigate to next item in prompt history.                                       |
-| ollama-buddy-clear-history                | Clear the conversation history.                                                |
-| ollama-buddy-awesome-sync-prompts         | Sync the latest prompt from the Awesome ChatGPT Prompt GitHub repository.      |
-| ollama-buddy-sessions-delete              | Delete an Ollama Buddy session.                                                |
-| ollama-buddy-transient-profile-menu       | Parameter profiles menu for Ollama Buddy.                                      |
-| ollama-buddy-set-suffix                   | Set the current prompt as a suffix.                                            |
-| ollama-buddy-set-system-prompt            | Set the current prompt as a system prompt.                                     |
-| ollama-buddy-history-save                 | Save the edited history back to ‘ollama-buddy--conversation-history-by-model’. |
-| ollama-buddy-import-gguf-file             | Import a GGUF file at FILE-PATH into Ollama.                                   |
-| ollama-buddy-transient-commands-menu      | Commands menu for Ollama Buddy.                                                |
-| ollama-buddy-toggle-interface-level       | Toggle between basic and advanced interface levels.                            |
-| ollama-buddy-transient-fabric-menu        | Fabric patterns menu for Ollama Buddy.                                         |
-| ollama-buddy-params-display               | Display the current Ollama parameter settings.                                 |
-| ollama-buddy-fabric-populate-patterns     | Populate the list of available patterns from the local repository.             |
-| ollama-buddy-sessions-save                | Save the current Ollama Buddy session.                                         |
+| Command                             | Description |
+|-------------------------------------+-------------|
+| ollama-buddy-transient-menu-wrapper |             |
+| ollama-buddy-menu                   |             |
 
 * Interactive functions
 

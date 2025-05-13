@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant with ChatGPT, Claude, Gemini and Grok Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.9.43
+;; Version: 0.9.50
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -2159,10 +2159,136 @@ Supports both single letter and prefixed multi-character model references."
         (when params-alist
           (ollama-buddy--restore-default-parameters))))))
 
+(defun ollama-buddy--calculate-prompt-context-percentage ()
+  "Calculate and return the context percentage for the current prompt."
+  (let* ((model (or ollama-buddy--current-model 
+                    ollama-buddy-default-model))
+         (max-context-size (ollama-buddy--get-model-context-size model))
+         (prompt-data (ollama-buddy--get-prompt-content))
+         (prompt-text (car prompt-data))
+         (history (ollama-buddy--get-history-for-request))
+         (history-tokens 0)
+         (prompt-tokens (ollama-buddy--estimate-token-count prompt-text))
+         (system-prompt-tokens 
+          (if ollama-buddy--current-system-prompt
+              (ollama-buddy--estimate-token-count ollama-buddy--current-system-prompt)
+            0)))
+    
+    ;; Calculate history tokens
+    (when history
+      (dolist (msg history)
+        (let ((content (alist-get 'content msg)))
+          (when content
+            (setq history-tokens (+ history-tokens 
+                                    (ollama-buddy--estimate-token-count content)))))))
+    
+    ;; Add system prompt tokens if not already in history
+    (when (and ollama-buddy--current-system-prompt
+               (not (seq-find (lambda (msg) 
+                                (string= (alist-get 'role msg) "system"))
+                              history)))
+      (setq history-tokens (+ history-tokens system-prompt-tokens)))
+    
+    ;; Calculate total tokens and percentage
+    (let* ((total-tokens (+ history-tokens prompt-tokens))
+           (context-percentage (/ (float total-tokens) max-context-size)))
+           
+      ;; Save the current percentage
+      (setq ollama-buddy--current-context-percentage context-percentage)
+      
+      ;; Save the total token count
+      (setq ollama-buddy--current-context-tokens total-tokens)
+      
+      ;; Save the maximum context size
+      (setq ollama-buddy--current-context-max-size max-context-size)
+      
+      ;; Save the breakdown for detailed display
+      (setq ollama-buddy--current-context-breakdown
+            (list :history-tokens history-tokens
+                  :prompt-tokens prompt-tokens
+                  :system-tokens system-prompt-tokens
+                  :total-tokens total-tokens))
+      
+      ;; Return the percentage
+      context-percentage)))
+
+(defun ollama-buddy-show-context-info ()
+  "Show detailed information about context sizes for all models."
+  (interactive)
+  (ollama-buddy--calculate-prompt-context-percentage)
+  (let ((buf (get-buffer-create "*Ollama Context Sizes*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert "Ollama Model Context Sizes:\n\n")
+        
+        ;; Check if model-context-sizes has any entries
+        (if (= (hash-table-count ollama-buddy--model-context-sizes) 0)
+            (insert "No model context sizes have been retrieved yet.\n")
+          
+          ;; Display context sizes for each model in model-context-sizes
+          (maphash (lambda (model size)
+                     (let ((color (ollama-buddy--get-model-color model)))
+                       (insert "  ")
+                       (insert (propertize model 'face `(:foreground ,color)))
+                       (insert (format ": %d tokens\n" size))))
+                   ollama-buddy--model-context-sizes))
+        
+        ;; Show current context info if available
+        (when ollama-buddy--current-context-percentage
+          (insert "\nCurrent context usage:\n")
+          (insert (format "  Model: %s\n" 
+                          (or ollama-buddy--current-model "unknown")))
+          (insert (format "  Context size: %d tokens\n" 
+                          (or ollama-buddy--current-context-max-size 4096)))
+          (insert (format "  Current usage: %d tokens (%.1f%%)\n"
+                          (or ollama-buddy--current-context-tokens 0)
+                          (* 100 (or ollama-buddy--current-context-percentage 0))))
+          
+          ;; Show breakdown if available
+          (when ollama-buddy--current-context-breakdown
+            (let ((breakdown ollama-buddy--current-context-breakdown))
+              (insert (format "  History: %d tokens\n" 
+                              (plist-get breakdown :history-tokens)))
+              (insert (format "  System prompt: %d tokens\n" 
+                              (plist-get breakdown :system-tokens)))
+              (insert (format "  Current prompt: %d tokens\n" 
+                              (plist-get breakdown :prompt-tokens))))))
+        
+        (view-mode 1)))
+    (display-buffer buf)))
+
+(defun ollama-buddy-toggle-context-percentage ()
+  "Toggle display of context percentage in the status bar."
+  (interactive)
+  (setq ollama-buddy-show-context-percentage 
+        (not ollama-buddy-show-context-percentage))
+  (ollama-buddy--update-status 
+   (concat "Context percentage " 
+           (if ollama-buddy-show-context-percentage "shown" "hidden")))
+  (message "Ollama context percentage display: %s"
+           (if ollama-buddy-show-context-percentage "enabled" "disabled")))
+
+(defun ollama-buddy--check-context-before-send ()
+  "Check context size before sending and warn if it's too large.
+Returns nil if user cancels, t otherwise."
+  (let* ((percentage (ollama-buddy--calculate-prompt-context-percentage))
+         (red-threshold (nth 1 ollama-buddy-context-size-thresholds)))
+    
+    (if (>= percentage red-threshold)
+        ;; Context exceeds limit, ask for confirmation
+        (yes-or-no-p 
+         (format "Warning: Your prompt exceeds the model's context limit (%.0f%%). Send anyway? " 
+                 (* 100 percentage)))
+      
+      ;; Context is within limits
+      t)))
+
 (defun ollama-buddy--send (&optional prompt specified-model)
   "Send PROMPT with optional SPECIFIED-MODEL.
 When PROMPT contains image file paths and the model supports vision, 
 those images will be included in the request."
+  
   ;; Check status and update UI if offline
   (unless (or (ollama-buddy--check-status))
     (ollama-buddy--update-status "OFFLINE")
@@ -2171,6 +2297,10 @@ those images will be included in the request."
   (unless (> (length prompt) 0)
     (user-error "Ensure prompt is defined"))
 
+  (when ollama-buddy-show-context-percentage
+    (unless (ollama-buddy--check-context-before-send)
+      (user-error "Context too far over limit to send")))
+  
   ;; Original Ollama send code with vision additions
   (let* ((model-info (ollama-buddy--get-valid-model specified-model))
          (model (car model-info))
@@ -3071,6 +3201,54 @@ When the operation completes, CALLBACK is called with no arguments if provided."
         (view-mode 1)))
     (display-buffer buf)))
 
+(defun ollama-buddy-set-model-context-size (model size)
+  "Manually set the context size for MODEL to SIZE."
+  (interactive
+   (let* ((models (ollama-buddy--get-models))
+          (model (completing-read "Model: " models nil t))
+          (size (read-number "Context size: " 
+                            (or (gethash model ollama-buddy--model-context-sizes)
+                                4096))))
+     (list model size)))
+
+  (puthash model size ollama-buddy--model-context-sizes)
+
+  (ollama-buddy--calculate-prompt-context-percentage)
+  (ollama-buddy--update-status "CTX Applied")
+
+  (message "Context size for %s set to %d" model size))
+
+(defun ollama-buddy-set-max-history-length (length)
+  "Set the maximum number of message pairs to keep in conversation history."
+  (interactive
+   (list
+    (read-number (format "Set max history length (current: %d): "
+                         ollama-buddy-max-history-length)
+                 ollama-buddy-max-history-length)))
+  
+  ;; Validate the input
+  (when (< length 0)
+    (error "History length must be non-negative"))
+  
+  ;; Set the new value
+  (setq ollama-buddy-max-history-length length)
+
+  (ollama-buddy--update-status "Updated History Max")
+  
+  ;; Truncate existing histories if needed
+  ;; (when (> length 0)
+  ;;   (maphash (lambda (model history)
+  ;;              (when (> (length history) (* 2 length))
+  ;;                (puthash model
+  ;;                         (seq-take history (* 2 length))
+  ;;                         ollama-buddy--conversation-history-by-model)))
+  ;;            ollama-buddy--conversation-history-by-model))
+  
+  ;; Provide feedback
+  (if (= length 0)
+      (message "History disabled (max length set to 0)")
+    (message "Max history length set to %d message pairs" length)))
+
 (defvar ollama-buddy-mode-map
   (let ((map (make-sparse-keymap)))
     
@@ -3120,6 +3298,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c H") #'ollama-buddy-toggle-history)
     (define-key map (kbd "C-c X") #'ollama-buddy-clear-history)
     (define-key map (kbd "C-c J") #'ollama-buddy-history-edit)
+    (define-key map (kbd "C-c Y") #'ollama-buddy-set-max-history-length)
     (define-key map (kbd "M-p") #'ollama-buddy-previous-history)  ;; Keep these existing bindings
     (define-key map (kbd "M-n") #'ollama-buddy-next-history)
     (define-key map (kbd "M-r") #'ollama-buddy-history-search)
@@ -3138,6 +3317,12 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c K") #'ollama-buddy-params-reset)
     (define-key map (kbd "C-c F") #'ollama-buddy-toggle-params-in-header)
     (define-key map (kbd "C-c p") #'ollama-buddy-transient-profile-menu)
+
+    ;; Context keybindings
+    (define-key map (kbd "C-c $") #'ollama-buddy-set-model-context-size)
+    (define-key map (kbd "C-c %") #'ollama-buddy-toggle-context-percentage)
+    (define-key map (kbd "C-c C") #'ollama-buddy-show-context-info)
+    
     (define-key map [remap move-beginning-of-line] #'ollama-buddy-beginning-of-prompt)
     map)
   "Keymap for ollama-buddy mode.")
