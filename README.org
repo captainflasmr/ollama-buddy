@@ -127,8 +127,8 @@ Enable it with the following:
 
 After implementing these changes:
 
-1. *Text mode* (default): Shows =1024/4096= style display
-2. *Bar mode*: Shows =███████░░░░ 2048= style display
+1. *Text mode*: Shows =1024/4096= style display
+2. *Bar mode* (default): Shows =███████░░░░ 2048= style display
 3. Use =C-c 8= to toggle between modes
 4. The *Text mode* will change colors based on your thresholds:
    - Normal: regular colors
