@@ -102,6 +102,7 @@ Added context size management and monitoring
 
 - Added configurable context sizes for popular models (llama3.2, mistral, qwen, etc.)
 - Implemented real-time context usage display in status bar
+- Can display in text or bar display types
 - Added context size thresholds with visual warnings
 - Added interactive commands for context management:
   - =ollama-buddy-show-context-info=: View all model context sizes
@@ -122,13 +123,20 @@ Enable it with the following:
 (setq ollama-buddy-show-context-percentage t)
 #+end_src
 
-*** Design Philosophy
+*** Usage
 
-My approach prioritized simplicity while fitting naturally into Ollama Buddy's design ethos. This means:
+After implementing these changes:
 
-- *Streamlined interface*: Minimal status line additions that don't clutter the display
-- *Immediate accessibility*: Simple keybindings directly from the chat buffer
-- *Text-first design*: Using fontification instead of colors for boundary indicators (keeping with Emacs' aesthetic)
+1. *Text mode* (default): Shows =1024/4096= style display
+2. *Bar mode*: Shows =███████░░░░ 2048= style display
+3. Use =C-c 8= to toggle between modes
+4. The *Text mode* will change colors based on your thresholds:
+   - Normal: regular colors
+   - Amber (85%+): underlined and bold
+   - Red (100%+): inverse video and bold
+5. The *Bar mode* will just fill up as normal
+
+The progress bar will visually represent how much of the context window you're using, making it easier to see at a glance when you're approaching the limit.
 
 *** Implementation Details
 
@@ -1827,6 +1835,7 @@ When a fallback occurs, Ollama Buddy provides clear feedback:
 |------------------------------------------+------------------------------------------------------------------------------|
 | ollama-buddy-awesome-categorize-prompts  | Whether to categorize prompts based on common keywords.                      |
 | ollama-buddy-awesome-prompts-file        | Filename containing the prompts within the repository.                       |
+| ollama-buddy-grok-api-endpoint           | Endpoint for Grok chat completions API.                                      |
 | ollama-buddy-remote-models               | List of available remote models.                                             |
 | ollama-buddy-command-definitions         | Comprehensive command definitions for Ollama Buddy.                          |
 | ollama-buddy-enable-model-colors         | Whether to show model colors.                                                |
@@ -1834,11 +1843,14 @@ When a fallback occurs, Ollama Buddy provides clear feedback:
 | ollama-buddy-show-params-in-header       | Whether to show modified parameters in the header line.                      |
 | ollama-buddy-debug-mode                  | When non-nil, show raw JSON messages in a debug buffer.                      |
 | ollama-buddy-mode                        | Non-nil if Ollama-Buddy mode is enabled.                                     |
+| ollama-buddy-grok-marker-prefix          | Prefix used to identify Grok models in the ollama-buddy interface.           |
 | ollama-buddy-reasoning-markers           | List of marker pairs that encapsulate reasoning/thinking sections.           |
 | ollama-buddy-awesome-update-on-startup   | Whether to automatically update prompts when Emacs starts.                   |
+| ollama-buddy-context-bar-width           | Width of the context progress bar in characters.                             |
 | ollama-buddy-sessions-directory          | Directory containing ollama-buddy session files.                             |
 | ollama-buddy-history-model-view-mode-map | Keymap for model-specific history viewing mode.                              |
 | ollama-buddy-menu-columns                | Number of columns to display in the Ollama Buddy menu.                       |
+| ollama-buddy-gemini-api-endpoint         | Endpoint format for Google Gemini API.                                       |
 | ollama-buddy-fabric-pattern-categories   | List of pattern categories to focus on when listing patterns.                |
 | ollama-buddy-status-update-interval      | Interval in seconds to update the status line with background operations.    |
 | ollama-buddy-fabric-update-on-startup    | Whether to automatically update patterns when Emacs starts.                  |
@@ -1854,11 +1866,14 @@ When a fallback occurs, Ollama Buddy provides clear feedback:
 | ollama-buddy-history-view-mode-map       | Keymap for history viewing mode.                                             |
 | ollama-buddy-fabric-local-dir            | Local directory where Fabric patterns will be stored.                        |
 | ollama-buddy-show-history-indicator      | Whether to show the history indicator in the header line.                    |
+| ollama-buddy-context-size-thresholds     | Thresholds for context usage warnings.                                       |
 | ollama-buddy-mode-map                    | Keymap for ollama-buddy mode.                                                |
 | ollama-buddy-marker-prefix               | Prefix used to identify Ollama models in the ollama-buddy interface.         |
 | ollama-buddy-fabric-patterns-subdir      | Subdirectory within the Fabric repo containing the patterns.                 |
+| ollama-buddy-context-display-type        | How to display context usage in the status bar.                              |
 | ollama-buddy-awesome-repo-url            | URL of the Awesome ChatGPT Prompts GitHub repository.                        |
 | ollama-buddy-openai-api-endpoint         | Endpoint for OpenAI chat completions API.                                    |
+| ollama-buddy-vision-models               | List of models known to support vision capabilities.                         |
 | ollama-buddy-params-active               | Currently active values for Ollama API parameters.                           |
 | ollama-buddy-openai-default-model        | Default OpenAI model to use.                                                 |
 | ollama-buddy-claude-default-model        | Default Claude model to use.                                                 |
@@ -1866,13 +1881,16 @@ When a fallback occurs, Ollama Buddy provides clear feedback:
 | ollama-buddy-gemini-temperature          | Temperature setting for Gemini requests (0.0-1.0).                           |
 | ollama-buddy-current-session-name        | The name of the currently loaded session.                                    |
 | ollama-buddy-host                        | Host where Ollama server is running.                                         |
+| ollama-buddy-image-formats               | List of regular expressions matching supported image file formats.           |
 | ollama-buddy-streaming-enabled           | Whether to use streaming mode for responses.                                 |
 | ollama-buddy-max-history-length          | Maximum number of message pairs to keep in conversation history.             |
 | ollama-buddy-gemini-default-model        | Default Gemini model to use.                                                 |
 | ollama-buddy-default-model               | Default Ollama model to use.                                                 |
 | ollama-buddy-claude-temperature          | Temperature setting for Claude requests (0.0-1.0).                           |
+| ollama-buddy-vision-enabled              | Whether to enable vision support for models that support it.                 |
 | ollama-buddy-awesome-prompt-variable     |                                                                              |
 | ollama-buddy-display-token-stats         | Whether to display token usage statistics in responses.                      |
+| ollama-buddy-show-context-percentage     | Whether to show context percentage in the status bar.                        |
 | ollama-buddy-claude-api-endpoint         | Endpoint for Anthropic Claude API.                                           |
 | ollama-buddy-gemini-api-key              | API key for accessing Google Gemini services.                                |
 | ollama-buddy-openai-max-tokens           | Maximum number of tokens to generate in the response.                        |
@@ -1887,6 +1905,8 @@ When a fallback occurs, Ollama Buddy provides clear feedback:
 | ollama-buddy-fabric-repo-url             | URL of the Fabric GitHub repository.                                         |
 | ollama-buddy-gemini-max-tokens           | Maximum number of tokens to generate in the response.                        |
 | ollama-buddy-modelfile-directory         | Directory for storing temporary Modelfiles.                                  |
+| ollama-buddy-fallback-context-sizes      | Mapping of model names to their default context sizes.                       |
+| ollama-buddy-context-bar-chars           | Characters used to draw the context progress bar.                            |
 | ollama-buddy-openai-temperature          | Temperature setting for OpenAI requests (0.0-2.0).                           |
 | ollama-buddy-convert-markdown-to-org     | Whether to automatically convert markdown to `org-mode' format in responses. |
 | ollama-buddy-mode-hook                   | Hook run after entering or leaving `ollama-buddy-mode'.                      |
@@ -1914,10 +1934,87 @@ When a fallback occurs, Ollama Buddy provides clear feedback:
 #+end_src
 
 #+RESULTS:
-| Command                             | Description |
-|-------------------------------------+-------------|
-| ollama-buddy-transient-menu-wrapper |             |
-| ollama-buddy-menu                   |             |
+| Command                                   | Description                                                                    |
+|-------------------------------------------+--------------------------------------------------------------------------------|
+| ollama-buddy-open-info                    | Open the Info manual for the ollama-buddy package.                             |
+| ollama-buddy-dired-import-gguf            | Import the GGUF file at point in Dired into Ollama.                            |
+| ollama-buddy-toggle-markdown-conversion   | Toggle automatic conversion of markdown to ‘org-mode’ format.                  |
+| ollama-buddy-fabric-send                  | Apply a Fabric pattern to the selected text and send to Ollama.                |
+| ollama-buddy-reset-system-prompt          | Reset the system prompt to default (none).                                     |
+| ollama-buddy-beginning-of-prompt          | Move point to the beginning of the current prompt.                             |
+| ollama-buddy-toggle-streaming             | Toggle streaming mode for Ollama responses.                                    |
+| ollama-buddy-toggle-reasoning-visibility  | Toggle visibility of reasoning/thinking sections in responses.                 |
+| ollama-buddy-history-toggle-edit-mode     | Toggle between viewing and editing modes for history.                          |
+| ollama-buddy-mode                         | Minor mode for ollama-buddy keybindings.                                       |
+| ollama-buddy-roles-switch-role            | Switch to a different ollama-buddy role.                                       |
+| ollama-buddy-pull-model                   | Pull or update MODEL from Ollama Hub asynchronously.                           |
+| ollama-buddy-history-edit                 | View and edit the conversation history in a buffer.                            |
+| ollama-buddy-previous-history             | Navigate to previous item in prompt history.                                   |
+| ollama-buddy-toggle-params-in-header      | Toggle display of modified parameters in the header line.                      |
+| ollama-buddy-display-token-graph          | Display a visual graph of token usage statistics.                              |
+| ollama-buddy-toggle-token-display         | Toggle display of token statistics after each response.                        |
+| ollama-buddy-show-raw-model-info          | Retrieve and display raw JSON information about the current default MODEL.     |
+| ollama-buddy-history-cancel               | Cancel editing the history.                                                    |
+| ollama-buddy-sessions-load                | Load an Ollama Buddy session with improved org file handling.                  |
+| ollama-buddy-transient-menu-wrapper       | Wrapper function for safely loading the Ollama Buddy transient menu.           |
+| ollama-buddy-sessions-list                | Display a list of saved sessions.                                              |
+| ollama-buddy-toggle-context-percentage    | Toggle display of context percentage in the status bar.                        |
+| ollama-buddy-transient-awesome-menu       | Awesome ChatGPT Prompts for ollama-buddy.                                      |
+| ollama-buddy-show-context-info            | Show detailed information about context sizes for all models.                  |
+| ollama-buddy-fabric-set-system-prompt     | Set the system prompt to a Fabric pattern without sending a request.           |
+| ollama-buddy-params-help                  | Display help for Ollama parameters.                                            |
+| ollama-buddy-awesome-send                 | Apply an Awesome ChatGPT Prompt to the selected text and send to Ollama.       |
+| ollama-buddy-sessions-new                 | Start a new session by clearing history and buffer.                            |
+| ollama-buddy-show-system-prompt           | Display the current system prompt in a buffer.                                 |
+| ollama-buddy-awesome-show-prompts-menu    | Show a transient menu of Awesome ChatGPT Prompt organized by category.         |
+| ollama-buddy-awesome-populate-prompts     | Populate the list of available prompt from the local repository.               |
+| ollama-buddy-awesome-set-system-prompt    | Set the system prompt to an Awesome ChatGPT Prompt without sending a request.  |
+| ollama-buddy-params-edit                  | Edit a specific parameter PARAM interactively.                                 |
+| ollama-buddy-awesome-list-prompts         | Display a list of available Awesome ChatGPT Prompt.                            |
+| ollama-buddy-transient-parameter-menu     | Parameter menu for Ollama Buddy.                                               |
+| ollama-buddy-toggle-debug-mode            | Toggle display of raw JSON messages in a debug buffer.                         |
+| ollama-buddy-awesome-show-prompt          | Display the full content of a prompt with FORMATTED-NAME.                      |
+| ollama-buddy-toggle-model-colors          | Toggle the use of model-specific colors in ollama-buddy.                       |
+| ollama-buddy-awesome-setup                | Set up the ollama-buddy-awesome package.                                       |
+| ollama-buddy-fabric-show-pattern          | Display the full content of a PATTERN.                                         |
+| ollama-buddy-fabric-sync-patterns         | Sync the latest patterns from the Fabric GitHub repository.                    |
+| ollama-buddy-reset-all-prompts            | Reset both system prompt and suffix to default (none).                         |
+| ollama-buddy-fabric-list-patterns         | Display a list of available Fabric patterns with descriptions.                 |
+| ollama-buddy-history-search               | Search through the prompt history using a ‘completing-read’ interface.         |
+| ollama-buddy-toggle-history               | Toggle conversation history on/off.                                            |
+| ollama-buddy-display-token-stats          | Display token usage statistics.                                                |
+| ollama-buddy-role-creator-create-new-role | Create a new role interactively.                                               |
+| ollama-buddy-roles-open-directory         | Open the ollama-buddy roles directory in Dired.                                |
+| ollama-buddy-params-reset                 | Reset all parameters to default values and clear modification tracking.        |
+| ollama-buddy-menu                         | Display Ollama Buddy menu with support for prefixed model references.          |
+| ollama-buddy-unload-all-models            | Unload all currently running Ollama models to free up resources.               |
+| ollama-buddy-history-toggle-edit-model    | Toggle between viewing and editing modes for MODEL history.                    |
+| ollama-buddy-transient-menu               | Ollama Buddy main menu.                                                        |
+| ollama-buddy-fabric-setup                 | Set up the ollama-buddy-fabric package.                                        |
+| ollama-buddy-manage-models                | Update the model management interface to include unload capabilities.          |
+| ollama-buddy-history-edit-model           | Edit the conversation history for a specific MODEL.                            |
+| ollama-buddy-roles-create-directory       | Create the ollama-buddy roles directory if it doesn’t exist.                   |
+| ollama-buddy-history-save-model           | Save the edited history for MODEL back to variable.                            |
+| ollama-buddy-toggle-context-display-type  | Toggle between text and bar display for context usage.                         |
+| ollama-buddy-set-max-history-length       | Set the maximum number of message pairs to keep in conversation history.       |
+| ollama-buddy-reset-suffix                 | Reset the suffix to default (none).                                            |
+| ollama-buddy-show-model-status            | Display status of models referenced in command definitions with color coding.  |
+| ollama-buddy-next-history                 | Navigate to next item in prompt history.                                       |
+| ollama-buddy-clear-history                | Clear the conversation history.                                                |
+| ollama-buddy-awesome-sync-prompts         | Sync the latest prompt from the Awesome ChatGPT Prompt GitHub repository.      |
+| ollama-buddy-set-model-context-size       | Manually set the context size for MODEL to SIZE.                               |
+| ollama-buddy-sessions-delete              | Delete an Ollama Buddy session.                                                |
+| ollama-buddy-transient-profile-menu       | Parameter profiles menu for Ollama Buddy.                                      |
+| ollama-buddy-set-suffix                   | Set the current prompt as a suffix.                                            |
+| ollama-buddy-set-system-prompt            | Set the current prompt as a system prompt.                                     |
+| ollama-buddy-history-save                 | Save the edited history back to ‘ollama-buddy--conversation-history-by-model’. |
+| ollama-buddy-import-gguf-file             | Import a GGUF file at FILE-PATH into Ollama.                                   |
+| ollama-buddy-transient-commands-menu      | Commands menu for Ollama Buddy.                                                |
+| ollama-buddy-toggle-interface-level       | Toggle between basic and advanced interface levels.                            |
+| ollama-buddy-transient-fabric-menu        | Fabric patterns menu for Ollama Buddy.                                         |
+| ollama-buddy-params-display               | Display the current Ollama parameter settings.                                 |
+| ollama-buddy-fabric-populate-patterns     | Populate the list of available patterns from the local repository.             |
+| ollama-buddy-sessions-save                | Save the current Ollama Buddy session.                                         |
 
 * Interactive functions
 
@@ -2073,49 +2170,47 @@ CLOSED: [2025-03-29 Sat 13:34]
 #+end_src
 
 #+RESULTS:
-| TODO                                                       | DOING                                                         | DONE                                         |
-|------------------------------------------------------------+---------------------------------------------------------------+----------------------------------------------|
-| check context size of current model when querying          | Add option to hide reasoning in chat buffer                   | Show token parameters as part of token stats |
-| Autoload intelligently? to speed up initial reponse times? | Unload all models?, to free up RAM if you are switching alot? | Autogenerate session save name               |
-| Core API - Embeddings                                      | Core Params - suffix                                          | Add gemini?                                  |
-| Core Params - format                                       |                                                               | Pull ChatGPT and Claude model names          |
-| Core Params - template                                     |                                                               | Merge history buffer functionality           |
-| Core Params - raw                                          |                                                               | Show incoming ollama messages                |
-| Test on Windows                                            |                                                               | Add chatGPT awesome prompt support           |
-|                                                            |                                                               | Add fabric pattern/prompt support            |
-|                                                            |                                                               | ChatGPT support                              |
-|                                                            |                                                               | Claude support                               |
-|                                                            |                                                               | Add new ChatGPT 4.1                          |
-|                                                            |                                                               | Method for securely storing API keys         |
-|                                                            |                                                               | Core API - Delete Model                      |
-|                                                            |                                                               | Core API - Copy a model                      |
-|                                                            |                                                               | Core API - stream                            |
-|                                                            |                                                               | Core API - Pull/Info/Pull/Delete a model     |
-|                                                            |                                                               | Core API - Show running models               |
-|                                                            |                                                               | Core API - Create a model from a GGUF file   |
-|                                                            |                                                               | Add transient menu                           |
-|                                                            |                                                               | History editing                              |
-|                                                            |                                                               | Core API - options - parameter editing       |
-|                                                            |                                                               | Core API - show model information            |
-|                                                            |                                                               | Core API - system prompt                     |
-|                                                            |                                                               | Chat buffer to use org-mode                  |
-|                                                            |                                                               | Chat export options                          |
-|                                                            |                                                               | Core Params - options:temperature            |
-|                                                            |                                                               | Managing Sessions                            |
-|                                                            |                                                               | Sparse minified version                      |
-|                                                            |                                                               | Role-Based Menu Preset System                |
-|                                                            |                                                               | Add to MELPA                                 |
-|                                                            |                                                               | Enhancing Menu Clarity                       |
-|                                                            |                                                               | Real time token tracking                     |
-|                                                            |                                                               | Managing chat history and context            |
+| TODO                    | DOING                | DONE                                         |
+|-------------------------+----------------------+----------------------------------------------|
+| Autoload intelligently? | check context size   | Add option to hide reasoning in chat buffer  |
+| Core API - Embeddings   | Core Params - suffix | Unload all models                            |
+| Core Params - format    |                      | Show token parameters as part of token stats |
+| Core Params - template  |                      | Autogenerate session save name               |
+| Core Params - raw       |                      | Add gemini?                                  |
+| Test on Windows         |                      | Pull ChatGPT and Claude model names          |
+|                         |                      | Merge history buffer functionality           |
+|                         |                      | Show incoming ollama messages                |
+|                         |                      | Add chatGPT awesome prompt support           |
+|                         |                      | Add fabric pattern/prompt support            |
+|                         |                      | ChatGPT support                              |
+|                         |                      | Claude support                               |
+|                         |                      | Add new ChatGPT 4.1                          |
+|                         |                      | Method for securely storing API keys         |
+|                         |                      | Core API - Delete Model                      |
+|                         |                      | Core API - Copy a model                      |
+|                         |                      | Core API - stream                            |
+|                         |                      | Core API - Pull/Info/Pull/Delete a model     |
+|                         |                      | Core API - Show running models               |
+|                         |                      | Core API - Create a model from a GGUF file   |
+|                         |                      | Add transient menu                           |
+|                         |                      | History editing                              |
+|                         |                      | Core API - options - parameter editing       |
+|                         |                      | Core API - show model information            |
+|                         |                      | Core API - system prompt                     |
+|                         |                      | Chat buffer to use org-mode                  |
+|                         |                      | Chat export options                          |
+|                         |                      | Core Params - options:temperature            |
+|                         |                      | Managing Sessions                            |
+|                         |                      | Sparse minified version                      |
+|                         |                      | Role-Based Menu Preset System                |
+|                         |                      | Add to MELPA                                 |
+|                         |                      | Enhancing Menu Clarity                       |
+|                         |                      | Real time token tracking                     |
+|                         |                      | Managing chat history and context            |
 
-** DOING Add option to hide reasoning in chat buffer
+** DOING check context size
 
-** DOING Unload all models?, to free up RAM if you are switching alot?
-
-** TODO check context size of current model when querying
-
-** TODO Autoload intelligently? to speed up initial reponse times?
+** TODO Autoload intelligently?
 
 ** TODO Core API - Embeddings
 
@@ -2131,43 +2226,33 @@ CLOSED: [2025-03-29 Sat 13:34]
 
 I think this is only for generate, but I have quietly added it in.
 
+** DONE Add option to hide reasoning in chat buffer
+
+** DONE Unload all models
+
 ** DONE Show token parameters as part of token stats
-CLOSED: [2025-04-26 Sat 08:12]
 
 ** DONE Autogenerate session save name
-CLOSED: [2025-04-18 Fri 16:33]
 
 ** DONE Add gemini?
-CLOSED: [2025-04-18 Fri 16:32]
 
 ** DONE Pull ChatGPT and Claude model names
-CLOSED: [2025-04-18 Fri 16:32]
 
 ** DONE Merge history buffer functionality
-CLOSED: [2025-04-18 Fri 16:32]
 
 ** DONE Show incoming ollama messages
-CLOSED: [2025-04-18 Fri 16:32]
 
 ** DONE Add chatGPT awesome prompt support
-CLOSED: [2025-04-18 Fri 16:32]
 
 ** DONE Add fabric pattern/prompt support
-CLOSED: [2025-04-18 Fri 16:32]
 
 ** DONE ChatGPT support
-CLOSED: [2025-04-18 Fri 16:31]
 
 ** DONE Claude support
-CLOSED: [2025-04-18 Fri 16:31]
 
 ** DONE Add new ChatGPT 4.1
-CLOSED: [2025-04-18 Fri 16:31]
 
 ** DONE Method for securely storing API keys
-CLOSED: [2025-04-04 Fri 10:18]
-
-Added to readme to advise to use Emacs built-in auth-source
 
 ** DONE Core API - Delete Model
 
