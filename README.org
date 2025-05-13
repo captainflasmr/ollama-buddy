@@ -130,7 +130,7 @@ After implementing these changes:
 1. *Text mode*: Shows =1024/4096= style display
 2. *Bar mode* (default): Shows =███████░░░░ 2048= style display
 3. Use =C-c 8= to toggle between modes
-4. The *Text mode* will change colors based on your thresholds:
+4. The *Text mode* will change fontification based on your thresholds:
    - Normal: regular fontification
    - (85%+): underlined and bold
    - (100%+): inverse video and bold
