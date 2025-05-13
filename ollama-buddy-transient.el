@@ -13,6 +13,9 @@
 (require 'ollama-buddy-awesome)
 
 ;; Forward declarations for functions defined in ollama-buddy.el
+(declare-function ollama-buddy-set-max-history-length "ollama-buddy")
+(declare-function ollama-buddy-set-model-context-size "ollama-buddy")
+(declare-function ollama-buddy-toggle-context-percentage "ollama-buddy")
 (declare-function ollama-buddy--open-chat "ollama-buddy")
 (declare-function ollama-buddy--send-with-command "ollama-buddy")
 (declare-function ollama-buddy-params-edit "ollama-buddy")
@@ -84,6 +87,7 @@
    ["Model"
     ("W" "Manage Models" ollama-buddy-manage-models)
     ("m" "Switch Model" ollama-buddy--swap-model)
+    ("$" "Set Context" ollama-buddy-set-model-context-size)
     ("v" "View Model Status" ollama-buddy-show-model-status)
     ("i" "Show Model Info" ollama-buddy-show-raw-model-info)
     ("M" "Multishot" ollama-buddy--multishot-prompt)
@@ -96,24 +100,31 @@
     ("f" "Fabric Patterns" ollama-buddy-transient-fabric-menu)
     ("a" "Awesome ChatGPT Prompts" ollama-buddy-transient-awesome-menu)
     ]
+
+   ["Buffer"
+    ("B" "Toggle Debug Mode" ollama-buddy-toggle-debug-mode)
+    ("u" "Token Stats" ollama-buddy-display-token-stats)
+    ("U" "Token Usage Graph" ollama-buddy-display-token-graph)
+    ("C" "Context Information" ollama-buddy-show-context-info)
+    ]
    ]
   
   [
-   ["Display Options"
-    ("A" "Toggle Interface Level" ollama-buddy-toggle-interface-level)
-    ("B" "Toggle Debug Mode" ollama-buddy-toggle-debug-mode)
-    ("T" "Toggle Token Display" ollama-buddy-toggle-token-display)
-    ("u" "Token Stats" ollama-buddy-display-token-stats)
-    ("U" "Token Usage Graph" ollama-buddy-display-token-graph)
-    ("C-o" "Toggle Markdown->Org" ollama-buddy-toggle-markdown-conversion)
-    ("c" "Toggle Model Colors" ollama-buddy-toggle-model-colors)
-    ("V" "Toggle reasoning visibility" ollama-buddy-toggle-reasoning-visibility)
+   ["Display Toggle"
+    ("A" "Interface Level" ollama-buddy-toggle-interface-level)
+    ("%" "Context Display" ollama-buddy-toggle-context-percentage)
+    ("T" "Token Display" ollama-buddy-toggle-token-display)
+    ("C-o" "Markdown->Org" ollama-buddy-toggle-markdown-conversion)
+    ("c" "Model Colors" ollama-buddy-toggle-model-colors)
+    ("V" "Reasoning Visibility" ollama-buddy-toggle-reasoning-visibility)
+    ("8" "Toggle display type" ollama-buddy-toggle-context-display-type)
     ]
    
    ["History"
     ("H" "Toggle History" ollama-buddy-toggle-history)
     ("X" "Clear History" ollama-buddy-clear-history)
     ("J" "Edit History" ollama-buddy-history-edit)
+    ("Y" "Edit Max History" ollama-buddy-set-max-history-length)
     ]
    
    ["Sessions"

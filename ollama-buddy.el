@@ -3249,6 +3249,17 @@ When the operation completes, CALLBACK is called with no arguments if provided."
       (message "History disabled (max length set to 0)")
     (message "Max history length set to %d message pairs" length)))
 
+(defun ollama-buddy-toggle-context-display-type ()
+  "Toggle between text and bar display for context usage."
+  (interactive)
+  (setq ollama-buddy-context-display-type
+        (if (eq ollama-buddy-context-display-type 'text) 'bar 'text))
+  (ollama-buddy--update-status 
+   (format "Context display: %s" 
+           (if (eq ollama-buddy-context-display-type 'bar) "bar" "text")))
+  (message "Context display mode: %s"
+           (if (eq ollama-buddy-context-display-type 'bar) "bar" "text")))
+
 (defvar ollama-buddy-mode-map
   (let ((map (make-sparse-keymap)))
     
@@ -3322,6 +3333,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c $") #'ollama-buddy-set-model-context-size)
     (define-key map (kbd "C-c %") #'ollama-buddy-toggle-context-percentage)
     (define-key map (kbd "C-c C") #'ollama-buddy-show-context-info)
+    (define-key map (kbd "C-c 8") #'ollama-buddy-toggle-context-display-type)
     
     (define-key map [remap move-beginning-of-line] #'ollama-buddy-beginning-of-prompt)
     map)

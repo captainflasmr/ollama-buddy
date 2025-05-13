@@ -34,6 +34,25 @@
   :group 'ollama-buddy
   :prefix "ollama-buddy-param-")
 
+(defcustom ollama-buddy-context-display-type 'bar
+  "How to display context usage in the status bar.
+'text' displays as numbers (e.g., 1024/4096)
+'bar' displays as a visual progress bar"
+  :type '(choice (const :tag "Text (numbers)" text)
+                 (const :tag "Visual bar" bar))
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-context-bar-width 10
+  "Width of the context progress bar in characters."
+  :type 'integer
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-context-bar-chars '(?█ ?░)
+  "Characters used to draw the context progress bar.
+First character is for filled portion, second for empty portion."
+  :type '(list character character)
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-fallback-context-sizes
   '(("llama3.2:1b" . 2048)
     ("llama3:8b" . 4096)
@@ -1587,35 +1606,52 @@ When complete, CALLBACK is called with the status response and result."
 ;; Status update functions
 
 (defun ollama-buddy--add-context-to-status-format ()
-  "Calculate context percentage if enabled."
+  "Calculate context percentage and display it according to preference."
   (if (and ollama-buddy-show-context-percentage
            ollama-buddy--current-context-percentage)
       (let* ((total-tokens ollama-buddy--current-context-tokens)
              (max-size ollama-buddy--current-context-max-size)
+             (percentage ollama-buddy--current-context-percentage)
              (amber-threshold (nth 0 ollama-buddy-context-size-thresholds))
              (red-threshold (nth 1 ollama-buddy-context-size-thresholds))
              (status-face (cond
-                           ((>= ollama-buddy--current-context-percentage red-threshold)
+                           ((>= percentage red-threshold)
                             '(:inherit header-line
                                        :inverse-video t
                                        :weight bold))
-                           ((>= ollama-buddy--current-context-percentage amber-threshold)
+                           ((>= percentage amber-threshold)
                             '(:inherit header-line
                                        :underline t
                                        :weight bold))
-                           (t '(:inherit header-line))))
-             ;; Show both token count and percentage - colorize the entire metric based on status
-             (context-text
-              (propertize
-               (format "%d/%d" 
-                       (or total-tokens 0) 
-                       (or max-size 4096))
-               'face
-               status-face)))
+                           (t '(:inherit header-line)))))
         
-        ;; Return the formatted context info with appropriate color
-        (format "%s" context-text))
-    ""))
+        (cond
+         ;; Text display
+         ((eq ollama-buddy-context-display-type 'text)
+          (let ((context-text
+                 (propertize
+                  (format "%d/%d" 
+                          (or total-tokens 0) 
+                          (or max-size 4096))
+                  'face status-face)))
+            (format "%s" context-text)))
+         ;; Bar display
+         ((eq ollama-buddy-context-display-type 'bar)
+          (let* ((bar-width ollama-buddy-context-bar-width)
+                 (filled-chars (round (* percentage bar-width)))
+                 (filled-chars (min filled-chars bar-width))
+                 (empty-chars (- bar-width filled-chars))
+                 (filled-char (car ollama-buddy-context-bar-chars))
+                 (empty-char (cadr ollama-buddy-context-bar-chars))
+                 (bar-text (concat 
+                           (make-string filled-chars filled-char)
+                           (make-string empty-chars empty-char)))
+                 (percentage-text (format " %.0f%%" (* percentage 100))))
+            (concat
+             bar-text
+             " " (format "%d" max-size))
+             ))))
+        ""))
 
 (defun ollama-buddy--update-status (status &optional original-model actual-model)
   "Update the Ollama status and refresh the display.
