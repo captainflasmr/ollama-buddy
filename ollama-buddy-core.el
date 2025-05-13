@@ -35,9 +35,7 @@
   :prefix "ollama-buddy-param-")
 
 (defcustom ollama-buddy-context-display-type 'bar
-  "How to display context usage in the status bar.
-'text' displays as numbers (e.g., 1024/4096)
-'bar' displays as a visual progress bar"
+  "How to display context usage in the status bar."
   :type '(choice (const :tag "Text (numbers)" text)
                  (const :tag "Visual bar" bar))
   :group 'ollama-buddy)
@@ -516,7 +514,7 @@ Returns empty string if no remote models are available."
 
 (defvar ollama-buddy--current-context-percentage nil
   "The current context window percentage used.")
-  
+
 (defvar ollama-buddy--current-context-tokens nil
   "The current token count used in the context window.")
 
@@ -680,8 +678,8 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
 (defun ollama-buddy--get-model-context-size (model)
   "Get the context window size for MODEL."
   (let* (;; Get base context size from cache or compute it
-         (base-size 
-          (or 
+         (base-size
+          (or
            ;; First check if we have it cached
            (gethash model ollama-buddy--model-context-sizes)
            
@@ -693,7 +691,7 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
              ;; Then try substring matches
              (unless fallback-size
                (dolist (entry ollama-buddy-fallback-context-sizes)
-                 (when (and (not fallback-size) 
+                 (when (and (not fallback-size)
                             (string-match-p (car entry) model))
                    (setq fallback-size (cdr entry)))))
              
@@ -719,9 +717,9 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
   (interactive
    (let* ((models (ollama-buddy--get-models))
           (model (completing-read "Model: " models nil t))
-          (size (read-number "Context size: " 
-                            (or (gethash model ollama-buddy--model-context-sizes)
-                                4096))))
+          (size (read-number "Context size: "
+                             (or (gethash model ollama-buddy--model-context-sizes)
+                                 4096))))
      (list model size)))
   
   (puthash model size ollama-buddy--model-context-sizes)
@@ -742,13 +740,13 @@ The handler function should accept the same arguments as `ollama-buddy--send`."
   "Dispatch to appropriate handler based on model prefix.
 ORIG-FUN is the original function being advised.
 PROMPT and SPECIFIED-MODEL are passed to the handler or original function."
-  (let* ((model (or specified-model 
+  (let* ((model (or specified-model
                     ollama-buddy--current-model
                     ollama-buddy-default-model))
          (handler nil))
     ;; Find a matching handler based on model prefix
     (maphash (lambda (prefix func)
-               (when (and (not handler) 
+               (when (and (not handler)
                           (string-prefix-p prefix model))
                  (setq handler func)))
              ollama-buddy--model-handlers)
@@ -802,7 +800,7 @@ Supports both single and prefixed multi-character model references."
   (let* ((available-models (when (ollama-buddy--ollama-running)
                              (ollama-buddy--get-models)))
          ;; Get models available for pull but not yet downloaded
-         (models-to-pull 
+         (models-to-pull
           (when (ollama-buddy--ollama-running)
             ;; Get models from ollama-buddy-available-models, potentially adding prefix
             (let ((available-for-pull
@@ -883,8 +881,8 @@ Supports both single and prefixed multi-character model references."
             (concat
              (mapconcat
               (lambda (model)
-                (let ((display-model (if (ollama-buddy--should-use-marker-prefix) 
-                                         model 
+                (let ((display-model (if (ollama-buddy--should-use-marker-prefix)
+                                         model
                                        (ollama-buddy--get-real-model-name model))))
                   (format "[[elisp:(ollama-buddy-pull-model \"%s\")][%s]]"
                           model display-model)))
@@ -1630,8 +1628,8 @@ When complete, CALLBACK is called with the status response and result."
          ((eq ollama-buddy-context-display-type 'text)
           (let ((context-text
                  (propertize
-                  (format "%d/%d" 
-                          (or total-tokens 0) 
+                  (format "%d/%d"
+                          (or total-tokens 0)
                           (or max-size 4096))
                   'face status-face)))
             (format "%s" context-text)))
@@ -1643,15 +1641,13 @@ When complete, CALLBACK is called with the status response and result."
                  (empty-chars (- bar-width filled-chars))
                  (filled-char (car ollama-buddy-context-bar-chars))
                  (empty-char (cadr ollama-buddy-context-bar-chars))
-                 (bar-text (concat 
-                           (make-string filled-chars filled-char)
-                           (make-string empty-chars empty-char)))
-                 (percentage-text (format " %.0f%%" (* percentage 100))))
+                 (bar-text (concat
+                            (make-string filled-chars filled-char)
+                            (make-string empty-chars empty-char))))
             (concat
              bar-text
-             " " (format "%d" max-size))
-             ))))
-        ""))
+             " " (format "%d" max-size))))))
+    ""))
 
 (defun ollama-buddy--update-status (status &optional original-model actual-model)
   "Update the Ollama status and refresh the display.
@@ -1749,7 +1745,7 @@ Works with the list-based multishot sequence without using array operations."
                 "")
               (when remaining
                 (concat (if completed "," "")
-                        (propertize (mapconcat 'identity remaining ",") 
+                        (propertize (mapconcat 'identity remaining ",")
                                     'face '(:weight normal))))))))
 
 ;; Command handling functions

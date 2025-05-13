@@ -1,4 +1,4 @@
-;;; ollama-buddy.el --- Ollama LLM AI Assistant with ChatGPT, Claude, Gemini and Grok Support -*- lexical-binding: t; -*-
+;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
 ;; Version: 0.9.50
@@ -1771,11 +1771,11 @@ Supports both single letter and prefixed multi-character model references."
                       (json-pretty-print json-start json-end))))))))))
 
     ;; Parse JSON safely
-    (let* ((json-str (save-match-data 
+    (let* ((json-str (save-match-data
                        (replace-regexp-in-string "^[^\{]*" "" output)))
-           (json-data (when (and (stringp json-str) 
+           (json-data (when (and (stringp json-str)
                                  (> (length json-str) 0))
-                        (ignore-errors 
+                        (ignore-errors
                           (json-read-from-string json-str))))
            (text (when json-data
                    (alist-get 'content (alist-get 'message json-data)))))
@@ -2161,7 +2161,7 @@ Supports both single letter and prefixed multi-character model references."
 
 (defun ollama-buddy--calculate-prompt-context-percentage ()
   "Calculate and return the context percentage for the current prompt."
-  (let* ((model (or ollama-buddy--current-model 
+  (let* ((model (or ollama-buddy--current-model
                     ollama-buddy-default-model))
          (max-context-size (ollama-buddy--get-model-context-size model))
          (prompt-data (ollama-buddy--get-prompt-content))
@@ -2169,7 +2169,7 @@ Supports both single letter and prefixed multi-character model references."
          (history (ollama-buddy--get-history-for-request))
          (history-tokens 0)
          (prompt-tokens (ollama-buddy--estimate-token-count prompt-text))
-         (system-prompt-tokens 
+         (system-prompt-tokens
           (if ollama-buddy--current-system-prompt
               (ollama-buddy--estimate-token-count ollama-buddy--current-system-prompt)
             0)))
@@ -2179,12 +2179,12 @@ Supports both single letter and prefixed multi-character model references."
       (dolist (msg history)
         (let ((content (alist-get 'content msg)))
           (when content
-            (setq history-tokens (+ history-tokens 
+            (setq history-tokens (+ history-tokens
                                     (ollama-buddy--estimate-token-count content)))))))
     
     ;; Add system prompt tokens if not already in history
     (when (and ollama-buddy--current-system-prompt
-               (not (seq-find (lambda (msg) 
+               (not (seq-find (lambda (msg)
                                 (string= (alist-get 'role msg) "system"))
                               history)))
       (setq history-tokens (+ history-tokens system-prompt-tokens)))
@@ -2192,7 +2192,7 @@ Supports both single letter and prefixed multi-character model references."
     ;; Calculate total tokens and percentage
     (let* ((total-tokens (+ history-tokens prompt-tokens))
            (context-percentage (/ (float total-tokens) max-context-size)))
-           
+      
       ;; Save the current percentage
       (setq ollama-buddy--current-context-percentage context-percentage)
       
@@ -2237,9 +2237,9 @@ Supports both single letter and prefixed multi-character model references."
         ;; Show current context info if available
         (when ollama-buddy--current-context-percentage
           (insert "\nCurrent context usage:\n")
-          (insert (format "  Model: %s\n" 
+          (insert (format "  Model: %s\n"
                           (or ollama-buddy--current-model "unknown")))
-          (insert (format "  Context size: %d tokens\n" 
+          (insert (format "  Context size: %d tokens\n"
                           (or ollama-buddy--current-context-max-size 4096)))
           (insert (format "  Current usage: %d tokens (%.1f%%)\n"
                           (or ollama-buddy--current-context-tokens 0)
@@ -2248,11 +2248,11 @@ Supports both single letter and prefixed multi-character model references."
           ;; Show breakdown if available
           (when ollama-buddy--current-context-breakdown
             (let ((breakdown ollama-buddy--current-context-breakdown))
-              (insert (format "  History: %d tokens\n" 
+              (insert (format "  History: %d tokens\n"
                               (plist-get breakdown :history-tokens)))
-              (insert (format "  System prompt: %d tokens\n" 
+              (insert (format "  System prompt: %d tokens\n"
                               (plist-get breakdown :system-tokens)))
-              (insert (format "  Current prompt: %d tokens\n" 
+              (insert (format "  Current prompt: %d tokens\n"
                               (plist-get breakdown :prompt-tokens))))))
         
         (view-mode 1)))
@@ -2261,10 +2261,10 @@ Supports both single letter and prefixed multi-character model references."
 (defun ollama-buddy-toggle-context-percentage ()
   "Toggle display of context percentage in the status bar."
   (interactive)
-  (setq ollama-buddy-show-context-percentage 
+  (setq ollama-buddy-show-context-percentage
         (not ollama-buddy-show-context-percentage))
-  (ollama-buddy--update-status 
-   (concat "Context percentage " 
+  (ollama-buddy--update-status
+   (concat "Context percentage "
            (if ollama-buddy-show-context-percentage "shown" "hidden")))
   (message "Ollama context percentage display: %s"
            (if ollama-buddy-show-context-percentage "enabled" "disabled")))
@@ -2277,8 +2277,8 @@ Returns nil if user cancels, t otherwise."
     
     (if (>= percentage red-threshold)
         ;; Context exceeds limit, ask for confirmation
-        (yes-or-no-p 
-         (format "Warning: Your prompt exceeds the model's context limit (%.0f%%). Send anyway? " 
+        (yes-or-no-p
+         (format "Warning: Your prompt exceeds the model's context limit (%.0f%%).  Send anyway? "
                  (* 100 percentage)))
       
       ;; Context is within limits
@@ -2286,7 +2286,7 @@ Returns nil if user cancels, t otherwise."
 
 (defun ollama-buddy--send (&optional prompt specified-model)
   "Send PROMPT with optional SPECIFIED-MODEL.
-When PROMPT contains image file paths and the model supports vision, 
+When PROMPT contains image file paths and the model supports vision,
 those images will be included in the request."
   
   ;; Check status and update UI if offline
@@ -2391,9 +2391,9 @@ those images will be included in the request."
       (setq ollama-buddy--start-point (point))
       (insert "Loading response..."))
     
-    (ollama-buddy--update-status (if has-images 
-                                     "Vision Model Processing..." 
-                                   "Model Processing...") 
+    (ollama-buddy--update-status (if has-images
+                                     "Vision Model Processing..."
+                                   "Model Processing...")
                                  original-model model)
 
     (when (and ollama-buddy--active-process
@@ -2870,7 +2870,7 @@ Modifies the variable in place."
 
 (defun ollama-buddy-manage-models ()
   "Update the model management interface to include unload capabilities."
-  (interactive) 
+  (interactive)
   (let* ((available-models (ollama-buddy--get-models))
          (running-models (ollama-buddy--get-running-models))
          (buf (get-buffer-create "*Ollama Models Management*")))
@@ -3049,9 +3049,9 @@ Modifies the variable in place."
 (defun ollama-buddy-pull-model (model)
   "Pull or update MODEL from Ollama Hub asynchronously.
 When the operation completes, CALLBACK is called with no arguments if provided."
-  (interactive 
+  (interactive
    (let* ((available-models (ollama-buddy--get-models))
-          (models-to-pull 
+          (models-to-pull
            (when (ollama-buddy--ollama-running)
              ;; Get models from ollama-buddy-available-models, potentially adding prefix
              (let ((available-for-pull
@@ -3066,10 +3066,10 @@ When the operation completes, CALLBACK is called with no arguments if provided."
                 available-models
                 :test #'string=)))))
      (if models-to-pull
-         (list (completing-read 
-                "Pull model: " 
+         (list (completing-read
+                "Pull model: "
                 models-to-pull
-                nil 
+                nil
                 nil  ; Allow custom input
                 nil
                 nil
@@ -3206,9 +3206,9 @@ When the operation completes, CALLBACK is called with no arguments if provided."
   (interactive
    (let* ((models (ollama-buddy--get-models))
           (model (completing-read "Model: " models nil t))
-          (size (read-number "Context size: " 
-                            (or (gethash model ollama-buddy--model-context-sizes)
-                                4096))))
+          (size (read-number "Context size: "
+                             (or (gethash model ollama-buddy--model-context-sizes)
+                                 4096))))
      (list model size)))
 
   (puthash model size ollama-buddy--model-context-sizes)
@@ -3219,7 +3219,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
   (message "Context size for %s set to %d" model size))
 
 (defun ollama-buddy-set-max-history-length (length)
-  "Set the maximum number of message pairs to keep in conversation history."
+  "Set the LENGTH number of message pairs to keep in conversation history."
   (interactive
    (list
     (read-number (format "Set max history length (current: %d): "
@@ -3254,8 +3254,8 @@ When the operation completes, CALLBACK is called with no arguments if provided."
   (interactive)
   (setq ollama-buddy-context-display-type
         (if (eq ollama-buddy-context-display-type 'text) 'bar 'text))
-  (ollama-buddy--update-status 
-   (format "Context display: %s" 
+  (ollama-buddy--update-status
+   (format "Context display: %s"
            (if (eq ollama-buddy-context-display-type 'bar) "bar" "text")))
   (message "Context display mode: %s"
            (if (eq ollama-buddy-context-display-type 'bar) "bar" "text")))
