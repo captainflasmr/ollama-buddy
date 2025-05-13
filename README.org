@@ -131,9 +131,9 @@ After implementing these changes:
 2. *Bar mode* (default): Shows =███████░░░░ 2048= style display
 3. Use =C-c 8= to toggle between modes
 4. The *Text mode* will change colors based on your thresholds:
-   - Normal: regular colors
-   - Amber (85%+): underlined and bold
-   - Red (100%+): inverse video and bold
+   - Normal: regular fontification
+   - (85%+): underlined and bold
+   - (100%+): inverse video and bold
 5. The *Bar mode* will just fill up as normal
 
 The progress bar will visually represent how much of the context window you're using, making it easier to see at a glance when you're approaching the limit.
