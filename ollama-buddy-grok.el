@@ -111,12 +111,28 @@ Use nil for API default behavior (adaptive)."
                                ollama-buddy--conversation-history-by-model
                                nil)))
            (system-prompt ollama-buddy--current-system-prompt)
+           (attachment-context
+            (when ollama-buddy--current-attachments
+              (concat "\n\n## Attached Files Context:\n\n"
+                      (mapconcat
+                       (lambda (attachment)
+                         (let ((file (plist-get attachment :file))
+                               (content (plist-get attachment :content)))
+                           (format "### File: %s\n\n#+end_src%s\n%s\n#+begin_src \n\n"
+                                   (file-name-nondirectory file)
+                                   (or (plist-get attachment :type) "")
+                                   content)))
+                       ollama-buddy--current-attachments
+                       ""))))
            (messages (vconcat []
                               (append
                                (when (and system-prompt (not (string-empty-p system-prompt)))
                                  `(((role . "system") (content . ,system-prompt))))
                                history
-                               `(((role . "user") (content . ,prompt))))))
+                               `(((role . "user")
+                                  (content . ,(if attachment-context
+                                                  (concat prompt attachment-context)
+                                                prompt)))))))
            (max-tokens (or ollama-buddy-grok-max-tokens 4096))
            (json-payload
             `((model . ,(ollama-buddy-grok--get-real-model-name
@@ -134,6 +150,11 @@ Use nil for API default behavior (adaptive)."
 
         (unless (> (buffer-size) 0)
           (insert (ollama-buddy--create-intro-message)))
+
+        ;; Show any attached files
+        (when ollama-buddy--current-attachments
+          (insert (format "\n\n[Including %d attached file(s) in context]"
+                          (length ollama-buddy--current-attachments))))
         
         (let (start-point
               (inhibit-read-only t))

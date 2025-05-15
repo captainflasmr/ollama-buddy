@@ -110,11 +110,27 @@ Use nil for API default behavior (adaptive)."
                                ollama-buddy--conversation-history-by-model
                                nil)))
            (system-prompt ollama-buddy--current-system-prompt)
+           (attachment-context
+            (when ollama-buddy--current-attachments
+              (concat "\n\n## Attached Files Context:\n\n"
+                      (mapconcat
+                       (lambda (attachment)
+                         (let ((file (plist-get attachment :file))
+                               (content (plist-get attachment :content)))
+                           (format "### File: %s\n\n#+end_src%s\n%s\n#+begin_src \n\n"
+                                   (file-name-nondirectory file)
+                                   (or (plist-get attachment :type) "")
+                                   content)))
+                       ollama-buddy--current-attachments
+                       ""))))
            (messages (vconcat []
                               (append
                                ;; Don't include system prompt in messages array
                                history
-                               `(((role . "user") (content . ,prompt))))))
+                               `(((role . "user")
+                                  (content . ,(if attachment-context
+                                                  (concat prompt attachment-context)
+                                                prompt)))))))
            (max-tokens (or ollama-buddy-claude-max-tokens 4096))
            (json-payload
             `((model . ,(ollama-buddy-claude--get-real-model-name
@@ -136,6 +152,11 @@ Use nil for API default behavior (adaptive)."
 
         (unless (> (buffer-size) 0)
           (insert (ollama-buddy--create-intro-message)))
+
+        ;; Show any attached files
+        (when ollama-buddy--current-attachments
+          (insert (format "\n\n[Including %d attached file(s) in context]"
+                          (length ollama-buddy--current-attachments))))
         
         (let (start-point
               (inhibit-read-only t))
@@ -308,9 +329,9 @@ Use nil for API default behavior (adaptive)."
                                             (append models-data nil)))
                             ;; Filter to only include Claude models (should be all of them)
                             (chat-models (cl-remove-if-not
-                                            (lambda (model)
-                                              (string-match-p "claude" model))
-                                            models))
+                                          (lambda (model)
+                                            (string-match-p "claude" model))
+                                          models))
                             ;; Prepend the marker prefix to each model name
                             (prefixed-models (mapcar (lambda (model-name)
                                                        (concat ollama-buddy-claude-marker-prefix model-name))

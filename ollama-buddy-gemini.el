@@ -134,6 +134,19 @@ Use nil for API default behavior (adaptive)."
                                ollama-buddy--conversation-history-by-model
                                nil)))
            (system-prompt ollama-buddy--current-system-prompt)
+           (attachment-context
+            (when ollama-buddy--current-attachments
+              (concat "\n\n## Attached Files Context:\n\n"
+                      (mapconcat
+                       (lambda (attachment)
+                         (let ((file (plist-get attachment :file))
+                               (content (plist-get attachment :content)))
+                           (format "### File: %s\n\n#+end_src%s\n%s\n#+begin_src \n\n"
+                                   (file-name-nondirectory file)
+                                   (or (plist-get attachment :type) "")
+                                   content)))
+                       ollama-buddy--current-attachments
+                       ""))))
            ;; For Gemini, we need to handle the system prompt differently
            (messages-with-system
             (if (and system-prompt (not (string-empty-p system-prompt)))
@@ -142,7 +155,10 @@ Use nil for API default behavior (adaptive)."
               history))
            ;; Add the current prompt to the messages
            (messages-all (append messages-with-system
-                                `(((role . "user") (content . ,prompt)))))
+                                 `(((role . "user")
+                                    (content . ,(if attachment-context
+                                                    (concat prompt attachment-context)
+                                                  prompt))))))
            ;; Build the API endpoint with the model name
            (api-endpoint (format ollama-buddy-gemini-api-endpoint model-name))
            ;; Add API key to the endpoint
@@ -173,6 +189,11 @@ Use nil for API default behavior (adaptive)."
 
         (unless (> (buffer-size) 0)
           (insert (ollama-buddy--create-intro-message)))
+
+        ;; Show any attached files
+        (when ollama-buddy--current-attachments
+          (insert (format "\n\n[Including %d attached file(s) in context]"
+                          (length ollama-buddy--current-attachments))))
         
         (let (start-point
               (inhibit-read-only t))
@@ -240,11 +261,11 @@ Use nil for API default behavior (adaptive)."
                                  ;; Parse the Gemini response structure
                                  (let* ((candidates (alist-get 'candidates json-response))
                                         (first-candidate (when (and candidates (> (length candidates) 0))
-                                                          (aref candidates 0)))
+                                                           (aref candidates 0)))
                                         (content-obj (when first-candidate
-                                                      (alist-get 'content first-candidate)))
+                                                       (alist-get 'content first-candidate)))
                                         (parts (when content-obj
-                                                (alist-get 'parts content-obj))))
+                                                 (alist-get 'parts content-obj))))
                                    (when (and parts (> (length parts) 0))
                                      (let ((part (aref parts 0)))
                                        (setq content (alist-get 'text part))))))
@@ -338,9 +359,9 @@ Use nil for API default behavior (adaptive)."
                                                       models))
                             ;; Filter to include only gemini models
                             (chat-models (cl-remove-if-not
-                                           (lambda (model)
-                                             (string-match-p "gemini" model))
-                                           processed-models))
+                                          (lambda (model)
+                                            (string-match-p "gemini" model))
+                                          processed-models))
                             ;; Prepend the marker prefix to each model name
                             (prefixed-models (mapcar (lambda (model-name)
                                                        (concat ollama-buddy-gemini-marker-prefix model-name))
