@@ -8,6 +8,65 @@
 
 * Features as they come in
 
+** <2025-05-14> *0.10.0*
+
+Added file attachment system for including documents in conversations
+
+- Added file attachment support with configurable file size limits (10MB default) and supported file types
+- Implemented session persistence for attachments in save/load functionality  
+- Added attachment context inclusion in prompts with proper token counting
+- Created comprehensive attachment management commands:
+  - Attach files to conversations
+  - Show current attachments in dedicated buffer
+  - Detach specific files
+  - Clear all attachments
+- Added Dired integration for bulk file attachment
+- Included attachment menu in transient interface (C-c 1)
+- Updated help text to document new attachment keybindings
+- Enhanced context calculation to include attachment token usage
+
+You can now seamlessly include text files, code, documentation, and more directly in your conversations with local AI models!
+
+Simply use =C-c C-a= from the chat buffer to attach any file to your current conversation.
+
+The attached files become part of your conversation context, allowing the AI to reference, analyze, or work with their contents directly.
+
+The transient menu has also been updated with a new *Attachment Menu*
+
+#+begin_src 
+*File Attachments*
+  a Attach file
+  w Show attachments
+  d Detach file
+  0 Clear all attachments
+#+end_src
+
+Your attachments aren't just dumped into the conversation - they're intelligently integrated:
+
+- *Token counting* now includes attachment content, so you always know how much context you're using
+- *Session persistence* means your attachments are saved and restored when you save/load conversations
+- *File size limits* (configurable, 10MB default) prevent accidentally overwhelming your context window
+
+Managing attached files is intuitive with dedicated commands:
+
+- =C-c C-w= - View all current attachments in a nicely formatted org mode buffer, folded to each file
+- =C-c C-d= - Detach specific files when you no longer need them
+- =C-c 0= - Clear all attachments at once
+- =C-c 1= - Access the full attachment menu via a transient interface
+
+Working in Dired? No problem! You can attach files directly from your file browser:
+
+- Mark multiple files and attach them all at once
+- Attach the file at point with a single command
+
+Use the configuration as follows:
+
+#+begin_src elisp
+(eval-after-load 'dired
+  '(progn
+     (define-key dired-mode-map (kbd "C-c C-a") #'ollama-buddy-dired-attach-marked-files)))
+#+end_src
+
 ** <2025-05-12> *0.9.50*
 
 Added context size management and monitoring

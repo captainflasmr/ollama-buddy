@@ -11,6 +11,23 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-05-14> *0.10.0*
+
+Added file attachment system for including documents in conversations
+
+- Added file attachment support with configurable file size limits (10MB default) and supported file types
+- Implemented session persistence for attachments in save/load functionality  
+- Added attachment context inclusion in prompts with proper token counting
+- Created comprehensive attachment management commands:
+  - Attach files to conversations
+  - Show current attachments in dedicated buffer
+  - Detach specific files
+  - Clear all attachments
+- Added Dired integration for bulk file attachment
+- Included attachment menu in transient interface (C-c 1)
+- Updated help text to document new attachment keybindings
+- Enhanced context calculation to include attachment token usage
+
 ** <2025-05-12> *0.9.50*
 
 Added context size management and monitoring

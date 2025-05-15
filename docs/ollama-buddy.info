@@ -33,6 +33,7 @@ language models (LLMs) directly within your Emacs workflow.
 * Chat Interface::              Using the chat UI
 * Working with Models::         Managing and using different models
 * Context Management::          Managing context
+* File Attachments::            Including files in conversations
 * Parameter Control::           Customizing AI behavior with parameters
 * Session Management::          Saving and loading conversations
 * Roles and Commands::          Creating custom commands and roles
@@ -68,6 +69,7 @@ directly from within Emacs for various tasks such as:
    • Using pre-built prompt templates from Fabric
    • Utilizing Awesome ChatGPT Prompts
    • Integrating with Claude and OpenAI's commercial APIs
+   • Including files as context in conversations
 
    Instead of context-switching to web interfaces or terminal
 applications, Ollama Buddy brings the power of local LLMs right into
@@ -85,6 +87,8 @@ your Emacs workflow.
      editor
    • *Extensibility*: Create custom roles and commands for your specific
      needs
+   • *File Support*: Include text files, code, and documentation
+     directly in conversations
 
 1.3 Prerequisites
 =================
@@ -226,7 +230,22 @@ Customize the appearance and behavior of Ollama Buddy:
      Level of interface complexity ('basic or 'advanced).
           (setq ollama-buddy-interface-level 'advanced)
 
-3.3 Directory Configuration
+3.3 File Attachment Configuration
+=================================
+
+Configure file attachment behavior:
+
+‘ollama-buddy-max-file-size’
+     Maximum size for attached files in bytes (default: 10MB).
+          (setq ollama-buddy-max-file-size (* 10 1024 1024))  ; 10MB
+
+‘ollama-buddy-supported-file-types’
+     List of regex patterns for supported file types (default includes
+     text, code, and configuration files).
+          (setq ollama-buddy-supported-file-types
+                '("\\.txt$" "\\.md$" "\\.org$" "\\.py$" "\\.js$" "\\.el$"))
+
+3.4 Directory Configuration
 ===========================
 
 Customize where Ollama Buddy stores its files:
@@ -251,7 +270,7 @@ Customize where Ollama Buddy stores its files:
           (setq ollama-buddy-awesome-local-dir
                 (expand-file-name "awesome-chatgpt-prompts" user-emacs-directory))
 
-3.4 History and Session Configuration
+3.5 History and Session Configuration
 =====================================
 
 Configure how conversation history is managed:
@@ -271,7 +290,7 @@ Configure how conversation history is managed:
      t).
           (setq ollama-buddy-show-history-indicator t)
 
-3.5 Context Management Configuration
+3.6 Context Management Configuration
 ====================================
 
 Configure how Ollama Buddy handles context management:
@@ -291,7 +310,7 @@ Configure how Ollama Buddy handles context management:
      Maximum number of message pairs to keep (affects context usage).
           (setq ollama-buddy-max-history-length 10)
 
-3.6 External API Configuration
+3.7 External API Configuration
 ==============================
 
 For OpenAI and Claude integration:
@@ -312,7 +331,7 @@ For OpenAI and Claude integration:
      Default model for Claude requests.
           (setq ollama-buddy-claude-default-model "claude-3-opus-20240229")
 
-3.7 Awesome ChatGPT Prompts Configuration
+3.8 Awesome ChatGPT Prompts Configuration
 =========================================
 
 Configure the Awesome ChatGPT Prompts integration:
@@ -370,6 +389,10 @@ Generating a commit message
 Changing models
      Press ‘C-c o’ followed by ‘m’ to switch between available models.
 
+Attaching files
+     Press ‘C-c o’ followed by ‘1’ for the attachment menu, then ‘a’ to
+     attach a file.
+
 Toggling reasoning visibility
      Press ‘C-c V’ to hide or show reasoning/thinking sections in
      responses.
@@ -407,6 +430,7 @@ The chat interface is the main way to interact with Ollama Buddy:
    • Real-time context usage display
    • Context size validation before sending prompts
    • Customizable context thresholds and warnings
+   • File attachment support
 
 5.2 Pre-built Commands
 ======================
@@ -473,6 +497,15 @@ Proofreading
    • Seamlessly switch between local and cloud models
    • Secure API key management
 
+5.8 File Attachments
+====================
+
+   • Attach text files, code, and documentation to conversations
+   • Automatic context inclusion with proper token counting
+   • Session persistence for attachments
+   • Support for various file types
+   • Dired integration for bulk file attachment
+
 
 File: ollama-buddy.info,  Node: Chat Interface,  Next: Working with Models,  Prev: Core Features,  Up: Top
 
@@ -499,6 +532,7 @@ The chat interface consists of:
    • A header line with status information
    • A status bar showing context usage (when enabled)
    • Context warnings and validation
+   • Attachment indicators when files are attached
 
 6.3 Sending Prompts
 ===================
@@ -659,7 +693,7 @@ simultaneously:
      sequence
 
 
-File: ollama-buddy.info,  Node: Context Management,  Next: Parameter Control,  Prev: Working with Models,  Up: Top
+File: ollama-buddy.info,  Node: Context Management,  Next: File Attachments,  Prev: Working with Models,  Up: Top
 
 8 Context Management
 ********************
@@ -669,12 +703,13 @@ File: ollama-buddy.info,  Node: Context Management,  Next: Parameter Control,  P
 
 Context windows define how much text (measured in tokens) a model can
 process at once.  This includes your current prompt, conversation
-history, and any system prompts.  Understanding and managing context is
-crucial for:
+history, any system prompts, and attached files.  Understanding and
+managing context is crucial for:
 
    • Preventing errors when context limits are exceeded
    • Optimizing model performance for different tasks
    • Managing longer conversations efficiently
+   • Including files without exceeding context limits
 
 8.2 Context Size Detection
 ==========================
@@ -702,13 +737,24 @@ Context monitoring is disabled by default.  To enable it:
         − Inverted: At or exceeding 100% usage
    • Warnings appear before sending prompts that exceed limits
 
-8.4 Context Management Commands
+8.4 Context with File Attachments
+=================================
+
+File attachments are included in context calculations:
+
+   • Each attached file contributes to the total token count
+   • The context breakdown shows attachment tokens separately
+   • File content is included in the request context
+   • Large files can significantly impact context usage
+
+8.5 Context Management Commands
 ===============================
 
 Show Context Information (‘C-c C’)
      Displays a breakdown of current context usage, including:
         • Conversation history token count
         • System prompt token count
+        • Attachment token count
         • Current prompt token count
         • Total usage percentage
 
@@ -718,7 +764,7 @@ Set Model Context Size (‘C-c $’)
 Toggle Context Display (‘C-c %’)
      Show or hide the context percentage in the status bar.
 
-8.5 Token Estimation
+8.6 Token Estimation
 ====================
 
 Ollama Buddy estimates token counts using a heuristic approach:
@@ -726,13 +772,13 @@ Ollama Buddy estimates token counts using a heuristic approach:
    • This provides a reasonable estimate for most use cases
    • Actual token counts may vary slightly between models
 
-8.6 Managing Context in Practice
+8.7 Managing Context in Practice
 ================================
 
-8.6.1 Workflow Strategies
+8.7.1 Workflow Strategies
 -------------------------
 
-8.6.1.1 Paste-and-Send Approach
+8.7.1.1 Paste-and-Send Approach
 ...............................
 
   1. Paste your content into the chat buffer
@@ -740,7 +786,7 @@ Ollama Buddy estimates token counts using a heuristic approach:
   3. If context is exceeded, you'll get a warning dialog
   4. Choose whether to proceed or modify your content
 
-8.6.1.2 Preemptive Checking
+8.7.1.2 Preemptive Checking
 ...........................
 
   1. Paste your content
@@ -750,8 +796,9 @@ Ollama Buddy estimates token counts using a heuristic approach:
         • Edit conversation history (‘C-c J’)
         • Switch to a larger context model
         • Adjust system prompt length
+        • Remove or reduce file attachments
 
-8.6.1.3 History Length Management
+8.7.1.3 History Length Management
 .................................
 
 Control context by limiting conversation history:
@@ -759,7 +806,7 @@ Control context by limiting conversation history:
 
    This keeps only the last 5 message pairs, reducing context usage.
 
-8.6.2 Using num_ctx Parameter
+8.7.2 Using num_ctx Parameter
 -----------------------------
 
 The ‘num_ctx’ parameter allows you to set a specific context size:
@@ -768,7 +815,7 @@ The ‘num_ctx’ parameter allows you to set a specific context size:
   3. Enter your desired context size
   4. Ollama Buddy will respect this limit
 
-8.7 Context Display Configuration
+8.8 Context Display Configuration
 =================================
 
 Customize how context information is displayed:
@@ -783,7 +830,7 @@ Customize how context information is displayed:
 ‘ollama-buddy-context-error-threshold’
      Percentage at which to block sending (default: 100).
 
-8.8 Fallback Context Sizes
+8.9 Fallback Context Sizes
 ==========================
 
 Ollama Buddy includes predefined context sizes for popular models.  You
@@ -794,18 +841,20 @@ can customize these via:
          ("codellama:7b" . 8192)
          ("mistral:7b" . 8192)))
 
-8.9 Troubleshooting Context Issues
-==================================
+8.10 Troubleshooting Context Issues
+===================================
 
 Context warnings appear unexpectedly
         • Check if you have a long system prompt
         • Review conversation history length
         • Verify the model's actual context size
+        • Check if files are attached and their sizes
 
 Model responses are truncated
         • Increase the ‘num_ctx’ parameter
         • Reduce history length with ‘C-c Y’
         • Clear some conversation history
+        • Remove large file attachments
 
 Context calculations seem inaccurate
         • Remember that token estimation is approximate
@@ -813,13 +862,217 @@ Context calculations seem inaccurate
         • Use ‘C-c C’ to see detailed breakdowns
 
 
-File: ollama-buddy.info,  Node: Parameter Control,  Next: Session Management,  Prev: Context Management,  Up: Top
+File: ollama-buddy.info,  Node: File Attachments,  Next: Parameter Control,  Prev: Context Management,  Up: Top
 
-9 Parameter Control
-*******************
+9 File Attachments
+******************
 
-9.1 Understanding Parameters
-============================
+9.1 Overview
+============
+
+File attachments allow you to include the contents of text files, code
+files, documentation, and configuration files directly in your
+conversations with AI models.  This feature is particularly useful for:
+
+   • Code review and analysis
+   • Documentation generation
+   • Configuration file troubleshooting
+   • Multi-file project discussions
+   • Research with multiple text sources
+
+9.2 Supported File Types
+========================
+
+Ollama Buddy supports a wide range of file types by default:
+
+Text and Documentation
+     ‘.txt’, ‘.md’, ‘.org’
+
+Programming Languages
+     ‘.py’, ‘.js’, ‘.el’, ‘.cpp’, ‘.c’, ‘.java’
+
+Web Technologies
+     ‘.html’, ‘.css’, ‘.json’, ‘.xml’
+
+Configuration Files
+     ‘.yaml’, ‘.yml’, ‘.toml’, ‘.ini’, ‘.cfg’
+
+Scripts
+     ‘.sh’, ‘.sql’
+
+   You can customize supported file types by modifying
+‘ollama-buddy-supported-file-types’.
+
+9.3 Attaching Files
+===================
+
+9.3.1 Basic File Attachment
+---------------------------
+
+To attach a single file:
+
+  1. Press ‘C-c 1’ to open the attachment menu
+  2. Press ‘a’ for "Attach file"
+  3. Select the file from the file browser
+  4. The file will be attached and its contents included in future
+     prompts
+
+   Alternatively, you can use ‘C-c C-a’ directly.
+
+9.3.2 Dired Integration
+-----------------------
+
+When working in Dired, you can attach files directly:
+
+Attach file at point
+     Position the cursor on a file and press ‘C-c C-a’
+
+Attach multiple marked files
+     Mark files with ‘m’, then run ‘M-x
+     ollama-buddy-dired-attach-marked-files’
+
+9.4 Managing Attachments
+========================
+
+9.4.1 Viewing Attachments
+-------------------------
+
+To see currently attached files:
+     M-x ollama-buddy-show-attachments
+   or press ‘C-c C-w’.
+
+   This opens a dedicated buffer showing:
+   • File names and paths
+   • File sizes
+   • File content preview
+
+9.4.2 Detaching Files
+---------------------
+
+To remove a specific file:
+     M-x ollama-buddy-detach-file
+   or press ‘C-c C-d’.
+
+   You'll be prompted to select which file to detach from the list of
+currently attached files.
+
+9.4.3 Clearing All Attachments
+------------------------------
+
+To remove all attached files at once:
+     M-x ollama-buddy-clear-attachments
+   or press ‘C-c 0’.
+
+9.5 File Size Limits
+====================
+
+Ollama Buddy enforces file size limits to prevent overwhelming the
+context window:
+
+   • Default maximum file size: 10MB
+   • Configurable via ‘ollama-buddy-max-file-size’
+   • Files exceeding the limit will trigger an error
+
+   Example configuration:
+     ;; Set maximum file size to 5MB
+     (setq ollama-buddy-max-file-size (* 5 1024 1024))
+
+9.6 How Attachments Work
+========================
+
+9.6.1 Context Integration
+-------------------------
+
+When files are attached:
+
+  1. File contents are read and stored in memory
+  2. Content is included in the prompt context when sending requests
+  3. Token counting includes attachment content
+  4. Files are formatted with clear delimiters showing filename and type
+
+9.6.2 Session Persistence
+-------------------------
+
+File attachments are preserved across sessions:
+
+   • Saving a session (‘C-c S’) includes all attached files
+   • Loading a session (‘C-c L’) restores attachments
+   • Session files store both file paths and content
+   • Attachment metadata is preserved (size, type, attachment time)
+
+9.7 File Attachment Workflow Examples
+=====================================
+
+9.7.1 Code Review Workflow
+--------------------------
+
+  1. Attach source files using ‘C-c C-a’
+  2. Set a system prompt for code review: "You are an expert code
+     reviewer"
+  3. Ask questions about the code: "What potential issues do you see in
+     this code?"
+  4. The AI can reference all attached files in its analysis
+
+9.7.2 Multi-File Analysis
+-------------------------
+
+  1. Use Dired to mark multiple related files
+  2. Attach them all with ‘M-x ollama-buddy-dired-attach-marked-files’
+  3. Ask for analysis: "Compare the approaches used in these files"
+  4. The AI can cross-reference content between files
+
+9.7.3 Configuration Troubleshooting
+-----------------------------------
+
+  1. Attach configuration files (.yaml, .json, .ini)
+  2. Describe the issue: "This configuration isn't working as expected"
+  3. The AI can analyze the config and suggest fixes
+
+9.8 Context Considerations
+==========================
+
+File attachments impact context usage:
+
+   • Each attached file counts toward the total token limit
+   • Large files can quickly fill available context
+   • Monitor context usage with ‘C-c C’ when using attachments
+   • Consider detaching unnecessary files to free up context
+
+9.9 Best Practices
+==================
+
+  1. Start with smaller files to avoid context issues
+  2. Use descriptive filenames for clarity
+  3. Remove attachments when no longer needed
+  4. Monitor context usage with large files
+  5. Use attachment history to avoid re-attaching the same files
+
+9.10 Troubleshooting Attachments
+================================
+
+File won't attach
+        • Check if file type is supported (or override with "y")
+        • Verify file size is under the limit
+        • Ensure file exists and is readable
+
+Context errors with attachments
+        • Remove some attachments with ‘C-c C-d’
+        • Switch to a model with larger context
+        • Reduce conversation history length
+
+Attachments not showing in session
+        • Ensure you saved the session after attaching files
+        • Check that the session file includes attachment data
+        • Verify file paths are still valid when loading
+
+
+File: ollama-buddy.info,  Node: Parameter Control,  Next: Session Management,  Prev: File Attachments,  Up: Top
+
+10 Parameter Control
+********************
+
+10.1 Understanding Parameters
+=============================
 
 Ollama's models support various parameters that control their behavior:
 
@@ -836,8 +1089,8 @@ top_p
 repeat_penalty
      Penalty for repeating tokens (higher values reduce repetition)
 
-9.2 Viewing Current Parameters
-==============================
+10.2 Viewing Current Parameters
+===============================
 
 To view all current parameters:
      M-x ollama-buddy-params-display
@@ -846,8 +1099,8 @@ To view all current parameters:
    Parameters that have been modified from default values are marked
 with an asterisk (*).
 
-9.3 Editing Parameters
-======================
+10.3 Editing Parameters
+=======================
 
 To edit parameters:
 
@@ -858,8 +1111,8 @@ To edit parameters:
    You can also use ‘M-x ollama-buddy-params-edit’ and select from a
 completion list.
 
-9.4 Parameter Profiles
-======================
+10.4 Parameter Profiles
+=======================
 
 Ollama Buddy comes with predefined parameter profiles for different use
 cases:
@@ -878,8 +1131,8 @@ Precise
      M-x ollama-buddy-transient-profile-menu
    or press ‘C-c p’ and select a profile.
 
-9.5 Command-Specific Parameters
-===============================
+10.5 Command-Specific Parameters
+================================
 
 Some commands have pre-configured parameters.  For example:
    • The "Refactor Code" command uses lower temperature for more
@@ -890,15 +1143,15 @@ Some commands have pre-configured parameters.  For example:
    These parameters are automatically applied when you use these
 commands and restored afterward.
 
-9.6 Reset Parameters
-====================
+10.6 Reset Parameters
+=====================
 
 To reset all parameters to default values:
      M-x ollama-buddy-params-reset
    or press ‘C-c K’ in the chat buffer.
 
-9.7 Displaying Parameters in Header
-===================================
+10.7 Displaying Parameters in Header
+====================================
 
 To toggle whether modified parameters are shown in the header:
      M-x ollama-buddy-toggle-params-in-header
@@ -907,10 +1160,10 @@ To toggle whether modified parameters are shown in the header:
 
 File: ollama-buddy.info,  Node: Session Management,  Next: Roles and Commands,  Prev: Parameter Control,  Up: Top
 
-10 Session Management
+11 Session Management
 *********************
 
-10.1 Understanding Sessions
+11.1 Understanding Sessions
 ===========================
 
 Sessions in Ollama Buddy allow you to:
@@ -919,7 +1172,7 @@ Sessions in Ollama Buddy allow you to:
    • Restore previous conversations later
    • Switch between different conversation contexts
 
-10.2 Creating a New Session
+11.2 Creating a New Session
 ===========================
 
 To start a fresh session:
@@ -929,7 +1182,7 @@ To start a fresh session:
    This will clear the current conversation history and let you start
 fresh.
 
-10.3 Saving a Session
+11.3 Saving a Session
 =====================
 
 To save the current session:
@@ -938,7 +1191,7 @@ To save the current session:
 
    You'll be prompted to enter a name for the session.
 
-10.4 Loading a Session
+11.4 Loading a Session
 ======================
 
 To load a previously saved session:
@@ -947,7 +1200,7 @@ To load a previously saved session:
 
    You'll be presented with a list of saved sessions to choose from.
 
-10.5 Managing Sessions
+11.5 Managing Sessions
 ======================
 
 To see a list of all saved sessions:
@@ -963,7 +1216,7 @@ To see a list of all saved sessions:
      M-x ollama-buddy-sessions-delete
    or press ‘C-c Z’ in the chat buffer.
 
-10.6 Conversation History
+11.6 Conversation History
 =========================
 
 Sessions save the conversation history for each model separately.
@@ -983,10 +1236,10 @@ Sessions save the conversation history for each model separately.
 
 File: ollama-buddy.info,  Node: Roles and Commands,  Next: Fabric Pattern Integration,  Prev: Session Management,  Up: Top
 
-11 Roles and Commands
+12 Roles and Commands
 *********************
 
-11.1 Understanding Roles
+12.1 Understanding Roles
 ========================
 
 Roles in Ollama Buddy are collections of commands with specific
@@ -999,7 +1252,7 @@ configurations:
    This allows you to create specialized assistants for different
 workflows.
 
-11.2 Role File Naming Convention
+12.2 Role File Naming Convention
 ================================
 
 The file naming convention is critical to understand how roles, preset
@@ -1034,7 +1287,7 @@ this naming convention is automatically handled for you.  When creating
 roles manually, you must follow this pattern for Ollama Buddy to
 recognize your role files correctly.
 
-11.3 Built-in Commands
+12.3 Built-in Commands
 ======================
 
 Ollama Buddy comes with several built-in commands:
@@ -1057,12 +1310,12 @@ synonym
 proofread
      Corrects grammar, style, and spelling
 
-11.4 Creating Custom Roles
+12.4 Creating Custom Roles
 ==========================
 
 There are two ways to create custom roles:
 
-11.4.1 Interactive Role Creator
+12.4.1 Interactive Role Creator
 -------------------------------
 
 The most user-friendly approach:
@@ -1080,7 +1333,7 @@ The most user-friendly approach:
    The interactive creator automatically handles file naming and
 placement.
 
-11.4.2 Manual Role Creation
+12.4.2 Manual Role Creation
 ---------------------------
 
 For more advanced customization, create role files manually:
@@ -1145,7 +1398,7 @@ For more advanced customization, create role files manually:
           :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
          ))
 
-11.5 Switching Roles
+12.5 Switching Roles
 ====================
 
 To switch between roles:
@@ -1154,7 +1407,7 @@ To switch between roles:
 
    You'll be presented with a list of available roles to choose from.
 
-11.6 Managing Role Files
+12.6 Managing Role Files
 ========================
 
 Roles are stored as Elisp files in the ‘ollama-buddy-roles-directory’.
@@ -1171,17 +1424,17 @@ you can customize it:
      M-x ollama-buddy-roles-open-directory
    or press ‘C-c D’ in the chat buffer.
 
-11.7 Advanced Role Customization
+12.7 Advanced Role Customization
 ================================
 
-11.7.1 Command-Specific Models
+12.7.1 Command-Specific Models
 ------------------------------
 
 Assign specific models to commands for optimal performance:
 
      (ollama-buddy-add-model-to-menu-entry 'refactor-code "codellama:7b")
 
-11.7.2 Command-Specific Parameters
+12.7.2 Command-Specific Parameters
 ----------------------------------
 
 Optimize parameters for specific commands:
@@ -1191,7 +1444,7 @@ Optimize parameters for specific commands:
        'top_p 0.7
        'repeat_penalty 1.3)
 
-11.7.3 Creating New Commands
+12.7.3 Creating New Commands
 ----------------------------
 
 Add entirely new commands to your menu:
@@ -1203,10 +1456,10 @@ Add entirely new commands to your menu:
        :system "You are an expert system specialized in this task."
        :action (lambda () (ollama-buddy--send-with-command 'my-new-command)))
 
-11.8 Role Examples
+12.8 Role Examples
 ==================
 
-11.8.1 Programming Role
+12.8.1 Programming Role
 -----------------------
 
 A complete example of a programming-focused role:
@@ -1253,7 +1506,7 @@ A complete example of a programming-focused role:
           :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
          ))
 
-11.8.2 Writing Role
+12.8.2 Writing Role
 -------------------
 
 A complete example of a writing-focused role:
@@ -1300,7 +1553,7 @@ A complete example of a writing-focused role:
           :action (lambda () (ollama-buddy--send-with-command 'brainstorm)))
          ))
 
-11.9 Tips for Effective Role Usage
+12.9 Tips for Effective Role Usage
 ==================================
 
   1. Group related commands: Create roles around specific workflows or
@@ -1317,10 +1570,10 @@ A complete example of a writing-focused role:
 
 File: ollama-buddy.info,  Node: Fabric Pattern Integration,  Next: Awesome ChatGPT Prompts,  Prev: Roles and Commands,  Up: Top
 
-12 Fabric Pattern Integration
+13 Fabric Pattern Integration
 *****************************
 
-12.1 What are Fabric Patterns?
+13.1 What are Fabric Patterns?
 ==============================
 
 Fabric patterns are pre-defined prompt templates from Daniel Miessler's
@@ -1332,7 +1585,7 @@ provide optimized prompts for various tasks, categorized as:
    • writing - Content creation and editing
    • analysis - Data and concept examination
 
-12.2 Setting Up Fabric Integration
+13.2 Setting Up Fabric Integration
 ==================================
 
 To set up Fabric integration:
@@ -1343,7 +1596,7 @@ To set up Fabric integration:
   2. Populate available patterns
   3. Make patterns available for use
 
-12.3 Using Fabric Patterns
+13.3 Using Fabric Patterns
 ==========================
 
 To use a Fabric pattern:
@@ -1356,7 +1609,7 @@ To use a Fabric pattern:
 
    The pattern will be used as a system prompt for your request.
 
-12.4 Browsing Available Patterns
+13.4 Browsing Available Patterns
 ================================
 
 To see all available patterns:
@@ -1368,7 +1621,7 @@ To see all available patterns:
    • Categories
    • Descriptions
 
-12.5 Viewing Pattern Details
+13.5 Viewing Pattern Details
 ============================
 
 To see the full content of a specific pattern:
@@ -1379,14 +1632,14 @@ To see the full content of a specific pattern:
    • The system prompt content
    • Full description
 
-12.6 Updating Patterns
+13.6 Updating Patterns
 ======================
 
 To sync with the latest patterns from GitHub:
      M-x ollama-buddy-fabric-sync-patterns
    or press ‘C-c f’ and then ‘S’.
 
-12.7 Using Patterns by Category
+13.7 Using Patterns by Category
 ===============================
 
 You can quickly access patterns by category:
@@ -1398,10 +1651,10 @@ You can quickly access patterns by category:
 
 File: ollama-buddy.info,  Node: Awesome ChatGPT Prompts,  Next: ChatGPT and Claude Support,  Prev: Fabric Pattern Integration,  Up: Top
 
-13 Awesome ChatGPT Prompts
+14 Awesome ChatGPT Prompts
 **************************
 
-13.1 What is Awesome ChatGPT Prompts?
+14.1 What is Awesome ChatGPT Prompts?
 =====================================
 
 Awesome ChatGPT Prompts is a curated collection of prompt templates
@@ -1416,7 +1669,7 @@ personas or experts, such as:
    • Business experts (marketers, consultants, strategists)
    • And many more specialized roles
 
-13.2 Setting Up Awesome ChatGPT Prompts
+14.2 Setting Up Awesome ChatGPT Prompts
 =======================================
 
 To set up the Awesome ChatGPT Prompts integration:
@@ -1427,7 +1680,7 @@ To set up the Awesome ChatGPT Prompts integration:
   2. Download only the necessary files (prompts.csv and README)
   3. Populate and categorize the available prompts
 
-13.3 Using Awesome ChatGPT Prompts
+14.3 Using Awesome ChatGPT Prompts
 ==================================
 
 To use an Awesome ChatGPT Prompt:
@@ -1441,7 +1694,7 @@ To use an Awesome ChatGPT Prompt:
    The selected prompt will be used as a system prompt for your request,
 transforming how the AI responds to your text.
 
-13.4 Browsing Available Prompts
+14.4 Browsing Available Prompts
 ===============================
 
 To see all available prompts:
@@ -1453,7 +1706,7 @@ To see all available prompts:
    • Categories
    • Preview of prompt content
 
-13.5 Categorized Browsing
+14.5 Categorized Browsing
 =========================
 
 Ollama Buddy automatically categorizes the Awesome ChatGPT Prompts into
@@ -1473,7 +1726,7 @@ useful groups:
      M-x ollama-buddy-awesome-show-prompts-menu
    or press ‘C-c w’ and then ‘c’.
 
-13.6 Viewing Prompt Details
+14.6 Viewing Prompt Details
 ===========================
 
 To see the full content of a specific prompt:
@@ -1482,14 +1735,14 @@ To see the full content of a specific prompt:
 
    Select a prompt to see its complete template.
 
-13.7 Updating Prompts
+14.7 Updating Prompts
 =====================
 
 To sync with the latest prompts from GitHub:
      M-x ollama-buddy-awesome-sync-prompts
    or press ‘C-c w’ and then ‘S’.
 
-13.8 Setting Without Sending
+14.8 Setting Without Sending
 ============================
 
 To set a prompt as the system prompt without sending text:
@@ -1499,7 +1752,7 @@ To set a prompt as the system prompt without sending text:
    This is useful when you want to set up a specific persona before
 starting a conversation.
 
-13.9 Example Usage
+14.9 Example Usage
 ==================
 
 Some popular prompts include:
@@ -1512,10 +1765,10 @@ Some popular prompts include:
 
 File: ollama-buddy.info,  Node: ChatGPT and Claude Support,  Next: Advanced Usage,  Prev: Awesome ChatGPT Prompts,  Up: Top
 
-14 ChatGPT and Claude Support
+15 ChatGPT and Claude Support
 *****************************
 
-14.1 Overview
+15.1 Overview
 =============
 
 Ollama Buddy integrates with commercial AI services:
@@ -1527,12 +1780,12 @@ Ollama Buddy integrates with commercial AI services:
    • Compare responses between local and cloud models
    • Leverage the strengths of different model families
 
-14.2 Setting Up API Access
+15.2 Setting Up API Access
 ==========================
 
 Before using commercial APIs, you need to set up API keys:
 
-14.2.1 Secure API Key Storage
+15.2.1 Secure API Key Storage
 -----------------------------
 
 The recommended approach is to use Emacs' built-in auth-source:
@@ -1540,14 +1793,14 @@ The recommended approach is to use Emacs' built-in auth-source:
      machine api.openai.com login apikey password YOUR_OPENAI_API_KEY
      machine api.anthropic.com login apikey password YOUR_CLAUDE_API_KEY
 
-14.2.2 Direct Configuration
+15.2.2 Direct Configuration
 ---------------------------
 
 For testing or temporary use (less secure):
      (setq ollama-buddy-openai-api-key "your-openai-key")
      (setq ollama-buddy-claude-api-key "your-claude-key")
 
-14.3 Selecting Commercial Models
+15.3 Selecting Commercial Models
 ================================
 
 Both OpenAI and Claude models appear in the model selection list with
@@ -1561,10 +1814,10 @@ special prefixes:
 
    Choose the model from the completion list.
 
-14.4 Configuring Commercial Models
+15.4 Configuring Commercial Models
 ==================================
 
-14.4.1 OpenAI Configuration
+15.4.1 OpenAI Configuration
 ---------------------------
 
 ‘ollama-buddy-openai-default-model’
@@ -1583,7 +1836,7 @@ special prefixes:
      Custom API endpoint (defaults to OpenAI's standard endpoint).
           (setq ollama-buddy-openai-api-endpoint "https://api.openai.com/v1/chat/completions")
 
-14.4.2 Claude Configuration
+15.4.2 Claude Configuration
 ---------------------------
 
 ‘ollama-buddy-claude-default-model’
@@ -1598,7 +1851,7 @@ special prefixes:
      Maximum tokens to generate (nil for API default).
           (setq ollama-buddy-claude-max-tokens 2000)
 
-14.5 History Management
+15.5 History Management
 =======================
 
 Each API service maintains its own conversation history:
@@ -1609,7 +1862,7 @@ Each API service maintains its own conversation history:
    This ensures that context is maintained appropriately for each
 service.
 
-14.6 Improved Error Handling
+15.6 Improved Error Handling
 ============================
 
 As of version 0.9.20, Ollama Buddy includes enhanced error handling for
@@ -1622,10 +1875,10 @@ ChatGPT and Claude:
 
 File: ollama-buddy.info,  Node: Advanced Usage,  Next: API Reference,  Prev: ChatGPT and Claude Support,  Up: Top
 
-15 Advanced Usage
+16 Advanced Usage
 *****************
 
-15.1 Managing Token Usage
+16.1 Managing Token Usage
 =========================
 
 Ollama Buddy can track token usage statistics:
@@ -1642,10 +1895,10 @@ Ollama Buddy can track token usage statistics:
      M-x ollama-buddy-display-token-graph
    or press ‘C-c U’ in the chat buffer.
 
-15.2 Customizing the Interface
+16.2 Customizing the Interface
 ==============================
 
-15.2.1 Interface Level
+16.2.1 Interface Level
 ----------------------
 
 Ollama Buddy has two interface levels:
@@ -1656,7 +1909,7 @@ Ollama Buddy has two interface levels:
      M-x ollama-buddy-toggle-interface-level
    or press ‘C-c A’ in the chat buffer.
 
-15.2.2 Model Colors
+16.2.2 Model Colors
 -------------------
 
 Each model has a distinctive color to help identify responses.
@@ -1665,7 +1918,7 @@ Each model has a distinctive color to help identify responses.
      M-x ollama-buddy-toggle-model-colors
    or press ‘C-c c’ in the chat buffer.
 
-15.2.3 Debug Mode
+16.2.3 Debug Mode
 -----------------
 
 For advanced troubleshooting, you can enable debug mode:
@@ -1674,7 +1927,7 @@ For advanced troubleshooting, you can enable debug mode:
 
    This shows raw JSON messages in a debug buffer.
 
-15.3 Editing Conversation History
+16.3 Editing Conversation History
 =================================
 
 To manually edit conversation history:
@@ -1686,24 +1939,24 @@ modify it and press ‘C-c C-c’ to save or ‘C-c C-k’ to cancel.
 
    To edit history for a specific model, use ‘C-u C-c J’.
 
-15.4 Advanced System Prompt Management
+16.4 Advanced System Prompt Management
 ======================================
 
 For more control over system prompts:
 
-15.4.1 Setting a system prompt without sending
+16.4.1 Setting a system prompt without sending
 ----------------------------------------------
 
      (ollama-buddy-set-system-prompt)
    Enter your system prompt, then press ‘C-c s’.
 
-15.4.2 Using a system prompt from Fabric
+16.4.2 Using a system prompt from Fabric
 ----------------------------------------
 
      M-x ollama-buddy-fabric-set-system-prompt
    or press ‘C-c f p’.
 
-15.5 Using Direct API Access
+16.5 Using Direct API Access
 ============================
 
 For direct programmatic access to Ollama:
@@ -1718,10 +1971,10 @@ For direct programmatic access to Ollama:
 
 File: ollama-buddy.info,  Node: API Reference,  Next: FAQ,  Prev: Advanced Usage,  Up: Top
 
-16 API Reference
+17 API Reference
 ****************
 
-16.1 Interactive Functions
+17.1 Interactive Functions
 ==========================
 
 ‘ollama-buddy-menu’
@@ -1835,7 +2088,7 @@ File: ollama-buddy.info,  Node: API Reference,  Next: FAQ,  Prev: Advanced Usage
 ‘ollama-buddy-set-max-history-length’
      Set the maximum number of message pairs to keep in history.
 
-16.2 Core Functions
+17.2 Core Functions
 ===================
 
 ‘ollama-buddy--send’
@@ -1862,7 +2115,7 @@ File: ollama-buddy.info,  Node: API Reference,  Next: FAQ,  Prev: Advanced Usage
 ‘ollama-buddy--update-status’
      Update the status display.
 
-16.3 Customization Functions
+17.3 Customization Functions
 ============================
 
 ‘ollama-buddy-update-command-with-params’
@@ -1880,27 +2133,27 @@ File: ollama-buddy.info,  Node: API Reference,  Next: FAQ,  Prev: Advanced Usage
 
 File: ollama-buddy.info,  Node: FAQ,  Next: Troubleshooting,  Prev: API Reference,  Up: Top
 
-17 Frequently Asked Questions
+18 Frequently Asked Questions
 *****************************
 
-17.1 General Questions
+18.1 General Questions
 ======================
 
-17.1.1 What is the difference between Ollama Buddy and other AI assistants?
+18.1.1 What is the difference between Ollama Buddy and other AI assistants?
 ---------------------------------------------------------------------------
 
 Ollama Buddy integrates with Ollama to run LLMs locally, offering
 privacy, customization, and seamless Emacs integration without relying
 on external API services.
 
-17.1.2 Does Ollama Buddy require an internet connection?
+18.1.2 Does Ollama Buddy require an internet connection?
 --------------------------------------------------------
 
 Once you've installed Ollama and pulled your models, no internet
 connection is required for normal operation.  Internet is only needed
 when pulling new models or syncing Fabric patterns.
 
-17.1.3 Which models work best with Ollama Buddy?
+18.1.3 Which models work best with Ollama Buddy?
 ------------------------------------------------
 
 Most models supported by Ollama work well.  Popular choices include:
@@ -1909,7 +2162,7 @@ Most models supported by Ollama work well.  Popular choices include:
    • mistral:latest - Good balance of performance and quality
    • phi:latest - Smaller model that works well on limited hardware
 
-17.1.4 How much RAM do I need?
+18.1.4 How much RAM do I need?
 ------------------------------
 
 It depends on the model:
@@ -1919,40 +2172,40 @@ It depends on the model:
 
    Quantized models (e.g., Q4_K_M variants) require less RAM.
 
-17.2 Usage Questions
+18.2 Usage Questions
 ====================
 
-17.2.1 How do I cancel a request that's taking too long?
+18.2.1 How do I cancel a request that's taking too long?
 --------------------------------------------------------
 
 Press ‘C-c k’ in the chat buffer or select "Kill Request" from the menu.
 
-17.2.2 How can I save my conversations?
+18.2.2 How can I save my conversations?
 ---------------------------------------
 
 Use ‘C-c S’ to save the current session, giving it a name.  You can
 restore it later with ‘C-c L’.
 
-17.2.3 Can I use multiple models in the same conversation?
+18.2.3 Can I use multiple models in the same conversation?
 ----------------------------------------------------------
 
 Yes, you can switch models at any time with ‘C-c m’.  Each model
 maintains its own conversation history.
 
-17.2.4 How do I clear the conversation history?
+18.2.4 How do I clear the conversation history?
 -----------------------------------------------
 
 Press ‘C-c X’ to clear history, or ‘C-c N’ to start a completely new
 session.
 
-17.2.5 How can I create a custom command?
+18.2.5 How can I create a custom command?
 -----------------------------------------
 
 The easiest way is through the role creator: press ‘C-c E’ and follow
 the prompts to create commands with specific prompts, models, and
 parameters.
 
-17.2.6 How can I manage context windows?
+18.2.6 How can I manage context windows?
 ----------------------------------------
 
 Ollama Buddy provides several options:
@@ -1962,7 +2215,7 @@ Ollama Buddy provides several options:
    • Limit history length with ‘C-c Y’
    • Set model-specific context sizes with ‘C-c $’
 
-17.2.7 What happens when I exceed the context limit?
+18.2.7 What happens when I exceed the context limit?
 ----------------------------------------------------
 
 When context monitoring is enabled:
@@ -1970,10 +2223,10 @@ When context monitoring is enabled:
    • You'll get an error dialog at or above 100%
    • You can choose to proceed anyway or modify your content
 
-17.3 Troubleshooting
+18.3 Troubleshooting
 ====================
 
-17.3.1 Ollama Buddy shows "OFFLINE" status
+18.3.1 Ollama Buddy shows "OFFLINE" status
 ------------------------------------------
 
 Ensure that:
@@ -1982,7 +2235,7 @@ Ensure that:
      and ‘ollama-buddy-port’)
    • Your firewall isn't blocking connections
 
-17.3.2 Responses are slow or the model seems to hang
+18.3.2 Responses are slow or the model seems to hang
 ----------------------------------------------------
 
 Try:
@@ -1991,7 +2244,7 @@ Try:
    • Setting ‘low_vram’ to ‘t’ if you have limited GPU memory
    • Checking CPU/RAM usage to ensure your system isn't overloaded
 
-17.3.3 Getting "error parsing model" when pulling a model
+18.3.3 Getting "error parsing model" when pulling a model
 ---------------------------------------------------------
 
 This usually means:
@@ -1999,7 +2252,7 @@ This usually means:
    • The model is not available in the Ollama repository
    • You have network connectivity issues
 
-17.3.4 Model responses are low quality or truncated
+18.3.4 Model responses are low quality or truncated
 ---------------------------------------------------
 
 Try:
@@ -2011,13 +2264,13 @@ Try:
 
 File: ollama-buddy.info,  Node: Troubleshooting,  Next: Contributing,  Prev: FAQ,  Up: Top
 
-18 Troubleshooting
+19 Troubleshooting
 ******************
 
-18.1 Common Issues
+19.1 Common Issues
 ==================
 
-18.1.1 Connection Problems
+19.1.1 Connection Problems
 --------------------------
 
 Symptom: Unable to connect to Ollama server
@@ -2032,7 +2285,7 @@ Symptom: Connection breaks during long responses
         • Try setting a lower ‘num_predict’ value
         • Check if your OS has any network timeout settings
 
-18.1.2 Model Problems
+19.1.2 Model Problems
 ---------------------
 
 Symptom: Model loads but gives poor responses
@@ -2047,7 +2300,7 @@ Symptom: Model fails to load or crashes
         • Adjust ‘num_ctx’ to a smaller value
         • Set ‘low_vram’ to ‘t’ if using GPU
 
-18.1.3 Interface Issues
+19.1.3 Interface Issues
 -----------------------
 
 Symptom: Chat buffer becomes unresponsive
@@ -2061,10 +2314,10 @@ Symptom: Markdown conversion issues
         • Check if the response contains complex formatting
         • Try editing the history to fix formatting issues
 
-18.2 Debugging
+19.2 Debugging
 ==============
 
-18.2.1 Enable Debug Mode
+19.2.1 Enable Debug Mode
 ------------------------
 
 To get more information about what's happening:
@@ -2072,13 +2325,13 @@ To get more information about what's happening:
 
    This opens a debug buffer showing raw JSON communication with Ollama.
 
-18.2.2 Check Logs
+19.2.2 Check Logs
 -----------------
 
 Ollama logs can be useful for troubleshooting:
      tail -f ~/.ollama/logs/ollama.log
 
-18.2.3 Report Issues
+19.2.3 Report Issues
 --------------------
 
 If you encounter a bug:
@@ -2095,10 +2348,10 @@ If you encounter a bug:
 
 File: ollama-buddy.info,  Node: Contributing,  Next: Index,  Prev: Troubleshooting,  Up: Top
 
-19 Contributing
+20 Contributing
 ***************
 
-19.1 Getting Started
+20.1 Getting Started
 ====================
 
 Ollama Buddy is an open-source project, and contributions are welcome!
@@ -2114,24 +2367,24 @@ Ollama Buddy is an open-source project, and contributions are welcome!
   7. Push to your fork
   8. Create a pull request
 
-19.2 Development Setup
+20.2 Development Setup
 ======================
 
-19.2.1 Required Tools
+20.2.1 Required Tools
 ---------------------
 
    • Emacs 28.1+
    • Ollama installed and running
    • Git
 
-19.2.2 Recommended Packages
+20.2.2 Recommended Packages
 ---------------------------
 
    • package-lint
    • flycheck
    • elisp-lint
 
-19.3 Coding Guidelines
+20.3 Coding Guidelines
 ======================
 
    • Follow Emacs Lisp conventions
@@ -2141,10 +2394,10 @@ Ollama Buddy is an open-source project, and contributions are welcome!
    • Use prefix ‘ollama-buddy--’ for internal functions
    • Use prefix ‘ollama-buddy-’ for public functions
 
-19.4 Testing
+20.4 Testing
 ============
 
-19.4.1 Run Existing Tests
+20.4.1 Run Existing Tests
 -------------------------
 
 The package includes comprehensive tests:
@@ -2154,7 +2407,7 @@ The package includes comprehensive tests:
      M-x ollama-buddy-fabric-run-tests
      M-x ollama-buddy-parameter-run-tests
 
-19.4.2 Adding New Tests
+20.4.2 Adding New Tests
 -----------------------
 
 When adding features, please also add tests:
@@ -2162,7 +2415,7 @@ When adding features, please also add tests:
    • Integration tests for API interactions
    • Parameter tests for parameter handling
 
-19.5 Feature Requests and Bug Reports
+20.5 Feature Requests and Bug Reports
 =====================================
 
    • Use GitHub Issues for bug reports and feature requests
@@ -2178,26 +2431,27 @@ Index
 
 Tag Table:
 Node: Top550
-Node: Introduction2107
-Node: Installation3915
-Node: Configuration6177
-Node: Quick Start11208
-Node: Core Features12836
-Node: Chat Interface15362
-Node: Working with Models18142
-Node: Context Management20793
-Node: Parameter Control25784
-Node: Session Management28173
-Node: Roles and Commands30181
-Node: Fabric Pattern Integration41758
-Node: Awesome ChatGPT Prompts43985
-Node: ChatGPT and Claude Support47845
-Node: Advanced Usage51300
-Node: API Reference53998
-Node: FAQ58158
-Node: Troubleshooting62787
-Node: Contributing65292
-Node: Index67249
+Node: Introduction2172
+Node: Installation4129
+Node: Configuration6391
+Node: Quick Start11975
+Node: Core Features13724
+Node: Chat Interface16585
+Node: Working with Models19418
+Node: Context Management22069
+Node: File Attachments27678
+Node: Parameter Control33607
+Node: Session Management36010
+Node: Roles and Commands38018
+Node: Fabric Pattern Integration49595
+Node: Awesome ChatGPT Prompts51822
+Node: ChatGPT and Claude Support55682
+Node: Advanced Usage59137
+Node: API Reference61835
+Node: FAQ65995
+Node: Troubleshooting70624
+Node: Contributing73129
+Node: Index75086
 
 End Tag Table
 

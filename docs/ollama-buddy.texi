@@ -52,6 +52,7 @@ allowing you to leverage powerful large language models (LLMs) directly within y
 * Chat Interface::              Using the chat UI
 * Working with Models::         Managing and using different models
 * Context Management::          Managing context
+* File Attachments::            Including files in conversations
 * Parameter Control::           Customizing AI behavior with parameters
 * Session Management::          Saving and loading conversations
 * Roles and Commands::          Creating custom commands and roles
@@ -85,6 +86,7 @@ interact with AI models directly from within Emacs for various tasks such as:
 @item Using pre-built prompt templates from Fabric
 @item Utilizing Awesome ChatGPT Prompts
 @item Integrating with Claude and OpenAI's commercial APIs
+@item Including files as context in conversations
 @end itemize
 
 Instead of context-switching to web interfaces or terminal applications, Ollama Buddy brings 
@@ -98,6 +100,7 @@ the power of local LLMs right into your Emacs workflow.
 @item @strong{Flexibility}: Supports multiple models, parameter tuning, and custom commands
 @item @strong{Efficiency}: Quick access to AI assistance without leaving your editor
 @item @strong{Extensibility}: Create custom roles and commands for your specific needs
+@item @strong{File Support}: Include text files, code, and documentation directly in conversations
 @end itemize
 
 @section Prerequisites
@@ -255,6 +258,25 @@ Whether to display token usage statistics after responses (default: nil).
 Level of interface complexity ('basic or 'advanced).
 @example
 (setq ollama-buddy-interface-level 'advanced)
+@end example
+@end table
+
+@section File Attachment Configuration
+
+Configure file attachment behavior:
+
+@table @code
+@item ollama-buddy-max-file-size
+Maximum size for attached files in bytes (default: 10MB).
+@example
+(setq ollama-buddy-max-file-size (* 10 1024 1024))  ; 10MB
+@end example
+
+@item ollama-buddy-supported-file-types
+List of regex patterns for supported file types (default includes text, code, and configuration files).
+@example
+(setq ollama-buddy-supported-file-types
+      '("\\.txt$" "\\.md$" "\\.org$" "\\.py$" "\\.js$" "\\.el$"))
 @end example
 @end table
 
@@ -432,6 +454,9 @@ Select your changes, press @code{C-c o}, then choose "Git Commit Message" (or pr
 @item Changing models
 Press @code{C-c o} followed by @code{m} to switch between available models.
 
+@item Attaching files
+Press @code{C-c o} followed by @code{1} for the attachment menu, then @code{a} to attach a file.
+
 @item Toggling reasoning visibility
 Press @code{C-c V} to hide or show reasoning/thinking sections in responses.
 
@@ -463,6 +488,7 @@ The chat interface is the main way to interact with Ollama Buddy:
 @item Real-time context usage display
 @item Context size validation before sending prompts
 @item Customizable context thresholds and warnings
+@item File attachment support
 @end itemize
 
 @section Pre-built Commands
@@ -536,6 +562,16 @@ Corrects grammar, style, and spelling
 @item Secure API key management
 @end itemize
 
+@section File Attachments
+
+@itemize @bullet
+@item Attach text files, code, and documentation to conversations
+@item Automatic context inclusion with proper token counting
+@item Session persistence for attachments
+@item Support for various file types
+@item Dired integration for bulk file attachment
+@end itemize
+
 @node Chat Interface
 @chapter Chat Interface
 
@@ -560,6 +596,7 @@ The chat interface consists of:
 @item A header line with status information
 @item A status bar showing context usage (when enabled)
 @item Context warnings and validation
+@item Attachment indicators when files are attached
 @end itemize
 
 @section Sending Prompts
@@ -727,12 +764,13 @@ Multishot mode allows you to send the same prompt to multiple models simultaneou
 
 @section Understanding Context Windows
 
-Context windows define how much text (measured in tokens) a model can process at once. This includes your current prompt, conversation history, and any system prompts. Understanding and managing context is crucial for:
+Context windows define how much text (measured in tokens) a model can process at once. This includes your current prompt, conversation history, any system prompts, and attached files. Understanding and managing context is crucial for:
 
 @itemize @bullet
 @item Preventing errors when context limits are exceeded
 @item Optimizing model performance for different tasks
 @item Managing longer conversations efficiently
+@item Including files without exceeding context limits
 @end itemize
 
 @section Context Size Detection
@@ -766,6 +804,17 @@ With context monitoring enabled:
 @item Warnings appear before sending prompts that exceed limits
 @end itemize
 
+@section Context with File Attachments
+
+File attachments are included in context calculations:
+
+@itemize @bullet
+@item Each attached file contributes to the total token count
+@item The context breakdown shows attachment tokens separately
+@item File content is included in the request context
+@item Large files can significantly impact context usage
+@end itemize
+
 @section Context Management Commands
 
 @table @asis
@@ -774,6 +823,7 @@ Displays a breakdown of current context usage, including:
 @itemize @bullet
 @item Conversation history token count
 @item System prompt token count
+@item Attachment token count
 @item Current prompt token count
 @item Total usage percentage
 @end itemize
@@ -816,6 +866,7 @@ Ollama Buddy estimates token counts using a heuristic approach:
   @item Edit conversation history (@kbd{C-c J})
   @item Switch to a larger context model
   @item Adjust system prompt length
+  @item Remove or reduce file attachments
   @end itemize
 @end enumerate
 
@@ -871,6 +922,7 @@ Ollama Buddy includes predefined context sizes for popular models. You can custo
 @item Check if you have a long system prompt
 @item Review conversation history length
 @item Verify the model's actual context size
+@item Check if files are attached and their sizes
 @end itemize
 
 @item Model responses are truncated
@@ -878,6 +930,7 @@ Ollama Buddy includes predefined context sizes for popular models. You can custo
 @item Increase the @code{num_ctx} parameter
 @item Reduce history length with @kbd{C-c Y}
 @item Clear some conversation history
+@item Remove large file attachments
 @end itemize
 
 @item Context calculations seem inaccurate
@@ -885,6 +938,220 @@ Ollama Buddy includes predefined context sizes for popular models. You can custo
 @item Remember that token estimation is approximate
 @item Different models may tokenize text differently
 @item Use @kbd{C-c C} to see detailed breakdowns
+@end itemize
+@end table
+
+@node File Attachments
+@chapter File Attachments
+
+@section Overview
+
+File attachments allow you to include the contents of text files, code files, documentation, and configuration files directly in your conversations with AI models. This feature is particularly useful for:
+
+@itemize @bullet
+@item Code review and analysis
+@item Documentation generation
+@item Configuration file troubleshooting
+@item Multi-file project discussions
+@item Research with multiple text sources
+@end itemize
+
+@section Supported File Types
+
+Ollama Buddy supports a wide range of file types by default:
+
+@table @asis
+@item Text and Documentation
+@code{.txt}, @code{.md}, @code{.org}
+
+@item Programming Languages
+@code{.py}, @code{.js}, @code{.el}, @code{.cpp}, @code{.c}, @code{.java}
+
+@item Web Technologies
+@code{.html}, @code{.css}, @code{.json}, @code{.xml}
+
+@item Configuration Files
+@code{.yaml}, @code{.yml}, @code{.toml}, @code{.ini}, @code{.cfg}
+
+@item Scripts
+@code{.sh}, @code{.sql}
+@end table
+
+You can customize supported file types by modifying @code{ollama-buddy-supported-file-types}.
+
+@section Attaching Files
+
+@subsection Basic File Attachment
+
+To attach a single file:
+
+@enumerate
+@item Press @code{C-c 1} to open the attachment menu
+@item Press @code{a} for "Attach file"
+@item Select the file from the file browser
+@item The file will be attached and its contents included in future prompts
+@end enumerate
+
+Alternatively, you can use @code{C-c C-a} directly.
+
+@subsection Dired Integration
+
+When working in Dired, you can attach files directly:
+
+@table @asis
+@item Attach file at point
+Position the cursor on a file and press @code{C-c C-a}
+
+@item Attach multiple marked files
+Mark files with @code{m}, then run @code{M-x ollama-buddy-dired-attach-marked-files}
+@end table
+
+@section Managing Attachments
+
+@subsection Viewing Attachments
+
+To see currently attached files:
+@example
+M-x ollama-buddy-show-attachments
+@end example
+or press @code{C-c C-w}.
+
+This opens a dedicated buffer showing:
+@itemize @bullet
+@item File names and paths
+@item File sizes
+@item File content preview
+@end itemize
+
+@subsection Detaching Files
+
+To remove a specific file:
+@example
+M-x ollama-buddy-detach-file
+@end example
+or press @code{C-c C-d}.
+
+You'll be prompted to select which file to detach from the list of currently attached files.
+
+@subsection Clearing All Attachments
+
+To remove all attached files at once:
+@example
+M-x ollama-buddy-clear-attachments
+@end example
+or press @code{C-c 0}.
+
+@section File Size Limits
+
+Ollama Buddy enforces file size limits to prevent overwhelming the context window:
+
+@itemize @bullet
+@item Default maximum file size: 10MB
+@item Configurable via @code{ollama-buddy-max-file-size}
+@item Files exceeding the limit will trigger an error
+@end itemize
+
+Example configuration:
+@example
+;; Set maximum file size to 5MB
+(setq ollama-buddy-max-file-size (* 5 1024 1024))
+@end example
+
+@section How Attachments Work
+
+@subsection Context Integration
+
+When files are attached:
+
+@enumerate
+@item File contents are read and stored in memory
+@item Content is included in the prompt context when sending requests
+@item Token counting includes attachment content
+@item Files are formatted with clear delimiters showing filename and type
+@end enumerate
+
+@subsection Session Persistence
+
+File attachments are preserved across sessions:
+
+@itemize @bullet
+@item Saving a session (@code{C-c S}) includes all attached files
+@item Loading a session (@code{C-c L}) restores attachments
+@item Session files store both file paths and content
+@item Attachment metadata is preserved (size, type, attachment time)
+@end itemize
+
+@section File Attachment Workflow Examples
+
+@subsection Code Review Workflow
+
+@enumerate
+@item Attach source files using @code{C-c C-a}
+@item Set a system prompt for code review: "You are an expert code reviewer"
+@item Ask questions about the code: "What potential issues do you see in this code?"
+@item The AI can reference all attached files in its analysis
+@end enumerate
+
+@subsection Multi-File Analysis
+
+@enumerate
+@item Use Dired to mark multiple related files
+@item Attach them all with @code{M-x ollama-buddy-dired-attach-marked-files}
+@item Ask for analysis: "Compare the approaches used in these files"
+@item The AI can cross-reference content between files
+@end enumerate
+
+@subsection Configuration Troubleshooting
+
+@enumerate
+@item Attach configuration files (.yaml, .json, .ini)
+@item Describe the issue: "This configuration isn't working as expected"
+@item The AI can analyze the config and suggest fixes
+@end enumerate
+
+@section Context Considerations
+
+File attachments impact context usage:
+
+@itemize @bullet
+@item Each attached file counts toward the total token limit
+@item Large files can quickly fill available context
+@item Monitor context usage with @code{C-c C} when using attachments
+@item Consider detaching unnecessary files to free up context
+@end itemize
+
+@section Best Practices
+
+@enumerate
+@item Start with smaller files to avoid context issues
+@item Use descriptive filenames for clarity
+@item Remove attachments when no longer needed
+@item Monitor context usage with large files
+@item Use attachment history to avoid re-attaching the same files
+@end enumerate
+
+@section Troubleshooting Attachments
+
+@table @asis
+@item File won't attach
+@itemize @bullet
+@item Check if file type is supported (or override with "y")
+@item Verify file size is under the limit
+@item Ensure file exists and is readable
+@end itemize
+
+@item Context errors with attachments
+@itemize @bullet
+@item Remove some attachments with @code{C-c C-d}
+@item Switch to a model with larger context
+@item Reduce conversation history length
+@end itemize
+
+@item Attachments not showing in session
+@itemize @bullet
+@item Ensure you saved the session after attaching files
+@item Check that the session file includes attachment data
+@item Verify file paths are still valid when loading
 @end itemize
 @end table
 

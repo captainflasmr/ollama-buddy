@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.9.50
+;; Version: 0.10.0
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -1110,55 +1110,67 @@ Returns the full prompt text ready to be sent."
           (concat "-" (string-join (seq-take words 10) "-"))))
     ""))
 
+(defun ollama-buddy--hash-table-to-alist (hash-table)
+  "Convert HASH-TABLE to an alist for serialization."
+  (let ((alist '()))
+    (maphash (lambda (key value)
+               (push (cons key value) alist))
+             hash-table)
+    (nreverse alist)))
+
+(defun ollama-buddy--alist-to-hash-table (alist)
+  "Convert ALIST back to a hash table."
+  (let ((hash-table (make-hash-table :test 'equal)))
+    (dolist (pair alist)
+      (puthash (car pair) (cdr pair) hash-table))
+    hash-table))
+
 (defun ollama-buddy-sessions-save ()
-  "Save the current Ollama Buddy session."
+  "Save the current Ollama Buddy session including attachments."
   (interactive)
   (let* ((default-name (concat (format-time-string "%F-%H%M%S--")
-                               (replace-regexp-in-string " " "-" (concat ollama-buddy--current-model
-                                                                         (ollama-buddy--get-first-words-of-first-user-content)))))
+                               (replace-regexp-in-string " " "-" 
+                                                         (concat ollama-buddy--current-model
+                                                                 (ollama-buddy--get-first-words-of-first-user-content)))))
          (session-name (read-string "Session name/description: " default-name))
-         (session-file (expand-file-name (concat session-name ".el") ollama-buddy-sessions-directory))
-         (org-file (expand-file-name (concat session-name ".org") ollama-buddy-sessions-directory)))
+         (session-file (expand-file-name (concat session-name ".el") 
+                                         ollama-buddy-sessions-directory))
+         (org-file (expand-file-name (concat session-name ".org") 
+                                     ollama-buddy-sessions-directory))
+         ;; Convert hash table to alist for serialization
+         (history-alist (ollama-buddy--hash-table-to-alist 
+                         ollama-buddy--conversation-history-by-model))
+         (session-data
+          `(:version "1.0"
+                     :model ,(or ollama-buddy--current-model ollama-buddy-default-model)
+                     :history ,history-alist
+                     :attachments ,ollama-buddy--current-attachments
+                     :system-prompt ,ollama-buddy--current-system-prompt
+                     :suffix ,ollama-buddy--current-suffix
+                     :params-active ,ollama-buddy-params-active
+                     :params-modified ,ollama-buddy-params-modified
+                     :created-time ,(current-time)
+                     :session-name ,session-name)))
 
     (ollama-buddy--ensure-sessions-directory)
     
-    ;; Write the session file
+    ;; Write session data
     (with-temp-file session-file
-      (insert ";; ollama-buddy session file\n")
+      (insert ";; Ollama Buddy session file\n")
       (insert (format ";; Session: %s\n" session-name))
       (insert (format ";; Created: %s\n\n" (format-time-string "%Y-%m-%d %H:%M:%S")))
-      
-      ;; Save current model
-      (insert (format "(setq ollama-buddy--current-model %S)\n\n"
-                      (or ollama-buddy--current-model
-                          ollama-buddy-default-model)))
-      
-      ;; Save conversation history by model
-      (insert "(setq ollama-buddy--conversation-history-by-model\n")
-      (insert "      (let ((table (make-hash-table :test 'equal)))\n")
-      
-      ;; For each model with history
-      (maphash
-       (lambda (model history)
-         (when history  ;; Only include non-empty histories
-           (insert (format "        (puthash %S\n" model))
-           (insert (format "                 '%S\n" history))
-           (insert "                 table)\n")))
-       ollama-buddy--conversation-history-by-model)
-      
-      (insert "        table))\n\n")
-      
-      ;; Set current session name
-      (insert (format "(setq ollama-buddy--current-session %S)\n" session-name)))
+      (let ((print-length nil)
+            (print-level nil))
+        (pp session-data (current-buffer))))
     
-    ;; Save the chat buffer contents to an org file
+    ;; Save chat buffer to org file
     (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
       (write-region (point-min) (point-max) org-file))
     
     (setq ollama-buddy-current-session-name session-name)
     (ollama-buddy-update-mode-line)
-    
     (message "Session saved as %s" session-name)))
+
 
 (defun ollama-buddy-update-mode-line ()
   "Update the mode line to show the current session name."
@@ -1187,33 +1199,72 @@ Returns the full prompt text ready to be sent."
   (force-mode-line-update t))
 
 (defun ollama-buddy-sessions-load ()
-  "Load an Ollama Buddy session with improved org file handling."
+  "Load an Ollama Buddy session including attachments."
   (interactive)
   (let* ((session-files (directory-files ollama-buddy-sessions-directory t "\\.el$"))
          (session-names (mapcar #'file-name-base session-files))
          (chosen-session (completing-read "Choose a session to load: " session-names nil t))
-         (session-file (expand-file-name (concat chosen-session ".el") ollama-buddy-sessions-directory))
-         (org-file (expand-file-name (concat chosen-session ".org") ollama-buddy-sessions-directory)))
+         (session-file (expand-file-name (concat chosen-session ".el") 
+                                         ollama-buddy-sessions-directory))
+         (org-file (expand-file-name (concat chosen-session ".org") 
+                                     ollama-buddy-sessions-directory)))
     
-    ;; Load the session data
-    (load-file session-file)
-    
-    ;; Load the org file contents into the chat buffer
-    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-      (let ((inhibit-read-only t))
-        (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
-        (erase-buffer)
-        (insert-file-contents org-file)
-        (org-mode)
-        (visual-line-mode 1)
-        (ollama-buddy-mode 1)
-        (goto-char (point-max))
-        (ollama-buddy--apply-model-colors-to-buffer)))
-
-    (setq ollama-buddy-current-session-name chosen-session)
-    (ollama-buddy-update-mode-line)
-    (ollama-buddy--update-status (format "Session '%s' loaded" chosen-session))
-    (message "Session %s loaded" chosen-session)))
+    ;; Read and parse session data
+    (let ((session-data (with-temp-buffer
+                          (insert-file-contents session-file)
+                          (goto-char (point-min))
+                          ;; Skip comments
+                          (while (looking-at ";;")
+                            (forward-line))
+                          (read (current-buffer)))))
+      
+      ;; Restore model
+      (setq ollama-buddy--current-model (plist-get session-data :model))
+      
+      ;; Restore conversation history (convert alist back to hash table)
+      (setq ollama-buddy--conversation-history-by-model
+            (ollama-buddy--alist-to-hash-table (plist-get session-data :history)))
+      
+      ;; Restore attachments
+      (setq ollama-buddy--current-attachments
+            (plist-get session-data :attachments))
+      
+      ;; Restore prompts
+      (setq ollama-buddy--current-system-prompt
+            (plist-get session-data :system-prompt))
+      (setq ollama-buddy--current-suffix
+            (plist-get session-data :suffix))
+      
+      ;; Restore parameters if available
+      (when (plist-get session-data :params-active)
+        (setq ollama-buddy-params-active (plist-get session-data :params-active)))
+      (when (plist-get session-data :params-modified)
+        (setq ollama-buddy-params-modified (plist-get session-data :params-modified)))
+      
+      ;; Load org file contents
+      (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+        (let ((inhibit-read-only t))
+          (pop-to-buffer (current-buffer))
+          (erase-buffer)
+          (when (file-exists-p org-file)
+            (insert-file-contents org-file))
+          (org-mode)
+          (visual-line-mode 1)
+          (ollama-buddy-mode 1)
+          (goto-char (point-max))
+          (ollama-buddy--apply-model-colors-to-buffer)))
+      
+      (setq ollama-buddy-current-session-name chosen-session)
+      (ollama-buddy-update-mode-line)
+      (ollama-buddy--update-status (format "Session '%s' loaded" chosen-session))
+      
+      ;; Show information about loaded session
+      (message "Session loaded: %s%s%s" 
+               chosen-session
+               (if ollama-buddy--current-attachments 
+                   (format " (%d attachments)" (length ollama-buddy--current-attachments)) 
+                 "")
+               (if ollama-buddy--current-system-prompt " [system prompt]" "")))))
 
 (defun ollama-buddy-sessions-list ()
   "Display a list of saved sessions."
@@ -1303,6 +1354,8 @@ Returns the full prompt text ready to be sent."
     
     ;; Clear all model histories
     (clrhash ollama-buddy--conversation-history-by-model)
+
+    (ollama-buddy-clear-attachments)
     
     ;; Clear the chat buffer
     (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
@@ -2161,15 +2214,24 @@ Supports both single letter and prefixed multi-character model references."
 
 (defun ollama-buddy--calculate-prompt-context-percentage ()
   "Calculate and return the context percentage for the current prompt."
-  (let* ((model (or ollama-buddy--current-model
+  (let* ((model (or ollama-buddy--current-model 
                     ollama-buddy-default-model))
-         (max-context-size (ollama-buddy--get-model-context-size model))
-         (prompt-data (ollama-buddy--get-prompt-content))
-         (prompt-text (car prompt-data))
-         (history (ollama-buddy--get-history-for-request))
+         (total-tokens 0)
          (history-tokens 0)
-         (prompt-tokens (ollama-buddy--estimate-token-count prompt-text))
-         (system-prompt-tokens
+         (max-context-size (ollama-buddy--get-model-context-size model))
+         (history (ollama-buddy--get-history-for-request))
+         (attachment-tokens
+          (ollama-buddy--estimate-token-count
+           (mapconcat
+            (lambda (attachment)
+              (let ((content (plist-get attachment :content)))
+                (format "%s" content)))
+            ollama-buddy--current-attachments
+            " ")))
+         (prompt-tokens
+          (ollama-buddy--estimate-token-count
+           (car (ollama-buddy--get-prompt-content))))
+         (system-prompt-tokens 
           (if ollama-buddy--current-system-prompt
               (ollama-buddy--estimate-token-count ollama-buddy--current-system-prompt)
             0)))
@@ -2179,19 +2241,26 @@ Supports both single letter and prefixed multi-character model references."
       (dolist (msg history)
         (let ((content (alist-get 'content msg)))
           (when content
-            (setq history-tokens (+ history-tokens
-                                    (ollama-buddy--estimate-token-count content)))))))
+            (setq total-tokens (+ total-tokens 
+                                  (ollama-buddy--estimate-token-count content)))))))
+
+    (setq history-tokens total-tokens)
     
     ;; Add system prompt tokens if not already in history
     (when (and ollama-buddy--current-system-prompt
-               (not (seq-find (lambda (msg)
+               (not (seq-find (lambda (msg) 
                                 (string= (alist-get 'role msg) "system"))
                               history)))
-      (setq history-tokens (+ history-tokens system-prompt-tokens)))
+      (setq total-tokens (+ total-tokens system-prompt-tokens)))
+
+    ;; and now the file attachments
+    (when ollama-buddy--current-attachments
+      (setq total-tokens (+ total-tokens attachment-tokens)))
+
+    (setq total-tokens (+ total-tokens prompt-tokens))
     
     ;; Calculate total tokens and percentage
-    (let* ((total-tokens (+ history-tokens prompt-tokens))
-           (context-percentage (/ (float total-tokens) max-context-size)))
+    (let* ((context-percentage (/ (float total-tokens) max-context-size)))
       
       ;; Save the current percentage
       (setq ollama-buddy--current-context-percentage context-percentage)
@@ -2207,6 +2276,7 @@ Supports both single letter and prefixed multi-character model references."
             (list :history-tokens history-tokens
                   :prompt-tokens prompt-tokens
                   :system-tokens system-prompt-tokens
+                  :attachment-tokens attachment-tokens
                   :total-tokens total-tokens))
       
       ;; Return the percentage
@@ -2236,23 +2306,25 @@ Supports both single letter and prefixed multi-character model references."
         
         ;; Show current context info if available
         (when ollama-buddy--current-context-percentage
-          (insert "\nCurrent context usage:\n")
-          (insert (format "  Model: %s\n"
+          (insert "\nCurrent context usage:\n\n")
+          (insert (format "  Model            : %s\n" 
                           (or ollama-buddy--current-model "unknown")))
-          (insert (format "  Context size: %d tokens\n"
+          (insert (format "  Context max size : %d tokens\n" 
                           (or ollama-buddy--current-context-max-size 4096)))
-          (insert (format "  Current usage: %d tokens (%.1f%%)\n"
+          (insert (format "  Current usage    : %d tokens (%.1f%%)\n"
                           (or ollama-buddy--current-context-tokens 0)
                           (* 100 (or ollama-buddy--current-context-percentage 0))))
           
           ;; Show breakdown if available
           (when ollama-buddy--current-context-breakdown
             (let ((breakdown ollama-buddy--current-context-breakdown))
-              (insert (format "  History: %d tokens\n"
+              (insert (format "  History          : %d tokens\n" 
                               (plist-get breakdown :history-tokens)))
-              (insert (format "  System prompt: %d tokens\n"
+              (insert (format "  System prompt    : %d tokens\n" 
                               (plist-get breakdown :system-tokens)))
-              (insert (format "  Current prompt: %d tokens\n"
+              (insert (format "  Attachments      : %d tokens\n" 
+                              (plist-get breakdown :attachment-tokens)))
+              (insert (format "  Current prompt   : %d tokens\n" 
                               (plist-get breakdown :prompt-tokens))))))
         
         (view-mode 1)))
@@ -2322,11 +2394,26 @@ those images will be included in the request."
                          (content . ,ollama-buddy--current-system-prompt)))
                       history)
             history))
+         (attachment-context
+          (when ollama-buddy--current-attachments
+            (concat "\n\n## Attached Files Context:\n\n"
+                    (mapconcat
+                     (lambda (attachment)
+                       (let ((file (plist-get attachment :file))
+                             (content (plist-get attachment :content)))
+                         (format "### File: %s\n\n#+end_src%s\n%s\n#+begin_src \n\n"
+                                 (file-name-nondirectory file)
+                                 (or (plist-get attachment :type) "")
+                                 content)))
+                     ollama-buddy--current-attachments
+                     ""))))
          ;; Create the current message, handling vision content if needed
          (current-message (if has-images
                               (ollama-buddy--create-vision-message prompt image-files)
                             `((role . "user")
-                              (content . ,prompt))))
+                              (content . ,(if attachment-context
+                                              (concat prompt attachment-context)
+                                            prompt)))))
          ;; Add the current message to the messages
          (messages-all (append messages-with-system (list current-message)))
          ;; Get only the modified parameters
@@ -2361,6 +2448,11 @@ those images will be included in the request."
       
       (unless (> (buffer-size) 0)
         (insert (ollama-buddy--create-intro-message)))
+
+      ;; Show any attached files
+      (when ollama-buddy--current-attachments
+        (insert (format "\n\n[Including %d attached file(s) in context]"
+                        (length ollama-buddy--current-attachments))))
       
       ;; Show whether we're using vision if applicable
       (if has-images
@@ -3260,6 +3352,153 @@ When the operation completes, CALLBACK is called with no arguments if provided."
   (message "Context display mode: %s"
            (if (eq ollama-buddy-context-display-type 'bar) "bar" "text")))
 
+(defun ollama-buddy--is-supported-file-type (file)
+  "Check if FILE is of a supported type."
+  (cl-some (lambda (pattern)
+             (string-match-p pattern file))
+           ollama-buddy-supported-file-types))
+
+(defun ollama-buddy--read-file-safely (file)
+  "Read FILE content safely with size and encoding checks."
+  (when (file-exists-p file)
+    (let ((size (file-attribute-size (file-attributes file))))
+      (when (> size ollama-buddy-max-file-size)
+        (error "File too large: %s (max %d bytes)" file ollama-buddy-max-file-size))
+      (with-temp-buffer
+        (let ((coding-system-for-read 'utf-8-unix))
+          (condition-case err
+              (insert-file-contents file)
+            (error
+             (error "Failed to read file %s: %s" file (error-message-string err)))))
+        (list :content (buffer-string)
+              :size size
+              :type (file-name-extension file))))))
+
+(defun ollama-buddy-attach-file (file)
+  "Attach FILE to the current conversation."
+  (interactive "fAttach file: ")
+  (unless (ollama-buddy--is-supported-file-type file)
+    (unless (y-or-n-p "This file type may not be well-supported. Attach anyway? ")
+      (user-error "File attachment cancelled")))
+  
+  (let* ((file-info (ollama-buddy--read-file-safely file))
+         (attachment (list :file (expand-file-name file)
+                           :content (plist-get file-info :content)
+                           :size (plist-get file-info :size)
+                           :type (plist-get file-info :type)
+                           :attachment-time (current-time))))
+    
+    ;; Check if already attached
+    (when (cl-find file ollama-buddy--current-attachments
+                   :test #'string= :key (lambda (a) (plist-get a :file)))
+      (user-error "File already attached: %s" file))
+    
+    ;; Add to current attachments
+    (push attachment ollama-buddy--current-attachments)
+    
+    ;; Add to attachment history
+    (push attachment ollama-buddy--attachment-history)
+
+    (let ((start (point)))
+      ;; Update status and display
+      (ollama-buddy--update-status 
+       (format "Attached: %s (%d files total)" 
+               (file-name-nondirectory file)
+               (length ollama-buddy--current-attachments)))
+      
+      ;; Show attachment in chat buffer
+      (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+        (let ((inhibit-read-only t))
+          (goto-char (point-max))
+          (insert (format "\n\n- Attached: %s (%d bytes)\n"
+                          (file-name-nondirectory file)
+                          (plist-get attachment :size)))
+          (goto-char start)
+          (while (re-search-forward "\n\n\n+" nil t)
+            (replace-match "\n\n")))))
+    
+    (message "File attached: %s" file)))
+
+(defun ollama-buddy-show-attachments ()
+  "Display currently attached files."
+  (interactive)
+  (if (null ollama-buddy--current-attachments)
+      (message "No files attached to current conversation")
+    (let ((buf (get-buffer-create "*Ollama Attachments*")))
+      (with-current-buffer buf
+        (let ((inhibit-read-only t))
+          (erase-buffer)
+          (org-mode)
+          (insert "Current File Attachments:\n")
+          (dolist (attachment ollama-buddy--current-attachments)
+            (let ((file (plist-get attachment :file))
+                  (size (plist-get attachment :size))
+                  (type (plist-get attachment :type)))
+              (insert (format "\n* %s\n" file))
+              (insert (format "\nSize: %d bytes, Type: %s\n" size (or type "unknown")))
+              (insert (format "\n%s\n\n" 
+                              (substring (plist-get attachment :content) 0 
+                                         (length (plist-get attachment :content)))))))
+          (view-mode 1)
+          (org-content)))
+      (display-buffer buf))))
+
+(defun ollama-buddy-detach-file (file)
+  "Remove FILE from current attachments."
+  (interactive
+   (list (completing-read "Detach file: "
+                          (mapcar (lambda (a) (plist-get a :file))
+                                  ollama-buddy--current-attachments)
+                          nil t)))
+  (setq ollama-buddy--current-attachments
+        (cl-remove file ollama-buddy--current-attachments
+                   :test #'string= :key (lambda (a) (plist-get a :file))))
+  (ollama-buddy--update-status 
+   (format "Detached: %s (%d files remaining)" 
+           (file-name-nondirectory file)
+           (length ollama-buddy--current-attachments)))
+  (message "File detached: %s" file))
+
+(defun ollama-buddy-clear-attachments ()
+  "Clear all current file attachments."
+  (interactive)
+  (when (or (null ollama-buddy--current-attachments)
+            (yes-or-no-p "Clear all attached files? "))
+    (setq ollama-buddy--current-attachments nil)
+    (ollama-buddy--update-status "All attachments cleared")
+    (message "All attachments cleared")))
+
+;; dired integration
+
+(defun ollama-buddy-dired-attach-marked-files ()
+  "Attach all marked files in current Dired buffer to Ollama chat."
+  (interactive)
+  (unless (eq major-mode 'dired-mode)
+    (user-error "This command only works in Dired mode"))
+  
+  (let ((marked-files (dired-get-marked-files)))
+    (if (null marked-files)
+        (message "No files marked")
+      (dolist (file marked-files)
+        (when (file-regular-p file)
+          (condition-case err
+              (ollama-buddy-attach-file file)
+            (error (message "Failed to attach %s: %s" 
+                            file (error-message-string err))))))
+      (message "Attached %d files to Ollama chat" 
+               (length (cl-remove-if-not #'file-regular-p marked-files))))))
+
+(defun ollama-buddy-dired-attach-file-at-point ()
+  "Attach the file at point to Ollama chat."
+  (interactive)
+  (unless (eq major-mode 'dired-mode)
+    (user-error "This command only works in Dired mode"))
+  
+  (let ((file (dired-get-filename nil t)))
+    (if (and file (file-regular-p file))
+        (ollama-buddy-attach-file file)
+      (user-error "No file at point or file is not regular"))))
+
 (defvar ollama-buddy-mode-map
   (let ((map (make-sparse-keymap)))
     
@@ -3334,6 +3573,13 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c %") #'ollama-buddy-toggle-context-percentage)
     (define-key map (kbd "C-c C") #'ollama-buddy-show-context-info)
     (define-key map (kbd "C-c 8") #'ollama-buddy-toggle-context-display-type)
+
+    ;; file attachments
+    (define-key map (kbd "C-c 1") #'ollama-buddy-transient-attachment-menu)
+    (define-key map (kbd "C-c C-a") #'ollama-buddy-attach-file)
+    (define-key map (kbd "C-c C-w") #'ollama-buddy-show-attachments)
+    (define-key map (kbd "C-c C-d") #'ollama-buddy-detach-file)
+    (define-key map (kbd "C-c 0") #'ollama-buddy-clear-attachments)
     
     (define-key map [remap move-beginning-of-line] #'ollama-buddy-beginning-of-prompt)
     map)

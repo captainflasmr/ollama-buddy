@@ -34,13 +34,15 @@ language models (LLMs) directly within your Emacs workflow.
 - [[#Configuration][3 Configuration]]
   - [[#Basic-Configuration][3.1 Basic Configuration]]
   - [[#Display-Options][3.2 Display Options]]
-  - [[#Directory-Configuration][3.3 Directory Configuration]]
-  - [[#History-and-Session-Configuration][3.4 History and Session
+  - [[#File-Attachment-Configuration][3.3 File Attachment
     Configuration]]
-  - [[#Context-Management-Configuration][3.5 Context Management
+  - [[#Directory-Configuration][3.4 Directory Configuration]]
+  - [[#History-and-Session-Configuration][3.5 History and Session
     Configuration]]
-  - [[#External-API-Configuration][3.6 External API Configuration]]
-  - [[#Awesome-ChatGPT-Prompts-Configuration][3.7 Awesome ChatGPT
+  - [[#Context-Management-Configuration][3.6 Context Management
+    Configuration]]
+  - [[#External-API-Configuration][3.7 External API Configuration]]
+  - [[#Awesome-ChatGPT-Prompts-Configuration][3.8 Awesome ChatGPT
     Prompts Configuration]]
 - [[#Quick-Start][4 Quick Start]]
   - [[#Basic-Usage][4.1 Basic Usage]]
@@ -53,6 +55,7 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Roles-and-Custom-Commands][5.5 Roles and Custom Commands]]
   - [[#Prompt-Template-Collections][5.6 Prompt Template Collections]]
   - [[#External-API-Integration][5.7 External API Integration]]
+  - [[#File-Attachments-1][5.8 File Attachments]]
 - [[#Chat-Interface][6 Chat Interface]]
   - [[#Opening-the-Chat][6.1 Opening the Chat]]
   - [[#Interface-Overview][6.2 Interface Overview]]
@@ -73,162 +76,187 @@ language models (LLMs) directly within your Emacs workflow.
     Windows]]
   - [[#Context-Size-Detection][8.2 Context Size Detection]]
   - [[#Enabling-Context-Monitoring][8.3 Enabling Context Monitoring]]
-  - [[#Context-Management-Commands][8.4 Context Management Commands]]
-  - [[#Token-Estimation][8.5 Token Estimation]]
-  - [[#Managing-Context-in-Practice][8.6 Managing Context in Practice]]
-    - [[#Workflow-Strategies][8.6.1 Workflow Strategies]]
-      - [[#Paste_002dand_002dSend-Approach][8.6.1.1 Paste-and-Send
+  - [[#Context-with-File-Attachments][8.4 Context with File
+    Attachments]]
+  - [[#Context-Management-Commands][8.5 Context Management Commands]]
+  - [[#Token-Estimation][8.6 Token Estimation]]
+  - [[#Managing-Context-in-Practice][8.7 Managing Context in Practice]]
+    - [[#Workflow-Strategies][8.7.1 Workflow Strategies]]
+      - [[#Paste_002dand_002dSend-Approach][8.7.1.1 Paste-and-Send
         Approach]]
-      - [[#Preemptive-Checking][8.6.1.2 Preemptive Checking]]
-      - [[#History-Length-Management][8.6.1.3 History Length
+      - [[#Preemptive-Checking][8.7.1.2 Preemptive Checking]]
+      - [[#History-Length-Management][8.7.1.3 History Length
         Management]]
-    - [[#Using-num_005fctx-Parameter][8.6.2 Using num_ctx Parameter]]
-  - [[#Context-Display-Configuration][8.7 Context Display
+    - [[#Using-num_005fctx-Parameter][8.7.2 Using num_ctx Parameter]]
+  - [[#Context-Display-Configuration][8.8 Context Display
     Configuration]]
-  - [[#Fallback-Context-Sizes][8.8 Fallback Context Sizes]]
-  - [[#Troubleshooting-Context-Issues][8.9 Troubleshooting Context
+  - [[#Fallback-Context-Sizes][8.9 Fallback Context Sizes]]
+  - [[#Troubleshooting-Context-Issues][8.10 Troubleshooting Context
     Issues]]
-- [[#Parameter-Control][9 Parameter Control]]
-  - [[#Understanding-Parameters][9.1 Understanding Parameters]]
-  - [[#Viewing-Current-Parameters][9.2 Viewing Current Parameters]]
-  - [[#Editing-Parameters][9.3 Editing Parameters]]
-  - [[#Parameter-Profiles][9.4 Parameter Profiles]]
-  - [[#Command_002dSpecific-Parameters][9.5 Command-Specific
+- [[#File-Attachments][9 File Attachments]]
+  - [[#Overview][9.1 Overview]]
+  - [[#Supported-File-Types][9.2 Supported File Types]]
+  - [[#Attaching-Files][9.3 Attaching Files]]
+    - [[#Basic-File-Attachment][9.3.1 Basic File Attachment]]
+    - [[#Dired-Integration][9.3.2 Dired Integration]]
+  - [[#Managing-Attachments][9.4 Managing Attachments]]
+    - [[#Viewing-Attachments][9.4.1 Viewing Attachments]]
+    - [[#Detaching-Files][9.4.2 Detaching Files]]
+    - [[#Clearing-All-Attachments][9.4.3 Clearing All Attachments]]
+  - [[#File-Size-Limits][9.5 File Size Limits]]
+  - [[#How-Attachments-Work][9.6 How Attachments Work]]
+    - [[#Context-Integration][9.6.1 Context Integration]]
+    - [[#Session-Persistence][9.6.2 Session Persistence]]
+  - [[#File-Attachment-Workflow-Examples][9.7 File Attachment Workflow
+    Examples]]
+    - [[#Code-Review-Workflow][9.7.1 Code Review Workflow]]
+    - [[#Multi_002dFile-Analysis][9.7.2 Multi-File Analysis]]
+    - [[#Configuration-Troubleshooting][9.7.3 Configuration
+      Troubleshooting]]
+  - [[#Context-Considerations][9.8 Context Considerations]]
+  - [[#Best-Practices][9.9 Best Practices]]
+  - [[#Troubleshooting-Attachments][9.10 Troubleshooting Attachments]]
+- [[#Parameter-Control][10 Parameter Control]]
+  - [[#Understanding-Parameters][10.1 Understanding Parameters]]
+  - [[#Viewing-Current-Parameters][10.2 Viewing Current Parameters]]
+  - [[#Editing-Parameters][10.3 Editing Parameters]]
+  - [[#Parameter-Profiles][10.4 Parameter Profiles]]
+  - [[#Command_002dSpecific-Parameters][10.5 Command-Specific
     Parameters]]
-  - [[#Reset-Parameters][9.6 Reset Parameters]]
-  - [[#Displaying-Parameters-in-Header][9.7 Displaying Parameters in
+  - [[#Reset-Parameters][10.6 Reset Parameters]]
+  - [[#Displaying-Parameters-in-Header][10.7 Displaying Parameters in
     Header]]
-- [[#Session-Management][10 Session Management]]
-  - [[#Understanding-Sessions][10.1 Understanding Sessions]]
-  - [[#Creating-a-New-Session][10.2 Creating a New Session]]
-  - [[#Saving-a-Session][10.3 Saving a Session]]
-  - [[#Loading-a-Session][10.4 Loading a Session]]
-  - [[#Managing-Sessions][10.5 Managing Sessions]]
-  - [[#Conversation-History][10.6 Conversation History]]
-- [[#Roles-and-Commands][11 Roles and Commands]]
-  - [[#Understanding-Roles][11.1 Understanding Roles]]
-  - [[#Role-File-Naming-Convention][11.2 Role File Naming Convention]]
-  - [[#Built_002din-Commands][11.3 Built-in Commands]]
-  - [[#Creating-Custom-Roles][11.4 Creating Custom Roles]]
-    - [[#Interactive-Role-Creator][11.4.1 Interactive Role Creator]]
-    - [[#Manual-Role-Creation][11.4.2 Manual Role Creation]]
-  - [[#Switching-Roles][11.5 Switching Roles]]
-  - [[#Managing-Role-Files][11.6 Managing Role Files]]
-  - [[#Advanced-Role-Customization][11.7 Advanced Role Customization]]
-    - [[#Command_002dSpecific-Models][11.7.1 Command-Specific Models]]
-    - [[#Command_002dSpecific-Parameters-1][11.7.2 Command-Specific
+- [[#Session-Management][11 Session Management]]
+  - [[#Understanding-Sessions][11.1 Understanding Sessions]]
+  - [[#Creating-a-New-Session][11.2 Creating a New Session]]
+  - [[#Saving-a-Session][11.3 Saving a Session]]
+  - [[#Loading-a-Session][11.4 Loading a Session]]
+  - [[#Managing-Sessions][11.5 Managing Sessions]]
+  - [[#Conversation-History][11.6 Conversation History]]
+- [[#Roles-and-Commands][12 Roles and Commands]]
+  - [[#Understanding-Roles][12.1 Understanding Roles]]
+  - [[#Role-File-Naming-Convention][12.2 Role File Naming Convention]]
+  - [[#Built_002din-Commands][12.3 Built-in Commands]]
+  - [[#Creating-Custom-Roles][12.4 Creating Custom Roles]]
+    - [[#Interactive-Role-Creator][12.4.1 Interactive Role Creator]]
+    - [[#Manual-Role-Creation][12.4.2 Manual Role Creation]]
+  - [[#Switching-Roles][12.5 Switching Roles]]
+  - [[#Managing-Role-Files][12.6 Managing Role Files]]
+  - [[#Advanced-Role-Customization][12.7 Advanced Role Customization]]
+    - [[#Command_002dSpecific-Models][12.7.1 Command-Specific Models]]
+    - [[#Command_002dSpecific-Parameters-1][12.7.2 Command-Specific
       Parameters]]
-    - [[#Creating-New-Commands][11.7.3 Creating New Commands]]
-  - [[#Role-Examples][11.8 Role Examples]]
-    - [[#Programming-Role][11.8.1 Programming Role]]
-    - [[#Writing-Role][11.8.2 Writing Role]]
-  - [[#Tips-for-Effective-Role-Usage][11.9 Tips for Effective Role
+    - [[#Creating-New-Commands][12.7.3 Creating New Commands]]
+  - [[#Role-Examples][12.8 Role Examples]]
+    - [[#Programming-Role][12.8.1 Programming Role]]
+    - [[#Writing-Role][12.8.2 Writing Role]]
+  - [[#Tips-for-Effective-Role-Usage][12.9 Tips for Effective Role
     Usage]]
-- [[#Fabric-Pattern-Integration][12 Fabric Pattern Integration]]
-  - [[#What-are-Fabric-Patterns_003f][12.1 What are Fabric Patterns?]]
-  - [[#Setting-Up-Fabric-Integration][12.2 Setting Up Fabric
+- [[#Fabric-Pattern-Integration][13 Fabric Pattern Integration]]
+  - [[#What-are-Fabric-Patterns_003f][13.1 What are Fabric Patterns?]]
+  - [[#Setting-Up-Fabric-Integration][13.2 Setting Up Fabric
     Integration]]
-  - [[#Using-Fabric-Patterns][12.3 Using Fabric Patterns]]
-  - [[#Browsing-Available-Patterns][12.4 Browsing Available Patterns]]
-  - [[#Viewing-Pattern-Details][12.5 Viewing Pattern Details]]
-  - [[#Updating-Patterns][12.6 Updating Patterns]]
-  - [[#Using-Patterns-by-Category][12.7 Using Patterns by Category]]
-- [[#Awesome-ChatGPT-Prompts][13 Awesome ChatGPT Prompts]]
-  - [[#What-is-Awesome-ChatGPT-Prompts_003f][13.1 What is Awesome
+  - [[#Using-Fabric-Patterns][13.3 Using Fabric Patterns]]
+  - [[#Browsing-Available-Patterns][13.4 Browsing Available Patterns]]
+  - [[#Viewing-Pattern-Details][13.5 Viewing Pattern Details]]
+  - [[#Updating-Patterns][13.6 Updating Patterns]]
+  - [[#Using-Patterns-by-Category][13.7 Using Patterns by Category]]
+- [[#Awesome-ChatGPT-Prompts][14 Awesome ChatGPT Prompts]]
+  - [[#What-is-Awesome-ChatGPT-Prompts_003f][14.1 What is Awesome
     ChatGPT Prompts?]]
-  - [[#Setting-Up-Awesome-ChatGPT-Prompts][13.2 Setting Up Awesome
+  - [[#Setting-Up-Awesome-ChatGPT-Prompts][14.2 Setting Up Awesome
     ChatGPT Prompts]]
-  - [[#Using-Awesome-ChatGPT-Prompts][13.3 Using Awesome ChatGPT
+  - [[#Using-Awesome-ChatGPT-Prompts][14.3 Using Awesome ChatGPT
     Prompts]]
-  - [[#Browsing-Available-Prompts][13.4 Browsing Available Prompts]]
-  - [[#Categorized-Browsing][13.5 Categorized Browsing]]
-  - [[#Viewing-Prompt-Details][13.6 Viewing Prompt Details]]
-  - [[#Updating-Prompts][13.7 Updating Prompts]]
-  - [[#Setting-Without-Sending][13.8 Setting Without Sending]]
-  - [[#Example-Usage][13.9 Example Usage]]
-- [[#ChatGPT-and-Claude-Support][14 ChatGPT and Claude Support]]
-  - [[#Overview][14.1 Overview]]
-  - [[#Setting-Up-API-Access][14.2 Setting Up API Access]]
-    - [[#Secure-API-Key-Storage][14.2.1 Secure API Key Storage]]
-    - [[#Direct-Configuration][14.2.2 Direct Configuration]]
-  - [[#Selecting-Commercial-Models][14.3 Selecting Commercial Models]]
-  - [[#Configuring-Commercial-Models][14.4 Configuring Commercial
+  - [[#Browsing-Available-Prompts][14.4 Browsing Available Prompts]]
+  - [[#Categorized-Browsing][14.5 Categorized Browsing]]
+  - [[#Viewing-Prompt-Details][14.6 Viewing Prompt Details]]
+  - [[#Updating-Prompts][14.7 Updating Prompts]]
+  - [[#Setting-Without-Sending][14.8 Setting Without Sending]]
+  - [[#Example-Usage][14.9 Example Usage]]
+- [[#ChatGPT-and-Claude-Support][15 ChatGPT and Claude Support]]
+  - [[#Overview-1][15.1 Overview]]
+  - [[#Setting-Up-API-Access][15.2 Setting Up API Access]]
+    - [[#Secure-API-Key-Storage][15.2.1 Secure API Key Storage]]
+    - [[#Direct-Configuration][15.2.2 Direct Configuration]]
+  - [[#Selecting-Commercial-Models][15.3 Selecting Commercial Models]]
+  - [[#Configuring-Commercial-Models][15.4 Configuring Commercial
     Models]]
-    - [[#OpenAI-Configuration][14.4.1 OpenAI Configuration]]
-    - [[#Claude-Configuration][14.4.2 Claude Configuration]]
-  - [[#History-Management][14.5 History Management]]
-  - [[#Improved-Error-Handling][14.6 Improved Error Handling]]
-- [[#Advanced-Usage][15 Advanced Usage]]
-  - [[#Managing-Token-Usage][15.1 Managing Token Usage]]
-  - [[#Customizing-the-Interface][15.2 Customizing the Interface]]
-    - [[#Interface-Level][15.2.1 Interface Level]]
-    - [[#Model-Colors][15.2.2 Model Colors]]
-    - [[#Debug-Mode][15.2.3 Debug Mode]]
-  - [[#Editing-Conversation-History][15.3 Editing Conversation History]]
-  - [[#Advanced-System-Prompt-Management][15.4 Advanced System Prompt
+    - [[#OpenAI-Configuration][15.4.1 OpenAI Configuration]]
+    - [[#Claude-Configuration][15.4.2 Claude Configuration]]
+  - [[#History-Management][15.5 History Management]]
+  - [[#Improved-Error-Handling][15.6 Improved Error Handling]]
+- [[#Advanced-Usage][16 Advanced Usage]]
+  - [[#Managing-Token-Usage][16.1 Managing Token Usage]]
+  - [[#Customizing-the-Interface][16.2 Customizing the Interface]]
+    - [[#Interface-Level][16.2.1 Interface Level]]
+    - [[#Model-Colors][16.2.2 Model Colors]]
+    - [[#Debug-Mode][16.2.3 Debug Mode]]
+  - [[#Editing-Conversation-History][16.3 Editing Conversation History]]
+  - [[#Advanced-System-Prompt-Management][16.4 Advanced System Prompt
     Management]]
-    - [[#Setting-a-system-prompt-without-sending][15.4.1 Setting a
+    - [[#Setting-a-system-prompt-without-sending][16.4.1 Setting a
       system prompt without sending]]
-    - [[#Using-a-system-prompt-from-Fabric][15.4.2 Using a system prompt
+    - [[#Using-a-system-prompt-from-Fabric][16.4.2 Using a system prompt
       from Fabric]]
-  - [[#Using-Direct-API-Access][15.5 Using Direct API Access]]
-- [[#API-Reference][16 API Reference]]
-  - [[#Interactive-Functions][16.1 Interactive Functions]]
-  - [[#Core-Functions][16.2 Core Functions]]
-  - [[#Customization-Functions][16.3 Customization Functions]]
-- [[#FAQ][17 Frequently Asked Questions]]
-  - [[#General-Questions][17.1 General Questions]]
-    - [[#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f][17.1.1
+  - [[#Using-Direct-API-Access][16.5 Using Direct API Access]]
+- [[#API-Reference][17 API Reference]]
+  - [[#Interactive-Functions][17.1 Interactive Functions]]
+  - [[#Core-Functions][17.2 Core Functions]]
+  - [[#Customization-Functions][17.3 Customization Functions]]
+- [[#FAQ][18 Frequently Asked Questions]]
+  - [[#General-Questions][18.1 General Questions]]
+    - [[#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f][18.1.1
       What is the difference between Ollama Buddy and other AI
       assistants?]]
-    - [[#Does-Ollama-Buddy-require-an-internet-connection_003f][17.1.2
+    - [[#Does-Ollama-Buddy-require-an-internet-connection_003f][18.1.2
       Does Ollama Buddy require an internet connection?]]
-    - [[#Which-models-work-best-with-Ollama-Buddy_003f][17.1.3 Which
+    - [[#Which-models-work-best-with-Ollama-Buddy_003f][18.1.3 Which
       models work best with Ollama Buddy?]]
-    - [[#How-much-RAM-do-I-need_003f][17.1.4 How much RAM do I need?]]
-  - [[#Usage-Questions][17.2 Usage Questions]]
-    - [[#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f][17.2.1
+    - [[#How-much-RAM-do-I-need_003f][18.1.4 How much RAM do I need?]]
+  - [[#Usage-Questions][18.2 Usage Questions]]
+    - [[#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f][18.2.1
       How do I cancel a request that's taking too long?]]
-    - [[#How-can-I-save-my-conversations_003f][17.2.2 How can I save my
+    - [[#How-can-I-save-my-conversations_003f][18.2.2 How can I save my
       conversations?]]
-    - [[#Can-I-use-multiple-models-in-the-same-conversation_003f][17.2.3
+    - [[#Can-I-use-multiple-models-in-the-same-conversation_003f][18.2.3
       Can I use multiple models in the same conversation?]]
-    - [[#How-do-I-clear-the-conversation-history_003f][17.2.4 How do I
+    - [[#How-do-I-clear-the-conversation-history_003f][18.2.4 How do I
       clear the conversation history?]]
-    - [[#How-can-I-create-a-custom-command_003f][17.2.5 How can I create
+    - [[#How-can-I-create-a-custom-command_003f][18.2.5 How can I create
       a custom command?]]
-    - [[#How-can-I-manage-context-windows_003f][17.2.6 How can I manage
+    - [[#How-can-I-manage-context-windows_003f][18.2.6 How can I manage
       context windows?]]
-    - [[#What-happens-when-I-exceed-the-context-limit_003f][17.2.7 What
+    - [[#What-happens-when-I-exceed-the-context-limit_003f][18.2.7 What
       happens when I exceed the context limit?]]
-  - [[#Troubleshooting-1][17.3 Troubleshooting]]
-    - [[#Ollama-Buddy-shows-_0022OFFLINE_0022-status][17.3.1 Ollama
+  - [[#Troubleshooting-1][18.3 Troubleshooting]]
+    - [[#Ollama-Buddy-shows-_0022OFFLINE_0022-status][18.3.1 Ollama
       Buddy shows "OFFLINE" status]]
-    - [[#Responses-are-slow-or-the-model-seems-to-hang][17.3.2 Responses
+    - [[#Responses-are-slow-or-the-model-seems-to-hang][18.3.2 Responses
       are slow or the model seems to hang]]
-    - [[#Getting-_0022error-parsing-model_0022-when-pulling-a-model][17.3.3
+    - [[#Getting-_0022error-parsing-model_0022-when-pulling-a-model][18.3.3
       Getting "error parsing model" when pulling a model]]
-    - [[#Model-responses-are-low-quality-or-truncated][17.3.4 Model
+    - [[#Model-responses-are-low-quality-or-truncated][18.3.4 Model
       responses are low quality or truncated]]
-- [[#Troubleshooting][18 Troubleshooting]]
-  - [[#Common-Issues][18.1 Common Issues]]
-    - [[#Connection-Problems][18.1.1 Connection Problems]]
-    - [[#Model-Problems][18.1.2 Model Problems]]
-    - [[#Interface-Issues][18.1.3 Interface Issues]]
-  - [[#Debugging][18.2 Debugging]]
-    - [[#Enable-Debug-Mode][18.2.1 Enable Debug Mode]]
-    - [[#Check-Logs][18.2.2 Check Logs]]
-    - [[#Report-Issues][18.2.3 Report Issues]]
-- [[#Contributing][19 Contributing]]
-  - [[#Getting-Started][19.1 Getting Started]]
-  - [[#Development-Setup][19.2 Development Setup]]
-    - [[#Required-Tools][19.2.1 Required Tools]]
-    - [[#Recommended-Packages][19.2.2 Recommended Packages]]
-  - [[#Coding-Guidelines][19.3 Coding Guidelines]]
-  - [[#Testing][19.4 Testing]]
-    - [[#Run-Existing-Tests][19.4.1 Run Existing Tests]]
-    - [[#Adding-New-Tests][19.4.2 Adding New Tests]]
-  - [[#Feature-Requests-and-Bug-Reports][19.5 Feature Requests and Bug
+- [[#Troubleshooting][19 Troubleshooting]]
+  - [[#Common-Issues][19.1 Common Issues]]
+    - [[#Connection-Problems][19.1.1 Connection Problems]]
+    - [[#Model-Problems][19.1.2 Model Problems]]
+    - [[#Interface-Issues][19.1.3 Interface Issues]]
+  - [[#Debugging][19.2 Debugging]]
+    - [[#Enable-Debug-Mode][19.2.1 Enable Debug Mode]]
+    - [[#Check-Logs][19.2.2 Check Logs]]
+    - [[#Report-Issues][19.2.3 Report Issues]]
+- [[#Contributing][20 Contributing]]
+  - [[#Getting-Started][20.1 Getting Started]]
+  - [[#Development-Setup][20.2 Development Setup]]
+    - [[#Required-Tools][20.2.1 Required Tools]]
+    - [[#Recommended-Packages][20.2.2 Recommended Packages]]
+  - [[#Coding-Guidelines][20.3 Coding Guidelines]]
+  - [[#Testing][20.4 Testing]]
+    - [[#Run-Existing-Tests][20.4.1 Run Existing Tests]]
+    - [[#Adding-New-Tests][20.4.2 Adding New Tests]]
+  - [[#Feature-Requests-and-Bug-Reports][20.5 Feature Requests and Bug
     Reports]]
 - [[#Index][Index]]
 
@@ -268,6 +296,7 @@ directly from within Emacs for various tasks such as:
 - Using pre-built prompt templates from Fabric
 - Utilizing Awesome ChatGPT Prompts
 - Integrating with Claude and OpenAI's commercial APIs
+- Including files as context in conversations
 
 Instead of context-switching to web interfaces or terminal applications,
 Ollama Buddy brings the power of local LLMs right into your Emacs
@@ -288,6 +317,8 @@ workflow.
   editor
 - *Extensibility*: Create custom roles and commands for your specific
   needs
+- *File Support*: Include text files, code, and documentation directly
+  in conversations
 
 <<Prerequisites>>
 *** 1.3 Prerequisites [[#Prerequisites][¶]]
@@ -457,6 +488,7 @@ Next: [[#Quick-Start][Quick Start]], Previous:
 :END:
 - [[#Basic-Configuration][Basic Configuration]]
 - [[#Display-Options][Display Options]]
+- [[#File-Attachment-Configuration][File Attachment Configuration]]
 - [[#Directory-Configuration][Directory Configuration]]
 - [[#History-and-Session-Configuration][History and Session
   Configuration]]
@@ -530,8 +562,32 @@ Customize the appearance and behavior of Ollama Buddy:
   (setq ollama-buddy-interface-level 'advanced)
   #+end_src
 
+<<File-Attachment-Configuration>>
+*** 3.3 File Attachment Configuration [[#File-Attachment-Configuration][¶]]
+:PROPERTIES:
+:CUSTOM_ID: file-attachment-configuration
+:CLASS: section
+:END:
+Configure file attachment behavior:
+
+- =ollama-buddy-max-file-size= :: Maximum size for attached files in
+  bytes (default: 10MB).
+
+  #+begin_src example-preformatted
+  (setq ollama-buddy-max-file-size (* 10 1024 1024))  ; 10MB
+  #+end_src
+
+- =ollama-buddy-supported-file-types= :: List of regex patterns for
+  supported file types (default includes text, code, and configuration
+  files).
+
+  #+begin_src example-preformatted
+  (setq ollama-buddy-supported-file-types
+        '("\\.txt$" "\\.md$" "\\.org$" "\\.py$" "\\.js$" "\\.el$"))
+  #+end_src
+
 <<Directory-Configuration>>
-*** 3.3 Directory Configuration [[#Directory-Configuration][¶]]
+*** 3.4 Directory Configuration [[#Directory-Configuration][¶]]
 :PROPERTIES:
 :CUSTOM_ID: directory-configuration
 :CLASS: section
@@ -571,7 +627,7 @@ Customize where Ollama Buddy stores its files:
   #+end_src
 
 <<History-and-Session-Configuration>>
-*** 3.4 History and Session Configuration [[#History-and-Session-Configuration][¶]]
+*** 3.5 History and Session Configuration [[#History-and-Session-Configuration][¶]]
 :PROPERTIES:
 :CUSTOM_ID: history-and-session-configuration
 :CLASS: section
@@ -600,7 +656,7 @@ Configure how conversation history is managed:
   #+end_src
 
 <<Context-Management-Configuration>>
-*** 3.5 Context Management Configuration [[#Context-Management-Configuration][¶]]
+*** 3.6 Context Management Configuration [[#Context-Management-Configuration][¶]]
 :PROPERTIES:
 :CUSTOM_ID: context-management-configuration
 :CLASS: section
@@ -631,7 +687,7 @@ Configure how Ollama Buddy handles context management:
   #+end_src
 
 <<External-API-Configuration>>
-*** 3.6 External API Configuration [[#External-API-Configuration][¶]]
+*** 3.7 External API Configuration [[#External-API-Configuration][¶]]
 :PROPERTIES:
 :CUSTOM_ID: external-api-configuration
 :CLASS: section
@@ -665,7 +721,7 @@ For OpenAI and Claude integration:
   #+end_src
 
 <<Awesome-ChatGPT-Prompts-Configuration>>
-*** 3.7 Awesome ChatGPT Prompts Configuration [[#Awesome-ChatGPT-Prompts-Configuration][¶]]
+*** 3.8 Awesome ChatGPT Prompts Configuration [[#Awesome-ChatGPT-Prompts-Configuration][¶]]
 :PROPERTIES:
 :CUSTOM_ID: awesome-chatgpt-prompts-configuration
 :CLASS: section
@@ -750,6 +806,9 @@ Next: [[#Core-Features][Core Features]], Previous:
 - Changing models :: Press =C-c o= followed by =m= to switch between
   available models.
 
+- Attaching files :: Press =C-c o= followed by =1= for the attachment
+  menu, then =a= to attach a file.
+
 - Toggling reasoning visibility :: Press =C-c V= to hide or show
   reasoning/thinking sections in responses.
 
@@ -782,6 +841,7 @@ Next: [[#Chat-Interface][Chat Interface]], Previous:
 - [[#Roles-and-Custom-Commands][Roles and Custom Commands]]
 - [[#Prompt-Template-Collections][Prompt Template Collections]]
 - [[#External-API-Integration][External API Integration]]
+- [[#File-Attachments-1][File Attachments]]
 
 <<Chat-Interface-1>>
 *** 5.1 Chat Interface [[#Chat-Interface-1][¶]]
@@ -801,6 +861,7 @@ The chat interface is the main way to interact with Ollama Buddy:
 - Real-time context usage display
 - Context size validation before sending prompts
 - Customizable context thresholds and warnings
+- File attachment support
 
 <<Pre_002dbuilt-Commands>>
 *** 5.2 Pre-built Commands [[#Pre_002dbuilt-Commands][¶]]
@@ -880,6 +941,18 @@ Ollama Buddy comes with several pre-built commands:
 - Seamlessly switch between local and cloud models
 - Secure API key management
 
+<<File-Attachments-1>>
+*** 5.8 File Attachments [[#File-Attachments-1][¶]]
+:PROPERTIES:
+:CUSTOM_ID: file-attachments
+:CLASS: section
+:END:
+- Attach text files, code, and documentation to conversations
+- Automatic context inclusion with proper token counting
+- Session persistence for attachments
+- Support for various file types
+- Dired integration for bulk file attachment
+
 --------------
 
 <<Chat-Interface>>
@@ -926,6 +999,7 @@ The chat interface consists of:
 - A header line with status information
 - A status bar showing context usage (when enabled)
 - Context warnings and validation
+- Attachment indicators when files are attached
 
 <<Sending-Prompts>>
 *** 6.3 Sending Prompts [[#Sending-Prompts][¶]]
@@ -1149,7 +1223,7 @@ simultaneously:
 
 <<Context-Management>>
 
-Next: [[#Parameter-Control][Parameter Control]], Previous:
+Next: [[#File-Attachments][File Attachments]], Previous:
 [[#Working-with-Models][Working with Models]], Up: [[#Top][Ollama
 Buddy]]   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
@@ -1161,6 +1235,7 @@ Buddy]]   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 - [[#Understanding-Context-Windows][Understanding Context Windows]]
 - [[#Context-Size-Detection][Context Size Detection]]
 - [[#Enabling-Context-Monitoring][Enabling Context Monitoring]]
+- [[#Context-with-File-Attachments][Context with File Attachments]]
 - [[#Context-Management-Commands][Context Management Commands]]
 - [[#Token-Estimation][Token Estimation]]
 - [[#Managing-Context-in-Practice][Managing Context in Practice]]
@@ -1176,12 +1251,13 @@ Buddy]]   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 :END:
 Context windows define how much text (measured in tokens) a model can
 process at once. This includes your current prompt, conversation
-history, and any system prompts. Understanding and managing context is
-crucial for:
+history, any system prompts, and attached files. Understanding and
+managing context is crucial for:
 
 - Preventing errors when context limits are exceeded
 - Optimizing model performance for different tasks
 - Managing longer conversations efficiently
+- Including files without exceeding context limits
 
 <<Context-Size-Detection>>
 *** 8.2 Context Size Detection [[#Context-Size-Detection][¶]]
@@ -1218,8 +1294,21 @@ With context monitoring enabled:
   - Inverted: At or exceeding 100% usage
 - Warnings appear before sending prompts that exceed limits
 
+<<Context-with-File-Attachments>>
+*** 8.4 Context with File Attachments [[#Context-with-File-Attachments][¶]]
+:PROPERTIES:
+:CUSTOM_ID: context-with-file-attachments
+:CLASS: section
+:END:
+File attachments are included in context calculations:
+
+- Each attached file contributes to the total token count
+- The context breakdown shows attachment tokens separately
+- File content is included in the request context
+- Large files can significantly impact context usage
+
 <<Context-Management-Commands>>
-*** 8.4 Context Management Commands [[#Context-Management-Commands][¶]]
+*** 8.5 Context Management Commands [[#Context-Management-Commands][¶]]
 :PROPERTIES:
 :CUSTOM_ID: context-management-commands
 :CLASS: section
@@ -1229,6 +1318,7 @@ With context monitoring enabled:
 
   - Conversation history token count
   - System prompt token count
+  - Attachment token count
   - Current prompt token count
   - Total usage percentage
 
@@ -1239,7 +1329,7 @@ With context monitoring enabled:
   in the status bar.
 
 <<Token-Estimation>>
-*** 8.5 Token Estimation [[#Token-Estimation][¶]]
+*** 8.6 Token Estimation [[#Token-Estimation][¶]]
 :PROPERTIES:
 :CUSTOM_ID: token-estimation
 :CLASS: section
@@ -1251,7 +1341,7 @@ Ollama Buddy estimates token counts using a heuristic approach:
 - Actual token counts may vary slightly between models
 
 <<Managing-Context-in-Practice>>
-*** 8.6 Managing Context in Practice [[#Managing-Context-in-Practice][¶]]
+*** 8.7 Managing Context in Practice [[#Managing-Context-in-Practice][¶]]
 :PROPERTIES:
 :CUSTOM_ID: managing-context-in-practice
 :CLASS: section
@@ -1260,7 +1350,7 @@ Ollama Buddy estimates token counts using a heuristic approach:
 - [[#Using-num_005fctx-Parameter][Using num_ctx Parameter]]
 
 <<Workflow-Strategies>>
-**** 8.6.1 Workflow Strategies [[#Workflow-Strategies][¶]]
+**** 8.7.1 Workflow Strategies [[#Workflow-Strategies][¶]]
 :PROPERTIES:
 :CUSTOM_ID: workflow-strategies
 :CLASS: subsection
@@ -1270,7 +1360,7 @@ Ollama Buddy estimates token counts using a heuristic approach:
 - [[#History-Length-Management][History Length Management]]
 
 <<Paste_002dand_002dSend-Approach>>
-**** 8.6.1.1 Paste-and-Send Approach [[#Paste_002dand_002dSend-Approach][¶]]
+**** 8.7.1.1 Paste-and-Send Approach [[#Paste_002dand_002dSend-Approach][¶]]
 :PROPERTIES:
 :CUSTOM_ID: paste-and-send-approach
 :CLASS: subsubsection
@@ -1281,7 +1371,7 @@ Ollama Buddy estimates token counts using a heuristic approach:
 4. Choose whether to proceed or modify your content
 
 <<Preemptive-Checking>>
-**** 8.6.1.2 Preemptive Checking [[#Preemptive-Checking][¶]]
+**** 8.7.1.2 Preemptive Checking [[#Preemptive-Checking][¶]]
 :PROPERTIES:
 :CUSTOM_ID: preemptive-checking
 :CLASS: subsubsection
@@ -1293,9 +1383,10 @@ Ollama Buddy estimates token counts using a heuristic approach:
    - Edit conversation history (C-c J)
    - Switch to a larger context model
    - Adjust system prompt length
+   - Remove or reduce file attachments
 
 <<History-Length-Management>>
-**** 8.6.1.3 History Length Management [[#History-Length-Management][¶]]
+**** 8.7.1.3 History Length Management [[#History-Length-Management][¶]]
 :PROPERTIES:
 :CUSTOM_ID: history-length-management
 :CLASS: subsubsection
@@ -1309,7 +1400,7 @@ Control context by limiting conversation history:
 This keeps only the last 5 message pairs, reducing context usage.
 
 <<Using-num_005fctx-Parameter>>
-**** 8.6.2 Using num_ctx Parameter [[#Using-num_005fctx-Parameter][¶]]
+**** 8.7.2 Using num_ctx Parameter [[#Using-num_005fctx-Parameter][¶]]
 :PROPERTIES:
 :CUSTOM_ID: using-num_ctx-parameter
 :CLASS: subsection
@@ -1322,7 +1413,7 @@ The =num_ctx= parameter allows you to set a specific context size:
 4. Ollama Buddy will respect this limit
 
 <<Context-Display-Configuration>>
-*** 8.7 Context Display Configuration [[#Context-Display-Configuration][¶]]
+*** 8.8 Context Display Configuration [[#Context-Display-Configuration][¶]]
 :PROPERTIES:
 :CUSTOM_ID: context-display-configuration
 :CLASS: section
@@ -1339,7 +1430,7 @@ Customize how context information is displayed:
   sending (default: 100).
 
 <<Fallback-Context-Sizes>>
-*** 8.8 Fallback Context Sizes [[#Fallback-Context-Sizes][¶]]
+*** 8.9 Fallback Context Sizes [[#Fallback-Context-Sizes][¶]]
 :PROPERTIES:
 :CUSTOM_ID: fallback-context-sizes
 :CLASS: section
@@ -1355,7 +1446,7 @@ can customize these via:
 #+end_src
 
 <<Troubleshooting-Context-Issues>>
-*** 8.9 Troubleshooting Context Issues [[#Troubleshooting-Context-Issues][¶]]
+*** 8.10 Troubleshooting Context Issues [[#Troubleshooting-Context-Issues][¶]]
 :PROPERTIES:
 :CUSTOM_ID: troubleshooting-context-issues
 :CLASS: section
@@ -1364,9 +1455,11 @@ can customize these via:
     system prompt
   - Review conversation history length
   - Verify the model's actual context size
+  - Check if files are attached and their sizes
 - Model responses are truncated :: - Increase the =num_ctx= parameter
   - Reduce history length with C-c Y
   - Clear some conversation history
+  - Remove large file attachments
 - Context calculations seem inaccurate :: - Remember that token
     estimation is approximate
   - Different models may tokenize text differently
@@ -1374,13 +1467,317 @@ can customize these via:
 
 --------------
 
-<<Parameter-Control>>
+<<File-Attachments>>
 
-Next: [[#Session-Management][Session Management]], Previous:
+Next: [[#Parameter-Control][Parameter Control]], Previous:
 [[#Context-Management][Context Management]], Up: [[#Top][Ollama Buddy]]
   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 9 Parameter Control [[#Parameter-Control-2][¶]]
+** 9 File Attachments [[#File-Attachments-2][¶]]
+:PROPERTIES:
+:CUSTOM_ID: File-Attachments-2
+:CLASS: chapter
+:END:
+- [[#Overview][Overview]]
+- [[#Supported-File-Types][Supported File Types]]
+- [[#Attaching-Files][Attaching Files]]
+- [[#Managing-Attachments][Managing Attachments]]
+- [[#File-Size-Limits][File Size Limits]]
+- [[#How-Attachments-Work][How Attachments Work]]
+- [[#File-Attachment-Workflow-Examples][File Attachment Workflow
+  Examples]]
+- [[#Context-Considerations][Context Considerations]]
+- [[#Best-Practices][Best Practices]]
+- [[#Troubleshooting-Attachments][Troubleshooting Attachments]]
+
+<<Overview>>
+*** 9.1 Overview [[#Overview][¶]]
+:PROPERTIES:
+:CUSTOM_ID: overview
+:CLASS: section
+:END:
+File attachments allow you to include the contents of text files, code
+files, documentation, and configuration files directly in your
+conversations with AI models. This feature is particularly useful for:
+
+- Code review and analysis
+- Documentation generation
+- Configuration file troubleshooting
+- Multi-file project discussions
+- Research with multiple text sources
+
+<<Supported-File-Types>>
+*** 9.2 Supported File Types [[#Supported-File-Types][¶]]
+:PROPERTIES:
+:CUSTOM_ID: supported-file-types
+:CLASS: section
+:END:
+Ollama Buddy supports a wide range of file types by default:
+
+- Text and Documentation :: =.txt=, =.md=, =.org=
+
+- Programming Languages :: =.py=, =.js=, =.el=, =.cpp=, =.c=, =.java=
+
+- Web Technologies :: =.html=, =.css=, =.json=, =.xml=
+
+- Configuration Files :: =.yaml=, =.yml=, =.toml=, =.ini=, =.cfg=
+
+- Scripts :: =.sh=, =.sql=
+
+You can customize supported file types by modifying
+=ollama-buddy-supported-file-types=.
+
+<<Attaching-Files>>
+*** 9.3 Attaching Files [[#Attaching-Files][¶]]
+:PROPERTIES:
+:CUSTOM_ID: attaching-files
+:CLASS: section
+:END:
+- [[#Basic-File-Attachment][Basic File Attachment]]
+- [[#Dired-Integration][Dired Integration]]
+
+<<Basic-File-Attachment>>
+**** 9.3.1 Basic File Attachment [[#Basic-File-Attachment][¶]]
+:PROPERTIES:
+:CUSTOM_ID: basic-file-attachment
+:CLASS: subsection
+:END:
+To attach a single file:
+
+1. Press =C-c 1= to open the attachment menu
+2. Press =a= for "Attach file"
+3. Select the file from the file browser
+4. The file will be attached and its contents included in future prompts
+
+Alternatively, you can use =C-c C-a= directly.
+
+<<Dired-Integration>>
+**** 9.3.2 Dired Integration [[#Dired-Integration][¶]]
+:PROPERTIES:
+:CUSTOM_ID: dired-integration
+:CLASS: subsection
+:END:
+When working in Dired, you can attach files directly:
+
+- Attach file at point :: Position the cursor on a file and press
+  =C-c C-a=
+
+- Attach multiple marked files :: Mark files with =m=, then run
+  =M-x ollama-buddy-dired-attach-marked-files=
+
+<<Managing-Attachments>>
+*** 9.4 Managing Attachments [[#Managing-Attachments][¶]]
+:PROPERTIES:
+:CUSTOM_ID: managing-attachments
+:CLASS: section
+:END:
+- [[#Viewing-Attachments][Viewing Attachments]]
+- [[#Detaching-Files][Detaching Files]]
+- [[#Clearing-All-Attachments][Clearing All Attachments]]
+
+<<Viewing-Attachments>>
+**** 9.4.1 Viewing Attachments [[#Viewing-Attachments][¶]]
+:PROPERTIES:
+:CUSTOM_ID: viewing-attachments
+:CLASS: subsection
+:END:
+To see currently attached files:
+
+#+begin_src example-preformatted
+M-x ollama-buddy-show-attachments
+#+end_src
+
+or press =C-c C-w=.
+
+This opens a dedicated buffer showing:
+
+- File names and paths
+- File sizes
+- File content preview
+
+<<Detaching-Files>>
+**** 9.4.2 Detaching Files [[#Detaching-Files][¶]]
+:PROPERTIES:
+:CUSTOM_ID: detaching-files
+:CLASS: subsection
+:END:
+To remove a specific file:
+
+#+begin_src example-preformatted
+M-x ollama-buddy-detach-file
+#+end_src
+
+or press =C-c C-d=.
+
+You'll be prompted to select which file to detach from the list of
+currently attached files.
+
+<<Clearing-All-Attachments>>
+**** 9.4.3 Clearing All Attachments [[#Clearing-All-Attachments][¶]]
+:PROPERTIES:
+:CUSTOM_ID: clearing-all-attachments
+:CLASS: subsection
+:END:
+To remove all attached files at once:
+
+#+begin_src example-preformatted
+M-x ollama-buddy-clear-attachments
+#+end_src
+
+or press =C-c 0=.
+
+<<File-Size-Limits>>
+*** 9.5 File Size Limits [[#File-Size-Limits][¶]]
+:PROPERTIES:
+:CUSTOM_ID: file-size-limits
+:CLASS: section
+:END:
+Ollama Buddy enforces file size limits to prevent overwhelming the
+context window:
+
+- Default maximum file size: 10MB
+- Configurable via =ollama-buddy-max-file-size=
+- Files exceeding the limit will trigger an error
+
+Example configuration:
+
+#+begin_src example-preformatted
+;; Set maximum file size to 5MB
+(setq ollama-buddy-max-file-size (* 5 1024 1024))
+#+end_src
+
+<<How-Attachments-Work>>
+*** 9.6 How Attachments Work [[#How-Attachments-Work][¶]]
+:PROPERTIES:
+:CUSTOM_ID: how-attachments-work
+:CLASS: section
+:END:
+- [[#Context-Integration][Context Integration]]
+- [[#Session-Persistence][Session Persistence]]
+
+<<Context-Integration>>
+**** 9.6.1 Context Integration [[#Context-Integration][¶]]
+:PROPERTIES:
+:CUSTOM_ID: context-integration
+:CLASS: subsection
+:END:
+When files are attached:
+
+1. File contents are read and stored in memory
+2. Content is included in the prompt context when sending requests
+3. Token counting includes attachment content
+4. Files are formatted with clear delimiters showing filename and type
+
+<<Session-Persistence>>
+**** 9.6.2 Session Persistence [[#Session-Persistence][¶]]
+:PROPERTIES:
+:CUSTOM_ID: session-persistence
+:CLASS: subsection
+:END:
+File attachments are preserved across sessions:
+
+- Saving a session (=C-c S=) includes all attached files
+- Loading a session (=C-c L=) restores attachments
+- Session files store both file paths and content
+- Attachment metadata is preserved (size, type, attachment time)
+
+<<File-Attachment-Workflow-Examples>>
+*** 9.7 File Attachment Workflow Examples [[#File-Attachment-Workflow-Examples][¶]]
+:PROPERTIES:
+:CUSTOM_ID: file-attachment-workflow-examples
+:CLASS: section
+:END:
+- [[#Code-Review-Workflow][Code Review Workflow]]
+- [[#Multi_002dFile-Analysis][Multi-File Analysis]]
+- [[#Configuration-Troubleshooting][Configuration Troubleshooting]]
+
+<<Code-Review-Workflow>>
+**** 9.7.1 Code Review Workflow [[#Code-Review-Workflow][¶]]
+:PROPERTIES:
+:CUSTOM_ID: code-review-workflow
+:CLASS: subsection
+:END:
+1. Attach source files using =C-c C-a=
+2. Set a system prompt for code review: "You are an expert code
+   reviewer"
+3. Ask questions about the code: "What potential issues do you see in
+   this code?"
+4. The AI can reference all attached files in its analysis
+
+<<Multi_002dFile-Analysis>>
+**** 9.7.2 Multi-File Analysis [[#Multi_002dFile-Analysis][¶]]
+:PROPERTIES:
+:CUSTOM_ID: multi-file-analysis
+:CLASS: subsection
+:END:
+1. Use Dired to mark multiple related files
+2. Attach them all with =M-x ollama-buddy-dired-attach-marked-files=
+3. Ask for analysis: "Compare the approaches used in these files"
+4. The AI can cross-reference content between files
+
+<<Configuration-Troubleshooting>>
+**** 9.7.3 Configuration Troubleshooting [[#Configuration-Troubleshooting][¶]]
+:PROPERTIES:
+:CUSTOM_ID: configuration-troubleshooting
+:CLASS: subsection
+:END:
+1. Attach configuration files (.yaml, .json, .ini)
+2. Describe the issue: "This configuration isn't working as expected"
+3. The AI can analyze the config and suggest fixes
+
+<<Context-Considerations>>
+*** 9.8 Context Considerations [[#Context-Considerations][¶]]
+:PROPERTIES:
+:CUSTOM_ID: context-considerations
+:CLASS: section
+:END:
+File attachments impact context usage:
+
+- Each attached file counts toward the total token limit
+- Large files can quickly fill available context
+- Monitor context usage with =C-c C= when using attachments
+- Consider detaching unnecessary files to free up context
+
+<<Best-Practices>>
+*** 9.9 Best Practices [[#Best-Practices][¶]]
+:PROPERTIES:
+:CUSTOM_ID: best-practices
+:CLASS: section
+:END:
+1. Start with smaller files to avoid context issues
+2. Use descriptive filenames for clarity
+3. Remove attachments when no longer needed
+4. Monitor context usage with large files
+5. Use attachment history to avoid re-attaching the same files
+
+<<Troubleshooting-Attachments>>
+*** 9.10 Troubleshooting Attachments [[#Troubleshooting-Attachments][¶]]
+:PROPERTIES:
+:CUSTOM_ID: troubleshooting-attachments
+:CLASS: section
+:END:
+- File won't attach :: - Check if file type is supported (or override
+    with "y")
+  - Verify file size is under the limit
+  - Ensure file exists and is readable
+- Context errors with attachments :: - Remove some attachments with
+    =C-c C-d=
+  - Switch to a model with larger context
+  - Reduce conversation history length
+- Attachments not showing in session :: - Ensure you saved the session
+    after attaching files
+  - Check that the session file includes attachment data
+  - Verify file paths are still valid when loading
+
+--------------
+
+<<Parameter-Control>>
+
+Next: [[#Session-Management][Session Management]], Previous:
+[[#File-Attachments][File Attachments]], Up: [[#Top][Ollama Buddy]]  
+[[[#SEC_Contents][Contents]]][[[#Index][Index]]]
+
+** 10 Parameter Control [[#Parameter-Control-2][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Parameter-Control-2
 :CLASS: chapter
@@ -1394,7 +1791,7 @@ Next: [[#Session-Management][Session Management]], Previous:
 - [[#Displaying-Parameters-in-Header][Displaying Parameters in Header]]
 
 <<Understanding-Parameters>>
-*** 9.1 Understanding Parameters [[#Understanding-Parameters][¶]]
+*** 10.1 Understanding Parameters [[#Understanding-Parameters][¶]]
 :PROPERTIES:
 :CUSTOM_ID: understanding-parameters
 :CLASS: section
@@ -1412,7 +1809,7 @@ Ollama's models support various parameters that control their behavior:
   repetition)
 
 <<Viewing-Current-Parameters>>
-*** 9.2 Viewing Current Parameters [[#Viewing-Current-Parameters][¶]]
+*** 10.2 Viewing Current Parameters [[#Viewing-Current-Parameters][¶]]
 :PROPERTIES:
 :CUSTOM_ID: viewing-current-parameters
 :CLASS: section
@@ -1429,7 +1826,7 @@ Parameters that have been modified from default values are marked with
 an asterisk (*).
 
 <<Editing-Parameters>>
-*** 9.3 Editing Parameters [[#Editing-Parameters][¶]]
+*** 10.3 Editing Parameters [[#Editing-Parameters][¶]]
 :PROPERTIES:
 :CUSTOM_ID: editing-parameters
 :CLASS: section
@@ -1444,7 +1841,7 @@ You can also use =M-x ollama-buddy-params-edit= and select from a
 completion list.
 
 <<Parameter-Profiles>>
-*** 9.4 Parameter Profiles [[#Parameter-Profiles][¶]]
+*** 10.4 Parameter Profiles [[#Parameter-Profiles][¶]]
 :PROPERTIES:
 :CUSTOM_ID: parameter-profiles
 :CLASS: section
@@ -1469,7 +1866,7 @@ M-x ollama-buddy-transient-profile-menu
 or press =C-c p= and select a profile.
 
 <<Command_002dSpecific-Parameters>>
-*** 9.5 Command-Specific Parameters [[#Command_002dSpecific-Parameters][¶]]
+*** 10.5 Command-Specific Parameters [[#Command_002dSpecific-Parameters][¶]]
 :PROPERTIES:
 :CUSTOM_ID: command-specific-parameters
 :CLASS: section
@@ -1485,7 +1882,7 @@ These parameters are automatically applied when you use these commands
 and restored afterward.
 
 <<Reset-Parameters>>
-*** 9.6 Reset Parameters [[#Reset-Parameters][¶]]
+*** 10.6 Reset Parameters [[#Reset-Parameters][¶]]
 :PROPERTIES:
 :CUSTOM_ID: reset-parameters
 :CLASS: section
@@ -1499,7 +1896,7 @@ M-x ollama-buddy-params-reset
 or press =C-c K= in the chat buffer.
 
 <<Displaying-Parameters-in-Header>>
-*** 9.7 Displaying Parameters in Header [[#Displaying-Parameters-in-Header][¶]]
+*** 10.7 Displaying Parameters in Header [[#Displaying-Parameters-in-Header][¶]]
 :PROPERTIES:
 :CUSTOM_ID: displaying-parameters-in-header
 :CLASS: section
@@ -1520,7 +1917,7 @@ Next: [[#Roles-and-Commands][Roles and Commands]], Previous:
 [[#Parameter-Control][Parameter Control]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 10 Session Management [[#Session-Management-1][¶]]
+** 11 Session Management [[#Session-Management-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Session-Management-1
 :CLASS: chapter
@@ -1533,7 +1930,7 @@ Next: [[#Roles-and-Commands][Roles and Commands]], Previous:
 - [[#Conversation-History][Conversation History]]
 
 <<Understanding-Sessions>>
-*** 10.1 Understanding Sessions [[#Understanding-Sessions][¶]]
+*** 11.1 Understanding Sessions [[#Understanding-Sessions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: understanding-sessions
 :CLASS: section
@@ -1546,7 +1943,7 @@ Sessions in Ollama Buddy allow you to:
 - Switch between different conversation contexts
 
 <<Creating-a-New-Session>>
-*** 10.2 Creating a New Session [[#Creating-a-New-Session][¶]]
+*** 11.2 Creating a New Session [[#Creating-a-New-Session][¶]]
 :PROPERTIES:
 :CUSTOM_ID: creating-a-new-session
 :CLASS: section
@@ -1563,7 +1960,7 @@ This will clear the current conversation history and let you start
 fresh.
 
 <<Saving-a-Session>>
-*** 10.3 Saving a Session [[#Saving-a-Session][¶]]
+*** 11.3 Saving a Session [[#Saving-a-Session][¶]]
 :PROPERTIES:
 :CUSTOM_ID: saving-a-session
 :CLASS: section
@@ -1579,7 +1976,7 @@ or press =C-c S= in the chat buffer.
 You'll be prompted to enter a name for the session.
 
 <<Loading-a-Session>>
-*** 10.4 Loading a Session [[#Loading-a-Session][¶]]
+*** 11.4 Loading a Session [[#Loading-a-Session][¶]]
 :PROPERTIES:
 :CUSTOM_ID: loading-a-session
 :CLASS: section
@@ -1595,7 +1992,7 @@ or press =C-c L= in the chat buffer.
 You'll be presented with a list of saved sessions to choose from.
 
 <<Managing-Sessions>>
-*** 10.5 Managing Sessions [[#Managing-Sessions][¶]]
+*** 11.5 Managing Sessions [[#Managing-Sessions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: managing-sessions
 :CLASS: section
@@ -1623,7 +2020,7 @@ M-x ollama-buddy-sessions-delete
 or press =C-c Z= in the chat buffer.
 
 <<Conversation-History>>
-*** 10.6 Conversation History [[#Conversation-History][¶]]
+*** 11.6 Conversation History [[#Conversation-History][¶]]
 :PROPERTIES:
 :CUSTOM_ID: conversation-history
 :CLASS: section
@@ -1663,7 +2060,7 @@ Previous: [[#Session-Management][Session Management]], Up:
 [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 11 Roles and Commands [[#Roles-and-Commands-1][¶]]
+** 12 Roles and Commands [[#Roles-and-Commands-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Roles-and-Commands-1
 :CLASS: chapter
@@ -1679,7 +2076,7 @@ Previous: [[#Session-Management][Session Management]], Up:
 - [[#Tips-for-Effective-Role-Usage][Tips for Effective Role Usage]]
 
 <<Understanding-Roles>>
-*** 11.1 Understanding Roles [[#Understanding-Roles][¶]]
+*** 12.1 Understanding Roles [[#Understanding-Roles][¶]]
 :PROPERTIES:
 :CUSTOM_ID: understanding-roles
 :CLASS: section
@@ -1696,7 +2093,7 @@ This allows you to create specialized assistants for different
 workflows.
 
 <<Role-File-Naming-Convention>>
-*** 11.2 Role File Naming Convention [[#Role-File-Naming-Convention][¶]]
+*** 12.2 Role File Naming Convention [[#Role-File-Naming-Convention][¶]]
 :PROPERTIES:
 :CUSTOM_ID: role-file-naming-convention
 :CLASS: section
@@ -1736,7 +2133,7 @@ manually, you must follow this pattern for Ollama Buddy to recognize
 your role files correctly.
 
 <<Built_002din-Commands>>
-*** 11.3 Built-in Commands [[#Built_002din-Commands][¶]]
+*** 12.3 Built-in Commands [[#Built_002din-Commands][¶]]
 :PROPERTIES:
 :CUSTOM_ID: built-in-commands
 :CLASS: section
@@ -1756,7 +2153,7 @@ Ollama Buddy comes with several built-in commands:
 - proofread :: Corrects grammar, style, and spelling
 
 <<Creating-Custom-Roles>>
-*** 11.4 Creating Custom Roles [[#Creating-Custom-Roles][¶]]
+*** 12.4 Creating Custom Roles [[#Creating-Custom-Roles][¶]]
 :PROPERTIES:
 :CUSTOM_ID: creating-custom-roles
 :CLASS: section
@@ -1767,7 +2164,7 @@ There are two ways to create custom roles:
 - [[#Manual-Role-Creation][Manual Role Creation]]
 
 <<Interactive-Role-Creator>>
-**** 11.4.1 Interactive Role Creator [[#Interactive-Role-Creator][¶]]
+**** 12.4.1 Interactive Role Creator [[#Interactive-Role-Creator][¶]]
 :PROPERTIES:
 :CUSTOM_ID: interactive-role-creator
 :CLASS: subsection
@@ -1786,7 +2183,7 @@ The most user-friendly approach:
 The interactive creator automatically handles file naming and placement.
 
 <<Manual-Role-Creation>>
-**** 11.4.2 Manual Role Creation [[#Manual-Role-Creation][¶]]
+**** 12.4.2 Manual Role Creation [[#Manual-Role-Creation][¶]]
 :PROPERTIES:
 :CUSTOM_ID: manual-role-creation
 :CLASS: subsection
@@ -1856,7 +2253,7 @@ For more advanced customization, create role files manually:
 #+end_src
 
 <<Switching-Roles>>
-*** 11.5 Switching Roles [[#Switching-Roles][¶]]
+*** 12.5 Switching Roles [[#Switching-Roles][¶]]
 :PROPERTIES:
 :CUSTOM_ID: switching-roles
 :CLASS: section
@@ -1872,7 +2269,7 @@ or press =C-c R= in the chat buffer.
 You'll be presented with a list of available roles to choose from.
 
 <<Managing-Role-Files>>
-*** 11.6 Managing Role Files [[#Managing-Role-Files][¶]]
+*** 12.6 Managing Role Files [[#Managing-Role-Files][¶]]
 :PROPERTIES:
 :CUSTOM_ID: managing-role-files
 :CLASS: section
@@ -1902,7 +2299,7 @@ M-x ollama-buddy-roles-open-directory
 or press =C-c D= in the chat buffer.
 
 <<Advanced-Role-Customization>>
-*** 11.7 Advanced Role Customization [[#Advanced-Role-Customization][¶]]
+*** 12.7 Advanced Role Customization [[#Advanced-Role-Customization][¶]]
 :PROPERTIES:
 :CUSTOM_ID: advanced-role-customization
 :CLASS: section
@@ -1912,7 +2309,7 @@ or press =C-c D= in the chat buffer.
 - [[#Creating-New-Commands][Creating New Commands]]
 
 <<Command_002dSpecific-Models>>
-**** 11.7.1 Command-Specific Models [[#Command_002dSpecific-Models][¶]]
+**** 12.7.1 Command-Specific Models [[#Command_002dSpecific-Models][¶]]
 :PROPERTIES:
 :CUSTOM_ID: command-specific-models
 :CLASS: subsection
@@ -1924,7 +2321,7 @@ Assign specific models to commands for optimal performance:
 #+end_src
 
 <<Command_002dSpecific-Parameters-1>>
-**** 11.7.2 Command-Specific Parameters [[#Command_002dSpecific-Parameters-1][¶]]
+**** 12.7.2 Command-Specific Parameters [[#Command_002dSpecific-Parameters-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: command-specific-parameters-1
 :CLASS: subsection
@@ -1939,7 +2336,7 @@ Optimize parameters for specific commands:
 #+end_src
 
 <<Creating-New-Commands>>
-**** 11.7.3 Creating New Commands [[#Creating-New-Commands][¶]]
+**** 12.7.3 Creating New Commands [[#Creating-New-Commands][¶]]
 :PROPERTIES:
 :CUSTOM_ID: creating-new-commands
 :CLASS: subsection
@@ -1956,7 +2353,7 @@ Add entirely new commands to your menu:
 #+end_src
 
 <<Role-Examples>>
-*** 11.8 Role Examples [[#Role-Examples][¶]]
+*** 12.8 Role Examples [[#Role-Examples][¶]]
 :PROPERTIES:
 :CUSTOM_ID: role-examples
 :CLASS: section
@@ -1965,7 +2362,7 @@ Add entirely new commands to your menu:
 - [[#Writing-Role][Writing Role]]
 
 <<Programming-Role>>
-**** 11.8.1 Programming Role [[#Programming-Role][¶]]
+**** 12.8.1 Programming Role [[#Programming-Role][¶]]
 :PROPERTIES:
 :CUSTOM_ID: programming-role
 :CLASS: subsection
@@ -2017,7 +2414,7 @@ A complete example of a programming-focused role:
 #+end_src
 
 <<Writing-Role>>
-**** 11.8.2 Writing Role [[#Writing-Role][¶]]
+**** 12.8.2 Writing Role [[#Writing-Role][¶]]
 :PROPERTIES:
 :CUSTOM_ID: writing-role
 :CLASS: subsection
@@ -2069,7 +2466,7 @@ A complete example of a writing-focused role:
 #+end_src
 
 <<Tips-for-Effective-Role-Usage>>
-*** 11.9 Tips for Effective Role Usage [[#Tips-for-Effective-Role-Usage][¶]]
+*** 12.9 Tips for Effective Role Usage [[#Tips-for-Effective-Role-Usage][¶]]
 :PROPERTIES:
 :CUSTOM_ID: tips-for-effective-role-usage
 :CLASS: section
@@ -2093,7 +2490,7 @@ Next: [[#Awesome-ChatGPT-Prompts][Awesome ChatGPT Prompts]], Previous:
 [[#Roles-and-Commands][Roles and Commands]], Up: [[#Top][Ollama Buddy]]
   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 12 Fabric Pattern Integration [[#Fabric-Pattern-Integration-1][¶]]
+** 13 Fabric Pattern Integration [[#Fabric-Pattern-Integration-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Fabric-Pattern-Integration-1
 :CLASS: chapter
@@ -2107,7 +2504,7 @@ Next: [[#Awesome-ChatGPT-Prompts][Awesome ChatGPT Prompts]], Previous:
 - [[#Using-Patterns-by-Category][Using Patterns by Category]]
 
 <<What-are-Fabric-Patterns_003f>>
-*** 12.1 What are Fabric Patterns? [[#What-are-Fabric-Patterns_003f][¶]]
+*** 13.1 What are Fabric Patterns? [[#What-are-Fabric-Patterns_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: what-are-fabric-patterns
 :CLASS: section
@@ -2122,7 +2519,7 @@ provide optimized prompts for various tasks, categorized as:
 - analysis - Data and concept examination
 
 <<Setting-Up-Fabric-Integration>>
-*** 12.2 Setting Up Fabric Integration [[#Setting-Up-Fabric-Integration][¶]]
+*** 13.2 Setting Up Fabric Integration [[#Setting-Up-Fabric-Integration][¶]]
 :PROPERTIES:
 :CUSTOM_ID: setting-up-fabric-integration
 :CLASS: section
@@ -2140,7 +2537,7 @@ This will:
 3. Make patterns available for use
 
 <<Using-Fabric-Patterns>>
-*** 12.3 Using Fabric Patterns [[#Using-Fabric-Patterns][¶]]
+*** 13.3 Using Fabric Patterns [[#Using-Fabric-Patterns][¶]]
 :PROPERTIES:
 :CUSTOM_ID: using-fabric-patterns
 :CLASS: section
@@ -2161,7 +2558,7 @@ You'll be prompted to:
 The pattern will be used as a system prompt for your request.
 
 <<Browsing-Available-Patterns>>
-*** 12.4 Browsing Available Patterns [[#Browsing-Available-Patterns][¶]]
+*** 13.4 Browsing Available Patterns [[#Browsing-Available-Patterns][¶]]
 :PROPERTIES:
 :CUSTOM_ID: browsing-available-patterns
 :CLASS: section
@@ -2181,7 +2578,7 @@ This shows:
 - Descriptions
 
 <<Viewing-Pattern-Details>>
-*** 12.5 Viewing Pattern Details [[#Viewing-Pattern-Details][¶]]
+*** 13.5 Viewing Pattern Details [[#Viewing-Pattern-Details][¶]]
 :PROPERTIES:
 :CUSTOM_ID: viewing-pattern-details
 :CLASS: section
@@ -2200,7 +2597,7 @@ Select a pattern to see:
 - Full description
 
 <<Updating-Patterns>>
-*** 12.6 Updating Patterns [[#Updating-Patterns][¶]]
+*** 13.6 Updating Patterns [[#Updating-Patterns][¶]]
 :PROPERTIES:
 :CUSTOM_ID: updating-patterns
 :CLASS: section
@@ -2214,7 +2611,7 @@ M-x ollama-buddy-fabric-sync-patterns
 or press =C-c f= and then =S=.
 
 <<Using-Patterns-by-Category>>
-*** 12.7 Using Patterns by Category [[#Using-Patterns-by-Category][¶]]
+*** 13.7 Using Patterns by Category [[#Using-Patterns-by-Category][¶]]
 :PROPERTIES:
 :CUSTOM_ID: using-patterns-by-category
 :CLASS: section
@@ -2235,7 +2632,7 @@ Previous: [[#Fabric-Pattern-Integration][Fabric Pattern Integration]],
 Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 13 Awesome ChatGPT Prompts [[#Awesome-ChatGPT-Prompts-1][¶]]
+** 14 Awesome ChatGPT Prompts [[#Awesome-ChatGPT-Prompts-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Awesome-ChatGPT-Prompts-1
 :CLASS: chapter
@@ -2253,7 +2650,7 @@ Up: [[#Top][Ollama Buddy]]  
 - [[#Example-Usage][Example Usage]]
 
 <<What-is-Awesome-ChatGPT-Prompts_003f>>
-*** 13.1 What is Awesome ChatGPT Prompts? [[#What-is-Awesome-ChatGPT-Prompts_003f][¶]]
+*** 14.1 What is Awesome ChatGPT Prompts? [[#What-is-Awesome-ChatGPT-Prompts_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: what-is-awesome-chatgpt-prompts
 :CLASS: section
@@ -2271,7 +2668,7 @@ personas or experts, such as:
 - And many more specialized roles
 
 <<Setting-Up-Awesome-ChatGPT-Prompts>>
-*** 13.2 Setting Up Awesome ChatGPT Prompts [[#Setting-Up-Awesome-ChatGPT-Prompts][¶]]
+*** 14.2 Setting Up Awesome ChatGPT Prompts [[#Setting-Up-Awesome-ChatGPT-Prompts][¶]]
 :PROPERTIES:
 :CUSTOM_ID: setting-up-awesome-chatgpt-prompts
 :CLASS: section
@@ -2289,7 +2686,7 @@ This will:
 3. Populate and categorize the available prompts
 
 <<Using-Awesome-ChatGPT-Prompts>>
-*** 13.3 Using Awesome ChatGPT Prompts [[#Using-Awesome-ChatGPT-Prompts][¶]]
+*** 14.3 Using Awesome ChatGPT Prompts [[#Using-Awesome-ChatGPT-Prompts][¶]]
 :PROPERTIES:
 :CUSTOM_ID: using-awesome-chatgpt-prompts
 :CLASS: section
@@ -2311,7 +2708,7 @@ The selected prompt will be used as a system prompt for your request,
 transforming how the AI responds to your text.
 
 <<Browsing-Available-Prompts>>
-*** 13.4 Browsing Available Prompts [[#Browsing-Available-Prompts][¶]]
+*** 14.4 Browsing Available Prompts [[#Browsing-Available-Prompts][¶]]
 :PROPERTIES:
 :CUSTOM_ID: browsing-available-prompts
 :CLASS: section
@@ -2331,7 +2728,7 @@ This shows:
 - Preview of prompt content
 
 <<Categorized-Browsing>>
-*** 13.5 Categorized Browsing [[#Categorized-Browsing][¶]]
+*** 14.5 Categorized Browsing [[#Categorized-Browsing][¶]]
 :PROPERTIES:
 :CUSTOM_ID: categorized-browsing
 :CLASS: section
@@ -2359,7 +2756,7 @@ M-x ollama-buddy-awesome-show-prompts-menu
 or press =C-c w= and then =c=.
 
 <<Viewing-Prompt-Details>>
-*** 13.6 Viewing Prompt Details [[#Viewing-Prompt-Details][¶]]
+*** 14.6 Viewing Prompt Details [[#Viewing-Prompt-Details][¶]]
 :PROPERTIES:
 :CUSTOM_ID: viewing-prompt-details
 :CLASS: section
@@ -2375,7 +2772,7 @@ or press =C-c w= and then =v=.
 Select a prompt to see its complete template.
 
 <<Updating-Prompts>>
-*** 13.7 Updating Prompts [[#Updating-Prompts][¶]]
+*** 14.7 Updating Prompts [[#Updating-Prompts][¶]]
 :PROPERTIES:
 :CUSTOM_ID: updating-prompts
 :CLASS: section
@@ -2389,7 +2786,7 @@ M-x ollama-buddy-awesome-sync-prompts
 or press =C-c w= and then =S=.
 
 <<Setting-Without-Sending>>
-*** 13.8 Setting Without Sending [[#Setting-Without-Sending][¶]]
+*** 14.8 Setting Without Sending [[#Setting-Without-Sending][¶]]
 :PROPERTIES:
 :CUSTOM_ID: setting-without-sending
 :CLASS: section
@@ -2406,7 +2803,7 @@ This is useful when you want to set up a specific persona before
 starting a conversation.
 
 <<Example-Usage>>
-*** 13.9 Example Usage [[#Example-Usage][¶]]
+*** 14.9 Example Usage [[#Example-Usage][¶]]
 :PROPERTIES:
 :CUSTOM_ID: example-usage
 :CLASS: section
@@ -2428,22 +2825,22 @@ Next: [[#Advanced-Usage][Advanced Usage]], Previous:
 [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 14 ChatGPT and Claude Support [[#ChatGPT-and-Claude-Support-1][¶]]
+** 15 ChatGPT and Claude Support [[#ChatGPT-and-Claude-Support-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: ChatGPT-and-Claude-Support-1
 :CLASS: chapter
 :END:
-- [[#Overview][Overview]]
+- [[#Overview-1][Overview]]
 - [[#Setting-Up-API-Access][Setting Up API Access]]
 - [[#Selecting-Commercial-Models][Selecting Commercial Models]]
 - [[#Configuring-Commercial-Models][Configuring Commercial Models]]
 - [[#History-Management][History Management]]
 - [[#Improved-Error-Handling][Improved Error Handling]]
 
-<<Overview>>
-*** 14.1 Overview [[#Overview][¶]]
+<<Overview-1>>
+*** 15.1 Overview [[#Overview-1][¶]]
 :PROPERTIES:
-:CUSTOM_ID: overview
+:CUSTOM_ID: overview-1
 :CLASS: section
 :END:
 Ollama Buddy integrates with commercial AI services:
@@ -2458,7 +2855,7 @@ This allows you to:
 - Leverage the strengths of different model families
 
 <<Setting-Up-API-Access>>
-*** 14.2 Setting Up API Access [[#Setting-Up-API-Access][¶]]
+*** 15.2 Setting Up API Access [[#Setting-Up-API-Access][¶]]
 :PROPERTIES:
 :CUSTOM_ID: setting-up-api-access
 :CLASS: section
@@ -2469,7 +2866,7 @@ Before using commercial APIs, you need to set up API keys:
 - [[#Direct-Configuration][Direct Configuration]]
 
 <<Secure-API-Key-Storage>>
-**** 14.2.1 Secure API Key Storage [[#Secure-API-Key-Storage][¶]]
+**** 15.2.1 Secure API Key Storage [[#Secure-API-Key-Storage][¶]]
 :PROPERTIES:
 :CUSTOM_ID: secure-api-key-storage
 :CLASS: subsection
@@ -2483,7 +2880,7 @@ machine api.anthropic.com login apikey password YOUR_CLAUDE_API_KEY
 #+end_src
 
 <<Direct-Configuration>>
-**** 14.2.2 Direct Configuration [[#Direct-Configuration][¶]]
+**** 15.2.2 Direct Configuration [[#Direct-Configuration][¶]]
 :PROPERTIES:
 :CUSTOM_ID: direct-configuration
 :CLASS: subsection
@@ -2496,7 +2893,7 @@ For testing or temporary use (less secure):
 #+end_src
 
 <<Selecting-Commercial-Models>>
-*** 14.3 Selecting Commercial Models [[#Selecting-Commercial-Models][¶]]
+*** 15.3 Selecting Commercial Models [[#Selecting-Commercial-Models][¶]]
 :PROPERTIES:
 :CUSTOM_ID: selecting-commercial-models
 :CLASS: section
@@ -2518,7 +2915,7 @@ or press =C-c m=.
 Choose the model from the completion list.
 
 <<Configuring-Commercial-Models>>
-*** 14.4 Configuring Commercial Models [[#Configuring-Commercial-Models][¶]]
+*** 15.4 Configuring Commercial Models [[#Configuring-Commercial-Models][¶]]
 :PROPERTIES:
 :CUSTOM_ID: configuring-commercial-models
 :CLASS: section
@@ -2527,7 +2924,7 @@ Choose the model from the completion list.
 - [[#Claude-Configuration][Claude Configuration]]
 
 <<OpenAI-Configuration>>
-**** 14.4.1 OpenAI Configuration [[#OpenAI-Configuration][¶]]
+**** 15.4.1 OpenAI Configuration [[#OpenAI-Configuration][¶]]
 :PROPERTIES:
 :CUSTOM_ID: openai-configuration
 :CLASS: subsection
@@ -2561,7 +2958,7 @@ Choose the model from the completion list.
   #+end_src
 
 <<Claude-Configuration>>
-**** 14.4.2 Claude Configuration [[#Claude-Configuration][¶]]
+**** 15.4.2 Claude Configuration [[#Claude-Configuration][¶]]
 :PROPERTIES:
 :CUSTOM_ID: claude-configuration
 :CLASS: subsection
@@ -2587,7 +2984,7 @@ Choose the model from the completion list.
   #+end_src
 
 <<History-Management>>
-*** 14.5 History Management [[#History-Management][¶]]
+*** 15.5 History Management [[#History-Management][¶]]
 :PROPERTIES:
 :CUSTOM_ID: history-management
 :CLASS: section
@@ -2601,7 +2998,7 @@ Each API service maintains its own conversation history:
 This ensures that context is maintained appropriately for each service.
 
 <<Improved-Error-Handling>>
-*** 14.6 Improved Error Handling [[#Improved-Error-Handling][¶]]
+*** 15.6 Improved Error Handling [[#Improved-Error-Handling][¶]]
 :PROPERTIES:
 :CUSTOM_ID: improved-error-handling
 :CLASS: section
@@ -2623,7 +3020,7 @@ Next: [[#API-Reference][API Reference]], Previous:
 [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 15 Advanced Usage [[#Advanced-Usage-1][¶]]
+** 16 Advanced Usage [[#Advanced-Usage-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Advanced-Usage-1
 :CLASS: chapter
@@ -2636,7 +3033,7 @@ Next: [[#API-Reference][API Reference]], Previous:
 - [[#Using-Direct-API-Access][Using Direct API Access]]
 
 <<Managing-Token-Usage>>
-*** 15.1 Managing Token Usage [[#Managing-Token-Usage][¶]]
+*** 16.1 Managing Token Usage [[#Managing-Token-Usage][¶]]
 :PROPERTIES:
 :CUSTOM_ID: managing-token-usage
 :CLASS: section
@@ -2668,7 +3065,7 @@ M-x ollama-buddy-display-token-graph
 or press =C-c U= in the chat buffer.
 
 <<Customizing-the-Interface>>
-*** 15.2 Customizing the Interface [[#Customizing-the-Interface][¶]]
+*** 16.2 Customizing the Interface [[#Customizing-the-Interface][¶]]
 :PROPERTIES:
 :CUSTOM_ID: customizing-the-interface
 :CLASS: section
@@ -2678,7 +3075,7 @@ or press =C-c U= in the chat buffer.
 - [[#Debug-Mode][Debug Mode]]
 
 <<Interface-Level>>
-**** 15.2.1 Interface Level [[#Interface-Level][¶]]
+**** 16.2.1 Interface Level [[#Interface-Level][¶]]
 :PROPERTIES:
 :CUSTOM_ID: interface-level
 :CLASS: subsection
@@ -2697,7 +3094,7 @@ M-x ollama-buddy-toggle-interface-level
 or press =C-c A= in the chat buffer.
 
 <<Model-Colors>>
-**** 15.2.2 Model Colors [[#Model-Colors][¶]]
+**** 16.2.2 Model Colors [[#Model-Colors][¶]]
 :PROPERTIES:
 :CUSTOM_ID: model-colors
 :CLASS: subsection
@@ -2713,7 +3110,7 @@ M-x ollama-buddy-toggle-model-colors
 or press =C-c c= in the chat buffer.
 
 <<Debug-Mode>>
-**** 15.2.3 Debug Mode [[#Debug-Mode][¶]]
+**** 16.2.3 Debug Mode [[#Debug-Mode][¶]]
 :PROPERTIES:
 :CUSTOM_ID: debug-mode
 :CLASS: subsection
@@ -2729,7 +3126,7 @@ or press =C-c B= in the chat buffer.
 This shows raw JSON messages in a debug buffer.
 
 <<Editing-Conversation-History>>
-*** 15.3 Editing Conversation History [[#Editing-Conversation-History][¶]]
+*** 16.3 Editing Conversation History [[#Editing-Conversation-History][¶]]
 :PROPERTIES:
 :CUSTOM_ID: editing-conversation-history
 :CLASS: section
@@ -2748,7 +3145,7 @@ modify it and press =C-c C-c= to save or =C-c C-k= to cancel.
 To edit history for a specific model, use =C-u C-c J=.
 
 <<Advanced-System-Prompt-Management>>
-*** 15.4 Advanced System Prompt Management [[#Advanced-System-Prompt-Management][¶]]
+*** 16.4 Advanced System Prompt Management [[#Advanced-System-Prompt-Management][¶]]
 :PROPERTIES:
 :CUSTOM_ID: advanced-system-prompt-management
 :CLASS: section
@@ -2761,7 +3158,7 @@ For more control over system prompts:
   Fabric]]
 
 <<Setting-a-system-prompt-without-sending>>
-**** 15.4.1 Setting a system prompt without sending [[#Setting-a-system-prompt-without-sending][¶]]
+**** 16.4.1 Setting a system prompt without sending [[#Setting-a-system-prompt-without-sending][¶]]
 :PROPERTIES:
 :CUSTOM_ID: setting-a-system-prompt-without-sending
 :CLASS: subsection
@@ -2774,7 +3171,7 @@ For more control over system prompts:
 Enter your system prompt, then press =C-c s=.
 
 <<Using-a-system-prompt-from-Fabric>>
-**** 15.4.2 Using a system prompt from Fabric [[#Using-a-system-prompt-from-Fabric][¶]]
+**** 16.4.2 Using a system prompt from Fabric [[#Using-a-system-prompt-from-Fabric][¶]]
 :PROPERTIES:
 :CUSTOM_ID: using-a-system-prompt-from-fabric
 :CLASS: subsection
@@ -2787,7 +3184,7 @@ M-x ollama-buddy-fabric-set-system-prompt
 or press =C-c f p=.
 
 <<Using-Direct-API-Access>>
-*** 15.5 Using Direct API Access [[#Using-Direct-API-Access][¶]]
+*** 16.5 Using Direct API Access [[#Using-Direct-API-Access][¶]]
 :PROPERTIES:
 :CUSTOM_ID: using-direct-api-access
 :CLASS: section
@@ -2814,7 +3211,7 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 [[#Advanced-Usage][Advanced Usage]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 16 API Reference [[#API-Reference-1][¶]]
+** 17 API Reference [[#API-Reference-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: API-Reference-1
 :CLASS: chapter
@@ -2824,7 +3221,7 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 - [[#Customization-Functions][Customization Functions]]
 
 <<Interactive-Functions>>
-*** 16.1 Interactive Functions [[#Interactive-Functions][¶]]
+*** 17.1 Interactive Functions [[#Interactive-Functions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: interactive-functions
 :CLASS: section
@@ -2918,7 +3315,7 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
   message pairs to keep in history.
 
 <<Core-Functions>>
-*** 16.2 Core Functions [[#Core-Functions][¶]]
+*** 17.2 Core Functions [[#Core-Functions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: core-functions
 :CLASS: section
@@ -2945,7 +3342,7 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 - =ollama-buddy--update-status= :: Update the status display.
 
 <<Customization-Functions>>
-*** 16.3 Customization Functions [[#Customization-Functions][¶]]
+*** 17.3 Customization Functions [[#Customization-Functions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: customization-functions
 :CLASS: section
@@ -2969,7 +3366,7 @@ Next: [[#Troubleshooting][Troubleshooting]], Previous:
 [[#API-Reference][API Reference]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 17 Frequently Asked Questions [[#Frequently-Asked-Questions][¶]]
+** 18 Frequently Asked Questions [[#Frequently-Asked-Questions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Frequently-Asked-Questions
 :CLASS: chapter
@@ -2979,7 +3376,7 @@ Next: [[#Troubleshooting][Troubleshooting]], Previous:
 - [[#Troubleshooting-1][Troubleshooting]]
 
 <<General-Questions>>
-*** 17.1 General Questions [[#General-Questions][¶]]
+*** 18.1 General Questions [[#General-Questions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: general-questions
 :CLASS: section
@@ -2993,7 +3390,7 @@ Next: [[#Troubleshooting][Troubleshooting]], Previous:
 - [[#How-much-RAM-do-I-need_003f][How much RAM do I need?]]
 
 <<What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f>>
-**** 17.1.1 What is the difference between Ollama Buddy and other AI assistants? [[#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f][¶]]
+**** 18.1.1 What is the difference between Ollama Buddy and other AI assistants? [[#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: what-is-the-difference-between-ollama-buddy-and-other-ai-assistants
 :CLASS: subsection
@@ -3003,7 +3400,7 @@ privacy, customization, and seamless Emacs integration without relying
 on external API services.
 
 <<Does-Ollama-Buddy-require-an-internet-connection_003f>>
-**** 17.1.2 Does Ollama Buddy require an internet connection? [[#Does-Ollama-Buddy-require-an-internet-connection_003f][¶]]
+**** 18.1.2 Does Ollama Buddy require an internet connection? [[#Does-Ollama-Buddy-require-an-internet-connection_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: does-ollama-buddy-require-an-internet-connection
 :CLASS: subsection
@@ -3013,7 +3410,7 @@ connection is required for normal operation. Internet is only needed
 when pulling new models or syncing Fabric patterns.
 
 <<Which-models-work-best-with-Ollama-Buddy_003f>>
-**** 17.1.3 Which models work best with Ollama Buddy? [[#Which-models-work-best-with-Ollama-Buddy_003f][¶]]
+**** 18.1.3 Which models work best with Ollama Buddy? [[#Which-models-work-best-with-Ollama-Buddy_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: which-models-work-best-with-ollama-buddy
 :CLASS: subsection
@@ -3026,7 +3423,7 @@ Most models supported by Ollama work well. Popular choices include:
 - phi:latest - Smaller model that works well on limited hardware
 
 <<How-much-RAM-do-I-need_003f>>
-**** 17.1.4 How much RAM do I need? [[#How-much-RAM-do-I-need_003f][¶]]
+**** 18.1.4 How much RAM do I need? [[#How-much-RAM-do-I-need_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-much-ram-do-i-need
 :CLASS: subsection
@@ -3040,7 +3437,7 @@ It depends on the model:
 Quantized models (e.g., Q4_K_M variants) require less RAM.
 
 <<Usage-Questions>>
-*** 17.2 Usage Questions [[#Usage-Questions][¶]]
+*** 18.2 Usage Questions [[#Usage-Questions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: usage-questions
 :CLASS: section
@@ -3061,7 +3458,7 @@ Quantized models (e.g., Q4_K_M variants) require less RAM.
   when I exceed the context limit?]]
 
 <<How-do-I-cancel-a-request-that_0027s-taking-too-long_003f>>
-**** 17.2.1 How do I cancel a request that's taking too long? [[#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f][¶]]
+**** 18.2.1 How do I cancel a request that's taking too long? [[#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-do-i-cancel-a-request-thats-taking-too-long
 :CLASS: subsection
@@ -3069,7 +3466,7 @@ Quantized models (e.g., Q4_K_M variants) require less RAM.
 Press =C-c k= in the chat buffer or select "Kill Request" from the menu.
 
 <<How-can-I-save-my-conversations_003f>>
-**** 17.2.2 How can I save my conversations? [[#How-can-I-save-my-conversations_003f][¶]]
+**** 18.2.2 How can I save my conversations? [[#How-can-I-save-my-conversations_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-can-i-save-my-conversations
 :CLASS: subsection
@@ -3078,7 +3475,7 @@ Use =C-c S= to save the current session, giving it a name. You can
 restore it later with =C-c L=.
 
 <<Can-I-use-multiple-models-in-the-same-conversation_003f>>
-**** 17.2.3 Can I use multiple models in the same conversation? [[#Can-I-use-multiple-models-in-the-same-conversation_003f][¶]]
+**** 18.2.3 Can I use multiple models in the same conversation? [[#Can-I-use-multiple-models-in-the-same-conversation_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: can-i-use-multiple-models-in-the-same-conversation
 :CLASS: subsection
@@ -3087,7 +3484,7 @@ Yes, you can switch models at any time with =C-c m=. Each model
 maintains its own conversation history.
 
 <<How-do-I-clear-the-conversation-history_003f>>
-**** 17.2.4 How do I clear the conversation history? [[#How-do-I-clear-the-conversation-history_003f][¶]]
+**** 18.2.4 How do I clear the conversation history? [[#How-do-I-clear-the-conversation-history_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-do-i-clear-the-conversation-history
 :CLASS: subsection
@@ -3096,7 +3493,7 @@ Press =C-c X= to clear history, or =C-c N= to start a completely new
 session.
 
 <<How-can-I-create-a-custom-command_003f>>
-**** 17.2.5 How can I create a custom command? [[#How-can-I-create-a-custom-command_003f][¶]]
+**** 18.2.5 How can I create a custom command? [[#How-can-I-create-a-custom-command_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-can-i-create-a-custom-command
 :CLASS: subsection
@@ -3106,7 +3503,7 @@ the prompts to create commands with specific prompts, models, and
 parameters.
 
 <<How-can-I-manage-context-windows_003f>>
-**** 17.2.6 How can I manage context windows? [[#How-can-I-manage-context-windows_003f][¶]]
+**** 18.2.6 How can I manage context windows? [[#How-can-I-manage-context-windows_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-can-i-manage-context-windows
 :CLASS: subsection
@@ -3120,7 +3517,7 @@ Ollama Buddy provides several options:
 - Set model-specific context sizes with C-c $
 
 <<What-happens-when-I-exceed-the-context-limit_003f>>
-**** 17.2.7 What happens when I exceed the context limit? [[#What-happens-when-I-exceed-the-context-limit_003f][¶]]
+**** 18.2.7 What happens when I exceed the context limit? [[#What-happens-when-I-exceed-the-context-limit_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: what-happens-when-i-exceed-the-context-limit
 :CLASS: subsection
@@ -3132,7 +3529,7 @@ When context monitoring is enabled:
 - You can choose to proceed anyway or modify your content
 
 <<Troubleshooting-1>>
-*** 17.3 Troubleshooting [[#Troubleshooting-1][¶]]
+*** 18.3 Troubleshooting [[#Troubleshooting-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: troubleshooting
 :CLASS: section
@@ -3147,7 +3544,7 @@ When context monitoring is enabled:
   low quality or truncated]]
 
 <<Ollama-Buddy-shows-_0022OFFLINE_0022-status>>
-**** 17.3.1 Ollama Buddy shows "OFFLINE" status [[#Ollama-Buddy-shows-_0022OFFLINE_0022-status][¶]]
+**** 18.3.1 Ollama Buddy shows "OFFLINE" status [[#Ollama-Buddy-shows-_0022OFFLINE_0022-status][¶]]
 :PROPERTIES:
 :CUSTOM_ID: ollama-buddy-shows-offline-status
 :CLASS: subsection
@@ -3160,7 +3557,7 @@ Ensure that:
 - Your firewall isn't blocking connections
 
 <<Responses-are-slow-or-the-model-seems-to-hang>>
-**** 17.3.2 Responses are slow or the model seems to hang [[#Responses-are-slow-or-the-model-seems-to-hang][¶]]
+**** 18.3.2 Responses are slow or the model seems to hang [[#Responses-are-slow-or-the-model-seems-to-hang][¶]]
 :PROPERTIES:
 :CUSTOM_ID: responses-are-slow-or-the-model-seems-to-hang
 :CLASS: subsection
@@ -3173,7 +3570,7 @@ Try:
 - Checking CPU/RAM usage to ensure your system isn't overloaded
 
 <<Getting-_0022error-parsing-model_0022-when-pulling-a-model>>
-**** 17.3.3 Getting "error parsing model" when pulling a model [[#Getting-_0022error-parsing-model_0022-when-pulling-a-model][¶]]
+**** 18.3.3 Getting "error parsing model" when pulling a model [[#Getting-_0022error-parsing-model_0022-when-pulling-a-model][¶]]
 :PROPERTIES:
 :CUSTOM_ID: getting-error-parsing-model-when-pulling-a-model
 :CLASS: subsection
@@ -3185,7 +3582,7 @@ This usually means:
 - You have network connectivity issues
 
 <<Model-responses-are-low-quality-or-truncated>>
-**** 17.3.4 Model responses are low quality or truncated [[#Model-responses-are-low-quality-or-truncated][¶]]
+**** 18.3.4 Model responses are low quality or truncated [[#Model-responses-are-low-quality-or-truncated][¶]]
 :PROPERTIES:
 :CUSTOM_ID: model-responses-are-low-quality-or-truncated
 :CLASS: subsection
@@ -3205,7 +3602,7 @@ Next: [[#Contributing][Contributing]], Previous: [[#FAQ][Frequently
 Asked Questions]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 18 Troubleshooting [[#Troubleshooting-2][¶]]
+** 19 Troubleshooting [[#Troubleshooting-2][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Troubleshooting-2
 :CLASS: chapter
@@ -3214,7 +3611,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
 - [[#Debugging][Debugging]]
 
 <<Common-Issues>>
-*** 18.1 Common Issues [[#Common-Issues][¶]]
+*** 19.1 Common Issues [[#Common-Issues][¶]]
 :PROPERTIES:
 :CUSTOM_ID: common-issues
 :CLASS: section
@@ -3224,7 +3621,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
 - [[#Interface-Issues][Interface Issues]]
 
 <<Connection-Problems>>
-**** 18.1.1 Connection Problems [[#Connection-Problems][¶]]
+**** 19.1.1 Connection Problems [[#Connection-Problems][¶]]
 :PROPERTIES:
 :CUSTOM_ID: connection-problems
 :CLASS: subsection
@@ -3241,7 +3638,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
   - Check if your OS has any network timeout settings
 
 <<Model-Problems>>
-**** 18.1.2 Model Problems [[#Model-Problems][¶]]
+**** 19.1.2 Model Problems [[#Model-Problems][¶]]
 :PROPERTIES:
 :CUSTOM_ID: model-problems
 :CLASS: subsection
@@ -3257,7 +3654,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
   - Set =low_vram= to =t= if using GPU
 
 <<Interface-Issues>>
-**** 18.1.3 Interface Issues [[#Interface-Issues][¶]]
+**** 19.1.3 Interface Issues [[#Interface-Issues][¶]]
 :PROPERTIES:
 :CUSTOM_ID: interface-issues
 :CLASS: subsection
@@ -3273,7 +3670,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
   - Try editing the history to fix formatting issues
 
 <<Debugging>>
-*** 18.2 Debugging [[#Debugging][¶]]
+*** 19.2 Debugging [[#Debugging][¶]]
 :PROPERTIES:
 :CUSTOM_ID: debugging
 :CLASS: section
@@ -3283,7 +3680,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
 - [[#Report-Issues][Report Issues]]
 
 <<Enable-Debug-Mode>>
-**** 18.2.1 Enable Debug Mode [[#Enable-Debug-Mode][¶]]
+**** 19.2.1 Enable Debug Mode [[#Enable-Debug-Mode][¶]]
 :PROPERTIES:
 :CUSTOM_ID: enable-debug-mode
 :CLASS: subsection
@@ -3297,7 +3694,7 @@ M-x ollama-buddy-toggle-debug-mode
 This opens a debug buffer showing raw JSON communication with Ollama.
 
 <<Check-Logs>>
-**** 18.2.2 Check Logs [[#Check-Logs][¶]]
+**** 19.2.2 Check Logs [[#Check-Logs][¶]]
 :PROPERTIES:
 :CUSTOM_ID: check-logs
 :CLASS: subsection
@@ -3309,7 +3706,7 @@ tail -f ~/.ollama/logs/ollama.log
 #+end_src
 
 <<Report-Issues>>
-**** 18.2.3 Report Issues [[#Report-Issues][¶]]
+**** 19.2.3 Report Issues [[#Report-Issues][¶]]
 :PROPERTIES:
 :CUSTOM_ID: report-issues
 :CLASS: subsection
@@ -3334,7 +3731,7 @@ Next: [[#Index][Index]], Previous:
 [[#Troubleshooting][Troubleshooting]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 19 Contributing [[#Contributing-1][¶]]
+** 20 Contributing [[#Contributing-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Contributing-1
 :CLASS: chapter
@@ -3347,7 +3744,7 @@ Next: [[#Index][Index]], Previous:
   Reports]]
 
 <<Getting-Started>>
-*** 19.1 Getting Started [[#Getting-Started][¶]]
+*** 20.1 Getting Started [[#Getting-Started][¶]]
 :PROPERTIES:
 :CUSTOM_ID: getting-started
 :CLASS: section
@@ -3366,7 +3763,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 8. Create a pull request
 
 <<Development-Setup>>
-*** 19.2 Development Setup [[#Development-Setup][¶]]
+*** 20.2 Development Setup [[#Development-Setup][¶]]
 :PROPERTIES:
 :CUSTOM_ID: development-setup
 :CLASS: section
@@ -3375,7 +3772,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 - [[#Recommended-Packages][Recommended Packages]]
 
 <<Required-Tools>>
-**** 19.2.1 Required Tools [[#Required-Tools][¶]]
+**** 20.2.1 Required Tools [[#Required-Tools][¶]]
 :PROPERTIES:
 :CUSTOM_ID: required-tools
 :CLASS: subsection
@@ -3385,7 +3782,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 - Git
 
 <<Recommended-Packages>>
-**** 19.2.2 Recommended Packages [[#Recommended-Packages][¶]]
+**** 20.2.2 Recommended Packages [[#Recommended-Packages][¶]]
 :PROPERTIES:
 :CUSTOM_ID: recommended-packages
 :CLASS: subsection
@@ -3395,7 +3792,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 - elisp-lint
 
 <<Coding-Guidelines>>
-*** 19.3 Coding Guidelines [[#Coding-Guidelines][¶]]
+*** 20.3 Coding Guidelines [[#Coding-Guidelines][¶]]
 :PROPERTIES:
 :CUSTOM_ID: coding-guidelines
 :CLASS: section
@@ -3408,7 +3805,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 - Use prefix =ollama-buddy-= for public functions
 
 <<Testing>>
-*** 19.4 Testing [[#Testing][¶]]
+*** 20.4 Testing [[#Testing][¶]]
 :PROPERTIES:
 :CUSTOM_ID: testing
 :CLASS: section
@@ -3417,7 +3814,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 - [[#Adding-New-Tests][Adding New Tests]]
 
 <<Run-Existing-Tests>>
-**** 19.4.1 Run Existing Tests [[#Run-Existing-Tests][¶]]
+**** 20.4.1 Run Existing Tests [[#Run-Existing-Tests][¶]]
 :PROPERTIES:
 :CUSTOM_ID: run-existing-tests
 :CLASS: subsection
@@ -3432,7 +3829,7 @@ M-x ollama-buddy-parameter-run-tests
 #+end_src
 
 <<Adding-New-Tests>>
-**** 19.4.2 Adding New Tests [[#Adding-New-Tests][¶]]
+**** 20.4.2 Adding New Tests [[#Adding-New-Tests][¶]]
 :PROPERTIES:
 :CUSTOM_ID: adding-new-tests
 :CLASS: subsection
@@ -3444,7 +3841,7 @@ When adding features, please also add tests:
 - Parameter tests for parameter handling
 
 <<Feature-Requests-and-Bug-Reports>>
-*** 19.5 Feature Requests and Bug Reports [[#Feature-Requests-and-Bug-Reports][¶]]
+*** 20.5 Feature Requests and Bug Reports [[#Feature-Requests-and-Bug-Reports][¶]]
 :PROPERTIES:
 :CUSTOM_ID: feature-requests-and-bug-reports
 :CLASS: section

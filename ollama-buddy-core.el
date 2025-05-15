@@ -34,6 +34,19 @@
   :group 'ollama-buddy
   :prefix "ollama-buddy-param-")
 
+(defcustom ollama-buddy-max-file-size (* 10 1024 1024) ; 10MB
+  "Maximum size for attached files in bytes."
+  :type 'integer
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-supported-file-types
+  '("\\.txt$" "\\.md$" "\\.org$" "\\.py$" "\\.js$" "\\.el$" "\\.cpp$" "\\.c$"
+    "\\.java$" "\\.json$" "\\.xml$" "\\.html$" "\\.css$" "\\.sh$" "\\.sql$"
+    "\\.yaml$" "\\.yml$" "\\.toml$" "\\.ini$" "\\.cfg$")
+  "List of regex patterns for supported file types."
+  :type '(repeat string)
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-context-display-type 'bar
   "How to display context usage in the status bar."
   :type '(choice (const :tag "Text (numbers)" text)
@@ -509,12 +522,19 @@ Returns empty string if no remote models are available."
   :type 'float
   :group 'ollama-buddy)
 
+(defvar ollama-buddy--current-attachments nil
+  "List of files attached to the current conversation.
+Each element is a plist with :file, :content, :size, and :type.")
+
+(defvar ollama-buddy--attachment-history nil
+  "History of attached files across conversations.")
+
 (defvar ollama-buddy--model-context-sizes (make-hash-table :test 'equal)
   "Hash table mapping model names to their maximum context window sizes.")
 
 (defvar ollama-buddy--current-context-percentage nil
   "The current context window percentage used.")
-
+  
 (defvar ollama-buddy--current-context-tokens nil
   "The current token count used in the context window.")
 
@@ -820,6 +840,7 @@ Supports both single and prefixed multi-character model references."
 - Main transient menu                 C-c O
 - Cancel request                      C-c C-k
 - Change model                        C-c m
+- Attach file                         C-c 1
 - Browse prompt history               M-p/n/r
 - Browse ollama-buddy manual          C-c ?
 - Advanced interface (show all tips)  C-c A")
@@ -831,6 +852,8 @@ Supports both single and prefixed multi-character model references."
 - Manage models                       C-c W
 - Browse prompt history               M-p/n/r
 - Browse ollama-buddy manual          C-c ?
+- Attachments C-c
+  - menu/file/show/detach/clear       1/C-a/C-w/C-d/0
 - Show Help/Status/Debug              C-c h/v/B
 - Show Token Stats/Graph/Report       C-c u/U/T
 - Model Change/Info/Multishot         C-c m/i/M

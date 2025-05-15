@@ -66,6 +66,7 @@
   :info-manual "(ollama-buddy) Main Commands"
   [
    "|o(Y)o| Ollama Buddy"
+     
    ["Chat"
     ("o" "Open Chat" ollama-buddy--open-chat)
     ("?" "Show Manual" ollama-buddy-open-info)
@@ -101,7 +102,8 @@
     ("a" "Awesome ChatGPT Prompts" ollama-buddy-transient-awesome-menu)
     ]
 
-   ["Buffer"
+   ["Buffer / File Management"
+    ("1" "Attachment menu" ollama-buddy-transient-attachment-menu)
     ("B" "Toggle Debug Mode" ollama-buddy-toggle-debug-mode)
     ("u" "Token Stats" ollama-buddy-display-token-stats)
     ("U" "Token Usage Graph" ollama-buddy-display-token-graph)
@@ -113,11 +115,11 @@
    ["Display Toggle"
     ("A" "Interface Level" ollama-buddy-toggle-interface-level)
     ("%" "Context Display" ollama-buddy-toggle-context-percentage)
+    ("8" "Context Type" ollama-buddy-toggle-context-display-type)
     ("T" "Token Display" ollama-buddy-toggle-token-display)
     ("C-o" "Markdown->Org" ollama-buddy-toggle-markdown-conversion)
     ("c" "Model Colors" ollama-buddy-toggle-model-colors)
     ("V" "Reasoning Visibility" ollama-buddy-toggle-reasoning-visibility)
-    ("8" "Toggle display type" ollama-buddy-toggle-context-display-type)
     ]
    
    ["History"
@@ -388,6 +390,15 @@
     ("c" "Category Browser" ollama-buddy-awesome-show-prompts-menu)
     ("S" "Sync Latest Prompts" ollama-buddy-awesome-sync-prompts)
     ("q" "Back to Main Menu" transient-quit-one)]])
+
+(transient-define-prefix ollama-buddy-transient-attachment-menu ()
+  "File attachment menu."
+  ["File Attachments"
+   ("a" "Attach file" ollama-buddy-attach-file)
+   ("w" "Show attachments" ollama-buddy-show-attachments)
+   ("d" "Detach file" ollama-buddy-detach-file)
+   ("0" "Clear all attachments" ollama-buddy-clear-attachments)
+   ("q" "Quit" transient-quit-one)])
 
 ;;;###autoload
 (defun ollama-buddy-transient-menu-wrapper ()

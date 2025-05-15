@@ -96,6 +96,65 @@ See *Screenshots / Demos* section for more videos/demonstration.
 
 * Whats New
 
+** <2025-05-14> *0.10.0*
+
+Added file attachment system for including documents in conversations
+
+- Added file attachment support with configurable file size limits (10MB default) and supported file types
+- Implemented session persistence for attachments in save/load functionality  
+- Added attachment context inclusion in prompts with proper token counting
+- Created comprehensive attachment management commands:
+  - Attach files to conversations
+  - Show current attachments in dedicated buffer
+  - Detach specific files
+  - Clear all attachments
+- Added Dired integration for bulk file attachment
+- Included attachment menu in transient interface (C-c 1)
+- Updated help text to document new attachment keybindings
+- Enhanced context calculation to include attachment token usage
+
+You can now seamlessly include text files, code, documentation, and more directly in your conversations with local AI models!
+
+Simply use =C-c C-a= from the chat buffer to attach any file to your current conversation.
+
+The attached files become part of your conversation context, allowing the AI to reference, analyze, or work with their contents directly.
+
+The transient menu has also been updated with a new *Attachment Menu*
+
+#+begin_src 
+*File Attachments*
+  a Attach file
+  w Show attachments
+  d Detach file
+  0 Clear all attachments
+#+end_src
+
+Your attachments aren't just dumped into the conversation - they're intelligently integrated:
+
+- *Token counting* now includes attachment content, so you always know how much context you're using
+- *Session persistence* means your attachments are saved and restored when you save/load conversations
+- *File size limits* (configurable, 10MB default) prevent accidentally overwhelming your context window
+
+Managing attached files is intuitive with dedicated commands:
+
+- =C-c C-w= - View all current attachments in a nicely formatted org mode buffer, folded to each file
+- =C-c C-d= - Detach specific files when you no longer need them
+- =C-c 0= - Clear all attachments at once
+- =C-c 1= - Access the full attachment menu via a transient interface
+
+Working in Dired? No problem! You can attach files directly from your file browser:
+
+- Mark multiple files and attach them all at once
+- Attach the file at point with a single command
+
+Use the configuration as follows:
+
+#+begin_src elisp
+(eval-after-load 'dired
+  '(progn
+     (define-key dired-mode-map (kbd "C-c C-a") #'ollama-buddy-dired-attach-marked-files)))
+#+end_src
+
 ** <2025-05-12> *0.9.50*
 
 Added context size management and monitoring
@@ -2116,8 +2175,6 @@ Error: This model's maximum context length is 16385 tokens. However, you request
 
 ** TODO Check tags caching
 
-** TODO Save system prompts as part of session
-
 ** TODO keybindings in ollama chat buffer are reserved
 
 #+begin_src 
@@ -2126,40 +2183,29 @@ Error: This model's maximum context length is 16385 tokens. However, you request
 
 Do I even care?
 
+** DONE Save system prompts as part of session
+
 ** DONE chat ollama names to include prefix
-CLOSED: [2025-04-28 Mon 13:58]
 
 ** DONE Still some encoding issues on returns from online AI
-CLOSED: [2025-04-20 Sun 20:25]
 
 ** DONE Conversation history to display with Claude/ChatGPT
-CLOSED: [2025-04-18 Fri 16:41]
 
 ** DONE I think some hard coded Claude models currently don't work
-CLOSED: [2025-04-18 Fri 16:40]
 
 ** DONE register contents to be converted to org, currently it is in markdown
-CLOSED: [2025-04-16 Wed 14:11]
 
 ** DONE =C-a= beginning-of-line to jump to prompt start like comint
-CLOSED: [2025-04-09 Wed 13:12]
 
 ** DONE As shell generally C-n to end of list to clear prompt history
-CLOSED: [2025-04-09 Wed 11:23]
 
 ** DONE Add Texinfo to MELPA recipe
-CLOSED: [2025-04-01 Tue 20:24]
-
-MELPA has automatically picked up the info file!
 
 ** DONE System prompt not cleared on new session
-CLOSED: [2025-03-29 Sat 13:44]
 
 ** DONE Remove fabric from Commands transient menu
-CLOSED: [2025-03-29 Sat 13:37]
 
 ** DONE External AI to copy to register
-CLOSED: [2025-03-29 Sat 13:34]
 
 ** DONE First request with no chat buffer fails
 
@@ -2170,45 +2216,45 @@ CLOSED: [2025-03-29 Sat 13:34]
 #+end_src
 
 #+RESULTS:
-| TODO                    | DOING                | DONE                                         |
-|-------------------------+----------------------+----------------------------------------------|
-| Autoload intelligently? | check context size   | Add option to hide reasoning in chat buffer  |
-| Core API - Embeddings   | Core Params - suffix | Unload all models                            |
-| Core Params - format    |                      | Show token parameters as part of token stats |
-| Core Params - template  |                      | Autogenerate session save name               |
-| Core Params - raw       |                      | Add gemini?                                  |
-| Test on Windows         |                      | Pull ChatGPT and Claude model names          |
-|                         |                      | Merge history buffer functionality           |
-|                         |                      | Show incoming ollama messages                |
-|                         |                      | Add chatGPT awesome prompt support           |
-|                         |                      | Add fabric pattern/prompt support            |
-|                         |                      | ChatGPT support                              |
-|                         |                      | Claude support                               |
-|                         |                      | Add new ChatGPT 4.1                          |
-|                         |                      | Method for securely storing API keys         |
-|                         |                      | Core API - Delete Model                      |
-|                         |                      | Core API - Copy a model                      |
-|                         |                      | Core API - stream                            |
-|                         |                      | Core API - Pull/Info/Pull/Delete a model     |
-|                         |                      | Core API - Show running models               |
-|                         |                      | Core API - Create a model from a GGUF file   |
-|                         |                      | Add transient menu                           |
-|                         |                      | History editing                              |
-|                         |                      | Core API - options - parameter editing       |
-|                         |                      | Core API - show model information            |
-|                         |                      | Core API - system prompt                     |
-|                         |                      | Chat buffer to use org-mode                  |
-|                         |                      | Chat export options                          |
-|                         |                      | Core Params - options:temperature            |
-|                         |                      | Managing Sessions                            |
-|                         |                      | Sparse minified version                      |
-|                         |                      | Role-Based Menu Preset System                |
-|                         |                      | Add to MELPA                                 |
-|                         |                      | Enhancing Menu Clarity                       |
-|                         |                      | Real time token tracking                     |
-|                         |                      | Managing chat history and context            |
+| TODO                    | DOING                                       | DONE                                              |
+|-------------------------+---------------------------------------------+---------------------------------------------------|
+| Autoload intelligently? | Add option to hide reasoning in chat buffer | Unload all models                                 |
+| Core API - Embeddings   | Core Params - suffix                        | check context size of current model when querying |
+| Core Params - format    |                                             | Show token parameters as part of token stats      |
+| Core Params - template  |                                             | Autogenerate session save name                    |
+| Core Params - raw       |                                             | Add gemini?                                       |
+| Test on Windows         |                                             | Pull ChatGPT and Claude model names               |
+|                         |                                             | Merge history buffer functionality                |
+|                         |                                             | Show incoming ollama messages                     |
+|                         |                                             | Add chatGPT awesome prompt support                |
+|                         |                                             | Add fabric pattern/prompt support                 |
+|                         |                                             | ChatGPT support                                   |
+|                         |                                             | Claude support                                    |
+|                         |                                             | Add new ChatGPT 4.1                               |
+|                         |                                             | Method for securely storing API keys              |
+|                         |                                             | Core API - Delete Model                           |
+|                         |                                             | Core API - Copy a model                           |
+|                         |                                             | Core API - stream                                 |
+|                         |                                             | Core API - Pull/Info/Pull/Delete a model          |
+|                         |                                             | Core API - Show running models                    |
+|                         |                                             | Core API - Create a model from a GGUF file        |
+|                         |                                             | Add transient menu                                |
+|                         |                                             | History editing                                   |
+|                         |                                             | Core API - options - parameter editing            |
+|                         |                                             | Core API - show model information                 |
+|                         |                                             | Core API - system prompt                          |
+|                         |                                             | Chat buffer to use org-mode                       |
+|                         |                                             | Chat export options                               |
+|                         |                                             | Core Params - options:temperature                 |
+|                         |                                             | Managing Sessions                                 |
+|                         |                                             | Sparse minified version                           |
+|                         |                                             | Role-Based Menu Preset System                     |
+|                         |                                             | Add to MELPA                                      |
+|                         |                                             | Enhancing Menu Clarity                            |
+|                         |                                             | Real time token tracking                          |
+|                         |                                             | Managing chat history and context                 |
 
-** DOING check context size
+** DOING Add option to hide reasoning in chat buffer
 
 ** TODO Autoload intelligently?
 
@@ -2226,9 +2272,9 @@ CLOSED: [2025-03-29 Sat 13:34]
 
 I think this is only for generate, but I have quietly added it in.
 
-** DONE Add option to hide reasoning in chat buffer
-
 ** DONE Unload all models
+
+** DONE check context size of current model when querying
 
 ** DONE Show token parameters as part of token stats
 
