@@ -11,6 +11,7 @@
 (require 'ollama-buddy-core)  ;; Use core instead of main package
 (require 'ollama-buddy-fabric)
 (require 'ollama-buddy-awesome)
+(require 'ollama-buddy-user-prompts)
 
 ;; Forward declarations for functions defined in ollama-buddy.el
 (declare-function ollama-buddy-set-max-history-length "ollama-buddy")
@@ -98,6 +99,7 @@
     ("R" "Switch Roles" ollama-buddy-roles-switch-role)
     ("E" "Create New Role" ollama-buddy-role-creator-create-new-role)
     ("D" "Open Roles Directory" ollama-buddy-roles-open-directory)
+    ("z" "User Prompts" ollama-buddy-transient-user-prompts-menu)
     ("f" "Fabric Patterns" ollama-buddy-transient-fabric-menu)
     ("a" "Awesome ChatGPT Prompts" ollama-buddy-transient-awesome-menu)
     ]
@@ -399,6 +401,19 @@
    ("d" "Detach file" ollama-buddy-detach-file)
    ("0" "Clear all attachments" ollama-buddy-clear-attachments)
    ("q" "Quit" transient-quit-one)])
+
+(transient-define-prefix ollama-buddy-transient-user-prompts-menu ()
+  "Transient menu for user system prompts."
+  ["User System Prompts"
+   [("s" "Save current" ollama-buddy-user-prompts-save)
+    ("l" "Load prompt" ollama-buddy-user-prompts-load)
+    ("n" "Create new" ollama-buddy-user-prompts-create-new)]
+   [("e" "Edit prompt" ollama-buddy-user-prompts-edit)
+    ("d" "Delete prompt" ollama-buddy-user-prompts-delete)
+    ("L" "List all" ollama-buddy-user-prompts-list)]
+   [("I" "Import from file" ollama-buddy-user-prompts-import)
+    ("E" "Export to file" ollama-buddy-user-prompts-export)
+    ("q" "Quit" transient-quit-one)]])
 
 ;;;###autoload
 (defun ollama-buddy-transient-menu-wrapper ()
