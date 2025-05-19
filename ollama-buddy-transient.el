@@ -411,9 +411,7 @@
    [("e" "Edit prompt" ollama-buddy-user-prompts-edit)
     ("d" "Delete prompt" ollama-buddy-user-prompts-delete)
     ("L" "List all" ollama-buddy-user-prompts-list)]
-   [("I" "Import from file" ollama-buddy-user-prompts-import)
-    ("E" "Export to file" ollama-buddy-user-prompts-export)
-    ("q" "Quit" transient-quit-one)]])
+   [("q" "Quit" transient-quit-one)]])
 
 ;;;###autoload
 (defun ollama-buddy-transient-menu-wrapper ()

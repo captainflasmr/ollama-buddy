@@ -211,46 +211,12 @@ Returns a plist with :category and :title, or nil if not a valid format."
                   (let ((title (plist-get prompt :title))
                         (file (plist-get prompt :file)))
                     
-                    ;; Create a clickable link to load the prompt
-                    (insert (format "** [[elisp:(ollama-buddy-user-prompts-load-by-file \"%s\")][%s]]\n"
-                                    file title))
-                    
                     ;; Add edit and delete buttons
-                    (insert "   ")
-                    (insert (format "[[elisp:(ollama-buddy-user-prompts-edit \"%s\")][Edit]] " file))
-                    (insert (format "[[elisp:(ollama-buddy-user-prompts-delete \"%s\")][Delete]]" file))
                     (insert "\n\n")))))))
         
         (view-mode 1)
         (goto-char (point-min)))
     (display-buffer buf))))
-
-(defun ollama-buddy-user-prompts-load-by-file (file)
-  "Load a system prompt by FILE name."
-  (let ((prompts (ollama-buddy-user-prompts--get-prompts)))
-    (when-let ((prompt (cl-find file prompts :test #'string= :key (lambda (p) (plist-get p :file)))))
-      (let ((content (ollama-buddy-user-prompts--read-prompt-content file)))
-        (when content
-          ;; Extract content without org headers
-          (setq content (with-temp-buffer
-                          (insert content)
-                          (goto-char (point-min))
-                          (while (looking-at "^#\\+")
-                            (forward-line 1))
-                          (while (looking-at "^$")
-                            (forward-line 1))
-                          (buffer-substring-no-properties (point) (point-max))))
-          
-          ;; Set the system prompt
-          (setq ollama-buddy--current-system-prompt content)
-          
-          ;; Ensure chat buffer is ready
-          (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-            (ollama-buddy--open-chat))
-          
-          (let ((title (plist-get prompt :title)))
-            (message "Loaded system prompt: %s" title)
-            (ollama-buddy--update-status (format "Loaded prompt: %s" title))))))))
 
 ;;;###autoload
 (defun ollama-buddy-user-prompts-edit (file)
@@ -315,9 +281,7 @@ Returns a plist with :category and :title, or nil if not a valid format."
     (with-temp-file filepath
       (insert "#+TITLE: " title "\n")
       (insert "#+CATEGORY: " category "\n")
-      (insert "#+DATE: " (format-time-string "%Y-%m-%d %H:%M:%S") "\n\n")
-      (insert "# Your system prompt goes here\n")
-      (insert "# This prompt will be used as a system message for the AI model\n\n"))
+      (insert "#+DATE: " (format-time-string "%Y-%m-%d %H:%M:%S") "\n\n"))
     
     ;; Open the file for editing
     (find-file filepath)
@@ -326,80 +290,6 @@ Returns a plist with :category and :title, or nil if not a valid format."
     (ollama-buddy-user-prompts--refresh-cache)
     
     (message "Created new system prompt: %s" filename)))
-
-;;;###autoload
-(defun ollama-buddy-user-prompts-export (file output-file)
-  "Export a user system prompt FILE to OUTPUT-FILE in plain text format."
-  (interactive
-   (let ((prompts (ollama-buddy-user-prompts--get-prompts)))
-     (unless prompts
-       (user-error "No user system prompts found"))
-     (let* ((formatted-prompts (mapcar #'ollama-buddy-user-prompts--format-for-completion prompts))
-            (prompt-alist (cl-mapcar #'cons formatted-prompts prompts))
-            (selected-formatted (completing-read "Export system prompt: " formatted-prompts nil t))
-            (selected-prompt (cdr (assoc selected-formatted prompt-alist)))
-            (file (plist-get selected-prompt :file))
-            (title (plist-get selected-prompt :title))
-            (default-output (concat (ollama-buddy-user-prompts--sanitize-title title) ".txt"))
-            (output-file (read-file-name "Export to: " nil default-output)))
-       (list file output-file))))
-  
-  (let ((content (ollama-buddy-user-prompts--read-prompt-content file)))
-    (when content
-      ;; Extract content without org headers
-      (setq content (with-temp-buffer
-                      (insert content)
-                      (goto-char (point-min))
-                      (while (looking-at "^#\\+")
-                        (forward-line 1))
-                      (while (looking-at "^$")
-                        (forward-line 1))
-                      (buffer-substring-no-properties (point) (point-max))))
-      
-      (with-temp-file output-file
-        (insert content))
-      
-      (message "Exported system prompt to: %s" output-file))))
-
-;;;###autoload
-(defun ollama-buddy-user-prompts-import (file)
-  "Import a text FILE as a new system prompt."
-  (interactive "fImport file: ")
-  (unless (file-exists-p file)
-    (user-error "File does not exist: %s" file))
-  
-  (ollama-buddy-user-prompts--ensure-directory)
-  
-  (let* ((content (with-temp-buffer
-                    (insert-file-contents file)
-                    (buffer-string)))
-         (category (completing-read 
-                    "Category: "
-                    ollama-buddy-user-prompts-default-categories
-                    nil nil nil nil "general"))
-         (default-title (file-name-base file))
-         (title (read-string "Title for this system prompt: " default-title))
-         (filename (ollama-buddy-user-prompts--format-filename category title))
-         (filepath (expand-file-name filename ollama-buddy-user-prompts-directory)))
-    
-    ;; Check if file already exists
-    (when (file-exists-p filepath)
-      (unless (y-or-n-p (format "File '%s' already exists. Overwrite? " filename))
-        (user-error "Import cancelled")))
-    
-    ;; Write the imported content with org headers
-    (with-temp-file filepath
-      (insert "#+TITLE: " title "\n")
-      (insert "#+CATEGORY: " category "\n")
-      (insert "#+DATE: " (format-time-string "%Y-%m-%d %H:%M:%S") "\n")
-      (insert "#+IMPORTED_FROM: " file "\n\n")
-      (insert content))
-    
-    ;; Refresh cache
-    (ollama-buddy-user-prompts--refresh-cache)
-    
-    (message "Imported system prompt as '%s'" filename)
-    (ollama-buddy--update-status (format "Imported prompt: %s" title))))
 
 (provide 'ollama-buddy-user-prompts)
 ;;; ollama-buddy-user-prompts.el ends here
