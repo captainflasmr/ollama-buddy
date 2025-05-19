@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 0.9.50
+@subtitle For Ollama Buddy version 0.9.51
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -55,6 +55,7 @@ allowing you to leverage powerful large language models (LLMs) directly within y
 * File Attachments::            Including files in conversations
 * Parameter Control::           Customizing AI behavior with parameters
 * Session Management::          Saving and loading conversations
+* User System Prompts::         Saving and managing system prompts
 * Roles and Commands::          Creating custom commands and roles
 * Fabric Pattern Integration::  Using predefined prompt patterns
 * Awesome ChatGPT Prompts::     Using the Awesome ChatGPT Prompts collection
@@ -1331,6 +1332,281 @@ M-x ollama-buddy-toggle-history
 @end example
 or press @code{C-c H} in the chat buffer.
 
+@node User System Prompts
+@chapter User System Prompts
+
+@section Overview
+
+The User System Prompts feature allows you to save, organize, and reuse effective system prompts for your conversations with AI models. This feature is particularly valuable for:
+
+@itemize @bullet
+@item Building a personal library of effective prompts
+@item Maintaining context continuity across sessions
+@item Sharing prompt templates with teammates
+@item Refining your prompts over time
+@item Categorizing prompts by domain or purpose
+@end itemize
+
+System prompts play a crucial role in guiding AI behavior and response quality. A well-crafted system prompt can dramatically improve the relevance, accuracy, and style of AI responses.
+
+@section Accessing the System Prompts Menu
+
+To access the system prompts menu:
+@example
+M-x ollama-buddy-transient-user-prompts-menu
+@end example
+or press @code{C-c s} in the chat buffer.
+
+This opens a transient menu with the following options:
+
+@table @asis
+@item Save current (S)
+Save your active system prompt for future reuse
+
+@item Load prompt (L)
+Select a previously saved prompt to apply
+
+@item Create new (N)
+Start fresh with a new prompt
+
+@item List all Prompts (l)
+View your entire prompt collection
+
+@item Edit prompt (e)
+Modify an existing prompt
+
+@item Set with current prompt (s)
+Set the current text as a system prompt
+
+@item Delete prompt (d)
+Remove prompts you no longer need
+
+@item Reset prompt (r)
+Clear the system prompt setting
+@end table
+
+@section Saving System Prompts
+
+To save a system prompt:
+
+@enumerate
+@item Set a system prompt by typing it and pressing @code{C-c s s}
+@item Open the system prompts menu with @code{C-c s}
+@item Press @code{S} to save the current system prompt
+@item Enter a category (from predefined options or create your own)
+@item Enter a descriptive title for your prompt
+@item The prompt will be saved to your prompts directory
+@end enumerate
+
+@section Loading Saved Prompts
+
+To load a previously saved prompt:
+
+@enumerate
+@item Press @code{C-c s} to open the system prompts menu
+@item Press @code{L} to list available prompts
+@item Select a prompt from the completion interface
+@item The prompt will be loaded and set as your current system prompt
+@end enumerate
+
+Prompts are displayed in the format "@code{category: title}" for easy selection.
+
+@section Managing Your Prompt Library
+
+@subsection Viewing All Prompts
+
+To view your entire prompt collection:
+@example
+M-x ollama-buddy-user-prompts-list
+@end example
+or press @code{C-c s l}.
+
+This displays a buffer showing:
+@itemize @bullet
+@item Prompts organized by category
+@item Prompt titles
+@item Preview of prompt content
+@end itemize
+
+@subsection Editing Prompts
+
+To edit an existing prompt:
+@example
+M-x ollama-buddy-user-prompts-edit
+@end example
+or press @code{C-c s e}.
+
+This opens the prompt file in an Org mode buffer where you can make changes and save.
+
+@subsection Creating New Prompts
+
+To create a new prompt from scratch:
+@example
+M-x ollama-buddy-user-prompts-create-new
+@end example
+or press @code{C-c s N}.
+
+This opens a template with Org headers where you can enter your prompt content.
+
+@subsection Deleting Prompts
+
+To delete a prompt:
+@example
+M-x ollama-buddy-user-prompts-delete
+@end example
+or press @code{C-c s d}.
+
+You'll be asked to confirm before the prompt is deleted.
+
+@section Categories and Organization
+
+Prompts are organized into categories for easier management. Default categories include:
+
+@itemize @bullet
+@item general - General-purpose system prompts
+@item coding - Programming-specific prompts
+@item writing - Content creation and editing prompts
+@item analysis - Data and research analysis prompts
+@item creative - Prompts for creative tasks
+@item technical - Technical documentation and explanation prompts
+@item documentation - Documentation-focused prompts
+@end itemize
+
+You can customize the default categories:
+@example
+(setq ollama-buddy-user-prompts-default-categories
+      '("general" "coding" "writing" "analysis" "creative" "custom"))
+@end example
+
+@section Prompt Storage Format
+
+System prompts are stored as Org mode files with a specific naming convention:
+
+@example
+category__title__system.org
+@end example
+
+Each file contains:
+@itemize @bullet
+@item Org properties with metadata (title, category, date)
+@item The full prompt content
+@end itemize
+
+Example prompt file content:
+@example
+#+TITLE: Python Expert
+#+CATEGORY: coding
+#+DATE: 2025-05-19 14:32:45
+
+You are a Python programming expert with deep knowledge of both modern and 
+legacy Python code. When analyzing or writing code:
+
+1. Prioritize readability and maintainability over clever tricks
+2. Follow PEP 8 conventions
+3. Include docstrings and comments for non-obvious operations
+4. Explain your thinking step-by-step
+5. Provide examples when helpful
+
+When asked to debug, first identify the likely cause before suggesting fixes.
+@end example
+
+@section Best Practices for System Prompts
+
+@subsection Components of Effective Prompts
+
+Well-designed system prompts typically include:
+
+@itemize @bullet
+@item Clear role definition (who/what the AI is supposed to be)
+@item Guidelines for response style and format
+@item Constraints or limitations to observe
+@item Specific instructions for handling certain types of queries
+@item Examples of desired responses (optional)
+@end itemize
+
+@subsection Example Patterns
+
+@table @asis
+@item Expert Role
+"You are a [domain] expert with [X years] of experience in [specific areas]..."
+
+@item Response Format
+"Format your responses with a brief summary first, followed by detailed analysis..."
+
+@item Specific Guidelines
+"When responding to code queries, always include sample code and explain line-by-line..."
+
+@item Thinking Process
+"Think step-by-step, breaking down complex problems into smaller components..."
+@end table
+
+@section Example System Prompts
+
+@subsection Technical Writing Assistant
+
+@example
+You are a technical writing expert who specializes in creating clear, concise, 
+and accessible documentation. Your writing should:
+
+1. Use plain language and avoid jargon where possible
+2. Include appropriate headings and structural elements
+3. Provide concrete examples that illustrate complex concepts
+4. Use active voice and direct instructions for procedures
+5. Anticipate common user questions and address them proactively
+
+When presented with technical content, focus on making it understandable to 
+the target audience while preserving technical accuracy.
+@end example
+
+@subsection Code Reviewer
+
+@example
+You are an experienced code reviewer with expertise in software engineering 
+best practices. When reviewing code:
+
+1. Identify potential bugs, edge cases, and performance issues
+2. Suggest improvements to readability and maintainability
+3. Highlight security vulnerabilities or potential risks
+4. Reference design patterns or library functions that could improve the implementation
+5. Provide specific, actionable feedback with examples
+
+Balance constructive criticism with acknowledgment of well-written code.
+@end example
+
+@section Workflow Examples
+
+@subsection Python Code Assistance
+
+@enumerate
+@item Load your "Python Expert" system prompt with @code{C-c s L}
+@item Ask coding questions or paste code for analysis
+@item The AI responds with Python-specific expertise
+@item Save the conversation as a session for future reference
+@end enumerate
+
+@subsection Technical Writing Help
+
+@enumerate
+@item Create a new system prompt for technical writing (@code{C-c s N})
+@item Define the AI's role as a technical writing assistant
+@item Save the prompt in the "writing" category
+@item Load this prompt whenever you need help with documentation
+@item The AI consistently provides responses optimized for technical writing
+@end enumerate
+
+@section Integration with Roles
+
+System prompts can be integrated with Ollama Buddy roles for more specialized workflows:
+
+@enumerate
+@item Create a system prompt for a specific purpose
+@item Test and refine it through direct interaction
+@item Once effective, save it to your prompt library
+@item Reference this prompt in a custom role definition
+@end enumerate
+
+This creates a reusable AI assistant configuration that can be shared and improved over time.
+
 @node Roles and Commands
 @chapter Roles and Commands
 
@@ -2221,6 +2497,27 @@ Display detailed context usage information.
 @item ollama-buddy-set-max-history-length
 Set the maximum number of message pairs to keep in history.
 
+@item ollama-buddy-user-prompts-save
+Save the current system prompt.
+
+@item ollama-buddy-user-prompts-load
+Load a previously saved system prompt.
+
+@item ollama-buddy-user-prompts-list
+Display a list of all saved user system prompts.
+
+@item ollama-buddy-user-prompts-edit
+Edit a user system prompt.
+
+@item ollama-buddy-user-prompts-delete
+Delete a user system prompt.
+
+@item ollama-buddy-user-prompts-create-new
+Create a new system prompt from scratch.
+
+@item ollama-buddy-transient-user-prompts-menu
+Display the transient menu for user system prompts.
+
 @end table
 
 @section Core Functions
@@ -2331,6 +2628,19 @@ When context monitoring is enabled:
 @item You can choose to proceed anyway or modify your content
 @end itemize
 
+@subsection How do I create effective system prompts?
+Effective system prompts typically include:
+@itemize @bullet
+@item Clear role definition for the AI
+@item Specific guidelines for response format and style
+@item Examples of desired output (when applicable)
+@item Constraints or limitations to observe
+@end itemize
+Start simple, test the response, and refine iteratively.
+
+@subsection Where are my system prompts stored?
+System prompts are stored as .org files in the directory specified by `ollama-buddy-user-prompts-directory`, which defaults to `~/.emacs.d/ollama-buddy-user-prompts/`.
+
 @section Troubleshooting
 
 @subsection Ollama Buddy shows "OFFLINE" status
@@ -2366,6 +2676,12 @@ Try:
 @item Using a more capable model
 @item Providing clearer instructions in your prompt
 @end itemize
+
+@subsection How do system prompts differ from regular prompts?
+System prompts provide overall instructions to the AI about its role and how to respond, while regular prompts are your specific questions or requests. System prompts persist across the conversation, affecting all responses, while regular prompts are one-time interactions.
+
+@subsection Can I share system prompts between different installations?
+Yes, the user system prompts are stored as plain text .org files in your `ollama-buddy-user-prompts-directory`. You can copy these files to share them with colleagues or between different machines.
 
 @node Troubleshooting
 @chapter Troubleshooting
@@ -2540,6 +2856,24 @@ When adding features, please also add tests:
 @item Provide clear steps to reproduce bugs
 @item For feature requests, explain the use case
 @end itemize
+
+@subsection User System Prompts Issues
+
+@table @asis
+@item Symptom: Cannot save system prompts
+@itemize @bullet
+@item Check if `ollama-buddy-user-prompts-directory` exists and is writable
+@item Ensure you have set a system prompt before trying to save it
+@item Check for any error messages in the minibuffer or *Messages* buffer
+@end itemize
+
+@item Symptom: Prompts not appearing in the load menu
+@itemize @bullet
+@item Verify that prompts are saved in the correct format (category__title__system.org)
+@item Check if the prompts directory contains files with proper formatting
+@item Try refreshing the prompts cache with `M-x ollama-buddy-user-prompts--refresh-cache`
+@end itemize
+@end table
 
 @node Index
 @unnumbered Index

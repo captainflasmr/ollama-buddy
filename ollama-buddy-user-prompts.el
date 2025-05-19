@@ -28,7 +28,7 @@
   :group 'ollama-buddy-user-prompts)
 
 (defcustom ollama-buddy-user-prompts-default-categories
-  '("general" "coding" "writing" "analysis" "creative" "technical" "documentation")
+  '("general" "coding" "writing" "analysis" "creative" "technical" "documentation" "emacs")
   "List of default categories for user system prompts."
   :type '(repeat string)
   :group 'ollama-buddy-user-prompts)
@@ -43,18 +43,18 @@
   "Time-to-live for the prompts cache in seconds.")
 
 (defun ollama-buddy-user-prompts--ensure-directory ()
-  "Ensure the user prompts directory exists."
+  "Ensure the user prompt directory exists."
   (unless (file-directory-p ollama-buddy-user-prompts-directory)
     (make-directory ollama-buddy-user-prompts-directory t)))
 
 (defun ollama-buddy-user-prompts--sanitize-title (title)
   "Sanitize TITLE for use in filename by replacing spaces with dashes."
-  (replace-regexp-in-string "[[:space:]]+" "-" 
+  (replace-regexp-in-string "[[:space:]]+" "-"
                             (replace-regexp-in-string "[^[:alnum:][:space:]-]" "" title)))
 
 (defun ollama-buddy-user-prompts--format-filename (category title)
   "Format filename using CATEGORY and TITLE."
-  (format "%s__%s__system.org" 
+  (format "%s__%s__system.org"
           (downcase category)
           (ollama-buddy-user-prompts--sanitize-title title)))
 
@@ -66,7 +66,7 @@ Returns a plist with :category and :title, or nil if not a valid format."
           :title (replace-regexp-in-string "-" " " (match-string 2 filename)))))
 
 (defun ollama-buddy-user-prompts--refresh-cache ()
-  "Refresh the cache of available user system prompts."
+  "Refresh the cache of available user system prompt."
   (ollama-buddy-user-prompts--ensure-directory)
   (let ((files (directory-files ollama-buddy-user-prompts-directory nil "\\.org$")))
     (setq ollama-buddy-user-prompts--cache
@@ -81,7 +81,7 @@ Returns a plist with :category and :title, or nil if not a valid format."
     (setq ollama-buddy-user-prompts--last-refresh (current-time))))
 
 (defun ollama-buddy-user-prompts--get-prompts ()
-  "Get list of available user prompts with caching."
+  "Get list of available user prompt with caching."
   (let ((current-time (float-time)))
     (when (or (null ollama-buddy-user-prompts--last-refresh)
               (> (- current-time (float-time ollama-buddy-user-prompts--last-refresh))
@@ -114,7 +114,7 @@ Returns a plist with :category and :title, or nil if not a valid format."
   
   (ollama-buddy-user-prompts--ensure-directory)
   
-  (let* ((category (completing-read 
+  (let* ((category (completing-read
                     "Category: "
                     ollama-buddy-user-prompts-default-categories
                     nil nil nil nil "general"))
@@ -124,7 +124,7 @@ Returns a plist with :category and :title, or nil if not a valid format."
     
     ;; Check if file already exists
     (when (file-exists-p filepath)
-      (unless (y-or-n-p (format "File '%s' already exists. Overwrite? " filename))
+      (unless (y-or-n-p (format "File '%s' already exists.  Overwrite? " filename))
         (user-error "Save cancelled")))
     
     ;; Write the system prompt to file
@@ -146,7 +146,7 @@ Returns a plist with :category and :title, or nil if not a valid format."
   (interactive)
   (let ((prompts (ollama-buddy-user-prompts--get-prompts)))
     (unless prompts
-      (user-error "No user system prompts found. Create one with `ollama-buddy-user-prompts-save'"))
+      (user-error "No user system prompts found.  Create one with `ollama-buddy-user-prompts-save'"))
     
     (let* ((formatted-prompts (mapcar #'ollama-buddy-user-prompts--format-for-completion prompts))
            (prompt-alist (cl-mapcar #'cons formatted-prompts prompts))
@@ -174,14 +174,11 @@ Returns a plist with :category and :title, or nil if not a valid format."
         ;; Ensure chat buffer is ready
         (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
           (ollama-buddy--open-chat))
-        
-        (let ((title (plist-get selected-prompt :title)))
-          (message "Loaded system prompt: %s" title)
-          (ollama-buddy--update-status (format "Loaded prompt: %s" title)))))))
+        (ollama-buddy--update-status (format "Loaded prompt"))))))
 
 ;;;###autoload
 (defun ollama-buddy-user-prompts-list ()
-  "Display a list of all saved user system prompts."
+  "Display a list of all saved user system prompt."
   (interactive)
   (let ((prompts (ollama-buddy-user-prompts--get-prompts))
         (buf (get-buffer-create "*User System Prompts*")))
@@ -194,7 +191,7 @@ Returns a plist with :category and :title, or nil if not a valid format."
         
         (if (null prompts)
             (insert "No user system prompts found.\n\n")
-          (let ((categories (cl-remove-duplicates 
+          (let ((categories (cl-remove-duplicates
                              (mapcar (lambda (p) (plist-get p :category)) prompts)
                              :test #'string=)))
             
@@ -205,18 +202,31 @@ Returns a plist with :category and :title, or nil if not a valid format."
               (let ((category-prompts (cl-remove-if-not
                                        (lambda (p) (string= (plist-get p :category) category))
                                        prompts)))
-                (dolist (prompt (sort category-prompts 
-                                      (lambda (a b) (string< (plist-get a :title) 
+                (dolist (prompt (sort category-prompts
+                                      (lambda (a b) (string< (plist-get a :title)
                                                              (plist-get b :title)))))
-                  (let ((title (plist-get prompt :title))
-                        (file (plist-get prompt :file)))
-                    
-                    ;; Add edit and delete buttons
-                    (insert "\n\n")))))))
-        
+                  (let* ((title (plist-get prompt :title))
+                         (file (plist-get prompt :file))
+                         (content (ollama-buddy-user-prompts--read-prompt-content file)))
+
+                    (when content
+                      ;; Extract just the content without org headers
+                      (setq content (with-temp-buffer
+                                      (insert content)
+                                      (goto-char (point-min))
+                                      ;; Skip org headers
+                                      (while (looking-at "^#\\+")
+                                        (forward-line 1))
+                                      ;; Skip any empty lines after headers
+                                      (while (looking-at "^$")
+                                        (forward-line 1))
+                                      (buffer-substring-no-properties (point) (point-max)))))
+                    (insert (format "** %s\n" title)"\n")
+                    (insert (concat content "\n\n"))))))))
+        (org-fold-hide-sublevels 2)
         (view-mode 1)
         (goto-char (point-min)))
-    (display-buffer buf))))
+      (display-buffer buf))))
 
 ;;;###autoload
 (defun ollama-buddy-user-prompts-edit (file)
@@ -264,7 +274,7 @@ Returns a plist with :category and :title, or nil if not a valid format."
   (interactive)
   (ollama-buddy-user-prompts--ensure-directory)
   
-  (let* ((category (completing-read 
+  (let* ((category (completing-read
                     "Category: "
                     ollama-buddy-user-prompts-default-categories
                     nil nil nil nil "general"))
@@ -274,7 +284,7 @@ Returns a plist with :category and :title, or nil if not a valid format."
     
     ;; Check if file already exists
     (when (file-exists-p filepath)
-      (unless (y-or-n-p (format "File '%s' already exists. Overwrite? " filename))
+      (unless (y-or-n-p (format "File '%s' already exists.  Overwrite? " filename))
         (user-error "Creation cancelled")))
     
     ;; Create the file with template

@@ -8,6 +8,50 @@
 
 * Features as they come in
 
+** <2025-05-19> *0.11.0*
+
+Added user system prompts management
+
+- You can now save, load and manage system prompts
+- Created new transient menu for user system prompts (C-c s)
+- Organized prompts by categories with org-mode format storage
+- Supported prompt editing, listing, creation and deletion
+- Updated key bindings to integrate with existing functionality
+- Added prompts directory customization with defaults
+
+This feature makes it easier to save, organize, and reuse your favorite system prompts when working with Ollama language models.
+
+System prompts are special instructions that guide the behavior of language models. By setting effective system prompts, you can:
+
+- Define the AI's role (e.g., "You are a helpful programming assistant who explains code clearly")
+- Establish response formats
+- Set the tone and style of responses
+- Provide background knowledge for specific domains
+
+The new =ollama-buddy-user-prompts= module organizes your system prompts in a clean, category-based system:
+
+- *Save your prompts* - Store effective system prompts you've crafted for future use
+- *Categorize* - Prompts are organized by domains like "coding," "writing," "technical," etc.
+- *Quick access* - Browse and load your prompt library with completion-based selection
+- *Edit in org-mode* - All prompts are stored as org files with proper metadata
+- *Manage with ease* - Create, edit, list, and delete prompts through a dedicated transient menu
+
+The new functionality is accessible through the updated key binding =C-c s=, which opens a dedicated transient menu with these options:
+
+- *Save current (S)* - Save your active system prompt
+- *Load prompt (L)* - Choose a previously saved prompt
+- *Create new (N)* - Start fresh with a new prompt
+- *List all Prompts (l)* - View your entire prompt library
+- *Edit prompt (e)* - Modify an existing prompt
+- *Delete prompt (d)* - Remove prompts you no longer need
+
+If you work frequently with Ollama models, you've likely discovered the power of well-crafted system prompts. They can dramatically improve the quality and consistency of responses. With this new management system, you can:
+
+- Build a personal library of effective prompts
+- Maintain context continuity across sessions
+- Share prompts with teammates
+- Refine your prompts over time
+
 ** <2025-05-14> *0.10.0*
 
 Added file attachment system for including documents in conversations

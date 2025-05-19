@@ -11,6 +11,17 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-05-19> *0.11.0*
+
+Added user system prompts management
+
+- You can now save, load and manage system prompts
+- Created new transient menu for user system prompts (C-c s)
+- Organized prompts by categories with org-mode format storage
+- Supported prompt editing, listing, creation and deletion
+- Updated key bindings to integrate with existing functionality
+- Added prompts directory customization with defaults
+  
 ** <2025-05-14> *0.10.0*
 
 Added file attachment system for including documents in conversations

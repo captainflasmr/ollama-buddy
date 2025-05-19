@@ -34,6 +34,7 @@ elisp_files=(
   "ollama-buddy-gemini.el"
   "ollama-buddy-grok.el"
   "ollama-buddy-transient.el"
+  "ollama-buddy-user-prompts.el"
 )
 
 # Directory above current one

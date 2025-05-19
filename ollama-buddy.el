@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.10.0
+;; Version: 0.11.0
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -1770,7 +1770,6 @@ Supports both single letter and prefixed multi-character model references."
         (visual-line-mode 1)
         (if ollama-buddy--current-system-prompt
             (progn
-              (insert "Current System Prompt:\n\n")
               (insert ollama-buddy--current-system-prompt))
           (insert "No system prompt is currently set.")))
       (view-mode 1))
@@ -3516,7 +3515,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     
     ;; Prompts section keybindings
     (define-key map (kbd "C-c l") (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))
-    (define-key map (kbd "C-c s") #'ollama-buddy-set-system-prompt)
+    (define-key map (kbd "C-c s") #'ollama-buddy-transient-user-prompts-menu)
     (define-key map (kbd "C-c C-s") #'ollama-buddy-show-system-prompt)
     (define-key map (kbd "C-c r") #'ollama-buddy-reset-system-prompt)
     (define-key map (kbd "C-c b") #'ollama-buddy-menu)

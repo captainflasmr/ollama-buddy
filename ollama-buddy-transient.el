@@ -64,23 +64,21 @@
 
 (transient-define-prefix ollama-buddy-transient-menu ()
   "Ollama Buddy main menu."
-  :info-manual "(ollama-buddy) Main Commands"
+  :info-manual "(ollama-buddy)Top"
   [
    "|o(Y)o| Ollama Buddy"
      
    ["Chat"
     ("o" "Open Chat" ollama-buddy--open-chat)
-    ("?" "Show Manual" ollama-buddy-open-info)
     ("O" "Commands" ollama-buddy-transient-commands-menu)
-    ("RET" "Send Prompt" ollama-buddy--send-prompt)
     ("h" "Help/Menu" ollama-buddy--menu-help-assistant)
-    ("k" "Kill/Cancel Request" ollama-buddy--cancel-request)
-    ("x" "Toggle Streaming" ollama-buddy-toggle-streaming)
+    ("k" "Cancel Request" ollama-buddy--cancel-request)
+    ("x" "Toggle Stream  " ollama-buddy-toggle-streaming)
     ]
 
    ["Prompts"
+    ("s" "User System Prompts" ollama-buddy-transient-user-prompts-menu)
     ("l" "Send Region" (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))
-    ("s" "Set System Prompt" ollama-buddy-set-system-prompt)
     ("C-s" "Show System Prompt" ollama-buddy-show-system-prompt)
     ("r" "Reset System Prompt" ollama-buddy-reset-system-prompt)
     ("b" "Ollama Buddy Menu" ollama-buddy-menu)
@@ -89,7 +87,6 @@
    ["Model"
     ("W" "Manage Models" ollama-buddy-manage-models)
     ("m" "Switch Model" ollama-buddy--swap-model)
-    ("$" "Set Context" ollama-buddy-set-model-context-size)
     ("v" "View Model Status" ollama-buddy-show-model-status)
     ("i" "Show Model Info" ollama-buddy-show-raw-model-info)
     ("M" "Multishot" ollama-buddy--multishot-prompt)
@@ -98,8 +95,7 @@
    ["Roles & Patterns"
     ("R" "Switch Roles" ollama-buddy-roles-switch-role)
     ("E" "Create New Role" ollama-buddy-role-creator-create-new-role)
-    ("D" "Open Roles Directory" ollama-buddy-roles-open-directory)
-    ("z" "User Prompts" ollama-buddy-transient-user-prompts-menu)
+    ("D" "Roles Directory" ollama-buddy-roles-open-directory)
     ("f" "Fabric Patterns" ollama-buddy-transient-fabric-menu)
     ("a" "Awesome ChatGPT Prompts" ollama-buddy-transient-awesome-menu)
     ]
@@ -119,9 +115,7 @@
     ("%" "Context Display" ollama-buddy-toggle-context-percentage)
     ("8" "Context Type" ollama-buddy-toggle-context-display-type)
     ("T" "Token Display" ollama-buddy-toggle-token-display)
-    ("C-o" "Markdown->Org" ollama-buddy-toggle-markdown-conversion)
-    ("c" "Model Colors" ollama-buddy-toggle-model-colors)
-    ("V" "Reasoning Visibility" ollama-buddy-toggle-reasoning-visibility)
+    ("V" "Reasoning Vis" ollama-buddy-toggle-reasoning-visibility)
     ]
    
    ["History"
@@ -129,6 +123,7 @@
     ("X" "Clear History" ollama-buddy-clear-history)
     ("J" "Edit History" ollama-buddy-history-edit)
     ("Y" "Edit Max History" ollama-buddy-set-max-history-length)
+    ("$" "Set Context         " ollama-buddy-set-model-context-size)
     ]
    
    ["Sessions"
@@ -136,7 +131,7 @@
     ("L" "Load Session" ollama-buddy-sessions-load)
     ("S" "Save Session" ollama-buddy-sessions-save)
     ("Q" "List Sessions" ollama-buddy-sessions-list)
-    ("Z" "Delete Session" ollama-buddy-sessions-delete)
+    ("Z" "Delete Session   " ollama-buddy-sessions-delete)
     ]
    
    ["Parameters"
@@ -144,8 +139,7 @@
     ("G" "Display Parameters" ollama-buddy-params-display)
     ("I" "Parameter Help" ollama-buddy-params-help)
     ("K" "Reset Parameters" ollama-buddy-params-reset)
-    ("F" "Toggle Params in Header" ollama-buddy-toggle-params-in-header)
-    ("p" "Parameter Profiles" ollama-buddy-transient-profile-menu)
+    ("F" "Toggle Params Display" ollama-buddy-toggle-params-in-header)
     ]
    ]
   )
@@ -405,12 +399,14 @@
 (transient-define-prefix ollama-buddy-transient-user-prompts-menu ()
   "Transient menu for user system prompts."
   ["User System Prompts"
-   [("s" "Save current" ollama-buddy-user-prompts-save)
-    ("l" "Load prompt" ollama-buddy-user-prompts-load)
-    ("n" "Create new" ollama-buddy-user-prompts-create-new)]
+   [("S" "Save current" ollama-buddy-user-prompts-save)
+    ("L" "Load prompt" ollama-buddy-user-prompts-load)
+    ("N" "Create new" ollama-buddy-user-prompts-create-new)
+    ("l" "List all Prompts" ollama-buddy-user-prompts-list)]
    [("e" "Edit prompt" ollama-buddy-user-prompts-edit)
+    ("s" "Set with current prompt" ollama-buddy-set-system-prompt)
     ("d" "Delete prompt" ollama-buddy-user-prompts-delete)
-    ("L" "List all" ollama-buddy-user-prompts-list)]
+    ("r" "Reset prompt" ollama-buddy-reset-system-prompt)]
    [("q" "Quit" transient-quit-one)]])
 
 ;;;###autoload
