@@ -36,6 +36,7 @@ language models (LLMs) directly within your Emacs workflow.
 * File Attachments::            Including files in conversations
 * Parameter Control::           Customizing AI behavior with parameters
 * Session Management::          Saving and loading conversations
+* User System Prompts::         Saving and managing system prompts
 * Roles and Commands::          Creating custom commands and roles
 * Fabric Pattern Integration::  Using predefined prompt patterns
 * Awesome ChatGPT Prompts::     Using the Awesome ChatGPT Prompts collection
@@ -1158,7 +1159,7 @@ To toggle whether modified parameters are shown in the header:
    or press ‘C-c F’ in the chat buffer.
 
 
-File: ollama-buddy.info,  Node: Session Management,  Next: Roles and Commands,  Prev: Parameter Control,  Up: Top
+File: ollama-buddy.info,  Node: Session Management,  Next: User System Prompts,  Prev: Parameter Control,  Up: Top
 
 11 Session Management
 *********************
@@ -1234,12 +1235,283 @@ Sessions save the conversation history for each model separately.
    or press ‘C-c H’ in the chat buffer.
 
 
-File: ollama-buddy.info,  Node: Roles and Commands,  Next: Fabric Pattern Integration,  Prev: Session Management,  Up: Top
+File: ollama-buddy.info,  Node: User System Prompts,  Next: Roles and Commands,  Prev: Session Management,  Up: Top
 
-12 Roles and Commands
+12 User System Prompts
+**********************
+
+12.1 Overview
+=============
+
+The User System Prompts feature allows you to save, organize, and reuse
+effective system prompts for your conversations with AI models.  This
+feature is particularly valuable for:
+
+   • Building a personal library of effective prompts
+   • Maintaining context continuity across sessions
+   • Sharing prompt templates with teammates
+   • Refining your prompts over time
+   • Categorizing prompts by domain or purpose
+
+   System prompts play a crucial role in guiding AI behavior and
+response quality.  A well-crafted system prompt can dramatically improve
+the relevance, accuracy, and style of AI responses.
+
+12.2 Accessing the System Prompts Menu
+======================================
+
+To access the system prompts menu:
+     M-x ollama-buddy-transient-user-prompts-menu
+   or press ‘C-c s’ in the chat buffer.
+
+   This opens a transient menu with the following options:
+
+Save current (S)
+     Save your active system prompt for future reuse
+
+Load prompt (L)
+     Select a previously saved prompt to apply
+
+Create new (N)
+     Start fresh with a new prompt
+
+List all Prompts (l)
+     View your entire prompt collection
+
+Edit prompt (e)
+     Modify an existing prompt
+
+Set with current prompt (s)
+     Set the current text as a system prompt
+
+Delete prompt (d)
+     Remove prompts you no longer need
+
+Reset prompt (r)
+     Clear the system prompt setting
+
+12.3 Saving System Prompts
+==========================
+
+To save a system prompt:
+
+  1. Set a system prompt by typing it and pressing ‘C-c s s’
+  2. Open the system prompts menu with ‘C-c s’
+  3. Press ‘S’ to save the current system prompt
+  4. Enter a category (from predefined options or create your own)
+  5. Enter a descriptive title for your prompt
+  6. The prompt will be saved to your prompts directory
+
+12.4 Loading Saved Prompts
+==========================
+
+To load a previously saved prompt:
+
+  1. Press ‘C-c s’ to open the system prompts menu
+  2. Press ‘L’ to list available prompts
+  3. Select a prompt from the completion interface
+  4. The prompt will be loaded and set as your current system prompt
+
+   Prompts are displayed in the format "‘category: title’" for easy
+selection.
+
+12.5 Managing Your Prompt Library
+=================================
+
+12.5.1 Viewing All Prompts
+--------------------------
+
+To view your entire prompt collection:
+     M-x ollama-buddy-user-prompts-list
+   or press ‘C-c s l’.
+
+   This displays a buffer showing:
+   • Prompts organized by category
+   • Prompt titles
+   • Preview of prompt content
+
+12.5.2 Editing Prompts
+----------------------
+
+To edit an existing prompt:
+     M-x ollama-buddy-user-prompts-edit
+   or press ‘C-c s e’.
+
+   This opens the prompt file in an Org mode buffer where you can make
+changes and save.
+
+12.5.3 Creating New Prompts
+---------------------------
+
+To create a new prompt from scratch:
+     M-x ollama-buddy-user-prompts-create-new
+   or press ‘C-c s N’.
+
+   This opens a template with Org headers where you can enter your
+prompt content.
+
+12.5.4 Deleting Prompts
+-----------------------
+
+To delete a prompt:
+     M-x ollama-buddy-user-prompts-delete
+   or press ‘C-c s d’.
+
+   You'll be asked to confirm before the prompt is deleted.
+
+12.6 Categories and Organization
+================================
+
+Prompts are organized into categories for easier management.  Default
+categories include:
+
+   • general - General-purpose system prompts
+   • coding - Programming-specific prompts
+   • writing - Content creation and editing prompts
+   • analysis - Data and research analysis prompts
+   • creative - Prompts for creative tasks
+   • technical - Technical documentation and explanation prompts
+   • documentation - Documentation-focused prompts
+
+   You can customize the default categories:
+     (setq ollama-buddy-user-prompts-default-categories
+           '("general" "coding" "writing" "analysis" "creative" "custom"))
+
+12.7 Prompt Storage Format
+==========================
+
+System prompts are stored as Org mode files with a specific naming
+convention:
+
+     category__title__system.org
+
+   Each file contains:
+   • Org properties with metadata (title, category, date)
+   • The full prompt content
+
+   Example prompt file content:
+     #+TITLE: Python Expert
+     #+CATEGORY: coding
+     #+DATE: 2025-05-19 14:32:45
+
+     You are a Python programming expert with deep knowledge of both modern and
+     legacy Python code. When analyzing or writing code:
+
+     1. Prioritize readability and maintainability over clever tricks
+     2. Follow PEP 8 conventions
+     3. Include docstrings and comments for non-obvious operations
+     4. Explain your thinking step-by-step
+     5. Provide examples when helpful
+
+     When asked to debug, first identify the likely cause before suggesting fixes.
+
+12.8 Best Practices for System Prompts
+======================================
+
+12.8.1 Components of Effective Prompts
+--------------------------------------
+
+Well-designed system prompts typically include:
+
+   • Clear role definition (who/what the AI is supposed to be)
+   • Guidelines for response style and format
+   • Constraints or limitations to observe
+   • Specific instructions for handling certain types of queries
+   • Examples of desired responses (optional)
+
+12.8.2 Example Patterns
+-----------------------
+
+Expert Role
+     "You are a [domain] expert with [X years] of experience in
+     [specific areas]..."
+
+Response Format
+     "Format your responses with a brief summary first, followed by
+     detailed analysis..."
+
+Specific Guidelines
+     "When responding to code queries, always include sample code and
+     explain line-by-line..."
+
+Thinking Process
+     "Think step-by-step, breaking down complex problems into smaller
+     components..."
+
+12.9 Example System Prompts
+===========================
+
+12.9.1 Technical Writing Assistant
+----------------------------------
+
+     You are a technical writing expert who specializes in creating clear, concise,
+     and accessible documentation. Your writing should:
+
+     1. Use plain language and avoid jargon where possible
+     2. Include appropriate headings and structural elements
+     3. Provide concrete examples that illustrate complex concepts
+     4. Use active voice and direct instructions for procedures
+     5. Anticipate common user questions and address them proactively
+
+     When presented with technical content, focus on making it understandable to
+     the target audience while preserving technical accuracy.
+
+12.9.2 Code Reviewer
+--------------------
+
+     You are an experienced code reviewer with expertise in software engineering
+     best practices. When reviewing code:
+
+     1. Identify potential bugs, edge cases, and performance issues
+     2. Suggest improvements to readability and maintainability
+     3. Highlight security vulnerabilities or potential risks
+     4. Reference design patterns or library functions that could improve the implementation
+     5. Provide specific, actionable feedback with examples
+
+     Balance constructive criticism with acknowledgment of well-written code.
+
+12.10 Workflow Examples
+=======================
+
+12.10.1 Python Code Assistance
+------------------------------
+
+  1. Load your "Python Expert" system prompt with ‘C-c s L’
+  2. Ask coding questions or paste code for analysis
+  3. The AI responds with Python-specific expertise
+  4. Save the conversation as a session for future reference
+
+12.10.2 Technical Writing Help
+------------------------------
+
+  1. Create a new system prompt for technical writing (‘C-c s N’)
+  2. Define the AI's role as a technical writing assistant
+  3. Save the prompt in the "writing" category
+  4. Load this prompt whenever you need help with documentation
+  5. The AI consistently provides responses optimized for technical
+     writing
+
+12.11 Integration with Roles
+============================
+
+System prompts can be integrated with Ollama Buddy roles for more
+specialized workflows:
+
+  1. Create a system prompt for a specific purpose
+  2. Test and refine it through direct interaction
+  3. Once effective, save it to your prompt library
+  4. Reference this prompt in a custom role definition
+
+   This creates a reusable AI assistant configuration that can be shared
+and improved over time.
+
+
+File: ollama-buddy.info,  Node: Roles and Commands,  Next: Fabric Pattern Integration,  Prev: User System Prompts,  Up: Top
+
+13 Roles and Commands
 *********************
 
-12.1 Understanding Roles
+13.1 Understanding Roles
 ========================
 
 Roles in Ollama Buddy are collections of commands with specific
@@ -1252,7 +1524,7 @@ configurations:
    This allows you to create specialized assistants for different
 workflows.
 
-12.2 Role File Naming Convention
+13.2 Role File Naming Convention
 ================================
 
 The file naming convention is critical to understand how roles, preset
@@ -1287,7 +1559,7 @@ this naming convention is automatically handled for you.  When creating
 roles manually, you must follow this pattern for Ollama Buddy to
 recognize your role files correctly.
 
-12.3 Built-in Commands
+13.3 Built-in Commands
 ======================
 
 Ollama Buddy comes with several built-in commands:
@@ -1310,12 +1582,12 @@ synonym
 proofread
      Corrects grammar, style, and spelling
 
-12.4 Creating Custom Roles
+13.4 Creating Custom Roles
 ==========================
 
 There are two ways to create custom roles:
 
-12.4.1 Interactive Role Creator
+13.4.1 Interactive Role Creator
 -------------------------------
 
 The most user-friendly approach:
@@ -1333,7 +1605,7 @@ The most user-friendly approach:
    The interactive creator automatically handles file naming and
 placement.
 
-12.4.2 Manual Role Creation
+13.4.2 Manual Role Creation
 ---------------------------
 
 For more advanced customization, create role files manually:
@@ -1398,7 +1670,7 @@ For more advanced customization, create role files manually:
           :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
          ))
 
-12.5 Switching Roles
+13.5 Switching Roles
 ====================
 
 To switch between roles:
@@ -1407,7 +1679,7 @@ To switch between roles:
 
    You'll be presented with a list of available roles to choose from.
 
-12.6 Managing Role Files
+13.6 Managing Role Files
 ========================
 
 Roles are stored as Elisp files in the ‘ollama-buddy-roles-directory’.
@@ -1424,17 +1696,17 @@ you can customize it:
      M-x ollama-buddy-roles-open-directory
    or press ‘C-c D’ in the chat buffer.
 
-12.7 Advanced Role Customization
+13.7 Advanced Role Customization
 ================================
 
-12.7.1 Command-Specific Models
+13.7.1 Command-Specific Models
 ------------------------------
 
 Assign specific models to commands for optimal performance:
 
      (ollama-buddy-add-model-to-menu-entry 'refactor-code "codellama:7b")
 
-12.7.2 Command-Specific Parameters
+13.7.2 Command-Specific Parameters
 ----------------------------------
 
 Optimize parameters for specific commands:
@@ -1444,7 +1716,7 @@ Optimize parameters for specific commands:
        'top_p 0.7
        'repeat_penalty 1.3)
 
-12.7.3 Creating New Commands
+13.7.3 Creating New Commands
 ----------------------------
 
 Add entirely new commands to your menu:
@@ -1456,10 +1728,10 @@ Add entirely new commands to your menu:
        :system "You are an expert system specialized in this task."
        :action (lambda () (ollama-buddy--send-with-command 'my-new-command)))
 
-12.8 Role Examples
+13.8 Role Examples
 ==================
 
-12.8.1 Programming Role
+13.8.1 Programming Role
 -----------------------
 
 A complete example of a programming-focused role:
@@ -1506,7 +1778,7 @@ A complete example of a programming-focused role:
           :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
          ))
 
-12.8.2 Writing Role
+13.8.2 Writing Role
 -------------------
 
 A complete example of a writing-focused role:
@@ -1553,7 +1825,7 @@ A complete example of a writing-focused role:
           :action (lambda () (ollama-buddy--send-with-command 'brainstorm)))
          ))
 
-12.9 Tips for Effective Role Usage
+13.9 Tips for Effective Role Usage
 ==================================
 
   1. Group related commands: Create roles around specific workflows or
@@ -1570,10 +1842,10 @@ A complete example of a writing-focused role:
 
 File: ollama-buddy.info,  Node: Fabric Pattern Integration,  Next: Awesome ChatGPT Prompts,  Prev: Roles and Commands,  Up: Top
 
-13 Fabric Pattern Integration
+14 Fabric Pattern Integration
 *****************************
 
-13.1 What are Fabric Patterns?
+14.1 What are Fabric Patterns?
 ==============================
 
 Fabric patterns are pre-defined prompt templates from Daniel Miessler's
@@ -1585,7 +1857,7 @@ provide optimized prompts for various tasks, categorized as:
    • writing - Content creation and editing
    • analysis - Data and concept examination
 
-13.2 Setting Up Fabric Integration
+14.2 Setting Up Fabric Integration
 ==================================
 
 To set up Fabric integration:
@@ -1596,7 +1868,7 @@ To set up Fabric integration:
   2. Populate available patterns
   3. Make patterns available for use
 
-13.3 Using Fabric Patterns
+14.3 Using Fabric Patterns
 ==========================
 
 To use a Fabric pattern:
@@ -1609,7 +1881,7 @@ To use a Fabric pattern:
 
    The pattern will be used as a system prompt for your request.
 
-13.4 Browsing Available Patterns
+14.4 Browsing Available Patterns
 ================================
 
 To see all available patterns:
@@ -1621,7 +1893,7 @@ To see all available patterns:
    • Categories
    • Descriptions
 
-13.5 Viewing Pattern Details
+14.5 Viewing Pattern Details
 ============================
 
 To see the full content of a specific pattern:
@@ -1632,14 +1904,14 @@ To see the full content of a specific pattern:
    • The system prompt content
    • Full description
 
-13.6 Updating Patterns
+14.6 Updating Patterns
 ======================
 
 To sync with the latest patterns from GitHub:
      M-x ollama-buddy-fabric-sync-patterns
    or press ‘C-c f’ and then ‘S’.
 
-13.7 Using Patterns by Category
+14.7 Using Patterns by Category
 ===============================
 
 You can quickly access patterns by category:
@@ -1651,10 +1923,10 @@ You can quickly access patterns by category:
 
 File: ollama-buddy.info,  Node: Awesome ChatGPT Prompts,  Next: ChatGPT and Claude Support,  Prev: Fabric Pattern Integration,  Up: Top
 
-14 Awesome ChatGPT Prompts
+15 Awesome ChatGPT Prompts
 **************************
 
-14.1 What is Awesome ChatGPT Prompts?
+15.1 What is Awesome ChatGPT Prompts?
 =====================================
 
 Awesome ChatGPT Prompts is a curated collection of prompt templates
@@ -1669,7 +1941,7 @@ personas or experts, such as:
    • Business experts (marketers, consultants, strategists)
    • And many more specialized roles
 
-14.2 Setting Up Awesome ChatGPT Prompts
+15.2 Setting Up Awesome ChatGPT Prompts
 =======================================
 
 To set up the Awesome ChatGPT Prompts integration:
@@ -1680,7 +1952,7 @@ To set up the Awesome ChatGPT Prompts integration:
   2. Download only the necessary files (prompts.csv and README)
   3. Populate and categorize the available prompts
 
-14.3 Using Awesome ChatGPT Prompts
+15.3 Using Awesome ChatGPT Prompts
 ==================================
 
 To use an Awesome ChatGPT Prompt:
@@ -1694,7 +1966,7 @@ To use an Awesome ChatGPT Prompt:
    The selected prompt will be used as a system prompt for your request,
 transforming how the AI responds to your text.
 
-14.4 Browsing Available Prompts
+15.4 Browsing Available Prompts
 ===============================
 
 To see all available prompts:
@@ -1706,7 +1978,7 @@ To see all available prompts:
    • Categories
    • Preview of prompt content
 
-14.5 Categorized Browsing
+15.5 Categorized Browsing
 =========================
 
 Ollama Buddy automatically categorizes the Awesome ChatGPT Prompts into
@@ -1726,7 +1998,7 @@ useful groups:
      M-x ollama-buddy-awesome-show-prompts-menu
    or press ‘C-c w’ and then ‘c’.
 
-14.6 Viewing Prompt Details
+15.6 Viewing Prompt Details
 ===========================
 
 To see the full content of a specific prompt:
@@ -1735,14 +2007,14 @@ To see the full content of a specific prompt:
 
    Select a prompt to see its complete template.
 
-14.7 Updating Prompts
+15.7 Updating Prompts
 =====================
 
 To sync with the latest prompts from GitHub:
      M-x ollama-buddy-awesome-sync-prompts
    or press ‘C-c w’ and then ‘S’.
 
-14.8 Setting Without Sending
+15.8 Setting Without Sending
 ============================
 
 To set a prompt as the system prompt without sending text:
@@ -1752,7 +2024,7 @@ To set a prompt as the system prompt without sending text:
    This is useful when you want to set up a specific persona before
 starting a conversation.
 
-14.9 Example Usage
+15.9 Example Usage
 ==================
 
 Some popular prompts include:
@@ -1765,10 +2037,10 @@ Some popular prompts include:
 
 File: ollama-buddy.info,  Node: ChatGPT and Claude Support,  Next: Advanced Usage,  Prev: Awesome ChatGPT Prompts,  Up: Top
 
-15 ChatGPT and Claude Support
+16 ChatGPT and Claude Support
 *****************************
 
-15.1 Overview
+16.1 Overview
 =============
 
 Ollama Buddy integrates with commercial AI services:
@@ -1780,12 +2052,12 @@ Ollama Buddy integrates with commercial AI services:
    • Compare responses between local and cloud models
    • Leverage the strengths of different model families
 
-15.2 Setting Up API Access
+16.2 Setting Up API Access
 ==========================
 
 Before using commercial APIs, you need to set up API keys:
 
-15.2.1 Secure API Key Storage
+16.2.1 Secure API Key Storage
 -----------------------------
 
 The recommended approach is to use Emacs' built-in auth-source:
@@ -1793,14 +2065,14 @@ The recommended approach is to use Emacs' built-in auth-source:
      machine api.openai.com login apikey password YOUR_OPENAI_API_KEY
      machine api.anthropic.com login apikey password YOUR_CLAUDE_API_KEY
 
-15.2.2 Direct Configuration
+16.2.2 Direct Configuration
 ---------------------------
 
 For testing or temporary use (less secure):
      (setq ollama-buddy-openai-api-key "your-openai-key")
      (setq ollama-buddy-claude-api-key "your-claude-key")
 
-15.3 Selecting Commercial Models
+16.3 Selecting Commercial Models
 ================================
 
 Both OpenAI and Claude models appear in the model selection list with
@@ -1814,10 +2086,10 @@ special prefixes:
 
    Choose the model from the completion list.
 
-15.4 Configuring Commercial Models
+16.4 Configuring Commercial Models
 ==================================
 
-15.4.1 OpenAI Configuration
+16.4.1 OpenAI Configuration
 ---------------------------
 
 ‘ollama-buddy-openai-default-model’
@@ -1836,7 +2108,7 @@ special prefixes:
      Custom API endpoint (defaults to OpenAI's standard endpoint).
           (setq ollama-buddy-openai-api-endpoint "https://api.openai.com/v1/chat/completions")
 
-15.4.2 Claude Configuration
+16.4.2 Claude Configuration
 ---------------------------
 
 ‘ollama-buddy-claude-default-model’
@@ -1851,7 +2123,7 @@ special prefixes:
      Maximum tokens to generate (nil for API default).
           (setq ollama-buddy-claude-max-tokens 2000)
 
-15.5 History Management
+16.5 History Management
 =======================
 
 Each API service maintains its own conversation history:
@@ -1862,7 +2134,7 @@ Each API service maintains its own conversation history:
    This ensures that context is maintained appropriately for each
 service.
 
-15.6 Improved Error Handling
+16.6 Improved Error Handling
 ============================
 
 As of version 0.9.20, Ollama Buddy includes enhanced error handling for
@@ -1875,10 +2147,10 @@ ChatGPT and Claude:
 
 File: ollama-buddy.info,  Node: Advanced Usage,  Next: API Reference,  Prev: ChatGPT and Claude Support,  Up: Top
 
-16 Advanced Usage
+17 Advanced Usage
 *****************
 
-16.1 Managing Token Usage
+17.1 Managing Token Usage
 =========================
 
 Ollama Buddy can track token usage statistics:
@@ -1895,10 +2167,10 @@ Ollama Buddy can track token usage statistics:
      M-x ollama-buddy-display-token-graph
    or press ‘C-c U’ in the chat buffer.
 
-16.2 Customizing the Interface
+17.2 Customizing the Interface
 ==============================
 
-16.2.1 Interface Level
+17.2.1 Interface Level
 ----------------------
 
 Ollama Buddy has two interface levels:
@@ -1909,7 +2181,7 @@ Ollama Buddy has two interface levels:
      M-x ollama-buddy-toggle-interface-level
    or press ‘C-c A’ in the chat buffer.
 
-16.2.2 Model Colors
+17.2.2 Model Colors
 -------------------
 
 Each model has a distinctive color to help identify responses.
@@ -1918,7 +2190,7 @@ Each model has a distinctive color to help identify responses.
      M-x ollama-buddy-toggle-model-colors
    or press ‘C-c c’ in the chat buffer.
 
-16.2.3 Debug Mode
+17.2.3 Debug Mode
 -----------------
 
 For advanced troubleshooting, you can enable debug mode:
@@ -1927,7 +2199,7 @@ For advanced troubleshooting, you can enable debug mode:
 
    This shows raw JSON messages in a debug buffer.
 
-16.3 Editing Conversation History
+17.3 Editing Conversation History
 =================================
 
 To manually edit conversation history:
@@ -1939,24 +2211,24 @@ modify it and press ‘C-c C-c’ to save or ‘C-c C-k’ to cancel.
 
    To edit history for a specific model, use ‘C-u C-c J’.
 
-16.4 Advanced System Prompt Management
+17.4 Advanced System Prompt Management
 ======================================
 
 For more control over system prompts:
 
-16.4.1 Setting a system prompt without sending
+17.4.1 Setting a system prompt without sending
 ----------------------------------------------
 
      (ollama-buddy-set-system-prompt)
    Enter your system prompt, then press ‘C-c s’.
 
-16.4.2 Using a system prompt from Fabric
+17.4.2 Using a system prompt from Fabric
 ----------------------------------------
 
      M-x ollama-buddy-fabric-set-system-prompt
    or press ‘C-c f p’.
 
-16.5 Using Direct API Access
+17.5 Using Direct API Access
 ============================
 
 For direct programmatic access to Ollama:
@@ -1971,10 +2243,10 @@ For direct programmatic access to Ollama:
 
 File: ollama-buddy.info,  Node: API Reference,  Next: FAQ,  Prev: Advanced Usage,  Up: Top
 
-17 API Reference
+18 API Reference
 ****************
 
-17.1 Interactive Functions
+18.1 Interactive Functions
 ==========================
 
 ‘ollama-buddy-menu’
@@ -2088,7 +2360,28 @@ File: ollama-buddy.info,  Node: API Reference,  Next: FAQ,  Prev: Advanced Usage
 ‘ollama-buddy-set-max-history-length’
      Set the maximum number of message pairs to keep in history.
 
-17.2 Core Functions
+‘ollama-buddy-user-prompts-save’
+     Save the current system prompt.
+
+‘ollama-buddy-user-prompts-load’
+     Load a previously saved system prompt.
+
+‘ollama-buddy-user-prompts-list’
+     Display a list of all saved user system prompts.
+
+‘ollama-buddy-user-prompts-edit’
+     Edit a user system prompt.
+
+‘ollama-buddy-user-prompts-delete’
+     Delete a user system prompt.
+
+‘ollama-buddy-user-prompts-create-new’
+     Create a new system prompt from scratch.
+
+‘ollama-buddy-transient-user-prompts-menu’
+     Display the transient menu for user system prompts.
+
+18.2 Core Functions
 ===================
 
 ‘ollama-buddy--send’
@@ -2115,7 +2408,7 @@ File: ollama-buddy.info,  Node: API Reference,  Next: FAQ,  Prev: Advanced Usage
 ‘ollama-buddy--update-status’
      Update the status display.
 
-17.3 Customization Functions
+18.3 Customization Functions
 ============================
 
 ‘ollama-buddy-update-command-with-params’
@@ -2133,27 +2426,27 @@ File: ollama-buddy.info,  Node: API Reference,  Next: FAQ,  Prev: Advanced Usage
 
 File: ollama-buddy.info,  Node: FAQ,  Next: Troubleshooting,  Prev: API Reference,  Up: Top
 
-18 Frequently Asked Questions
+19 Frequently Asked Questions
 *****************************
 
-18.1 General Questions
+19.1 General Questions
 ======================
 
-18.1.1 What is the difference between Ollama Buddy and other AI assistants?
+19.1.1 What is the difference between Ollama Buddy and other AI assistants?
 ---------------------------------------------------------------------------
 
 Ollama Buddy integrates with Ollama to run LLMs locally, offering
 privacy, customization, and seamless Emacs integration without relying
 on external API services.
 
-18.1.2 Does Ollama Buddy require an internet connection?
+19.1.2 Does Ollama Buddy require an internet connection?
 --------------------------------------------------------
 
 Once you've installed Ollama and pulled your models, no internet
 connection is required for normal operation.  Internet is only needed
 when pulling new models or syncing Fabric patterns.
 
-18.1.3 Which models work best with Ollama Buddy?
+19.1.3 Which models work best with Ollama Buddy?
 ------------------------------------------------
 
 Most models supported by Ollama work well.  Popular choices include:
@@ -2162,7 +2455,7 @@ Most models supported by Ollama work well.  Popular choices include:
    • mistral:latest - Good balance of performance and quality
    • phi:latest - Smaller model that works well on limited hardware
 
-18.1.4 How much RAM do I need?
+19.1.4 How much RAM do I need?
 ------------------------------
 
 It depends on the model:
@@ -2172,40 +2465,40 @@ It depends on the model:
 
    Quantized models (e.g., Q4_K_M variants) require less RAM.
 
-18.2 Usage Questions
+19.2 Usage Questions
 ====================
 
-18.2.1 How do I cancel a request that's taking too long?
+19.2.1 How do I cancel a request that's taking too long?
 --------------------------------------------------------
 
 Press ‘C-c k’ in the chat buffer or select "Kill Request" from the menu.
 
-18.2.2 How can I save my conversations?
+19.2.2 How can I save my conversations?
 ---------------------------------------
 
 Use ‘C-c S’ to save the current session, giving it a name.  You can
 restore it later with ‘C-c L’.
 
-18.2.3 Can I use multiple models in the same conversation?
+19.2.3 Can I use multiple models in the same conversation?
 ----------------------------------------------------------
 
 Yes, you can switch models at any time with ‘C-c m’.  Each model
 maintains its own conversation history.
 
-18.2.4 How do I clear the conversation history?
+19.2.4 How do I clear the conversation history?
 -----------------------------------------------
 
 Press ‘C-c X’ to clear history, or ‘C-c N’ to start a completely new
 session.
 
-18.2.5 How can I create a custom command?
+19.2.5 How can I create a custom command?
 -----------------------------------------
 
 The easiest way is through the role creator: press ‘C-c E’ and follow
 the prompts to create commands with specific prompts, models, and
 parameters.
 
-18.2.6 How can I manage context windows?
+19.2.6 How can I manage context windows?
 ----------------------------------------
 
 Ollama Buddy provides several options:
@@ -2215,7 +2508,7 @@ Ollama Buddy provides several options:
    • Limit history length with ‘C-c Y’
    • Set model-specific context sizes with ‘C-c $’
 
-18.2.7 What happens when I exceed the context limit?
+19.2.7 What happens when I exceed the context limit?
 ----------------------------------------------------
 
 When context monitoring is enabled:
@@ -2223,10 +2516,27 @@ When context monitoring is enabled:
    • You'll get an error dialog at or above 100%
    • You can choose to proceed anyway or modify your content
 
-18.3 Troubleshooting
+19.2.8 How do I create effective system prompts?
+------------------------------------------------
+
+Effective system prompts typically include:
+   • Clear role definition for the AI
+   • Specific guidelines for response format and style
+   • Examples of desired output (when applicable)
+   • Constraints or limitations to observe
+   Start simple, test the response, and refine iteratively.
+
+19.2.9 Where are my system prompts stored?
+------------------------------------------
+
+System prompts are stored as .org files in the directory specified by
+'ollama-buddy-user-prompts-directory', which defaults to
+'~/.emacs.d/ollama-buddy-user-prompts/'.
+
+19.3 Troubleshooting
 ====================
 
-18.3.1 Ollama Buddy shows "OFFLINE" status
+19.3.1 Ollama Buddy shows "OFFLINE" status
 ------------------------------------------
 
 Ensure that:
@@ -2235,7 +2545,7 @@ Ensure that:
      and ‘ollama-buddy-port’)
    • Your firewall isn't blocking connections
 
-18.3.2 Responses are slow or the model seems to hang
+19.3.2 Responses are slow or the model seems to hang
 ----------------------------------------------------
 
 Try:
@@ -2244,7 +2554,7 @@ Try:
    • Setting ‘low_vram’ to ‘t’ if you have limited GPU memory
    • Checking CPU/RAM usage to ensure your system isn't overloaded
 
-18.3.3 Getting "error parsing model" when pulling a model
+19.3.3 Getting "error parsing model" when pulling a model
 ---------------------------------------------------------
 
 This usually means:
@@ -2252,7 +2562,7 @@ This usually means:
    • The model is not available in the Ollama repository
    • You have network connectivity issues
 
-18.3.4 Model responses are low quality or truncated
+19.3.4 Model responses are low quality or truncated
 ---------------------------------------------------
 
 Try:
@@ -2261,16 +2571,31 @@ Try:
    • Using a more capable model
    • Providing clearer instructions in your prompt
 
+19.3.5 How do system prompts differ from regular prompts?
+---------------------------------------------------------
+
+System prompts provide overall instructions to the AI about its role and
+how to respond, while regular prompts are your specific questions or
+requests.  System prompts persist across the conversation, affecting all
+responses, while regular prompts are one-time interactions.
+
+19.3.6 Can I share system prompts between different installations?
+------------------------------------------------------------------
+
+Yes, the user system prompts are stored as plain text .org files in your
+'ollama-buddy-user-prompts-directory'.  You can copy these files to
+share them with colleagues or between different machines.
+
 
 File: ollama-buddy.info,  Node: Troubleshooting,  Next: Contributing,  Prev: FAQ,  Up: Top
 
-19 Troubleshooting
+20 Troubleshooting
 ******************
 
-19.1 Common Issues
+20.1 Common Issues
 ==================
 
-19.1.1 Connection Problems
+20.1.1 Connection Problems
 --------------------------
 
 Symptom: Unable to connect to Ollama server
@@ -2285,7 +2610,7 @@ Symptom: Connection breaks during long responses
         • Try setting a lower ‘num_predict’ value
         • Check if your OS has any network timeout settings
 
-19.1.2 Model Problems
+20.1.2 Model Problems
 ---------------------
 
 Symptom: Model loads but gives poor responses
@@ -2300,7 +2625,7 @@ Symptom: Model fails to load or crashes
         • Adjust ‘num_ctx’ to a smaller value
         • Set ‘low_vram’ to ‘t’ if using GPU
 
-19.1.3 Interface Issues
+20.1.3 Interface Issues
 -----------------------
 
 Symptom: Chat buffer becomes unresponsive
@@ -2314,10 +2639,10 @@ Symptom: Markdown conversion issues
         • Check if the response contains complex formatting
         • Try editing the history to fix formatting issues
 
-19.2 Debugging
+20.2 Debugging
 ==============
 
-19.2.1 Enable Debug Mode
+20.2.1 Enable Debug Mode
 ------------------------
 
 To get more information about what's happening:
@@ -2325,13 +2650,13 @@ To get more information about what's happening:
 
    This opens a debug buffer showing raw JSON communication with Ollama.
 
-19.2.2 Check Logs
+20.2.2 Check Logs
 -----------------
 
 Ollama logs can be useful for troubleshooting:
      tail -f ~/.ollama/logs/ollama.log
 
-19.2.3 Report Issues
+20.2.3 Report Issues
 --------------------
 
 If you encounter a bug:
@@ -2348,10 +2673,10 @@ If you encounter a bug:
 
 File: ollama-buddy.info,  Node: Contributing,  Next: Index,  Prev: Troubleshooting,  Up: Top
 
-20 Contributing
+21 Contributing
 ***************
 
-20.1 Getting Started
+21.1 Getting Started
 ====================
 
 Ollama Buddy is an open-source project, and contributions are welcome!
@@ -2367,24 +2692,24 @@ Ollama Buddy is an open-source project, and contributions are welcome!
   7. Push to your fork
   8. Create a pull request
 
-20.2 Development Setup
+21.2 Development Setup
 ======================
 
-20.2.1 Required Tools
+21.2.1 Required Tools
 ---------------------
 
    • Emacs 28.1+
    • Ollama installed and running
    • Git
 
-20.2.2 Recommended Packages
+21.2.2 Recommended Packages
 ---------------------------
 
    • package-lint
    • flycheck
    • elisp-lint
 
-20.3 Coding Guidelines
+21.3 Coding Guidelines
 ======================
 
    • Follow Emacs Lisp conventions
@@ -2394,10 +2719,10 @@ Ollama Buddy is an open-source project, and contributions are welcome!
    • Use prefix ‘ollama-buddy--’ for internal functions
    • Use prefix ‘ollama-buddy-’ for public functions
 
-20.4 Testing
+21.4 Testing
 ============
 
-20.4.1 Run Existing Tests
+21.4.1 Run Existing Tests
 -------------------------
 
 The package includes comprehensive tests:
@@ -2407,7 +2732,7 @@ The package includes comprehensive tests:
      M-x ollama-buddy-fabric-run-tests
      M-x ollama-buddy-parameter-run-tests
 
-20.4.2 Adding New Tests
+21.4.2 Adding New Tests
 -----------------------
 
 When adding features, please also add tests:
@@ -2415,12 +2740,30 @@ When adding features, please also add tests:
    • Integration tests for API interactions
    • Parameter tests for parameter handling
 
-20.5 Feature Requests and Bug Reports
+21.5 Feature Requests and Bug Reports
 =====================================
 
    • Use GitHub Issues for bug reports and feature requests
    • Provide clear steps to reproduce bugs
    • For feature requests, explain the use case
+
+21.5.1 User System Prompts Issues
+---------------------------------
+
+Symptom: Cannot save system prompts
+        • Check if 'ollama-buddy-user-prompts-directory' exists and is
+          writable
+        • Ensure you have set a system prompt before trying to save it
+        • Check for any error messages in the minibuffer or *Messages*
+          buffer
+
+Symptom: Prompts not appearing in the load menu
+        • Verify that prompts are saved in the correct format
+          (category__title__system.org)
+        • Check if the prompts directory contains files with proper
+          formatting
+        • Try refreshing the prompts cache with 'M-x
+          ollama-buddy-user-prompts-refresh-cache'
 
 
 File: ollama-buddy.info,  Node: Index,  Prev: Contributing,  Up: Top
@@ -2431,27 +2774,28 @@ Index
 
 Tag Table:
 Node: Top550
-Node: Introduction2172
-Node: Installation4129
-Node: Configuration6391
-Node: Quick Start11975
-Node: Core Features13724
-Node: Chat Interface16585
-Node: Working with Models19418
-Node: Context Management22069
-Node: File Attachments27678
-Node: Parameter Control33607
-Node: Session Management36010
-Node: Roles and Commands38018
-Node: Fabric Pattern Integration49595
-Node: Awesome ChatGPT Prompts51822
-Node: ChatGPT and Claude Support55682
-Node: Advanced Usage59137
-Node: API Reference61835
-Node: FAQ65995
-Node: Troubleshooting70624
-Node: Contributing73129
-Node: Index75086
+Node: Introduction2239
+Node: Installation4196
+Node: Configuration6458
+Node: Quick Start12042
+Node: Core Features13791
+Node: Chat Interface16652
+Node: Working with Models19485
+Node: Context Management22136
+Node: File Attachments27745
+Node: Parameter Control33674
+Node: Session Management36077
+Node: User System Prompts38086
+Node: Roles and Commands46576
+Node: Fabric Pattern Integration58154
+Node: Awesome ChatGPT Prompts60381
+Node: ChatGPT and Claude Support64241
+Node: Advanced Usage67696
+Node: API Reference70394
+Node: FAQ75142
+Node: Troubleshooting81153
+Node: Contributing83658
+Node: Index86326
 
 End Tag Table
 

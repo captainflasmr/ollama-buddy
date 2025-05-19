@@ -133,131 +133,166 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Loading-a-Session][11.4 Loading a Session]]
   - [[#Managing-Sessions][11.5 Managing Sessions]]
   - [[#Conversation-History][11.6 Conversation History]]
-- [[#Roles-and-Commands][12 Roles and Commands]]
-  - [[#Understanding-Roles][12.1 Understanding Roles]]
-  - [[#Role-File-Naming-Convention][12.2 Role File Naming Convention]]
-  - [[#Built_002din-Commands][12.3 Built-in Commands]]
-  - [[#Creating-Custom-Roles][12.4 Creating Custom Roles]]
-    - [[#Interactive-Role-Creator][12.4.1 Interactive Role Creator]]
-    - [[#Manual-Role-Creation][12.4.2 Manual Role Creation]]
-  - [[#Switching-Roles][12.5 Switching Roles]]
-  - [[#Managing-Role-Files][12.6 Managing Role Files]]
-  - [[#Advanced-Role-Customization][12.7 Advanced Role Customization]]
-    - [[#Command_002dSpecific-Models][12.7.1 Command-Specific Models]]
-    - [[#Command_002dSpecific-Parameters-1][12.7.2 Command-Specific
-      Parameters]]
-    - [[#Creating-New-Commands][12.7.3 Creating New Commands]]
-  - [[#Role-Examples][12.8 Role Examples]]
-    - [[#Programming-Role][12.8.1 Programming Role]]
-    - [[#Writing-Role][12.8.2 Writing Role]]
-  - [[#Tips-for-Effective-Role-Usage][12.9 Tips for Effective Role
-    Usage]]
-- [[#Fabric-Pattern-Integration][13 Fabric Pattern Integration]]
-  - [[#What-are-Fabric-Patterns_003f][13.1 What are Fabric Patterns?]]
-  - [[#Setting-Up-Fabric-Integration][13.2 Setting Up Fabric
-    Integration]]
-  - [[#Using-Fabric-Patterns][13.3 Using Fabric Patterns]]
-  - [[#Browsing-Available-Patterns][13.4 Browsing Available Patterns]]
-  - [[#Viewing-Pattern-Details][13.5 Viewing Pattern Details]]
-  - [[#Updating-Patterns][13.6 Updating Patterns]]
-  - [[#Using-Patterns-by-Category][13.7 Using Patterns by Category]]
-- [[#Awesome-ChatGPT-Prompts][14 Awesome ChatGPT Prompts]]
-  - [[#What-is-Awesome-ChatGPT-Prompts_003f][14.1 What is Awesome
-    ChatGPT Prompts?]]
-  - [[#Setting-Up-Awesome-ChatGPT-Prompts][14.2 Setting Up Awesome
-    ChatGPT Prompts]]
-  - [[#Using-Awesome-ChatGPT-Prompts][14.3 Using Awesome ChatGPT
+- [[#User-System-Prompts][12 User System Prompts]]
+  - [[#Overview-1][12.1 Overview]]
+  - [[#Accessing-the-System-Prompts-Menu][12.2 Accessing the System
+    Prompts Menu]]
+  - [[#Saving-System-Prompts][12.3 Saving System Prompts]]
+  - [[#Loading-Saved-Prompts][12.4 Loading Saved Prompts]]
+  - [[#Managing-Your-Prompt-Library][12.5 Managing Your Prompt Library]]
+    - [[#Viewing-All-Prompts][12.5.1 Viewing All Prompts]]
+    - [[#Editing-Prompts][12.5.2 Editing Prompts]]
+    - [[#Creating-New-Prompts][12.5.3 Creating New Prompts]]
+    - [[#Deleting-Prompts][12.5.4 Deleting Prompts]]
+  - [[#Categories-and-Organization][12.6 Categories and Organization]]
+  - [[#Prompt-Storage-Format][12.7 Prompt Storage Format]]
+  - [[#Best-Practices-for-System-Prompts][12.8 Best Practices for System
     Prompts]]
-  - [[#Browsing-Available-Prompts][14.4 Browsing Available Prompts]]
-  - [[#Categorized-Browsing][14.5 Categorized Browsing]]
-  - [[#Viewing-Prompt-Details][14.6 Viewing Prompt Details]]
-  - [[#Updating-Prompts][14.7 Updating Prompts]]
-  - [[#Setting-Without-Sending][14.8 Setting Without Sending]]
-  - [[#Example-Usage][14.9 Example Usage]]
-- [[#ChatGPT-and-Claude-Support][15 ChatGPT and Claude Support]]
-  - [[#Overview-1][15.1 Overview]]
-  - [[#Setting-Up-API-Access][15.2 Setting Up API Access]]
-    - [[#Secure-API-Key-Storage][15.2.1 Secure API Key Storage]]
-    - [[#Direct-Configuration][15.2.2 Direct Configuration]]
-  - [[#Selecting-Commercial-Models][15.3 Selecting Commercial Models]]
-  - [[#Configuring-Commercial-Models][15.4 Configuring Commercial
+    - [[#Components-of-Effective-Prompts][12.8.1 Components of Effective
+      Prompts]]
+    - [[#Example-Patterns][12.8.2 Example Patterns]]
+  - [[#Example-System-Prompts][12.9 Example System Prompts]]
+    - [[#Technical-Writing-Assistant][12.9.1 Technical Writing
+      Assistant]]
+    - [[#Code-Reviewer][12.9.2 Code Reviewer]]
+  - [[#Workflow-Examples][12.10 Workflow Examples]]
+    - [[#Python-Code-Assistance][12.10.1 Python Code Assistance]]
+    - [[#Technical-Writing-Help][12.10.2 Technical Writing Help]]
+  - [[#Integration-with-Roles][12.11 Integration with Roles]]
+- [[#Roles-and-Commands][13 Roles and Commands]]
+  - [[#Understanding-Roles][13.1 Understanding Roles]]
+  - [[#Role-File-Naming-Convention][13.2 Role File Naming Convention]]
+  - [[#Built_002din-Commands][13.3 Built-in Commands]]
+  - [[#Creating-Custom-Roles][13.4 Creating Custom Roles]]
+    - [[#Interactive-Role-Creator][13.4.1 Interactive Role Creator]]
+    - [[#Manual-Role-Creation][13.4.2 Manual Role Creation]]
+  - [[#Switching-Roles][13.5 Switching Roles]]
+  - [[#Managing-Role-Files][13.6 Managing Role Files]]
+  - [[#Advanced-Role-Customization][13.7 Advanced Role Customization]]
+    - [[#Command_002dSpecific-Models][13.7.1 Command-Specific Models]]
+    - [[#Command_002dSpecific-Parameters-1][13.7.2 Command-Specific
+      Parameters]]
+    - [[#Creating-New-Commands][13.7.3 Creating New Commands]]
+  - [[#Role-Examples][13.8 Role Examples]]
+    - [[#Programming-Role][13.8.1 Programming Role]]
+    - [[#Writing-Role][13.8.2 Writing Role]]
+  - [[#Tips-for-Effective-Role-Usage][13.9 Tips for Effective Role
+    Usage]]
+- [[#Fabric-Pattern-Integration][14 Fabric Pattern Integration]]
+  - [[#What-are-Fabric-Patterns_003f][14.1 What are Fabric Patterns?]]
+  - [[#Setting-Up-Fabric-Integration][14.2 Setting Up Fabric
+    Integration]]
+  - [[#Using-Fabric-Patterns][14.3 Using Fabric Patterns]]
+  - [[#Browsing-Available-Patterns][14.4 Browsing Available Patterns]]
+  - [[#Viewing-Pattern-Details][14.5 Viewing Pattern Details]]
+  - [[#Updating-Patterns][14.6 Updating Patterns]]
+  - [[#Using-Patterns-by-Category][14.7 Using Patterns by Category]]
+- [[#Awesome-ChatGPT-Prompts][15 Awesome ChatGPT Prompts]]
+  - [[#What-is-Awesome-ChatGPT-Prompts_003f][15.1 What is Awesome
+    ChatGPT Prompts?]]
+  - [[#Setting-Up-Awesome-ChatGPT-Prompts][15.2 Setting Up Awesome
+    ChatGPT Prompts]]
+  - [[#Using-Awesome-ChatGPT-Prompts][15.3 Using Awesome ChatGPT
+    Prompts]]
+  - [[#Browsing-Available-Prompts][15.4 Browsing Available Prompts]]
+  - [[#Categorized-Browsing][15.5 Categorized Browsing]]
+  - [[#Viewing-Prompt-Details][15.6 Viewing Prompt Details]]
+  - [[#Updating-Prompts][15.7 Updating Prompts]]
+  - [[#Setting-Without-Sending][15.8 Setting Without Sending]]
+  - [[#Example-Usage][15.9 Example Usage]]
+- [[#ChatGPT-and-Claude-Support][16 ChatGPT and Claude Support]]
+  - [[#Overview-2][16.1 Overview]]
+  - [[#Setting-Up-API-Access][16.2 Setting Up API Access]]
+    - [[#Secure-API-Key-Storage][16.2.1 Secure API Key Storage]]
+    - [[#Direct-Configuration][16.2.2 Direct Configuration]]
+  - [[#Selecting-Commercial-Models][16.3 Selecting Commercial Models]]
+  - [[#Configuring-Commercial-Models][16.4 Configuring Commercial
     Models]]
-    - [[#OpenAI-Configuration][15.4.1 OpenAI Configuration]]
-    - [[#Claude-Configuration][15.4.2 Claude Configuration]]
-  - [[#History-Management][15.5 History Management]]
-  - [[#Improved-Error-Handling][15.6 Improved Error Handling]]
-- [[#Advanced-Usage][16 Advanced Usage]]
-  - [[#Managing-Token-Usage][16.1 Managing Token Usage]]
-  - [[#Customizing-the-Interface][16.2 Customizing the Interface]]
-    - [[#Interface-Level][16.2.1 Interface Level]]
-    - [[#Model-Colors][16.2.2 Model Colors]]
-    - [[#Debug-Mode][16.2.3 Debug Mode]]
-  - [[#Editing-Conversation-History][16.3 Editing Conversation History]]
-  - [[#Advanced-System-Prompt-Management][16.4 Advanced System Prompt
+    - [[#OpenAI-Configuration][16.4.1 OpenAI Configuration]]
+    - [[#Claude-Configuration][16.4.2 Claude Configuration]]
+  - [[#History-Management][16.5 History Management]]
+  - [[#Improved-Error-Handling][16.6 Improved Error Handling]]
+- [[#Advanced-Usage][17 Advanced Usage]]
+  - [[#Managing-Token-Usage][17.1 Managing Token Usage]]
+  - [[#Customizing-the-Interface][17.2 Customizing the Interface]]
+    - [[#Interface-Level][17.2.1 Interface Level]]
+    - [[#Model-Colors][17.2.2 Model Colors]]
+    - [[#Debug-Mode][17.2.3 Debug Mode]]
+  - [[#Editing-Conversation-History][17.3 Editing Conversation History]]
+  - [[#Advanced-System-Prompt-Management][17.4 Advanced System Prompt
     Management]]
-    - [[#Setting-a-system-prompt-without-sending][16.4.1 Setting a
+    - [[#Setting-a-system-prompt-without-sending][17.4.1 Setting a
       system prompt without sending]]
-    - [[#Using-a-system-prompt-from-Fabric][16.4.2 Using a system prompt
+    - [[#Using-a-system-prompt-from-Fabric][17.4.2 Using a system prompt
       from Fabric]]
-  - [[#Using-Direct-API-Access][16.5 Using Direct API Access]]
-- [[#API-Reference][17 API Reference]]
-  - [[#Interactive-Functions][17.1 Interactive Functions]]
-  - [[#Core-Functions][17.2 Core Functions]]
-  - [[#Customization-Functions][17.3 Customization Functions]]
-- [[#FAQ][18 Frequently Asked Questions]]
-  - [[#General-Questions][18.1 General Questions]]
-    - [[#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f][18.1.1
+  - [[#Using-Direct-API-Access][17.5 Using Direct API Access]]
+- [[#API-Reference][18 API Reference]]
+  - [[#Interactive-Functions][18.1 Interactive Functions]]
+  - [[#Core-Functions][18.2 Core Functions]]
+  - [[#Customization-Functions][18.3 Customization Functions]]
+- [[#FAQ][19 Frequently Asked Questions]]
+  - [[#General-Questions][19.1 General Questions]]
+    - [[#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f][19.1.1
       What is the difference between Ollama Buddy and other AI
       assistants?]]
-    - [[#Does-Ollama-Buddy-require-an-internet-connection_003f][18.1.2
+    - [[#Does-Ollama-Buddy-require-an-internet-connection_003f][19.1.2
       Does Ollama Buddy require an internet connection?]]
-    - [[#Which-models-work-best-with-Ollama-Buddy_003f][18.1.3 Which
+    - [[#Which-models-work-best-with-Ollama-Buddy_003f][19.1.3 Which
       models work best with Ollama Buddy?]]
-    - [[#How-much-RAM-do-I-need_003f][18.1.4 How much RAM do I need?]]
-  - [[#Usage-Questions][18.2 Usage Questions]]
-    - [[#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f][18.2.1
+    - [[#How-much-RAM-do-I-need_003f][19.1.4 How much RAM do I need?]]
+  - [[#Usage-Questions][19.2 Usage Questions]]
+    - [[#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f][19.2.1
       How do I cancel a request that's taking too long?]]
-    - [[#How-can-I-save-my-conversations_003f][18.2.2 How can I save my
+    - [[#How-can-I-save-my-conversations_003f][19.2.2 How can I save my
       conversations?]]
-    - [[#Can-I-use-multiple-models-in-the-same-conversation_003f][18.2.3
+    - [[#Can-I-use-multiple-models-in-the-same-conversation_003f][19.2.3
       Can I use multiple models in the same conversation?]]
-    - [[#How-do-I-clear-the-conversation-history_003f][18.2.4 How do I
+    - [[#How-do-I-clear-the-conversation-history_003f][19.2.4 How do I
       clear the conversation history?]]
-    - [[#How-can-I-create-a-custom-command_003f][18.2.5 How can I create
+    - [[#How-can-I-create-a-custom-command_003f][19.2.5 How can I create
       a custom command?]]
-    - [[#How-can-I-manage-context-windows_003f][18.2.6 How can I manage
+    - [[#How-can-I-manage-context-windows_003f][19.2.6 How can I manage
       context windows?]]
-    - [[#What-happens-when-I-exceed-the-context-limit_003f][18.2.7 What
+    - [[#What-happens-when-I-exceed-the-context-limit_003f][19.2.7 What
       happens when I exceed the context limit?]]
-  - [[#Troubleshooting-1][18.3 Troubleshooting]]
-    - [[#Ollama-Buddy-shows-_0022OFFLINE_0022-status][18.3.1 Ollama
+    - [[#How-do-I-create-effective-system-prompts_003f][19.2.8 How do I
+      create effective system prompts?]]
+    - [[#Where-are-my-system-prompts-stored_003f][19.2.9 Where are my
+      system prompts stored?]]
+  - [[#Troubleshooting-1][19.3 Troubleshooting]]
+    - [[#Ollama-Buddy-shows-_0022OFFLINE_0022-status][19.3.1 Ollama
       Buddy shows "OFFLINE" status]]
-    - [[#Responses-are-slow-or-the-model-seems-to-hang][18.3.2 Responses
+    - [[#Responses-are-slow-or-the-model-seems-to-hang][19.3.2 Responses
       are slow or the model seems to hang]]
-    - [[#Getting-_0022error-parsing-model_0022-when-pulling-a-model][18.3.3
+    - [[#Getting-_0022error-parsing-model_0022-when-pulling-a-model][19.3.3
       Getting "error parsing model" when pulling a model]]
-    - [[#Model-responses-are-low-quality-or-truncated][18.3.4 Model
+    - [[#Model-responses-are-low-quality-or-truncated][19.3.4 Model
       responses are low quality or truncated]]
-- [[#Troubleshooting][19 Troubleshooting]]
-  - [[#Common-Issues][19.1 Common Issues]]
-    - [[#Connection-Problems][19.1.1 Connection Problems]]
-    - [[#Model-Problems][19.1.2 Model Problems]]
-    - [[#Interface-Issues][19.1.3 Interface Issues]]
-  - [[#Debugging][19.2 Debugging]]
-    - [[#Enable-Debug-Mode][19.2.1 Enable Debug Mode]]
-    - [[#Check-Logs][19.2.2 Check Logs]]
-    - [[#Report-Issues][19.2.3 Report Issues]]
-- [[#Contributing][20 Contributing]]
-  - [[#Getting-Started][20.1 Getting Started]]
-  - [[#Development-Setup][20.2 Development Setup]]
-    - [[#Required-Tools][20.2.1 Required Tools]]
-    - [[#Recommended-Packages][20.2.2 Recommended Packages]]
-  - [[#Coding-Guidelines][20.3 Coding Guidelines]]
-  - [[#Testing][20.4 Testing]]
-    - [[#Run-Existing-Tests][20.4.1 Run Existing Tests]]
-    - [[#Adding-New-Tests][20.4.2 Adding New Tests]]
-  - [[#Feature-Requests-and-Bug-Reports][20.5 Feature Requests and Bug
+    - [[#How-do-system-prompts-differ-from-regular-prompts_003f][19.3.5
+      How do system prompts differ from regular prompts?]]
+    - [[#Can-I-share-system-prompts-between-different-installations_003f][19.3.6
+      Can I share system prompts between different installations?]]
+- [[#Troubleshooting][20 Troubleshooting]]
+  - [[#Common-Issues][20.1 Common Issues]]
+    - [[#Connection-Problems][20.1.1 Connection Problems]]
+    - [[#Model-Problems][20.1.2 Model Problems]]
+    - [[#Interface-Issues][20.1.3 Interface Issues]]
+  - [[#Debugging][20.2 Debugging]]
+    - [[#Enable-Debug-Mode][20.2.1 Enable Debug Mode]]
+    - [[#Check-Logs][20.2.2 Check Logs]]
+    - [[#Report-Issues][20.2.3 Report Issues]]
+- [[#Contributing][21 Contributing]]
+  - [[#Getting-Started][21.1 Getting Started]]
+  - [[#Development-Setup][21.2 Development Setup]]
+    - [[#Required-Tools][21.2.1 Required Tools]]
+    - [[#Recommended-Packages][21.2.2 Recommended Packages]]
+  - [[#Coding-Guidelines][21.3 Coding Guidelines]]
+  - [[#Testing][21.4 Testing]]
+    - [[#Run-Existing-Tests][21.4.1 Run Existing Tests]]
+    - [[#Adding-New-Tests][21.4.2 Adding New Tests]]
+  - [[#Feature-Requests-and-Bug-Reports][21.5 Feature Requests and Bug
     Reports]]
+    - [[#User-System-Prompts-Issues][21.5.1 User System Prompts Issues]]
 - [[#Index][Index]]
 
 --------------
@@ -1913,7 +1948,7 @@ or press =C-c F= in the chat buffer.
 
 <<Session-Management>>
 
-Next: [[#Roles-and-Commands][Roles and Commands]], Previous:
+Next: [[#User-System-Prompts][User System Prompts]], Previous:
 [[#Parameter-Control][Parameter Control]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
@@ -2053,14 +2088,407 @@ or press =C-c H= in the chat buffer.
 
 --------------
 
+<<User-System-Prompts>>
+
+Next: [[#Roles-and-Commands][Roles and Commands]], Previous:
+[[#Session-Management][Session Management]], Up: [[#Top][Ollama Buddy]]
+  [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
+
+** 12 User System Prompts [[#User-System-Prompts-1][¶]]
+:PROPERTIES:
+:CUSTOM_ID: User-System-Prompts-1
+:CLASS: chapter
+:END:
+- [[#Overview-1][Overview]]
+- [[#Accessing-the-System-Prompts-Menu][Accessing the System Prompts
+  Menu]]
+- [[#Saving-System-Prompts][Saving System Prompts]]
+- [[#Loading-Saved-Prompts][Loading Saved Prompts]]
+- [[#Managing-Your-Prompt-Library][Managing Your Prompt Library]]
+- [[#Categories-and-Organization][Categories and Organization]]
+- [[#Prompt-Storage-Format][Prompt Storage Format]]
+- [[#Best-Practices-for-System-Prompts][Best Practices for System
+  Prompts]]
+- [[#Example-System-Prompts][Example System Prompts]]
+- [[#Workflow-Examples][Workflow Examples]]
+- [[#Integration-with-Roles][Integration with Roles]]
+
+<<Overview-1>>
+*** 12.1 Overview [[#Overview-1][¶]]
+:PROPERTIES:
+:CUSTOM_ID: overview-1
+:CLASS: section
+:END:
+The User System Prompts feature allows you to save, organize, and reuse
+effective system prompts for your conversations with AI models. This
+feature is particularly valuable for:
+
+- Building a personal library of effective prompts
+- Maintaining context continuity across sessions
+- Sharing prompt templates with teammates
+- Refining your prompts over time
+- Categorizing prompts by domain or purpose
+
+System prompts play a crucial role in guiding AI behavior and response
+quality. A well-crafted system prompt can dramatically improve the
+relevance, accuracy, and style of AI responses.
+
+<<Accessing-the-System-Prompts-Menu>>
+*** 12.2 Accessing the System Prompts Menu [[#Accessing-the-System-Prompts-Menu][¶]]
+:PROPERTIES:
+:CUSTOM_ID: accessing-the-system-prompts-menu
+:CLASS: section
+:END:
+To access the system prompts menu:
+
+#+begin_src example-preformatted
+M-x ollama-buddy-transient-user-prompts-menu
+#+end_src
+
+or press =C-c s= in the chat buffer.
+
+This opens a transient menu with the following options:
+
+- Save current (S) :: Save your active system prompt for future reuse
+
+- Load prompt (L) :: Select a previously saved prompt to apply
+
+- Create new (N) :: Start fresh with a new prompt
+
+- List all Prompts (l) :: View your entire prompt collection
+
+- Edit prompt (e) :: Modify an existing prompt
+
+- Set with current prompt (s) :: Set the current text as a system prompt
+
+- Delete prompt (d) :: Remove prompts you no longer need
+
+- Reset prompt (r) :: Clear the system prompt setting
+
+<<Saving-System-Prompts>>
+*** 12.3 Saving System Prompts [[#Saving-System-Prompts][¶]]
+:PROPERTIES:
+:CUSTOM_ID: saving-system-prompts
+:CLASS: section
+:END:
+To save a system prompt:
+
+1. Set a system prompt by typing it and pressing =C-c s s=
+2. Open the system prompts menu with =C-c s=
+3. Press =S= to save the current system prompt
+4. Enter a category (from predefined options or create your own)
+5. Enter a descriptive title for your prompt
+6. The prompt will be saved to your prompts directory
+
+<<Loading-Saved-Prompts>>
+*** 12.4 Loading Saved Prompts [[#Loading-Saved-Prompts][¶]]
+:PROPERTIES:
+:CUSTOM_ID: loading-saved-prompts
+:CLASS: section
+:END:
+To load a previously saved prompt:
+
+1. Press =C-c s= to open the system prompts menu
+2. Press =L= to list available prompts
+3. Select a prompt from the completion interface
+4. The prompt will be loaded and set as your current system prompt
+
+Prompts are displayed in the format "=category: title=" for easy
+selection.
+
+<<Managing-Your-Prompt-Library>>
+*** 12.5 Managing Your Prompt Library [[#Managing-Your-Prompt-Library][¶]]
+:PROPERTIES:
+:CUSTOM_ID: managing-your-prompt-library
+:CLASS: section
+:END:
+- [[#Viewing-All-Prompts][Viewing All Prompts]]
+- [[#Editing-Prompts][Editing Prompts]]
+- [[#Creating-New-Prompts][Creating New Prompts]]
+- [[#Deleting-Prompts][Deleting Prompts]]
+
+<<Viewing-All-Prompts>>
+**** 12.5.1 Viewing All Prompts [[#Viewing-All-Prompts][¶]]
+:PROPERTIES:
+:CUSTOM_ID: viewing-all-prompts
+:CLASS: subsection
+:END:
+To view your entire prompt collection:
+
+#+begin_src example-preformatted
+M-x ollama-buddy-user-prompts-list
+#+end_src
+
+or press =C-c s l=.
+
+This displays a buffer showing:
+
+- Prompts organized by category
+- Prompt titles
+- Preview of prompt content
+
+<<Editing-Prompts>>
+**** 12.5.2 Editing Prompts [[#Editing-Prompts][¶]]
+:PROPERTIES:
+:CUSTOM_ID: editing-prompts
+:CLASS: subsection
+:END:
+To edit an existing prompt:
+
+#+begin_src example-preformatted
+M-x ollama-buddy-user-prompts-edit
+#+end_src
+
+or press =C-c s e=.
+
+This opens the prompt file in an Org mode buffer where you can make
+changes and save.
+
+<<Creating-New-Prompts>>
+**** 12.5.3 Creating New Prompts [[#Creating-New-Prompts][¶]]
+:PROPERTIES:
+:CUSTOM_ID: creating-new-prompts
+:CLASS: subsection
+:END:
+To create a new prompt from scratch:
+
+#+begin_src example-preformatted
+M-x ollama-buddy-user-prompts-create-new
+#+end_src
+
+or press =C-c s N=.
+
+This opens a template with Org headers where you can enter your prompt
+content.
+
+<<Deleting-Prompts>>
+**** 12.5.4 Deleting Prompts [[#Deleting-Prompts][¶]]
+:PROPERTIES:
+:CUSTOM_ID: deleting-prompts
+:CLASS: subsection
+:END:
+To delete a prompt:
+
+#+begin_src example-preformatted
+M-x ollama-buddy-user-prompts-delete
+#+end_src
+
+or press =C-c s d=.
+
+You'll be asked to confirm before the prompt is deleted.
+
+<<Categories-and-Organization>>
+*** 12.6 Categories and Organization [[#Categories-and-Organization][¶]]
+:PROPERTIES:
+:CUSTOM_ID: categories-and-organization
+:CLASS: section
+:END:
+Prompts are organized into categories for easier management. Default
+categories include:
+
+- general - General-purpose system prompts
+- coding - Programming-specific prompts
+- writing - Content creation and editing prompts
+- analysis - Data and research analysis prompts
+- creative - Prompts for creative tasks
+- technical - Technical documentation and explanation prompts
+- documentation - Documentation-focused prompts
+
+You can customize the default categories:
+
+#+begin_src example-preformatted
+(setq ollama-buddy-user-prompts-default-categories
+      '("general" "coding" "writing" "analysis" "creative" "custom"))
+#+end_src
+
+<<Prompt-Storage-Format>>
+*** 12.7 Prompt Storage Format [[#Prompt-Storage-Format][¶]]
+:PROPERTIES:
+:CUSTOM_ID: prompt-storage-format
+:CLASS: section
+:END:
+System prompts are stored as Org mode files with a specific naming
+convention:
+
+#+begin_src example-preformatted
+category__title__system.org
+#+end_src
+
+Each file contains:
+
+- Org properties with metadata (title, category, date)
+- The full prompt content
+
+Example prompt file content:
+
+#+begin_src example-preformatted
+,#+TITLE: Python Expert
+,#+CATEGORY: coding
+,#+DATE: 2025-05-19 14:32:45
+
+You are a Python programming expert with deep knowledge of both modern and 
+legacy Python code. When analyzing or writing code:
+
+1. Prioritize readability and maintainability over clever tricks
+2. Follow PEP 8 conventions
+3. Include docstrings and comments for non-obvious operations
+4. Explain your thinking step-by-step
+5. Provide examples when helpful
+
+When asked to debug, first identify the likely cause before suggesting fixes.
+#+end_src
+
+<<Best-Practices-for-System-Prompts>>
+*** 12.8 Best Practices for System Prompts [[#Best-Practices-for-System-Prompts][¶]]
+:PROPERTIES:
+:CUSTOM_ID: best-practices-for-system-prompts
+:CLASS: section
+:END:
+- [[#Components-of-Effective-Prompts][Components of Effective Prompts]]
+- [[#Example-Patterns][Example Patterns]]
+
+<<Components-of-Effective-Prompts>>
+**** 12.8.1 Components of Effective Prompts [[#Components-of-Effective-Prompts][¶]]
+:PROPERTIES:
+:CUSTOM_ID: components-of-effective-prompts
+:CLASS: subsection
+:END:
+Well-designed system prompts typically include:
+
+- Clear role definition (who/what the AI is supposed to be)
+- Guidelines for response style and format
+- Constraints or limitations to observe
+- Specific instructions for handling certain types of queries
+- Examples of desired responses (optional)
+
+<<Example-Patterns>>
+**** 12.8.2 Example Patterns [[#Example-Patterns][¶]]
+:PROPERTIES:
+:CUSTOM_ID: example-patterns
+:CLASS: subsection
+:END:
+- Expert Role :: "You are a [domain] expert with [X years] of experience
+  in [specific areas]..."
+
+- Response Format :: "Format your responses with a brief summary first,
+  followed by detailed analysis..."
+
+- Specific Guidelines :: "When responding to code queries, always
+  include sample code and explain line-by-line..."
+
+- Thinking Process :: "Think step-by-step, breaking down complex
+  problems into smaller components..."
+
+<<Example-System-Prompts>>
+*** 12.9 Example System Prompts [[#Example-System-Prompts][¶]]
+:PROPERTIES:
+:CUSTOM_ID: example-system-prompts
+:CLASS: section
+:END:
+- [[#Technical-Writing-Assistant][Technical Writing Assistant]]
+- [[#Code-Reviewer][Code Reviewer]]
+
+<<Technical-Writing-Assistant>>
+**** 12.9.1 Technical Writing Assistant [[#Technical-Writing-Assistant][¶]]
+:PROPERTIES:
+:CUSTOM_ID: technical-writing-assistant
+:CLASS: subsection
+:END:
+
+#+begin_src example-preformatted
+You are a technical writing expert who specializes in creating clear, concise, 
+and accessible documentation. Your writing should:
+
+1. Use plain language and avoid jargon where possible
+2. Include appropriate headings and structural elements
+3. Provide concrete examples that illustrate complex concepts
+4. Use active voice and direct instructions for procedures
+5. Anticipate common user questions and address them proactively
+
+When presented with technical content, focus on making it understandable to 
+the target audience while preserving technical accuracy.
+#+end_src
+
+<<Code-Reviewer>>
+**** 12.9.2 Code Reviewer [[#Code-Reviewer][¶]]
+:PROPERTIES:
+:CUSTOM_ID: code-reviewer
+:CLASS: subsection
+:END:
+
+#+begin_src example-preformatted
+You are an experienced code reviewer with expertise in software engineering 
+best practices. When reviewing code:
+
+1. Identify potential bugs, edge cases, and performance issues
+2. Suggest improvements to readability and maintainability
+3. Highlight security vulnerabilities or potential risks
+4. Reference design patterns or library functions that could improve the implementation
+5. Provide specific, actionable feedback with examples
+
+Balance constructive criticism with acknowledgment of well-written code.
+#+end_src
+
+<<Workflow-Examples>>
+*** 12.10 Workflow Examples [[#Workflow-Examples][¶]]
+:PROPERTIES:
+:CUSTOM_ID: workflow-examples
+:CLASS: section
+:END:
+- [[#Python-Code-Assistance][Python Code Assistance]]
+- [[#Technical-Writing-Help][Technical Writing Help]]
+
+<<Python-Code-Assistance>>
+**** 12.10.1 Python Code Assistance [[#Python-Code-Assistance][¶]]
+:PROPERTIES:
+:CUSTOM_ID: python-code-assistance
+:CLASS: subsection
+:END:
+1. Load your "Python Expert" system prompt with =C-c s L=
+2. Ask coding questions or paste code for analysis
+3. The AI responds with Python-specific expertise
+4. Save the conversation as a session for future reference
+
+<<Technical-Writing-Help>>
+**** 12.10.2 Technical Writing Help [[#Technical-Writing-Help][¶]]
+:PROPERTIES:
+:CUSTOM_ID: technical-writing-help
+:CLASS: subsection
+:END:
+1. Create a new system prompt for technical writing (=C-c s N=)
+2. Define the AI's role as a technical writing assistant
+3. Save the prompt in the "writing" category
+4. Load this prompt whenever you need help with documentation
+5. The AI consistently provides responses optimized for technical
+   writing
+
+<<Integration-with-Roles>>
+*** 12.11 Integration with Roles [[#Integration-with-Roles][¶]]
+:PROPERTIES:
+:CUSTOM_ID: integration-with-roles
+:CLASS: section
+:END:
+System prompts can be integrated with Ollama Buddy roles for more
+specialized workflows:
+
+1. Create a system prompt for a specific purpose
+2. Test and refine it through direct interaction
+3. Once effective, save it to your prompt library
+4. Reference this prompt in a custom role definition
+
+This creates a reusable AI assistant configuration that can be shared
+and improved over time.
+
+--------------
+
 <<Roles-and-Commands>>
 
 Next: [[#Fabric-Pattern-Integration][Fabric Pattern Integration]],
-Previous: [[#Session-Management][Session Management]], Up:
+Previous: [[#User-System-Prompts][User System Prompts]], Up:
 [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 12 Roles and Commands [[#Roles-and-Commands-1][¶]]
+** 13 Roles and Commands [[#Roles-and-Commands-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Roles-and-Commands-1
 :CLASS: chapter
@@ -2076,7 +2504,7 @@ Previous: [[#Session-Management][Session Management]], Up:
 - [[#Tips-for-Effective-Role-Usage][Tips for Effective Role Usage]]
 
 <<Understanding-Roles>>
-*** 12.1 Understanding Roles [[#Understanding-Roles][¶]]
+*** 13.1 Understanding Roles [[#Understanding-Roles][¶]]
 :PROPERTIES:
 :CUSTOM_ID: understanding-roles
 :CLASS: section
@@ -2093,7 +2521,7 @@ This allows you to create specialized assistants for different
 workflows.
 
 <<Role-File-Naming-Convention>>
-*** 12.2 Role File Naming Convention [[#Role-File-Naming-Convention][¶]]
+*** 13.2 Role File Naming Convention [[#Role-File-Naming-Convention][¶]]
 :PROPERTIES:
 :CUSTOM_ID: role-file-naming-convention
 :CLASS: section
@@ -2133,7 +2561,7 @@ manually, you must follow this pattern for Ollama Buddy to recognize
 your role files correctly.
 
 <<Built_002din-Commands>>
-*** 12.3 Built-in Commands [[#Built_002din-Commands][¶]]
+*** 13.3 Built-in Commands [[#Built_002din-Commands][¶]]
 :PROPERTIES:
 :CUSTOM_ID: built-in-commands
 :CLASS: section
@@ -2153,7 +2581,7 @@ Ollama Buddy comes with several built-in commands:
 - proofread :: Corrects grammar, style, and spelling
 
 <<Creating-Custom-Roles>>
-*** 12.4 Creating Custom Roles [[#Creating-Custom-Roles][¶]]
+*** 13.4 Creating Custom Roles [[#Creating-Custom-Roles][¶]]
 :PROPERTIES:
 :CUSTOM_ID: creating-custom-roles
 :CLASS: section
@@ -2164,7 +2592,7 @@ There are two ways to create custom roles:
 - [[#Manual-Role-Creation][Manual Role Creation]]
 
 <<Interactive-Role-Creator>>
-**** 12.4.1 Interactive Role Creator [[#Interactive-Role-Creator][¶]]
+**** 13.4.1 Interactive Role Creator [[#Interactive-Role-Creator][¶]]
 :PROPERTIES:
 :CUSTOM_ID: interactive-role-creator
 :CLASS: subsection
@@ -2183,7 +2611,7 @@ The most user-friendly approach:
 The interactive creator automatically handles file naming and placement.
 
 <<Manual-Role-Creation>>
-**** 12.4.2 Manual Role Creation [[#Manual-Role-Creation][¶]]
+**** 13.4.2 Manual Role Creation [[#Manual-Role-Creation][¶]]
 :PROPERTIES:
 :CUSTOM_ID: manual-role-creation
 :CLASS: subsection
@@ -2253,7 +2681,7 @@ For more advanced customization, create role files manually:
 #+end_src
 
 <<Switching-Roles>>
-*** 12.5 Switching Roles [[#Switching-Roles][¶]]
+*** 13.5 Switching Roles [[#Switching-Roles][¶]]
 :PROPERTIES:
 :CUSTOM_ID: switching-roles
 :CLASS: section
@@ -2269,7 +2697,7 @@ or press =C-c R= in the chat buffer.
 You'll be presented with a list of available roles to choose from.
 
 <<Managing-Role-Files>>
-*** 12.6 Managing Role Files [[#Managing-Role-Files][¶]]
+*** 13.6 Managing Role Files [[#Managing-Role-Files][¶]]
 :PROPERTIES:
 :CUSTOM_ID: managing-role-files
 :CLASS: section
@@ -2299,7 +2727,7 @@ M-x ollama-buddy-roles-open-directory
 or press =C-c D= in the chat buffer.
 
 <<Advanced-Role-Customization>>
-*** 12.7 Advanced Role Customization [[#Advanced-Role-Customization][¶]]
+*** 13.7 Advanced Role Customization [[#Advanced-Role-Customization][¶]]
 :PROPERTIES:
 :CUSTOM_ID: advanced-role-customization
 :CLASS: section
@@ -2309,7 +2737,7 @@ or press =C-c D= in the chat buffer.
 - [[#Creating-New-Commands][Creating New Commands]]
 
 <<Command_002dSpecific-Models>>
-**** 12.7.1 Command-Specific Models [[#Command_002dSpecific-Models][¶]]
+**** 13.7.1 Command-Specific Models [[#Command_002dSpecific-Models][¶]]
 :PROPERTIES:
 :CUSTOM_ID: command-specific-models
 :CLASS: subsection
@@ -2321,7 +2749,7 @@ Assign specific models to commands for optimal performance:
 #+end_src
 
 <<Command_002dSpecific-Parameters-1>>
-**** 12.7.2 Command-Specific Parameters [[#Command_002dSpecific-Parameters-1][¶]]
+**** 13.7.2 Command-Specific Parameters [[#Command_002dSpecific-Parameters-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: command-specific-parameters-1
 :CLASS: subsection
@@ -2336,7 +2764,7 @@ Optimize parameters for specific commands:
 #+end_src
 
 <<Creating-New-Commands>>
-**** 12.7.3 Creating New Commands [[#Creating-New-Commands][¶]]
+**** 13.7.3 Creating New Commands [[#Creating-New-Commands][¶]]
 :PROPERTIES:
 :CUSTOM_ID: creating-new-commands
 :CLASS: subsection
@@ -2353,7 +2781,7 @@ Add entirely new commands to your menu:
 #+end_src
 
 <<Role-Examples>>
-*** 12.8 Role Examples [[#Role-Examples][¶]]
+*** 13.8 Role Examples [[#Role-Examples][¶]]
 :PROPERTIES:
 :CUSTOM_ID: role-examples
 :CLASS: section
@@ -2362,7 +2790,7 @@ Add entirely new commands to your menu:
 - [[#Writing-Role][Writing Role]]
 
 <<Programming-Role>>
-**** 12.8.1 Programming Role [[#Programming-Role][¶]]
+**** 13.8.1 Programming Role [[#Programming-Role][¶]]
 :PROPERTIES:
 :CUSTOM_ID: programming-role
 :CLASS: subsection
@@ -2414,7 +2842,7 @@ A complete example of a programming-focused role:
 #+end_src
 
 <<Writing-Role>>
-**** 12.8.2 Writing Role [[#Writing-Role][¶]]
+**** 13.8.2 Writing Role [[#Writing-Role][¶]]
 :PROPERTIES:
 :CUSTOM_ID: writing-role
 :CLASS: subsection
@@ -2466,7 +2894,7 @@ A complete example of a writing-focused role:
 #+end_src
 
 <<Tips-for-Effective-Role-Usage>>
-*** 12.9 Tips for Effective Role Usage [[#Tips-for-Effective-Role-Usage][¶]]
+*** 13.9 Tips for Effective Role Usage [[#Tips-for-Effective-Role-Usage][¶]]
 :PROPERTIES:
 :CUSTOM_ID: tips-for-effective-role-usage
 :CLASS: section
@@ -2490,7 +2918,7 @@ Next: [[#Awesome-ChatGPT-Prompts][Awesome ChatGPT Prompts]], Previous:
 [[#Roles-and-Commands][Roles and Commands]], Up: [[#Top][Ollama Buddy]]
   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 13 Fabric Pattern Integration [[#Fabric-Pattern-Integration-1][¶]]
+** 14 Fabric Pattern Integration [[#Fabric-Pattern-Integration-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Fabric-Pattern-Integration-1
 :CLASS: chapter
@@ -2504,7 +2932,7 @@ Next: [[#Awesome-ChatGPT-Prompts][Awesome ChatGPT Prompts]], Previous:
 - [[#Using-Patterns-by-Category][Using Patterns by Category]]
 
 <<What-are-Fabric-Patterns_003f>>
-*** 13.1 What are Fabric Patterns? [[#What-are-Fabric-Patterns_003f][¶]]
+*** 14.1 What are Fabric Patterns? [[#What-are-Fabric-Patterns_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: what-are-fabric-patterns
 :CLASS: section
@@ -2519,7 +2947,7 @@ provide optimized prompts for various tasks, categorized as:
 - analysis - Data and concept examination
 
 <<Setting-Up-Fabric-Integration>>
-*** 13.2 Setting Up Fabric Integration [[#Setting-Up-Fabric-Integration][¶]]
+*** 14.2 Setting Up Fabric Integration [[#Setting-Up-Fabric-Integration][¶]]
 :PROPERTIES:
 :CUSTOM_ID: setting-up-fabric-integration
 :CLASS: section
@@ -2537,7 +2965,7 @@ This will:
 3. Make patterns available for use
 
 <<Using-Fabric-Patterns>>
-*** 13.3 Using Fabric Patterns [[#Using-Fabric-Patterns][¶]]
+*** 14.3 Using Fabric Patterns [[#Using-Fabric-Patterns][¶]]
 :PROPERTIES:
 :CUSTOM_ID: using-fabric-patterns
 :CLASS: section
@@ -2558,7 +2986,7 @@ You'll be prompted to:
 The pattern will be used as a system prompt for your request.
 
 <<Browsing-Available-Patterns>>
-*** 13.4 Browsing Available Patterns [[#Browsing-Available-Patterns][¶]]
+*** 14.4 Browsing Available Patterns [[#Browsing-Available-Patterns][¶]]
 :PROPERTIES:
 :CUSTOM_ID: browsing-available-patterns
 :CLASS: section
@@ -2578,7 +3006,7 @@ This shows:
 - Descriptions
 
 <<Viewing-Pattern-Details>>
-*** 13.5 Viewing Pattern Details [[#Viewing-Pattern-Details][¶]]
+*** 14.5 Viewing Pattern Details [[#Viewing-Pattern-Details][¶]]
 :PROPERTIES:
 :CUSTOM_ID: viewing-pattern-details
 :CLASS: section
@@ -2597,7 +3025,7 @@ Select a pattern to see:
 - Full description
 
 <<Updating-Patterns>>
-*** 13.6 Updating Patterns [[#Updating-Patterns][¶]]
+*** 14.6 Updating Patterns [[#Updating-Patterns][¶]]
 :PROPERTIES:
 :CUSTOM_ID: updating-patterns
 :CLASS: section
@@ -2611,7 +3039,7 @@ M-x ollama-buddy-fabric-sync-patterns
 or press =C-c f= and then =S=.
 
 <<Using-Patterns-by-Category>>
-*** 13.7 Using Patterns by Category [[#Using-Patterns-by-Category][¶]]
+*** 14.7 Using Patterns by Category [[#Using-Patterns-by-Category][¶]]
 :PROPERTIES:
 :CUSTOM_ID: using-patterns-by-category
 :CLASS: section
@@ -2632,7 +3060,7 @@ Previous: [[#Fabric-Pattern-Integration][Fabric Pattern Integration]],
 Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 14 Awesome ChatGPT Prompts [[#Awesome-ChatGPT-Prompts-1][¶]]
+** 15 Awesome ChatGPT Prompts [[#Awesome-ChatGPT-Prompts-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Awesome-ChatGPT-Prompts-1
 :CLASS: chapter
@@ -2650,7 +3078,7 @@ Up: [[#Top][Ollama Buddy]]  
 - [[#Example-Usage][Example Usage]]
 
 <<What-is-Awesome-ChatGPT-Prompts_003f>>
-*** 14.1 What is Awesome ChatGPT Prompts? [[#What-is-Awesome-ChatGPT-Prompts_003f][¶]]
+*** 15.1 What is Awesome ChatGPT Prompts? [[#What-is-Awesome-ChatGPT-Prompts_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: what-is-awesome-chatgpt-prompts
 :CLASS: section
@@ -2668,7 +3096,7 @@ personas or experts, such as:
 - And many more specialized roles
 
 <<Setting-Up-Awesome-ChatGPT-Prompts>>
-*** 14.2 Setting Up Awesome ChatGPT Prompts [[#Setting-Up-Awesome-ChatGPT-Prompts][¶]]
+*** 15.2 Setting Up Awesome ChatGPT Prompts [[#Setting-Up-Awesome-ChatGPT-Prompts][¶]]
 :PROPERTIES:
 :CUSTOM_ID: setting-up-awesome-chatgpt-prompts
 :CLASS: section
@@ -2686,7 +3114,7 @@ This will:
 3. Populate and categorize the available prompts
 
 <<Using-Awesome-ChatGPT-Prompts>>
-*** 14.3 Using Awesome ChatGPT Prompts [[#Using-Awesome-ChatGPT-Prompts][¶]]
+*** 15.3 Using Awesome ChatGPT Prompts [[#Using-Awesome-ChatGPT-Prompts][¶]]
 :PROPERTIES:
 :CUSTOM_ID: using-awesome-chatgpt-prompts
 :CLASS: section
@@ -2708,7 +3136,7 @@ The selected prompt will be used as a system prompt for your request,
 transforming how the AI responds to your text.
 
 <<Browsing-Available-Prompts>>
-*** 14.4 Browsing Available Prompts [[#Browsing-Available-Prompts][¶]]
+*** 15.4 Browsing Available Prompts [[#Browsing-Available-Prompts][¶]]
 :PROPERTIES:
 :CUSTOM_ID: browsing-available-prompts
 :CLASS: section
@@ -2728,7 +3156,7 @@ This shows:
 - Preview of prompt content
 
 <<Categorized-Browsing>>
-*** 14.5 Categorized Browsing [[#Categorized-Browsing][¶]]
+*** 15.5 Categorized Browsing [[#Categorized-Browsing][¶]]
 :PROPERTIES:
 :CUSTOM_ID: categorized-browsing
 :CLASS: section
@@ -2756,7 +3184,7 @@ M-x ollama-buddy-awesome-show-prompts-menu
 or press =C-c w= and then =c=.
 
 <<Viewing-Prompt-Details>>
-*** 14.6 Viewing Prompt Details [[#Viewing-Prompt-Details][¶]]
+*** 15.6 Viewing Prompt Details [[#Viewing-Prompt-Details][¶]]
 :PROPERTIES:
 :CUSTOM_ID: viewing-prompt-details
 :CLASS: section
@@ -2772,7 +3200,7 @@ or press =C-c w= and then =v=.
 Select a prompt to see its complete template.
 
 <<Updating-Prompts>>
-*** 14.7 Updating Prompts [[#Updating-Prompts][¶]]
+*** 15.7 Updating Prompts [[#Updating-Prompts][¶]]
 :PROPERTIES:
 :CUSTOM_ID: updating-prompts
 :CLASS: section
@@ -2786,7 +3214,7 @@ M-x ollama-buddy-awesome-sync-prompts
 or press =C-c w= and then =S=.
 
 <<Setting-Without-Sending>>
-*** 14.8 Setting Without Sending [[#Setting-Without-Sending][¶]]
+*** 15.8 Setting Without Sending [[#Setting-Without-Sending][¶]]
 :PROPERTIES:
 :CUSTOM_ID: setting-without-sending
 :CLASS: section
@@ -2803,7 +3231,7 @@ This is useful when you want to set up a specific persona before
 starting a conversation.
 
 <<Example-Usage>>
-*** 14.9 Example Usage [[#Example-Usage][¶]]
+*** 15.9 Example Usage [[#Example-Usage][¶]]
 :PROPERTIES:
 :CUSTOM_ID: example-usage
 :CLASS: section
@@ -2825,22 +3253,22 @@ Next: [[#Advanced-Usage][Advanced Usage]], Previous:
 [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 15 ChatGPT and Claude Support [[#ChatGPT-and-Claude-Support-1][¶]]
+** 16 ChatGPT and Claude Support [[#ChatGPT-and-Claude-Support-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: ChatGPT-and-Claude-Support-1
 :CLASS: chapter
 :END:
-- [[#Overview-1][Overview]]
+- [[#Overview-2][Overview]]
 - [[#Setting-Up-API-Access][Setting Up API Access]]
 - [[#Selecting-Commercial-Models][Selecting Commercial Models]]
 - [[#Configuring-Commercial-Models][Configuring Commercial Models]]
 - [[#History-Management][History Management]]
 - [[#Improved-Error-Handling][Improved Error Handling]]
 
-<<Overview-1>>
-*** 15.1 Overview [[#Overview-1][¶]]
+<<Overview-2>>
+*** 16.1 Overview [[#Overview-2][¶]]
 :PROPERTIES:
-:CUSTOM_ID: overview-1
+:CUSTOM_ID: overview-2
 :CLASS: section
 :END:
 Ollama Buddy integrates with commercial AI services:
@@ -2855,7 +3283,7 @@ This allows you to:
 - Leverage the strengths of different model families
 
 <<Setting-Up-API-Access>>
-*** 15.2 Setting Up API Access [[#Setting-Up-API-Access][¶]]
+*** 16.2 Setting Up API Access [[#Setting-Up-API-Access][¶]]
 :PROPERTIES:
 :CUSTOM_ID: setting-up-api-access
 :CLASS: section
@@ -2866,7 +3294,7 @@ Before using commercial APIs, you need to set up API keys:
 - [[#Direct-Configuration][Direct Configuration]]
 
 <<Secure-API-Key-Storage>>
-**** 15.2.1 Secure API Key Storage [[#Secure-API-Key-Storage][¶]]
+**** 16.2.1 Secure API Key Storage [[#Secure-API-Key-Storage][¶]]
 :PROPERTIES:
 :CUSTOM_ID: secure-api-key-storage
 :CLASS: subsection
@@ -2880,7 +3308,7 @@ machine api.anthropic.com login apikey password YOUR_CLAUDE_API_KEY
 #+end_src
 
 <<Direct-Configuration>>
-**** 15.2.2 Direct Configuration [[#Direct-Configuration][¶]]
+**** 16.2.2 Direct Configuration [[#Direct-Configuration][¶]]
 :PROPERTIES:
 :CUSTOM_ID: direct-configuration
 :CLASS: subsection
@@ -2893,7 +3321,7 @@ For testing or temporary use (less secure):
 #+end_src
 
 <<Selecting-Commercial-Models>>
-*** 15.3 Selecting Commercial Models [[#Selecting-Commercial-Models][¶]]
+*** 16.3 Selecting Commercial Models [[#Selecting-Commercial-Models][¶]]
 :PROPERTIES:
 :CUSTOM_ID: selecting-commercial-models
 :CLASS: section
@@ -2915,7 +3343,7 @@ or press =C-c m=.
 Choose the model from the completion list.
 
 <<Configuring-Commercial-Models>>
-*** 15.4 Configuring Commercial Models [[#Configuring-Commercial-Models][¶]]
+*** 16.4 Configuring Commercial Models [[#Configuring-Commercial-Models][¶]]
 :PROPERTIES:
 :CUSTOM_ID: configuring-commercial-models
 :CLASS: section
@@ -2924,7 +3352,7 @@ Choose the model from the completion list.
 - [[#Claude-Configuration][Claude Configuration]]
 
 <<OpenAI-Configuration>>
-**** 15.4.1 OpenAI Configuration [[#OpenAI-Configuration][¶]]
+**** 16.4.1 OpenAI Configuration [[#OpenAI-Configuration][¶]]
 :PROPERTIES:
 :CUSTOM_ID: openai-configuration
 :CLASS: subsection
@@ -2958,7 +3386,7 @@ Choose the model from the completion list.
   #+end_src
 
 <<Claude-Configuration>>
-**** 15.4.2 Claude Configuration [[#Claude-Configuration][¶]]
+**** 16.4.2 Claude Configuration [[#Claude-Configuration][¶]]
 :PROPERTIES:
 :CUSTOM_ID: claude-configuration
 :CLASS: subsection
@@ -2984,7 +3412,7 @@ Choose the model from the completion list.
   #+end_src
 
 <<History-Management>>
-*** 15.5 History Management [[#History-Management][¶]]
+*** 16.5 History Management [[#History-Management][¶]]
 :PROPERTIES:
 :CUSTOM_ID: history-management
 :CLASS: section
@@ -2998,7 +3426,7 @@ Each API service maintains its own conversation history:
 This ensures that context is maintained appropriately for each service.
 
 <<Improved-Error-Handling>>
-*** 15.6 Improved Error Handling [[#Improved-Error-Handling][¶]]
+*** 16.6 Improved Error Handling [[#Improved-Error-Handling][¶]]
 :PROPERTIES:
 :CUSTOM_ID: improved-error-handling
 :CLASS: section
@@ -3020,7 +3448,7 @@ Next: [[#API-Reference][API Reference]], Previous:
 [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 16 Advanced Usage [[#Advanced-Usage-1][¶]]
+** 17 Advanced Usage [[#Advanced-Usage-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Advanced-Usage-1
 :CLASS: chapter
@@ -3033,7 +3461,7 @@ Next: [[#API-Reference][API Reference]], Previous:
 - [[#Using-Direct-API-Access][Using Direct API Access]]
 
 <<Managing-Token-Usage>>
-*** 16.1 Managing Token Usage [[#Managing-Token-Usage][¶]]
+*** 17.1 Managing Token Usage [[#Managing-Token-Usage][¶]]
 :PROPERTIES:
 :CUSTOM_ID: managing-token-usage
 :CLASS: section
@@ -3065,7 +3493,7 @@ M-x ollama-buddy-display-token-graph
 or press =C-c U= in the chat buffer.
 
 <<Customizing-the-Interface>>
-*** 16.2 Customizing the Interface [[#Customizing-the-Interface][¶]]
+*** 17.2 Customizing the Interface [[#Customizing-the-Interface][¶]]
 :PROPERTIES:
 :CUSTOM_ID: customizing-the-interface
 :CLASS: section
@@ -3075,7 +3503,7 @@ or press =C-c U= in the chat buffer.
 - [[#Debug-Mode][Debug Mode]]
 
 <<Interface-Level>>
-**** 16.2.1 Interface Level [[#Interface-Level][¶]]
+**** 17.2.1 Interface Level [[#Interface-Level][¶]]
 :PROPERTIES:
 :CUSTOM_ID: interface-level
 :CLASS: subsection
@@ -3094,7 +3522,7 @@ M-x ollama-buddy-toggle-interface-level
 or press =C-c A= in the chat buffer.
 
 <<Model-Colors>>
-**** 16.2.2 Model Colors [[#Model-Colors][¶]]
+**** 17.2.2 Model Colors [[#Model-Colors][¶]]
 :PROPERTIES:
 :CUSTOM_ID: model-colors
 :CLASS: subsection
@@ -3110,7 +3538,7 @@ M-x ollama-buddy-toggle-model-colors
 or press =C-c c= in the chat buffer.
 
 <<Debug-Mode>>
-**** 16.2.3 Debug Mode [[#Debug-Mode][¶]]
+**** 17.2.3 Debug Mode [[#Debug-Mode][¶]]
 :PROPERTIES:
 :CUSTOM_ID: debug-mode
 :CLASS: subsection
@@ -3126,7 +3554,7 @@ or press =C-c B= in the chat buffer.
 This shows raw JSON messages in a debug buffer.
 
 <<Editing-Conversation-History>>
-*** 16.3 Editing Conversation History [[#Editing-Conversation-History][¶]]
+*** 17.3 Editing Conversation History [[#Editing-Conversation-History][¶]]
 :PROPERTIES:
 :CUSTOM_ID: editing-conversation-history
 :CLASS: section
@@ -3145,7 +3573,7 @@ modify it and press =C-c C-c= to save or =C-c C-k= to cancel.
 To edit history for a specific model, use =C-u C-c J=.
 
 <<Advanced-System-Prompt-Management>>
-*** 16.4 Advanced System Prompt Management [[#Advanced-System-Prompt-Management][¶]]
+*** 17.4 Advanced System Prompt Management [[#Advanced-System-Prompt-Management][¶]]
 :PROPERTIES:
 :CUSTOM_ID: advanced-system-prompt-management
 :CLASS: section
@@ -3158,7 +3586,7 @@ For more control over system prompts:
   Fabric]]
 
 <<Setting-a-system-prompt-without-sending>>
-**** 16.4.1 Setting a system prompt without sending [[#Setting-a-system-prompt-without-sending][¶]]
+**** 17.4.1 Setting a system prompt without sending [[#Setting-a-system-prompt-without-sending][¶]]
 :PROPERTIES:
 :CUSTOM_ID: setting-a-system-prompt-without-sending
 :CLASS: subsection
@@ -3171,7 +3599,7 @@ For more control over system prompts:
 Enter your system prompt, then press =C-c s=.
 
 <<Using-a-system-prompt-from-Fabric>>
-**** 16.4.2 Using a system prompt from Fabric [[#Using-a-system-prompt-from-Fabric][¶]]
+**** 17.4.2 Using a system prompt from Fabric [[#Using-a-system-prompt-from-Fabric][¶]]
 :PROPERTIES:
 :CUSTOM_ID: using-a-system-prompt-from-fabric
 :CLASS: subsection
@@ -3184,7 +3612,7 @@ M-x ollama-buddy-fabric-set-system-prompt
 or press =C-c f p=.
 
 <<Using-Direct-API-Access>>
-*** 16.5 Using Direct API Access [[#Using-Direct-API-Access][¶]]
+*** 17.5 Using Direct API Access [[#Using-Direct-API-Access][¶]]
 :PROPERTIES:
 :CUSTOM_ID: using-direct-api-access
 :CLASS: section
@@ -3211,7 +3639,7 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 [[#Advanced-Usage][Advanced Usage]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 17 API Reference [[#API-Reference-1][¶]]
+** 18 API Reference [[#API-Reference-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: API-Reference-1
 :CLASS: chapter
@@ -3221,7 +3649,7 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 - [[#Customization-Functions][Customization Functions]]
 
 <<Interactive-Functions>>
-*** 17.1 Interactive Functions [[#Interactive-Functions][¶]]
+*** 18.1 Interactive Functions [[#Interactive-Functions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: interactive-functions
 :CLASS: section
@@ -3314,8 +3742,26 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 - =ollama-buddy-set-max-history-length= :: Set the maximum number of
   message pairs to keep in history.
 
+- =ollama-buddy-user-prompts-save= :: Save the current system prompt.
+
+- =ollama-buddy-user-prompts-load= :: Load a previously saved system
+  prompt.
+
+- =ollama-buddy-user-prompts-list= :: Display a list of all saved user
+  system prompts.
+
+- =ollama-buddy-user-prompts-edit= :: Edit a user system prompt.
+
+- =ollama-buddy-user-prompts-delete= :: Delete a user system prompt.
+
+- =ollama-buddy-user-prompts-create-new= :: Create a new system prompt
+  from scratch.
+
+- =ollama-buddy-transient-user-prompts-menu= :: Display the transient
+  menu for user system prompts.
+
 <<Core-Functions>>
-*** 17.2 Core Functions [[#Core-Functions][¶]]
+*** 18.2 Core Functions [[#Core-Functions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: core-functions
 :CLASS: section
@@ -3342,7 +3788,7 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 - =ollama-buddy--update-status= :: Update the status display.
 
 <<Customization-Functions>>
-*** 17.3 Customization Functions [[#Customization-Functions][¶]]
+*** 18.3 Customization Functions [[#Customization-Functions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: customization-functions
 :CLASS: section
@@ -3366,7 +3812,7 @@ Next: [[#Troubleshooting][Troubleshooting]], Previous:
 [[#API-Reference][API Reference]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 18 Frequently Asked Questions [[#Frequently-Asked-Questions][¶]]
+** 19 Frequently Asked Questions [[#Frequently-Asked-Questions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Frequently-Asked-Questions
 :CLASS: chapter
@@ -3376,7 +3822,7 @@ Next: [[#Troubleshooting][Troubleshooting]], Previous:
 - [[#Troubleshooting-1][Troubleshooting]]
 
 <<General-Questions>>
-*** 18.1 General Questions [[#General-Questions][¶]]
+*** 19.1 General Questions [[#General-Questions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: general-questions
 :CLASS: section
@@ -3390,7 +3836,7 @@ Next: [[#Troubleshooting][Troubleshooting]], Previous:
 - [[#How-much-RAM-do-I-need_003f][How much RAM do I need?]]
 
 <<What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f>>
-**** 18.1.1 What is the difference between Ollama Buddy and other AI assistants? [[#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f][¶]]
+**** 19.1.1 What is the difference between Ollama Buddy and other AI assistants? [[#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: what-is-the-difference-between-ollama-buddy-and-other-ai-assistants
 :CLASS: subsection
@@ -3400,7 +3846,7 @@ privacy, customization, and seamless Emacs integration without relying
 on external API services.
 
 <<Does-Ollama-Buddy-require-an-internet-connection_003f>>
-**** 18.1.2 Does Ollama Buddy require an internet connection? [[#Does-Ollama-Buddy-require-an-internet-connection_003f][¶]]
+**** 19.1.2 Does Ollama Buddy require an internet connection? [[#Does-Ollama-Buddy-require-an-internet-connection_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: does-ollama-buddy-require-an-internet-connection
 :CLASS: subsection
@@ -3410,7 +3856,7 @@ connection is required for normal operation. Internet is only needed
 when pulling new models or syncing Fabric patterns.
 
 <<Which-models-work-best-with-Ollama-Buddy_003f>>
-**** 18.1.3 Which models work best with Ollama Buddy? [[#Which-models-work-best-with-Ollama-Buddy_003f][¶]]
+**** 19.1.3 Which models work best with Ollama Buddy? [[#Which-models-work-best-with-Ollama-Buddy_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: which-models-work-best-with-ollama-buddy
 :CLASS: subsection
@@ -3423,7 +3869,7 @@ Most models supported by Ollama work well. Popular choices include:
 - phi:latest - Smaller model that works well on limited hardware
 
 <<How-much-RAM-do-I-need_003f>>
-**** 18.1.4 How much RAM do I need? [[#How-much-RAM-do-I-need_003f][¶]]
+**** 19.1.4 How much RAM do I need? [[#How-much-RAM-do-I-need_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-much-ram-do-i-need
 :CLASS: subsection
@@ -3437,7 +3883,7 @@ It depends on the model:
 Quantized models (e.g., Q4_K_M variants) require less RAM.
 
 <<Usage-Questions>>
-*** 18.2 Usage Questions [[#Usage-Questions][¶]]
+*** 19.2 Usage Questions [[#Usage-Questions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: usage-questions
 :CLASS: section
@@ -3456,9 +3902,13 @@ Quantized models (e.g., Q4_K_M variants) require less RAM.
   windows?]]
 - [[#What-happens-when-I-exceed-the-context-limit_003f][What happens
   when I exceed the context limit?]]
+- [[#How-do-I-create-effective-system-prompts_003f][How do I create
+  effective system prompts?]]
+- [[#Where-are-my-system-prompts-stored_003f][Where are my system
+  prompts stored?]]
 
 <<How-do-I-cancel-a-request-that_0027s-taking-too-long_003f>>
-**** 18.2.1 How do I cancel a request that's taking too long? [[#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f][¶]]
+**** 19.2.1 How do I cancel a request that's taking too long? [[#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-do-i-cancel-a-request-thats-taking-too-long
 :CLASS: subsection
@@ -3466,7 +3916,7 @@ Quantized models (e.g., Q4_K_M variants) require less RAM.
 Press =C-c k= in the chat buffer or select "Kill Request" from the menu.
 
 <<How-can-I-save-my-conversations_003f>>
-**** 18.2.2 How can I save my conversations? [[#How-can-I-save-my-conversations_003f][¶]]
+**** 19.2.2 How can I save my conversations? [[#How-can-I-save-my-conversations_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-can-i-save-my-conversations
 :CLASS: subsection
@@ -3475,7 +3925,7 @@ Use =C-c S= to save the current session, giving it a name. You can
 restore it later with =C-c L=.
 
 <<Can-I-use-multiple-models-in-the-same-conversation_003f>>
-**** 18.2.3 Can I use multiple models in the same conversation? [[#Can-I-use-multiple-models-in-the-same-conversation_003f][¶]]
+**** 19.2.3 Can I use multiple models in the same conversation? [[#Can-I-use-multiple-models-in-the-same-conversation_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: can-i-use-multiple-models-in-the-same-conversation
 :CLASS: subsection
@@ -3484,7 +3934,7 @@ Yes, you can switch models at any time with =C-c m=. Each model
 maintains its own conversation history.
 
 <<How-do-I-clear-the-conversation-history_003f>>
-**** 18.2.4 How do I clear the conversation history? [[#How-do-I-clear-the-conversation-history_003f][¶]]
+**** 19.2.4 How do I clear the conversation history? [[#How-do-I-clear-the-conversation-history_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-do-i-clear-the-conversation-history
 :CLASS: subsection
@@ -3493,7 +3943,7 @@ Press =C-c X= to clear history, or =C-c N= to start a completely new
 session.
 
 <<How-can-I-create-a-custom-command_003f>>
-**** 18.2.5 How can I create a custom command? [[#How-can-I-create-a-custom-command_003f][¶]]
+**** 19.2.5 How can I create a custom command? [[#How-can-I-create-a-custom-command_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-can-i-create-a-custom-command
 :CLASS: subsection
@@ -3503,7 +3953,7 @@ the prompts to create commands with specific prompts, models, and
 parameters.
 
 <<How-can-I-manage-context-windows_003f>>
-**** 18.2.6 How can I manage context windows? [[#How-can-I-manage-context-windows_003f][¶]]
+**** 19.2.6 How can I manage context windows? [[#How-can-I-manage-context-windows_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-can-i-manage-context-windows
 :CLASS: subsection
@@ -3517,7 +3967,7 @@ Ollama Buddy provides several options:
 - Set model-specific context sizes with C-c $
 
 <<What-happens-when-I-exceed-the-context-limit_003f>>
-**** 18.2.7 What happens when I exceed the context limit? [[#What-happens-when-I-exceed-the-context-limit_003f][¶]]
+**** 19.2.7 What happens when I exceed the context limit? [[#What-happens-when-I-exceed-the-context-limit_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: what-happens-when-i-exceed-the-context-limit
 :CLASS: subsection
@@ -3528,8 +3978,33 @@ When context monitoring is enabled:
 - You'll get an error dialog at or above 100%
 - You can choose to proceed anyway or modify your content
 
+<<How-do-I-create-effective-system-prompts_003f>>
+**** 19.2.8 How do I create effective system prompts? [[#How-do-I-create-effective-system-prompts_003f][¶]]
+:PROPERTIES:
+:CUSTOM_ID: how-do-i-create-effective-system-prompts
+:CLASS: subsection
+:END:
+Effective system prompts typically include:
+
+- Clear role definition for the AI
+- Specific guidelines for response format and style
+- Examples of desired output (when applicable)
+- Constraints or limitations to observe
+
+Start simple, test the response, and refine iteratively.
+
+<<Where-are-my-system-prompts-stored_003f>>
+**** 19.2.9 Where are my system prompts stored? [[#Where-are-my-system-prompts-stored_003f][¶]]
+:PROPERTIES:
+:CUSTOM_ID: where-are-my-system-prompts-stored
+:CLASS: subsection
+:END:
+System prompts are stored as .org files in the directory specified by
+‘ollama-buddy-user-prompts-directory‘, which defaults to
+‘~/.emacs.d/ollama-buddy-user-prompts/‘.
+
 <<Troubleshooting-1>>
-*** 18.3 Troubleshooting [[#Troubleshooting-1][¶]]
+*** 19.3 Troubleshooting [[#Troubleshooting-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: troubleshooting
 :CLASS: section
@@ -3542,9 +4017,13 @@ When context monitoring is enabled:
   "error parsing model" when pulling a model]]
 - [[#Model-responses-are-low-quality-or-truncated][Model responses are
   low quality or truncated]]
+- [[#How-do-system-prompts-differ-from-regular-prompts_003f][How do
+  system prompts differ from regular prompts?]]
+- [[#Can-I-share-system-prompts-between-different-installations_003f][Can
+  I share system prompts between different installations?]]
 
 <<Ollama-Buddy-shows-_0022OFFLINE_0022-status>>
-**** 18.3.1 Ollama Buddy shows "OFFLINE" status [[#Ollama-Buddy-shows-_0022OFFLINE_0022-status][¶]]
+**** 19.3.1 Ollama Buddy shows "OFFLINE" status [[#Ollama-Buddy-shows-_0022OFFLINE_0022-status][¶]]
 :PROPERTIES:
 :CUSTOM_ID: ollama-buddy-shows-offline-status
 :CLASS: subsection
@@ -3557,7 +4036,7 @@ Ensure that:
 - Your firewall isn't blocking connections
 
 <<Responses-are-slow-or-the-model-seems-to-hang>>
-**** 18.3.2 Responses are slow or the model seems to hang [[#Responses-are-slow-or-the-model-seems-to-hang][¶]]
+**** 19.3.2 Responses are slow or the model seems to hang [[#Responses-are-slow-or-the-model-seems-to-hang][¶]]
 :PROPERTIES:
 :CUSTOM_ID: responses-are-slow-or-the-model-seems-to-hang
 :CLASS: subsection
@@ -3570,7 +4049,7 @@ Try:
 - Checking CPU/RAM usage to ensure your system isn't overloaded
 
 <<Getting-_0022error-parsing-model_0022-when-pulling-a-model>>
-**** 18.3.3 Getting "error parsing model" when pulling a model [[#Getting-_0022error-parsing-model_0022-when-pulling-a-model][¶]]
+**** 19.3.3 Getting "error parsing model" when pulling a model [[#Getting-_0022error-parsing-model_0022-when-pulling-a-model][¶]]
 :PROPERTIES:
 :CUSTOM_ID: getting-error-parsing-model-when-pulling-a-model
 :CLASS: subsection
@@ -3582,7 +4061,7 @@ This usually means:
 - You have network connectivity issues
 
 <<Model-responses-are-low-quality-or-truncated>>
-**** 18.3.4 Model responses are low quality or truncated [[#Model-responses-are-low-quality-or-truncated][¶]]
+**** 19.3.4 Model responses are low quality or truncated [[#Model-responses-are-low-quality-or-truncated][¶]]
 :PROPERTIES:
 :CUSTOM_ID: model-responses-are-low-quality-or-truncated
 :CLASS: subsection
@@ -3594,6 +4073,27 @@ Try:
 - Using a more capable model
 - Providing clearer instructions in your prompt
 
+<<How-do-system-prompts-differ-from-regular-prompts_003f>>
+**** 19.3.5 How do system prompts differ from regular prompts? [[#How-do-system-prompts-differ-from-regular-prompts_003f][¶]]
+:PROPERTIES:
+:CUSTOM_ID: how-do-system-prompts-differ-from-regular-prompts
+:CLASS: subsection
+:END:
+System prompts provide overall instructions to the AI about its role and
+how to respond, while regular prompts are your specific questions or
+requests. System prompts persist across the conversation, affecting all
+responses, while regular prompts are one-time interactions.
+
+<<Can-I-share-system-prompts-between-different-installations_003f>>
+**** 19.3.6 Can I share system prompts between different installations? [[#Can-I-share-system-prompts-between-different-installations_003f][¶]]
+:PROPERTIES:
+:CUSTOM_ID: can-i-share-system-prompts-between-different-installations
+:CLASS: subsection
+:END:
+Yes, the user system prompts are stored as plain text .org files in your
+‘ollama-buddy-user-prompts-directory‘. You can copy these files to share
+them with colleagues or between different machines.
+
 --------------
 
 <<Troubleshooting>>
@@ -3602,7 +4102,7 @@ Next: [[#Contributing][Contributing]], Previous: [[#FAQ][Frequently
 Asked Questions]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 19 Troubleshooting [[#Troubleshooting-2][¶]]
+** 20 Troubleshooting [[#Troubleshooting-2][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Troubleshooting-2
 :CLASS: chapter
@@ -3611,7 +4111,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
 - [[#Debugging][Debugging]]
 
 <<Common-Issues>>
-*** 19.1 Common Issues [[#Common-Issues][¶]]
+*** 20.1 Common Issues [[#Common-Issues][¶]]
 :PROPERTIES:
 :CUSTOM_ID: common-issues
 :CLASS: section
@@ -3621,7 +4121,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
 - [[#Interface-Issues][Interface Issues]]
 
 <<Connection-Problems>>
-**** 19.1.1 Connection Problems [[#Connection-Problems][¶]]
+**** 20.1.1 Connection Problems [[#Connection-Problems][¶]]
 :PROPERTIES:
 :CUSTOM_ID: connection-problems
 :CLASS: subsection
@@ -3638,7 +4138,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
   - Check if your OS has any network timeout settings
 
 <<Model-Problems>>
-**** 19.1.2 Model Problems [[#Model-Problems][¶]]
+**** 20.1.2 Model Problems [[#Model-Problems][¶]]
 :PROPERTIES:
 :CUSTOM_ID: model-problems
 :CLASS: subsection
@@ -3654,7 +4154,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
   - Set =low_vram= to =t= if using GPU
 
 <<Interface-Issues>>
-**** 19.1.3 Interface Issues [[#Interface-Issues][¶]]
+**** 20.1.3 Interface Issues [[#Interface-Issues][¶]]
 :PROPERTIES:
 :CUSTOM_ID: interface-issues
 :CLASS: subsection
@@ -3670,7 +4170,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
   - Try editing the history to fix formatting issues
 
 <<Debugging>>
-*** 19.2 Debugging [[#Debugging][¶]]
+*** 20.2 Debugging [[#Debugging][¶]]
 :PROPERTIES:
 :CUSTOM_ID: debugging
 :CLASS: section
@@ -3680,7 +4180,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
 - [[#Report-Issues][Report Issues]]
 
 <<Enable-Debug-Mode>>
-**** 19.2.1 Enable Debug Mode [[#Enable-Debug-Mode][¶]]
+**** 20.2.1 Enable Debug Mode [[#Enable-Debug-Mode][¶]]
 :PROPERTIES:
 :CUSTOM_ID: enable-debug-mode
 :CLASS: subsection
@@ -3694,7 +4194,7 @@ M-x ollama-buddy-toggle-debug-mode
 This opens a debug buffer showing raw JSON communication with Ollama.
 
 <<Check-Logs>>
-**** 19.2.2 Check Logs [[#Check-Logs][¶]]
+**** 20.2.2 Check Logs [[#Check-Logs][¶]]
 :PROPERTIES:
 :CUSTOM_ID: check-logs
 :CLASS: subsection
@@ -3706,7 +4206,7 @@ tail -f ~/.ollama/logs/ollama.log
 #+end_src
 
 <<Report-Issues>>
-**** 19.2.3 Report Issues [[#Report-Issues][¶]]
+**** 20.2.3 Report Issues [[#Report-Issues][¶]]
 :PROPERTIES:
 :CUSTOM_ID: report-issues
 :CLASS: subsection
@@ -3731,7 +4231,7 @@ Next: [[#Index][Index]], Previous:
 [[#Troubleshooting][Troubleshooting]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 20 Contributing [[#Contributing-1][¶]]
+** 21 Contributing [[#Contributing-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Contributing-1
 :CLASS: chapter
@@ -3744,7 +4244,7 @@ Next: [[#Index][Index]], Previous:
   Reports]]
 
 <<Getting-Started>>
-*** 20.1 Getting Started [[#Getting-Started][¶]]
+*** 21.1 Getting Started [[#Getting-Started][¶]]
 :PROPERTIES:
 :CUSTOM_ID: getting-started
 :CLASS: section
@@ -3763,7 +4263,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 8. Create a pull request
 
 <<Development-Setup>>
-*** 20.2 Development Setup [[#Development-Setup][¶]]
+*** 21.2 Development Setup [[#Development-Setup][¶]]
 :PROPERTIES:
 :CUSTOM_ID: development-setup
 :CLASS: section
@@ -3772,7 +4272,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 - [[#Recommended-Packages][Recommended Packages]]
 
 <<Required-Tools>>
-**** 20.2.1 Required Tools [[#Required-Tools][¶]]
+**** 21.2.1 Required Tools [[#Required-Tools][¶]]
 :PROPERTIES:
 :CUSTOM_ID: required-tools
 :CLASS: subsection
@@ -3782,7 +4282,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 - Git
 
 <<Recommended-Packages>>
-**** 20.2.2 Recommended Packages [[#Recommended-Packages][¶]]
+**** 21.2.2 Recommended Packages [[#Recommended-Packages][¶]]
 :PROPERTIES:
 :CUSTOM_ID: recommended-packages
 :CLASS: subsection
@@ -3792,7 +4292,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 - elisp-lint
 
 <<Coding-Guidelines>>
-*** 20.3 Coding Guidelines [[#Coding-Guidelines][¶]]
+*** 21.3 Coding Guidelines [[#Coding-Guidelines][¶]]
 :PROPERTIES:
 :CUSTOM_ID: coding-guidelines
 :CLASS: section
@@ -3805,7 +4305,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 - Use prefix =ollama-buddy-= for public functions
 
 <<Testing>>
-*** 20.4 Testing [[#Testing][¶]]
+*** 21.4 Testing [[#Testing][¶]]
 :PROPERTIES:
 :CUSTOM_ID: testing
 :CLASS: section
@@ -3814,7 +4314,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 - [[#Adding-New-Tests][Adding New Tests]]
 
 <<Run-Existing-Tests>>
-**** 20.4.1 Run Existing Tests [[#Run-Existing-Tests][¶]]
+**** 21.4.1 Run Existing Tests [[#Run-Existing-Tests][¶]]
 :PROPERTIES:
 :CUSTOM_ID: run-existing-tests
 :CLASS: subsection
@@ -3829,7 +4329,7 @@ M-x ollama-buddy-parameter-run-tests
 #+end_src
 
 <<Adding-New-Tests>>
-**** 20.4.2 Adding New Tests [[#Adding-New-Tests][¶]]
+**** 21.4.2 Adding New Tests [[#Adding-New-Tests][¶]]
 :PROPERTIES:
 :CUSTOM_ID: adding-new-tests
 :CLASS: subsection
@@ -3841,7 +4341,7 @@ When adding features, please also add tests:
 - Parameter tests for parameter handling
 
 <<Feature-Requests-and-Bug-Reports>>
-*** 20.5 Feature Requests and Bug Reports [[#Feature-Requests-and-Bug-Reports][¶]]
+*** 21.5 Feature Requests and Bug Reports [[#Feature-Requests-and-Bug-Reports][¶]]
 :PROPERTIES:
 :CUSTOM_ID: feature-requests-and-bug-reports
 :CLASS: section
@@ -3849,6 +4349,25 @@ When adding features, please also add tests:
 - Use GitHub Issues for bug reports and feature requests
 - Provide clear steps to reproduce bugs
 - For feature requests, explain the use case
+
+- [[#User-System-Prompts-Issues][User System Prompts Issues]]
+
+<<User-System-Prompts-Issues>>
+**** 21.5.1 User System Prompts Issues [[#User-System-Prompts-Issues][¶]]
+:PROPERTIES:
+:CUSTOM_ID: user-system-prompts-issues
+:CLASS: subsection
+:END:
+- Symptom: Cannot save system prompts :: - Check if
+    ‘ollama-buddy-user-prompts-directory‘ exists and is writable
+  - Ensure you have set a system prompt before trying to save it
+  - Check for any error messages in the minibuffer or *Messages* buffer
+- Symptom: Prompts not appearing in the load menu :: - Verify that
+    prompts are saved in the correct format
+    (category__title__system.org)
+  - Check if the prompts directory contains files with proper formatting
+  - Try refreshing the prompts cache with ‘M-x
+    ollama-buddy-user-prompts--refresh-cache‘
 
 --------------
 
