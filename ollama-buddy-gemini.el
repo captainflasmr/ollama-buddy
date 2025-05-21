@@ -198,13 +198,7 @@ Use nil for API default behavior (adaptive)."
         (let (start-point
               (inhibit-read-only t))
           
-          (insert (propertize (format "\n\n** [%s: RESPONSE]" 
-                                      ollama-buddy--current-model) 
-                              'face
-                              `(:inherit bold :foreground 
-                                         ,(ollama-buddy--get-model-color 
-                                           ollama-buddy--current-model))) 
-                  "\n\n")
+          (insert (format "\n\n** [%s: RESPONSE]\n\n" ollama-buddy--current-model))
           
           (setq start-point (point))
           

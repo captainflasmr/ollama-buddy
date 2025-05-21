@@ -105,8 +105,7 @@ Use nil for API default behavior (adaptive)."
     (setq ollama-buddy-grok--current-token-count 0)
 
     ;; Get history and system prompt
-    (let* ((model ollama-buddy--current-model)
-           (history (when ollama-buddy-history-enabled
+    (let* ((history (when ollama-buddy-history-enabled
                       (gethash ollama-buddy--current-model
                                ollama-buddy--conversation-history-by-model
                                nil)))
@@ -158,9 +157,8 @@ Use nil for API default behavior (adaptive)."
         
         (let (start-point
               (inhibit-read-only t))
-          
-          (insert (propertize (format "\n\n** [%s: RESPONSE]" model) 'face
-                              `(:inherit bold :foreground ,(ollama-buddy--get-model-color model))) "\n\n")
+
+          (insert (format "\n\n** [%s: RESPONSE]\n\n" ollama-buddy--current-model))
           
           (setq start-point (point))
           

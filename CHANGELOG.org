@@ -11,6 +11,39 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-05-21> *0.11.1*
+
+Quite a bit of refactoring to generally make this project more maintainable and I have added a starter kit of user prompts.
+
+- Color System Reworking
+  - Removed all model color-related functions and variables
+  - Removed dependency on =color.el=
+  - Replaced with =highlight-regexp= and hashing to =^font-lock= faces, so now using a more native built-in solutions for model colouring rather than shoe-horning in overlays.
+
+- UI Improvements
+  - Simplified the display system by leveraging Org mode
+  - Added org-mode styling for output buffers
+  - Added =org-hide-emphasis-markers= and =org-hide-leading-stars= settings
+  - Changed formatting to use Org markup instead of text properties
+  - Converted plain text headers to proper Org headings
+  - Replaced color properties with Org emphasis (bold)
+
+- History Management Updates
+  - Streamlined history editing functionality
+  - Improved model-specific history editing
+  - Refactored history display and navigation
+
+- System Prompts
+  - Added library of system prompts in these categories:
+    - analysis (3 prompts)
+    - coding (5 prompts)
+    - creative (3 prompts)
+    - documentation (3 prompts)
+    - emacs (10 prompts)
+    - general (3 prompts)
+    - technical (3 prompts)
+    - writing (3 prompts)
+
 ** <2025-05-19> *0.11.0*
 
 Added user system prompts management

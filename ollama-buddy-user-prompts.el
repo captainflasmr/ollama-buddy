@@ -187,6 +187,9 @@ Returns a plist with :category and :title, or nil if not a valid format."
       (let ((inhibit-read-only t))
         (erase-buffer)
         (org-mode)
+        (setq-local org-hide-emphasis-markers t)
+        (setq-local org-hide-leading-stars t)
+        
         (insert "#+TITLE: User System Prompts\n\n")
         
         (if (null prompts)
@@ -206,27 +209,14 @@ Returns a plist with :category and :title, or nil if not a valid format."
                                       (lambda (a b) (string< (plist-get a :title)
                                                              (plist-get b :title)))))
                   (let* ((title (plist-get prompt :title))
-                         (file (plist-get prompt :file))
-                         (content (ollama-buddy-user-prompts--read-prompt-content file)))
-
-                    (when content
-                      ;; Extract just the content without org headers
-                      (setq content (with-temp-buffer
-                                      (insert content)
-                                      (goto-char (point-min))
-                                      ;; Skip org headers
-                                      (while (looking-at "^#\\+")
-                                        (forward-line 1))
-                                      ;; Skip any empty lines after headers
-                                      (while (looking-at "^$")
-                                        (forward-line 1))
-                                      (buffer-substring-no-properties (point) (point-max)))))
+                        (file (plist-get prompt :file))
+                        (content (ollama-buddy-user-prompts--read-prompt-content file)))
                     (insert (format "** %s\n" title)"\n")
                     (insert (concat content "\n\n"))))))))
         (org-fold-hide-sublevels 2)
         (view-mode 1)
         (goto-char (point-min)))
-      (display-buffer buf))))
+    (display-buffer buf))))
 
 ;;;###autoload
 (defun ollama-buddy-user-prompts-edit (file)
@@ -295,10 +285,11 @@ Returns a plist with :category and :title, or nil if not a valid format."
     
     ;; Open the file for editing
     (find-file filepath)
+    (goto-char (point-max))
     
     ;; Refresh cache
     (ollama-buddy-user-prompts--refresh-cache)
-    
+
     (message "Created new system prompt: %s" filename)))
 
 (provide 'ollama-buddy-user-prompts)

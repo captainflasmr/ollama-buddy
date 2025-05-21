@@ -14,6 +14,7 @@
 (require 'ollama-buddy-user-prompts)
 
 ;; Forward declarations for functions defined in ollama-buddy.el
+(declare-function ollama-buddy-history-edit-model "ollama-buddy")
 (declare-function ollama-buddy-set-max-history-length "ollama-buddy")
 (declare-function ollama-buddy-set-model-context-size "ollama-buddy")
 (declare-function ollama-buddy-toggle-context-percentage "ollama-buddy")
@@ -40,7 +41,6 @@
 (declare-function ollama-buddy-toggle-token-display "ollama-buddy")
 (declare-function ollama-buddy-display-token-stats "ollama-buddy")
 (declare-function ollama-buddy-toggle-markdown-conversion "ollama-buddy")
-(declare-function ollama-buddy-toggle-model-colors "ollama-buddy")
 (declare-function ollama-buddy-display-token-graph "ollama-buddy")
 (declare-function ollama-buddy-toggle-history "ollama-buddy")
 (declare-function ollama-buddy-clear-history "ollama-buddy")
@@ -81,7 +81,7 @@
     ("l" "Send Region" (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))
     ("C-s" "Show System Prompt" ollama-buddy-show-system-prompt)
     ("r" "Reset System Prompt" ollama-buddy-reset-system-prompt)
-    ("b" "Ollama Buddy Menu" ollama-buddy-menu)
+    ("b" "Custom Menu" ollama-buddy-menu)
     ]
    
    ["Model"
@@ -116,12 +116,13 @@
     ("8" "Context Type" ollama-buddy-toggle-context-display-type)
     ("T" "Token Display" ollama-buddy-toggle-token-display)
     ("V" "Reasoning Vis" ollama-buddy-toggle-reasoning-visibility)
+    ("#" "Fancy" ollama-buddy-toggle-model-highlighting)
     ]
    
    ["History"
     ("H" "Toggle History" ollama-buddy-toggle-history)
     ("X" "Clear History" ollama-buddy-clear-history)
-    ("J" "Edit History" ollama-buddy-history-edit)
+    ("J" "Edit History" ollama-buddy-history-edit-model)
     ("Y" "Edit Max History" ollama-buddy-set-max-history-length)
     ("$" "Set Context         " ollama-buddy-set-model-context-size)
     ]

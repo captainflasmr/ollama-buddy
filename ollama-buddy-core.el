@@ -18,7 +18,6 @@
 (require 'dired)
 (require 'org)
 (require 'savehist)
-(require 'color)
 
 ;; Core Customization Groups
 (defgroup ollama-buddy nil
@@ -33,6 +32,11 @@
   "Customization group for Ollama API parameters."
   :group 'ollama-buddy
   :prefix "ollama-buddy-param-")
+
+(defcustom ollama-buddy-highlight-models-enabled t
+  "Highlight model names with distinctive colors in Ollama Buddy buffers."
+  :type 'boolean
+  :group 'ollama-buddy)
 
 (defcustom ollama-buddy-max-file-size (* 10 1024 1024) ; 10MB
   "Maximum size for attached files in bytes."
@@ -410,11 +414,6 @@ Each command is defined with:
   :type 'directory
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-enable-model-colors t
-  "Whether to show model colors."
-  :type 'boolean
-  :group 'ollama-buddy)
-
 (defcustom ollama-buddy-host "localhost"
   "Host where Ollama server is running."
   :type 'string
@@ -522,6 +521,9 @@ Returns empty string if no remote models are available."
   :type 'float
   :group 'ollama-buddy)
 
+(defvar ollama-buddy--model-highlights nil
+  "List of model name regexps currently highlighted.")
+
 (defvar ollama-buddy--current-attachments nil
   "List of files attached to the current conversation.
 Each element is a plist with :file, :content, :size, and :type.")
@@ -563,12 +565,6 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
 
 (defvar ollama-buddy--running-models-cache-timestamp nil
   "Timestamp when running models cache was last updated.")
-
-(defvar ollama-buddy--colors-cache nil
-  "Cache for model colors.")
-
-(defvar ollama-buddy--colors-cache-timestamp nil
-  "Timestamp when colors cache was last updated.")
 
 (defvar ollama-buddy--models-cache nil
   "Cache for available Ollama models.")
@@ -686,14 +682,80 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
 (defvar ollama-buddy--multishot-prompt nil
   "The prompt being used for the current multishot sequence.")
 
-;; Keep track of model colors
-(defvar ollama-buddy--model-colors (make-hash-table :test 'equal)
-  "Hash table mapping model names to their colors.")
-
 (defvar ollama-buddy--model-handlers (make-hash-table :test 'equal)
   "Map of model prefixes to handler functions.")
 
 ;; Core utility functions
+
+(defun ollama-buddy-clear-model-highlights ()
+  "Clear all model name highlighting."
+  (interactive)
+  (when ollama-buddy--model-highlights
+    (dolist (regex ollama-buddy--model-highlights)
+      (unhighlight-regexp regex))
+    (setq ollama-buddy--model-highlights nil)))
+
+(defun ollama-buddy-highlight-models ()
+  "Highlight model names in the ollama-buddy buffer."
+  (interactive)
+  (when (derived-mode-p 'org-mode)
+    ;; First clear any existing highlights
+    (ollama-buddy-clear-model-highlights)
+    
+    ;; Define a list of standard Emacs highlighting faces to use
+    (let ((highlight-faces (apropos-internal "^font-lock-" 'facep))
+          (models-to-highlight nil))
+      
+      ;; Collect all models to highlight
+      ;; 1. Available models
+      (when (ollama-buddy--ollama-running)
+        (dolist (model (ollama-buddy--get-models))
+          (push model models-to-highlight)))
+      
+      ;; 2. Models available for pull
+      (let ((available-for-pull
+             (mapcar (lambda (model)
+                       (if (ollama-buddy--should-use-marker-prefix)
+                           (concat ollama-buddy-marker-prefix model)
+                         model))
+                     ollama-buddy-available-models)))
+        (dolist (model available-for-pull)
+          (push model models-to-highlight)))
+      
+      ;; 3. Remote models (if available)
+      (when (boundp 'ollama-buddy-remote-models)
+        (dolist (model ollama-buddy-remote-models)
+          (push model models-to-highlight)))
+      
+      ;; Remove duplicates
+      (setq models-to-highlight (delete-dups models-to-highlight))
+      
+      ;; Apply highlighting
+      (dolist (model-name models-to-highlight)
+        (let* (;; Generate a consistent hash from the model name
+               (hash (abs (sxhash model-name)))
+               ;; Select a face based on the hash
+               (face (nth (mod hash (length highlight-faces)) highlight-faces))
+               ;; Create the regexp pattern
+               (regex (format "\\b%s\\b" (regexp-quote model-name))))
+          ;; Highlight the model name with the selected face
+          (highlight-regexp regex face)
+          ;; Track the highlighting for later removal
+          (push regex ollama-buddy--model-highlights))))))
+
+(defun ollama-buddy-toggle-model-highlighting ()
+  "Toggle highlighting of model names in Ollama Buddy buffers."
+  (interactive)
+  (setq ollama-buddy-highlight-models-enabled (not ollama-buddy-highlight-models-enabled))
+  (if ollama-buddy-highlight-models-enabled
+      (progn
+        (ollama-buddy-highlight-models)
+        (add-hook 'ollama-buddy-mode-hook #'ollama-buddy-highlight-models)
+        (message "Model highlighting enabled"))
+    (progn
+      (ollama-buddy-clear-model-highlights)
+      (remove-hook 'ollama-buddy-mode-hook #'ollama-buddy-highlight-models)
+      (message "Model highlighting disabled"))))
 
 (defun ollama-buddy--get-model-context-size (model)
   "Get the context window size for MODEL."
@@ -817,6 +879,8 @@ and prefixed combinations like '@a', '@b', etc. for additional models."
   "Create welcome message with model management capabilities in org format.
 Supports both single and prefixed multi-character model references."
   (ollama-buddy--assign-model-letters)
+  (setq-local org-hide-emphasis-markers t)
+  (setq-local org-hide-leading-stars t)
   (let* ((available-models (when (ollama-buddy--ollama-running)
                              (ollama-buddy--get-models)))
          ;; Get models available for pull but not yet downloaded
@@ -836,40 +900,41 @@ Supports both single and prefixed multi-character model references."
                :test #'string=))))
          ;; Basic tips for beginners
          (basic-tips
-          "- Ask me anything!                    C-c C-c
-- Main transient menu                 C-c O
-- Cancel request                      C-c C-k
-- Change model                        C-c m
-- Attach file                         C-c 1
-- Browse prompt history               M-p/n/r
-- Browse ollama-buddy manual          C-c ?
-- Advanced interface (show all tips)  C-c A")
+          "- /Ask me anything!/       C-c C-c
+- /Main transient menu/    C-c O
+- /Cancel request/         C-c C-k
+- /Change model/           C-c m
+- /Attach file/            C-c 1
+- /Browse prompt history/  M-p/n/r
+- /Browse manual/          C-c ?
+- /Advanced interface/     C-c A")
          ;; Advanced tips for experienced users
          (advanced-tips
-          "- Ask me anything!                    C-c C-c
-- Cancel request                      C-c C-k
-- Main transient menu                 C-c O
-- Manage models                       C-c W
-- Browse prompt history               M-p/n/r
-- Browse ollama-buddy manual          C-c ?
-- Attachments C-c
-  - menu/file/show/detach/clear       1/C-a/C-w/C-d/0
-- Show Help/Status/Debug              C-c h/v/B
-- Show Token Stats/Graph/Report       C-c u/U/T
-- Model Change/Info/Multishot         C-c m/i/M
-- Toggle Streaming                    C-c x
-- Toggle Reasoning Visibility         C-c V
-- System Prompt Set/Show/Reset        C-c s/C-s/r
-- Param Menu/Profiles/Show/Help/Reset C-c P/p/G/I/K
-- History Toggle/Clear/Show/Edit/Max  C-c H/X/J/Y
-- Context Size/Toggle/Show            C-c $/%/C
-- Session New/Load/Save/List/Delete   C-c N/L/S/Q/Z
-- Role Switch/Create/Directory        C-c R/E/D
-- Fabric Patterns Menu                C-c f
-- Awesome ChatGPT Patterns Menu       C-c w
-- Toggle Display Colors/Markdown      C-c c/C-o
-- Show Buddy custom menu              C-c b
-- Basic interface (simpler display)   C-c A
+          "- /Ask me anything!/                    C-c C-c
+- /Cancel request/                      C-c C-k
+- /Main transient menu/                 C-c O
+- /Manage models/                       C-c W
+- /Browse prompt history/               M-p/n/r
+- /Browse ollama-buddy manual/          C-c ?
+- /Attachments C-c/
+  - /menu/file/show/detach/clear/       1/C-a/C-w/C-d/0
+- /Toggle Fancy/                        C-c #
+- /Show Help/Status/Debug/              C-c h/v/B
+- /Show Token Stats/Graph/Report/       C-c u/U/T
+- /Model Change/Info/Multishot/         C-c m/i/M
+- /Toggle Streaming/                    C-c x
+- /Toggle Reasoning Visibility/         C-c V
+- /System Prompt Set/Show/Reset/        C-c s/C-s/r
+- /Param Menu/Profiles/Show/Help/Reset/ C-c P/p/G/I/K
+- /History Toggle/Clear/Show/Edit/Max/  C-c H/X/J/Y
+- /Context Size/Toggle/Show/            C-c $/%/C
+- /Session New/Load/Save/List/Delete/   C-c N/L/S/Q/Z
+- /Role Switch/Create/Directory/        C-c R/E/D
+- /Fabric Patterns Menu/                C-c f
+- /Awesome ChatGPT Patterns Menu/       C-c w
+- /Toggle Display Markdown/             C-c C-o
+- /Show Buddy custom menu/              C-c b
+- /Basic interface (simpler display)/   C-c A
 
 [[elisp:(call-interactively #'ollama-buddy-import-gguf-file)][Import-GGUF-File]] [[elisp:(call-interactively #'ollama-buddy-pull-model)][Pull-Any-Model]]")
          ;; Choose tips based on interface level
@@ -885,7 +950,7 @@ Supports both single and prefixed multi-character model references."
                 (let ((model-letter (ollama-buddy--get-model-letter model)))
                   (concat
                    (format
-                    "(%s) %s [[elisp:(ollama-buddy-select-model \"%s\")][Select]] "
+                    "(%s) *%s* [[elisp:(ollama-buddy-select-model \"%s\")][Select]] "
                     model-letter model model)
                    (format
                     "[[elisp:(ollama-buddy-show-raw-model-info \"%s\")][Info]] " model)
@@ -918,7 +983,7 @@ Supports both single and prefixed multi-character model references."
           (concat
            (when (= (buffer-size) 0)
              (concat "#+TITLE: Ollama Buddy Chat"))
-           "\n\n* Welcome to OLLAMA BUDDY\n\n"
+           "\n\n* Welcome to _OLLAMA BUDDY_\n\n"
            "#+begin_example\n"
            " ___ _ _      n _ n      ___       _   _ _ _\n"
            "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |\n"
@@ -928,23 +993,13 @@ Supports both single and prefixed multi-character model references."
            (when (not (ollama-buddy--check-status))
              "** *THERE IS NO OLLAMA RUNNING*\n
 please run =ollama serve=\n\n")
+           ;; "** available models (local):\n\n"
            models-management-section
+           ;; "** available models (pull):\n\n"
            models-to-pull-section
+           ;; "** comamnds:\n\n"
            tips-section)))
 
-    ;; Apply overlay colors to model names
-    (with-temp-buffer
-      (insert message-text)
-      (goto-char (point-min))
-      ;; Find model names in the format "=model-name=" and apply face
-      (while (re-search-forward "=\\([^=]+\\)=" nil t)
-        (let* ((model-name (match-string 1))
-               (color (ollama-buddy--get-model-color model-name))
-               (start (match-beginning 0))
-               (end (match-end 0)))
-          (add-text-properties start end `(face (:foreground ,color :weight bold)) (current-buffer))))
-      (setq message-text (buffer-string)))
-    
     ;; Add bold face to the entire message
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
@@ -1162,93 +1217,6 @@ When disabled, responses only appear after completion."
   "Get property PROP from command COMMAND-NAME."
   (plist-get (cdr (ollama-buddy--get-command-def command-name)) prop))
 
-(defun ollama-buddy--color-contrast (color1 color2)
-  "Calculate contrast ratio between COLOR1 and COLOR2.
-Returns a value between 1 and 21, where higher values indicate better contrast.
-Based on WCAG 2.0 contrast algorithm."
-  (let* ((rgb1 (color-name-to-rgb color1))
-         (rgb2 (color-name-to-rgb color2))
-         ;; Calculate relative luminance for each color
-         (l1 (ollama-buddy--relative-luminance rgb1))
-         (l2 (ollama-buddy--relative-luminance rgb2))
-         ;; Ensure lighter color is l1
-         (light (max l1 l2))
-         (dark (min l1 l2)))
-    ;; Contrast ratio formula
-    (/ (+ light 0.05) (+ dark 0.05))))
-
-(defun ollama-buddy--relative-luminance (rgb)
-  "Calculate the relative luminance of RGB.
-RGB should be a list of (r g b) values between 0 and 1."
-  (let* ((r (nth 0 rgb))
-         (g (nth 1 rgb))
-         (b (nth 2 rgb))
-         ;; Convert RGB to linear values (gamma correction)
-         (r-linear (if (<= r 0.03928)
-                       (/ r 12.92)
-                     (expt (/ (+ r 0.055) 1.055) 2.4)))
-         (g-linear (if (<= g 0.03928)
-                       (/ g 12.92)
-                     (expt (/ (+ g 0.055) 1.055) 2.4)))
-         (b-linear (if (<= b 0.03928)
-                       (/ b 12.92)
-                     (expt (/ (+ b 0.055) 1.055) 2.4))))
-    ;; Calculate luminance with RGB coefficients
-    (+ (* 0.2126 r-linear)
-       (* 0.7152 g-linear)
-       (* 0.0722 b-linear))))
-
-(defun ollama-buddy--hash-string-to-color (str)
-  "Generate a consistent color based on the hash of STR with good contrast.
-Adapts the color to the current theme (light or dark) for better visibility."
-  (let* ((hash (abs (sxhash str)))
-         ;; Generate HSL values - keeping saturation high for readability
-         (hue (mod hash 360))
-         (saturation 85)
-         ;; Determine if background is light or dark
-         (is-dark-background (eq (frame-parameter nil 'background-mode) 'dark))
-         ;; Adjust lightness based on background (darker for light bg, lighter for dark bg)
-         (base-lightness (if is-dark-background 65 45))
-         ;; Avoid problematic hue ranges for visibility (e.g., yellows on white background)
-         ;; Adjust lightness for problematic hues
-         (lightness (cond
-                     ;; Yellows (40-70) - make darker on light backgrounds
-                     ((and (>= hue 40) (<= hue 70) (not is-dark-background))
-                      (max 20 (- base-lightness 20)))
-                     ;; Blues (180-240) - make lighter on dark backgrounds
-                     ((and (>= hue 180) (<= hue 240) is-dark-background)
-                      (min 80 (+ base-lightness 15)))
-                     ;; Default lightness
-                     (t base-lightness)))
-         ;; Convert HSL to RGB
-         (rgb-values (color-hsl-to-rgb (/ hue 360.0) (/ saturation 100.0) (/ lightness 100.0)))
-         ;; Convert RGB to hex color
-         (color (apply #'color-rgb-to-hex rgb-values))
-         ;; Get foreground/background colors for contrast check
-         (bg-color (face-background 'default))
-         (target-color color))
-    
-    ;; Adjust saturation for better contrast if needed (fallback approach)
-    (when (and bg-color
-               (< (ollama-buddy--color-contrast bg-color target-color) 4.5))
-      (let* ((adjusted-saturation (min 100 (+ saturation 10)))
-             (adjusted-lightness (if is-dark-background
-                                     (min 85 (+ lightness 10))
-                                   (max 15 (- lightness 10))))
-             (adjusted-rgb (color-hsl-to-rgb (/ hue 360.0)
-                                             (/ adjusted-saturation 100.0)
-                                             (/ adjusted-lightness 100.0))))
-        (setq target-color (apply #'color-rgb-to-hex adjusted-rgb))))
-    
-    target-color))
-
-(defun ollama-buddy--get-model-color (model)
-  "Get the color associated with MODEL."
-  (if ollama-buddy-enable-model-colors
-      (or (gethash model ollama-buddy--model-colors)
-          (ollama-buddy--hash-string-to-color model))
-    (face-foreground 'default)))  ;; Returns the default foreground color
-
 (defun ollama-buddy--param-shortname (param)
   "Create a 4-character shortened name for PARAM by using first 2 and last 2 chars.
 For parameters with 4 or fewer characters, returns the full name."
@@ -1268,7 +1236,6 @@ When SUFFIX-PROMPT is non-nil, mark as a suffix."
   (let* ((model (or ollama-buddy--current-model
                     ollama-buddy-default-model
                     "Default:latest"))
-         (color (ollama-buddy--get-model-color model))
          (existing-content (when keep-content (ollama-buddy--text-after-prompt))))
 
     (let ((buf (get-buffer-create ollama-buddy--chat-buffer)))
@@ -1289,17 +1256,12 @@ When SUFFIX-PROMPT is non-nil, mark as a suffix."
               (goto-char (point-max))))
           
           ;; Insert new prompt header
-          (let ((start (point)))
-            (insert (format "\n\n* %s %s"
-                            model
-                            (cond
-                             (system-prompt ">> SYSTEM PROMPT: ")
-                             (suffix-prompt ">> SUFFIX: ")
-                             (t ">> PROMPT: "))))
-            
-            ;; Apply overlay for model name
-            (let ((overlay (make-overlay start (+ start 4 (length model)))))
-              (overlay-put overlay 'face `(:foreground ,color :weight bold))))
+          (insert (format "\n\n* *%s* %s"
+                          model
+                          (cond
+                           (system-prompt ">> SYSTEM PROMPT: ")
+                           (suffix-prompt ">> SUFFIX: ")
+                           (t ">> PROMPT: "))))
           
           ;; Restore content if requested
           (when (and keep-content existing-content)
@@ -1417,39 +1379,8 @@ When complete, CALLBACK is called with the status response and result."
   (when result
     (mapcar (lambda (m)
               (let ((name (ollama-buddy--get-full-model-name (alist-get 'name m))))
-                (cons name (ollama-buddy--hash-string-to-color name))))
+                (cons name name)))
             (alist-get 'models result))))
-
-(defun ollama-buddy--get-models-with-colors ()
-  "Get available Ollama models with their associated colors using cache."
-  (when (ollama-buddy--ollama-running)
-    (let ((current-time (float-time)))
-      (when (or (null ollama-buddy--colors-cache-timestamp)
-                (> (- current-time ollama-buddy--colors-cache-timestamp)
-                   ollama-buddy--models-cache-ttl))
-        ;; Cache expired or not set - use synchronous version to refresh cache
-        (when-let ((response (ollama-buddy--make-request "/api/tags" "GET")))
-          (setq ollama-buddy--colors-cache
-                (ollama-buddy--get-models-with-colors-from-result response)
-                ollama-buddy--colors-cache-timestamp current-time)
-          
-          ;; Also refresh in background for next time
-          (ollama-buddy--refresh-colors-cache)))
-      
-      ollama-buddy--colors-cache)))
-
-(defun ollama-buddy--refresh-colors-cache ()
-  "Refresh the model colors cache in the background."
-  (ollama-buddy--make-request-async
-   "/api/tags"
-   "GET"
-   nil
-   (lambda (status result)
-     (unless (plist-get status :error)
-       (when result
-         (setq ollama-buddy--colors-cache
-               (ollama-buddy--get-models-with-colors-from-result result)
-               ollama-buddy--colors-cache-timestamp (float-time)))))))
 
 (defun ollama-buddy--get-running-models ()
   "Get list of currently running Ollama models with caching."
@@ -1595,34 +1526,6 @@ When complete, CALLBACK is called with the status response and result."
              (history (gethash model ollama-buddy--conversation-history-by-model nil)))
         history)
     nil))
-
-;; Model color functions
-(defun ollama-buddy--update-model-colors ()
-  "Update the model colors hash table and return it with caching."
-  (when (ollama-buddy--ollama-running)
-    ;; First update synchronously if needed
-    (ollama-buddy--get-models-with-colors)
-    
-    ;; Update the hash table from the cache
-    (dolist (pair ollama-buddy--colors-cache)
-      (puthash (car pair) (cdr pair) ollama-buddy--model-colors))
-    
-    ;; Also refresh in background
-    (ollama-buddy--make-request-async
-     "/api/tags"
-     "GET"
-     nil
-     (lambda (status result)
-       (unless (plist-get status :error)
-         (when result
-           (let ((models-with-colors (ollama-buddy--get-models-with-colors-from-result result)))
-             (dolist (pair models-with-colors)
-               (puthash (car pair) (cdr pair) ollama-buddy--model-colors))
-             ;; Update cache too
-             (setq ollama-buddy--colors-cache models-with-colors
-                   ollama-buddy--colors-cache-timestamp (float-time)))))))
-    
-    ollama-buddy--model-colors))
 
 ;; Status update functions
 
