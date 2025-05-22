@@ -58,6 +58,34 @@
 (defvar ollama-buddy-fabric--sync-in-progress nil
   "Flag indicating whether a sync operation is currently in progress.")
 
+(defun ollama-buddy-fabric-set-system-prompt ()
+  "Set the system prompt to a Fabric pattern without sending a request."
+  (interactive)
+  (unless ollama-buddy-fabric--patterns
+    (ollama-buddy-fabric-populate-patterns))
+  
+  (let* ((formatted-patterns (mapcar #'ollama-buddy-fabric--format-pattern-name
+                                     ollama-buddy-fabric--patterns))
+         (pattern-alist (cl-mapcar #'cons formatted-patterns
+                                   ollama-buddy-fabric--patterns))
+         (selected-formatted (completing-read "Fabric pattern: " formatted-patterns nil t))
+         (selected-pattern (cdr (assoc selected-formatted pattern-alist)))
+         (system-file (expand-file-name (format "%s/%s/system.md"
+                                                (ollama-buddy-fabric--patterns-path)
+                                                selected-pattern)))
+         (system-prompt (with-temp-buffer
+                          (insert-file-contents system-file)
+                          (buffer-string)))
+         ;; Extract title from pattern name
+         (title (replace-regexp-in-string "_" " " 
+                                          (capitalize selected-pattern))))
+    
+    ;; Use the enhanced system prompt setting function
+    (ollama-buddy--set-system-prompt-with-metadata system-prompt title "fabric")
+    
+    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+      (ollama-buddy--open-chat))))
+
 (defun ollama-buddy-fabric--patterns-path ()
   "Return the full path to the patterns directory."
   (expand-file-name ollama-buddy-fabric-patterns-subdir
@@ -220,16 +248,32 @@
 (defun ollama-buddy-fabric-send ()
   "Apply a Fabric pattern to the selected text and send to Ollama."
   (interactive)
-  (let ((system-prompt (ollama-buddy-fabric-yield-prompt))
-        (selected-text (when (use-region-p)
-                         (buffer-substring-no-properties
-                          (region-beginning) (region-end)))))
+  (unless ollama-buddy-fabric--patterns
+    (ollama-buddy-fabric-populate-patterns))
+  
+  (let* ((formatted-patterns (mapcar #'ollama-buddy-fabric--format-pattern-name
+                                     ollama-buddy-fabric--patterns))
+         (pattern-alist (cl-mapcar #'cons formatted-patterns
+                                   ollama-buddy-fabric--patterns))
+         (selected-formatted (completing-read "Fabric pattern: " formatted-patterns nil t))
+         (selected-pattern (cdr (assoc selected-formatted pattern-alist)))
+         (system-file (expand-file-name (format "%s/%s/system.md"
+                                                (ollama-buddy-fabric--patterns-path)
+                                                selected-pattern)))
+         (system-prompt (with-temp-buffer
+                          (insert-file-contents system-file)
+                          (buffer-string)))
+         (title (replace-regexp-in-string "_" " " 
+                                          (capitalize selected-pattern)))
+         (selected-text (when (use-region-p)
+                          (buffer-substring-no-properties
+                           (region-beginning) (region-end)))))
     
     (unless selected-text
       (setq selected-text (read-string "Enter text to process: ")))
     
-    ;; Set the system prompt
-    (setq ollama-buddy--current-system-prompt system-prompt)
+    ;; Set the system prompt with metadata
+    (ollama-buddy--set-system-prompt-with-metadata system-prompt title "fabric")
     
     ;; Prepare the chat buffer
     (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
@@ -269,9 +313,7 @@ Returns the first paragraph (up to 250 chars) as a description."
                        (point-max)))))
           ;; Limit to ~250 chars for preview
           (let ((desc (buffer-substring-no-properties start end)))
-            (if (> (length desc) 250)
-                (concat (substring desc 0 247) "...")
-              desc)))))))
+              desc))))))
 
 (defun ollama-buddy-fabric-list-patterns ()
   "Display a list of available Fabric patterns with descriptions."
@@ -284,15 +326,16 @@ Returns the first paragraph (up to 250 chars) as a description."
       (let ((inhibit-read-only t))
         (erase-buffer)
         (org-mode)
-        (insert "* Fabric Patterns\n\n")
+        (setq-local org-hide-emphasis-markers t)
+        (setq-local org-hide-leading-stars t)
+
+        (insert "#+TITLE: Fabric Patterns\n\n")
         
         (if ollama-buddy-fabric--last-sync-time
             (insert (format "Last synced: %s\n\n"
                             (format-time-string "%Y-%m-%d %H:%M:%S"
                                                 ollama-buddy-fabric--last-sync-time)))
           (insert "Never synced with GitHub repository\n\n"))
-        
-        (insert "** Available Patterns\n")
         
         (let ((current-category ""))
           (dolist (pattern ollama-buddy-fabric--patterns)
@@ -306,20 +349,21 @@ Returns the first paragraph (up to 250 chars) as a description."
               
               ;; Add category header if changed
               (unless (string= category current-category)
-                (insert (format "*** %s\n" (capitalize category)))
+                (insert (format "* %s\n\n" (capitalize category)))
                 (setq current-category category))
               
               ;; Pattern name and description
-              (insert (format "**** %s\n" name))
+              (insert (format "** %s\n\n" name))
               (if (file-exists-p desc-file)
                   (progn
                     (insert-file-contents (string-trim desc-file))
-                    (insert "\n"))
+                    (insert "\n\n"))
                 (insert
                  (string-trim
                   (ollama-buddy-fabric--extract-description-from-system pattern))
-                 "\n"))
+                 "\n\n"))
               (goto-char (point-max))))))
+      (my/org-hide-sublevels 2)
       (view-mode 1)
       (goto-char (point-min)))
     (display-buffer buf)))
@@ -356,17 +400,6 @@ Returns the first paragraph (up to 250 chars) as a description."
   (ollama-buddy-fabric-populate-patterns)
   (message "ollama-buddy-fabric setup complete. Found %d patterns."
            (length ollama-buddy-fabric--patterns)))
-
-;; Add a command to set the system prompt without sending
-(defun ollama-buddy-fabric-set-system-prompt ()
-  "Set the system prompt to a Fabric pattern without sending a request."
-  (interactive)
-  (let ((system-prompt (ollama-buddy-fabric-yield-prompt)))
-    (setq ollama-buddy--current-system-prompt system-prompt)
-    (message "System prompt set to Fabric pattern")
-    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-      (ollama-buddy--open-chat))
-    (ollama-buddy--update-status "Fabric system prompt set")))
 
 ;; Initialize on load if configured
 (when ollama-buddy-fabric-update-on-startup

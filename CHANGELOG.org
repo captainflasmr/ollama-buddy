@@ -11,6 +11,17 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-05-22> *0.12.0*
+
+Full system prompt in the status bar replaced with a more meaningful simple role title
+
+- Added system prompt metadata tracking with title, source, and timestamp registry
+- Implemented automatic title extraction and unified completing-read interface
+- Enhanced fabric/awesome prompt integration with proper metadata handling
+- Improved transient menu organization and org-mode formatting with folding
+- Added system prompt history display and better error handling for empty files
+- Transient menu has been simplified and reorganised
+
 ** <2025-05-21> *0.11.1*
 
 Quite a bit of refactoring to generally make this project more maintainable and I have added a starter kit of user prompts.

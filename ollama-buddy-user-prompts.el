@@ -153,6 +153,7 @@ Returns a plist with :category and :title, or nil if not a valid format."
            (selected-formatted (completing-read "Load system prompt: " formatted-prompts nil t))
            (selected-prompt (cdr (assoc selected-formatted prompt-alist)))
            (file (plist-get selected-prompt :file))
+           (title (plist-get selected-prompt :title))
            (content (ollama-buddy-user-prompts--read-prompt-content file)))
       
       (when content
@@ -160,21 +161,39 @@ Returns a plist with :category and :title, or nil if not a valid format."
         (setq content (with-temp-buffer
                         (insert content)
                         (goto-char (point-min))
-                        ;; Skip org headers
-                        (while (looking-at "^#\\+")
+                        
+                        ;; Skip org headers - but check we haven't reached end of buffer
+                        (while (and (not (eobp)) (looking-at "^#\\+"))
                           (forward-line 1))
-                        ;; Skip any empty lines after headers
-                        (while (looking-at "^$")
+                        
+                        ;; Skip any empty lines after headers - but check we haven't reached end
+                        (while (and (not (eobp)) (looking-at "^$"))
                           (forward-line 1))
-                        (buffer-substring-no-properties (point) (point-max))))
+                        
+                        ;; Get remaining content, or empty string if nothing left
+                        (if (eobp)
+                            ""
+                          (string-trim (buffer-substring-no-properties (point) (point-max))))))
         
-        ;; Set the system prompt
-        (setq ollama-buddy--current-system-prompt content)
-        
-        ;; Ensure chat buffer is ready
-        (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-          (ollama-buddy--open-chat))
-        (ollama-buddy--update-status (format "Loaded prompt"))))))
+        ;; Check if we actually have content after stripping headers
+        (if (string-empty-p content)
+            (progn
+              (message "Warning: User prompt '%s' contains no content after headers" title)
+              (when (yes-or-no-p "The selected prompt file appears to be empty. Continue anyway? ")
+                ;; Set empty system prompt to effectively clear it
+                (setq ollama-buddy--current-system-prompt nil
+                      ollama-buddy--current-system-prompt-title nil
+                      ollama-buddy--current-system-prompt-source nil)
+                (ollama-buddy--update-status "Empty prompt loaded (system prompt cleared)")
+                (message "System prompt cleared due to empty file")))
+          
+          ;; We have actual content, proceed normally
+          (ollama-buddy--set-system-prompt-with-metadata content title "user")
+          
+          ;; Ensure chat buffer is ready
+          (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+            (ollama-buddy--open-chat))
+          (message "Loaded user prompt: %s" title))))))
 
 ;;;###autoload
 (defun ollama-buddy-user-prompts-list ()
@@ -213,7 +232,7 @@ Returns a plist with :category and :title, or nil if not a valid format."
                         (content (ollama-buddy-user-prompts--read-prompt-content file)))
                     (insert (format "** %s\n" title)"\n")
                     (insert (concat content "\n\n"))))))))
-        (org-fold-hide-sublevels 2)
+        (my/org-hide-sublevels 2)
         (view-mode 1)
         (goto-char (point-min)))
     (display-buffer buf))))

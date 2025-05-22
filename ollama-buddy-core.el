@@ -521,6 +521,15 @@ Returns empty string if no remote models are available."
   :type 'float
   :group 'ollama-buddy)
 
+(defvar ollama-buddy--current-system-prompt-title nil
+  "Title/name of the current system prompt for display purposes.")
+
+(defvar ollama-buddy--current-system-prompt-source nil
+  "Source of the current system prompt (user, fabric, awesome, manual).")
+
+(defvar ollama-buddy--system-prompt-registry (make-hash-table :test 'equal)
+  "Registry mapping system prompt content to metadata (title, source).")
+
 (defvar ollama-buddy--model-highlights nil
   "List of model name regexps currently highlighted.")
 
@@ -686,6 +695,261 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
   "Map of model prefixes to handler functions.")
 
 ;; Core utility functions
+(defun my/org-hide-sublevels (level)
+  "Show Org headings up to LEVEL. Hides deeper levels and their content.
+Works across Org mode versions."
+  (interactive "nHide sublevels deeper than: ")
+  (unless (derived-mode-p 'org-mode)
+    (error "Not in Org mode"))
+  (save-excursion
+    (goto-char (point-min))
+    (org-content level)))
+
+(defun ollama-buddy--extract-title-from-content (content)
+  "Extract a meaningful title from system prompt CONTENT."
+  (when (and content (stringp content))
+    (let ((content-clean (string-trim content))
+          title)
+      (cond
+       ;; Pattern: "You are a/an [role]"
+       ((string-match "^[Yy]ou are \\(?:a\\|an\\) \\([^.,:;!?\n]+\\)" content-clean)
+        (setq title (capitalize (match-string 1 content-clean))))
+       
+       ;; Pattern: "Act as [role]"
+       ((string-match "^[Aa]ct as \\(?:a\\|an\\|the\\)?\\s-*\\([^.,:;!?\n]+\\)" content-clean)
+        (setq title (capitalize (match-string 1 content-clean))))
+       
+       ;; Pattern: "I want you to act as [role]"
+       ((string-match "[Ii] want you to act as \\(?:a\\|an\\|the\\)?\\s-*\\([^.,:;!?\n]+\\)" content-clean)
+        (setq title (capitalize (match-string 1 content-clean))))
+       
+       ;; Pattern: "Your role is [role]"
+       ((string-match "[Yy]our role is \\(?:a\\|an\\|the\\)?\\s-*\\([^.,:;!?\n]+\\)" content-clean)
+        (setq title (capitalize (match-string 1 content-clean))))
+       
+       ;; Fallback: Use first few words
+       (t
+        (let ((words (split-string content-clean)))
+          (when words
+            (setq title (mapconcat 'identity (seq-take words 3) " "))
+            (when (> (length title) 30)
+              (setq title (concat (substring title 0 27) "...")))))))
+      
+      ;; Clean up the title
+      (when title
+        (setq title (replace-regexp-in-string "\\s-+" " " title))
+        (setq title (string-trim title))
+        (when (> (length title) 40)
+          (setq title (concat (substring title 0 37) "..."))))
+      
+      (or title "Custom Prompt"))))
+
+(defun ollama-buddy--register-system-prompt (content title source)
+  "Register system prompt CONTENT with TITLE and SOURCE metadata."
+  (when (and content (stringp content) (not (string-empty-p content)))
+    (let ((content-hash (secure-hash 'sha256 content)))
+      (puthash content-hash
+               (list :title title
+                     :source source
+                     :content content
+                     :timestamp (current-time))
+               ollama-buddy--system-prompt-registry)
+      ;; Set current metadata
+      (setq ollama-buddy--current-system-prompt-title title
+            ollama-buddy--current-system-prompt-source source))))
+
+(defun ollama-buddy--get-system-prompt-metadata (content)
+  "Get metadata for system prompt CONTENT, generating title if needed."
+  (when (and content (stringp content) (not (string-empty-p content)))
+    (let* ((content-hash (secure-hash 'sha256 content))
+           (metadata (gethash content-hash ollama-buddy--system-prompt-registry)))
+      (unless metadata
+        ;; Generate metadata if not found
+        (let ((title (ollama-buddy--extract-title-from-content content)))
+          (setq metadata (list :title title
+                               :source "manual"
+                               :content content
+                               :timestamp (current-time)))
+          (puthash content-hash metadata ollama-buddy--system-prompt-registry)))
+      metadata)))
+
+(defun ollama-buddy--update-system-prompt-display-info (content)
+  "Update display information for the current system prompt CONTENT."
+  (if (and content (not (string-empty-p content)))
+      (let ((metadata (ollama-buddy--get-system-prompt-metadata content)))
+        (setq ollama-buddy--current-system-prompt-title (plist-get metadata :title)
+              ollama-buddy--current-system-prompt-source (plist-get metadata :source)))
+    (setq ollama-buddy--current-system-prompt-title nil
+          ollama-buddy--current-system-prompt-source nil)))
+
+(defun ollama-buddy--get-prompt-content ()
+  "Extract the current prompt content from the buffer.
+Returns a cons cell (TEXT . POINT) with the prompt text and point position."
+  (save-excursion
+    (goto-char (point-max))
+    (if (re-search-backward ">> \\(?:PROMPT\\|SYSTEM PROMPT\\):" nil t)
+        (let ((start-point (point)))
+          (search-forward ":")
+          (cons (string-trim (buffer-substring-no-properties
+                              (point) (point-max)))
+                start-point))
+      (cons "" nil))))
+
+(defun ollama-buddy-set-system-prompt-with-title ()
+  "Set the current prompt as a system prompt, allowing user to specify a title."
+  (interactive)
+  (let* ((prompt-data (ollama-buddy--get-prompt-content))
+         (prompt-text (car prompt-data))
+         (title (read-string "Title for this system prompt: "
+                             (ollama-buddy--extract-title-from-content prompt-text))))
+    
+    ;; Add to history if non-empty
+    (when (and prompt-text (not (string-empty-p prompt-text)))
+      (put 'ollama-buddy--cycle-prompt-history 'history-position -1)
+      (add-to-history 'ollama-buddy--prompt-history prompt-text))
+    
+    ;; Set as system prompt with metadata
+    (setq ollama-buddy--current-system-prompt prompt-text)
+    (ollama-buddy--register-system-prompt prompt-text title "manual")
+    
+    ;; Update the UI to reflect the change
+    (ollama-buddy--prepare-prompt-area t t t)
+    (ollama-buddy--prepare-prompt-area nil nil)
+    
+    ;; Update status to show system prompt is set
+    (ollama-buddy--update-status "System prompt set")
+    (message "System prompt set: %s" title)))
+
+(defun ollama-buddy--get-system-prompt-display ()
+  "Get display text for the current system prompt."
+  (cond
+   ((and ollama-buddy--current-system-prompt
+         ollama-buddy--current-system-prompt-title)
+    (let* ((source-indicator (cond
+                              ((string= ollama-buddy--current-system-prompt-source "fabric") "F:")
+                              ((string= ollama-buddy--current-system-prompt-source "awesome") "A:")
+                              ((string= ollama-buddy--current-system-prompt-source "user") "U:")
+                              (t "")))
+           (title ollama-buddy--current-system-prompt-title))
+      (format "[%s%s]" source-indicator title)))
+   
+   (ollama-buddy--current-system-prompt
+    ;; Fallback for prompts without titles
+    (let ((auto-title (ollama-buddy--extract-title-from-content 
+                       ollama-buddy--current-system-prompt)))
+      (ollama-buddy--update-system-prompt-display-info ollama-buddy--current-system-prompt)
+      (format "[%s]" auto-title)))
+   
+   (t "")))
+
+(defun ollama-buddy--set-system-prompt-with-metadata (content title source)
+  "Set system prompt CONTENT with TITLE and SOURCE metadata."
+  (setq ollama-buddy--current-system-prompt content)
+  (ollama-buddy--register-system-prompt content title source)
+  (ollama-buddy--update-status "System prompt set"))
+
+(defun ollama-buddy-show-system-prompt-info ()
+  "Show detailed information about the current system prompt."
+  (interactive)
+  (if ollama-buddy--current-system-prompt
+      (let* ((metadata (ollama-buddy--get-system-prompt-metadata 
+                        ollama-buddy--current-system-prompt))
+             (title (plist-get metadata :title))
+             (source (plist-get metadata :source))
+             (timestamp (plist-get metadata :timestamp))
+             (buf (get-buffer-create "*System Prompt Info*")))
+        
+        (with-current-buffer buf
+          (let ((inhibit-read-only t))
+            (erase-buffer)
+            (org-mode)
+            (setq-local org-hide-emphasis-markers t)
+            (setq-local org-hide-leading-stars t)
+            
+            (insert "#+TITLE: System Prompt Information\n\n")
+            (insert (format "* Title: %s\n\n" (or title "Untitled")))
+            (insert (format "* Source: %s\n\n" (or source "Unknown")))
+            (when timestamp
+              (insert (format "* Set at: %s\n\n" 
+                              (format-time-string "%Y-%m-%d %H:%M:%S" timestamp))))
+            (insert "* Content:\n\n")
+            (insert "#+begin_example\n")
+            (insert ollama-buddy--current-system-prompt)
+            (insert "\n#+end_example\n")
+            
+            (view-mode 1)
+            (goto-char (point-min))))
+        
+        (display-buffer buf))
+    (message "No system prompt is currently set")))
+
+(defun ollama-buddy-list-system-prompt-history ()
+  "List all previously used system prompts with their titles."
+  (interactive)
+  (let ((buf (get-buffer-create "*System Prompt History*"))
+        (prompts '()))
+    
+    ;; Collect all registered prompts
+    (maphash (lambda (hash metadata)
+               (push (cons hash metadata) prompts))
+             ollama-buddy--system-prompt-registry)
+    
+    ;; Sort by timestamp (newest first)
+    (setq prompts (sort prompts
+                        (lambda (a b)
+                          (let ((time-a (plist-get (cdr a) :timestamp))
+                                (time-b (plist-get (cdr b) :timestamp)))
+                            (time-less-p time-b time-a)))))
+    
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (org-mode)
+        (setq-local org-hide-emphasis-markers t)
+        (setq-local org-hide-leading-stars t)
+        
+        (insert "#+TITLE: System Prompt History\n\n")
+        
+        (if (null prompts)
+            (insert "No system prompts in history.\n")
+          (dolist (prompt-pair prompts)
+            (let* ((metadata (cdr prompt-pair))
+                   (title (plist-get metadata :title))
+                   (source (plist-get metadata :source))
+                   (timestamp (plist-get metadata :timestamp))
+                   (content (plist-get metadata :content)))
+              
+              (insert (format "* %s (%s)\n\n" title source))
+              (when timestamp
+                (insert (format "Used: %s\n\n"
+                                (format-time-string "%Y-%m-%d %H:%M:%S" timestamp))))
+              
+              ;; Show preview of content
+              (let ((preview (if (> (length content) 200)
+                                 (concat (substring content 0 197) "...")
+                               content)))
+                (insert "#+begin_example\n")
+                (insert preview)
+                (insert "\n#+end_example\n\n")))))
+        
+        (view-mode 1)
+        (goto-char (point-min))))
+    
+    (display-buffer buf)))
+
+(defun ollama-buddy-reset-system-prompt-enhanced ()
+  "Reset the system prompt and clear associated metadata."
+  (interactive)
+  (setq ollama-buddy--current-system-prompt nil
+        ollama-buddy--current-system-prompt-title nil
+        ollama-buddy--current-system-prompt-source nil)
+  
+  ;; Update the UI to reflect the change
+  (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+    (ollama-buddy--prepare-prompt-area t))
+  
+  ;; Update status
+  (message "System prompt has been reset"))
 
 (defun ollama-buddy-clear-model-highlights ()
   "Clear all model name highlighting."
@@ -1596,12 +1860,7 @@ ACTUAL-MODEL is the model being used instead."
                                               2)))
                         (format "H%d/%d"
                                 history-count ollama-buddy-max-history-length))))
-           (system-indicator (if ollama-buddy--current-system-prompt
-                                 (let ((system-text (if (> (length ollama-buddy--current-system-prompt) 30)
-                                                        (concat (substring ollama-buddy--current-system-prompt 0 27) "...")
-                                                      ollama-buddy--current-system-prompt)))
-                                   (format "[%s]" system-text))
-                               ""))
+           (system-indicator (ollama-buddy--get-system-prompt-display))
            (params (when ollama-buddy-show-params-in-header
                      (let ((param-str
                             (mapconcat

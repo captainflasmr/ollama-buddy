@@ -383,22 +383,33 @@ of the awesome-chatgpt-prompts CSV file."
 (defun ollama-buddy-awesome-send ()
   "Apply an Awesome ChatGPT Prompt to the selected text and send to Ollama."
   (interactive)
-  (let ((system-prompt (ollama-buddy-awesome-yield-prompt))
-        (selected-text (when (use-region-p)
-                         (buffer-substring-no-properties
-                          (region-beginning) (region-end)))))
+  (unless ollama-buddy-awesome--prompts
+    (ollama-buddy-awesome-populate-prompts))
+  
+  (let* ((formatted-prompts (mapcar #'ollama-buddy-awesome--format-prompt-name
+                                    ollama-buddy-awesome--prompts))
+         (prompt-alist (cl-mapcar #'cons formatted-prompts
+                                  ollama-buddy-awesome--prompts))
+         (selected-formatted (completing-read "Awesome ChatGPT Prompt: " formatted-prompts nil t))
+         (selected-prompt (cdr (assoc selected-formatted prompt-alist)))
+         (system-prompt (plist-get selected-prompt :content))
+         (title (plist-get selected-prompt :title))
+         (selected-text (when (use-region-p)
+                          (buffer-substring-no-properties
+                           (region-beginning) (region-end)))))
     
     (unless selected-text
       (setq selected-text (read-string "Enter text to process: ")))
     
-    ;; Set the system prompt
-    (setq ollama-buddy--current-system-prompt system-prompt)
+    ;; Set the system prompt with metadata
+    (ollama-buddy--set-system-prompt-with-metadata system-prompt title "awesome")
     
     ;; Prepare the chat buffer
     (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
       (ollama-buddy--open-chat)
       (ollama-buddy--prepare-prompt-area t nil)  ;; New prompt, no content
       (insert (string-trim selected-text)))
+    
     ;; Send the request
     (ollama-buddy--send selected-text)))
 
@@ -413,15 +424,16 @@ of the awesome-chatgpt-prompts CSV file."
       (let ((inhibit-read-only t))
         (erase-buffer)
         (org-mode)
-        (insert "* Awesome ChatGPT Prompts\n\n")
+        (setq-local org-hide-emphasis-markers t)
+        (setq-local org-hide-leading-stars t)
+
+        (insert "#+TITLE: Awesome ChatGPT Prompts\n\n")
         
         (if ollama-buddy-awesome--last-sync-time
             (insert (format "Last synced: %s\n\n"
                             (format-time-string "%Y-%m-%d %H:%M:%S"
                                                 ollama-buddy-awesome--last-sync-time)))
           (insert "Never synced with GitHub repository\n\n"))
-        
-        (insert "** Available Prompts\n")
         
         (let ((current-category ""))
           (dolist (prompt ollama-buddy-awesome--prompts)
@@ -431,15 +443,14 @@ of the awesome-chatgpt-prompts CSV file."
               
               ;; Add category header if changed
               (unless (string= category current-category)
-                (insert (format "*** %s\n" (capitalize category)))
+                (insert (format "* %s\n\n" (capitalize category)))
                 (setq current-category category))
               
               ;; Prompt title and content preview
-              (insert (format "**** %s\n" title))
-              (if (> (length content) 250)
-                  (insert (concat (substring content 0 247) "...\n"))
-                (insert (concat content "\n")))
+              (insert (format "** %s\n\n" title))
+              (insert (concat content "\n\n"))
               (goto-char (point-max))))))
+      (my/org-hide-sublevels 2)
       (view-mode 1)
       (goto-char (point-min)))
     (display-buffer buf)))
@@ -480,12 +491,24 @@ of the awesome-chatgpt-prompts CSV file."
 (defun ollama-buddy-awesome-set-system-prompt ()
   "Set the system prompt to an Awesome ChatGPT Prompt without sending a request."
   (interactive)
-  (let ((system-prompt (ollama-buddy-awesome-yield-prompt)))
-    (setq ollama-buddy--current-system-prompt system-prompt)
-    (message "System prompt set to Awesome ChatGPT Prompt")
+  (unless ollama-buddy-awesome--prompts
+    (ollama-buddy-awesome-populate-prompts))
+  
+  (let* ((formatted-prompts (mapcar #'ollama-buddy-awesome--format-prompt-name
+                                    ollama-buddy-awesome--prompts))
+         (prompt-alist (cl-mapcar #'cons formatted-prompts
+                                  ollama-buddy-awesome--prompts))
+         (selected-formatted (completing-read "Awesome ChatGPT Prompt: " formatted-prompts nil t))
+         (selected-prompt (cdr (assoc selected-formatted prompt-alist)))
+         (system-prompt (plist-get selected-prompt :content))
+         (title (plist-get selected-prompt :title)))
+    
+    ;; Use the enhanced system prompt setting function
+    (ollama-buddy--set-system-prompt-with-metadata system-prompt title "awesome")
+    
+    (message "System prompt set to Awesome ChatGPT Prompt: %s" title)
     (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-      (ollama-buddy--open-chat))
-    (ollama-buddy--update-status "Awesome prompt set")))
+      (ollama-buddy--open-chat))))
 
 ;; Initialize on load if configured
 (when ollama-buddy-awesome-update-on-startup

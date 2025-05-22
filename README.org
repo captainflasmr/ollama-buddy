@@ -96,6 +96,29 @@ See *Screenshots / Demos* section for more videos/demonstration.
 
 * Whats New
 
+** <2025-05-22> *0.12.0*
+
+Full system prompt in the status bar replaced with a more meaningful simple role title
+
+- Added system prompt metadata tracking with title, source, and timestamp registry
+- Implemented automatic title extraction and unified completing-read interface
+- Enhanced fabric/awesome prompt integration with proper metadata handling
+- Improved transient menu organization and org-mode formatting with folding
+- Added system prompt history display and better error handling for empty files
+- Transient menu has been simplified and reorganised
+
+Previously, the header status bar would show truncated system prompt text like =[You are a helpful assistant wh...]=, making it difficult to quickly identify which prompt was active. Now, the display shows meaningful role titles with source indicators:
+
+- =[F:Code Reviewer]= - Fabric pattern
+- =[A:Linux Terminal]= - Awesome ChatGPT prompt  
+- =[U:Writing Assistant]= - User-defined prompt
+
+The system now intelligently extracts titles from prompt content by recognizing common patterns like "You are a...", "Act as...", or "I want you to act as...". When these patterns aren't found, it generates a concise title from the first few words.
+
+Behind the scenes, Ollama Buddy now maintains a registry of all system prompts with their titles, sources, and timestamps. This enables new features like system prompt history viewing and better organization across Fabric patterns, Awesome ChatGPT prompts, and user-defined prompts.
+
+The result is a cleaner interface that makes it immediately clear which role your AI assistant is currently embodying, without cluttering the status bar with long, truncated text.
+
 ** <2025-05-21> *0.11.1*
 
 Quite a bit of refactoring to generally make this project more maintainable and I have added a starter kit of user prompts.

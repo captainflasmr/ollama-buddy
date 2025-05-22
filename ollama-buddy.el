@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 0.11.1
+;; Version: 0.12.0
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -781,7 +781,7 @@ PROPS should be a sequence of property-value pairs."
     (ollama-buddy--prepare-prompt-area t))
   
   ;; Update status
-  (ollama-buddy--update-status "System prompt reset")
+  (ollama-buddy--update-status "reset")
   (message "System prompt has been reset"))
 
 (defun ollama-buddy-show-raw-model-info (&optional model)
@@ -862,8 +862,9 @@ PROPS should be a sequence of property-value pairs."
       (put 'ollama-buddy--cycle-prompt-history 'history-position -1)
       (add-to-history 'ollama-buddy--prompt-history prompt-text))
     
-    ;; Set as system prompt
+    ;; Set as system prompt with auto-generated title
     (setq ollama-buddy--current-system-prompt prompt-text)
+    (ollama-buddy--update-system-prompt-display-info prompt-text)
     
     ;; Update the UI to reflect the change
     (ollama-buddy--prepare-prompt-area t t t)
@@ -871,10 +872,8 @@ PROPS should be a sequence of property-value pairs."
     
     ;; Update status to show system prompt is set
     (ollama-buddy--update-status "System prompt set")
-    (message "System prompt set: %s"
-             (if (> (length prompt-text) 50)
-                 (concat (substring prompt-text 0 47) "...")
-               prompt-text))))
+    (message "System prompt set: %s" 
+             (or ollama-buddy--current-system-prompt-title "Custom Prompt"))))
 
 (defun ollama-buddy-reset-system-prompt ()
   "Reset the system prompt to default (none)."
@@ -886,7 +885,7 @@ PROPS should be a sequence of property-value pairs."
     (ollama-buddy--prepare-prompt-area t))
   
   ;; Update status
-  (ollama-buddy--update-status "System prompt reset")
+  (ollama-buddy--update-status "reset")
   (message "System prompt has been reset"))
 
 (defun ollama-buddy--get-prompt-content ()
@@ -1565,7 +1564,8 @@ With prefix argument ALL-MODELS, clear history for all models."
             (progn
               (insert ollama-buddy--current-system-prompt))
           (insert "No system prompt is currently set.")))
-      (view-mode 1))
+      (view-mode 1)
+      (goto-char (point-min)))
     (display-buffer buf)))
 
 (defun ollama-buddy--initialize-chat-buffer ()
@@ -2278,8 +2278,8 @@ those images will be included in the request."
       (insert "Loading response..."))
     
     (ollama-buddy--update-status (if has-images
-                                     "Vision Model Processing..."
-                                   "Model Processing...")
+                                     "Vision Processing..."
+                                   "Processing...")
                                  original-model model)
 
     (when (and ollama-buddy--active-process
