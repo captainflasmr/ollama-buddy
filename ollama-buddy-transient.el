@@ -87,7 +87,7 @@
     ("s" "User Defined" ollama-buddy-transient-user-prompts-menu)
     ("f" "Fabric" ollama-buddy-transient-fabric-menu)
     ("w" "Awesome" ollama-buddy-transient-awesome-menu)
-    ("C-s" "Show" ollama-buddy-show-system-prompt)
+    ("C-s" "Show" ollama-buddy-show-system-prompt-info)
     ("r" "Reset" ollama-buddy-reset-system-prompt)
     ]
    

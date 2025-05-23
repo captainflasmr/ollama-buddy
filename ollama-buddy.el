@@ -243,14 +243,6 @@ with an empty messages array and keep_alive set to 0."
           (beginning-of-line)))
     (beginning-of-line)))
 
-(defun ollama-buddy-advice-beginning-of-line (orig-fun &rest args)
-  "Advice to modify beginning-of-line behavior with ORIG-FUN Optional ARGS ."
-  (if (and (boundp 'ollama-buddy-mode)
-           ollama-buddy-mode
-           (eq (current-buffer) (get-buffer ollama-buddy--chat-buffer)))
-      (ollama-buddy-beginning-of-prompt)
-    (apply orig-fun args)))
-
 (defun ollama-buddy-history-search ()
   "Search through the prompt history using a `completing-read' interface."
   (interactive)
@@ -503,31 +495,6 @@ with an empty messages array and keep_alive set to 0."
       (message "Viewing mode. Press C-x C-q to edit, C-c C-k to cancel")))
     (goto-char (point-min))))
 
-(defun ollama-buddy-history-save-model (model)
-  "Save the edited history for MODEL back to variable."
-  (interactive)
-  (unless (and (boundp 'ollama-buddy-editing-history)
-               ollama-buddy-editing-history)
-    (user-error "Not editing history for model %s" model))
-  
-  (condition-case err
-      (let ((edited-history (read (buffer-string))))
-        ;; Validate the edited history
-        (unless (listp edited-history)
-          (user-error "Invalid history format: must be a list of message alists"))
-        
-        ;; Update the specific model's history
-        (puthash model edited-history ollama-buddy--conversation-history-by-model)
-
-        (ollama-buddy-history-edit-model)
-        
-        ;; Provide feedback and clean up
-        (message "History for %s saved successfully" model)
-        ;; (kill-buffer)
-        (ollama-buddy--update-status (format "History for %s Updated" model)))
-    (error
-     (message "Error saving history: %s" (error-message-string err)))))
-
 (defun ollama-buddy-toggle-interface-level ()
   "Toggle between basic and advanced interface levels."
   (interactive)
@@ -720,7 +687,9 @@ PROPS should be a sequence of property-value pairs."
                       (length ollama-buddy-params-modified)
                       (if (zerop (length ollama-buddy-params-modified))
                           " (all default values)"
-                        (format ": %s" (mapcar #'symbol-name ollama-buddy-params-modified))))))
+                        (format ": %s" (mapcar #'symbol-name ollama-buddy-params-modified)))))
+      (goto-char (point-min))
+      (view-mode 1))
     (display-buffer buf)))
 
 (defun ollama-buddy-toggle-params-in-header ()
@@ -731,44 +700,6 @@ PROPS should be a sequence of property-value pairs."
   (ollama-buddy--update-status ollama-buddy--status)
   (message "Parameters in header: %s"
            (if ollama-buddy-show-params-in-header "enabled" "disabled")))
-
-(defun ollama-buddy-set-suffix ()
-  "Set the current prompt as a suffix."
-  (interactive)
-  (let* ((prompt-data (ollama-buddy--get-prompt-content))
-         (prompt-text (car prompt-data)))
-    
-    ;; Add to history if non-empty
-    (when (and prompt-text (not (string-empty-p prompt-text)))
-      (put 'ollama-buddy--cycle-prompt-history 'history-position -1)
-      (add-to-history 'ollama-buddy--prompt-history prompt-text))
-    
-    ;; Set as suffix
-    (setq ollama-buddy--current-suffix prompt-text)
-    
-    ;; Update the UI to reflect the change
-    (ollama-buddy--prepare-prompt-area t t nil t)
-    (ollama-buddy--prepare-prompt-area nil nil)
-    
-    ;; Update status to show suffix is set
-    (ollama-buddy--update-status "Suffix set")
-    (message "Suffix set: %s"
-             (if (> (length prompt-text) 50)
-                 (concat (substring prompt-text 0 47) "...")
-               prompt-text))))
-
-(defun ollama-buddy-reset-suffix ()
-  "Reset the suffix to default (none)."
-  (interactive)
-  (setq ollama-buddy--current-suffix nil)
-  
-  ;; Update the UI to reflect the change
-  (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-    (ollama-buddy--prepare-prompt-area t))
-  
-  ;; Update status
-  (ollama-buddy--update-status "Suffix reset")
-  (message "Suffix has been reset"))
 
 (defun ollama-buddy-reset-all-prompts ()
   "Reset both system prompt and suffix to default (none)."
@@ -1160,6 +1091,7 @@ Returns the full prompt text ready to be sent."
                            ", "))
                   (insert "\n"))
                 (insert "\n")))))
+        (goto-char (point-min))
         (view-mode 1)))
     (display-buffer buf)))
 
@@ -1311,6 +1243,7 @@ With prefix argument ALL-MODELS, clear history for all models."
                                                 (plist-get info :timestamp))))
                   (insert (format "  *%s*: %d tokens (%.2f t/s) at %s\n"
                                   model tokens rate time))))))
+          (goto-char (point-min))
           (view-mode 1))))
     (display-buffer buf)))
 
@@ -1321,68 +1254,6 @@ With prefix argument ALL-MODELS, clear history for all models."
   (ollama-buddy--update-status (concat "Stats in chat " (if ollama-buddy-display-token-stats "enabled" "disabled")))
   (message "Ollama token statistics display: %s"
            (if ollama-buddy-display-token-stats "enabled" "disabled")))
-
-(defun ollama-buddy--format-models-with-letters-plain ()
-  "Format models with letter assignments for display without color properties."
-  (when-let* ((models-alist ollama-buddy--model-letters)
-              (total (length models-alist))
-              (rows (ceiling (/ total 2.0))))
-    (let* ((formatted-pairs
-            (cl-loop for row below rows
-                     collect
-                     (cl-loop for col below 2
-                              for idx = (+ (* col rows) row)
-                              when (< idx total)
-                              collect (nth idx models-alist))))
-           (max-width (apply #'max
-                             (mapcar (lambda (pair)
-                                       (length (cdr pair)))
-                                     models-alist)))
-           (format-str (format "  (%%c) %%-%ds  %%s" max-width)))
-      (concat (mapconcat
-               (lambda (row)
-                 (format format-str
-                         (caar row)
-                         (if (cdar row) (cdar row) "")
-                         (if (cdr row)
-                             (format "(%c) %s"
-                                     (caadr row)
-                                     (if (cdadr row) (cdadr row) ""))
-                           "")))
-               formatted-pairs
-               "\n")
-              "\n\n"))))
-
-(defun ollama-buddy--format-models-with-letters ()
-  "Format models with letter assignments for display."
-  (when-let* ((models-alist ollama-buddy--model-letters)
-              (total (length models-alist))
-              (rows (ceiling (/ total 2.0))))
-    (let* ((formatted-pairs
-            (cl-loop for row below rows
-                     collect
-                     (cl-loop for col below 2
-                              for idx = (+ (* col rows) row)
-                              when (< idx total)
-                              collect (nth idx models-alist))))
-           (max-width (apply #'max
-                             (mapcar (lambda (pair)
-                                       (length (cdr pair)))
-                                     models-alist)))
-           (format-str (format "  (%%s) %%-%ds  %%s" max-width)))
-      (concat (mapconcat
-               (lambda (row)
-                 (format format-str
-                         (car (car row))
-                         (if (cdar row)
-                             (cdar row)
-                           "")
-                         (if (cdr row)
-                             (cdadr row)
-                           "")))
-               formatted-pairs
-               "\n")
-              "\n\n"))))
 
 (defun ollama-buddy-roles--get-available-roles ()
   "Scan the preset directory and extract role names from filenames."
@@ -1535,38 +1406,6 @@ With prefix argument ALL-MODELS, clear history for all models."
             (dired ollama-buddy-roles-directory))
         (message "Directory not created."))
     (dired ollama-buddy-roles-directory)))
-
-(defun ollama-buddy--monitor-connection ()
-  "Monitor Ollama connection status and update UI accordingly."
-  (unless (ollama-buddy--ollama-running)
-    (when (and ollama-buddy--active-process
-               (process-live-p ollama-buddy--active-process))
-      (delete-process ollama-buddy--active-process)
-      (setq ollama-buddy--active-process nil)
-      (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-        (let ((inhibit-read-only t))
-          (goto-char (point-max))
-          (insert "\n\n[Connection Lost - Request Interrupted]")))))
-  (ollama-buddy--update-status ollama-buddy--status))
-
-(defun ollama-buddy-show-system-prompt ()
-  "Display the current system prompt in a buffer."
-  (interactive)
-  (let ((buf (get-buffer-create "*Ollama System Prompt*")))
-    (with-current-buffer buf
-      (let ((inhibit-read-only t))
-        (org-mode)
-        (setq-local org-hide-emphasis-markers t)
-        (setq-local org-hide-leading-stars t)
-        (erase-buffer)
-        (visual-line-mode 1)
-        (if ollama-buddy--current-system-prompt
-            (progn
-              (insert ollama-buddy--current-system-prompt))
-          (insert "No system prompt is currently set.")))
-      (view-mode 1)
-      (goto-char (point-min)))
-    (display-buffer buf)))
 
 (defun ollama-buddy--initialize-chat-buffer ()
   "Initialize the chat buffer and check Ollama status."
@@ -2122,7 +1961,8 @@ With prefix argument ALL-MODELS, clear history for all models."
                               (plist-get breakdown :attachment-tokens)))
               (insert (format "  Current prompt   : %d tokens\n" 
                               (plist-get breakdown :prompt-tokens))))))
-        
+
+        (goto-char (point-min))
         (view-mode 1)))
     (display-buffer buf)))
 
@@ -2722,19 +2562,6 @@ Modifies the variable in place."
                  (insert "\nError creating model: " status)))
                (insert "\n")))))))))
 
-(defun ollama-buddy-dired-import-gguf ()
-  "Import the GGUF file at point in Dired into Ollama."
-  (interactive)
-  (unless (eq major-mode 'dired-mode)
-    (user-error "This command only works in Dired mode"))
-  
-  (let ((file (dired-get-filename nil t)))
-    (if file
-        (if (string-match-p "\\.gguf$" file)
-            (ollama-buddy-import-gguf-file file)
-          (user-error "File is not a GGUF file: %s" file))
-      (user-error "No file at point"))))
-
 (defun ollama-buddy-manage-models ()
   "Update the model management interface to include unload capabilities."
   (interactive)
@@ -2849,7 +2676,9 @@ Modifies the variable in place."
         (insert-text-button
          "[Pull Model from Hub]"
          'action (lambda (_) (call-interactively #'ollama-buddy-pull-model))
-         'help-echo "Pull a model from Ollama Hub")))
+         'help-echo "Pull a model from Ollama Hub"))
+      (goto-char (point-min))
+      (view-mode 1))
     (display-buffer buf)))
 
 (defun ollama-buddy-select-model (model)
@@ -2861,43 +2690,6 @@ Modifies the variable in place."
   (ollama-buddy--prepare-prompt-area)
   (goto-char (point-max))
   (ollama-buddy--update-status "Idle"))
-
-(defun ollama-buddy-show-model-info (model)
-  "Display detailed information about MODEL."
-  (let ((endpoint "/api/show")
-        (payload (json-encode `((name . ,model))))
-        (operation-id (gensym "show-")))
-
-    (ollama-buddy--register-background-operation
-     operation-id
-     (format "Fetching info for %s" model))
-    
-    (ollama-buddy--make-request-async
-     endpoint
-     "POST"
-     payload
-     (lambda (status result)
-       (if (plist-get status :error)
-           (progn
-             (message "Error fetching model info: %s" (cdr (plist-get status :error)))
-             (ollama-buddy--complete-background-operation
-              operation-id
-              (format "Error fetching %s" model)))
-         (let ((buf (get-buffer-create "*Ollama Model Info*")))
-           (with-current-buffer buf
-             (let ((inhibit-read-only t))
-               (erase-buffer)
-               (insert (format "Ollama Model Information: %s\n\n" model))
-               (insert "#+begin_src json\n")
-               (let ((json-start (point)))
-                 (insert (json-encode result))
-                 (json-pretty-print json-start (point)))
-               (insert "\n#+end_src")
-               (view-mode 1)))
-           (display-buffer buf)))
-       (ollama-buddy--complete-background-operation
-        operation-id
-        (format "Model %s info displayed" model))))))
 
 (defun ollama-buddy-pull-model (model)
   "Pull or update MODEL from Ollama Hub asynchronously.
@@ -3052,7 +2844,8 @@ When the operation completes, CALLBACK is called with no arguments if provided."
         (insert "use_mmap: Use memory-mapped files\n")
         (insert "use_mlock: Lock model weights in memory\n")
         (insert "num_thread: Number of CPU threads to use\n")
-        
+
+        (goto-char (point-min))
         (view-mode 1)))
     (display-buffer buf)))
 
@@ -3205,6 +2998,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
               (insert (format "\n%s\n\n" 
                               (substring (plist-get attachment :content) 0 
                                          (length (plist-get attachment :content)))))))
+          (goto-char (point-min))
           (view-mode 1)
           (org-content)))
       (display-buffer buf))))
@@ -3254,17 +3048,6 @@ When the operation completes, CALLBACK is called with no arguments if provided."
       (message "Attached %d files to Ollama chat" 
                (length (cl-remove-if-not #'file-regular-p marked-files))))))
 
-(defun ollama-buddy-dired-attach-file-at-point ()
-  "Attach the file at point to Ollama chat."
-  (interactive)
-  (unless (eq major-mode 'dired-mode)
-    (user-error "This command only works in Dired mode"))
-  
-  (let ((file (dired-get-filename nil t)))
-    (if (and file (file-regular-p file))
-        (ollama-buddy-attach-file file)
-      (user-error "No file at point or file is not regular"))))
-
 (defvar ollama-buddy-mode-map
   (let ((map (make-sparse-keymap)))
     
@@ -3283,7 +3066,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     ;; Prompts section keybindings
     (define-key map (kbd "C-c l") (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))
     (define-key map (kbd "C-c s") #'ollama-buddy-transient-user-prompts-menu)
-    (define-key map (kbd "C-c C-s") #'ollama-buddy-show-system-prompt)
+    (define-key map (kbd "C-c C-s") #'ollama-buddy-show-system-prompt-info)
     (define-key map (kbd "C-c r") #'ollama-buddy-reset-system-prompt)
     (define-key map (kbd "C-c b") #'ollama-buddy-menu)
     

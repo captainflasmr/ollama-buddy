@@ -232,9 +232,9 @@ Returns a plist with :category and :title, or nil if not a valid format."
                         (content (ollama-buddy-user-prompts--read-prompt-content file)))
                     (insert (format "** %s\n" title)"\n")
                     (insert (concat content "\n\n"))))))))
-        (my/org-hide-sublevels 2)
+        (goto-char (point-min))
         (view-mode 1)
-        (goto-char (point-min)))
+        (org-content))
     (display-buffer buf))))
 
 ;;;###autoload

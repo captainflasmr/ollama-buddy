@@ -496,13 +496,6 @@ Returns non-nil if any remote models are available."
   (and (boundp 'ollama-buddy-remote-models)
        ollama-buddy-remote-models))
 
-(defun ollama-buddy--get-effective-marker-prefix ()
-  "Get the effective marker prefix based on available remote models.
-Returns empty string if no remote models are available."
-  (if (ollama-buddy--should-use-marker-prefix)
-      ollama-buddy-marker-prefix
-    ""))
-
 (defun ollama-buddy--get-full-model-name (model)
   "Get the full display name for MODEL with prefix if needed."
   (if (ollama-buddy--should-use-marker-prefix)
@@ -587,14 +580,6 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
 (defvar ollama-buddy-roles--current-role "default"
   "The currently active ollama-buddy role.")
 
-(defvar ollama-buddy-role-creator--command-template
-  '((key . nil)
-    (description . nil)
-    (model . nil)
-    (prompt . nil)
-    (system . nil))
-  "Template for a new command definition.")
-
 (defvar ollama-buddy--history-edit-buffer "*Ollama History Edit*"
   "Buffer name for editing Ollama conversation history.")
 
@@ -667,9 +652,6 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
 (defvar ollama-buddy--current-model nil
   "Current model being used for Ollama requests.")
 
-(defvar ollama-buddy--connection-timer nil
-  "Timer for checking Ollama connection status.")
-
 (defvar ollama-buddy--chat-buffer "*Ollama Buddy Chat*"
   "Chat interaction buffer.")
 
@@ -695,15 +677,6 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
   "Map of model prefixes to handler functions.")
 
 ;; Core utility functions
-(defun my/org-hide-sublevels (level)
-  "Show Org headings up to LEVEL. Hides deeper levels and their content.
-Works across Org mode versions."
-  (interactive "nHide sublevels deeper than: ")
-  (unless (derived-mode-p 'org-mode)
-    (error "Not in Org mode"))
-  (save-excursion
-    (goto-char (point-min))
-    (org-content level)))
 
 (defun ollama-buddy--extract-title-from-content (content)
   "Extract a meaningful title from system prompt CONTENT."
@@ -882,74 +855,6 @@ Returns a cons cell (TEXT . POINT) with the prompt text and point position."
         
         (display-buffer buf))
     (message "No system prompt is currently set")))
-
-(defun ollama-buddy-list-system-prompt-history ()
-  "List all previously used system prompts with their titles."
-  (interactive)
-  (let ((buf (get-buffer-create "*System Prompt History*"))
-        (prompts '()))
-    
-    ;; Collect all registered prompts
-    (maphash (lambda (hash metadata)
-               (push (cons hash metadata) prompts))
-             ollama-buddy--system-prompt-registry)
-    
-    ;; Sort by timestamp (newest first)
-    (setq prompts (sort prompts
-                        (lambda (a b)
-                          (let ((time-a (plist-get (cdr a) :timestamp))
-                                (time-b (plist-get (cdr b) :timestamp)))
-                            (time-less-p time-b time-a)))))
-    
-    (with-current-buffer buf
-      (let ((inhibit-read-only t))
-        (erase-buffer)
-        (org-mode)
-        (setq-local org-hide-emphasis-markers t)
-        (setq-local org-hide-leading-stars t)
-        
-        (insert "#+TITLE: System Prompt History\n\n")
-        
-        (if (null prompts)
-            (insert "No system prompts in history.\n")
-          (dolist (prompt-pair prompts)
-            (let* ((metadata (cdr prompt-pair))
-                   (title (plist-get metadata :title))
-                   (source (plist-get metadata :source))
-                   (timestamp (plist-get metadata :timestamp))
-                   (content (plist-get metadata :content)))
-              
-              (insert (format "* %s (%s)\n\n" title source))
-              (when timestamp
-                (insert (format "Used: %s\n\n"
-                                (format-time-string "%Y-%m-%d %H:%M:%S" timestamp))))
-              
-              ;; Show preview of content
-              (let ((preview (if (> (length content) 200)
-                                 (concat (substring content 0 197) "...")
-                               content)))
-                (insert "#+begin_example\n")
-                (insert preview)
-                (insert "\n#+end_example\n\n")))))
-        
-        (view-mode 1)
-        (goto-char (point-min))))
-    
-    (display-buffer buf)))
-
-(defun ollama-buddy-reset-system-prompt-enhanced ()
-  "Reset the system prompt and clear associated metadata."
-  (interactive)
-  (setq ollama-buddy--current-system-prompt nil
-        ollama-buddy--current-system-prompt-title nil
-        ollama-buddy--current-system-prompt-source nil)
-  
-  ;; Update the UI to reflect the change
-  (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-    (ollama-buddy--prepare-prompt-area t))
-  
-  ;; Update status
-  (message "System prompt has been reset"))
 
 (defun ollama-buddy-clear-model-highlights ()
   "Clear all model name highlighting."
@@ -1284,21 +1189,6 @@ please run =ollama serve=\n\n")
           (setq result (concat result (format "\\u%04X" char)))))
       (setq i (1+ i)))
     result))
-
-(defun ollama-buddy-fix-encoding-issues (string)
-  "Fix common encoding issues with STRING."
-  (let* ((string (replace-regexp-in-string "â" "—" string))      ;; em dash
-         (string (replace-regexp-in-string "" "" string)) ;; alternative em dash
-         (string (replace-regexp-in-string "" "" string)) ;; en dash
-         (string (replace-regexp-in-string "â€œ" "\"" string))    ;; left double quote
-         (string (replace-regexp-in-string "â€" "\"" string))     ;; right double quote
-         (string (replace-regexp-in-string "â€˜" "'" string))     ;; left single quote
-         (string (replace-regexp-in-string "â€™" "'" string))     ;; right single quote
-         (string (replace-regexp-in-string "â€¦" "…" string))     ;; ellipsis
-         (string (replace-regexp-in-string "Ã" "E" string))   ;; capital E with acute accent
-         (string (replace-regexp-in-string "Ã©" "e" string))   ;; lowercase e with acute accent
-         (string (replace-regexp-in-string "â€¢" "•" string)))    ;; bullet point
-    string))
 
 (defun ollama-buddy--register-background-operation (operation-id description)
   "Register a new background OPERATION-ID with DESCRIPTION."

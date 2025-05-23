@@ -450,9 +450,9 @@ of the awesome-chatgpt-prompts CSV file."
               (insert (format "** %s\n\n" title))
               (insert (concat content "\n\n"))
               (goto-char (point-max))))))
-      (my/org-hide-sublevels 2)
+      (goto-char (point-min))
       (view-mode 1)
-      (goto-char (point-min)))
+      (org-content))
     (display-buffer buf)))
 
 (defun ollama-buddy-awesome-show-prompt (formatted-name)

@@ -363,9 +363,9 @@ Returns the first paragraph (up to 250 chars) as a description."
                   (ollama-buddy-fabric--extract-description-from-system pattern))
                  "\n\n"))
               (goto-char (point-max))))))
-      (my/org-hide-sublevels 2)
+      (goto-char (point-min))
       (view-mode 1)
-      (goto-char (point-min)))
+      (org-content))
     (display-buffer buf)))
 
 (defun ollama-buddy-fabric-show-pattern (pattern)
