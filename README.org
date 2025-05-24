@@ -1197,7 +1197,7 @@ https://github.com/captainflasmr/ollama-buddy
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_019.gif]]
 
-** 020 Ollama Buddy - Attaching files to the chat buffer #ollama
+** 020 Ollama Buddy - Attaching files to the chat buffer #emacs #ollama
 
 Demonstrating the Emacs package ollama-buddy, providing a convenient way to integrate Ollama's local LLM capabilities.
 
@@ -1220,7 +1220,24 @@ https://github.com/captainflasmr/ollama-buddy
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_020.gif]]
 
+** 021 Ollama Buddy - Using a vision model to extract some text #emacs #ollama
 
+Demonstrating the Emacs package ollama-buddy, providing a convenient way to integrate Ollama's local LLM capabilities.
+
+switch to use gemma3:4b
+
+Open the image with the text
+
+Copy the link, paste into the chat buffer and then lets see if the text is correctly extracted!
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_021.gif]]
 
 * Installation
 
@@ -2406,15 +2423,16 @@ All interactive functions available in ollama-buddy are listed in the original R
 #+RESULTS:
 | TODO                                                                         | DOING                                                  | DONE                                                                  |
 |------------------------------------------------------------------------------+--------------------------------------------------------+-----------------------------------------------------------------------|
-| Modifying a parameter internal defaults would flag as not modified           | Kill online AI process with cancel request             | chat ollama names to include prefix                                   |
-| transient-setup: Key sequence 1 0 starts with non-prefix key 1               | GGUF to use new syncing option                         | Still some encoding issues on returns from online AI                  |
-| No streaming with hiding reasoning corrupts output                           | sometimes chat output with filter is getting clobbered | Conversation history to display with Claude/ChatGPT                   |
+| Vision image with spaces not processed as image                              | Kill online AI process with cancel request             | Save system prompts as part of session                                |
+| Modifying a parameter internal defaults would flag as not modified           | GGUF to use new syncing option                         | chat ollama names to include prefix                                   |
+| transient-setup: Key sequence 1 0 starts with non-prefix key 1               | sometimes chat output with filter is getting clobbered | Still some encoding issues on returns from online AI                  |
+| No streaming with hiding reasoning corrupts output                           |                                                        | Conversation history to display with Claude/ChatGPT                   |
 | Claude request and connection can sometimes take time and it blocks!         |                                                        | I think some hard coded Claude models currently don't work            |
 | Pushing hundreds or even thousands of lines to the chat buffer takes a while |                                                        | register contents to be converted to org, currently it is in markdown |
 | ChatGPT request/response too long                                            |                                                        | =C-a= beginning-of-line to jump to prompt start like comint           |
 | Check tags caching                                                           |                                                        | As shell generally C-n to end of list to clear prompt history         |
-| Save system prompts as part of session                                       |                                                        | Add Texinfo to MELPA recipe                                           |
-| keybindings in ollama chat buffer are reserved                               |                                                        | System prompt not cleared on new session                              |
+| keybindings in ollama chat buffer are reserved                               |                                                        | Add Texinfo to MELPA recipe                                           |
+|                                                                              |                                                        | System prompt not cleared on new session                              |
 |                                                                              |                                                        | Remove fabric from Commands transient menu                            |
 |                                                                              |                                                        | External AI to copy to register                                       |
 |                                                                              |                                                        | First request with no chat buffer fails                               |
@@ -2426,6 +2444,8 @@ All interactive functions available in ollama-buddy are listed in the original R
 For some reason this is more difficult than it looks
 
 ** DOING sometimes chat output with filter is getting clobbered
+
+** TODO Vision image with spaces not processed as image
 
 ** TODO Modifying a parameter internal defaults would flag as not modified
 
