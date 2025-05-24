@@ -906,7 +906,7 @@ The transient menu can be customized by modifying the =transient-define-prefix= 
 
 Note that all the demos are in real time.
 
-** youtube
+** Ollama Buddy - youtube #emacs #ollama
 
 Also these videos will all be uploaded to a youtube channel:
 
@@ -921,7 +921,15 @@ https://github.com/captainflasmr/ollama-buddy
 
 #emacs #ollama
 
-** 001 First Steps
+*** Display setup
+
+ (setq font-general "Source Code Pro 15")
+
+ theme : doom-oceanic-next
+
+** 001 Ollama Buddy - First Steps #emacs #ollama
+
+Demonstrating the Emacs package ollama-buddy, providing a convenient way to integrate Ollama's local LLM capabilities.
 
 - Starting with model : llama3.2:1b
 - Show menu activation C-c o =ollama-buddy-menu=
@@ -931,32 +939,53 @@ https://github.com/captainflasmr/ollama-buddy
 - From this demo README file, select the following text and send to chat buffer:
   What is the capital of France?
 
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
 #+attr_org: :width 300px
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_001.gif]]
 
-** 002 Swap Models
+** 002 Ollama Buddy - Swap Models #emacs #ollama
+
+Demonstrating the Emacs package ollama-buddy, providing a convenient way to integrate Ollama's local LLM capabilities.
 
 - C-c m to swap to differing models from chat buffer
 - Select models from the intro message
 - Swap models from the transient menu
 - PROMPT:: how many fingers do I have?
 
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
 #+attr_org: :width 300px
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_002.gif]]
 
-** 003 From Other Buffers
+** 003 Ollama Buddy - From Other Buffers #emacs #ollama
+
+Demonstrating the Emacs package ollama-buddy, providing a convenient way to integrate Ollama's local LLM capabilities.
 
 the quick brown fox jumps over the lazy dog
 - Select individual words for dictionary menu items
 - Select whole sentence and convert to uppercase
 
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
 #+attr_org: :width 300px
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_003.gif]]
 
-** 004 Coding - Writing a Hello World! program with increasingly advanced models
+** 004 Coding - Ollama Buddy - Writing a Hello World! program with increasingly advanced models #emacs #ollama
+
+Demonstrating the Emacs package ollama-buddy, providing a convenient way to integrate Ollama's local LLM capabilities.
 
 - PROMPT:: can you write a hello world program in Ada?
 - switch models to the following and check differing output:
@@ -964,15 +993,27 @@ the quick brown fox jumps over the lazy dog
   - qwen2.5-coder:3b
   - qwen2.5-coder:7b
 
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
 #+attr_org: :width 300px
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_004.gif]]
 
-** 005 006 Roald Dahl to Buffy! using a custom menu - just for fun!
+** 005 006 Ollama Buddy - Roald Dahl to Buffy! using a custom menu - just for fun! #emacs #ollama
+
+Demonstrating the Emacs package ollama-buddy, providing a convenient way to integrate Ollama's local LLM capabilities.
 
 In fairy-tales, witches always wear silly black hats and black coats, and they ride on broomsticks. But this is not a fairy-tale. This is about REAL WITCHES.
 
 Lets change roles into a Buffy preset and have some fun!
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
 
 - *Cordelia burn*
 
@@ -986,33 +1027,56 @@ Lets change roles into a Buffy preset and have some fun!
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_006.gif]]
 
-** 007 Multishot
+** 007 Ollama Buddy - Multishot #emacs #ollama
+
+Demonstrating the Emacs package ollama-buddy, providing a convenient way to integrate Ollama's local LLM capabilities.
 
 - PROMPT:: how many fingers do I have?
 - send to multiple models, any difference in output?
 - Also they are now available in the equivalent letter named registers, so lets pull those registers!
 
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
 #+attr_org: :width 300px
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_007.gif]]  
 
-** 008 Role Switching
+** 008 Ollama Buddy - Role Switching #emacs #ollama
+
+Demonstrating the Emacs package ollama-buddy, providing a convenient way to integrate Ollama's local LLM capabilities.
 
 Show the changing of roles and how they affect the menu and hence the commands available.
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
 
 #+attr_org: :width 300px
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_008.gif]]  
 
-** 009 Prompt History
+** 009 Ollama Buddy - Prompt History #emacs #ollama
+
+Demonstrating the Emacs package ollama-buddy, providing a convenient way to integrate Ollama's local LLM capabilities.
 
 Enter a few queries to test the system, then navigate back through your previous inputs, switch models, and resubmit to compare results.
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
 
 #+attr_org: :width 300px
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_009.gif]]  
 
-** 012 Sessions/History and recall
+** 012 Ollama Buddy - Sessions/History and recall #emacs #ollama
+
+Demonstrating the Emacs package ollama-buddy, providing a convenient way to integrate Ollama's local LLM capabilities.
 
 - Ask:
 What is the capital of France?
@@ -1026,11 +1090,18 @@ and of Germany?
 - Load Session
 and of Sweden?
 
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
 #+attr_org: :width 300px
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_012.gif]]
 
-** 015 System prompt support
+** 015 Ollama Buddy - System prompt support #emacs #ollama
+
+Demonstrating the Emacs package ollama-buddy, providing a convenient way to integrate Ollama's local LLM capabilities.
 
 Set the system message to:
 You must always respond in a single sentence.
@@ -1039,16 +1110,93 @@ Tell me why Emacs is so great!
 Tell me about black holes
 clear the system message and ask again, the reponses should now be more verbose!!
 
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
 #+attr_org: :width 300px
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_015.gif]]
 
-** Advanced parameter options
+** 016 Ollama Buddy - Same prompt to 10 models (multishot) #emacs #ollama
 
-*** Get the same response each time using *seed*
+Demonstrating the Emacs package ollama-buddy, providing a convenient way to integrate Ollama's local LLM capabilities.
 
-Set the seed using edit parameters to 50
-Send the same prompt and see the same response!!
+PROMPT: What is the capital of France?
+Multishot to abcdefghij
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_016.gif]]
+
+** 017 Ollama Buddy - Lets look at some usage statistics #emacs #ollama
+
+Demonstrating the Emacs package ollama-buddy, providing a convenient way to integrate Ollama's local LLM capabilities.
+
+Display Token Stats
+Display Token Usage Graph
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_017.gif]]
+
+** 018 Ollama Buddy - Awesome ChatGPT Prompting Pt1 #emacs #ollama
+
+Demonstrating the Emacs package ollama-buddy, providing a convenient way to integrate Ollama's local LLM capabilities.
+
+Select a passage from 20,000 and push
+
+as a poet
+as a gaslighter
+as a drunk person
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_018.gif]]
+
+** 019 Ollama Buddy - First Steps into User System Prompt Management #emacs #ollama
+
+Demonstrating the Emacs package ollama-buddy, providing a convenient way to integrate Ollama's local LLM capabilities.
+
+Select User System Prompts
+
+List, and move down through the buffer
+
+Set as system prompt/load
+
+Select Elisp Debugging Guide
+
+Show the system prompt in a buffer
+
+switch to use qwen2.5-coder:3b
+
+Run checking overy my/rsync in Emacs-DIYer
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_019.gif]]
+
 
 * Installation
 
