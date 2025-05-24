@@ -1174,6 +1174,8 @@ https://github.com/captainflasmr/ollama-buddy
 
 Demonstrating the Emacs package ollama-buddy, providing a convenient way to integrate Ollama's local LLM capabilities.
 
+switch to use qwen2.5-coder:3b
+
 Select User System Prompts
 
 List, and move down through the buffer
@@ -1183,8 +1185,6 @@ Set as system prompt/load
 Select Elisp Debugging Guide
 
 Show the system prompt in a buffer
-
-switch to use qwen2.5-coder:3b
 
 Run checking overy my/rsync in Emacs-DIYer
 
@@ -1196,6 +1196,30 @@ https://github.com/captainflasmr/ollama-buddy
 #+attr_org: :width 300px
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_019.gif]]
+
+** 020 Ollama Buddy - Attaching files to the chat buffer #ollama
+
+Demonstrating the Emacs package ollama-buddy, providing a convenient way to integrate Ollama's local LLM capabilities.
+
+switch to use qwen2.5-coder:3b
+
+Attach the ollama-buddy Makefile
+
+can you tell me about this file?
+
+Attach another file, curl-tests.sh
+
+Show attachments
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_020.gif]]
+
 
 
 * Installation
