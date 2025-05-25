@@ -135,17 +135,86 @@
 
 ;; Function to detect file paths in a prompt and check if they are image files
 (defun ollama-buddy--detect-image-files (prompt)
-  "Detect potential image file paths in PROMPT."
+  "Detect potential image file paths in PROMPT.
+Handles file paths with spaces by looking for quoted paths and using smart pattern matching."
   (when (and ollama-buddy-vision-enabled prompt)
-    (let ((words (split-string prompt))
-          (image-files nil))
-      (dolist (word words)
-        (when (and (file-exists-p word)
-                   (cl-some (lambda (format-regex)
-                              (string-match-p format-regex word))
-                            ollama-buddy-image-formats))
-          (push word image-files)))
-      (nreverse image-files))))
+    (let ((image-files nil))
+      
+      ;; Method 1: Look for quoted file paths (single or double quotes)
+      (let ((quoted-pattern "\\(?:\"\\([^\"]+\\)\"\\|'\\([^']+\\)'\\)"))
+        (let ((start 0))
+          (while (string-match quoted-pattern prompt start)
+            (let ((quoted-path (or (match-string 1 prompt) (match-string 2 prompt))))
+              (when (and (file-exists-p quoted-path)
+                         (cl-some (lambda (format-regex)
+                                    (string-match-p format-regex quoted-path))
+                                  ollama-buddy-image-formats))
+                (push quoted-path image-files)))
+            (setq start (match-end 0)))))
+      
+      ;; Method 2: Smart path detection - look for potential file paths and test them
+      ;; This method tries to build complete paths by looking ahead for image extensions
+      (let ((start 0))
+        (while (string-match "\\(?:^\\|\\s-\\)\\([/.~]\\|[A-Za-z]:[\\\\]\\)" prompt start)
+          (let ((path-start (match-beginning 1))
+                (search-pos (match-end 1)))
+            ;; Look for image file extensions from this position
+            (dolist (format-regex ollama-buddy-image-formats)
+              (let ((ext-pattern (replace-regexp-in-string "\\\\\\." "\\\\." 
+                                                           (replace-regexp-in-string "\\$" "" format-regex))))
+                (when (string-match (concat "\\(" (regexp-quote (substring prompt path-start)) 
+                                           "[^\\n]*?" ext-pattern "\\)") prompt)
+                  (let ((potential-path (match-string 1 prompt)))
+                    (when (and (file-exists-p potential-path)
+                               (not (member potential-path image-files)))
+                      (push potential-path image-files))))))
+            (setq start (1+ path-start)))))
+      
+      ;; Method 3: Aggressive search - split on likely path separators and reconstruct
+      ;; This handles cases where paths might be embedded in longer text
+      (let ((tokens (split-string prompt "[ \t\n]+"))
+            (current-path ""))
+        (dolist (token tokens)
+          (if (string-match "^[/.~]\\|^[A-Za-z]:[\\\\]" token)
+              ;; Start of a new potential path
+              (progn
+                (setq current-path token)
+                ;; Check if this token alone is a valid image file
+                (when (and (file-exists-p current-path)
+                           (cl-some (lambda (format-regex)
+                                      (string-match-p format-regex current-path))
+                                    ollama-buddy-image-formats)
+                           (not (member current-path image-files)))
+                  (push current-path image-files)))
+            ;; Continue building the current path if it makes sense
+            (when (and (not (string-empty-p current-path))
+                       (or (string-match "\\.[a-zA-Z0-9]+$" token) ; ends with extension
+                           (not (string-match "^[a-zA-Z]+:" token)))) ; not a new scheme
+              (let ((extended-path (concat current-path " " token)))
+                (when (and (file-exists-p extended-path)
+                           (cl-some (lambda (format-regex)
+                                      (string-match-p format-regex extended-path))
+                                    ollama-buddy-image-formats)
+                           (not (member extended-path image-files)))
+                  (push extended-path image-files)
+                  (setq current-path extended-path))
+                ;; If the extended path doesn't exist, reset
+                (unless (file-exists-p extended-path)
+                  (setq current-path "")))))))
+      
+      ;; Method 4: Fallback to original word-based approach for simple paths without spaces
+      (let ((words (split-string prompt)))
+        (dolist (word words)
+          (when (and (file-exists-p word)
+                     (cl-some (lambda (format-regex)
+                                (string-match-p format-regex word))
+                              ollama-buddy-image-formats)
+                     ;; Only add if not already found by other methods
+                     (not (member word image-files)))
+            (push word image-files))))
+      
+      ;; Remove duplicates and return
+      (delete-dups (nreverse image-files)))))
 
 ;; Function to encode image file to base64
 (defun ollama-buddy--encode-image-to-base64 (file-path)
