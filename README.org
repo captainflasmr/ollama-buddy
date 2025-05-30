@@ -2423,15 +2423,15 @@ All interactive functions available in ollama-buddy are listed in the original R
 #+RESULTS:
 | TODO                                                                         | DOING                                                  | DONE                                                                  |
 |------------------------------------------------------------------------------+--------------------------------------------------------+-----------------------------------------------------------------------|
-| Modifying a parameter internal defaults would flag as not modified           | Kill online AI process with cancel request             | Vision image with spaces not processed as image                       |
-| transient-setup: Key sequence 1 0 starts with non-prefix key 1               | GGUF to use new syncing option                         | Save system prompts as part of session                                |
-| No streaming with hiding reasoning corrupts output                           | sometimes chat output with filter is getting clobbered | chat ollama names to include prefix                                   |
-| Claude request and connection can sometimes take time and it blocks!         |                                                        | Still some encoding issues on returns from online AI                  |
-| Pushing hundreds or even thousands of lines to the chat buffer takes a while |                                                        | Conversation history to display with Claude/ChatGPT                   |
-| ChatGPT request/response too long                                            |                                                        | I think some hard coded Claude models currently don't work            |
-| Check tags caching                                                           |                                                        | register contents to be converted to org, currently it is in markdown |
-| keybindings in ollama chat buffer are reserved                               |                                                        | =C-a= beginning-of-line to jump to prompt start like comint           |
-|                                                                              |                                                        | As shell generally C-n to end of list to clear prompt history         |
+| allow switch to remote LLMs even when ollama not running                     | Kill online AI process with cancel request             | Vision image with spaces not processed as image                       |
+| Modifying a parameter internal defaults would flag as not modified           | GGUF to use new syncing option                         | Save system prompts as part of session                                |
+| transient-setup: Key sequence 1 0 starts with non-prefix key 1               | sometimes chat output with filter is getting clobbered | chat ollama names to include prefix                                   |
+| No streaming with hiding reasoning corrupts output                           |                                                        | Still some encoding issues on returns from online AI                  |
+| Claude request and connection can sometimes take time and it blocks!         |                                                        | Conversation history to display with Claude/ChatGPT                   |
+| Pushing hundreds or even thousands of lines to the chat buffer takes a while |                                                        | I think some hard coded Claude models currently don't work            |
+| ChatGPT request/response too long                                            |                                                        | register contents to be converted to org, currently it is in markdown |
+| Check tags caching                                                           |                                                        | =C-a= beginning-of-line to jump to prompt start like comint           |
+| keybindings in ollama chat buffer are reserved                               |                                                        | As shell generally C-n to end of list to clear prompt history         |
 |                                                                              |                                                        | Add Texinfo to MELPA recipe                                           |
 |                                                                              |                                                        | System prompt not cleared on new session                              |
 |                                                                              |                                                        | Remove fabric from Commands transient menu                            |
@@ -2445,6 +2445,8 @@ All interactive functions available in ollama-buddy are listed in the original R
 For some reason this is more difficult than it looks
 
 ** DOING sometimes chat output with filter is getting clobbered
+
+** TODO allow switch to remote LLMs even when ollama not running
 
 ** TODO Modifying a parameter internal defaults would flag as not modified
 
