@@ -135,8 +135,7 @@
 
 ;; Function to detect file paths in a prompt and check if they are image files
 (defun ollama-buddy--detect-image-files (prompt)
-  "Detect potential image file paths in PROMPT.
-Handles file paths with spaces by looking for quoted paths and using smart pattern matching."
+  "Detect potential image file paths in PROMPT."
   (when (and ollama-buddy-vision-enabled prompt)
     (let ((image-files nil))
       
@@ -156,8 +155,7 @@ Handles file paths with spaces by looking for quoted paths and using smart patte
       ;; This method tries to build complete paths by looking ahead for image extensions
       (let ((start 0))
         (while (string-match "\\(?:^\\|\\s-\\)\\([/.~]\\|[A-Za-z]:[\\\\]\\)" prompt start)
-          (let ((path-start (match-beginning 1))
-                (search-pos (match-end 1)))
+          (let ((path-start (match-beginning 1)))
             ;; Look for image file extensions from this position
             (dolist (format-regex ollama-buddy-image-formats)
               (let ((ext-pattern (replace-regexp-in-string "\\\\\\." "\\\\." 
