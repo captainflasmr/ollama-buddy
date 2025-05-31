@@ -1179,16 +1179,16 @@ please run =ollama serve=\n\n")
   (info "(ollama-buddy)"))
 
 (defun ollama-buddy-escape-unicode (string)
-  "Convert all non-ASCII characters in STRING to Unicode escape sequences."
-  (let ((result "")
-        (i 0))
-    (while (< i (length string))
-      (let ((char (aref string i)))
-        (if (< char 128)  ;; ASCII
-            (setq result (concat result (char-to-string char)))
-          (setq result (concat result (format "\\u%04X" char)))))
-      (setq i (1+ i)))
-    result))
+  "Efficiently convert non-ASCII characters to Unicode escape sequences."
+  (with-temp-buffer
+    (insert string)
+    (goto-char (point-min))
+    (while (re-search-forward "[^\x00-\x7F]" nil t)
+      (let* ((char (char-before))
+             (unicode-escape (format "\\u%04X" char)))
+        (delete-char -1)
+        (insert unicode-escape)))
+    (buffer-string)))
 
 (defun ollama-buddy--register-background-operation (operation-id description)
   "Register a new background OPERATION-ID with DESCRIPTION."

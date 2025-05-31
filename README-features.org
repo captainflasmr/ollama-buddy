@@ -8,6 +8,14 @@
 
 * Features as they come in
 
+** <2025-05-31> *0.12.1*
+
+Optimized Unicode escape function to fix blocking with large file attachments
+
+- Fixed UI blocking when sending large attached files
+- Used temp buffer with delete-char/insert instead of repeated concat calls
+- Reduced processing time from minutes to milliseconds for large payloads
+
 ** <2025-05-22> *0.12.0*
 
 Full system prompt in the status bar replaced with a more meaningful simple role title
