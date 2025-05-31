@@ -1806,8 +1806,6 @@ With prefix argument ALL-MODELS, clear history for all models."
 (defun ollama-buddy--swap-model ()
   "Swap ollama model, including OpenAI models if available."
   (interactive)
-  (unless (ollama-buddy--ollama-running)
-    (error "!!WARNING!! ollama server not running"))
   (let* ((models (ollama-buddy--get-models-with-others))
          (new-model (completing-read "Model: " models nil t)))
     (setq ollama-buddy-default-model new-model)
