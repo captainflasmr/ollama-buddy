@@ -326,8 +326,8 @@ These are the only parameters that will be sent to Ollama."
     (proofread
      :key ?p
      :description "Proofread text"
-     :prompt "proofread the following:"
-     :system "You are a professional editor who identifies and corrects grammar, spelling, punctuation, and style errors with brief explanations of corrections, providing both the corrected text and a list of changes made."
+     :prompt "Proofread the following text and return only the corrected version, with no explanations or extra text:"
+     :system "You are a professional editor. Only return the corrected text with all grammar, spelling, punctuation, and style errors corrected. Do not include explanations, lists, or any extra commentary."
      :action (lambda () (ollama-buddy--send-with-command 'proofread)))
     
     ;; System Commands
