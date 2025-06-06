@@ -33,6 +33,11 @@
   :group 'ollama-buddy
   :prefix "ollama-buddy-param-")
 
+(defcustom ollama-buddy-autocomplete-enabled nil
+  "Whether to enable autocomplete functionality by default."
+  :type 'boolean
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-highlight-models-enabled t
   "Highlight model names with distinctive colors in Ollama Buddy buffers."
   :type 'boolean
@@ -236,6 +241,16 @@ These are the only parameters that will be sent to Ollama."
 
 (defcustom ollama-buddy-command-definitions
   '(
+    (autocomplete-toggle
+     :key ?A
+     :description "Toggle autocomplete"
+     :action ollama-buddy-autocomplete-toggle)
+    
+    (autocomplete-trigger
+     :key ?t  
+     :description "Trigger autocomplete manually"
+     :action ollama-buddy-autocomplete-trigger-manual)
+    
     ;; General Commands
     (open-chat
      :key ?o
