@@ -348,24 +348,57 @@ Works with both standard `move-end-of-line` and `org-end-of-line`."
 (defun ollama-buddy-autocomplete-update ()
   "Update the auto-suggestion overlay."
   (when ollama-buddy-autocomplete--overlay
-    ;; Clear suggestion if we're not at the right position or context changed
-    (unless (and (eq (overlay-start ollama-buddy-autocomplete--overlay) (point))
-                 (ollama-buddy-autocomplete--should-trigger-p))
-      (ollama-buddy-autocomplete--clear-suggestion)))
+    ;; Clear suggestion if we're not at the right position or context changed inappropriately
+    (let ((should-clear nil))
+      ;; Clear if cursor moved away from overlay position
+      (when (not (eq (overlay-start ollama-buddy-autocomplete--overlay) (point)))
+        (setq should-clear t))
+      
+      ;; Clear if we're in an inappropriate context (but not just because we stopped typing)
+      (when (and (not (ollama-buddy-autocomplete--is-suitable-mode-p))
+                 (minibufferp))
+        (setq should-clear t))
+      
+      ;; Clear on certain commands that should dismiss suggestions
+      (when (memq this-command '(newline electric-newline-and-maybe-indent
+                                 delete-backward-char backward-delete-char-untabify
+                                 kill-line kill-whole-line))
+        (setq should-clear t))
+      
+      (when should-clear
+        (ollama-buddy-autocomplete--clear-suggestion))))
   
-  ;; Schedule new request if conditions are met
+  ;; Schedule new request if conditions are met and we don't have a suggestion
   (when (and (not ollama-buddy-autocomplete--current-suggestion)
-             (not ollama-buddy-autocomplete--request-in-progress))
+             (not ollama-buddy-autocomplete--request-in-progress)
+             ;; Don't immediately reschedule after dismissing
+             (not (eq this-command 'ollama-buddy-autocomplete-keyboard-quit)))
     (ollama-buddy-autocomplete--schedule-request)))
 
-;; ;; Minor mode definition (following simple-autosuggest pattern)
+;; C-g handling for dismissing suggestions
+
+(defun ollama-buddy-autocomplete-keyboard-quit ()
+  "Handle C-g - dismiss suggestion if present, otherwise run normal keyboard-quit."
+  (interactive)
+  (if (and ollama-buddy-autocomplete--overlay
+           (overlay-get ollama-buddy-autocomplete--overlay 'after-string))
+      (progn
+        (ollama-buddy-autocomplete--clear-suggestion)
+        (message "Autocomplete suggestion dismissed"))
+    ;; No suggestion present, run normal keyboard-quit
+    (keyboard-quit)))
+
+;; Minor mode definition (following simple-autosuggest pattern)
 
 ;;;###autoload
 (define-minor-mode ollama-buddy-autocomplete-mode
   "Minor mode for ollama-buddy autocomplete functionality.
-Shows AI-powered code completions as you type. Accept with C-e (end-of-line)."
+Shows AI-powered code completions as you type. Accept with C-e (end-of-line), dismiss with C-g."
   :lighter " OB-AC"
   :keymap (let ((map (make-sparse-keymap)))
+            ;; Always bind C-g for dismissing suggestions
+            (define-key map (kbd "C-g") #'ollama-buddy-autocomplete-keyboard-quit)
+            
             (cond
              ;; End-of-line acceptance (default and recommended)
              ((eq ollama-buddy-autocomplete-accept-key 'end-of-line)
@@ -382,15 +415,13 @@ Shows AI-powered code completions as you type. Accept with C-e (end-of-line)."
   :group 'ollama-buddy-autocomplete
   (if ollama-buddy-autocomplete-mode
       (progn
-        (message "poop: 0") 
         (setq-local ollama-buddy-autocomplete--overlay 
                     (make-overlay (point) (point) nil t t))
-        (setq ollama-buddy-autocomplete-enabled t))
-    ;; (add-hook 'post-command-hook #'ollama-buddy-autocomplete-update nil t))
+        (setq ollama-buddy-autocomplete-enabled t)
+        (add-hook 'post-command-hook #'ollama-buddy-autocomplete-update nil t))
     (progn
-      (message "poop: 1") 
       (setq ollama-buddy-autocomplete-enabled nil)
-      ;; (remove-hook 'post-command-hook #'ollama-buddy-autocomplete-update t)
+      (remove-hook 'post-command-hook #'ollama-buddy-autocomplete-update t)
       (ollama-buddy-autocomplete--cancel-timer)
       (when ollama-buddy-autocomplete--overlay
         (delete-overlay ollama-buddy-autocomplete--overlay)
@@ -444,8 +475,12 @@ Shows AI-powered code completions as you type. Accept with C-e (end-of-line)."
 (defun ollama-buddy-autocomplete-dismiss-suggestion ()
   "Dismiss the current autocomplete suggestion."
   (interactive)
-  (ollama-buddy-autocomplete--clear-suggestion)
-  (message "Autocomplete suggestion dismissed"))
+  (if (and ollama-buddy-autocomplete--overlay
+           (overlay-get ollama-buddy-autocomplete--overlay 'after-string))
+      (progn
+        (ollama-buddy-autocomplete--clear-suggestion)
+        (message "Autocomplete suggestion dismissed"))
+    (message "No autocomplete suggestion to dismiss")))
 
 ;; Debug functions
 
@@ -453,12 +488,15 @@ Shows AI-powered code completions as you type. Accept with C-e (end-of-line)."
 (defun ollama-buddy-autocomplete-debug-info ()
   "Show debug information about autocomplete state."
   (interactive)
-  (message "Debug: overlay=%s suggestion=%s enabled=%s in-progress=%s mode=%s"
-           (if ollama-buddy-autocomplete--overlay "YES" "NO")
-           (if ollama-buddy-autocomplete--current-suggestion "YES" "NO") 
-           (if ollama-buddy-autocomplete-enabled "YES" "NO")
-           (if ollama-buddy-autocomplete--request-in-progress "YES" "NO")
-           (if ollama-buddy-autocomplete-mode "ON" "OFF")))
+  (let ((overlay-suggestion (when ollama-buddy-autocomplete--overlay
+                              (overlay-get ollama-buddy-autocomplete--overlay 'after-string))))
+    (message "Debug: overlay=%s overlay-text=%s stored-suggestion=%s enabled=%s in-progress=%s mode=%s"
+             (if ollama-buddy-autocomplete--overlay "YES" "NO")
+             (if overlay-suggestion "YES" "NO")
+             (if ollama-buddy-autocomplete--current-suggestion "YES" "NO") 
+             (if ollama-buddy-autocomplete-enabled "YES" "NO")
+             (if ollama-buddy-autocomplete--request-in-progress "YES" "NO")
+             (if ollama-buddy-autocomplete-mode "ON" "OFF"))))
 
 ;; Integration with main ollama-buddy package
 
