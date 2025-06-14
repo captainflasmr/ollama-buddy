@@ -565,7 +565,7 @@ Each element is a plist with :file, :content, :size, and :type.")
 
 (defvar ollama-buddy--current-context-percentage nil
   "The current context window percentage used.")
-  
+
 (defvar ollama-buddy--current-context-tokens nil
   "The current token count used in the context window.")
 
@@ -817,30 +817,228 @@ When complete, CALLBACK is called with the status response and result."
              ;; Call the callback
              (funcall callback status result))))))))
 
-(defun ollama-buddy--curl-stream-filter (proc output callback)
-  "Process streaming OUTPUT from curl PROC, calling CALLBACK for each JSON line."
-  (with-current-buffer (process-buffer proc)
-    (goto-char (point-max))
-    (insert output)
+(defun ollama-buddy--curl-process-filter (proc output)
+  "Process filter for curl streaming responses."
+  (let ((proc-buffer (process-buffer proc)))
+    (when (and proc-buffer (buffer-live-p proc-buffer))
+      (condition-case err
+          (with-current-buffer proc-buffer
+            ;; Append new output
+            (goto-char (point-max))
+            (insert output)
+            
+            ;; Process headers if not already done
+            (unless ollama-buddy--curl-headers-processed
+              (goto-char (point-min))
+              (when (re-search-forward "\r?\n\r?\n" nil t)
+                ;; Headers found, remove them
+                (delete-region (point-min) (point))
+                (setq ollama-buddy--curl-headers-processed t)))
+            
+            ;; Process JSON lines when headers are processed
+            (when ollama-buddy--curl-headers-processed
+              (goto-char (point-min))
+              (while (re-search-forward "^\\(.+\\)\n" nil t)
+                (let ((json-line (match-string 1)))
+                  ;; Remove the processed line
+                  (delete-region (match-beginning 0) (match-end 0))
+                  ;; Process the JSON line
+                  (ollama-buddy--process-curl-json-line json-line)))))
+        (error
+         (message "Error in curl filter: %s" (error-message-string err)))))))
+
+(defun ollama-buddy--process-curl-json-line (json-line)
+  "Process a single JSON line from curl output."
+  (when (and json-line 
+             (not (string-empty-p (string-trim json-line)))
+             (string-prefix-p "{" (string-trim json-line)))
+    (condition-case err
+        (let* ((json-data (json-read-from-string json-line))
+               (message-data (alist-get 'message json-data))
+               (content (when message-data (alist-get 'content message-data)))
+               (done (alist-get 'done json-data)))
+          
+          (when content
+            (ollama-buddy--handle-curl-content content))
+          
+          (when (eq done t)
+            (ollama-buddy--handle-curl-done json-data)))
+      (error
+       (message "Error parsing JSON: %s" (error-message-string err))))))
+
+(defun ollama-buddy--handle-curl-content (content)
+  "Handle content token from curl response."
+  ;; Initialize token tracking on first content
+  (unless ollama-buddy--current-token-start-time
+    (setq ollama-buddy--current-token-start-time (float-time)
+          ollama-buddy--current-token-count 0
+          ollama-buddy--current-response "")
     
-    ;; Process complete lines
-    (goto-char (point-min))
-    (while (re-search-forward "^.*\n" nil t)
-      (let ((line (match-string 0)))
-        (delete-region (match-beginning 0) (match-end 0))
-        (when (and (string-match-p "^{" line)
-                   (not (string-empty-p (string-trim line))))
-          (condition-case err
-              (let ((json-data (json-read-from-string line)))
-                (funcall callback json-data))
-            (error
-             (message "Warning: Failed to parse streaming JSON: %s" 
-                      (error-message-string err)))))))))
+    ;; Start token rate timer
+    (when ollama-buddy--token-update-timer
+      (cancel-timer ollama-buddy--token-update-timer))
+    (setq ollama-buddy--token-update-timer
+          (run-with-timer 0 ollama-buddy--token-update-interval
+                          #'ollama-buddy--update-token-rate-display)))
+  
+  ;; Increment token count
+  (setq ollama-buddy--current-token-count (1+ ollama-buddy--current-token-count))
+  
+  ;; Accumulate response
+  (setq ollama-buddy--current-response 
+        (concat ollama-buddy--current-response content))
+  
+  ;; Display content in chat buffer
+  (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
+    (with-current-buffer ollama-buddy--chat-buffer
+      (let ((inhibit-read-only t)
+            (window (get-buffer-window ollama-buddy--chat-buffer t))
+            (was-at-end (= (point) (point-max))))
+        
+        ;; Insert content at end of buffer
+        (save-excursion
+          (goto-char (point-max))
+          
+          ;; Handle reasoning hiding
+          (let ((should-show-content t))
+            (when ollama-buddy-hide-reasoning
+              (let ((reasoning-marker (ollama-buddy--find-reasoning-marker content)))
+                (cond
+                 ;; Start of reasoning section
+                 ((and reasoning-marker (eq (car reasoning-marker) 'start))
+                  (setq ollama-buddy--in-reasoning-section t
+                        should-show-content nil)
+                  (insert (format "[%s...]" 
+                                  (capitalize 
+                                   (replace-regexp-in-string 
+                                    "[<>]" "" 
+                                    (cadr reasoning-marker))))))
+                 ;; End of reasoning section
+                 ((and reasoning-marker (eq (car reasoning-marker) 'end))
+                  (setq ollama-buddy--in-reasoning-section nil
+                        should-show-content nil)
+                  ;; Remove the reasoning indicator if present
+                  (when (re-search-backward "\\[.*\\.\\.\\.]" (line-beginning-position) t)
+                    (delete-region (match-beginning 0) (match-end 0))))
+                 ;; Inside reasoning section
+                 (ollama-buddy--in-reasoning-section
+                  (setq should-show-content nil)))))
+          
+          ;; Insert content if not hidden
+          (when should-show-content
+            (insert content)))
+        
+        ;; Update register
+        (set-register ollama-buddy-default-register 
+                      (concat (or (get-register ollama-buddy-default-register) "")
+                              content))
+        
+        ;; Keep window at end if it was there
+        (when (and window was-at-end)
+          (set-window-point window (point-max))))))))
+
+(defun ollama-buddy--handle-curl-done (json-data)
+  "Handle completion of curl response."
+  (condition-case err
+      (progn
+        ;; Cancel token timer
+        (when ollama-buddy--token-update-timer
+          (cancel-timer ollama-buddy--token-update-timer)
+          (setq ollama-buddy--token-update-timer nil))
+        
+        ;; Calculate stats
+        (let* ((elapsed (- (float-time) ollama-buddy--current-token-start-time))
+               (rate (if (> elapsed 0) (/ ollama-buddy--current-token-count elapsed) 0))
+               (token-info (list :model ollama-buddy--current-model
+                                 :tokens ollama-buddy--current-token-count
+                                 :elapsed elapsed
+                                 :rate rate
+                                 :timestamp (current-time))))
+          (push token-info ollama-buddy--token-usage-history))
+        
+        ;; Add to history
+        (ollama-buddy--add-to-history "user" ollama-buddy--current-prompt)
+        (ollama-buddy--add-to-history "assistant" ollama-buddy--current-response)
+        
+        ;; Update chat buffer
+        (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
+          (with-current-buffer ollama-buddy--chat-buffer
+            (let ((inhibit-read-only t))
+              (goto-char (point-max))
+              
+              ;; Convert markdown if enabled
+              (when (and ollama-buddy-convert-markdown-to-org
+                         (boundp 'ollama-buddy--response-start-position)
+                         ollama-buddy--response-start-position)
+                (ollama-buddy--md-to-org-convert-region 
+                 ollama-buddy--response-start-position (point-max)))
+              
+              ;; Show token stats if enabled
+              (when ollama-buddy-display-token-stats
+                (let ((last-info (car ollama-buddy--token-usage-history)))
+                  (insert (format "\n\n*** Token Stats\n[%d tokens in %.1fs, %.1f tokens/sec]"
+                                  (plist-get last-info :tokens)
+                                  (plist-get last-info :elapsed)
+                                  (plist-get last-info :rate)))))
+              
+              (insert "\n\n*** FINISHED")
+              (ollama-buddy--prepare-prompt-area))))
+        
+        ;; Reset tracking variables
+        (setq ollama-buddy--current-token-count 0
+              ollama-buddy--current-token-start-time nil
+              ollama-buddy--current-response ""
+              ollama-buddy--in-reasoning-section nil
+              ollama-buddy--curl-headers-processed nil)
+        
+        ;; Reset temporary model
+        (when ollama-buddy--current-request-temporary-model
+          (setq ollama-buddy--current-model ollama-buddy--current-request-temporary-model
+                ollama-buddy--current-request-temporary-model nil))
+        
+        ;; Handle multishot or update status
+        (if ollama-buddy--multishot-sequence
+            (if (< ollama-buddy--multishot-progress (length ollama-buddy--multishot-sequence))
+                (run-with-timer 0.5 nil #'ollama-buddy--send-next-in-sequence)
+              (ollama-buddy--update-status "Multi Finished"))
+          (let ((last-info (car ollama-buddy--token-usage-history)))
+            (if last-info
+                (ollama-buddy--update-status
+                 (format "Curl Finished [%d %.1f t/s]"
+                         (plist-get last-info :tokens)
+                         (plist-get last-info :rate)))
+              (ollama-buddy--update-status "Curl Finished")))))
+      (error
+       (message "Error in curl completion: %s" (error-message-string err)))))
+
+(defun ollama-buddy--curl-process-sentinel (proc event)
+  "Sentinel for curl processes."
+  (condition-case err
+      (let ((proc-buffer (process-buffer proc)))
+        ;; Clean up process buffer
+        (when (and proc-buffer (buffer-live-p proc-buffer))
+          (kill-buffer proc-buffer))
+        
+        ;; Handle different exit conditions
+        (cond
+         ((string-match-p "finished" event)
+          (message "Curl request completed"))
+         ((string-match-p "\\(?:killed\\|terminated\\)" event)
+          (ollama-buddy--update-status "Request cancelled")
+          (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
+            (with-current-buffer ollama-buddy--chat-buffer
+              (let ((inhibit-read-only t))
+                (goto-char (point-max))
+                (insert "\n\n*** CANCELLED")
+                (ollama-buddy--prepare-prompt-area)))))
+         (t
+          (ollama-buddy--update-status "Request failed")
+          (message "Curl request failed: %s" event))))
+    (error
+     (message "Error in curl sentinel: %s" (error-message-string err)))))
 
 (defun ollama-buddy--send-curl (prompt &optional specified-model)
   "Send PROMPT using curl backend with streaming support."
-  ;; This is a more complex implementation that handles streaming
-  ;; For now, we'll implement a simpler version that works with the existing filter
   (unless (ollama-buddy--check-status)
     (ollama-buddy--update-status "OFFLINE")
     (user-error "Ensure Ollama is running"))
@@ -852,6 +1050,9 @@ When complete, CALLBACK is called with the status response and result."
     (unless (ollama-buddy--check-context-before-send)
       (user-error "Context too far over limit to send")))
   
+  ;; Reset curl state
+  (setq ollama-buddy--curl-headers-processed nil)
+
   (let* ((model-info (ollama-buddy--get-valid-model specified-model))
          (model (car model-info))
          (original-model (cdr model-info))
@@ -874,9 +1075,8 @@ When complete, CALLBACK is called with the status response and result."
                      (lambda (attachment)
                        (let ((file (plist-get attachment :file))
                              (content (plist-get attachment :content)))
-                         (format "### File: %s\n\n#+end_src%s\n%s\n#+begin_src \n\n"
+                         (format "### File: %s\n\n%s\n\n"
                                  (file-name-nondirectory file)
-                                 (or (plist-get attachment :type) "")
                                  content)))
                      ollama-buddy--current-attachments
                      ""))))
@@ -890,27 +1090,23 @@ When complete, CALLBACK is called with the status response and result."
          (modified-options (ollama-buddy-params-get-for-request))
          (base-payload `((model . ,(ollama-buddy--get-real-model-name model))
                          (messages . ,(vconcat [] messages-all))
-                         (stream . ,(if ollama-buddy-streaming-enabled t :json-false))))
-         (with-system (if ollama-buddy--current-system-prompt
-                          (append base-payload `((system . ,ollama-buddy--current-system-prompt)))
-                        base-payload))
-         (with-suffix (if ollama-buddy--current-suffix
-                          (append with-system `((suffix . ,ollama-buddy--current-suffix)))
-                        with-system))
+                         (stream . t)))
          (final-payload (if modified-options
-                            (append with-suffix `((options . ,modified-options)))
-                          with-suffix))
+                            (append base-payload `((options . ,modified-options)))
+                          base-payload))
          (payload (json-encode final-payload))
          (temp-file (make-temp-file "ollama-buddy-payload"))
-         (url (format "http://%s:%d/api/chat" ollama-buddy-host ollama-buddy-port)))
+         (url (format "http://%s:%d/api/chat" ollama-buddy-host ollama-buddy-port))
+         (process-name "ollama-chat-curl")
+         (process-buffer (generate-new-buffer " *ollama-curl*")))
 
     (unless ollama-buddy--multishot-sequence
       (set-register ollama-buddy-default-register ""))
     
-    (setq ollama-buddy--current-model model)
-    (setq ollama-buddy--current-prompt prompt)
+    (setq ollama-buddy--current-model model
+          ollama-buddy--current-prompt prompt)
     
-    ;; Prepare the chat buffer (same as network version)
+    ;; Prepare chat buffer
     (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
       (pop-to-buffer (current-buffer))
       (goto-char (point-max))
@@ -931,7 +1127,7 @@ When complete, CALLBACK is called with the status response and result."
       (insert "\n\n")
 
       (when (and original-model model (not (string= original-model model)))
-        (insert (format "*[Using %s instead of %s]*" model original-model) "\n\n"))
+        (insert (format "*[Using %s instead of %s]*\n\n" model original-model)))
 
       (when has-images
         (insert "Detected images:\n")
@@ -940,20 +1136,14 @@ When complete, CALLBACK is called with the status response and result."
         (insert "\n"))
 
       (visual-line-mode 1))
-
-    (when (not ollama-buddy-streaming-enabled)
-      (setq ollama-buddy--start-point (point))
-      (insert "Loading response..."))
     
     (ollama-buddy--update-status (if has-images
-                                     "Vision Processing..."
-                                   "Processing...")
+                                     "Curl Vision Processing..."
+                                   "Curl Processing...")
                                  original-model model)
 
-    ;; Kill existing process if any
-    (when (and ollama-buddy--active-process
-               (process-live-p ollama-buddy--active-process))
-      (set-process-sentinel ollama-buddy--active-process nil)
+    ;; Kill existing process
+    (when (and ollama-buddy--active-process (process-live-p ollama-buddy--active-process))
       (delete-process ollama-buddy--active-process)
       (setq ollama-buddy--active-process nil))
     
@@ -963,47 +1153,38 @@ When complete, CALLBACK is called with the status response and result."
     
     ;; Start curl process
     (condition-case err
-        (let* ((process-name "ollama-chat-curl")
-               (args (list
-                      "--silent"
-                      "--no-buffer"
-                      "--max-time" (number-to-string ollama-buddy-curl-timeout)
-                      "--request" "POST"
-                      "--header" "Content-Type: application/json"
-                      "--data-binary" (concat "@" temp-file)
-                      url)))
+        (let ((args (list
+                     "--silent"
+                     "--no-buffer"
+                     "--include"  ; Include headers so we can strip them
+                     "--max-time" (number-to-string ollama-buddy-curl-timeout)
+                     "--request" "POST"
+                     "--header" "Content-Type: application/json"
+                     "--data-binary" (concat "@" temp-file)
+                     url)))
           
           (setq ollama-buddy--active-process
-                (apply #'start-process process-name nil 
+                (apply #'start-process process-name process-buffer 
                        ollama-buddy-curl-executable args))
           
-          ;; Set up process filter for streaming
-          (set-process-filter 
-           ollama-buddy--active-process
-           (lambda (proc output)
-             (ollama-buddy--curl-stream-filter 
-              proc output
-              (lambda (json-data)
-                ;; Convert to the format expected by the existing stream filter
-                (let ((text (alist-get 'content (alist-get 'message json-data))))
-                  (when text
-                    (ollama-buddy--stream-filter proc (json-encode json-data))))))))
+          ;; Set filter and sentinel
+          (set-process-filter ollama-buddy--active-process 
+                              #'ollama-buddy--curl-process-filter)
+          (set-process-sentinel ollama-buddy--active-process 
+                                #'ollama-buddy--curl-process-sentinel)
           
-          ;; Set up sentinel
-          (set-process-sentinel
-           ollama-buddy--active-process
-           (lambda (proc event)
-             ;; Clean up temp file
-             (when (file-exists-p temp-file)
-               (delete-file temp-file))
-             ;; Call existing sentinel
-             (ollama-buddy--stream-sentinel proc event))))
+          ;; Clean up temp file after a delay
+          (run-with-timer 1.0 nil (lambda () 
+                                    (when (file-exists-p temp-file)
+                                      (delete-file temp-file)))))
       
       (error
        (when (file-exists-p temp-file)
          (delete-file temp-file))
-       (ollama-buddy--update-status "OFFLINE - Curl failed")
-       (error "Failed to start curl process: %s" (error-message-string err))))))
+       (when (and process-buffer (buffer-live-p process-buffer))
+         (kill-buffer process-buffer))
+       (ollama-buddy--update-status "Curl failed to start")
+       (error "Failed to start curl: %s" (error-message-string err))))))
 
 ;; Modified backend dispatcher functions
 (defun ollama-buddy--make-request-backend (endpoint method &optional payload)
