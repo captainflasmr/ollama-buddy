@@ -773,6 +773,7 @@ When complete, CALLBACK is called with the status response and result."
                         ollama-buddy-host ollama-buddy-port endpoint))
            (temp-file (when payload (make-temp-file "ollama-buddy-payload")))
            (process-name (format "ollama-curl-%s" (gensym)))
+           (process-buffer (generate-new-buffer (format " *%s*" process-name)))
            (args (list
                   "--silent"
                   "--show-error"
@@ -790,7 +791,7 @@ When complete, CALLBACK is called with the status response and result."
       ;; Add URL at the end
       (setq args (append args (list url)))
       
-      (let ((process (apply #'start-process process-name nil 
+      (let ((process (apply #'start-process process-name process-buffer 
                             ollama-buddy-curl-executable args)))
         (set-process-sentinel
          process
@@ -798,24 +799,45 @@ When complete, CALLBACK is called with the status response and result."
            (let ((status (if (string-match-p "finished" event)
                              nil
                            (list :error (cons 'error event))))
-                 (result nil))
-             (when (zerop (process-exit-status proc))
-               (with-current-buffer (process-buffer proc)
-                 (when (not (string-empty-p (buffer-string)))
-                   (condition-case err
-                       (setq result (json-read-from-string (buffer-string)))
-                     (error
-                      (message "Warning: Failed to parse JSON response: %s" 
-                               (error-message-string err)))))))
+                 (result nil)
+                 (proc-buffer (process-buffer proc)))  ; Get buffer reference first
              
-             ;; Clean up
+             ;; CRITICAL FIX: Check if buffer exists and is live BEFORE using it
+             (when (and proc-buffer (buffer-live-p proc-buffer))
+               (condition-case err
+                   (when (zerop (process-exit-status proc))
+                     ;; Now it's safe to access the buffer
+                     (with-current-buffer proc-buffer
+                       (when (not (string-empty-p (buffer-string)))
+                         (condition-case parse-err
+                             (setq result (json-read-from-string (buffer-string)))
+                           (error
+                            (message "Warning: Failed to parse JSON response: %s" 
+                                     (error-message-string parse-err)))))))
+                 (error
+                  (message "Error reading process buffer: %s" (error-message-string err)))))
+             
+             ;; Clean up temp file
              (when (and temp-file (file-exists-p temp-file))
-               (delete-file temp-file))
-             (when (buffer-live-p (process-buffer proc))
-               (kill-buffer (process-buffer proc)))
+               (condition-case err
+                   (delete-file temp-file)
+                 (error
+                  (message "Warning: Failed to delete temp file %s: %s" 
+                           temp-file (error-message-string err)))))
+             
+             ;; Clean up process buffer - but only if it still exists
+             (when (and proc-buffer (buffer-live-p proc-buffer))
+               (condition-case err
+                   (kill-buffer proc-buffer)
+                 (error
+                  (message "Warning: Failed to kill process buffer: %s" 
+                           (error-message-string err)))))
              
              ;; Call the callback
-             (funcall callback status result))))))))
+             (condition-case err
+                 (funcall callback status result)
+               (error
+                (message "Error in callback: %s" (error-message-string err)))))))))))
 
 (defun ollama-buddy--curl-process-filter (proc output)
   "Process filter for curl streaming responses."
@@ -1239,6 +1261,7 @@ When complete, CALLBACK is called with the status response and result."
     (setq ollama-buddy-communication-backend new-backend)
     (message "Switched from %s to %s backend" 
              current-backend new-backend)
+    (ollama-buddy--update-status new-backend)
     (ollama-buddy-test-communication-backend)))
 
 (defun ollama-buddy--extract-title-from-content (content)
@@ -1651,6 +1674,7 @@ Supports both single and prefixed multi-character model references."
 - /Attachments C-c/
   - /menu/file/show/detach/clear/       1/C-a/C-w/C-d/0
 - /Toggle Fancy/                        C-c #
+- /Toggle Backend/                      C-c e
 - /Show Help/Status/Debug/              C-c h/v/B
 - /Show Token Stats/Graph/Report/       C-c u/U/T
 - /Model Change/Info/Multishot/         C-c m/i/M
@@ -2081,7 +2105,8 @@ When complete, CALLBACK is called with the status response and result."
                  (mapcar #'car (ollama-buddy--get-models-with-colors-from-result response))
                  #'string<)
                 ollama-buddy--models-cache-timestamp current-time)
-          (ollama-buddy--refresh-models-cache)))
+          ;; (ollama-buddy--refresh-models-cache)
+          ))
       ollama-buddy--models-cache)))
 
 (defun ollama-buddy--refresh-models-cache ()
@@ -2340,7 +2365,9 @@ ACTUAL-MODEL is the model being used instead."
            (backend-indicator (if (eq backend 'curl) "C" "N")))
       (setq header-line-format
             (concat
-             (format " %s %s%s%s%s %s%s%s %s %s %s%s %s"
+             (format " %s%s %s%s%s%s %s%s%s %s %s %s%s"
+                     backend-indicator
+
                      (ollama-buddy--add-context-to-status-format)
                      
                      (if ollama-buddy-hide-reasoning "REASONING HIDDEN " "")
@@ -2356,15 +2383,9 @@ ACTUAL-MODEL is the model being used instead."
                      (if (ollama-buddy--check-status)
                          (propertize model 'face `(:weight bold :box (:line-width 2 :style flat-button)))
                        (propertize model 'face `(:weight bold :inherit shadow :box (:line-width 2 :style flat-button))))
-
                      status
-
                      system-indicator
-                     
                      (or params "")
-                     
-                     backend-indicator
-                     
                      )
              (when (and original-model actual-model (not (string= original-model actual-model)))
                (propertize (format " [Using %s instead of %s]" actual-model original-model)

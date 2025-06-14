@@ -3195,6 +3195,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c 0") #'ollama-buddy-clear-attachments)
 
     (define-key map (kbd "C-c #") #'ollama-buddy-toggle-model-highlighting)
+    (define-key map (kbd "C-c e") #'ollama-buddy-switch-communication-backend)
     
     (define-key map [remap move-beginning-of-line] #'ollama-buddy-beginning-of-prompt)
     map)
