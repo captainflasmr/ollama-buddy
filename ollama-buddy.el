@@ -1849,7 +1849,7 @@ With prefix argument ALL-MODELS, clear history for all models."
       (ollama-buddy--open-chat)
       (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
         (insert (string-trim prompt-with-selection)))
-      (ollama-buddy--send (string-trim prompt-with-selection)))))
+      (ollama-buddy--send-backend (string-trim prompt-with-selection)))))
 
 (defun ollama-buddy--menu-minibuffer-prompt ()
   "Show the custom minibuffer prompt."
@@ -1860,7 +1860,7 @@ With prefix argument ALL-MODELS, clear history for all models."
     (ollama-buddy--open-chat)
     (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
       (insert (string-trim prompt)))
-    (ollama-buddy--send (string-trim prompt))))
+    (ollama-buddy--send-backend (string-trim prompt))))
 
 (defun ollama-buddy--send-with-command (command-name)
   "Send request using configuration from COMMAND-NAME."
@@ -2264,7 +2264,7 @@ those images will be included in the request."
         (setq ollama-buddy--multishot-progress (1+ ollama-buddy--multishot-progress))
         
         ;; Send the prompt
-        (ollama-buddy--send ollama-buddy--multishot-prompt model)))))
+        (ollama-buddy--send-backend ollama-buddy--multishot-prompt model)))))
 
 (defun ollama-buddy--multishot-prepare ()
   "Prepare for a multishot sequence and return the prompt text."
@@ -2519,7 +2519,7 @@ Modifies the variable in place."
             ollama-buddy--multishot-prompt nil)
       
       ;; Send with system prompt and suffix support
-      (ollama-buddy--send prompt-text model)))))
+      (ollama-buddy--send-backend prompt-text model)))))
 
 (defun ollama-buddy--cancel-request ()
   "Cancel the current request and clean up resources."
