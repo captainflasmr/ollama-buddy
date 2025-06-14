@@ -86,6 +86,7 @@
 (require 'ollama-buddy-core)
 (require 'ollama-buddy-transient)
 (require 'ollama-buddy-user-prompts)
+(require 'ollama-buddy-autocomplete)
 
 (defvar ollama-buddy--reasoning-skip-newlines nil
   "Whether to skip leading newlines after reasoning section ends.")
@@ -3195,6 +3196,10 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c 0") #'ollama-buddy-clear-attachments)
 
     (define-key map (kbd "C-c #") #'ollama-buddy-toggle-model-highlighting)
+
+    ;; Autocomplete keybindings
+    (define-key map (kbd "C-c a") #'ollama-buddy-autocomplete-toggle)
+    (define-key map (kbd "C-c C-t") #'ollama-buddy-autocomplete-trigger-manual)
     
     (define-key map [remap move-beginning-of-line] #'ollama-buddy-beginning-of-prompt)
     map)

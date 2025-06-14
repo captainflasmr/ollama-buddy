@@ -1247,6 +1247,29 @@ https://github.com/captainflasmr/ollama-buddy
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_021.gif]]
 
+** 022 Ollama Buddy - Prototyping autocompletion #emacs #ollama
+
+Demonstrating a potential implementation for some autocompletion.
+
+Select o:qwen2.5-coder:0.5b in configuration
+
+~(ollama-buddy-autocomplete-model "o:qwen2.5-coder:0.5b")~
+
+Load up my init file and through a test transient menu toggle on autocomplete and then set manual completion, lets see what happens.
+
+I chose qwen2.5-coder:0.5b as it probably the fastest coding local LLM.
+
+Basically looking to autocomplete bits and bobs within the init file.
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_022.gif]]
+
 * Installation
 
 ** Prerequisites
