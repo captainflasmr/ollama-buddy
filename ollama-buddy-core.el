@@ -1851,9 +1851,22 @@ When complete, CALLBACK is called with the status response and result."
 
 (defun ollama-buddy--ollama-running ()
   "Check if Ollama server is running using the configured backend."
-  (condition-case nil
-      (ollama-buddy--make-request-backend "/api/tags" "GET")
-    (error nil)))
+  (let ((backend (ollama-buddy--get-effective-backend)))
+    (condition-case nil
+        (cond
+         ((eq backend 'curl)
+          ;; Direct curl call without going through the request system
+          (zerop (call-process 
+                  ollama-buddy-curl-executable nil nil nil
+                  "--silent" "--output" "/dev/null" "--max-time" "5" "--fail"
+                  (format "http://%s:%d/api/tags" ollama-buddy-host ollama-buddy-port))))
+         (t
+          ;; Original network method
+          (progn
+            (url-retrieve-synchronously 
+             (format "http://%s:%s/api/tags" ollama-buddy-host ollama-buddy-port))
+            t)))
+      (error nil))))
 
 (defun ollama-buddy--check-status ()
   "Check Ollama status with caching for better performance."
