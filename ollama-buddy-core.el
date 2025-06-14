@@ -27,11 +27,38 @@
 
 ;; Forward declarations for functions defined in ollama-buddy.el
 (declare-function ollama-buddy--calculate-prompt-context-percentage "ollama-buddy")
+(declare-function ollama-buddy--send "ollama-buddy")
+(declare-function ollama-buddy--stream-sentinel "ollama-buddy")
+(declare-function ollama-buddy--stream-filter "ollama-buddy")
+(declare-function ollama-buddy--create-vision-message "ollama-buddy")
+(declare-function ollama-buddy--detect-image-files "ollama-buddy")
+(declare-function ollama-buddy--model-supports-vision "ollama-buddy")
+(declare-function ollama-buddy--check-context-before-send "ollama-buddy")
 
 (defgroup ollama-buddy-params nil
   "Customization group for Ollama API parameters."
   :group 'ollama-buddy
   :prefix "ollama-buddy-param-")
+
+(defcustom ollama-buddy-communication-backend 'network-process
+  "Communication backend to use for Ollama API requests.
+- `network-process': Use Emacs built-in network process (default)
+- `curl': Use external curl command for requests"
+  :type '(choice (const :tag "Network Process (built-in)" network-process)
+                 (const :tag "Curl (external)" curl))
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-curl-executable "curl"
+  "Path to the curl executable.
+Only used when `ollama-buddy-communication-backend' is set to `curl'."
+  :type 'string
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-curl-timeout 30
+  "Timeout in seconds for curl requests.
+Only used when `ollama-buddy-communication-backend' is set to `curl'."
+  :type 'integer
+  :group 'ollama-buddy)
 
 (defcustom ollama-buddy-highlight-models-enabled t
   "Highlight model names with distinctive colors in Ollama Buddy buffers."
@@ -677,6 +704,361 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
   "Map of model prefixes to handler functions.")
 
 ;; Core utility functions
+;; Backend detection and validation
+(defun ollama-buddy--validate-curl-executable ()
+  "Check if curl executable is available and working."
+  (condition-case nil
+      (zerop (call-process ollama-buddy-curl-executable nil nil nil "--version"))
+    (error nil)))
+
+(defun ollama-buddy--get-effective-backend ()
+  "Get the effective communication backend, with fallback logic."
+  (cond
+   ;; If explicitly set to curl, validate it's available
+   ((eq ollama-buddy-communication-backend 'curl)
+    (if (ollama-buddy--validate-curl-executable)
+        'curl
+      (progn
+        (message "Warning: curl not available, falling back to network-process")
+        'network-process)))
+   ;; Default to network-process
+   (t 'network-process)))
+
+;; Curl-based implementations
+(defun ollama-buddy--make-request-curl (endpoint method &optional payload)
+  "Make a request using curl for ENDPOINT with METHOD and optional PAYLOAD."
+  (when (ollama-buddy--ollama-running)
+    (let* ((url (format "http://%s:%d%s"
+                        ollama-buddy-host ollama-buddy-port endpoint))
+           (temp-file (when payload (make-temp-file "ollama-buddy-payload")))
+           (args (list
+                  "--silent"
+                  "--show-error"
+                  "--max-time" (number-to-string ollama-buddy-curl-timeout)
+                  "--request" method
+                  "--header" "Content-Type: application/json"
+                  "--header" "Connection: close")))
+      
+      ;; Add payload if provided
+      (when payload
+        (with-temp-file temp-file
+          (insert payload))
+        (setq args (append args (list "--data-binary" (concat "@" temp-file)))))
+      
+      ;; Add URL at the end
+      (setq args (append args (list url)))
+      
+      (unwind-protect
+          (with-temp-buffer
+            (let ((exit-code (apply #'call-process ollama-buddy-curl-executable nil t nil args)))
+              (if (zerop exit-code)
+                  (when (not (string-empty-p (buffer-string)))
+                    (condition-case err
+                        (json-read-from-string (buffer-string))
+                      (error
+                       (message "Warning: Failed to parse JSON response: %s" 
+                                (error-message-string err))
+                       nil)))
+                (error "Curl request failed with exit code %d: %s" 
+                       exit-code (buffer-string)))))
+        ;; Clean up temp file
+        (when (and temp-file (file-exists-p temp-file))
+          (delete-file temp-file))))))
+
+(defun ollama-buddy--make-request-curl-async (endpoint method payload callback)
+  "Make an asynchronous curl request to ENDPOINT using METHOD with PAYLOAD.
+When complete, CALLBACK is called with the status response and result."
+  (when (ollama-buddy--ollama-running)
+    (let* ((url (format "http://%s:%d%s"
+                        ollama-buddy-host ollama-buddy-port endpoint))
+           (temp-file (when payload (make-temp-file "ollama-buddy-payload")))
+           (process-name (format "ollama-curl-%s" (gensym)))
+           (args (list
+                  "--silent"
+                  "--show-error"
+                  "--max-time" (number-to-string ollama-buddy-curl-timeout)
+                  "--request" method
+                  "--header" "Content-Type: application/json"
+                  "--header" "Connection: close")))
+      
+      ;; Add payload if provided
+      (when payload
+        (with-temp-file temp-file
+          (insert payload))
+        (setq args (append args (list "--data-binary" (concat "@" temp-file)))))
+      
+      ;; Add URL at the end
+      (setq args (append args (list url)))
+      
+      (let ((process (apply #'start-process process-name nil 
+                            ollama-buddy-curl-executable args)))
+        (set-process-sentinel
+         process
+         (lambda (proc event)
+           (let ((status (if (string-match-p "finished" event)
+                             nil
+                           (list :error (cons 'error event))))
+                 (result nil))
+             (when (zerop (process-exit-status proc))
+               (with-current-buffer (process-buffer proc)
+                 (when (not (string-empty-p (buffer-string)))
+                   (condition-case err
+                       (setq result (json-read-from-string (buffer-string)))
+                     (error
+                      (message "Warning: Failed to parse JSON response: %s" 
+                               (error-message-string err)))))))
+             
+             ;; Clean up
+             (when (and temp-file (file-exists-p temp-file))
+               (delete-file temp-file))
+             (when (buffer-live-p (process-buffer proc))
+               (kill-buffer (process-buffer proc)))
+             
+             ;; Call the callback
+             (funcall callback status result))))))))
+
+(defun ollama-buddy--curl-stream-filter (proc output callback)
+  "Process streaming OUTPUT from curl PROC, calling CALLBACK for each JSON line."
+  (with-current-buffer (process-buffer proc)
+    (goto-char (point-max))
+    (insert output)
+    
+    ;; Process complete lines
+    (goto-char (point-min))
+    (while (re-search-forward "^.*\n" nil t)
+      (let ((line (match-string 0)))
+        (delete-region (match-beginning 0) (match-end 0))
+        (when (and (string-match-p "^{" line)
+                   (not (string-empty-p (string-trim line))))
+          (condition-case err
+              (let ((json-data (json-read-from-string line)))
+                (funcall callback json-data))
+            (error
+             (message "Warning: Failed to parse streaming JSON: %s" 
+                      (error-message-string err)))))))))
+
+(defun ollama-buddy--send-curl (prompt &optional specified-model)
+  "Send PROMPT using curl backend with streaming support."
+  ;; This is a more complex implementation that handles streaming
+  ;; For now, we'll implement a simpler version that works with the existing filter
+  (unless (ollama-buddy--check-status)
+    (ollama-buddy--update-status "OFFLINE")
+    (user-error "Ensure Ollama is running"))
+
+  (unless (> (length prompt) 0)
+    (user-error "Ensure prompt is defined"))
+
+  (when ollama-buddy-show-context-percentage
+    (unless (ollama-buddy--check-context-before-send)
+      (user-error "Context too far over limit to send")))
+  
+  (let* ((model-info (ollama-buddy--get-valid-model specified-model))
+         (model (car model-info))
+         (original-model (cdr model-info))
+         (supports-vision (and ollama-buddy-vision-enabled
+                               (ollama-buddy--model-supports-vision model)))
+         (image-files (when supports-vision
+                        (ollama-buddy--detect-image-files prompt)))
+         (has-images (and supports-vision image-files (not (null image-files))))
+         (history (ollama-buddy--get-history-for-request))
+         (messages-with-system
+          (if ollama-buddy--current-system-prompt
+              (append `(((role . "system")
+                         (content . ,ollama-buddy--current-system-prompt)))
+                      history)
+            history))
+         (attachment-context
+          (when ollama-buddy--current-attachments
+            (concat "\n\n## Attached Files Context:\n\n"
+                    (mapconcat
+                     (lambda (attachment)
+                       (let ((file (plist-get attachment :file))
+                             (content (plist-get attachment :content)))
+                         (format "### File: %s\n\n#+end_src%s\n%s\n#+begin_src \n\n"
+                                 (file-name-nondirectory file)
+                                 (or (plist-get attachment :type) "")
+                                 content)))
+                     ollama-buddy--current-attachments
+                     ""))))
+         (current-message (if has-images
+                              (ollama-buddy--create-vision-message prompt image-files)
+                            `((role . "user")
+                              (content . ,(if attachment-context
+                                              (concat prompt attachment-context)
+                                            prompt)))))
+         (messages-all (append messages-with-system (list current-message)))
+         (modified-options (ollama-buddy-params-get-for-request))
+         (base-payload `((model . ,(ollama-buddy--get-real-model-name model))
+                         (messages . ,(vconcat [] messages-all))
+                         (stream . ,(if ollama-buddy-streaming-enabled t :json-false))))
+         (with-system (if ollama-buddy--current-system-prompt
+                          (append base-payload `((system . ,ollama-buddy--current-system-prompt)))
+                        base-payload))
+         (with-suffix (if ollama-buddy--current-suffix
+                          (append with-system `((suffix . ,ollama-buddy--current-suffix)))
+                        with-system))
+         (final-payload (if modified-options
+                            (append with-suffix `((options . ,modified-options)))
+                          with-suffix))
+         (payload (json-encode final-payload))
+         (temp-file (make-temp-file "ollama-buddy-payload"))
+         (url (format "http://%s:%d/api/chat" ollama-buddy-host ollama-buddy-port)))
+
+    (unless ollama-buddy--multishot-sequence
+      (set-register ollama-buddy-default-register ""))
+    
+    (setq ollama-buddy--current-model model)
+    (setq ollama-buddy--current-prompt prompt)
+    
+    ;; Prepare the chat buffer (same as network version)
+    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+      (pop-to-buffer (current-buffer))
+      (goto-char (point-max))
+      
+      (unless (> (buffer-size) 0)
+        (insert (ollama-buddy--create-intro-message)))
+
+      (when ollama-buddy--current-attachments
+        (insert (format "\n\n[Including %d attached file(s) in context]"
+                        (length ollama-buddy--current-attachments))))
+      
+      (if has-images
+          (insert (format "\n\n** [%s: RESPONSE with %d image(s)]"
+                          model (length image-files)))
+        (insert (format "\n\n** [%s: RESPONSE]" model)))
+
+      (setq ollama-buddy--response-start-position (point))
+      (insert "\n\n")
+
+      (when (and original-model model (not (string= original-model model)))
+        (insert (format "*[Using %s instead of %s]*" model original-model) "\n\n"))
+
+      (when has-images
+        (insert "Detected images:\n")
+        (dolist (img image-files)
+          (insert (format "- %s\n" img)))
+        (insert "\n"))
+
+      (visual-line-mode 1))
+
+    (when (not ollama-buddy-streaming-enabled)
+      (setq ollama-buddy--start-point (point))
+      (insert "Loading response..."))
+    
+    (ollama-buddy--update-status (if has-images
+                                     "Vision Processing..."
+                                   "Processing...")
+                                 original-model model)
+
+    ;; Kill existing process if any
+    (when (and ollama-buddy--active-process
+               (process-live-p ollama-buddy--active-process))
+      (set-process-sentinel ollama-buddy--active-process nil)
+      (delete-process ollama-buddy--active-process)
+      (setq ollama-buddy--active-process nil))
+    
+    ;; Write payload to temp file
+    (with-temp-file temp-file
+      (insert payload))
+    
+    ;; Start curl process
+    (condition-case err
+        (let* ((process-name "ollama-chat-curl")
+               (args (list
+                      "--silent"
+                      "--no-buffer"
+                      "--max-time" (number-to-string ollama-buddy-curl-timeout)
+                      "--request" "POST"
+                      "--header" "Content-Type: application/json"
+                      "--data-binary" (concat "@" temp-file)
+                      url)))
+          
+          (setq ollama-buddy--active-process
+                (apply #'start-process process-name nil 
+                       ollama-buddy-curl-executable args))
+          
+          ;; Set up process filter for streaming
+          (set-process-filter 
+           ollama-buddy--active-process
+           (lambda (proc output)
+             (ollama-buddy--curl-stream-filter 
+              proc output
+              (lambda (json-data)
+                ;; Convert to the format expected by the existing stream filter
+                (let ((text (alist-get 'content (alist-get 'message json-data))))
+                  (when text
+                    (ollama-buddy--stream-filter proc (json-encode json-data))))))))
+          
+          ;; Set up sentinel
+          (set-process-sentinel
+           ollama-buddy--active-process
+           (lambda (proc event)
+             ;; Clean up temp file
+             (when (file-exists-p temp-file)
+               (delete-file temp-file))
+             ;; Call existing sentinel
+             (ollama-buddy--stream-sentinel proc event))))
+      
+      (error
+       (when (file-exists-p temp-file)
+         (delete-file temp-file))
+       (ollama-buddy--update-status "OFFLINE - Curl failed")
+       (error "Failed to start curl process: %s" (error-message-string err))))))
+
+;; Modified backend dispatcher functions
+(defun ollama-buddy--make-request-backend (endpoint method &optional payload)
+  "Make request using the configured backend."
+  (let ((backend (ollama-buddy--get-effective-backend)))
+    (cond
+     ((eq backend 'curl)
+      (ollama-buddy--make-request-curl endpoint method payload))
+     (t
+      (ollama-buddy--make-request endpoint method payload)))))
+
+(defun ollama-buddy--make-request-async-backend (endpoint method payload callback)
+  "Make async request using the configured backend."
+  (let ((backend (ollama-buddy--get-effective-backend)))
+    (cond
+     ((eq backend 'curl)
+      (ollama-buddy--make-request-curl-async endpoint method payload callback))
+     (t
+      (ollama-buddy--make-request-async endpoint method payload callback)))))
+
+(defun ollama-buddy--send-backend (prompt &optional specified-model)
+  "Send prompt using the configured backend."
+  (let ((backend (ollama-buddy--get-effective-backend)))
+    (cond
+     ((eq backend 'curl)
+      (ollama-buddy--send-curl prompt specified-model))
+     (t
+      (ollama-buddy--send prompt specified-model)))))
+
+;; Function to test communication backend
+(defun ollama-buddy-test-communication-backend ()
+  "Test the current communication backend."
+  (interactive)
+  (let ((backend (ollama-buddy--get-effective-backend)))
+    (message "Testing %s backend..." backend)
+    (condition-case err
+        (if (ollama-buddy--make-request-backend "/api/tags" "GET")
+            (message "%s backend working correctly!" (capitalize (symbol-name backend)))
+          (message "%s backend failed to get response" (capitalize (symbol-name backend))))
+      (error
+       (message "%s backend failed: %s" (capitalize (symbol-name backend)) 
+                (error-message-string err))))))
+
+;; Function to switch backend interactively
+(defun ollama-buddy-switch-communication-backend ()
+  "Interactively switch communication backend."
+  (interactive)
+  (let ((current-backend ollama-buddy-communication-backend)
+        (new-backend (intern (completing-read 
+                              "Select communication backend: "
+                              '("network-process" "curl") nil t))))
+    (setq ollama-buddy-communication-backend new-backend)
+    (message "Switched from %s to %s backend" 
+             current-backend new-backend)
+    (ollama-buddy-test-communication-backend)))
 
 (defun ollama-buddy--extract-title-from-content (content)
   "Extract a meaningful title from system prompt CONTENT."
@@ -1468,14 +1850,10 @@ When complete, CALLBACK is called with the status response and result."
                     nil t t))))
 
 (defun ollama-buddy--ollama-running ()
-  "Check if Ollama server is running using url.el."
-  (let ((ollama-url (format "http://%s:%s/api/tags"
-                            ollama-buddy-host ollama-buddy-port)))
-    (condition-case nil
-        (progn
-          (url-retrieve-synchronously ollama-url)
-          t)
-      (error nil))))
+  "Check if Ollama server is running using the configured backend."
+  (condition-case nil
+      (ollama-buddy--make-request-backend "/api/tags" "GET")
+    (error nil)))
 
 (defun ollama-buddy--check-status ()
   "Check Ollama status with caching for better performance."
@@ -1502,20 +1880,19 @@ When complete, CALLBACK is called with the status response and result."
       (when (or (null ollama-buddy--models-cache-timestamp)
                 (> (- current-time ollama-buddy--models-cache-timestamp)
                    ollama-buddy--models-cache-ttl))
-        ;; Cache expired or not set - use synchronous version to refresh cache
-        (when-let ((response (ollama-buddy--make-request "/api/tags" "GET")))
+        ;; Use backend dispatcher
+        (when-let ((response (ollama-buddy--make-request-backend "/api/tags" "GET")))
           (setq ollama-buddy--models-cache
                 (sort
                  (mapcar #'car (ollama-buddy--get-models-with-colors-from-result response))
                  #'string<)
                 ollama-buddy--models-cache-timestamp current-time)
-          ;; Also refresh in background for next time
           (ollama-buddy--refresh-models-cache)))
       ollama-buddy--models-cache)))
 
 (defun ollama-buddy--refresh-models-cache ()
   "Refresh the models cache in the background."
-  (ollama-buddy--make-request-async
+  (ollama-buddy--make-request-async-backend
    "/api/tags"
    "GET"
    nil
@@ -1543,21 +1920,20 @@ When complete, CALLBACK is called with the status response and result."
       (when (or (null ollama-buddy--running-models-cache-timestamp)
                 (> (- current-time ollama-buddy--running-models-cache-timestamp)
                    ollama-buddy--models-cache-ttl))
-        ;; Cache expired or not set - use synchronous version to refresh cache
-        (when-let ((response (ollama-buddy--make-request "/api/ps" "GET")))
+        ;; Use backend dispatcher
+        (when-let ((response (ollama-buddy--make-request-backend "/api/ps" "GET")))
           (setq ollama-buddy--running-models-cache
                 (mapcar (lambda (m)
                           (ollama-buddy--get-full-model-name (alist-get 'name m)))
                         (alist-get 'models response))
                 ollama-buddy--running-models-cache-timestamp current-time)
           
-          ;; Also refresh in background for next time
           (ollama-buddy--refresh-running-models-cache)))
       ollama-buddy--running-models-cache)))
 
 (defun ollama-buddy--refresh-running-models-cache ()
   "Refresh the running models cache in the background."
-  (ollama-buddy--make-request-async
+  (ollama-buddy--make-request-async-backend
    "/api/ps"
    "GET"
    nil
@@ -1765,10 +2141,12 @@ ACTUAL-MODEL is the model being used instead."
                              ollama-buddy-params-modified " ")))
                        (if (string-empty-p param-str)
                            ""
-                         (format " [%s]" param-str))))))
+                         (format " [%s]" param-str)))))
+           (backend (ollama-buddy--get-effective-backend))
+           (backend-indicator (if (eq backend 'curl) "C" "N")))
       (setq header-line-format
             (concat
-             (format " %s %s%s%s%s %s%s%s %s %s %s%s"
+             (format " %s %s%s%s%s %s%s%s %s %s %s%s %s"
                      (ollama-buddy--add-context-to-status-format)
                      
                      (if ollama-buddy-hide-reasoning "REASONING HIDDEN " "")
@@ -1789,7 +2167,11 @@ ACTUAL-MODEL is the model being used instead."
 
                      system-indicator
                      
-                     (or params ""))
+                     (or params "")
+                     
+                     backend-indicator
+                     
+                     )
              (when (and original-model actual-model (not (string= original-model actual-model)))
                (propertize (format " [Using %s instead of %s]" actual-model original-model)
                            'face '(:foreground "orange" :weight bold))))))))

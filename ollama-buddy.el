@@ -796,7 +796,7 @@ PROPS should be a sequence of property-value pairs."
     (ollama-buddy--update-status (format "Fetching info for %s..." model))
     
     ;; Make API request asynchronously to get model info
-    (ollama-buddy--make-request-async
+    (ollama-buddy--make-request-async-backend
      endpoint
      "POST"
      payload
@@ -1898,7 +1898,7 @@ With prefix argument ALL-MODELS, clear history for all models."
           (add-to-history 'ollama-buddy--prompt-history prompt-text))
         
         ;; Send the request
-        (ollama-buddy--send (string-trim full-prompt) model)
+        (ollama-buddy--send-backend (string-trim full-prompt) model)
         
         ;; Restore the original system prompt if we changed it
         (when system-text
@@ -2794,7 +2794,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
      operation-id
      (format "Pulling %s" model))
     
-    (ollama-buddy--make-request-async
+    (ollama-buddy--make-request-async-backend
      "/api/pull"
      "POST"
      payload
@@ -2822,7 +2822,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
      operation-id
      (format "Copying to %s" model))
     
-    (ollama-buddy--make-request-async
+    (ollama-buddy--make-request-async-backend
      "/api/copy"
      "POST"
      payload
@@ -2848,7 +2848,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
      operation-id
      (format "Deleting %s" model))
     
-    (ollama-buddy--make-request-async
+    (ollama-buddy--make-request-async-backend
      "/api/delete"
      "DELETE"
      payload
