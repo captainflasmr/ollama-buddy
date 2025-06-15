@@ -55,7 +55,7 @@ Only used when `ollama-buddy-communication-backend' is set to `curl'."
   :type 'string
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-curl-timeout 30
+(defcustom ollama-buddy-curl-timeout 300
   "Timeout in seconds for curl requests.
 Only used when `ollama-buddy-communication-backend' is set to `curl'."
   :type 'integer
