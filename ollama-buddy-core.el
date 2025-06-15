@@ -729,10 +729,12 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
   (cond
    ;; If explicitly set to curl, validate it's available
    ((eq ollama-buddy-communication-backend 'curl)
-    (if (ollama-buddy--validate-curl-executable)
+    (if (and (featurep 'ollama-buddy-curl)
+             (fboundp 'ollama-buddy-curl--validate-executable)
+             (ollama-buddy-curl--validate-executable))
         'curl
       (progn
-        (message "Warning: curl not available, falling back to network-process")
+        (message "Warning: curl backend not available, falling back to network-process")
         'network-process)))
    ;; Default to network-process
    (t 'network-process)))
@@ -1587,7 +1589,9 @@ When complete, CALLBACK is called with the status response and result."
   "Check if Ollama server is running using the configured backend."
   (let ((backend (ollama-buddy--get-effective-backend)))
     (cond
-     ((eq backend 'curl)
+     ((and (eq backend 'curl)
+           (featurep 'ollama-buddy-curl)
+           (fboundp 'ollama-buddy-curl--test-connection))
       (ollama-buddy-curl--test-connection))
      (t
       (condition-case nil
