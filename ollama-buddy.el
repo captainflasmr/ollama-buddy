@@ -87,6 +87,20 @@
 (require 'ollama-buddy-transient)
 (require 'ollama-buddy-user-prompts)
 
+(declare-function ollama-buddy-curl--validate-executable "ollama-buddy-curl")
+(declare-function ollama-buddy-curl--test-connection "ollama-buddy-curl")
+(declare-function ollama-buddy-curl--make-request-direct "ollama-buddy-curl")
+(declare-function ollama-buddy-curl--make-request "ollama-buddy-curl")
+(declare-function ollama-buddy-curl--make-request-async "ollama-buddy-curl")
+(declare-function ollama-buddy-curl--process-filter "ollama-buddy-curl")
+(declare-function ollama-buddy-curl--process-json-line "ollama-buddy-curl")
+(declare-function ollama-buddy-curl--handle-content "ollama-buddy-curl")
+(declare-function ollama-buddy-curl--handle-completion "ollama-buddy-curl")
+(declare-function ollama-buddy-curl--sentinel "ollama-buddy-curl")
+(declare-function ollama-buddy-curl--send "ollama-buddy-curl")
+(declare-function ollama-buddy-curl--non-streaming-sentinel "ollama-buddy-curl")
+(declare-function ollama-buddy-curl-test "ollama-buddy-curl")
+
 (defvar ollama-buddy--reasoning-skip-newlines nil
   "Whether to skip leading newlines after reasoning section ends.")
 

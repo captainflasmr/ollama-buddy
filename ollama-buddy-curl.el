@@ -12,24 +12,15 @@
 
 (require 'json)
 (require 'subr-x)
+(require 'ollama-buddy-core)
 
 ;; Forward declarations for functions defined in other ollama-buddy files
-(declare-function ollama-buddy--ollama-running "ollama-buddy-core")
-(declare-function ollama-buddy--get-valid-model "ollama-buddy-core")
-(declare-function ollama-buddy--get-history-for-request "ollama-buddy-core")
 (declare-function ollama-buddy--create-vision-message "ollama-buddy")
 (declare-function ollama-buddy--detect-image-files "ollama-buddy")
 (declare-function ollama-buddy--model-supports-vision "ollama-buddy")
-(declare-function ollama-buddy--get-real-model-name "ollama-buddy-core")
-(declare-function ollama-buddy-params-get-for-request "ollama-buddy-core")
-(declare-function ollama-buddy--update-status "ollama-buddy-core")
-(declare-function ollama-buddy--create-intro-message "ollama-buddy-core")
-(declare-function ollama-buddy--prepare-prompt-area "ollama-buddy-core")
 (declare-function ollama-buddy--check-context-before-send "ollama-buddy")
 (declare-function ollama-buddy--find-reasoning-marker "ollama-buddy")
 (declare-function ollama-buddy--update-token-rate-display "ollama-buddy")
-(declare-function ollama-buddy--add-to-history "ollama-buddy-core")
-(declare-function ollama-buddy--md-to-org-convert-region "ollama-buddy-core")
 (declare-function ollama-buddy--send-next-in-sequence "ollama-buddy")
 
 ;; Curl-specific variables
@@ -44,6 +35,7 @@
     (error nil)))
 
 ;; Connection test
+;;;###autoload
 (defun ollama-buddy-curl--test-connection ()
   "Check if Ollama server is reachable using curl."
   (condition-case nil

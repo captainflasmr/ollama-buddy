@@ -18,7 +18,6 @@
 (require 'dired)
 (require 'org)
 (require 'savehist)
-(require 'ollama-buddy-curl nil t)
 
 ;; Core Customization Groups
 (defgroup ollama-buddy nil
@@ -35,6 +34,19 @@
 (declare-function ollama-buddy--detect-image-files "ollama-buddy")
 (declare-function ollama-buddy--model-supports-vision "ollama-buddy")
 (declare-function ollama-buddy--check-context-before-send "ollama-buddy")
+(declare-function ollama-buddy-curl--validate-executable "ollama-buddy-curl")
+(declare-function ollama-buddy-curl--test-connection "ollama-buddy-curl")
+(declare-function ollama-buddy-curl--make-request-direct "ollama-buddy-curl")
+(declare-function ollama-buddy-curl--make-request "ollama-buddy-curl")
+(declare-function ollama-buddy-curl--make-request-async "ollama-buddy-curl")
+(declare-function ollama-buddy-curl--process-filter "ollama-buddy-curl")
+(declare-function ollama-buddy-curl--process-json-line "ollama-buddy-curl")
+(declare-function ollama-buddy-curl--handle-content "ollama-buddy-curl")
+(declare-function ollama-buddy-curl--handle-completion "ollama-buddy-curl")
+(declare-function ollama-buddy-curl--sentinel "ollama-buddy-curl")
+(declare-function ollama-buddy-curl--send "ollama-buddy-curl")
+(declare-function ollama-buddy-curl--non-streaming-sentinel "ollama-buddy-curl")
+(declare-function ollama-buddy-curl-test "ollama-buddy-curl")
 
 (defgroup ollama-buddy-params nil
   "Customization group for Ollama API parameters."
