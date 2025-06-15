@@ -297,7 +297,7 @@ When complete, CALLBACK is called with the status response and result."
         (when (and window was-at-end)
           (set-window-point window (point-max))))))))
 
-(defun ollama-buddy-curl--handle-completion (json-data)
+(defun ollama-buddy-curl--handle-completion (_json-data)
   "Handle completion of curl response."
   (condition-case err
       (progn

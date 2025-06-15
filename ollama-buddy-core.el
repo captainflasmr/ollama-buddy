@@ -554,6 +554,12 @@ Returns non-nil if any remote models are available."
   :type 'float
   :group 'ollama-buddy)
 
+(defvar ollama-buddy--in-reasoning-section nil
+  "Whether we are currently inside a reasoning section.")
+
+(defvar ollama-buddy--current-response nil
+  "The current response text being accumulated.")
+
 (defvar ollama-buddy--current-system-prompt-title nil
   "Title/name of the current system prompt for display purposes.")
 

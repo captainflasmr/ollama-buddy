@@ -107,9 +107,6 @@
 (defvar ollama-buddy--reasoning-marker-found nil
   "Whether we are currently inside a reasoning section.")
 
-(defvar ollama-buddy--in-reasoning-section nil
-  "Whether we are currently inside a reasoning section.")
-
 (defvar ollama-buddy--reasoning-status-message nil
   "Current reasoning status message.")
 
@@ -127,9 +124,6 @@
 
 (defvar ollama-buddy--start-point nil
   "General store of a starting point.")
-
-(defvar ollama-buddy--current-response nil
-  "The current response text being accumulated.")
 
 ;; creating vision payload
 (defun ollama-buddy--create-vision-message (prompt image-files)
