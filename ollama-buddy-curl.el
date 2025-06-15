@@ -565,5 +565,7 @@ When complete, CALLBACK is called with the status response and result."
         (message "Curl is available but cannot connect to Ollama"))
     (message "Curl executable not found or not working")))
 
+(advice-add 'ollama-buddy-curl--send :around #'ollama-buddy--dispatch-to-handler)
+
 (provide 'ollama-buddy-curl)
 ;;; ollama-buddy-curl.el ends here
