@@ -406,6 +406,7 @@ When complete, CALLBACK is called with the status response and result."
      (message "Error in curl sentinel: %s" (error-message-string err)))))
 
 ;; Main curl send function
+
 (defun ollama-buddy-curl--send (prompt &optional specified-model)
   "Send PROMPT using curl backend with streaming support."
   (unless (ollama-buddy--check-status)
@@ -459,7 +460,7 @@ When complete, CALLBACK is called with the status response and result."
          (modified-options (ollama-buddy-params-get-for-request))
          (base-payload `((model . ,(ollama-buddy--get-real-model-name model))
                          (messages . ,(vconcat [] messages-all))
-                         (stream . t)))
+                         (stream . ,(if ollama-buddy-streaming-enabled t :json-false))))
          (final-payload (if modified-options
                             (append base-payload `((options . ,modified-options)))
                           base-payload))
@@ -505,6 +506,13 @@ When complete, CALLBACK is called with the status response and result."
         (insert "\n"))
 
       (visual-line-mode 1))
+
+    ;; Show "Loading..." message when streaming is disabled
+    (when (not ollama-buddy-streaming-enabled)
+      (with-current-buffer ollama-buddy--chat-buffer
+        (let ((inhibit-read-only t))
+          (goto-char (point-max))
+          (insert "Loading response..."))))
     
     (ollama-buddy--update-status (if has-images
                                      "Curl Vision Processing..."
@@ -524,23 +532,31 @@ When complete, CALLBACK is called with the status response and result."
     (condition-case err
         (let ((args (list
                      "--silent"
-                     "--no-buffer"
-                     "--include"  ; Include headers so we can strip them
                      "--max-time" (number-to-string ollama-buddy-curl-timeout)
                      "--request" "POST"
                      "--header" "Content-Type: application/json"
                      "--data-binary" (concat "@" temp-file)
                      url)))
           
+          ;; Add streaming-specific args
+          (when ollama-buddy-streaming-enabled
+            (setq args (append '("--no-buffer" "--include") args)))
+          
           (setq ollama-buddy--active-process
                 (apply #'start-process process-name process-buffer 
                        ollama-buddy-curl-executable args))
           
-          ;; Set filter and sentinel
-          (set-process-filter ollama-buddy--active-process 
-                              #'ollama-buddy-curl--process-filter)
-          (set-process-sentinel ollama-buddy--active-process 
-                                #'ollama-buddy-curl--sentinel)
+          ;; Set different filter and sentinel based on streaming mode
+          (if ollama-buddy-streaming-enabled
+              (progn
+                ;; Streaming mode - use line-by-line processing
+                (set-process-filter ollama-buddy--active-process 
+                                    #'ollama-buddy-curl--process-filter)
+                (set-process-sentinel ollama-buddy--active-process 
+                                      #'ollama-buddy-curl--sentinel))
+            ;; Non-streaming mode - collect all output then process
+            (set-process-sentinel ollama-buddy--active-process 
+                                  #'ollama-buddy-curl--non-streaming-sentinel))
           
           ;; Clean up temp file after a delay
           (run-with-timer 1.0 nil (lambda () 
@@ -554,6 +570,87 @@ When complete, CALLBACK is called with the status response and result."
          (kill-buffer process-buffer))
        (ollama-buddy--update-status "Curl failed to start")
        (error "Failed to start curl: %s" (error-message-string err))))))
+
+;; Add new sentinel for non-streaming mode:
+(defun ollama-buddy-curl--non-streaming-sentinel (proc event)
+  "Sentinel for non-streaming curl processes."
+  (condition-case err
+      (let ((proc-buffer (process-buffer proc))
+            (result-content ""))
+        
+        ;; Get the complete response
+        (when (and proc-buffer (buffer-live-p proc-buffer))
+          (with-current-buffer proc-buffer
+            (setq result-content (buffer-string))))
+        
+        ;; Clean up process buffer
+        (when (and proc-buffer (buffer-live-p proc-buffer))
+          (kill-buffer proc-buffer))
+        
+        ;; Handle different exit conditions
+        (cond
+         ((string-match-p "finished" event)
+          ;; Process the complete response
+          (ollama-buddy-curl--process-non-streaming-response result-content)
+          (message "Curl request completed"))
+         ((string-match-p "\\(?:killed\\|terminated\\)" event)
+          (ollama-buddy--update-status "Request cancelled")
+          (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
+            (with-current-buffer ollama-buddy--chat-buffer
+              (let ((inhibit-read-only t))
+                (goto-char (point-max))
+                ;; Remove "Loading..." message
+                (when (re-search-backward "Loading response\\.\\.\\." nil t)
+                  (delete-region (match-beginning 0) (point-max)))
+                (insert "\n\n*** CANCELLED")
+                (ollama-buddy--prepare-prompt-area)))))
+         (t
+          (ollama-buddy--update-status "Request failed")
+          (message "Curl request failed: %s" event))))
+    (error
+     (message "Error in curl non-streaming sentinel: %s" (error-message-string err)))))
+
+;; Add function to process non-streaming response:
+(defun ollama-buddy-curl--process-non-streaming-response (response-content)
+  "Process complete non-streaming response RESPONSE-CONTENT."
+  (condition-case err
+      (when (not (string-empty-p response-content))
+        ;; Parse the JSON response
+        (let* ((json-data (condition-case parse-err
+                              (json-read-from-string response-content)
+                            (error
+                             (message "Failed to parse non-streaming response: %s" 
+                                      (error-message-string parse-err))
+                             nil)))
+               (message-data (when json-data (alist-get 'message json-data)))
+               (content (when message-data (alist-get 'content message-data))))
+          
+          (when content
+            ;; Set up token tracking
+            (setq ollama-buddy--current-token-start-time (float-time)
+                  ollama-buddy--current-token-count (ollama-buddy--estimate-token-count content)
+                  ollama-buddy--current-response content)
+            
+            ;; Display the complete response at once
+            (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
+              (with-current-buffer ollama-buddy--chat-buffer
+                (let ((inhibit-read-only t))
+                  (goto-char (point-max))
+                  
+                  ;; Remove "Loading..." message
+                  (when (re-search-backward "Loading response\\.\\.\\." nil t)
+                    (delete-region (match-beginning 0) (point-max)))
+                  
+                  ;; Insert the complete response
+                  (insert content)
+                  
+                  ;; Update register
+                  (set-register ollama-buddy-default-register content))))
+            
+            ;; Handle completion
+            (ollama-buddy-curl--handle-completion json-data))))
+    (error
+     (message "Error processing non-streaming response: %s" (error-message-string err)))))
 
 ;; Public interface functions
 (defun ollama-buddy-curl-test ()
