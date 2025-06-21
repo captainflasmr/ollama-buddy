@@ -11,6 +11,20 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-06-21> *0.13.1*
+
+Refactored content register processing to be more efficient and added a new Emacs package brainstorming prompt file.
+
+** <2025-06-15> *0.13.0*
+
+Added curl communication backend with fallback support
+
+- Added ollama-buddy-curl.el as separate backend implementation
+- Implemented backend dispatcher system in ollama-buddy-core.el
+- Updated all async functions to use backend dispatcher
+- Added curl backend validation and testing functions
+- Maintained full compatibility with existing network process backend
+
 ** <2025-05-31> *0.12.1*
 
 Optimized Unicode escape function to fix blocking with large file attachments

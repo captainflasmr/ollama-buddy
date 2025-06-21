@@ -96,6 +96,10 @@ See *Screenshots / Demos* section for more videos/demonstration.
 
 * Whats New
 
+** <2025-06-21> *0.13.1*
+
+Refactored content register processing to be more efficient and added a new Emacs package brainstorming prompt file.
+
 ** <2025-06-15> *0.13.0*
 
 Added curl communication backend with fallback support
