@@ -321,13 +321,13 @@ When complete, CALLBACK is called with the status response and result."
             (let ((inhibit-read-only t))
               (goto-char (point-max))
               
-              ;; Convert the response from markdown to org format if enabled
+                ;; Convert the response from markdown to org format if enabled
               (when ollama-buddy-convert-markdown-to-org
                 (let* ((converted-content (with-temp-buffer
                                             (insert ollama-buddy--current-response)
                                             (ollama-buddy--md-to-org-convert-region (point-min) (point-max))
                                             (buffer-string))))
-                  (set-register reg-char converted-content))
+                  (set-register ollama-buddy-default-register converted-content))
                 
                 (when (and (boundp 'ollama-buddy--response-start-position)
                            ollama-buddy--response-start-position)
@@ -336,10 +336,10 @@ When complete, CALLBACK is called with the status response and result."
                    (point-max))
                   ;; Reset the marker after conversion
                   (makunbound 'ollama-buddy--response-start-position)))
-              
+
               (unless ollama-buddy-convert-markdown-to-org
-                (set-register reg-char ollama-buddy--current-response))
-              
+                (set-register ollama-buddy-default-register ollama-buddy--current-response))
+
               ;; Show token stats if enabled
               (when ollama-buddy-display-token-stats
                 (let ((last-info (car ollama-buddy--token-usage-history)))
@@ -347,7 +347,6 @@ When complete, CALLBACK is called with the status response and result."
                                   (plist-get last-info :tokens)
                                   (plist-get last-info :elapsed)
                                   (plist-get last-info :rate)))))
-              
               (insert "\n\n*** FINISHED")
               (ollama-buddy--prepare-prompt-area))))
         

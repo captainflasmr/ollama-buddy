@@ -1566,8 +1566,7 @@ With prefix argument ALL-MODELS, clear history for all models."
                  (window (get-buffer-window ollama-buddy--chat-buffer t))
                  (old-point (and window (window-point window)))
                  (at-end (and window (>= old-point (point-max))))
-                 (old-window-start (and window (window-start window)))
-                 (reg-char ollama-buddy-default-register))
+                 (old-window-start (and window (window-start window))))
             (save-excursion
               (goto-char (point-max))
               
@@ -1649,7 +1648,7 @@ With prefix argument ALL-MODELS, clear history for all models."
                                               (insert ollama-buddy--current-response)
                                               (ollama-buddy--md-to-org-convert-region (point-min) (point-max))
                                               (buffer-string))))
-                    (set-register reg-char converted-content))
+                    (set-register ollama-buddy-default-register converted-content))
                   
                   (when (and (boundp 'ollama-buddy--response-start-position)
                              ollama-buddy--response-start-position)
@@ -1660,7 +1659,7 @@ With prefix argument ALL-MODELS, clear history for all models."
                     (makunbound 'ollama-buddy--response-start-position)))
 
                 (unless ollama-buddy-convert-markdown-to-org
-                  (set-register reg-char ollama-buddy--current-response))
+                  (set-register ollama-buddy-default-register ollama-buddy--current-response))
                 
                 ;; Add the user message to history
                 (ollama-buddy--add-to-history "user" ollama-buddy--current-prompt)
