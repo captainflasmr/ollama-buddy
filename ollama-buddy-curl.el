@@ -283,19 +283,14 @@ When complete, CALLBACK is called with the status response and result."
                  ;; Inside reasoning section
                  (ollama-buddy--in-reasoning-section
                   (setq should-show-content nil)))))
+            
+            ;; Insert content if not hidden
+            (when should-show-content
+              (insert content)))
           
-          ;; Insert content if not hidden
-          (when should-show-content
-            (insert content)))
-        
-        ;; Update register
-        (set-register ollama-buddy-default-register 
-                      (concat (or (get-register ollama-buddy-default-register) "")
-                              content))
-        
-        ;; Keep window at end if it was there
-        (when (and window was-at-end)
-          (set-window-point window (point-max))))))))
+          ;; Keep window at end if it was there
+          (when (and window was-at-end)
+            (set-window-point window (point-max))))))))
 
 (defun ollama-buddy-curl--handle-completion (_json-data)
   "Handle completion of curl response."
@@ -326,12 +321,24 @@ When complete, CALLBACK is called with the status response and result."
             (let ((inhibit-read-only t))
               (goto-char (point-max))
               
-              ;; Convert markdown if enabled
-              (when (and ollama-buddy-convert-markdown-to-org
-                         (boundp 'ollama-buddy--response-start-position)
-                         ollama-buddy--response-start-position)
-                (ollama-buddy--md-to-org-convert-region 
-                 ollama-buddy--response-start-position (point-max)))
+              ;; Convert the response from markdown to org format if enabled
+              (when ollama-buddy-convert-markdown-to-org
+                (let* ((converted-content (with-temp-buffer
+                                            (insert ollama-buddy--current-response)
+                                            (ollama-buddy--md-to-org-convert-region (point-min) (point-max))
+                                            (buffer-string))))
+                  (set-register reg-char converted-content))
+                
+                (when (and (boundp 'ollama-buddy--response-start-position)
+                           ollama-buddy--response-start-position)
+                  (ollama-buddy--md-to-org-convert-region
+                   ollama-buddy--response-start-position
+                   (point-max))
+                  ;; Reset the marker after conversion
+                  (makunbound 'ollama-buddy--response-start-position)))
+              
+              (unless ollama-buddy-convert-markdown-to-org
+                (set-register reg-char ollama-buddy--current-response))
               
               ;; Show token stats if enabled
               (when ollama-buddy-display-token-stats
@@ -368,8 +375,8 @@ When complete, CALLBACK is called with the status response and result."
                          (plist-get last-info :tokens)
                          (plist-get last-info :rate)))
               (ollama-buddy--update-status "Curl Finished")))))
-      (error
-       (message "Error in curl completion: %s" (error-message-string err)))))
+    (error
+     (message "Error in curl completion: %s" (error-message-string err)))))
 
 (defun ollama-buddy-curl--sentinel (proc event)
   "Sentinel for curl processes."

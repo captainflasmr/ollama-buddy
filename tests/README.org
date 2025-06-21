@@ -26,13 +26,14 @@ This file contains a description of my testing strategy for the =ollama-buddy= E
 # List of elisp files to compile
 elisp_files=(
   "ollama-buddy-awesome.el"
+  "ollama-buddy-claude.el"
   "ollama-buddy-core.el"
+  "ollama-buddy-curl.el"
   "ollama-buddy.el"
   "ollama-buddy-fabric.el"
-  "ollama-buddy-openai.el"
-  "ollama-buddy-claude.el"
   "ollama-buddy-gemini.el"
   "ollama-buddy-grok.el"
+  "ollama-buddy-openai.el"
   "ollama-buddy-transient.el"
   "ollama-buddy-user-prompts.el"
 )
@@ -46,6 +47,8 @@ for el in "${elisp_files[@]}"; do
     -f batch-byte-compile "$elisp_dir/$el"
 done
 #+end_src
+
+#+RESULTS:
 
 ** Run ollama-buddy with different Emacs versions
 
@@ -102,6 +105,12 @@ echo "Temporary init file: $INIT_FILE"
 echo "Cleaning up temporary directory..."
 rm -rf "$TEMP_DIR"
 #+end_src
+
+#+RESULTS:
+| Starting  | Emacs        | 28.2      | with                                  | minimal | configuration... |
+| Testing   | ollama-buddy | from:     | ~/source/repos/ollama-buddy           |         |                  |
+| Temporary | init         | file:     | /tmp/ollama-buddy-test-2gXF4C/init.el |         |                  |
+| Cleaning  | up           | temporary | directory...                          |         |                  |
 
 ** Prompt Text Edge Cases
 

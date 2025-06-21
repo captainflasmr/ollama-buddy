@@ -169,7 +169,7 @@
               (let ((ext-pattern (replace-regexp-in-string "\\\\\\." "\\\\." 
                                                            (replace-regexp-in-string "\\$" "" format-regex))))
                 (when (string-match (concat "\\(" (regexp-quote (substring prompt path-start)) 
-                                           "[^\\n]*?" ext-pattern "\\)") prompt)
+                                            "[^\\n]*?" ext-pattern "\\)") prompt)
                   (let ((potential-path (match-string 1 prompt)))
                     (when (and (file-exists-p potential-path)
                                (not (member potential-path image-files)))
@@ -1622,15 +1622,9 @@ With prefix argument ALL-MODELS, clear history for all models."
               (unless (boundp 'ollama-buddy--current-response)
                 (setq ollama-buddy--current-response text))
               
-              ;; Write to register - if multishot is enabled, use that register, otherwise use default
-              (unless (and ollama-buddy-hide-reasoning ollama-buddy--in-reasoning-section)
-                (set-register reg-char
-                              (concat
-                               (if (stringp (get-register reg-char))
-                                   (get-register reg-char) "") text)))
-              
               ;; Check if this response is complete
               (when (eq (alist-get 'done json-data) t)
+
                 ;; If we're still in a reasoning section at the end, force exit
                 (when (and ollama-buddy-hide-reasoning
                            ollama-buddy--in-reasoning-section)
@@ -1651,22 +1645,22 @@ With prefix argument ALL-MODELS, clear history for all models."
 
                 ;; Convert the response from markdown to org format if enabled
                 (when ollama-buddy-convert-markdown-to-org
-                  ;; first convert the register contents
-                  (let* ((content (get-register reg-char))
-                         (converted-content (with-temp-buffer
-                                              (insert content)
+                  (let* ((converted-content (with-temp-buffer
+                                              (insert ollama-buddy--current-response)
                                               (ollama-buddy--md-to-org-convert-region (point-min) (point-max))
                                               (buffer-string))))
                     (set-register reg-char converted-content))
                   
-                  (let ((response-end (point-max)))
-                    (when (and (boundp 'ollama-buddy--response-start-position)
-                               ollama-buddy--response-start-position)
-                      (ollama-buddy--md-to-org-convert-region
-                       ollama-buddy--response-start-position
-                       response-end)
-                      ;; Reset the marker after conversion
-                      (makunbound 'ollama-buddy--response-start-position))))
+                  (when (and (boundp 'ollama-buddy--response-start-position)
+                             ollama-buddy--response-start-position)
+                    (ollama-buddy--md-to-org-convert-region
+                     ollama-buddy--response-start-position
+                     (point-max))
+                    ;; Reset the marker after conversion
+                    (makunbound 'ollama-buddy--response-start-position)))
+
+                (unless ollama-buddy-convert-markdown-to-org
+                  (set-register reg-char ollama-buddy--current-response))
                 
                 ;; Add the user message to history
                 (ollama-buddy--add-to-history "user" ollama-buddy--current-prompt)
@@ -2466,13 +2460,13 @@ Modifies the variable in place."
         (if running-models
             (progn
               (dolist (model running-models)
-                  (insert (format "- *%s*\n" model))))
+                (insert (format "- *%s*\n" model))))
           (insert "No models currently running.\n"))
 
         ;; List available models with colors
         (insert "\n* Available Models\n\n")
         (dolist (model available-models)
-            (insert (format "- *%s*\n" model)))
+          (insert (format "- *%s*\n" model)))
 
         (insert "\n")
 
@@ -2482,7 +2476,7 @@ Modifies the variable in place."
         
         ;; Display default model
         (when ollama-buddy-default-model
-            (insert (format "* Default Model *%s*\n\n" ollama-buddy-default-model)))
+          (insert (format "* Default Model *%s*\n\n" ollama-buddy-default-model)))
         
         ;; Display models used in commands with colors
         (insert "* Models used in commands\n\n")
@@ -2657,7 +2651,7 @@ Modifies the variable in place."
         
         ;; Display default model
         (when ollama-buddy-default-model
-            (insert (format "* Default Model *%s*\n\n" ollama-buddy-default-model)))
+          (insert (format "* Default Model *%s*\n\n" ollama-buddy-default-model)))
         
         ;; Show running models count with unload all button
         (when running-models
