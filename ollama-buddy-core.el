@@ -1280,7 +1280,7 @@ Supports both single and prefixed multi-character model references."
            "#+begin_example\n"
            " ___ _ _      n _ n      ___       _   _ _ _\n"
            "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |\n"
-           "| | | | | .  |     | .  | . | | | . | . |__ |\n"
+           "| | | | | .  | 1.0 | .  | . | | | . | . |__ |\n"
            "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n"
            "#+end_example\n\n"
            (when (not (ollama-buddy--check-status))
