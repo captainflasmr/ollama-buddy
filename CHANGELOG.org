@@ -11,6 +11,16 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2025-12-11 Thu> *1.0.1*
+
+Added Mistral Codestral integration
+
+- Added ollama-buddy-codestral.el for Mistral Codestral API support
+- Implemented model handler registration for seamless switching between local Ollama and cloud-based Codestral models
+- Supports async streaming responses with real-time token counting
+- Follows the same integration pattern as other remote AI providers (OpenAI, Claude, Gemini, Grok)
+- Uses "s:" prefix to identify Codestral models in the model list
+
 ** <2025-06-21> *0.13.1*
 
 Refactored content register processing to be more efficient and added a new Emacs package brainstorming prompt file.

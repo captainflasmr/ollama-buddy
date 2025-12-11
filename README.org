@@ -96,6 +96,28 @@ See *Screenshots / Demos* section for more videos/demonstration.
 
 * Whats New
 
+** <2025-12-11 Thu> *1.0.1*
+
+Added Mistral Codestral support
+
+- Added ollama-buddy-codestral.el for Mistral Codestral API support
+- Implemented model handler registration for seamless switching between local Ollama and cloud-based Codestral models
+- Supports async streaming responses with real-time token counting
+- Follows the same integration pattern as other remote AI providers (OpenAI, Claude, Gemini, Grok)
+- Uses "s:" prefix to identify Codestral models in the model list
+
+#+begin_src elisp
+(use-package ollama-buddy
+  :bind
+  ("C-c o" . ollama-buddy-menu)
+  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  :custom
+  (ollama-buddy-codestral-api-key
+   (auth-source-pick-first-password :host "ollama-buddy-codestral" :user "apikey"))
+  :config
+  (require 'ollama-buddy-codestral nil t))
+#+end_src
+
 ** <2025-07-23> *1.0.0*
 
 Simply bumped to version 1
