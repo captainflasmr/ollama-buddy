@@ -11,7 +11,7 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
-** <2025-12-11 Thu> *1.0.1*
+** <2025-12-11 Thu> *1.0.2*
 
 Added Mistral Codestral integration
 

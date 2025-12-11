@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 1.0.1
+;; Version: 1.0.2
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -3119,6 +3119,8 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     
     ;; Primary Transient Menu access
     (define-key map (kbd "C-c O") #'ollama-buddy-transient-menu)
+    ;; Convenient access to transient menu from chat buffer
+    (define-key map (kbd "C-c .") #'ollama-buddy-transient-menu)
     (define-key map (kbd "C-c W") #'ollama-buddy-manage-models)
     (define-key map (kbd "C-c ?") #'ollama-buddy-open-info)
     (define-key map (kbd "C-c C-u") #'ollama-buddy-unload-all-models)
