@@ -2507,30 +2507,6 @@ All interactive functions available in ollama-buddy are listed in the original R
 
 * Bugs                                                                 :bugs:
 
-#+begin_src emacs-lisp :results table :exports results :tangle no
-(my/kanban-to-table "bugs" "issues")
-#+end_src
-
-#+RESULTS:
-| TODO                                                                         | DOING                                      | DONE                                                                  |
-|------------------------------------------------------------------------------+--------------------------------------------+-----------------------------------------------------------------------|
-| GGUF to be asynchronous                                                      | Kill online AI process with cancel request | Claude request and connection can sometimes take time and it blocks!  |
-| Better attachment signalling                                                 |                                            | allow switch to remote LLMs even when ollama not running              |
-| Modifying a parameter internal defaults would flag as not modified           |                                            | Vision image with spaces not processed as image                       |
-| No streaming with hiding reasoning corrupts output                           |                                            | Save system prompts as part of session                                |
-| Pushing hundreds or even thousands of lines to the chat buffer takes a while |                                            | chat ollama names to include prefix                                   |
-| Check tags caching                                                           |                                            | Still some encoding issues on returns from online AI                  |
-| keybindings in ollama chat buffer are reserved                               |                                            | Conversation history to display with Claude/ChatGPT                   |
-|                                                                              |                                            | I think some hard coded Claude models currently don't work            |
-|                                                                              |                                            | register contents to be converted to org, currently it is in markdown |
-|                                                                              |                                            | =C-a= beginning-of-line to jump to prompt start like comint           |
-|                                                                              |                                            | As shell generally C-n to end of list to clear prompt history         |
-|                                                                              |                                            | Add Texinfo to MELPA recipe                                           |
-|                                                                              |                                            | System prompt not cleared on new session                              |
-|                                                                              |                                            | Remove fabric from Commands transient menu                            |
-|                                                                              |                                            | External AI to copy to register                                       |
-|                                                                              |                                            | First request with no chat buffer fails                               |
-
 ** TODO GGUF to be asynchronous
 
 ** TODO Better attachment signalling
@@ -2581,136 +2557,121 @@ All interactive functions available in ollama-buddy are listed in the original R
 
 * Roadmap                                                           :roadmap:
 
-#+begin_src emacs-lisp :results table :exports results :tangle no
-(my/kanban-to-table "roadmap" "issues")
-#+end_src
+** Ollama API Improvements (Jan 2026)
 
-#+RESULTS:
-| TODO                    | DOING                                       | DONE                                              |
-|-------------------------+---------------------------------------------+---------------------------------------------------|
-| Autoload intelligently? | Add option to hide reasoning in chat buffer | Unload all models                                 |
-| Core API - Embeddings   | Core Params - suffix                        | check context size of current model when querying |
-| Core Params - format    |                                             | Show token parameters as part of token stats      |
-| Core Params - template  |                                             | Autogenerate session save name                    |
-| Core Params - raw       |                                             | Add gemini?                                       |
-| Test on Windows         |                                             | Pull ChatGPT and Claude model names               |
-|                         |                                             | Merge history buffer functionality                |
-|                         |                                             | Show incoming ollama messages                     |
-|                         |                                             | Add chatGPT awesome prompt support                |
-|                         |                                             | Add fabric pattern/prompt support                 |
-|                         |                                             | ChatGPT support                                   |
-|                         |                                             | Claude support                                    |
-|                         |                                             | Add new ChatGPT 4.1                               |
-|                         |                                             | Method for securely storing API keys              |
-|                         |                                             | Core API - Delete Model                           |
-|                         |                                             | Core API - Copy a model                           |
-|                         |                                             | Core API - stream                                 |
-|                         |                                             | Core API - Pull/Info/Pull/Delete a model          |
-|                         |                                             | Core API - Show running models                    |
-|                         |                                             | Core API - Create a model from a GGUF file        |
-|                         |                                             | Add transient menu                                |
-|                         |                                             | History editing                                   |
-|                         |                                             | Core API - options - parameter editing            |
-|                         |                                             | Core API - show model information                 |
-|                         |                                             | Core API - system prompt                          |
-|                         |                                             | Chat buffer to use org-mode                       |
-|                         |                                             | Chat export options                               |
-|                         |                                             | Core Params - options:temperature                 |
-|                         |                                             | Managing Sessions                                 |
-|                         |                                             | Sparse minified version                           |
-|                         |                                             | Role-Based Menu Preset System                     |
-|                         |                                             | Add to MELPA                                      |
-|                         |                                             | Enhancing Menu Clarity                            |
-|                         |                                             | Real time token tracking                          |
-|                         |                                             | Managing chat history and context                 |
+Recent Ollama releases (v0.12-v0.15) have introduced significant new features. The following roadmap items represent opportunities to integrate these capabilities into ollama-buddy.
 
-** DOING Add option to hide reasoning in chat buffer
+*** TODO Cloud Models Support
 
-** TODO Autoload intelligently?
+Ollama v0.12+ supports cloud-hosted models via =ollama.com= infrastructure, enabling access to larger models (e.g., =deepseek-v3.1:671b-cloud=, =qwen3-coder:480b-cloud=) without local hardware requirements.
 
-** TODO Core API - Embeddings
+*Implementation considerations:*
+- Add authentication support via =ollama signin= / =ollama signout= flow
+- Detect and handle cloud model suffix (=-cloud=) in model names
+- Display cloud vs local indicator in status line
+- Handle potential network latency differences
 
-** TODO Core Params - format
+*References:* [[https://ollama.com/blog/cloud-models][Ollama Cloud Models Blog]]
 
-** TODO Core Params - template
+*** TODO Tool Calling / Function Calling
 
-** TODO Core Params - raw
+Ollama now supports tool calling through the =/api/chat= endpoint with a =tools= parameter. Models like Llama 3.1, Mistral Nemo, and Command-R+ can invoke external functions.
 
-** TODO Test on Windows
+*Implementation considerations:*
+- Define tool schema format in elisp
+- Parse =tool_calls= response field
+- Execute tool functions and return results via =tool= role messages
+- Potential integration with Emacs functions (file operations, shell commands, org-mode)
 
-** DOING Core Params - suffix
+*References:* [[https://ollama.com/blog/tool-support][Ollama Tool Support Blog]]
 
-I think this is only for generate, but I have quietly added it in.
+*** TODO Web Search API Integration
 
-** DONE Unload all models
+Ollama provides a web search API at =https://ollama.com/api/web_search= requiring an API key. Could enable grounded responses with current information.
 
-** DONE check context size of current model when querying
+*Implementation considerations:*
+- Add =ollama-buddy-web-search-api-key= customization
+- Implement =ollama-buddy-web-search= function
+- Option to automatically augment prompts with search results
+- Display source URLs in responses
 
-** DONE Show token parameters as part of token stats
+*References:* [[https://ollama.com/blog/web-search][Ollama Web Search Blog]]
 
-** DONE Autogenerate session save name
+*** TODO Image Generation Support
 
-** DONE Add gemini?
+Ollama v0.14+ supports local image generation with models like Z-Image Turbo (6B) and FLUX.2 Klein. Currently macOS only, Windows/Linux planned.
 
-** DONE Pull ChatGPT and Claude model names
+*Implementation considerations:*
+- Detect image generation models (=x/= prefix)
+- Handle image output (save to file, display in buffer)
+- Support generation parameters (width, height, steps, seed)
+- Integration with org-mode inline images
 
-** DONE Merge history buffer functionality
+*References:* [[https://ollama.com/blog/image-generation][Ollama Image Generation Blog]]
 
-** DONE Show incoming ollama messages
+*** TODO Anthropic Messages API Compatibility
 
-** DONE Add chatGPT awesome prompt support
+Ollama v0.14+ implements =/v1/messages= endpoint compatible with Anthropic's API format. This could simplify the existing =ollama-buddy-claude.el= module or enable new workflows.
 
-** DONE Add fabric pattern/prompt support
+*Implementation considerations:*
+- Option to route Claude-format requests through local Ollama
+- Support for tool_use and tool_result content blocks
+- Extended thinking parameter support
+- Token counting endpoint (=/v1/messages/count_tokens=)
 
-** DONE ChatGPT support
+*References:* [[https://docs.ollama.com/api/anthropic-compatibility][Ollama Anthropic Compatibility Docs]]
 
-** DONE Claude support
+*** TODO Enhanced Token Metrics from API Response
 
-** DONE Add new ChatGPT 4.1
+The API now returns detailed timing and token metrics in responses:
+- =prompt_eval_count= - input token count
+- =eval_count= - output token count
+- =prompt_eval_duration= - prompt processing time (nanoseconds)
+- =eval_duration= - generation time (nanoseconds)
+- =total_duration= - total execution time
+- =load_duration= - model loading time
 
-** DONE Method for securely storing API keys
+*Implementation considerations:*
+- Parse and display all timing metrics
+- Calculate and show tokens/second rate
+- Track model load times separately
+- Historical performance comparison per model
 
-** DONE Core API - Delete Model
+*** TODO Think Parameter for Reasoning Models
 
-** DONE Core API - Copy a model
+The API now supports a =think= parameter to enable thinking/reasoning mode for compatible models.
 
-** DONE Core API - stream
+*Implementation considerations:*
+- Add =ollama-buddy-param-think= customization
+- Toggle thinking mode from transient menu
+- Distinguish thinking output from final response in display
 
-** DONE Core API - Pull/Info/Pull/Delete a model
+*** TODO Improved Context Window Tracking
 
-** DONE Core API - Show running models
+Verify current implementation uses the returned context information correctly. The API provides =context= field for continuation and models report their context window size.
 
-** DONE Core API - Create a model from a GGUF file
+*Implementation considerations:*
+- Validate context percentage calculation against actual API values
+- Warn when approaching context limits
+- Option to automatically truncate/summarize conversation
 
-** DONE Add transient menu
+*** TODO Keep-Alive Parameter
 
-** DONE History editing
+The API supports =keep_alive= parameter (default 5m) to control how long models stay loaded in memory.
 
-** DONE Core API - options - parameter editing
+*Implementation considerations:*
+- Add =ollama-buddy-param-keep-alive= customization
+- Presets for different usage patterns (quick queries vs long sessions)
+- Display currently loaded models and their timeout status
 
-** DONE Core API - show model information
+*** TODO Model Scheduling Improvements
 
-** DONE Core API - system prompt
+Ollama v0.11+ introduced improved model scheduling that reduces OOM crashes and maximizes GPU utilization when running multiple models.
 
-** DONE Chat buffer to use org-mode
-
-** DONE Chat export options
-
-** DONE Core Params - options:temperature
-
-** DONE Managing Sessions
-
-** DONE Sparse minified version
-
-** DONE Role-Based Menu Preset System
-
-** DONE Add to MELPA
-
-** DONE Enhancing Menu Clarity
-
-** DONE Real time token tracking
-
-** DONE Managing chat history and context
+*Implementation considerations:*
+- Leverage for multishot mode improvements
+- Better handling of concurrent model requests
+- Status display for GPU memory utilization
 
 * Alternative LLM based packages
 
