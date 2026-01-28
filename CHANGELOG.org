@@ -11,6 +11,31 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-01-28 Tue> *1.1*
+
+Added Ollama Cloud Models support
+
+- Cloud models (running on ollama.com infrastructure) now work seamlessly
+- =ollama-buddy-cloud-signin= to automatically open browser for authentication
+- Cloud models are proxied through the local Ollama server which handles authentication
+- Use =C-u C-c m= or transient menu "Model > Cloud" to select cloud models
+- Status line shows ☁ indicator when using a cloud model
+- Available cloud models include: qwen3-coder:480b-cloud, deepseek-v3.1:671b-cloud, gpt-oss:120b-cloud, minimax-m2.1:cloud, and more
+
+To use cloud models:
+1. Sign in once with =M-x ollama-buddy-cloud-signin= (opens browser automatically)
+2. Select a cloud model with =C-u C-c m=
+3. Use normally - the local Ollama server handles cloud authentication
+
+#+begin_src elisp
+;; Cloud models work with no additional configuration
+;; Just sign in once via the transient menu: Cloud Auth > Sign In
+(use-package ollama-buddy
+  :bind
+  ("C-c o" . ollama-buddy-menu)
+  ("C-c O" . ollama-buddy-transient-menu-wrapper))
+#+end_src
+
 ** <2025-12-11 Thu> *1.0.2*
 
 Added Mistral Codestral integration

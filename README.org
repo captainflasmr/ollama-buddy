@@ -96,12 +96,12 @@ See *Screenshots / Demos* section for more videos/demonstration.
 
 * Whats New
 
-** <2026-01-28 Tue> *1.0.3*
+** <2026-01-28 Tue> *1.1*
 
 Added Ollama Cloud Models support
 
 - Cloud models (running on ollama.com infrastructure) now work seamlessly
-- Improved =ollama-buddy-cloud-signin= to automatically open browser for authentication
+- =ollama-buddy-cloud-signin= to automatically open browser for authentication
 - Cloud models are proxied through the local Ollama server which handles authentication
 - Use =C-u C-c m= or transient menu "Model > Cloud" to select cloud models
 - Status line shows ☁ indicator when using a cloud model
