@@ -1356,6 +1356,33 @@ https://github.com/captainflasmr/ollama-buddy
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_021.gif]]
 
+** 023 Ollama Buddy - Accessing cloud models! #emacs #ollama
+
+Demonstrating the Emacs package ollama-buddy, providing a convenient way to integrate Ollama's local LLM capabilities.
+
+Note: that the user has to be already signed in to ollama.com so the authentication is set up through ollama running locally
+
+switch to *minimax-m2.1:cloud using the universal argument
+
+type in some text
+
+lets see a response!
+
+switch to gpt-oss:120b-cloud using the transient menu
+
+type in some text
+
+lets see a response!
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_023.gif]]
+
 * Installation
 
 ** Prerequisites
