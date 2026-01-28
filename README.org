@@ -96,6 +96,31 @@ See *Screenshots / Demos* section for more videos/demonstration.
 
 * Whats New
 
+** <2026-01-28 Tue> *1.0.3*
+
+Added Ollama Cloud Models support
+
+- Cloud models (running on ollama.com infrastructure) now work seamlessly
+- Improved =ollama-buddy-cloud-signin= to automatically open browser for authentication
+- Cloud models are proxied through the local Ollama server which handles authentication
+- Use =C-u C-c m= or transient menu "Model > Cloud" to select cloud models
+- Status line shows ☁ indicator when using a cloud model
+- Available cloud models include: qwen3-coder:480b-cloud, deepseek-v3.1:671b-cloud, gpt-oss:120b-cloud, minimax-m2.1:cloud, and more
+
+To use cloud models:
+1. Sign in once with =M-x ollama-buddy-cloud-signin= (opens browser automatically)
+2. Select a cloud model with =C-u C-c m=
+3. Use normally - the local Ollama server handles cloud authentication
+
+#+begin_src elisp
+;; Cloud models work with no additional configuration
+;; Just sign in once via the transient menu: Cloud Auth > Sign In
+(use-package ollama-buddy
+  :bind
+  ("C-c o" . ollama-buddy-menu)
+  ("C-c O" . ollama-buddy-transient-menu-wrapper))
+#+end_src
+
 ** <2025-12-11 Thu> *1.0.2*
 
 Added Mistral Codestral support
@@ -731,11 +756,12 @@ If desired, the following will get you going! (of course, have =ollama= running 
   - Edit conversation history with intuitive keybindings
 
 - *Smart Model Management*
-  
+
   - Models can be assigned to individual menu commands
   - Intelligent model fallback
   - Real-time model availability monitoring
   - Easy model switching during sessions
+  - Ollama Cloud models support (qwen3-coder:480b, deepseek-v3.1:671b, gpt-oss, minimax-m2.1, etc.)
 
 - *Parameter Control*
 
@@ -2221,6 +2247,34 @@ When a fallback occurs, Ollama Buddy provides clear feedback:
   (ollama-buddy-port 11400))
 #+end_src
 
+** Ollama Cloud Models
+
+Ollama Cloud models run on ollama.com infrastructure and provide access to large models (like qwen3-coder:480b, deepseek-v3.1:671b) without requiring local hardware capable of running them.
+
+*** Authentication
+
+Cloud models require a one-time sign-in. Use the transient menu (=C-c O=) and select "Cloud Auth > Sign In", or run =M-x ollama-buddy-cloud-signin=. This will automatically open your browser for authentication.
+
+The authentication is handled by the local Ollama server using SSH keys stored in =~/.ollama/=, so no API key configuration is needed in Emacs.
+
+*** Selecting Cloud Models
+
+- Use =C-u C-c m= (universal argument + model switch) to select from cloud models
+- Or use the transient menu: "Model > Cloud"
+- Cloud models are identified by the =-cloud= suffix (e.g., =minimax-m2.1:cloud=)
+- The status line shows a ☁ indicator when using a cloud model
+
+*** Available Cloud Models
+
+The default cloud models list includes:
+- =qwen3-coder:480b-cloud= - Large coding model
+- =deepseek-v3.1:671b-cloud= - DeepSeek's flagship model
+- =gpt-oss:120b-cloud= / =gpt-oss:20b-cloud= - Open source GPT variants
+- =glm-4.7:cloud= - GLM model
+- =minimax-m2.1:cloud= - MiniMax model
+
+You can customize the list via =ollama-buddy-cloud-models=.
+
 ** Command-Specific Models
 
 #+begin_src elisp
@@ -2561,15 +2615,26 @@ All interactive functions available in ollama-buddy are listed in the original R
 
 Recent Ollama releases (v0.12-v0.15) have introduced significant new features. The following roadmap items represent opportunities to integrate these capabilities into ollama-buddy.
 
-*** TODO Cloud Models Support
+*** DOING Cloud Models Support
 
 Ollama v0.12+ supports cloud-hosted models via =ollama.com= infrastructure, enabling access to larger models (e.g., =deepseek-v3.1:671b-cloud=, =qwen3-coder:480b-cloud=) without local hardware requirements.
 
-*Implementation considerations:*
-- Add authentication support via =ollama signin= / =ollama signout= flow
-- Detect and handle cloud model suffix (=-cloud=) in model names
-- Display cloud vs local indicator in status line
+*Implemented:*
+- =ollama-buddy-cloud-models= customization for available cloud models
+- =C-u C-c m= to select from cloud models (prefix argument to swap-model)
+- Transient menu "Model > Cloud" option (=c= key)
+- Cloud indicator (☁) in status line when using cloud model
+- =ollama-buddy--cloud-model-p= function to detect cloud models
+- Validation accepts cloud models without requiring local availability
+- =ollama-buddy-cloud-signin= - runs =ollama signin= to authenticate (opens browser)
+- =ollama-buddy-cloud-signout= - runs =ollama signout= to sign out
+- =ollama-buddy-cloud-status= - checks cloud authentication status
+- Transient menu "Cloud Auth" section with Sign In (=2=), Sign Out (=3=), Auth Status (=4=)
+- =ollama-buddy-ollama-executable= customization for ollama CLI path
+
+*Still TODO:*
 - Handle potential network latency differences
+- Auto-fetch available cloud models from API (if endpoint exists)
 
 *References:* [[https://ollama.com/blog/cloud-models][Ollama Cloud Models Blog]]
 

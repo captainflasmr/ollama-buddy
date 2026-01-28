@@ -406,7 +406,9 @@ When complete, CALLBACK is called with the status response and result."
 ;; Main curl send function
 
 (defun ollama-buddy-curl--send (prompt &optional specified-model)
-  "Send PROMPT using curl backend with streaming support."
+  "Send PROMPT using curl backend with streaming support.
+Cloud models are proxied through the local Ollama server which handles
+authentication via `ollama signin'."
   (unless (ollama-buddy--check-status)
     (ollama-buddy--update-status "OFFLINE")
     (user-error "Ensure Ollama is running"))
@@ -417,10 +419,10 @@ When complete, CALLBACK is called with the status response and result."
   (when ollama-buddy-show-context-percentage
     (unless (ollama-buddy--check-context-before-send)
       (user-error "Context too far over limit to send")))
-  
+
   ;; Reset curl state
   (setq ollama-buddy-curl--headers-processed nil)
-  
+
   (let* ((model-info (ollama-buddy--get-valid-model specified-model))
          (model (car model-info))
          (original-model (cdr model-info))
@@ -464,6 +466,7 @@ When complete, CALLBACK is called with the status response and result."
                           base-payload))
          (payload (json-encode final-payload))
          (temp-file (make-temp-file "ollama-buddy-payload"))
+         ;; Always use local Ollama server - it proxies cloud models automatically
          (url (format "http://%s:%d/api/chat" ollama-buddy-host ollama-buddy-port))
          (process-name "ollama-chat-curl")
          (process-buffer (generate-new-buffer " *ollama-curl*")))
@@ -525,7 +528,7 @@ When complete, CALLBACK is called with the status response and result."
     ;; Write payload to temp file
     (with-temp-file temp-file
       (insert payload))
-    
+
     ;; Start curl process
     (condition-case err
         (let ((args (list
@@ -535,7 +538,7 @@ When complete, CALLBACK is called with the status response and result."
                      "--header" "Content-Type: application/json"
                      "--data-binary" (concat "@" temp-file)
                      url)))
-          
+
           ;; Add streaming-specific args
           (when ollama-buddy-streaming-enabled
             (setq args (append '("--no-buffer" "--include") args)))

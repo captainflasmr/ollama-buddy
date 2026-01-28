@@ -1802,18 +1802,103 @@ With prefix argument ALL-MODELS, clear history for all models."
                  (point) end)))))
         (ollama-buddy--update-status (concat "Stream " status))))))
 
-(defun ollama-buddy--swap-model ()
-  "Swap ollama model, including OpenAI models if available."
-  (interactive)
-  (let* ((models (ollama-buddy--get-models-with-others))
-         (new-model (completing-read "Model: " models nil t)))
+(defun ollama-buddy--swap-model (&optional arg)
+  "Swap ollama model, including OpenAI models if available.
+With prefix ARG (\\[universal-argument]), select from cloud models instead.
+Cloud models run on ollama.com infrastructure and require authentication."
+  (interactive "P")
+  (let* ((models (if arg
+                     ollama-buddy-cloud-models
+                   (ollama-buddy--get-models-with-others)))
+         (prompt (if arg "Cloud Model: " "Model: "))
+         (new-model (completing-read prompt models nil t)))
     (setq ollama-buddy-default-model new-model)
     (setq ollama-buddy--current-model new-model)
-    (message "Switched to model: %s" new-model)
+    (message "Switched to %smodel: %s" (if arg "cloud " "") new-model)
     (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
     (ollama-buddy--prepare-prompt-area t t)
     (goto-char (point-max))
     (ollama-buddy--update-status "Idle")))
+
+(defun ollama-buddy--swap-model-cloud ()
+  "Switch to an Ollama cloud model.
+Cloud models run on ollama.com infrastructure and require authentication
+via `ollama signin'."
+  (interactive)
+  (ollama-buddy--swap-model t))
+
+(defvar ollama-buddy--signin-url-opened nil
+  "Flag to track whether we've already opened the signin URL.")
+
+(defun ollama-buddy-cloud-signin ()
+  "Sign in to Ollama cloud services.
+This runs `ollama signin' which outputs a URL for authentication.
+The URL will be automatically opened in your default browser."
+  (interactive)
+  (setq ollama-buddy--signin-url-opened nil)
+  (let ((buffer-name "*ollama-signin*"))
+    (message "Starting Ollama signin process...")
+    (if (executable-find ollama-buddy-ollama-executable)
+        (let ((proc (start-process "ollama-signin" buffer-name
+                                   ollama-buddy-ollama-executable "signin")))
+          ;; Set up filter to capture URL and auto-open browser
+          (set-process-filter
+           proc
+           (lambda (process output)
+             ;; Append output to process buffer
+             (when (buffer-live-p (process-buffer process))
+               (with-current-buffer (process-buffer process)
+                 (goto-char (point-max))
+                 (insert output)))
+             ;; Check for already signed in message
+             (when (string-match-p "already signed in" output)
+               (message "Ollama cloud: Already signed in"))
+             ;; Look for URL and auto-open browser
+             (when (and (not ollama-buddy--signin-url-opened)
+                        (string-match "https://[^\n\r\t ]+" output))
+               (let ((url (match-string 0 output)))
+                 (setq ollama-buddy--signin-url-opened t)
+                 (message "Opening Ollama signin URL in browser...")
+                 (browse-url url)))))
+          (set-process-sentinel
+           proc
+           (lambda (process event)
+             (cond
+              ((string-match-p "finished" event)
+               (if ollama-buddy--signin-url-opened
+                   (message "Ollama signin: Complete authentication in your browser")
+                 (message "Ollama signin completed"))
+               (ollama-buddy--update-status "Signed in"))
+              ((string-match-p "exited abnormally" event)
+               (message "Ollama signin failed. Check *ollama-signin* buffer for details")
+               (pop-to-buffer buffer-name)))))
+          (message "Ollama signin: Checking authentication status..."))
+      (user-error "Cannot find ollama executable. Set `ollama-buddy-ollama-executable'"))))
+
+(defun ollama-buddy-cloud-signout ()
+  "Sign out from Ollama cloud services."
+  (interactive)
+  (if (executable-find ollama-buddy-ollama-executable)
+      (let ((exit-code (call-process ollama-buddy-ollama-executable nil nil nil "signout")))
+        (if (zerop exit-code)
+            (progn
+              (message "Signed out from Ollama cloud")
+              (ollama-buddy--update-status "Signed out"))
+          (message "Ollama signout failed with exit code %d" exit-code)))
+    (user-error "Cannot find ollama executable. Set `ollama-buddy-ollama-executable'")))
+
+(defun ollama-buddy-cloud-status ()
+  "Check Ollama cloud authentication status.
+Attempts to verify if user is signed in by checking for cloud model access."
+  (interactive)
+  (if (executable-find ollama-buddy-ollama-executable)
+      (with-temp-buffer
+        (let ((exit-code (call-process ollama-buddy-ollama-executable nil t nil
+                                       "show" "--modelfile" "gpt-oss:20b-cloud")))
+          (if (zerop exit-code)
+              (message "Ollama cloud: Signed in (cloud models accessible)")
+            (message "Ollama cloud: Not signed in or cloud access unavailable"))))
+    (user-error "Cannot find ollama executable. Set `ollama-buddy-ollama-executable'")))
 
 ;; Update buffer initialization to check status
 (defun ollama-buddy--open-chat ()
@@ -2061,10 +2146,12 @@ Returns nil if user cancels, t otherwise."
 (defun ollama-buddy--send (&optional prompt specified-model)
   "Send PROMPT with optional SPECIFIED-MODEL.
 When PROMPT contains image file paths and the model supports vision,
-those images will be included in the request."
-  
+those images will be included in the request.
+Cloud models are proxied through the local Ollama server which handles
+authentication via `ollama signin'."
+
   ;; Check status and update UI if offline
-  (unless (or (ollama-buddy--check-status))
+  (unless (ollama-buddy--check-status)
     (ollama-buddy--update-status "OFFLINE")
     (user-error "Ensure Ollama is running"))
 
@@ -2074,7 +2161,7 @@ those images will be included in the request."
   (when ollama-buddy-show-context-percentage
     (unless (ollama-buddy--check-context-before-send)
       (user-error "Context too far over limit to send")))
-  
+
   ;; Original Ollama send code with vision additions
   (let* ((model-info (ollama-buddy--get-valid-model specified-model))
          (model (car model-info))

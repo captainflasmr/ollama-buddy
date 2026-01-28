@@ -30,6 +30,10 @@
 (declare-function ollama-buddy-menu "ollama-buddy")
 (declare-function ollama-buddy-manage-models "ollama-buddy")
 (declare-function ollama-buddy--swap-model "ollama-buddy")
+(declare-function ollama-buddy--swap-model-cloud "ollama-buddy")
+(declare-function ollama-buddy-cloud-signin "ollama-buddy")
+(declare-function ollama-buddy-cloud-signout "ollama-buddy")
+(declare-function ollama-buddy-cloud-status "ollama-buddy")
 (declare-function ollama-buddy-show-model-status "ollama-buddy")
 (declare-function ollama-buddy-show-raw-model-info "ollama-buddy")
 (declare-function ollama-buddy--multishot-prompt "ollama-buddy")
@@ -94,11 +98,18 @@
    ["Model"
     ("W" "Manage" ollama-buddy-manage-models)
     ("m" "Switch" ollama-buddy--swap-model)
+    ("c" "Cloud" ollama-buddy--swap-model-cloud)
     ("v" "Status" ollama-buddy-show-model-status)
     ("i" "Info" ollama-buddy-show-raw-model-info)
     ("M" "Multishot" ollama-buddy--multishot-prompt)
     ]
-   
+
+   ["Cloud Auth"
+    ("2" "Sign In" ollama-buddy-cloud-signin)
+    ("3" "Sign Out" ollama-buddy-cloud-signout)
+    ("4" "Auth Status" ollama-buddy-cloud-status)
+    ]
+
    ["Roles"
     ("R" "Switch" ollama-buddy-roles-switch-role)
     ("E" "New" ollama-buddy-role-creator-create-new-role)

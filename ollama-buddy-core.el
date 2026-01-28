@@ -61,6 +61,12 @@
                  (const :tag "Curl (external)" curl))
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-ollama-executable "ollama"
+  "Path to the ollama executable.
+Used for CLI commands like signin and signout."
+  :type 'string
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-curl-executable "curl"
   "Path to the curl executable.
 Only used when `ollama-buddy-communication-backend' is set to `curl'."
@@ -596,6 +602,20 @@ Each element is a plist with :file, :content, :size, and :type.")
 
 (defvar ollama-buddy-remote-models nil
   "List of available remote models.")
+
+(defcustom ollama-buddy-cloud-models
+  '("qwen3-coder:480b-cloud"
+    "deepseek-v3.1:671b-cloud"
+    "gpt-oss:120b-cloud"
+    "gpt-oss:20b-cloud"
+    "glm-4.7:cloud"
+    "minimax-m2.1:cloud")
+  "List of available Ollama cloud models.
+These models run on ollama.com infrastructure and require authentication
+via `ollama signin`.  Use \\[universal-argument] with `ollama-buddy--swap-model'
+to select from this list."
+  :type '(repeat string)
+  :group 'ollama-buddy)
 
 (defvar ollama-buddy-current-session-name nil
   "The name of the currently loaded session.")
@@ -1698,10 +1718,19 @@ When complete, CALLBACK is called with the status response and result."
                        (alist-get 'models result))
                ollama-buddy--running-models-cache-timestamp (float-time)))))))
 
+(defun ollama-buddy--cloud-model-p (model)
+  "Return non-nil if MODEL is a cloud model.
+Cloud models have a `-cloud' suffix or are in `ollama-buddy-cloud-models'."
+  (when model
+    (or (string-suffix-p "-cloud" model)
+        (member model ollama-buddy-cloud-models))))
+
 (defun ollama-buddy--validate-model (model)
-  "Validate MODEL availability."
+  "Validate MODEL availability.
+Cloud models are always considered valid if Ollama is running."
   (when (and model (ollama-buddy--ollama-running))
-    (when (member model (ollama-buddy--get-models-with-others))
+    (when (or (member model (ollama-buddy--get-models-with-others))
+              (ollama-buddy--cloud-model-p model))
       (message "#valmod %s" model)
       model)))
 
@@ -1896,11 +1925,13 @@ ACTUAL-MODEL is the model being used instead."
                            ""
                          (format " [%s]" param-str)))))
            (backend (ollama-buddy--get-effective-backend))
-           (backend-indicator (if (eq backend 'curl) "C" "N")))
+           (backend-indicator (if (eq backend 'curl) "C" "N"))
+           (cloud-indicator (if (ollama-buddy--cloud-model-p model) "☁" "")))
       (setq header-line-format
             (concat
-             (format " %s%s %s%s%s%s %s%s%s %s %s %s%s"
+             (format " %s%s%s %s%s%s%s %s%s%s %s %s %s%s"
                      backend-indicator
+                     cloud-indicator
 
                      (ollama-buddy--add-context-to-status-format)
                      
