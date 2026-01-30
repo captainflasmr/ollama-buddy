@@ -48,9 +48,14 @@ A simple text information screen will be presented on the first opening of the c
 - Ask me anything!       C-c C-c
 - Main transient menu    C-c O
 - Detailed info          C-c A
+- Select model           C-c m (10 ollama / 4 online)
+- Select cloud model     C-u C-c m (7 cloud)
 
 ,* *tinyllama:latest >> PROMPT:* <put prompt in here>
 #+end_src
+
+The model counts show how many models are available in each category. If you have external LLM providers configured, you'll also see a line like:
+: Online: a: OpenAI | c: Claude | g: Gemini
 
 Press =C-c A= to open the =*Ollama Buddy Info*= buffer which shows:
 - All installed models with Select/Info/Pull/Copy/Delete actions
@@ -91,13 +96,15 @@ See full list in :
 
 [[file:CHANGELOG.org]]
 
-** <2026-01-30 Thu> *1.1.1*
+** <2026-01-30 Thu> *1.1.2*
 
 Simplified chat interface
 
-- Default welcome screen now shows only essential commands: Ask me anything (C-c C-c), Main transient menu (C-c O), and Detailed info (C-c A)
-- Full interface info (model list with actions, all commands reference) now opens in a separate =*Ollama Buddy Info*= buffer via C-c A
-- Cleaner, less cluttered initial experience while keeping all functionality accessible
+- Streamlined welcome screen showing only essential commands
+- Full interface info (models, commands) moved to separate =*Ollama Buddy Info*= buffer via =C-c A=
+- Model selection now shows counts: =C-c m (10 ollama / 4 online)= and =C-u C-c m (7 cloud)=
+- Header line displays bold prefix characters for loaded external providers: =acgks=
+- Welcome screen lists enabled online LLM providers (e.g., "Online: a: OpenAI | c: Claude")
 
 ** <2026-01-28 Tue> *1.1*
 

@@ -1188,11 +1188,29 @@ and prefixed combinations like '@a', '@b', etc. for additional models."
   "Return the letter assigned to MODEL-NAME from `ollama-buddy--model-letters`."
   (car (rassoc model-name ollama-buddy--model-letters)))
 
+(defun ollama-buddy--get-enabled-external-providers ()
+  "Return a list of enabled external LLM provider names with prefixes."
+  (let (providers)
+    (when (featurep 'ollama-buddy-openai) (push "a: OpenAI" providers))
+    (when (featurep 'ollama-buddy-claude) (push "c: Claude" providers))
+    (when (featurep 'ollama-buddy-gemini) (push "g: Gemini" providers))
+    (when (featurep 'ollama-buddy-grok) (push "k: Grok" providers))
+    (when (featurep 'ollama-buddy-codestral) (push "s: Codestral" providers))
+    (nreverse providers)))
+
 (defun ollama-buddy--create-intro-message ()
   "Create minimal welcome message with essential commands in org format."
   (setq-local org-hide-emphasis-markers t)
   (setq-local org-hide-leading-stars t)
-  (let* ((message-text
+  (let* ((external-providers (ollama-buddy--get-enabled-external-providers))
+         (ollama-count (length (ollama-buddy--get-models)))
+         (online-count (length ollama-buddy-remote-models))
+         (cloud-count (length ollama-buddy-cloud-models))
+         (model-info (if (> online-count 0)
+                         (format " (%d ollama / %d online)" ollama-count online-count)
+                       (format " (%d ollama)" ollama-count)))
+         (cloud-info (format " (%d cloud)" cloud-count))
+         (message-text
           (concat
            (when (= (buffer-size) 0)
              (concat "#+TITLE: Ollama Buddy Chat"))
@@ -1206,9 +1224,13 @@ and prefixed combinations like '@a', '@b', etc. for additional models."
            (when (not (ollama-buddy--check-status))
              "** *THERE IS NO OLLAMA RUNNING*\n
 please run =ollama serve=\n\n")
+           (when external-providers
+             (concat "Online: " (mapconcat #'identity external-providers " | ") "\n\n"))
            "- /Ask me anything!/       C-c C-c
 - /Main transient menu/    C-c O
-- /Detailed info/          C-c A")))
+- /Detailed info/          C-c A
+- /Select model/           C-c m" model-info "
+- /Select cloud model/     C-u C-c m" cloud-info)))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
 
@@ -1921,12 +1943,22 @@ ACTUAL-MODEL is the model being used instead."
                          (format " [%s]" param-str)))))
            (backend (ollama-buddy--get-effective-backend))
            (backend-indicator (if (eq backend 'curl) "C" "N"))
-           (cloud-indicator (if (ollama-buddy--cloud-model-p model) "☁" "")))
+           (cloud-indicator (if (ollama-buddy--cloud-model-p model) "☁" ""))
+           (external-indicator (let ((ind (concat
+                                            (if (featurep 'ollama-buddy-openai) "a" "")
+                                            (if (featurep 'ollama-buddy-claude) "c" "")
+                                            (if (featurep 'ollama-buddy-gemini) "g" "")
+                                            (if (featurep 'ollama-buddy-grok) "k" "")
+                                            (if (featurep 'ollama-buddy-codestral) "s" ""))))
+                                 (if (string-empty-p ind)
+                                     ""
+                                   (propertize ind 'face '(:weight bold))))))
       (setq header-line-format
             (concat
-             (format " %s%s%s %s%s%s%s %s%s%s %s %s %s%s"
+             (format " %s%s%s%s %s%s%s%s %s%s%s %s %s %s%s"
                      backend-indicator
                      cloud-indicator
+                     external-indicator
 
                      (ollama-buddy--add-context-to-status-format)
                      
