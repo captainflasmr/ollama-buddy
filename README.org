@@ -41,30 +41,21 @@ A simple text information screen will be presented on the first opening of the c
 ,#+begin_example
  ___ _ _      n _ n      ___       _   _ _ _
 |   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |
-| | | | | .  |     | .  | . | | | . | . |__ |
+| | | | | .  | 1.1 | .  | . | | | . | . |__ |
 |___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|
 ,#+end_example
 
-(a) *tinyllama:latest* Select Info Pull Copy Delete
-(b) *qwen2.5-coder:7b* Select Info Pull Copy Delete
-(c) *deepseek-r1:7b* Select Info Pull Copy Delete
-(d) *codellama:7b* Select Info Pull Copy Delete
-(e) *gemma3:4b* Select Info Pull Copy Delete
-(f) *phi3:3.8b* Select Info Pull Copy Delete
-(g) *llama3.2:1b* Select Info Pull Copy Delete
-
-starcoder2:3b mistral:7b deepseek-r1:1.5b gemma3:1b qwen2.5-coder:3b llama3.2:3b
-
-- Ask me anything!                    C-c C-c
-- Main transient menu                 C-c O
-- Cancel request                      C-c C-k
-- Change model                        C-c m
-- Browse prompt history               M-p/n/r
-- Browse ollama-buddy manual          C-c ?
-- Advanced interface (show all tips)  C-c A
+- Ask me anything!       C-c C-c
+- Main transient menu    C-c O
+- Detailed info          C-c A
 
 ,* *tinyllama:latest >> PROMPT:* <put prompt in here>
 #+end_src
+
+Press =C-c A= to open the =*Ollama Buddy Info*= buffer which shows:
+- All installed models with Select/Info/Pull/Copy/Delete actions
+- Models available to pull
+- Complete commands reference
 
 You will, of course, need to have =ollama serve= running, but technically, that is all you need! Emacs and =ollama-buddy= will handle the rest!
 
@@ -95,6 +86,14 @@ Toggle on =ollama-buddy-toggle-token-display=
 See *Screenshots / Demos* section for more videos/demonstration.
 
 * Whats New
+
+** <2026-01-30 Thu> *1.1.1*
+
+Simplified chat interface
+
+- Default welcome screen now shows only essential commands: Ask me anything (C-c C-c), Main transient menu (C-c O), and Detailed info (C-c A)
+- Full interface info (model list with actions, all commands reference) now opens in a separate =*Ollama Buddy Info*= buffer via C-c A
+- Cleaner, less cluttered initial experience while keeping all functionality accessible
 
 ** <2026-01-28 Tue> *1.1*
 

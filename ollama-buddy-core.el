@@ -1189,40 +1189,48 @@ and prefixed combinations like '@a', '@b', etc. for additional models."
   (car (rassoc model-name ollama-buddy--model-letters)))
 
 (defun ollama-buddy--create-intro-message ()
-  "Create welcome message with model management capabilities in org format.
-Supports both single and prefixed multi-character model references."
-  (ollama-buddy--assign-model-letters)
+  "Create minimal welcome message with essential commands in org format."
   (setq-local org-hide-emphasis-markers t)
   (setq-local org-hide-leading-stars t)
+  (let* ((message-text
+          (concat
+           (when (= (buffer-size) 0)
+             (concat "#+TITLE: Ollama Buddy Chat"))
+           "\n\n* Welcome to _OLLAMA BUDDY_\n\n"
+           "#+begin_example\n"
+           " ___ _ _      n _ n      ___       _   _ _ _\n"
+           "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |\n"
+           "| | | | | .  | 1.1 | .  | . | | | . | . |__ |\n"
+           "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n"
+           "#+end_example\n\n"
+           (when (not (ollama-buddy--check-status))
+             "** *THERE IS NO OLLAMA RUNNING*\n
+please run =ollama serve=\n\n")
+           "- /Ask me anything!/       C-c C-c
+- /Main transient menu/    C-c O
+- /Detailed info/          C-c A")))
+    (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
+    message-text))
+
+(defun ollama-buddy-show-interface-info ()
+  "Show full interface information in a separate buffer."
+  (interactive)
+  (ollama-buddy--assign-model-letters)
   (let* ((available-models (when (ollama-buddy--ollama-running)
                              (ollama-buddy--get-models)))
-         ;; Get models available for pull but not yet downloaded
          (models-to-pull
           (when (ollama-buddy--ollama-running)
-            ;; Get models from ollama-buddy-available-models, potentially adding prefix
             (let ((available-for-pull
                    (mapcar (lambda (model)
                              (if (ollama-buddy--should-use-marker-prefix)
                                  (concat ollama-buddy-marker-prefix model)
                                model))
                            ollama-buddy-available-models)))
-              ;; Compare with models already available in the system
               (cl-set-difference
                available-for-pull
                available-models
                :test #'string=))))
-         ;; Basic tips for beginners
-         (basic-tips
-          "- /Ask me anything!/       C-c C-c
-- /Main transient menu/    C-c O
-- /Cancel request/         C-c C-k
-- /Change model/           C-c m
-- /Attach file/            C-c 1
-- /Browse prompt history/  M-p/n/r
-- /Browse manual/          C-c ?
-- /Advanced interface/     C-c A")
-         ;; Advanced tips for experienced users
-         (advanced-tips
+         (tips
           "- /Ask me anything!/                    C-c C-c
 - /Cancel request/                      C-c C-k
 - /Main transient menu/                 C-c O
@@ -1248,14 +1256,8 @@ Supports both single and prefixed multi-character model references."
 - /Awesome ChatGPT Patterns Menu/       C-c w
 - /Toggle Display Markdown/             C-c C-o
 - /Show Buddy custom menu/              C-c b
-- /Basic interface (simpler display)/   C-c A
 
 [[elisp:(call-interactively #'ollama-buddy-import-gguf-file)][Import-GGUF-File]] [[elisp:(call-interactively #'ollama-buddy-pull-model)][Pull-Any-Model]]")
-         ;; Choose tips based on interface level
-         (tips-section (if (eq ollama-buddy-interface-level 'basic)
-                           basic-tips
-                         advanced-tips))
-         ;; Create model management section
          (models-management-section
           (when available-models
             (concat
@@ -1276,8 +1278,6 @@ Supports both single and prefixed multi-character model references."
               available-models
               "\n")
              "\n\n")))
-         
-         ;; Create section for models available to pull but not yet downloaded
          (models-to-pull-section
           (when (and models-to-pull (not (null models-to-pull)))
             (concat
@@ -1291,32 +1291,26 @@ Supports both single and prefixed multi-character model references."
               models-to-pull
               " ")
              "\n\n")))
-
-         ;; Models with letters (the original section)
-         (message-text
-          (concat
-           (when (= (buffer-size) 0)
-             (concat "#+TITLE: Ollama Buddy Chat"))
-           "\n\n* Welcome to _OLLAMA BUDDY_\n\n"
-           "#+begin_example\n"
-           " ___ _ _      n _ n      ___       _   _ _ _\n"
-           "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |\n"
-           "| | | | | .  | 1.0 | .  | . | | | . | . |__ |\n"
-           "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n"
-           "#+end_example\n\n"
-           (when (not (ollama-buddy--check-status))
-             "** *THERE IS NO OLLAMA RUNNING*\n
-please run =ollama serve=\n\n")
-           ;; "** available models (local):\n\n"
-           models-management-section
-           ;; "** available models (pull):\n\n"
-           models-to-pull-section
-           ;; "** comamnds:\n\n"
-           tips-section)))
-
-    ;; Add bold face to the entire message
-    (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
-    message-text))
+         (buf (get-buffer-create "*Ollama Buddy Info*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (org-mode)
+        (setq-local org-hide-emphasis-markers t)
+        (setq-local org-hide-leading-stars t)
+        (insert "#+TITLE: Ollama Buddy Interface Info\n\n")
+        (insert "* Available Models (Local)\n\n")
+        (if models-management-section
+            (insert models-management-section)
+          (insert "No models currently installed.\n\n"))
+        (when models-to-pull-section
+          (insert "* Available Models (Pull)\n\n")
+          (insert models-to-pull-section))
+        (insert "* Commands\n\n")
+        (insert tips)
+        (add-face-text-property (point-min) (point-max) '(:inherit bold) nil)
+        (goto-char (point-min))))
+    (display-buffer buf)))
 
 (defun ollama-buddy-open-info ()
   "Open the Info manual for the ollama-buddy package."

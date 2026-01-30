@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 1.1
+;; Version: 1.1.1
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -571,13 +571,9 @@ with an empty messages array and keep_alive set to 0."
     (goto-char (point-min))))
 
 (defun ollama-buddy-toggle-interface-level ()
-  "Toggle between basic and advanced interface levels."
+  "Show detailed interface info (models, commands) in a separate buffer."
   (interactive)
-  (setq ollama-buddy-interface-level
-        (if (eq ollama-buddy-interface-level 'basic) 'advanced 'basic))
-  (message "Ollama Buddy interface level set to %s"
-           (if (eq ollama-buddy-interface-level 'basic) "basic" "advanced"))
-  (ollama-buddy--menu-help-assistant))
+  (ollama-buddy-show-interface-info))
 
 ;;;###autoload
 (defun ollama-buddy-update-command-with-params (entry-name &rest props-and-params)
