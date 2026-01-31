@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 1.1.2
+;; Version: 1.1.3
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -1740,7 +1740,7 @@ With prefix argument ALL-MODELS, clear history for all models."
                                                          (plist-get (car ollama-buddy--token-usage-history) :tokens)
                                                          (plist-get (car ollama-buddy--token-usage-history) :rate)))))))
             (when window
-              (if at-end
+              (if (and at-end ollama-buddy-auto-scroll)
                   (set-window-point window (point-max))
                 (set-window-point window old-point))
               (set-window-start window old-window-start t))))))))

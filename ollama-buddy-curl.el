@@ -288,8 +288,8 @@ When complete, CALLBACK is called with the status response and result."
             (when should-show-content
               (insert content)))
           
-          ;; Keep window at end if it was there
-          (when (and window was-at-end)
+          ;; Keep window at end if it was there (and auto-scroll is enabled)
+          (when (and window was-at-end ollama-buddy-auto-scroll)
             (set-window-point window (point-max))))))))
 
 (defun ollama-buddy-curl--handle-completion (_json-data)

@@ -221,6 +221,15 @@ When disabled, responses only appear after completion."
   :type 'boolean
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-auto-scroll nil
+  "Whether to auto-scroll the chat buffer during streaming output.
+When non-nil, the buffer scrolls to follow new output if the
+cursor was at the end of the buffer.
+When nil (default), the cursor stays in place and you can
+manually scroll to view new output."
+  :type 'boolean
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-interface-level 'basic
   "Level of interface complexity to display."
   :type '(choice (const :tag "Basic (for beginners)" basic)
