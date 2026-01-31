@@ -1858,7 +1858,7 @@ The URL will be automatically opened in your default browser."
                  (browse-url url)))))
           (set-process-sentinel
            proc
-           (lambda (process event)
+           (lambda (_process event)
              (cond
               ((string-match-p "finished" event)
                (if ollama-buddy--signin-url-opened
