@@ -966,10 +966,11 @@ Returns the full prompt text ready to be sent."
 (defun ollama-buddy-sessions-save ()
   "Save the current Ollama Buddy session including attachments."
   (interactive)
-  (let* ((default-name (concat (format-time-string "%F-%H%M%S--")
-                               (replace-regexp-in-string " " "-" 
-                                                         (concat ollama-buddy--current-model
-                                                                 (ollama-buddy--get-first-words-of-first-user-content)))))
+  (let* ((default-name (concat (format-time-string "%F-%H%M%S")
+                               (let ((first-words (ollama-buddy--get-first-words-of-first-user-content)))
+                                 (if (and first-words (not (string-empty-p first-words)))
+                                     (concat "-" (replace-regexp-in-string " " "-" first-words))
+                                   ""))))
          (session-name (read-string "Session name/description: " default-name))
          (session-file (expand-file-name (concat session-name ".el") 
                                          ollama-buddy-sessions-directory))
