@@ -47,7 +47,7 @@ A simple text information screen will be presented on the first opening of the c
 
 - Ask me anything!       C-c C-c
 - Main transient menu    C-c O
-- Detailed info          C-c A
+- Manage models          C-c W
 - Select model           C-c m (10 ollama / 4 online)
 - Select cloud model     C-u C-c m (7 cloud)
 
@@ -57,10 +57,10 @@ A simple text information screen will be presented on the first opening of the c
 The model counts show how many models are available in each category. If you have external LLM providers configured, you'll also see a line like:
 : Online: a: OpenAI | c: Claude | g: Gemini
 
-Press =C-c A= to open the =*Ollama Buddy Info*= buffer which shows:
-- All installed models with Select/Info/Pull/Copy/Delete actions
-- Models available to pull
-- Complete commands reference
+Press =C-c W= to open the =*Ollama Models Management*= buffer which shows:
+- All installed models with Select/Info/Pull/Copy/Delete/Unload actions
+- Recommended models available to pull
+- Quick actions for importing GGUF files and pulling from Ollama Hub
 
 You will, of course, need to have =ollama serve= running, but technically, that is all you need! Emacs and =ollama-buddy= will handle the rest!
 
@@ -109,6 +109,12 @@ Added global system prompt for consistent response formatting
 
 This feature helps ensure consistent response formatting across different models, avoiding issues like unexpected markdown tables in responses.
 
+Consolidated model management
+
+- Moved "Recommended Models (Pull)" section into =C-c W= model management buffer
+- Removed =C-c A= (Detailed Info) keybinding and =ollama-buddy-show-interface-info= function
+- Updated welcome screen to reference =C-c W= for model management
+
 ** <2026-01-31 Fri> *1.1.4*
 
 Header-line and keybinding improvements
@@ -135,7 +141,7 @@ Improved chat UX and simplified codebase
 Simplified chat interface
 
 - Streamlined welcome screen showing only essential commands
-- Full interface info (models, commands) moved to separate =*Ollama Buddy Info*= buffer via =C-c A=
+- Model management via =C-c W= with recommended models to pull
 - Model selection now shows counts: =C-c m (10 ollama / 4 online)= and =C-u C-c m (7 cloud)=
 - Header line displays bold prefix characters for loaded external providers: =acgks=
 - Welcome screen lists enabled online LLM providers (e.g., "Online: a: OpenAI | c: Claude")
@@ -210,7 +216,7 @@ If desired, the following will get you going! (of course, have =ollama= running 
   - Menu Presets easily definable in text files
   - Quickly switch between LLM models with no configuration required
   - Send text from any Emacs buffer
-  - Switch between basic and advanced interface levels (=C-c A=)
+  - Comprehensive model management with =C-c W=
 
 - *Role and Session Management*
 
@@ -932,7 +938,6 @@ OR
 | C-c T           | Toggle token display                    |
 | C-c Z           | Toggle parameters                       |
 | C-c C-o         | Toggle Markdown/Org format              |
-| C-c A           | Toggle interface level (basic/advanced) |
 
 ** Default Menu Items
 
@@ -1393,7 +1398,7 @@ Set your preferred interface level:
 (setq ollama-buddy-interface-level 'basic)  ; or 'advanced
 #+end_src
 
-By default, the menu is set to Basic. Switch between levels during your session with =C-c A=.
+Use =C-c W= to access the model management interface with all available actions.
 
 ** Conversation History
 
@@ -1988,7 +1993,6 @@ You can customize the list via =ollama-buddy-cloud-models=.
 | ollama-buddy-history-save                 | Save the edited history back to ‘ollama-buddy--conversation-history-by-model’. |
 | ollama-buddy-import-gguf-file             | Import a GGUF file at FILE-PATH into Ollama.                                   |
 | ollama-buddy-transient-commands-menu      | Commands menu for Ollama Buddy.                                                |
-| ollama-buddy-toggle-interface-level       | Toggle between basic and advanced interface levels.                            |
 | ollama-buddy-transient-fabric-menu        | Fabric patterns menu for Ollama Buddy.                                         |
 | ollama-buddy-params-display               | Display the current Ollama parameter settings.                                 |
 | ollama-buddy-fabric-populate-patterns     | Populate the list of available patterns from the local repository.             |

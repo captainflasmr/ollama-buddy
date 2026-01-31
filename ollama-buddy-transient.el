@@ -40,7 +40,6 @@
 (declare-function ollama-buddy-roles-switch-role "ollama-buddy")
 (declare-function ollama-buddy-role-creator-create-new-role "ollama-buddy")
 (declare-function ollama-buddy-roles-open-directory "ollama-buddy")
-(declare-function ollama-buddy-toggle-interface-level "ollama-buddy")
 (declare-function ollama-buddy-toggle-debug-mode "ollama-buddy")
 (declare-function ollama-buddy-toggle-token-display "ollama-buddy")
 (declare-function ollama-buddy-display-token-stats "ollama-buddy")
@@ -75,7 +74,6 @@
    ["Chat"
     ("o" "Open Chat" ollama-buddy--open-chat)
     ("1" "Attachments" ollama-buddy-transient-attachment-menu)
-    ("A" "Interface" ollama-buddy-toggle-interface-level)
     ("b" "Custom Menu " ollama-buddy-menu)
     ]
 

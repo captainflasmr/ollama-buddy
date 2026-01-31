@@ -233,12 +233,6 @@ to indicate completion."
   :type 'boolean
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-interface-level 'basic
-  "Level of interface complexity to display."
-  :type '(choice (const :tag "Basic (for beginners)" basic)
-                 (const :tag "Advanced (full features)" advanced))
-  :group 'ollama-buddy)
-
 (defcustom ollama-buddy-default-model nil
   "Default Ollama model to use."
   :type 'string
@@ -1209,111 +1203,11 @@ please run =ollama serve=\n\n")
              (concat "Online: " (mapconcat #'identity external-providers " | ") "\n\n"))
            "- /Ask me anything!/       C-c C-c
 - /Main transient menu/    C-c O
-- /Detailed info/          C-c A
+- /Manage models/          C-c W
 - /Select model/           C-c m" model-info "
 - /Select cloud model/     C-u C-c m" cloud-info)))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
-
-(defun ollama-buddy-show-interface-info ()
-  "Show full interface information in a separate buffer."
-  (interactive)
-  (ollama-buddy--assign-model-letters)
-  (let* ((available-models (when (ollama-buddy--ollama-running)
-                             (ollama-buddy--get-models)))
-         (models-to-pull
-          (when (ollama-buddy--ollama-running)
-            (let ((available-for-pull
-                   (mapcar (lambda (model)
-                             (if (ollama-buddy--should-use-marker-prefix)
-                                 (concat ollama-buddy-marker-prefix model)
-                               model))
-                           ollama-buddy-available-models)))
-              (cl-set-difference
-               available-for-pull
-               available-models
-               :test #'string=))))
-         (tips
-          "- /Ask me anything!/                    C-c C-c
-- /Cancel request/                      C-c C-k
-- /Main transient menu/                 C-c O
-- /Manage models/                       C-c W
-- /Browse prompt history/               M-p/n/r
-- /Browse ollama-buddy manual/          C-c ?
-- /Attachments C-c/
-  - /menu/file/show/detach/clear/       1/C-a/C-w/C-d/0
-- /Toggle Fancy/                        C-c #
-- /Toggle Backend/                      C-c e
-- /Show Help/Status/Debug/              C-c h/v/B
-- /Show Token Stats/Graph/Report/       C-c u/U/T
-- /Model Change/Info/Multishot/         C-c m/i/M
-- /Toggle Streaming/                    C-c x
-- /Toggle Reasoning Visibility/         C-c V
-- /System Prompt Set/Show/Reset/        C-c s/C-s/r
-- /Param Menu/Profiles/Show/Help/Reset/ C-c P/p/G/I/K
-- /History Toggle/Clear/Show/Edit/Max/  C-c H/X/J/Y
-- /Context Size/Toggle/Show/            C-c $/%/C
-- /Session New/Load/Save/List/Delete/   C-c N/L/S/Q/Z
-- /Role Switch/Create/Directory/        C-c R/E/D
-- /Fabric Patterns Menu/                C-c f
-- /Awesome ChatGPT Patterns Menu/       C-c w
-- /Toggle Display Markdown/             C-c C-o
-- /Show Buddy custom menu/              C-c b
-
-[[elisp:(call-interactively #'ollama-buddy-import-gguf-file)][Import-GGUF-File]] [[elisp:(call-interactively #'ollama-buddy-pull-model)][Pull-Any-Model]]")
-         (models-management-section
-          (when available-models
-            (concat
-             (mapconcat
-              (lambda (model)
-                (let ((model-letter (ollama-buddy--get-model-letter model)))
-                  (concat
-                   (format
-                    "(%s) *%s* [[elisp:(ollama-buddy-select-model \"%s\")][Select]] "
-                    model-letter model model)
-                   (format
-                    "[[elisp:(ollama-buddy-show-raw-model-info \"%s\")][Info]] " model)
-                   (format "[[elisp:(ollama-buddy-pull-model \"%s\")][Pull]] " model)
-                   (format "[[elisp:(ollama-buddy-copy-model \"%s\")][Copy]] " model)
-                   (format
-                    "[[elisp:(ollama-buddy-delete-model \"%s\"))][Delete]]"
-                    model))))
-              available-models
-              "\n")
-             "\n\n")))
-         (models-to-pull-section
-          (when (and models-to-pull (not (null models-to-pull)))
-            (concat
-             (mapconcat
-              (lambda (model)
-                (let ((display-model (if (ollama-buddy--should-use-marker-prefix)
-                                         model
-                                       (ollama-buddy--get-real-model-name model))))
-                  (format "[[elisp:(ollama-buddy-pull-model \"%s\")][%s]]"
-                          model display-model)))
-              models-to-pull
-              " ")
-             "\n\n")))
-         (buf (get-buffer-create "*Ollama Buddy Info*")))
-    (with-current-buffer buf
-      (let ((inhibit-read-only t))
-        (erase-buffer)
-        (org-mode)
-        (setq-local org-hide-emphasis-markers t)
-        (setq-local org-hide-leading-stars t)
-        (insert "#+TITLE: Ollama Buddy Interface Info\n\n")
-        (insert "* Available Models (Local)\n\n")
-        (if models-management-section
-            (insert models-management-section)
-          (insert "No models currently installed.\n\n"))
-        (when models-to-pull-section
-          (insert "* Available Models (Pull)\n\n")
-          (insert models-to-pull-section))
-        (insert "* Commands\n\n")
-        (insert tips)
-        (add-face-text-property (point-min) (point-max) '(:inherit bold) nil)
-        (goto-char (point-min))))
-    (display-buffer buf)))
 
 (defun ollama-buddy-open-info ()
   "Open the Info manual for the ollama-buddy package."

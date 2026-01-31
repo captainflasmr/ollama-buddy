@@ -24,6 +24,12 @@ Added global system prompt for consistent response formatting
 
 This feature helps ensure consistent response formatting across different models, avoiding issues like unexpected markdown tables in responses.
 
+Consolidated model management
+
+- Moved "Recommended Models (Pull)" section into =C-c W= model management buffer
+- Removed =C-c A= (Detailed Info) keybinding and =ollama-buddy-show-interface-info= function
+- Updated welcome screen to reference =C-c W= for model management
+
 ** <2026-01-31 Fri> *1.1.4*
 
 Header-line and keybinding improvements

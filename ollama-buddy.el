@@ -570,11 +570,6 @@ with an empty messages array and keep_alive set to 0."
       (message "Viewing mode. Press C-x C-q to edit, C-c C-k to cancel")))
     (goto-char (point-min))))
 
-(defun ollama-buddy-toggle-interface-level ()
-  "Show detailed interface info (models, commands) in a separate buffer."
-  (interactive)
-  (ollama-buddy-show-interface-info))
-
 ;;;###autoload
 (defun ollama-buddy-update-command-with-params (entry-name &rest props-and-params)
   "Update command ENTRY-NAME with properties and parameters.
@@ -2722,6 +2717,18 @@ Modifies the variable in place."
   (interactive)
   (let* ((available-models (ollama-buddy--get-models))
          (running-models (ollama-buddy--get-running-models))
+         (models-to-pull
+          (when (ollama-buddy--ollama-running)
+            (let ((available-for-pull
+                   (mapcar (lambda (model)
+                             (if (ollama-buddy--should-use-marker-prefix)
+                                 (concat ollama-buddy-marker-prefix model)
+                               model))
+                           ollama-buddy-available-models)))
+              (cl-set-difference
+               available-for-pull
+               available-models
+               :test #'string=))))
          (buf (get-buffer-create "*Ollama Models Management*")))
     
     (with-current-buffer buf
@@ -2815,7 +2822,22 @@ Modifies the variable in place."
              'help-echo "Delete this model")
             
             (insert "\n")))
-        
+
+        ;; Models available to pull section
+        (when models-to-pull
+          (insert "\n* Recommended Models (Pull to Install)\n\n")
+          (dolist (model models-to-pull)
+            (let ((display-model (if (ollama-buddy--should-use-marker-prefix)
+                                     model
+                                   (ollama-buddy--get-real-model-name model))))
+              (insert "- ")
+              (insert-text-button
+               display-model
+               'action `(lambda (_)
+                          (ollama-buddy-pull-model ,model))
+               'help-echo (format "Pull %s from Ollama Hub" display-model))
+              (insert "\n"))))
+
         ;; Actions at bottom
         (insert "\n* Actions:\n\n")
         (insert-text-button
@@ -3242,7 +3264,6 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c w") #'ollama-buddy-transient-awesome-menu)
     
     ;; Display Options keybindings
-    (define-key map (kbd "C-c A") #'ollama-buddy-toggle-interface-level)
     (define-key map (kbd "C-c B") #'ollama-buddy-toggle-debug-mode)
     (define-key map (kbd "C-c T") #'ollama-buddy-toggle-token-display)
     (define-key map (kbd "C-c u") #'ollama-buddy-display-token-stats)
