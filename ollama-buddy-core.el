@@ -1429,11 +1429,12 @@ When disabled, responses only appear after completion."
           (while (re-search-forward "!\\[.*?\\](\\(.*?\\))" nil t)
             (replace-match "[[\\1]]")))
         
-        ;; Headers: Adjust '#'
+        ;; Headers: Adjust '#' - add 2 levels so MD H1 becomes org level 3
+        ;; (below the ** [MODEL] RESPONSE heading)
         (save-match-data
           (goto-char (point-min))
           (while (re-search-forward "^\\(#+\\) " nil t)
-            (replace-match (make-string (length (match-string 1)) ?*) nil nil nil 1)))
+            (replace-match (make-string (+ 2 (length (match-string 1))) ?*) nil nil nil 1)))
         
         ;; Any extra characters
         (save-match-data
@@ -1880,8 +1881,6 @@ ACTUAL-MODEL is the model being used instead."
                        (if (string-empty-p param-str)
                            ""
                          (format " [%s]" param-str)))))
-           (backend (ollama-buddy--get-effective-backend))
-           (backend-indicator (if (eq backend 'curl) "C" "N"))
            (cloud-indicator (if (ollama-buddy--cloud-model-p model) "☁" ""))
            (external-indicator (let ((ind (concat
                                             (if (featurep 'ollama-buddy-openai) "a" "")
@@ -1894,8 +1893,7 @@ ACTUAL-MODEL is the model being used instead."
                                    (propertize ind 'face '(:weight bold))))))
       (setq header-line-format
             (concat
-             (format " %s%s%s%s %s%s%s%s %s%s%s %s %s %s%s"
-                     backend-indicator
+             (format " %s%s%s %s%s%s%s %s%s%s %s %s %s%s"
                      cloud-indicator
                      external-indicator
 
@@ -1906,7 +1904,7 @@ ACTUAL-MODEL is the model being used instead."
                      (if ollama-buddy-streaming-enabled "" "X")
                      (or history "")
                      
-                     (if ollama-buddy-convert-markdown-to-org "ORG" "Markdown")
+                     (if ollama-buddy-convert-markdown-to-org "ORG" "MD")
                      (ollama-buddy--update-multishot-status)
                      (propertize (if (ollama-buddy--check-status) "" " OFFLINE")
                                  'face '(:weight bold))

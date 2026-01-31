@@ -96,6 +96,15 @@ See full list in :
 
 [[file:CHANGELOG.org]]
 
+** <2026-01-31 Fri> *1.1.4*
+
+Header-line and keybinding improvements
+
+- Added =C-c RET= keybinding to send prompts (matches gptel convention)
+- Simplified header-line: removed backend indicator (N/C)
+- Changed header-line "Markdown" indicator to "MD" for compactness
+- Fixed markdown to org heading conversion: MD headings now offset by 2 levels so H1 becomes org level 3, properly nesting under the =** [MODEL] RESPONSE= heading
+
 ** <2026-01-31 Fri> *1.1.3*
 
 Improved chat UX and simplified codebase

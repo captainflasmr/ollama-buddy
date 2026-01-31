@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 1.1.3
+;; Version: 1.1.4
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -3214,6 +3214,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     
     ;; Chat section keybindings from transient
     (define-key map (kbd "C-c C-c") #'ollama-buddy--send-prompt)
+    (define-key map (kbd "C-c RET") #'ollama-buddy--send-prompt)
     (define-key map (kbd "C-c h") #'ollama-buddy--menu-help-assistant)
     (define-key map (kbd "C-c C-k") #'ollama-buddy--cancel-request)
     (define-key map (kbd "C-c x") #'ollama-buddy-toggle-streaming)
