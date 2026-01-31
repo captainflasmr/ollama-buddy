@@ -11,6 +11,19 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-01-31 Fri> *1.1.5*
+
+Added global system prompt for consistent response formatting
+
+- Added =ollama-buddy-global-system-prompt= customization with sensible default instructing models to avoid markdown tables and use plain prose
+- Added =ollama-buddy-global-system-prompt-enabled= toggle (default: t) to enable/disable the global prompt
+- Global prompt is prepended to session-specific system prompts, providing baseline formatting across all models and providers
+- Added =ollama-buddy-toggle-global-system-prompt= command to quickly toggle the feature
+- Added toggle to transient menu under "Display Toggle" (key: 9)
+- Works with all providers: Ollama, OpenAI, Claude, Gemini, Grok, and Codestral
+
+This feature helps ensure consistent response formatting across different models, avoiding issues like unexpected markdown tables in responses.
+
 ** <2026-01-31 Fri> *1.1.4*
 
 Header-line and keybinding improvements

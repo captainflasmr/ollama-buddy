@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 1.1.4
+;; Version: 1.1.5
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -2176,11 +2176,13 @@ authentication via `ollama signin'."
          (has-images (and supports-vision image-files (not (null image-files))))
          ;; Get history for the request
          (history (ollama-buddy--get-history-for-request))
+         ;; Get effective system prompt (combines global + session prompts)
+         (effective-system-prompt (ollama-buddy--effective-system-prompt))
          ;; If we have a system prompt, add it to the request
          (messages-with-system
-          (if ollama-buddy--current-system-prompt
+          (if effective-system-prompt
               (append `(((role . "system")
-                         (content . ,ollama-buddy--current-system-prompt)))
+                         (content . ,effective-system-prompt)))
                       history)
             history))
          (attachment-context
@@ -2212,8 +2214,8 @@ authentication via `ollama signin'."
                          (messages . ,(vconcat [] messages-all))
                          (stream . ,(if ollama-buddy-streaming-enabled t :json-false))))
          ;; Add system prompt if present
-         (with-system (if ollama-buddy--current-system-prompt
-                          (append base-payload `((system . ,ollama-buddy--current-system-prompt)))
+         (with-system (if effective-system-prompt
+                          (append base-payload `((system . ,effective-system-prompt)))
                         base-payload))
          ;; Add suffix if present
          (with-suffix (if ollama-buddy--current-suffix

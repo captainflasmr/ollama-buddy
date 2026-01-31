@@ -466,6 +466,22 @@ Each command is defined with:
   :type 'boolean
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-global-system-prompt
+  "Format responses in plain prose. Avoid markdown tables unless specifically requested. Use clear paragraphs and bullet points for structured information."
+  "Global system prompt prepended to all requests for consistent formatting.
+This prompt is combined with any session-specific system prompt to provide
+baseline formatting instructions across all models and providers.
+Set to an empty string to disable without toggling the enabled flag."
+  :type 'string
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-global-system-prompt-enabled t
+  "When non-nil, prepend `ollama-buddy-global-system-prompt' to all requests.
+The global prompt provides consistent formatting instructions and is
+combined with session-specific prompts (personas, roles, etc.)."
+  :type 'boolean
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-sessions-directory
   (expand-file-name "ollama-buddy-sessions" user-emacs-directory)
   "Directory containing ollama-buddy session files."
@@ -973,6 +989,32 @@ Returns a cons cell (TEXT . POINT) with the prompt text and point position."
   (setq ollama-buddy--current-system-prompt content)
   (ollama-buddy--register-system-prompt content title source)
   (ollama-buddy--update-status "System prompt set"))
+
+(defun ollama-buddy--effective-system-prompt ()
+  "Return the combined global and session system prompts.
+When `ollama-buddy-global-system-prompt-enabled' is non-nil and
+`ollama-buddy-global-system-prompt' is non-empty, it is prepended
+to the session-specific `ollama-buddy--current-system-prompt'.
+The prompts are separated by two newlines when combined."
+  (let ((global (and ollama-buddy-global-system-prompt-enabled
+                     (stringp ollama-buddy-global-system-prompt)
+                     (not (string-empty-p ollama-buddy-global-system-prompt))
+                     ollama-buddy-global-system-prompt))
+        (session ollama-buddy--current-system-prompt))
+    (cond
+     ((and global session (not (string-empty-p session)))
+      (concat global "\n\n" session))
+     (global global)
+     ((and session (not (string-empty-p session))) session)
+     (t nil))))
+
+(defun ollama-buddy-toggle-global-system-prompt ()
+  "Toggle the global system prompt on or off."
+  (interactive)
+  (setq ollama-buddy-global-system-prompt-enabled
+        (not ollama-buddy-global-system-prompt-enabled))
+  (message "Global system prompt %s"
+           (if ollama-buddy-global-system-prompt-enabled "enabled" "disabled")))
 
 (defun ollama-buddy-show-system-prompt-info ()
   "Show detailed information about the current system prompt."

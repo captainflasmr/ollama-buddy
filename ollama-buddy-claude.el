@@ -108,7 +108,7 @@ Use nil for API default behavior (adaptive)."
                       (gethash ollama-buddy--current-model
                                ollama-buddy--conversation-history-by-model
                                nil)))
-           (system-prompt ollama-buddy--current-system-prompt)
+           (system-prompt (ollama-buddy--effective-system-prompt))
            (attachment-context
             (when ollama-buddy--current-attachments
               (concat "\n\n## Attached Files Context:\n\n"
