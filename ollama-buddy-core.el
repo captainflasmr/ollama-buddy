@@ -294,11 +294,6 @@ These are the only parameters that will be sent to Ollama."
      :description "Open chat buffer"
      :action ollama-buddy--open-chat)
     
-    (show-models
-     :key ?v
-     :description "View model status"
-     :action ollama-buddy-show-model-status)
-
     (unload-all-models
      :key ?U
      :description "Unload all models"

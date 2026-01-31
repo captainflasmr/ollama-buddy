@@ -11,6 +11,14 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-01-31 Fri> *1.1.6*
+
+Removed model status buffer
+
+- Removed =ollama-buddy-show-model-status= function and =*Ollama Model Status*= buffer
+- Removed =C-c v= keybinding and transient menu entry
+- Model information is available in the model management buffer (=C-c W=)
+
 ** <2026-01-31 Fri> *1.1.5*
 
 Added global system prompt for consistent response formatting

@@ -2513,66 +2513,6 @@ Modifies the variable in place."
           (append (cdr entry) (list :model model-name))))
   ollama-buddy-command-definitions)
 
-(defun ollama-buddy-show-model-status ()
-  "Display status of models referenced in command definitions with color coding."
-  (interactive)
-  (let* ((used-models (delete-dups
-                       (delq nil
-                             (mapcar (lambda (cmd)
-                                       (plist-get (cdr cmd) :model))
-                                     ollama-buddy-command-definitions))))
-         (available-models (ollama-buddy--get-models))
-         (running-models (ollama-buddy--get-running-models))
-         (ollama-version (ollama-buddy--make-request "/api/version" "GET"))
-         (buf (get-buffer-create "*Ollama Model Status*")))
-    
-    (with-current-buffer buf
-      (let ((inhibit-read-only t))
-        (org-mode)
-        (setq-local org-hide-emphasis-markers t)
-        (setq-local org-hide-leading-stars t)
-        (erase-buffer)
-
-        (insert "#+title: Ollama Model Status\n\n")
-
-        ;; ollama version
-        (insert "* Version\n\n- ollama : " (cdar ollama-version) "\n\n")
-
-        (insert "* Running Models\n\n")
-
-        ;; List running models
-        (if running-models
-            (progn
-              (dolist (model running-models)
-                (insert (format "- *%s*\n" model))))
-          (insert "No models currently running.\n"))
-
-        ;; List available models with colors
-        (insert "\n* Available Models\n\n")
-        (dolist (model available-models)
-          (insert (format "- *%s*\n" model)))
-
-        (insert "\n")
-
-        ;; Display current model
-        (when ollama-buddy--current-model
-          (insert (format "* Current Model *%s*\n\n" ollama-buddy--current-model)))
-        
-        ;; Display default model
-        (when ollama-buddy-default-model
-          (insert (format "* Default Model *%s*\n\n" ollama-buddy-default-model)))
-        
-        ;; Display models used in commands with colors
-        (insert "* Models used in commands\n\n")
-        (dolist (model used-models)
-          (when model
-            (insert (format "  *%s*" model))
-            (insert (format ": %s\n"
-                            (if (member model available-models)
-                                "Available ✓"
-                              "Not Available ✗")))))))
-    (display-buffer buf)))
-
 (defun ollama-buddy--send-prompt ()
   "Send the current prompt to a LLM with support for system prompt and suffixes."
   (interactive)
@@ -3253,7 +3193,6 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     
     ;; Model section keybindings
     (define-key map (kbd "C-c m") #'ollama-buddy--swap-model)
-    (define-key map (kbd "C-c v") #'ollama-buddy-show-model-status)
     (define-key map (kbd "C-c i") #'ollama-buddy-show-raw-model-info)
     (define-key map (kbd "C-c M") #'ollama-buddy--multishot-prompt)
     

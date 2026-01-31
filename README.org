@@ -305,7 +305,7 @@ When called, the main transient menu appears at the bottom of your Emacs frame, 
 [Chat]             [Prompts]            [Model]               [Roles & Patterns]
 o  Open Chat       l  Send Region       W  Manage Models      R  Switch Roles
 O  Commands        s  Set System Prompt m  Switch Model       E  Create New Role
-RET Send Prompt    C-s Show System      v  View Model Status  D  Open Roles Directory
+RET Send Prompt    C-s Show System      c  Cloud Models        D  Open Roles Directory
 h  Help/Menu       r  Reset System      i  Show Model Info    f  Fabric Patterns
 k  Kill/Cancel     b  Ollama Buddy Menu M  Multishot          t  OpenAI Integration
 x  Toggle Streaming
@@ -349,9 +349,8 @@ These commands help you manage and send prompts:
 
 Commands for model management:
 
-- *Manage Models*: Info, Pull, Copy, Delete for each model, plus Import GGUF Model and Pull any model from ollama library
+- *Manage Models (W)*: Info, Pull, Copy, Delete for each model, plus Import GGUF Model and Pull any model from ollama library
 - *Switch Model (m)*: Changes the active LLM
-- *View Model Status (v)*: Shows status of all available models
 - *Show Model Info (i)*: Displays detailed information about the current model
 - *Multishot (M)*: Sends the same prompt to multiple models
 
@@ -947,7 +946,6 @@ The default menu offers the following menu items:
 |-----+-----------------------------+-----------------------------|
 | o   | Open chat buffer            | Open chat buffer            |
 | m   | Swap model                  | Swap model                  |
-| v   | View model status           | View model status           |
 | l   | Send region                 | Send region                 |
 | R   | Switch roles                | Switch roles                |
 | N   | Create new role             | Create new role             |
@@ -1038,16 +1036,11 @@ The first will add a menu item to the existing menu, and the second will define 
      :description "Open chat buffer"
      :action ollama-buddy--open-chat)
     
-    (show-models
-     :key ?v
-     :description "View model status"
-     :action ollama-buddy-show-model-status)
-    
     (switch-role
      :key ?R
      :description "Switch roles"
      :action ollama-buddy-roles-switch-role)
-    
+
     (create-role
      :key ?E
      :description "Create new role"
@@ -1203,16 +1196,11 @@ For more advanced customization, create role files manually:
      :description "Open chat buffer"
      :action ollama-buddy--open-chat)
     
-    (show-models
-     :key ?v
-     :description "View model status"
-     :action ollama-buddy-show-model-status)
-    
     (switch-role
      :key ?R
      :description "Switch roles"
      :action ollama-buddy-roles-switch-role)
-    
+
     (create-role
      :key ?E
      :description "Create new role"
@@ -1309,16 +1297,11 @@ Here's a complete example of setting up a writing-focused role:
      :description "Open chat buffer"
      :action ollama-buddy--open-chat)
     
-    (show-models
-     :key ?v
-     :description "View model status"
-     :action ollama-buddy-show-model-status)
-    
     (switch-role
      :key ?R
      :description "Switch roles"
      :action ollama-buddy-roles-switch-role)
-    
+
     (create-role
      :key ?E
      :description "Create new role"
@@ -1707,7 +1690,7 @@ When a fallback occurs, Ollama Buddy provides clear feedback:
 
 - The header line shows which model is being used
 - If using a fallback model, an orange warning appears showing both the requested and actual model
-- The model status can be viewed using the "View model status" command (v key)
+- Full model information is available in the model management buffer (=C-c W=)
 
 * Customization
 
@@ -1981,7 +1964,6 @@ You can customize the list via =ollama-buddy-cloud-models=.
 | ollama-buddy-toggle-context-display-type  | Toggle between text and bar display for context usage.                         |
 | ollama-buddy-set-max-history-length       | Set the maximum number of message pairs to keep in conversation history.       |
 | ollama-buddy-reset-suffix                 | Reset the suffix to default (none).                                            |
-| ollama-buddy-show-model-status            | Display status of models referenced in command definitions with color coding.  |
 | ollama-buddy-next-history                 | Navigate to next item in prompt history.                                       |
 | ollama-buddy-clear-history                | Clear the conversation history.                                                |
 | ollama-buddy-awesome-sync-prompts         | Sync the latest prompt from the Awesome ChatGPT Prompt GitHub repository.      |
