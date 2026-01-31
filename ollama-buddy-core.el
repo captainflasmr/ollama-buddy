@@ -18,6 +18,7 @@
 (require 'dired)
 (require 'org)
 (require 'savehist)
+(require 'pulse)
 
 ;; Core Customization Groups
 (defgroup ollama-buddy nil
@@ -77,11 +78,6 @@ Only used when `ollama-buddy-communication-backend' is set to `curl'."
   "Timeout in seconds for curl requests.
 Only used when `ollama-buddy-communication-backend' is set to `curl'."
   :type 'integer
-  :group 'ollama-buddy)
-
-(defcustom ollama-buddy-highlight-models-enabled t
-  "Highlight model names with distinctive colors in Ollama Buddy buffers."
-  :type 'boolean
   :group 'ollama-buddy)
 
 (defcustom ollama-buddy-max-file-size (* 10 1024 1024) ; 10MB
@@ -227,6 +223,13 @@ When non-nil, the buffer scrolls to follow new output if the
 cursor was at the end of the buffer.
 When nil (default), the cursor stays in place and you can
 manually scroll to view new output."
+  :type 'boolean
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-pulse-response t
+  "Whether to pulse/flash the response text when streaming completes.
+When non-nil (default), the response region is briefly highlighted
+to indicate completion."
   :type 'boolean
   :group 'ollama-buddy)
 
@@ -575,6 +578,9 @@ Returns non-nil if any remote models are available."
 (defvar ollama-buddy--current-response nil
   "The current response text being accumulated.")
 
+(defvar ollama-buddy--response-start-marker nil
+  "Marker for the start of the current response, used for pulsing.")
+
 (defvar ollama-buddy--current-system-prompt-title nil
   "Title/name of the current system prompt for display purposes.")
 
@@ -583,9 +589,6 @@ Returns non-nil if any remote models are available."
 
 (defvar ollama-buddy--system-prompt-registry (make-hash-table :test 'equal)
   "Registry mapping system prompt content to metadata (title, source).")
-
-(defvar ollama-buddy--model-highlights nil
-  "List of model name regexps currently highlighted.")
 
 (defvar ollama-buddy--current-attachments nil
   "List of files attached to the current conversation.
@@ -679,9 +682,6 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
 
 (defvar ollama-buddy--response-start-position nil
   "Marker for the start position of the current response.")
-
-(defvar-local ollama-buddy--response-start-position nil
-  "Buffer-local marker for the start position of the current response.")
 
 (defvar ollama-buddy--current-prompt nil
   "The current prompt.")
@@ -1008,76 +1008,6 @@ Returns a cons cell (TEXT . POINT) with the prompt text and point position."
         
         (display-buffer buf))
     (message "No system prompt is currently set")))
-
-(defun ollama-buddy-clear-model-highlights ()
-  "Clear all model name highlighting."
-  (interactive)
-  (when ollama-buddy--model-highlights
-    (dolist (regex ollama-buddy--model-highlights)
-      (unhighlight-regexp regex))
-    (setq ollama-buddy--model-highlights nil)))
-
-(defun ollama-buddy-highlight-models ()
-  "Highlight model names in the ollama-buddy buffer."
-  (interactive)
-  (when (derived-mode-p 'org-mode)
-    ;; First clear any existing highlights
-    (ollama-buddy-clear-model-highlights)
-    
-    ;; Define a list of standard Emacs highlighting faces to use
-    (let ((highlight-faces (apropos-internal "^font-lock-" 'facep))
-          (models-to-highlight nil))
-      
-      ;; Collect all models to highlight
-      ;; 1. Available models
-      (when (ollama-buddy--ollama-running)
-        (dolist (model (ollama-buddy--get-models))
-          (push model models-to-highlight)))
-      
-      ;; 2. Models available for pull
-      (let ((available-for-pull
-             (mapcar (lambda (model)
-                       (if (ollama-buddy--should-use-marker-prefix)
-                           (concat ollama-buddy-marker-prefix model)
-                         model))
-                     ollama-buddy-available-models)))
-        (dolist (model available-for-pull)
-          (push model models-to-highlight)))
-      
-      ;; 3. Remote models (if available)
-      (when (boundp 'ollama-buddy-remote-models)
-        (dolist (model ollama-buddy-remote-models)
-          (push model models-to-highlight)))
-      
-      ;; Remove duplicates
-      (setq models-to-highlight (delete-dups models-to-highlight))
-      
-      ;; Apply highlighting
-      (dolist (model-name models-to-highlight)
-        (let* (;; Generate a consistent hash from the model name
-               (hash (abs (sxhash model-name)))
-               ;; Select a face based on the hash
-               (face (nth (mod hash (length highlight-faces)) highlight-faces))
-               ;; Create the regexp pattern
-               (regex (format "\\b%s\\b" (regexp-quote model-name))))
-          ;; Highlight the model name with the selected face
-          (highlight-regexp regex face)
-          ;; Track the highlighting for later removal
-          (push regex ollama-buddy--model-highlights))))))
-
-(defun ollama-buddy-toggle-model-highlighting ()
-  "Toggle highlighting of model names in Ollama Buddy buffers."
-  (interactive)
-  (setq ollama-buddy-highlight-models-enabled (not ollama-buddy-highlight-models-enabled))
-  (if ollama-buddy-highlight-models-enabled
-      (progn
-        (ollama-buddy-highlight-models)
-        (add-hook 'ollama-buddy-mode-hook #'ollama-buddy-highlight-models)
-        (message "Model highlighting enabled"))
-    (progn
-      (ollama-buddy-clear-model-highlights)
-      (remove-hook 'ollama-buddy-mode-hook #'ollama-buddy-highlight-models)
-      (message "Model highlighting disabled"))))
 
 (defun ollama-buddy--get-model-context-size (model)
   "Get the context window size for MODEL."

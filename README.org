@@ -98,12 +98,15 @@ See full list in :
 
 ** <2026-01-31 Fri> *1.1.3*
 
-Added auto-scroll control for chat buffer
+Improved chat UX and simplified codebase
 
 - Added =ollama-buddy-auto-scroll= customization option (default: nil)
 - When nil, cursor stays in place during streaming output, allowing manual scrolling
 - When t, buffer auto-scrolls to follow new output (previous behavior)
-- Works with both network process and curl backends
+- Added =ollama-buddy-pulse-response= option (default: t) to flash/pulse the response text when streaming completes, providing visual feedback similar to gptel
+- Removed model name coloring feature (hash-based highlighting)
+- Removed =ollama-buddy-highlight-models-enabled=, =ollama-buddy-toggle-model-highlighting=
+- Simplifies codebase and may improve org-mode buffer performance
 
 ** <2026-01-30 Thu> *1.1.2*
 
@@ -185,7 +188,6 @@ If desired, the following will get you going! (of course, have =ollama= running 
   - Menu Presets easily definable in text files
   - Quickly switch between LLM models with no configuration required
   - Send text from any Emacs buffer
-  - Each model is uniquely colored to enhance visual feedback
   - Switch between basic and advanced interface levels (=C-c A=)
 
 - *Role and Session Management*
@@ -287,7 +289,6 @@ T  Toggle Token Display    J  Edit History        S  Save Session        I  Para
 u  Token Stats                                    Q  List Sessions       K  Reset Parameters
 U  Token Usage Graph                              Z  Delete Session      F  Toggle Params in Header
 C-o Toggle Markdown->Org                                                 p  Parameter Profiles
-c  Toggle Model Colors
 V  Toggle reasoning visibility                                           
 #+end_src
 
@@ -356,7 +357,6 @@ Commands to customize the display:
 - *Toggle Token Display (T)*: Show/hide token usage statistics
 - *Display Token Stats (U)*: Show detailed token usage information
 - *Toggle Markdown->Org (C-o)*: Enable/disable conversion to Org format
-- *Toggle Model Colors (c)*: Enable/disable model-specific colors
 - *Toggle reasoning visibility (V)*: Hide/show reasoning/thinking sections
 - *Token Usage Graph (g)*: Display a visual graph of token usage
 
@@ -1696,8 +1696,6 @@ When a fallback occurs, Ollama Buddy provides clear feedback:
   (ollama-buddy-default-model "llama3:latest")
   ;; Set interface level (basic or advanced)
   (ollama-buddy-interface-level 'advanced)
-  ;; Enable model colors
-  (ollama-buddy-enable-model-colors t)
   ;; Set menu columns
   (ollama-buddy-menu-columns 3))
 #+end_src
@@ -1798,7 +1796,6 @@ You can customize the list via =ollama-buddy-cloud-models=.
 | ollama-buddy-grok-api-endpoint           | Endpoint for Grok chat completions API.                                      |
 | ollama-buddy-remote-models               | List of available remote models.                                             |
 | ollama-buddy-command-definitions         | Comprehensive command definitions for Ollama Buddy.                          |
-| ollama-buddy-enable-model-colors         | Whether to show model colors.                                                |
 | ollama-buddy-interface-level             | Level of interface complexity to display.                                    |
 | ollama-buddy-show-params-in-header       | Whether to show modified parameters in the header line.                      |
 | ollama-buddy-debug-mode                  | When non-nil, show raw JSON messages in a debug buffer.                      |
@@ -1934,7 +1931,6 @@ You can customize the list via =ollama-buddy-cloud-models=.
 | ollama-buddy-transient-parameter-menu     | Parameter menu for Ollama Buddy.                                               |
 | ollama-buddy-toggle-debug-mode            | Toggle display of raw JSON messages in a debug buffer.                         |
 | ollama-buddy-awesome-show-prompt          | Display the full content of a prompt with FORMATTED-NAME.                      |
-| ollama-buddy-toggle-model-colors          | Toggle the use of model-specific colors in ollama-buddy.                       |
 | ollama-buddy-awesome-setup                | Set up the ollama-buddy-awesome package.                                       |
 | ollama-buddy-fabric-show-pattern          | Display the full content of a PATTERN.                                         |
 | ollama-buddy-fabric-sync-patterns         | Sync the latest patterns from the Fabric GitHub repository.                    |

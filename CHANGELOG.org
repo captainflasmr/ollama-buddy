@@ -13,12 +13,15 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 ** <2026-01-31 Fri> *1.1.3*
 
-Added auto-scroll control for chat buffer
+Improved chat UX and simplified codebase
 
 - Added =ollama-buddy-auto-scroll= customization option (default: nil)
 - When nil, cursor stays in place during streaming output, allowing manual scrolling
 - When t, buffer auto-scrolls to follow new output (previous behavior)
-- Works with both network process and curl backends
+- Added =ollama-buddy-pulse-response= option (default: t) to flash/pulse the response text when streaming completes, providing visual feedback similar to gptel
+- Removed model name coloring feature (hash-based highlighting)
+- Removed =ollama-buddy-highlight-models-enabled=, =ollama-buddy-toggle-model-highlighting=
+- Simplifies codebase and may improve org-mode buffer performance
 
 ** <2026-01-30 Thu> *1.1.2*
 

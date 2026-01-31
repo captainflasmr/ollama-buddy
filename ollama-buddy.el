@@ -1499,8 +1499,6 @@ With prefix argument ALL-MODELS, clear history for all models."
           (insert (format "\n\n* NO DEFAULT MODEL : Using best guess : %s" model))))
       (ollama-buddy--prepare-prompt-area)
       (put 'ollama-buddy--cycle-prompt-history 'history-position -1))
-    (when ollama-buddy-highlight-models-enabled
-      (ollama-buddy-highlight-models))
     (ollama-buddy--update-status "Idle")))
 
 (defun ollama-buddy--stream-filter (_proc output)
@@ -1638,6 +1636,13 @@ With prefix argument ALL-MODELS, clear history for all models."
                       (unless (string-empty-p remaining-content)
                         (insert remaining-content)))))
 
+                ;; Pulse the response region to indicate completion
+                (when (and ollama-buddy-pulse-response
+                           ollama-buddy--response-start-position)
+                  (ignore-errors
+                    (pulse-momentary-highlight-region
+                     ollama-buddy--response-start-position (point))))
+
                 ;; Convert the response from markdown to org format if enabled
                 (when ollama-buddy-convert-markdown-to-org
                   (let* ((converted-content (with-temp-buffer
@@ -1645,14 +1650,13 @@ With prefix argument ALL-MODELS, clear history for all models."
                                               (ollama-buddy--md-to-org-convert-region (point-min) (point-max))
                                               (buffer-string))))
                     (set-register ollama-buddy-default-register converted-content))
-                  
-                  (when (and (boundp 'ollama-buddy--response-start-position)
-                             ollama-buddy--response-start-position)
+
+                  (when ollama-buddy--response-start-position
                     (ollama-buddy--md-to-org-convert-region
                      ollama-buddy--response-start-position
                      (point-max))
                     ;; Reset the marker after conversion
-                    (makunbound 'ollama-buddy--response-start-position)))
+                    (setq ollama-buddy--response-start-position nil)))
 
                 (unless ollama-buddy-convert-markdown-to-org
                   (set-register ollama-buddy-default-register ollama-buddy--current-response))
@@ -1718,7 +1722,7 @@ With prefix argument ALL-MODELS, clear history for all models."
                 (when ollama-buddy--current-request-temporary-model
                   (setq ollama-buddy--current-model ollama-buddy--current-request-temporary-model)
                   (setq ollama-buddy--current-request-temporary-model nil))
-                
+
                 (insert "\n\n*** FINISHED")
                 
                 ;; Handle multishot progression here
@@ -3280,7 +3284,6 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c C-d") #'ollama-buddy-detach-file)
     (define-key map (kbd "C-c 0") #'ollama-buddy-clear-attachments)
 
-    (define-key map (kbd "C-c #") #'ollama-buddy-toggle-model-highlighting)
     (define-key map (kbd "C-c e") #'ollama-buddy-switch-communication-backend)
     
     (define-key map [remap move-beginning-of-line] #'ollama-buddy-beginning-of-prompt)

@@ -320,22 +320,28 @@ When complete, CALLBACK is called with the status response and result."
           (with-current-buffer ollama-buddy--chat-buffer
             (let ((inhibit-read-only t))
               (goto-char (point-max))
-              
-                ;; Convert the response from markdown to org format if enabled
+
+              ;; Pulse the response region to indicate completion
+              (when (and ollama-buddy-pulse-response
+                         ollama-buddy--response-start-position)
+                (ignore-errors
+                  (pulse-momentary-highlight-region
+                   ollama-buddy--response-start-position (point))))
+
+              ;; Convert the response from markdown to org format if enabled
               (when ollama-buddy-convert-markdown-to-org
                 (let* ((converted-content (with-temp-buffer
                                             (insert ollama-buddy--current-response)
                                             (ollama-buddy--md-to-org-convert-region (point-min) (point-max))
                                             (buffer-string))))
                   (set-register ollama-buddy-default-register converted-content))
-                
-                (when (and (boundp 'ollama-buddy--response-start-position)
-                           ollama-buddy--response-start-position)
+
+                (when ollama-buddy--response-start-position
                   (ollama-buddy--md-to-org-convert-region
                    ollama-buddy--response-start-position
                    (point-max))
                   ;; Reset the marker after conversion
-                  (makunbound 'ollama-buddy--response-start-position)))
+                  (setq ollama-buddy--response-start-position nil)))
 
               (unless ollama-buddy-convert-markdown-to-org
                 (set-register ollama-buddy-default-register ollama-buddy--current-response))
@@ -347,6 +353,7 @@ When complete, CALLBACK is called with the status response and result."
                                   (plist-get last-info :tokens)
                                   (plist-get last-info :elapsed)
                                   (plist-get last-info :rate)))))
+
               (insert "\n\n*** FINISHED")
               (ollama-buddy--prepare-prompt-area))))
         
