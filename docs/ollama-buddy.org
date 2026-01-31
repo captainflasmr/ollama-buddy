@@ -30,7 +30,8 @@ language models (LLMs) directly within your Emacs workflow.
     - [[#Using-use_002dpackage][2.2.2 Using use-package]]
     - [[#Manual-Installation][2.2.3 Manual Installation]]
   - [[#Dependencies][2.3 Dependencies]]
-  - [[#API-Key-Setup][2.4 API Key Setup]]
+  - [[#Communication-Backends][2.4 Communication Backends]]
+  - [[#API-Key-Setup][2.5 API Key Setup]]
 - [[#Configuration][3 Configuration]]
   - [[#Basic-Configuration][3.1 Basic Configuration]]
   - [[#Display-Options][3.2 Display Options]]
@@ -42,7 +43,12 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Context-Management-Configuration][3.6 Context Management
     Configuration]]
   - [[#External-API-Configuration][3.7 External API Configuration]]
-  - [[#Awesome-ChatGPT-Prompts-Configuration][3.8 Awesome ChatGPT
+    - [[#Provider-Prefixes][3.7.1 Provider Prefixes]]
+  - [[#Global-System-Prompt-Configuration][3.8 Global System Prompt
+    Configuration]]
+  - [[#Vision-Configuration][3.9 Vision Configuration]]
+  - [[#Cloud-Model-Configuration][3.10 Cloud Model Configuration]]
+  - [[#Awesome-ChatGPT-Prompts-Configuration][3.11 Awesome ChatGPT
     Prompts Configuration]]
 - [[#Quick-Start][4 Quick Start]]
   - [[#Basic-Usage][4.1 Basic Usage]]
@@ -55,7 +61,8 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Roles-and-Custom-Commands][5.5 Roles and Custom Commands]]
   - [[#Prompt-Template-Collections][5.6 Prompt Template Collections]]
   - [[#External-API-Integration][5.7 External API Integration]]
-  - [[#File-Attachments-1][5.8 File Attachments]]
+  - [[#Vision-Support][5.8 Vision Support]]
+  - [[#File-Attachments-1][5.9 File Attachments]]
 - [[#Chat-Interface][6 Chat Interface]]
   - [[#Opening-the-Chat][6.1 Opening the Chat]]
   - [[#Interface-Overview][6.2 Interface Overview]]
@@ -70,7 +77,10 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Managing-Models][7.4 Managing Models]]
   - [[#Pulling-New-Models][7.5 Pulling New Models]]
   - [[#Importing-GGUF-Files][7.6 Importing GGUF Files]]
-  - [[#Multishot-Mode][7.7 Multishot Mode]]
+  - [[#Vision-Models][7.7 Vision Models]]
+    - [[#Configuring-Vision-Support][7.7.1 Configuring Vision Support]]
+    - [[#Using-Vision-Models][7.7.2 Using Vision Models]]
+  - [[#Multishot-Mode][7.8 Multishot Mode]]
 - [[#Context-Management][8 Context Management]]
   - [[#Understanding-Context-Windows][8.1 Understanding Context
     Windows]]
@@ -200,99 +210,116 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Updating-Prompts][15.7 Updating Prompts]]
   - [[#Setting-Without-Sending][15.8 Setting Without Sending]]
   - [[#Example-Usage][15.9 Example Usage]]
-- [[#ChatGPT-and-Claude-Support][16 ChatGPT and Claude Support]]
+- [[#Remote-Providers][16 Remote Providers]]
   - [[#Overview-2][16.1 Overview]]
-  - [[#Setting-Up-API-Access][16.2 Setting Up API Access]]
-    - [[#Secure-API-Key-Storage][16.2.1 Secure API Key Storage]]
-    - [[#Direct-Configuration][16.2.2 Direct Configuration]]
-  - [[#Selecting-Commercial-Models][16.3 Selecting Commercial Models]]
-  - [[#Configuring-Commercial-Models][16.4 Configuring Commercial
-    Models]]
-    - [[#OpenAI-Configuration][16.4.1 OpenAI Configuration]]
-    - [[#Claude-Configuration][16.4.2 Claude Configuration]]
-  - [[#History-Management][16.5 History Management]]
-  - [[#Improved-Error-Handling][16.6 Improved Error Handling]]
-- [[#Advanced-Usage][17 Advanced Usage]]
-  - [[#Managing-Token-Usage][17.1 Managing Token Usage]]
-  - [[#Customizing-the-Interface][17.2 Customizing the Interface]]
-    - [[#Interface-Level][17.2.1 Interface Level]]
-    - [[#Model-Colors][17.2.2 Model Colors]]
-    - [[#Debug-Mode][17.2.3 Debug Mode]]
-  - [[#Editing-Conversation-History][17.3 Editing Conversation History]]
-  - [[#Advanced-System-Prompt-Management][17.4 Advanced System Prompt
+  - [[#Status-Line-Indicators][16.2 Status Line Indicators]]
+  - [[#Setting-Up-API-Access][16.3 Setting Up API Access]]
+  - [[#Selecting-Remote-Models][16.4 Selecting Remote Models]]
+  - [[#Provider-Configuration][16.5 Provider Configuration]]
+    - [[#OpenAI-Configuration][16.5.1 OpenAI Configuration]]
+    - [[#Claude-Configuration][16.5.2 Claude Configuration]]
+    - [[#Gemini-Configuration][16.5.3 Gemini Configuration]]
+    - [[#Grok-Configuration][16.5.4 Grok Configuration]]
+    - [[#Codestral-Configuration][16.5.5 Codestral Configuration]]
+  - [[#History-Management][16.6 History Management]]
+- [[#Ollama-Cloud-Models][17 Ollama Cloud Models]]
+  - [[#Overview-3][17.1 Overview]]
+  - [[#Available-Cloud-Models][17.2 Available Cloud Models]]
+  - [[#Selecting-Cloud-Models][17.3 Selecting Cloud Models]]
+  - [[#Cloud-Authentication][17.4 Cloud Authentication]]
+  - [[#Cloud-Model-Indicator][17.5 Cloud Model Indicator]]
+  - [[#Configuration-2][17.6 Configuration]]
+- [[#Global-System-Prompt][18 Global System Prompt]]
+  - [[#Overview-4][18.1 Overview]]
+  - [[#Configuration-3][18.2 Configuration]]
+  - [[#Toggling-Global-Prompt][18.3 Toggling Global Prompt]]
+  - [[#How-It-Works][18.4 How It Works]]
+- [[#Advanced-Usage][19 Advanced Usage]]
+  - [[#Managing-Token-Usage][19.1 Managing Token Usage]]
+  - [[#Customizing-the-Interface][19.2 Customizing the Interface]]
+    - [[#Streaming-Options][19.2.1 Streaming Options]]
+    - [[#Debug-Mode][19.2.2 Debug Mode]]
+  - [[#Editing-Conversation-History][19.3 Editing Conversation History]]
+  - [[#Advanced-System-Prompt-Management][19.4 Advanced System Prompt
     Management]]
-    - [[#Setting-a-system-prompt-without-sending][17.4.1 Setting a
+    - [[#Setting-a-system-prompt-without-sending][19.4.1 Setting a
       system prompt without sending]]
-    - [[#Using-a-system-prompt-from-Fabric][17.4.2 Using a system prompt
+    - [[#Using-a-system-prompt-from-Fabric][19.4.2 Using a system prompt
       from Fabric]]
-  - [[#Using-Direct-API-Access][17.5 Using Direct API Access]]
-- [[#API-Reference][18 API Reference]]
-  - [[#Interactive-Functions][18.1 Interactive Functions]]
-  - [[#Core-Functions][18.2 Core Functions]]
-  - [[#Customization-Functions][18.3 Customization Functions]]
-- [[#FAQ][19 Frequently Asked Questions]]
-  - [[#General-Questions][19.1 General Questions]]
-    - [[#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f][19.1.1
+  - [[#Using-Direct-API-Access][19.5 Using Direct API Access]]
+- [[#API-Reference][20 API Reference]]
+  - [[#Interactive-Functions][20.1 Interactive Functions]]
+  - [[#Core-Functions][20.2 Core Functions]]
+  - [[#Customization-Functions][20.3 Customization Functions]]
+- [[#FAQ][21 Frequently Asked Questions]]
+  - [[#General-Questions][21.1 General Questions]]
+    - [[#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f][21.1.1
       What is the difference between Ollama Buddy and other AI
       assistants?]]
-    - [[#Does-Ollama-Buddy-require-an-internet-connection_003f][19.1.2
+    - [[#Does-Ollama-Buddy-require-an-internet-connection_003f][21.1.2
       Does Ollama Buddy require an internet connection?]]
-    - [[#Which-models-work-best-with-Ollama-Buddy_003f][19.1.3 Which
+    - [[#How-do-I-use-Ollama-cloud-models_003f][21.1.3 How do I use
+      Ollama cloud models?]]
+    - [[#Which-models-work-best-with-Ollama-Buddy_003f][21.1.4 Which
       models work best with Ollama Buddy?]]
-    - [[#How-much-RAM-do-I-need_003f][19.1.4 How much RAM do I need?]]
-  - [[#Usage-Questions][19.2 Usage Questions]]
-    - [[#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f][19.2.1
+    - [[#How-much-RAM-do-I-need_003f][21.1.5 How much RAM do I need?]]
+  - [[#Usage-Questions][21.2 Usage Questions]]
+    - [[#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f][21.2.1
       How do I cancel a request that's taking too long?]]
-    - [[#How-can-I-save-my-conversations_003f][19.2.2 How can I save my
+    - [[#How-can-I-save-my-conversations_003f][21.2.2 How can I save my
       conversations?]]
-    - [[#Can-I-use-multiple-models-in-the-same-conversation_003f][19.2.3
+    - [[#Can-I-use-multiple-models-in-the-same-conversation_003f][21.2.3
       Can I use multiple models in the same conversation?]]
-    - [[#How-do-I-clear-the-conversation-history_003f][19.2.4 How do I
+    - [[#How-do-I-clear-the-conversation-history_003f][21.2.4 How do I
       clear the conversation history?]]
-    - [[#How-can-I-create-a-custom-command_003f][19.2.5 How can I create
+    - [[#How-can-I-create-a-custom-command_003f][21.2.5 How can I create
       a custom command?]]
-    - [[#How-can-I-manage-context-windows_003f][19.2.6 How can I manage
+    - [[#How-can-I-manage-context-windows_003f][21.2.6 How can I manage
       context windows?]]
-    - [[#What-happens-when-I-exceed-the-context-limit_003f][19.2.7 What
+    - [[#What-happens-when-I-exceed-the-context-limit_003f][21.2.7 What
       happens when I exceed the context limit?]]
-    - [[#How-do-I-create-effective-system-prompts_003f][19.2.8 How do I
+    - [[#How-do-I-create-effective-system-prompts_003f][21.2.8 How do I
       create effective system prompts?]]
-    - [[#Where-are-my-system-prompts-stored_003f][19.2.9 Where are my
+    - [[#Where-are-my-system-prompts-stored_003f][21.2.9 Where are my
       system prompts stored?]]
-  - [[#Troubleshooting-1][19.3 Troubleshooting]]
-    - [[#Ollama-Buddy-shows-_0022OFFLINE_0022-status][19.3.1 Ollama
+  - [[#Troubleshooting-1][21.3 Troubleshooting]]
+    - [[#Ollama-Buddy-shows-_0022OFFLINE_0022-status][21.3.1 Ollama
       Buddy shows "OFFLINE" status]]
-    - [[#Responses-are-slow-or-the-model-seems-to-hang][19.3.2 Responses
+    - [[#Responses-are-slow-or-the-model-seems-to-hang][21.3.2 Responses
       are slow or the model seems to hang]]
-    - [[#Getting-_0022error-parsing-model_0022-when-pulling-a-model][19.3.3
+    - [[#Getting-_0022error-parsing-model_0022-when-pulling-a-model][21.3.3
       Getting "error parsing model" when pulling a model]]
-    - [[#Model-responses-are-low-quality-or-truncated][19.3.4 Model
+    - [[#Model-responses-are-low-quality-or-truncated][21.3.4 Model
       responses are low quality or truncated]]
-    - [[#How-do-system-prompts-differ-from-regular-prompts_003f][19.3.5
+    - [[#How-do-system-prompts-differ-from-regular-prompts_003f][21.3.5
       How do system prompts differ from regular prompts?]]
-    - [[#Can-I-share-system-prompts-between-different-installations_003f][19.3.6
+    - [[#What-is-the-global-system-prompt_003f][21.3.6 What is the
+      global system prompt?]]
+    - [[#How-do-I-use-image-analysis_002fvision-features_003f][21.3.7
+      How do I use image analysis/vision features?]]
+    - [[#Can-I-share-system-prompts-between-different-installations_003f][21.3.8
       Can I share system prompts between different installations?]]
-- [[#Troubleshooting][20 Troubleshooting]]
-  - [[#Common-Issues][20.1 Common Issues]]
-    - [[#Connection-Problems][20.1.1 Connection Problems]]
-    - [[#Model-Problems][20.1.2 Model Problems]]
-    - [[#Interface-Issues][20.1.3 Interface Issues]]
-  - [[#Debugging][20.2 Debugging]]
-    - [[#Enable-Debug-Mode][20.2.1 Enable Debug Mode]]
-    - [[#Check-Logs][20.2.2 Check Logs]]
-    - [[#Report-Issues][20.2.3 Report Issues]]
-- [[#Contributing][21 Contributing]]
-  - [[#Getting-Started][21.1 Getting Started]]
-  - [[#Development-Setup][21.2 Development Setup]]
-    - [[#Required-Tools][21.2.1 Required Tools]]
-    - [[#Recommended-Packages][21.2.2 Recommended Packages]]
-  - [[#Coding-Guidelines][21.3 Coding Guidelines]]
-  - [[#Testing][21.4 Testing]]
-    - [[#Run-Existing-Tests][21.4.1 Run Existing Tests]]
-    - [[#Adding-New-Tests][21.4.2 Adding New Tests]]
-  - [[#Feature-Requests-and-Bug-Reports][21.5 Feature Requests and Bug
+- [[#Troubleshooting][22 Troubleshooting]]
+  - [[#Common-Issues][22.1 Common Issues]]
+    - [[#Connection-Problems][22.1.1 Connection Problems]]
+    - [[#Model-Problems][22.1.2 Model Problems]]
+    - [[#Interface-Issues][22.1.3 Interface Issues]]
+  - [[#Debugging][22.2 Debugging]]
+    - [[#Enable-Debug-Mode][22.2.1 Enable Debug Mode]]
+    - [[#Check-Logs][22.2.2 Check Logs]]
+    - [[#Report-Issues][22.2.3 Report Issues]]
+- [[#Contributing][23 Contributing]]
+  - [[#Getting-Started][23.1 Getting Started]]
+  - [[#Development-Setup][23.2 Development Setup]]
+    - [[#Required-Tools][23.2.1 Required Tools]]
+    - [[#Recommended-Packages][23.2.2 Recommended Packages]]
+  - [[#Coding-Guidelines][23.3 Coding Guidelines]]
+  - [[#Testing][23.4 Testing]]
+    - [[#Run-Existing-Tests][23.4.1 Run Existing Tests]]
+    - [[#Adding-New-Tests][23.4.2 Adding New Tests]]
+  - [[#Feature-Requests-and-Bug-Reports][23.5 Feature Requests and Bug
     Reports]]
-    - [[#User-System-Prompts-Issues][21.5.1 User System Prompts Issues]]
+    - [[#User-System-Prompts-Issues][23.5.1 User System Prompts Issues]]
 - [[#Index][Index]]
 
 --------------
@@ -330,7 +357,9 @@ directly from within Emacs for various tasks such as:
 - Custom AI-powered workflows via roles
 - Using pre-built prompt templates from Fabric
 - Utilizing Awesome ChatGPT Prompts
-- Integrating with Claude and OpenAI's commercial APIs
+- Integrating with commercial APIs (OpenAI, Claude, Gemini, Grok,
+  Codestral)
+- Using Ollama cloud models
 - Including files as context in conversations
 
 Instead of context-switching to web interfaces or terminal applications,
@@ -386,6 +415,7 @@ Next: [[#Configuration][Configuration]], Previous:
 - [[#Installing-Ollama][Installing Ollama]]
 - [[#Package-Installation][Package Installation]]
 - [[#Dependencies][Dependencies]]
+- [[#Communication-Backends][Communication Backends]]
 - [[#API-Key-Setup][API Key Setup]]
 
 <<Installing-Ollama>>
@@ -475,17 +505,45 @@ To install manually:
 :CUSTOM_ID: dependencies
 :CLASS: section
 :END:
-Ollama Buddy requires the following Emacs packages:
+Ollama Buddy requires the following:
 
-- transient
-- json
-- cl-lib
+- Emacs 28.1 or later
+- (Optional) transient 0.4.0+ for advanced menu system
 
-These should be automatically installed if you use package.el or
-use-package.
+Built-in packages used: json, cl-lib, url, subr-x, dired, org, savehist.
+
+<<Communication-Backends>>
+*** 2.4 Communication Backends [[#Communication-Backends][¶]]
+:PROPERTIES:
+:CUSTOM_ID: communication-backends
+:CLASS: section
+:END:
+Ollama Buddy supports two communication backends:
+
+- =network-process (default)= :: Uses Emacs built-in network process.
+
+- =curl= :: Uses external curl command for requests. Useful as a
+  fallback when network process has issues.
+
+To switch backends:
+
+#+begin_src example-preformatted
+M-x ollama-buddy-switch-communication-backend
+#+end_src
+
+or press =C-c e= in the chat buffer.
+
+To configure curl backend:
+
+#+begin_src example-preformatted
+(require 'ollama-buddy-curl)
+(setq ollama-buddy-communication-backend 'curl)
+(setq ollama-buddy-curl-executable "curl")
+(setq ollama-buddy-curl-timeout 300)
+#+end_src
 
 <<API-Key-Setup>>
-*** 2.4 API Key Setup [[#API-Key-Setup][¶]]
+*** 2.5 API Key Setup [[#API-Key-Setup][¶]]
 :PROPERTIES:
 :CUSTOM_ID: api-key-setup
 :CLASS: section
@@ -530,6 +588,10 @@ Next: [[#Quick-Start][Quick Start]], Previous:
 - [[#Context-Management-Configuration][Context Management
   Configuration]]
 - [[#External-API-Configuration][External API Configuration]]
+- [[#Global-System-Prompt-Configuration][Global System Prompt
+  Configuration]]
+- [[#Vision-Configuration][Vision Configuration]]
+- [[#Cloud-Model-Configuration][Cloud Model Configuration]]
 - [[#Awesome-ChatGPT-Prompts-Configuration][Awesome ChatGPT Prompts
   Configuration]]
 
@@ -576,13 +638,6 @@ Customize the appearance and behavior of Ollama Buddy:
   (setq ollama-buddy-convert-markdown-to-org t)
   #+end_src
 
-- =ollama-buddy-enable-model-colors= :: Whether to show model names with
-  distinctive colors (default: t).
-
-  #+begin_src example-preformatted
-  (setq ollama-buddy-enable-model-colors t)
-  #+end_src
-
 - =ollama-buddy-display-token-stats= :: Whether to display token usage
   statistics after responses (default: nil).
 
@@ -590,11 +645,25 @@ Customize the appearance and behavior of Ollama Buddy:
   (setq ollama-buddy-display-token-stats t)
   #+end_src
 
-- =ollama-buddy-interface-level= :: Level of interface complexity
-  ('basic or 'advanced).
+- =ollama-buddy-streaming-enabled= :: Whether to use streaming mode for
+  responses (default: t).
 
   #+begin_src example-preformatted
-  (setq ollama-buddy-interface-level 'advanced)
+  (setq ollama-buddy-streaming-enabled t)
+  #+end_src
+
+- =ollama-buddy-auto-scroll= :: Whether to auto-scroll the chat buffer
+  during streaming output (default: nil).
+
+  #+begin_src example-preformatted
+  (setq ollama-buddy-auto-scroll t)
+  #+end_src
+
+- =ollama-buddy-pulse-response= :: Whether to pulse/flash the response
+  text when streaming completes (default: t).
+
+  #+begin_src example-preformatted
+  (setq ollama-buddy-pulse-response t)
   #+end_src
 
 <<File-Attachment-Configuration>>
@@ -727,36 +796,108 @@ Configure how Ollama Buddy handles context management:
 :CUSTOM_ID: external-api-configuration
 :CLASS: section
 :END:
-For OpenAI and Claude integration:
+For remote provider integration, configure API keys using auth-source
+(recommended):
 
-- =ollama-buddy-openai-api-key= :: Your OpenAI API key.
+#+begin_src example-preformatted
+;; In ~/.authinfo.gpg
+machine ollama-buddy-openai login apikey password YOUR_KEY
+machine ollama-buddy-claude login apikey password YOUR_KEY
+machine ollama-buddy-gemini login apikey password YOUR_KEY
+machine ollama-buddy-grok login apikey password YOUR_KEY
+machine ollama-buddy-codestral login apikey password YOUR_KEY
+#+end_src
+
+Then in your Emacs config:
+
+#+begin_src example-preformatted
+(setq ollama-buddy-openai-api-key
+      (auth-source-pick-first-password
+       :host "ollama-buddy-openai" :user "apikey"))
+#+end_src
+
+- [[#Provider-Prefixes][Provider Prefixes]]
+
+<<Provider-Prefixes>>
+**** 3.7.1 Provider Prefixes [[#Provider-Prefixes][¶]]
+:PROPERTIES:
+:CUSTOM_ID: provider-prefixes
+:CLASS: subsection
+:END:
+Each provider uses a prefix to identify its models:
+
+- =a:= - OpenAI (e.g., =a:gpt-4=)
+- =c:= - Claude (e.g., =c:claude-3-opus=)
+- =g:= - Gemini (e.g., =g:gemini-pro=)
+- =k:= - Grok (e.g., =k:grok-1=)
+- =s:= - Codestral (e.g., =s:codestral-latest=)
+- =o:= - Ollama local (when remote providers are loaded)
+
+<<Global-System-Prompt-Configuration>>
+*** 3.8 Global System Prompt Configuration [[#Global-System-Prompt-Configuration][¶]]
+:PROPERTIES:
+:CUSTOM_ID: global-system-prompt-configuration
+:CLASS: section
+:END:
+Configure a persistent system prompt for all requests:
+
+- =ollama-buddy-global-system-prompt= :: The global prompt prepended to
+  all requests.
 
   #+begin_src example-preformatted
-  (setq ollama-buddy-openai-api-key "your-openai-key")
+  (setq ollama-buddy-global-system-prompt
+    "Format responses in plain prose. Avoid markdown tables.")
   #+end_src
 
-- =ollama-buddy-claude-api-key= :: Your Claude API key.
+- =ollama-buddy-global-system-prompt-enabled= :: Whether to enable the
+  global prompt (default: t).
 
   #+begin_src example-preformatted
-  (setq ollama-buddy-claude-api-key "your-claude-key")
+  (setq ollama-buddy-global-system-prompt-enabled t)
   #+end_src
 
-- =ollama-buddy-openai-default-model= :: Default model for OpenAI
-  requests.
+<<Vision-Configuration>>
+*** 3.9 Vision Configuration [[#Vision-Configuration][¶]]
+:PROPERTIES:
+:CUSTOM_ID: vision-configuration
+:CLASS: section
+:END:
+Configure vision support for image analysis:
+
+- =ollama-buddy-vision-enabled= :: Whether to enable vision support
+  (default: t).
+
+- =ollama-buddy-vision-models= :: Models known to support vision
+  capabilities.
 
   #+begin_src example-preformatted
-  (setq ollama-buddy-openai-default-model "gpt-4")
+  (setq ollama-buddy-vision-models
+        '("gemma3:4b" "llama3.2:3b" "llama3.2:8b"))
   #+end_src
 
-- =ollama-buddy-claude-default-model= :: Default model for Claude
-  requests.
+- =ollama-buddy-image-formats= :: Supported image file formats.
+
+<<Cloud-Model-Configuration>>
+*** 3.10 Cloud Model Configuration [[#Cloud-Model-Configuration][¶]]
+:PROPERTIES:
+:CUSTOM_ID: cloud-model-configuration
+:CLASS: section
+:END:
+Configure Ollama cloud models:
+
+- =ollama-buddy-cloud-models= :: List of available cloud models.
 
   #+begin_src example-preformatted
-  (setq ollama-buddy-claude-default-model "claude-3-opus-20240229")
+  (setq ollama-buddy-cloud-models
+    '("qwen3-coder:480b-cloud"
+      "deepseek-v3.1:671b-cloud"))
   #+end_src
+
+- =ollama-buddy-ollama-executable= :: Path to the ollama CLI (default:
+  "ollama").
 
 <<Awesome-ChatGPT-Prompts-Configuration>>
-*** 3.8 Awesome ChatGPT Prompts Configuration [[#Awesome-ChatGPT-Prompts-Configuration][¶]]
+*** 3.11 Awesome ChatGPT Prompts Configuration [[#Awesome-ChatGPT-Prompts-Configuration][¶]]
 :PROPERTIES:
 :CUSTOM_ID: awesome-chatgpt-prompts-configuration
 :CLASS: section
@@ -838,11 +979,14 @@ Next: [[#Core-Features][Core Features]], Previous:
 - Generating a commit message :: Select your changes, press =C-c o=,
   then choose "Git Commit Message" (or press =g=).
 
-- Changing models :: Press =C-c o= followed by =m= to switch between
-  available models.
+- Changing models :: Press =C-c m= to switch between available models,
+  or =C-u C-c m= to select from cloud models.
 
-- Attaching files :: Press =C-c o= followed by =1= for the attachment
-  menu, then =a= to attach a file.
+- Using the transient menu :: Press =C-c O= for the main transient menu
+  with all features organized by category.
+
+- Attaching files :: Press =C-c C-a= to attach a file, or use the
+  transient menu "Attachments" section.
 
 - Toggling reasoning visibility :: Press =C-c V= to hide or show
   reasoning/thinking sections in responses.
@@ -876,6 +1020,7 @@ Next: [[#Chat-Interface][Chat Interface]], Previous:
 - [[#Roles-and-Custom-Commands][Roles and Custom Commands]]
 - [[#Prompt-Template-Collections][Prompt Template Collections]]
 - [[#External-API-Integration][External API Integration]]
+- [[#Vision-Support][Vision Support]]
 - [[#File-Attachments-1][File Attachments]]
 
 <<Chat-Interface-1>>
@@ -971,13 +1116,28 @@ Ollama Buddy comes with several pre-built commands:
 :CUSTOM_ID: external-api-integration
 :CLASS: section
 :END:
-- Connect to OpenAI's ChatGPT API
-- Connect to Anthropic's Claude API
+- Connect to OpenAI's ChatGPT API (prefix: =a:=)
+- Connect to Anthropic's Claude API (prefix: =c:=)
+- Connect to Google Gemini API (prefix: =g:=)
+- Connect to X Grok API (prefix: =k:=)
+- Connect to Mistral Codestral API (prefix: =s:=)
+- Use Ollama cloud models (indicated by =☁=)
 - Seamlessly switch between local and cloud models
-- Secure API key management
+- Secure API key management via auth-source
+
+<<Vision-Support>>
+*** 5.8 Vision Support [[#Vision-Support][¶]]
+:PROPERTIES:
+:CUSTOM_ID: vision-support
+:CLASS: section
+:END:
+- Analyze images with vision-capable models
+- Automatic image detection in prompts
+- Support for PNG, JPG, JPEG, WebP, and GIF formats
+- Configurable list of vision-capable models
 
 <<File-Attachments-1>>
-*** 5.8 File Attachments [[#File-Attachments-1][¶]]
+*** 5.9 File Attachments [[#File-Attachments-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: file-attachments
 :CLASS: section
@@ -1028,11 +1188,17 @@ To open the chat interface:
 :END:
 The chat interface consists of:
 
-- A welcome message with available models
+- A welcome message with available models and providers
 - Conversation history (previous prompts and responses)
 - A prompt area for entering your queries
-- A header line with status information
-- A status bar showing context usage (when enabled)
+- A header line with status information including:
+  - Cloud model indicator (=☁=)
+  - Loaded provider indicators (=acgks=)
+  - Context usage bar (when enabled)
+  - History count (=H5/10=)
+  - Current model name
+  - System prompt indicator
+  - Modified parameters
 - Context warnings and validation
 - Attachment indicators when files are attached
 
@@ -1138,6 +1304,7 @@ Next: [[#Context-Management][Context Management]], Previous:
 - [[#Managing-Models][Managing Models]]
 - [[#Pulling-New-Models][Pulling New Models]]
 - [[#Importing-GGUF-Files][Importing GGUF Files]]
+- [[#Vision-Models][Vision Models]]
 - [[#Multishot-Mode][Multishot Mode]]
 
 <<Available-Models>>
@@ -1237,8 +1404,65 @@ You can import custom GGUF model files:
 5. Optionally provide model parameters
 6. Wait for Ollama to create the model
 
+<<Vision-Models>>
+*** 7.7 Vision Models [[#Vision-Models][¶]]
+:PROPERTIES:
+:CUSTOM_ID: vision-models
+:CLASS: section
+:END:
+Some models support vision capabilities for image analysis.
+
+- [[#Configuring-Vision-Support][Configuring Vision Support]]
+- [[#Using-Vision-Models][Using Vision Models]]
+
+<<Configuring-Vision-Support>>
+**** 7.7.1 Configuring Vision Support [[#Configuring-Vision-Support][¶]]
+:PROPERTIES:
+:CUSTOM_ID: configuring-vision-support
+:CLASS: subsection
+:END:
+- =ollama-buddy-vision-enabled= :: Whether to enable vision support
+  (default: t).
+
+  #+begin_src example-preformatted
+  (setq ollama-buddy-vision-enabled t)
+  #+end_src
+
+- =ollama-buddy-vision-models= :: List of models known to support
+  vision:
+
+  #+begin_src example-preformatted
+  (setq ollama-buddy-vision-models
+        '("gemma3:4b" "llama3.2:3b" "llama3.2:8b"))
+  #+end_src
+
+- =ollama-buddy-image-formats= :: Supported image file formats:
+
+  #+begin_src example-preformatted
+  (setq ollama-buddy-image-formats
+        '("\\.png$" "\\.jpg$" "\\.jpeg$" "\\.webp$" "\\.gif$"))
+  #+end_src
+
+<<Using-Vision-Models>>
+**** 7.7.2 Using Vision Models [[#Using-Vision-Models][¶]]
+:PROPERTIES:
+:CUSTOM_ID: using-vision-models
+:CLASS: subsection
+:END:
+To analyze an image:
+
+1. Select a vision-capable model
+2. Include an image path in your prompt, or use the "Analyze image"
+   command
+3. The image will be automatically encoded and sent to the model
+
+Image paths can be:
+
+- Quoted paths: ="path/to/image.png"=
+- Unquoted paths: =/home/user/image.jpg=
+
 <<Multishot-Mode>>
-*** 7.7 Multishot Mode [[#Multishot-Mode][¶]]
+*** 7.8 Multishot Mode [[#Multishot-Mode][¶]]
 :PROPERTIES:
 :CUSTOM_ID: multishot-mode
 :CLASS: section
@@ -3055,9 +3279,9 @@ You can quickly access patterns by category:
 
 <<Awesome-ChatGPT-Prompts>>
 
-Next: [[#ChatGPT-and-Claude-Support][ChatGPT and Claude Support]],
-Previous: [[#Fabric-Pattern-Integration][Fabric Pattern Integration]],
-Up: [[#Top][Ollama Buddy]]  
+Next: [[#Remote-Providers][Remote Providers]], Previous:
+[[#Fabric-Pattern-Integration][Fabric Pattern Integration]], Up:
+[[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
 ** 15 Awesome ChatGPT Prompts [[#Awesome-ChatGPT-Prompts-1][¶]]
@@ -3246,24 +3470,24 @@ Some popular prompts include:
 
 --------------
 
-<<ChatGPT-and-Claude-Support>>
+<<Remote-Providers>>
 
-Next: [[#Advanced-Usage][Advanced Usage]], Previous:
+Next: [[#Ollama-Cloud-Models][Ollama Cloud Models]], Previous:
 [[#Awesome-ChatGPT-Prompts][Awesome ChatGPT Prompts]], Up:
 [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 16 ChatGPT and Claude Support [[#ChatGPT-and-Claude-Support-1][¶]]
+** 16 Remote Providers [[#Remote-Providers-1][¶]]
 :PROPERTIES:
-:CUSTOM_ID: ChatGPT-and-Claude-Support-1
+:CUSTOM_ID: Remote-Providers-1
 :CLASS: chapter
 :END:
 - [[#Overview-2][Overview]]
+- [[#Status-Line-Indicators][Status Line Indicators]]
 - [[#Setting-Up-API-Access][Setting Up API Access]]
-- [[#Selecting-Commercial-Models][Selecting Commercial Models]]
-- [[#Configuring-Commercial-Models][Configuring Commercial Models]]
+- [[#Selecting-Remote-Models][Selecting Remote Models]]
+- [[#Provider-Configuration][Provider Configuration]]
 - [[#History-Management][History Management]]
-- [[#Improved-Error-Handling][Improved Error Handling]]
 
 <<Overview-2>>
 *** 16.1 Overview [[#Overview-2][¶]]
@@ -3271,68 +3495,78 @@ Next: [[#Advanced-Usage][Advanced Usage]], Previous:
 :CUSTOM_ID: overview-2
 :CLASS: section
 :END:
-Ollama Buddy integrates with commercial AI services:
+Ollama Buddy integrates with multiple commercial AI services, each
+loaded on-demand:
 
-- OpenAI's ChatGPT API
-- Anthropic's Claude API
+- OpenAI (prefix: =a:=) :: Load with
+  =(require 'ollama-buddy-openai nil t)=
 
-This allows you to:
+- Claude/Anthropic (prefix: =c:=) :: Load with
+  =(require 'ollama-buddy-claude nil t)=
 
-- Use the latest commercial models when needed
-- Compare responses between local and cloud models
-- Leverage the strengths of different model families
+- Google Gemini (prefix: =g:=) :: Load with
+  =(require 'ollama-buddy-gemini nil t)=
+
+- Grok/X (prefix: =k:=) :: Load with
+  =(require 'ollama-buddy-grok nil t)=
+
+- Codestral/Mistral (prefix: =s:=) :: Load with
+  =(require 'ollama-buddy-codestral nil t)=
+
+Local Ollama models use the =o:= prefix when remote models are
+available, or no prefix when only local models are present.
+
+<<Status-Line-Indicators>>
+*** 16.2 Status Line Indicators [[#Status-Line-Indicators][¶]]
+:PROPERTIES:
+:CUSTOM_ID: status-line-indicators
+:CLASS: section
+:END:
+The header line shows compact indicators for loaded providers:
+
+- =☁= - Currently using an Ollama cloud model
+- =a= - OpenAI provider loaded
+- =c= - Claude provider loaded
+- =g= - Gemini provider loaded
+- =k= - Grok provider loaded
+- =s= - Codestral provider loaded
+
+Example: =☁acgks= means cloud model with all five external providers
+loaded.
 
 <<Setting-Up-API-Access>>
-*** 16.2 Setting Up API Access [[#Setting-Up-API-Access][¶]]
+*** 16.3 Setting Up API Access [[#Setting-Up-API-Access][¶]]
 :PROPERTIES:
 :CUSTOM_ID: setting-up-api-access
 :CLASS: section
 :END:
-Before using commercial APIs, you need to set up API keys:
-
-- [[#Secure-API-Key-Storage][Secure API Key Storage]]
-- [[#Direct-Configuration][Direct Configuration]]
-
-<<Secure-API-Key-Storage>>
-**** 16.2.1 Secure API Key Storage [[#Secure-API-Key-Storage][¶]]
-:PROPERTIES:
-:CUSTOM_ID: secure-api-key-storage
-:CLASS: subsection
-:END:
-The recommended approach is to use Emacs' built-in auth-source:
+Before using commercial APIs, you need to set up API keys. The
+recommended approach is to use Emacs' built-in auth-source:
 
 #+begin_src example-preformatted
 ;; Add to ~/.authinfo.gpg (encrypted)
-machine api.openai.com login apikey password YOUR_OPENAI_API_KEY
-machine api.anthropic.com login apikey password YOUR_CLAUDE_API_KEY
+machine ollama-buddy-openai login apikey password YOUR_OPENAI_API_KEY
+machine ollama-buddy-claude login apikey password YOUR_CLAUDE_API_KEY
+machine ollama-buddy-gemini login apikey password YOUR_GEMINI_API_KEY
+machine ollama-buddy-grok login apikey password YOUR_GROK_API_KEY
+machine ollama-buddy-codestral login apikey password YOUR_CODESTRAL_API_KEY
 #+end_src
 
-<<Direct-Configuration>>
-**** 16.2.2 Direct Configuration [[#Direct-Configuration][¶]]
-:PROPERTIES:
-:CUSTOM_ID: direct-configuration
-:CLASS: subsection
-:END:
-For testing or temporary use (less secure):
+Then configure with auth-source:
 
 #+begin_src example-preformatted
-(setq ollama-buddy-openai-api-key "your-openai-key")
-(setq ollama-buddy-claude-api-key "your-claude-key")
+(setq ollama-buddy-openai-api-key
+      (auth-source-pick-first-password :host "ollama-buddy-openai" :user "apikey"))
 #+end_src
 
-<<Selecting-Commercial-Models>>
-*** 16.3 Selecting Commercial Models [[#Selecting-Commercial-Models][¶]]
+<<Selecting-Remote-Models>>
+*** 16.4 Selecting Remote Models [[#Selecting-Remote-Models][¶]]
 :PROPERTIES:
-:CUSTOM_ID: selecting-commercial-models
+:CUSTOM_ID: selecting-remote-models
 :CLASS: section
 :END:
-Both OpenAI and Claude models appear in the model selection list with
-special prefixes:
-
-- OpenAI models are prefixed with "openai:"
-- Claude models are prefixed with "claude:"
-
-To select a commercial model:
+All remote models appear in the model selection list with their provider
+prefix:
 
 #+begin_src example-preformatted
 M-x ollama-buddy--swap-model
@@ -3340,115 +3574,287 @@ M-x ollama-buddy--swap-model
 
 or press =C-c m=.
 
-Choose the model from the completion list.
+Models will appear like: =a:gpt-4=, =c:claude-3-opus=, =g:gemini-pro=,
+etc.
 
-<<Configuring-Commercial-Models>>
-*** 16.4 Configuring Commercial Models [[#Configuring-Commercial-Models][¶]]
+<<Provider-Configuration>>
+*** 16.5 Provider Configuration [[#Provider-Configuration][¶]]
 :PROPERTIES:
-:CUSTOM_ID: configuring-commercial-models
+:CUSTOM_ID: provider-configuration
 :CLASS: section
 :END:
 - [[#OpenAI-Configuration][OpenAI Configuration]]
 - [[#Claude-Configuration][Claude Configuration]]
+- [[#Gemini-Configuration][Gemini Configuration]]
+- [[#Grok-Configuration][Grok Configuration]]
+- [[#Codestral-Configuration][Codestral Configuration]]
 
 <<OpenAI-Configuration>>
-**** 16.4.1 OpenAI Configuration [[#OpenAI-Configuration][¶]]
+**** 16.5.1 OpenAI Configuration [[#OpenAI-Configuration][¶]]
 :PROPERTIES:
 :CUSTOM_ID: openai-configuration
 :CLASS: subsection
 :END:
+- =ollama-buddy-openai-api-key= :: Your OpenAI API key.
+
 - =ollama-buddy-openai-default-model= :: Default OpenAI model to use
   (e.g., "gpt-4").
-
-  #+begin_src example-preformatted
-  (setq ollama-buddy-openai-default-model "gpt-4")
-  #+end_src
 
 - =ollama-buddy-openai-temperature= :: Default temperature for OpenAI
   requests (0.0-2.0).
 
-  #+begin_src example-preformatted
-  (setq ollama-buddy-openai-temperature 0.7)
-  #+end_src
-
 - =ollama-buddy-openai-max-tokens= :: Maximum tokens to generate (nil
   for API default).
 
-  #+begin_src example-preformatted
-  (setq ollama-buddy-openai-max-tokens 2000)
-  #+end_src
-
-- =ollama-buddy-openai-api-endpoint= :: Custom API endpoint (defaults to
-  OpenAI's standard endpoint).
-
-  #+begin_src example-preformatted
-  (setq ollama-buddy-openai-api-endpoint "https://api.openai.com/v1/chat/completions")
-  #+end_src
-
 <<Claude-Configuration>>
-**** 16.4.2 Claude Configuration [[#Claude-Configuration][¶]]
+**** 16.5.2 Claude Configuration [[#Claude-Configuration][¶]]
 :PROPERTIES:
 :CUSTOM_ID: claude-configuration
 :CLASS: subsection
 :END:
-- =ollama-buddy-claude-default-model= :: Default Claude model to use.
+- =ollama-buddy-claude-api-key= :: Your Anthropic Claude API key.
 
-  #+begin_src example-preformatted
-  (setq ollama-buddy-claude-default-model "claude-3-opus-20240229")
-  #+end_src
+- =ollama-buddy-claude-default-model= :: Default Claude model to use.
 
 - =ollama-buddy-claude-temperature= :: Default temperature for Claude
   requests (0.0-1.0).
 
-  #+begin_src example-preformatted
-  (setq ollama-buddy-claude-temperature 0.7)
-  #+end_src
+- =ollama-buddy-claude-max-tokens= :: Maximum tokens to generate.
 
-- =ollama-buddy-claude-max-tokens= :: Maximum tokens to generate (nil
-  for API default).
+<<Gemini-Configuration>>
+**** 16.5.3 Gemini Configuration [[#Gemini-Configuration][¶]]
+:PROPERTIES:
+:CUSTOM_ID: gemini-configuration
+:CLASS: subsection
+:END:
+- =ollama-buddy-gemini-api-key= :: Your Google Gemini API key.
 
-  #+begin_src example-preformatted
-  (setq ollama-buddy-claude-max-tokens 2000)
-  #+end_src
+- =ollama-buddy-gemini-default-model= :: Default Gemini model to use.
+
+<<Grok-Configuration>>
+**** 16.5.4 Grok Configuration [[#Grok-Configuration][¶]]
+:PROPERTIES:
+:CUSTOM_ID: grok-configuration
+:CLASS: subsection
+:END:
+- =ollama-buddy-grok-api-key= :: Your X/Grok API key.
+
+- =ollama-buddy-grok-default-model= :: Default Grok model to use.
+
+<<Codestral-Configuration>>
+**** 16.5.5 Codestral Configuration [[#Codestral-Configuration][¶]]
+:PROPERTIES:
+:CUSTOM_ID: codestral-configuration
+:CLASS: subsection
+:END:
+- =ollama-buddy-codestral-api-key= :: Your Mistral Codestral API key.
+
+- =ollama-buddy-codestral-default-model= :: Default Codestral model to
+  use.
 
 <<History-Management>>
-*** 16.5 History Management [[#History-Management][¶]]
+*** 16.6 History Management [[#History-Management][¶]]
 :PROPERTIES:
 :CUSTOM_ID: history-management
 :CLASS: section
 :END:
-Each API service maintains its own conversation history:
+Each provider maintains its own conversation history, ensuring context
+is preserved appropriately per service.
 
-- Ollama history for local models
-- OpenAI history for ChatGPT models
-- Claude history for Claude models
+--------------
 
-This ensures that context is maintained appropriately for each service.
+<<Ollama-Cloud-Models>>
 
-<<Improved-Error-Handling>>
-*** 16.6 Improved Error Handling [[#Improved-Error-Handling][¶]]
+Next: [[#Global-System-Prompt][Global System Prompt]], Previous:
+[[#Remote-Providers][Remote Providers]], Up: [[#Top][Ollama Buddy]]  
+[[[#SEC_Contents][Contents]]][[[#Index][Index]]]
+
+** 17 Ollama Cloud Models [[#Ollama-Cloud-Models-1][¶]]
 :PROPERTIES:
-:CUSTOM_ID: improved-error-handling
+:CUSTOM_ID: Ollama-Cloud-Models-1
+:CLASS: chapter
+:END:
+- [[#Overview-3][Overview]]
+- [[#Available-Cloud-Models][Available Cloud Models]]
+- [[#Selecting-Cloud-Models][Selecting Cloud Models]]
+- [[#Cloud-Authentication][Cloud Authentication]]
+- [[#Cloud-Model-Indicator][Cloud Model Indicator]]
+- [[#Configuration-2][Configuration]]
+
+<<Overview-3>>
+*** 17.1 Overview [[#Overview-3][¶]]
+:PROPERTIES:
+:CUSTOM_ID: overview-3
 :CLASS: section
 :END:
-As of version 0.9.20, Ollama Buddy includes enhanced error handling for
-ChatGPT and Claude:
+Ollama cloud models run on ollama.com infrastructure and provide access
+to large models without local hardware requirements. These models
+require authentication via the Ollama CLI.
 
-- Better Unicode character handling in JSON requests
-- More robust error recovery
-- Clearer error messages
-- Consistent handling of API responses
+<<Available-Cloud-Models>>
+*** 17.2 Available Cloud Models [[#Available-Cloud-Models][¶]]
+:PROPERTIES:
+:CUSTOM_ID: available-cloud-models
+:CLASS: section
+:END:
+Cloud models are configured via =ollama-buddy-cloud-models=:
+
+#+begin_src example-preformatted
+(setq ollama-buddy-cloud-models
+  '("qwen3-coder:480b-cloud"
+    "kimi-k2.5:cloud"
+    "deepseek-v3.1:671b-cloud"
+    "gpt-oss:120b-cloud"
+    "gpt-oss:20b-cloud"
+    "glm-4.7:cloud"
+    "minimax-m2.1:cloud"))
+#+end_src
+
+Cloud models have a =-cloud= suffix in their names.
+
+<<Selecting-Cloud-Models>>
+*** 17.3 Selecting Cloud Models [[#Selecting-Cloud-Models][¶]]
+:PROPERTIES:
+:CUSTOM_ID: selecting-cloud-models
+:CLASS: section
+:END:
+To select a cloud model:
+
+- Use =C-u C-c m= (universal argument with model switch)
+- Use the transient menu: =C-c O= then "Model > Cloud"
+
+<<Cloud-Authentication>>
+*** 17.4 Cloud Authentication [[#Cloud-Authentication][¶]]
+:PROPERTIES:
+:CUSTOM_ID: cloud-authentication
+:CLASS: section
+:END:
+Authentication is handled via the Ollama CLI:
+
+- Sign In (=M-x ollama-buddy-cloud-signin=) :: Opens your browser for
+  Ollama cloud login. Accessible from transient menu "Cloud Auth > Sign
+  In".
+
+- Sign Out (=M-x ollama-buddy-cloud-signout=) :: Signs out from cloud
+  services. Accessible from transient menu "Cloud Auth > Sign Out".
+
+- Check Status (=M-x ollama-buddy-cloud-status=) :: Verifies your
+  authentication status. Accessible from transient menu "Cloud Auth >
+  Auth Status".
+
+<<Cloud-Model-Indicator>>
+*** 17.5 Cloud Model Indicator [[#Cloud-Model-Indicator][¶]]
+:PROPERTIES:
+:CUSTOM_ID: cloud-model-indicator
+:CLASS: section
+:END:
+When using a cloud model, the header line displays a =☁= symbol to
+indicate cloud model usage.
+
+<<Configuration-2>>
+*** 17.6 Configuration [[#Configuration-2][¶]]
+:PROPERTIES:
+:CUSTOM_ID: configuration
+:CLASS: section
+:END:
+- =ollama-buddy-cloud-models= :: List of available Ollama cloud models.
+
+- =ollama-buddy-ollama-executable= :: Path to the ollama CLI executable
+  (default: "ollama"). Used for signin/signout commands.
+
+--------------
+
+<<Global-System-Prompt>>
+
+Next: [[#Advanced-Usage][Advanced Usage]], Previous:
+[[#Ollama-Cloud-Models][Ollama Cloud Models]], Up: [[#Top][Ollama
+Buddy]]   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
+
+** 18 Global System Prompt [[#Global-System-Prompt-1][¶]]
+:PROPERTIES:
+:CUSTOM_ID: Global-System-Prompt-1
+:CLASS: chapter
+:END:
+- [[#Overview-4][Overview]]
+- [[#Configuration-3][Configuration]]
+- [[#Toggling-Global-Prompt][Toggling Global Prompt]]
+- [[#How-It-Works][How It Works]]
+
+<<Overview-4>>
+*** 18.1 Overview [[#Overview-4][¶]]
+:PROPERTIES:
+:CUSTOM_ID: overview-4
+:CLASS: section
+:END:
+The global system prompt provides baseline formatting instructions that
+are automatically prepended to all requests, regardless of the
+session-specific system prompt. This ensures consistent response
+formatting across all interactions.
+
+<<Configuration-3>>
+*** 18.2 Configuration [[#Configuration-3][¶]]
+:PROPERTIES:
+:CUSTOM_ID: configuration-1
+:CLASS: section
+:END:
+- =ollama-buddy-global-system-prompt= :: The global prompt content
+  prepended to all requests.
+
+  #+begin_src example-preformatted
+  (setq ollama-buddy-global-system-prompt
+    "Format responses in plain prose. Avoid markdown tables unless
+  specifically requested. Use clear paragraphs and bullet points
+  for structured information.")
+  #+end_src
+
+- =ollama-buddy-global-system-prompt-enabled= :: Whether to enable the
+  global system prompt (default: t).
+
+  #+begin_src example-preformatted
+  (setq ollama-buddy-global-system-prompt-enabled t)
+  #+end_src
+
+<<Toggling-Global-Prompt>>
+*** 18.3 Toggling Global Prompt [[#Toggling-Global-Prompt][¶]]
+:PROPERTIES:
+:CUSTOM_ID: toggling-global-prompt
+:CLASS: section
+:END:
+To toggle the global system prompt on or off:
+
+#+begin_src example-preformatted
+M-x ollama-buddy-toggle-global-system-prompt
+#+end_src
+
+or use the transient menu "Settings > Global Prompt".
+
+<<How-It-Works>>
+*** 18.4 How It Works [[#How-It-Works][¶]]
+:PROPERTIES:
+:CUSTOM_ID: how-it-works
+:CLASS: section
+:END:
+When enabled, the global system prompt is combined with any
+session-specific system prompt:
+
+- If both global and session prompts exist, they are combined with two
+  newlines between them
+- If only the global prompt exists, it is used alone
+- If only a session prompt exists, it is used alone
+- If neither exists, no system prompt is sent
+
+This allows you to maintain consistent formatting while still using
+specialized prompts for specific tasks.
 
 --------------
 
 <<Advanced-Usage>>
 
 Next: [[#API-Reference][API Reference]], Previous:
-[[#ChatGPT-and-Claude-Support][ChatGPT and Claude Support]], Up:
-[[#Top][Ollama Buddy]]  
-[[[#SEC_Contents][Contents]]][[[#Index][Index]]]
+[[#Global-System-Prompt][Global System Prompt]], Up: [[#Top][Ollama
+Buddy]]   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 17 Advanced Usage [[#Advanced-Usage-1][¶]]
+** 19 Advanced Usage [[#Advanced-Usage-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Advanced-Usage-1
 :CLASS: chapter
@@ -3461,7 +3867,7 @@ Next: [[#API-Reference][API Reference]], Previous:
 - [[#Using-Direct-API-Access][Using Direct API Access]]
 
 <<Managing-Token-Usage>>
-*** 17.1 Managing Token Usage [[#Managing-Token-Usage][¶]]
+*** 19.1 Managing Token Usage [[#Managing-Token-Usage][¶]]
 :PROPERTIES:
 :CUSTOM_ID: managing-token-usage
 :CLASS: section
@@ -3493,52 +3899,37 @@ M-x ollama-buddy-display-token-graph
 or press =C-c U= in the chat buffer.
 
 <<Customizing-the-Interface>>
-*** 17.2 Customizing the Interface [[#Customizing-the-Interface][¶]]
+*** 19.2 Customizing the Interface [[#Customizing-the-Interface][¶]]
 :PROPERTIES:
 :CUSTOM_ID: customizing-the-interface
 :CLASS: section
 :END:
-- [[#Interface-Level][Interface Level]]
-- [[#Model-Colors][Model Colors]]
+- [[#Streaming-Options][Streaming Options]]
 - [[#Debug-Mode][Debug Mode]]
 
-<<Interface-Level>>
-**** 17.2.1 Interface Level [[#Interface-Level][¶]]
+<<Streaming-Options>>
+**** 19.2.1 Streaming Options [[#Streaming-Options][¶]]
 :PROPERTIES:
-:CUSTOM_ID: interface-level
+:CUSTOM_ID: streaming-options
 :CLASS: subsection
 :END:
-Ollama Buddy has two interface levels:
+Control how responses are displayed:
 
-- basic - Simplified for beginners
-- advanced - Full feature set for power users
+- =ollama-buddy-streaming-enabled= :: Toggle streaming mode where
+  responses appear token by token.
 
-To toggle between them:
+  #+begin_src example-preformatted
+  M-x ollama-buddy-toggle-streaming
+  #+end_src
 
-#+begin_src example-preformatted
-M-x ollama-buddy-toggle-interface-level
-#+end_src
+- =ollama-buddy-auto-scroll= :: Enable auto-scrolling during streaming
+  output.
 
-or press =C-c A= in the chat buffer.
-
-<<Model-Colors>>
-**** 17.2.2 Model Colors [[#Model-Colors][¶]]
-:PROPERTIES:
-:CUSTOM_ID: model-colors
-:CLASS: subsection
-:END:
-Each model has a distinctive color to help identify responses.
-
-To toggle model colors:
-
-#+begin_src example-preformatted
-M-x ollama-buddy-toggle-model-colors
-#+end_src
-
-or press =C-c c= in the chat buffer.
+- =ollama-buddy-pulse-response= :: Flash the response when streaming
+  completes.
 
 <<Debug-Mode>>
-**** 17.2.3 Debug Mode [[#Debug-Mode][¶]]
+**** 19.2.2 Debug Mode [[#Debug-Mode][¶]]
 :PROPERTIES:
 :CUSTOM_ID: debug-mode
 :CLASS: subsection
@@ -3554,7 +3945,7 @@ or press =C-c B= in the chat buffer.
 This shows raw JSON messages in a debug buffer.
 
 <<Editing-Conversation-History>>
-*** 17.3 Editing Conversation History [[#Editing-Conversation-History][¶]]
+*** 19.3 Editing Conversation History [[#Editing-Conversation-History][¶]]
 :PROPERTIES:
 :CUSTOM_ID: editing-conversation-history
 :CLASS: section
@@ -3573,7 +3964,7 @@ modify it and press =C-c C-c= to save or =C-c C-k= to cancel.
 To edit history for a specific model, use =C-u C-c J=.
 
 <<Advanced-System-Prompt-Management>>
-*** 17.4 Advanced System Prompt Management [[#Advanced-System-Prompt-Management][¶]]
+*** 19.4 Advanced System Prompt Management [[#Advanced-System-Prompt-Management][¶]]
 :PROPERTIES:
 :CUSTOM_ID: advanced-system-prompt-management
 :CLASS: section
@@ -3586,7 +3977,7 @@ For more control over system prompts:
   Fabric]]
 
 <<Setting-a-system-prompt-without-sending>>
-**** 17.4.1 Setting a system prompt without sending [[#Setting-a-system-prompt-without-sending][¶]]
+**** 19.4.1 Setting a system prompt without sending [[#Setting-a-system-prompt-without-sending][¶]]
 :PROPERTIES:
 :CUSTOM_ID: setting-a-system-prompt-without-sending
 :CLASS: subsection
@@ -3599,7 +3990,7 @@ For more control over system prompts:
 Enter your system prompt, then press =C-c s=.
 
 <<Using-a-system-prompt-from-Fabric>>
-**** 17.4.2 Using a system prompt from Fabric [[#Using-a-system-prompt-from-Fabric][¶]]
+**** 19.4.2 Using a system prompt from Fabric [[#Using-a-system-prompt-from-Fabric][¶]]
 :PROPERTIES:
 :CUSTOM_ID: using-a-system-prompt-from-fabric
 :CLASS: subsection
@@ -3612,7 +4003,7 @@ M-x ollama-buddy-fabric-set-system-prompt
 or press =C-c f p=.
 
 <<Using-Direct-API-Access>>
-*** 17.5 Using Direct API Access [[#Using-Direct-API-Access][¶]]
+*** 19.5 Using Direct API Access [[#Using-Direct-API-Access][¶]]
 :PROPERTIES:
 :CUSTOM_ID: using-direct-api-access
 :CLASS: section
@@ -3639,7 +4030,7 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 [[#Advanced-Usage][Advanced Usage]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 18 API Reference [[#API-Reference-1][¶]]
+** 20 API Reference [[#API-Reference-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: API-Reference-1
 :CLASS: chapter
@@ -3649,7 +4040,7 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 - [[#Customization-Functions][Customization Functions]]
 
 <<Interactive-Functions>>
-*** 18.1 Interactive Functions [[#Interactive-Functions][¶]]
+*** 20.1 Interactive Functions [[#Interactive-Functions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: interactive-functions
 :CLASS: section
@@ -3662,7 +4053,26 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 
 - =ollama-buddy--send-prompt= :: Send the current prompt to the AI.
 
-- =ollama-buddy--swap-model= :: Switch to a different model.
+- =ollama-buddy--swap-model= :: Switch to a different model. With prefix
+  argument, select from cloud models.
+
+- =ollama-buddy--swap-model-cloud= :: Switch to an Ollama cloud model.
+
+- =ollama-buddy-cloud-signin= :: Sign in to Ollama cloud services.
+
+- =ollama-buddy-cloud-signout= :: Sign out from Ollama cloud services.
+
+- =ollama-buddy-cloud-status= :: Check Ollama cloud authentication
+  status.
+
+- =ollama-buddy-toggle-global-system-prompt= :: Toggle the global system
+  prompt on or off.
+
+- =ollama-buddy-unload-model= :: Unload a specific model to free up
+  resources.
+
+- =ollama-buddy-unload-all-models= :: Unload all currently running
+  models.
 
 - =ollama-buddy-manage-models= :: Display and manage available models.
 
@@ -3727,6 +4137,18 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 - =ollama-buddy-toggle-markdown-conversion= :: Toggle Markdown to Org
   conversion.
 
+- =ollama-buddy-toggle-streaming= :: Toggle streaming mode for
+  responses.
+
+- =ollama-buddy-toggle-reasoning-visibility= :: Toggle visibility of
+  reasoning/thinking sections in responses.
+
+- =ollama-buddy-switch-communication-backend= :: Interactively switch
+  between network-process and curl backends.
+
+- =ollama-buddy-test-communication-backend= :: Test the current
+  communication backend.
+
 - =ollama-buddy-toggle-debug-mode= :: Toggle display of debug
   information.
 
@@ -3761,7 +4183,7 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
   menu for user system prompts.
 
 <<Core-Functions>>
-*** 18.2 Core Functions [[#Core-Functions][¶]]
+*** 20.2 Core Functions [[#Core-Functions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: core-functions
 :CLASS: section
@@ -3788,7 +4210,7 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 - =ollama-buddy--update-status= :: Update the status display.
 
 <<Customization-Functions>>
-*** 18.3 Customization Functions [[#Customization-Functions][¶]]
+*** 20.3 Customization Functions [[#Customization-Functions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: customization-functions
 :CLASS: section
@@ -3812,7 +4234,7 @@ Next: [[#Troubleshooting][Troubleshooting]], Previous:
 [[#API-Reference][API Reference]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 19 Frequently Asked Questions [[#Frequently-Asked-Questions][¶]]
+** 21 Frequently Asked Questions [[#Frequently-Asked-Questions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Frequently-Asked-Questions
 :CLASS: chapter
@@ -3822,7 +4244,7 @@ Next: [[#Troubleshooting][Troubleshooting]], Previous:
 - [[#Troubleshooting-1][Troubleshooting]]
 
 <<General-Questions>>
-*** 19.1 General Questions [[#General-Questions][¶]]
+*** 21.1 General Questions [[#General-Questions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: general-questions
 :CLASS: section
@@ -3831,12 +4253,14 @@ Next: [[#Troubleshooting][Troubleshooting]], Previous:
   is the difference between Ollama Buddy and other AI assistants?]]
 - [[#Does-Ollama-Buddy-require-an-internet-connection_003f][Does Ollama
   Buddy require an internet connection?]]
+- [[#How-do-I-use-Ollama-cloud-models_003f][How do I use Ollama cloud
+  models?]]
 - [[#Which-models-work-best-with-Ollama-Buddy_003f][Which models work
   best with Ollama Buddy?]]
 - [[#How-much-RAM-do-I-need_003f][How much RAM do I need?]]
 
 <<What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f>>
-**** 19.1.1 What is the difference between Ollama Buddy and other AI assistants? [[#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f][¶]]
+**** 21.1.1 What is the difference between Ollama Buddy and other AI assistants? [[#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: what-is-the-difference-between-ollama-buddy-and-other-ai-assistants
 :CLASS: subsection
@@ -3846,17 +4270,33 @@ privacy, customization, and seamless Emacs integration without relying
 on external API services.
 
 <<Does-Ollama-Buddy-require-an-internet-connection_003f>>
-**** 19.1.2 Does Ollama Buddy require an internet connection? [[#Does-Ollama-Buddy-require-an-internet-connection_003f][¶]]
+**** 21.1.2 Does Ollama Buddy require an internet connection? [[#Does-Ollama-Buddy-require-an-internet-connection_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: does-ollama-buddy-require-an-internet-connection
 :CLASS: subsection
 :END:
-Once you've installed Ollama and pulled your models, no internet
-connection is required for normal operation. Internet is only needed
-when pulling new models or syncing Fabric patterns.
+For local Ollama models, no internet connection is required after
+pulling them. Internet is needed for:
+
+- Pulling new models from Ollama
+- Using Ollama cloud models
+- Using remote providers (OpenAI, Claude, Gemini, Grok, Codestral)
+- Syncing Fabric patterns or Awesome ChatGPT Prompts
+
+<<How-do-I-use-Ollama-cloud-models_003f>>
+**** 21.1.3 How do I use Ollama cloud models? [[#How-do-I-use-Ollama-cloud-models_003f][¶]]
+:PROPERTIES:
+:CUSTOM_ID: how-do-i-use-ollama-cloud-models
+:CLASS: subsection
+:END:
+Cloud models require authentication:
+
+1. Run =M-x ollama-buddy-cloud-signin= to sign in
+2. Select cloud models with =C-u C-c m=
+3. The =☁= symbol in the header indicates cloud model usage
 
 <<Which-models-work-best-with-Ollama-Buddy_003f>>
-**** 19.1.3 Which models work best with Ollama Buddy? [[#Which-models-work-best-with-Ollama-Buddy_003f][¶]]
+**** 21.1.4 Which models work best with Ollama Buddy? [[#Which-models-work-best-with-Ollama-Buddy_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: which-models-work-best-with-ollama-buddy
 :CLASS: subsection
@@ -3869,7 +4309,7 @@ Most models supported by Ollama work well. Popular choices include:
 - phi:latest - Smaller model that works well on limited hardware
 
 <<How-much-RAM-do-I-need_003f>>
-**** 19.1.4 How much RAM do I need? [[#How-much-RAM-do-I-need_003f][¶]]
+**** 21.1.5 How much RAM do I need? [[#How-much-RAM-do-I-need_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-much-ram-do-i-need
 :CLASS: subsection
@@ -3883,7 +4323,7 @@ It depends on the model:
 Quantized models (e.g., Q4_K_M variants) require less RAM.
 
 <<Usage-Questions>>
-*** 19.2 Usage Questions [[#Usage-Questions][¶]]
+*** 21.2 Usage Questions [[#Usage-Questions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: usage-questions
 :CLASS: section
@@ -3908,7 +4348,7 @@ Quantized models (e.g., Q4_K_M variants) require less RAM.
   prompts stored?]]
 
 <<How-do-I-cancel-a-request-that_0027s-taking-too-long_003f>>
-**** 19.2.1 How do I cancel a request that's taking too long? [[#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f][¶]]
+**** 21.2.1 How do I cancel a request that's taking too long? [[#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-do-i-cancel-a-request-thats-taking-too-long
 :CLASS: subsection
@@ -3916,7 +4356,7 @@ Quantized models (e.g., Q4_K_M variants) require less RAM.
 Press =C-c k= in the chat buffer or select "Kill Request" from the menu.
 
 <<How-can-I-save-my-conversations_003f>>
-**** 19.2.2 How can I save my conversations? [[#How-can-I-save-my-conversations_003f][¶]]
+**** 21.2.2 How can I save my conversations? [[#How-can-I-save-my-conversations_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-can-i-save-my-conversations
 :CLASS: subsection
@@ -3925,7 +4365,7 @@ Use =C-c S= to save the current session, giving it a name. You can
 restore it later with =C-c L=.
 
 <<Can-I-use-multiple-models-in-the-same-conversation_003f>>
-**** 19.2.3 Can I use multiple models in the same conversation? [[#Can-I-use-multiple-models-in-the-same-conversation_003f][¶]]
+**** 21.2.3 Can I use multiple models in the same conversation? [[#Can-I-use-multiple-models-in-the-same-conversation_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: can-i-use-multiple-models-in-the-same-conversation
 :CLASS: subsection
@@ -3934,7 +4374,7 @@ Yes, you can switch models at any time with =C-c m=. Each model
 maintains its own conversation history.
 
 <<How-do-I-clear-the-conversation-history_003f>>
-**** 19.2.4 How do I clear the conversation history? [[#How-do-I-clear-the-conversation-history_003f][¶]]
+**** 21.2.4 How do I clear the conversation history? [[#How-do-I-clear-the-conversation-history_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-do-i-clear-the-conversation-history
 :CLASS: subsection
@@ -3943,7 +4383,7 @@ Press =C-c X= to clear history, or =C-c N= to start a completely new
 session.
 
 <<How-can-I-create-a-custom-command_003f>>
-**** 19.2.5 How can I create a custom command? [[#How-can-I-create-a-custom-command_003f][¶]]
+**** 21.2.5 How can I create a custom command? [[#How-can-I-create-a-custom-command_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-can-i-create-a-custom-command
 :CLASS: subsection
@@ -3953,7 +4393,7 @@ the prompts to create commands with specific prompts, models, and
 parameters.
 
 <<How-can-I-manage-context-windows_003f>>
-**** 19.2.6 How can I manage context windows? [[#How-can-I-manage-context-windows_003f][¶]]
+**** 21.2.6 How can I manage context windows? [[#How-can-I-manage-context-windows_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-can-i-manage-context-windows
 :CLASS: subsection
@@ -3967,7 +4407,7 @@ Ollama Buddy provides several options:
 - Set model-specific context sizes with C-c $
 
 <<What-happens-when-I-exceed-the-context-limit_003f>>
-**** 19.2.7 What happens when I exceed the context limit? [[#What-happens-when-I-exceed-the-context-limit_003f][¶]]
+**** 21.2.7 What happens when I exceed the context limit? [[#What-happens-when-I-exceed-the-context-limit_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: what-happens-when-i-exceed-the-context-limit
 :CLASS: subsection
@@ -3979,7 +4419,7 @@ When context monitoring is enabled:
 - You can choose to proceed anyway or modify your content
 
 <<How-do-I-create-effective-system-prompts_003f>>
-**** 19.2.8 How do I create effective system prompts? [[#How-do-I-create-effective-system-prompts_003f][¶]]
+**** 21.2.8 How do I create effective system prompts? [[#How-do-I-create-effective-system-prompts_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-do-i-create-effective-system-prompts
 :CLASS: subsection
@@ -3994,7 +4434,7 @@ Effective system prompts typically include:
 Start simple, test the response, and refine iteratively.
 
 <<Where-are-my-system-prompts-stored_003f>>
-**** 19.2.9 Where are my system prompts stored? [[#Where-are-my-system-prompts-stored_003f][¶]]
+**** 21.2.9 Where are my system prompts stored? [[#Where-are-my-system-prompts-stored_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: where-are-my-system-prompts-stored
 :CLASS: subsection
@@ -4004,7 +4444,7 @@ System prompts are stored as .org files in the directory specified by
 ‘~/.emacs.d/ollama-buddy-user-prompts/‘.
 
 <<Troubleshooting-1>>
-*** 19.3 Troubleshooting [[#Troubleshooting-1][¶]]
+*** 21.3 Troubleshooting [[#Troubleshooting-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: troubleshooting
 :CLASS: section
@@ -4019,11 +4459,15 @@ System prompts are stored as .org files in the directory specified by
   low quality or truncated]]
 - [[#How-do-system-prompts-differ-from-regular-prompts_003f][How do
   system prompts differ from regular prompts?]]
+- [[#What-is-the-global-system-prompt_003f][What is the global system
+  prompt?]]
+- [[#How-do-I-use-image-analysis_002fvision-features_003f][How do I use
+  image analysis/vision features?]]
 - [[#Can-I-share-system-prompts-between-different-installations_003f][Can
   I share system prompts between different installations?]]
 
 <<Ollama-Buddy-shows-_0022OFFLINE_0022-status>>
-**** 19.3.1 Ollama Buddy shows "OFFLINE" status [[#Ollama-Buddy-shows-_0022OFFLINE_0022-status][¶]]
+**** 21.3.1 Ollama Buddy shows "OFFLINE" status [[#Ollama-Buddy-shows-_0022OFFLINE_0022-status][¶]]
 :PROPERTIES:
 :CUSTOM_ID: ollama-buddy-shows-offline-status
 :CLASS: subsection
@@ -4036,7 +4480,7 @@ Ensure that:
 - Your firewall isn't blocking connections
 
 <<Responses-are-slow-or-the-model-seems-to-hang>>
-**** 19.3.2 Responses are slow or the model seems to hang [[#Responses-are-slow-or-the-model-seems-to-hang][¶]]
+**** 21.3.2 Responses are slow or the model seems to hang [[#Responses-are-slow-or-the-model-seems-to-hang][¶]]
 :PROPERTIES:
 :CUSTOM_ID: responses-are-slow-or-the-model-seems-to-hang
 :CLASS: subsection
@@ -4049,7 +4493,7 @@ Try:
 - Checking CPU/RAM usage to ensure your system isn't overloaded
 
 <<Getting-_0022error-parsing-model_0022-when-pulling-a-model>>
-**** 19.3.3 Getting "error parsing model" when pulling a model [[#Getting-_0022error-parsing-model_0022-when-pulling-a-model][¶]]
+**** 21.3.3 Getting "error parsing model" when pulling a model [[#Getting-_0022error-parsing-model_0022-when-pulling-a-model][¶]]
 :PROPERTIES:
 :CUSTOM_ID: getting-error-parsing-model-when-pulling-a-model
 :CLASS: subsection
@@ -4061,7 +4505,7 @@ This usually means:
 - You have network connectivity issues
 
 <<Model-responses-are-low-quality-or-truncated>>
-**** 19.3.4 Model responses are low quality or truncated [[#Model-responses-are-low-quality-or-truncated][¶]]
+**** 21.3.4 Model responses are low quality or truncated [[#Model-responses-are-low-quality-or-truncated][¶]]
 :PROPERTIES:
 :CUSTOM_ID: model-responses-are-low-quality-or-truncated
 :CLASS: subsection
@@ -4074,7 +4518,7 @@ Try:
 - Providing clearer instructions in your prompt
 
 <<How-do-system-prompts-differ-from-regular-prompts_003f>>
-**** 19.3.5 How do system prompts differ from regular prompts? [[#How-do-system-prompts-differ-from-regular-prompts_003f][¶]]
+**** 21.3.5 How do system prompts differ from regular prompts? [[#How-do-system-prompts-differ-from-regular-prompts_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-do-system-prompts-differ-from-regular-prompts
 :CLASS: subsection
@@ -4084,8 +4528,31 @@ how to respond, while regular prompts are your specific questions or
 requests. System prompts persist across the conversation, affecting all
 responses, while regular prompts are one-time interactions.
 
+<<What-is-the-global-system-prompt_003f>>
+**** 21.3.6 What is the global system prompt? [[#What-is-the-global-system-prompt_003f][¶]]
+:PROPERTIES:
+:CUSTOM_ID: what-is-the-global-system-prompt
+:CLASS: subsection
+:END:
+The global system prompt is a baseline prompt automatically prepended to
+all requests. It's useful for consistent formatting instructions across
+all models. Toggle it with
+=M-x ollama-buddy-toggle-global-system-prompt=.
+
+<<How-do-I-use-image-analysis_002fvision-features_003f>>
+**** 21.3.7 How do I use image analysis/vision features? [[#How-do-I-use-image-analysis_002fvision-features_003f][¶]]
+:PROPERTIES:
+:CUSTOM_ID: how-do-i-use-image-analysisvision-features
+:CLASS: subsection
+:END:
+1. Select a vision-capable model (e.g., gemma3:4b, llama3.2:3b)
+2. Include an image path in your prompt
+3. The image will be automatically detected and encoded
+
+Supported formats: PNG, JPG, JPEG, WebP, GIF.
+
 <<Can-I-share-system-prompts-between-different-installations_003f>>
-**** 19.3.6 Can I share system prompts between different installations? [[#Can-I-share-system-prompts-between-different-installations_003f][¶]]
+**** 21.3.8 Can I share system prompts between different installations? [[#Can-I-share-system-prompts-between-different-installations_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: can-i-share-system-prompts-between-different-installations
 :CLASS: subsection
@@ -4102,7 +4569,7 @@ Next: [[#Contributing][Contributing]], Previous: [[#FAQ][Frequently
 Asked Questions]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 20 Troubleshooting [[#Troubleshooting-2][¶]]
+** 22 Troubleshooting [[#Troubleshooting-2][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Troubleshooting-2
 :CLASS: chapter
@@ -4111,7 +4578,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
 - [[#Debugging][Debugging]]
 
 <<Common-Issues>>
-*** 20.1 Common Issues [[#Common-Issues][¶]]
+*** 22.1 Common Issues [[#Common-Issues][¶]]
 :PROPERTIES:
 :CUSTOM_ID: common-issues
 :CLASS: section
@@ -4121,7 +4588,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
 - [[#Interface-Issues][Interface Issues]]
 
 <<Connection-Problems>>
-**** 20.1.1 Connection Problems [[#Connection-Problems][¶]]
+**** 22.1.1 Connection Problems [[#Connection-Problems][¶]]
 :PROPERTIES:
 :CUSTOM_ID: connection-problems
 :CLASS: subsection
@@ -4138,7 +4605,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
   - Check if your OS has any network timeout settings
 
 <<Model-Problems>>
-**** 20.1.2 Model Problems [[#Model-Problems][¶]]
+**** 22.1.2 Model Problems [[#Model-Problems][¶]]
 :PROPERTIES:
 :CUSTOM_ID: model-problems
 :CLASS: subsection
@@ -4154,7 +4621,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
   - Set =low_vram= to =t= if using GPU
 
 <<Interface-Issues>>
-**** 20.1.3 Interface Issues [[#Interface-Issues][¶]]
+**** 22.1.3 Interface Issues [[#Interface-Issues][¶]]
 :PROPERTIES:
 :CUSTOM_ID: interface-issues
 :CLASS: subsection
@@ -4170,7 +4637,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
   - Try editing the history to fix formatting issues
 
 <<Debugging>>
-*** 20.2 Debugging [[#Debugging][¶]]
+*** 22.2 Debugging [[#Debugging][¶]]
 :PROPERTIES:
 :CUSTOM_ID: debugging
 :CLASS: section
@@ -4180,7 +4647,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
 - [[#Report-Issues][Report Issues]]
 
 <<Enable-Debug-Mode>>
-**** 20.2.1 Enable Debug Mode [[#Enable-Debug-Mode][¶]]
+**** 22.2.1 Enable Debug Mode [[#Enable-Debug-Mode][¶]]
 :PROPERTIES:
 :CUSTOM_ID: enable-debug-mode
 :CLASS: subsection
@@ -4194,7 +4661,7 @@ M-x ollama-buddy-toggle-debug-mode
 This opens a debug buffer showing raw JSON communication with Ollama.
 
 <<Check-Logs>>
-**** 20.2.2 Check Logs [[#Check-Logs][¶]]
+**** 22.2.2 Check Logs [[#Check-Logs][¶]]
 :PROPERTIES:
 :CUSTOM_ID: check-logs
 :CLASS: subsection
@@ -4206,7 +4673,7 @@ tail -f ~/.ollama/logs/ollama.log
 #+end_src
 
 <<Report-Issues>>
-**** 20.2.3 Report Issues [[#Report-Issues][¶]]
+**** 22.2.3 Report Issues [[#Report-Issues][¶]]
 :PROPERTIES:
 :CUSTOM_ID: report-issues
 :CLASS: subsection
@@ -4231,7 +4698,7 @@ Next: [[#Index][Index]], Previous:
 [[#Troubleshooting][Troubleshooting]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 21 Contributing [[#Contributing-1][¶]]
+** 23 Contributing [[#Contributing-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Contributing-1
 :CLASS: chapter
@@ -4244,7 +4711,7 @@ Next: [[#Index][Index]], Previous:
   Reports]]
 
 <<Getting-Started>>
-*** 21.1 Getting Started [[#Getting-Started][¶]]
+*** 23.1 Getting Started [[#Getting-Started][¶]]
 :PROPERTIES:
 :CUSTOM_ID: getting-started
 :CLASS: section
@@ -4263,7 +4730,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 8. Create a pull request
 
 <<Development-Setup>>
-*** 21.2 Development Setup [[#Development-Setup][¶]]
+*** 23.2 Development Setup [[#Development-Setup][¶]]
 :PROPERTIES:
 :CUSTOM_ID: development-setup
 :CLASS: section
@@ -4272,7 +4739,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 - [[#Recommended-Packages][Recommended Packages]]
 
 <<Required-Tools>>
-**** 21.2.1 Required Tools [[#Required-Tools][¶]]
+**** 23.2.1 Required Tools [[#Required-Tools][¶]]
 :PROPERTIES:
 :CUSTOM_ID: required-tools
 :CLASS: subsection
@@ -4282,7 +4749,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 - Git
 
 <<Recommended-Packages>>
-**** 21.2.2 Recommended Packages [[#Recommended-Packages][¶]]
+**** 23.2.2 Recommended Packages [[#Recommended-Packages][¶]]
 :PROPERTIES:
 :CUSTOM_ID: recommended-packages
 :CLASS: subsection
@@ -4292,7 +4759,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 - elisp-lint
 
 <<Coding-Guidelines>>
-*** 21.3 Coding Guidelines [[#Coding-Guidelines][¶]]
+*** 23.3 Coding Guidelines [[#Coding-Guidelines][¶]]
 :PROPERTIES:
 :CUSTOM_ID: coding-guidelines
 :CLASS: section
@@ -4305,7 +4772,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 - Use prefix =ollama-buddy-= for public functions
 
 <<Testing>>
-*** 21.4 Testing [[#Testing][¶]]
+*** 23.4 Testing [[#Testing][¶]]
 :PROPERTIES:
 :CUSTOM_ID: testing
 :CLASS: section
@@ -4314,7 +4781,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 - [[#Adding-New-Tests][Adding New Tests]]
 
 <<Run-Existing-Tests>>
-**** 21.4.1 Run Existing Tests [[#Run-Existing-Tests][¶]]
+**** 23.4.1 Run Existing Tests [[#Run-Existing-Tests][¶]]
 :PROPERTIES:
 :CUSTOM_ID: run-existing-tests
 :CLASS: subsection
@@ -4329,7 +4796,7 @@ M-x ollama-buddy-parameter-run-tests
 #+end_src
 
 <<Adding-New-Tests>>
-**** 21.4.2 Adding New Tests [[#Adding-New-Tests][¶]]
+**** 23.4.2 Adding New Tests [[#Adding-New-Tests][¶]]
 :PROPERTIES:
 :CUSTOM_ID: adding-new-tests
 :CLASS: subsection
@@ -4341,7 +4808,7 @@ When adding features, please also add tests:
 - Parameter tests for parameter handling
 
 <<Feature-Requests-and-Bug-Reports>>
-*** 21.5 Feature Requests and Bug Reports [[#Feature-Requests-and-Bug-Reports][¶]]
+*** 23.5 Feature Requests and Bug Reports [[#Feature-Requests-and-Bug-Reports][¶]]
 :PROPERTIES:
 :CUSTOM_ID: feature-requests-and-bug-reports
 :CLASS: section
@@ -4353,7 +4820,7 @@ When adding features, please also add tests:
 - [[#User-System-Prompts-Issues][User System Prompts Issues]]
 
 <<User-System-Prompts-Issues>>
-**** 21.5.1 User System Prompts Issues [[#User-System-Prompts-Issues][¶]]
+**** 23.5.1 User System Prompts Issues [[#User-System-Prompts-Issues][¶]]
 :PROPERTIES:
 :CUSTOM_ID: user-system-prompts-issues
 :CLASS: subsection

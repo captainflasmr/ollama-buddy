@@ -12,7 +12,7 @@
 @end direntry
 
 @copying
-Copyright @copyright{} 2024 James Dyer
+Copyright @copyright{} 2024-2025 James Dyer
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 0.9.51
+@subtitle For Ollama Buddy version 1.1.5
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -59,7 +59,9 @@ allowing you to leverage powerful large language models (LLMs) directly within y
 * Roles and Commands::          Creating custom commands and roles
 * Fabric Pattern Integration::  Using predefined prompt patterns
 * Awesome ChatGPT Prompts::     Using the Awesome ChatGPT Prompts collection
-* ChatGPT and Claude Support::  Using commercial LLM APIs
+* Remote Providers::            Using commercial LLM APIs (OpenAI, Claude, Gemini, Grok, Codestral)
+* Ollama Cloud Models::         Using Ollama's cloud-hosted models
+* Global System Prompt::        Configuring a persistent global system prompt
 * Advanced Usage::              Tips and techniques for power users
 * API Reference::               Comprehensive function documentation
 * FAQ::                         Frequently asked questions
@@ -86,7 +88,8 @@ interact with AI models directly from within Emacs for various tasks such as:
 @item Custom AI-powered workflows via roles
 @item Using pre-built prompt templates from Fabric
 @item Utilizing Awesome ChatGPT Prompts
-@item Integrating with Claude and OpenAI's commercial APIs
+@item Integrating with commercial APIs (OpenAI, Claude, Gemini, Grok, Codestral)
+@item Using Ollama cloud models
 @item Including files as context in conversations
 @end itemize
 
@@ -177,15 +180,40 @@ git clone https://github.com/captainflasmr/ollama-buddy.git
 
 @section Dependencies
 
-Ollama Buddy requires the following Emacs packages:
+Ollama Buddy requires the following:
 
 @itemize @bullet
-@item transient
-@item json
-@item cl-lib
+@item Emacs 28.1 or later
+@item (Optional) transient 0.4.0+ for advanced menu system
 @end itemize
 
-These should be automatically installed if you use package.el or use-package.
+Built-in packages used: json, cl-lib, url, subr-x, dired, org, savehist.
+
+@section Communication Backends
+
+Ollama Buddy supports two communication backends:
+
+@table @code
+@item network-process (default)
+Uses Emacs built-in network process.
+
+@item curl
+Uses external curl command for requests. Useful as a fallback when network process has issues.
+@end table
+
+To switch backends:
+@example
+M-x ollama-buddy-switch-communication-backend
+@end example
+or press @code{C-c e} in the chat buffer.
+
+To configure curl backend:
+@example
+(require 'ollama-buddy-curl)
+(setq ollama-buddy-communication-backend 'curl)
+(setq ollama-buddy-curl-executable "curl")
+(setq ollama-buddy-curl-timeout 300)
+@end example
 
 @section API Key Setup
 
@@ -243,22 +271,28 @@ Whether to automatically convert markdown to org-mode format in responses (defau
 (setq ollama-buddy-convert-markdown-to-org t)
 @end example
 
-@item ollama-buddy-enable-model-colors
-Whether to show model names with distinctive colors (default: t).
-@example
-(setq ollama-buddy-enable-model-colors t)
-@end example
-
 @item ollama-buddy-display-token-stats
 Whether to display token usage statistics after responses (default: nil).
 @example
 (setq ollama-buddy-display-token-stats t)
 @end example
 
-@item ollama-buddy-interface-level
-Level of interface complexity ('basic or 'advanced).
+@item ollama-buddy-streaming-enabled
+Whether to use streaming mode for responses (default: t).
 @example
-(setq ollama-buddy-interface-level 'advanced)
+(setq ollama-buddy-streaming-enabled t)
+@end example
+
+@item ollama-buddy-auto-scroll
+Whether to auto-scroll the chat buffer during streaming output (default: nil).
+@example
+(setq ollama-buddy-auto-scroll t)
+@end example
+
+@item ollama-buddy-pulse-response
+Whether to pulse/flash the response text when streaming completes (default: t).
+@example
+(setq ollama-buddy-pulse-response t)
 @end example
 @end table
 
@@ -367,32 +401,89 @@ Maximum number of message pairs to keep (affects context usage).
 
 @section External API Configuration
 
-For OpenAI and Claude integration:
+For remote provider integration, configure API keys using auth-source (recommended):
+
+@example
+;; In ~/.authinfo.gpg
+machine ollama-buddy-openai login apikey password YOUR_KEY
+machine ollama-buddy-claude login apikey password YOUR_KEY
+machine ollama-buddy-gemini login apikey password YOUR_KEY
+machine ollama-buddy-grok login apikey password YOUR_KEY
+machine ollama-buddy-codestral login apikey password YOUR_KEY
+@end example
+
+Then in your Emacs config:
+@example
+(setq ollama-buddy-openai-api-key
+      (auth-source-pick-first-password
+       :host "ollama-buddy-openai" :user "apikey"))
+@end example
+
+@subsection Provider Prefixes
+
+Each provider uses a prefix to identify its models:
+@itemize @bullet
+@item @code{a:} - OpenAI (e.g., @code{a:gpt-4})
+@item @code{c:} - Claude (e.g., @code{c:claude-3-opus})
+@item @code{g:} - Gemini (e.g., @code{g:gemini-pro})
+@item @code{k:} - Grok (e.g., @code{k:grok-1})
+@item @code{s:} - Codestral (e.g., @code{s:codestral-latest})
+@item @code{o:} - Ollama local (when remote providers are loaded)
+@end itemize
+
+@section Global System Prompt Configuration
+
+Configure a persistent system prompt for all requests:
 
 @table @code
-@item ollama-buddy-openai-api-key
-Your OpenAI API key.
+@item ollama-buddy-global-system-prompt
+The global prompt prepended to all requests.
 @example
-(setq ollama-buddy-openai-api-key "your-openai-key")
+(setq ollama-buddy-global-system-prompt
+  "Format responses in plain prose. Avoid markdown tables.")
 @end example
 
-@item ollama-buddy-claude-api-key
-Your Claude API key.
+@item ollama-buddy-global-system-prompt-enabled
+Whether to enable the global prompt (default: t).
 @example
-(setq ollama-buddy-claude-api-key "your-claude-key")
+(setq ollama-buddy-global-system-prompt-enabled t)
+@end example
+@end table
+
+@section Vision Configuration
+
+Configure vision support for image analysis:
+
+@table @code
+@item ollama-buddy-vision-enabled
+Whether to enable vision support (default: t).
+
+@item ollama-buddy-vision-models
+Models known to support vision capabilities.
+@example
+(setq ollama-buddy-vision-models
+      '("gemma3:4b" "llama3.2:3b" "llama3.2:8b"))
 @end example
 
-@item ollama-buddy-openai-default-model
-Default model for OpenAI requests.
+@item ollama-buddy-image-formats
+Supported image file formats.
+@end table
+
+@section Cloud Model Configuration
+
+Configure Ollama cloud models:
+
+@table @code
+@item ollama-buddy-cloud-models
+List of available cloud models.
 @example
-(setq ollama-buddy-openai-default-model "gpt-4")
+(setq ollama-buddy-cloud-models
+  '("qwen3-coder:480b-cloud"
+    "deepseek-v3.1:671b-cloud"))
 @end example
 
-@item ollama-buddy-claude-default-model
-Default model for Claude requests.
-@example
-(setq ollama-buddy-claude-default-model "claude-3-opus-20240229")
-@end example
+@item ollama-buddy-ollama-executable
+Path to the ollama CLI (default: "ollama").
 @end table
 
 @section Awesome ChatGPT Prompts Configuration
@@ -453,10 +544,13 @@ Select code, press @code{C-c o}, then choose "Refactor Code" (or press @code{r})
 Select your changes, press @code{C-c o}, then choose "Git Commit Message" (or press @code{g}).
 
 @item Changing models
-Press @code{C-c o} followed by @code{m} to switch between available models.
+Press @code{C-c m} to switch between available models, or @code{C-u C-c m} to select from cloud models.
+
+@item Using the transient menu
+Press @code{C-c O} for the main transient menu with all features organized by category.
 
 @item Attaching files
-Press @code{C-c o} followed by @code{1} for the attachment menu, then @code{a} to attach a file.
+Press @code{C-c C-a} to attach a file, or use the transient menu "Attachments" section.
 
 @item Toggling reasoning visibility
 Press @code{C-c V} to hide or show reasoning/thinking sections in responses.
@@ -557,10 +651,23 @@ Corrects grammar, style, and spelling
 @section External API Integration
 
 @itemize @bullet
-@item Connect to OpenAI's ChatGPT API
-@item Connect to Anthropic's Claude API
+@item Connect to OpenAI's ChatGPT API (prefix: @code{a:})
+@item Connect to Anthropic's Claude API (prefix: @code{c:})
+@item Connect to Google Gemini API (prefix: @code{g:})
+@item Connect to X Grok API (prefix: @code{k:})
+@item Connect to Mistral Codestral API (prefix: @code{s:})
+@item Use Ollama cloud models (indicated by @code{☁})
 @item Seamlessly switch between local and cloud models
-@item Secure API key management
+@item Secure API key management via auth-source
+@end itemize
+
+@section Vision Support
+
+@itemize @bullet
+@item Analyze images with vision-capable models
+@item Automatic image detection in prompts
+@item Support for PNG, JPG, JPEG, WebP, and GIF formats
+@item Configurable list of vision-capable models
 @end itemize
 
 @section File Attachments
@@ -591,11 +698,19 @@ To open the chat interface:
 The chat interface consists of:
 
 @itemize @bullet
-@item A welcome message with available models
+@item A welcome message with available models and providers
 @item Conversation history (previous prompts and responses)
 @item A prompt area for entering your queries
-@item A header line with status information
-@item A status bar showing context usage (when enabled)
+@item A header line with status information including:
+  @itemize @minus
+  @item Cloud model indicator (@code{☁})
+  @item Loaded provider indicators (@code{acgks})
+  @item Context usage bar (when enabled)
+  @item History count (@code{H5/10})
+  @item Current model name
+  @item System prompt indicator
+  @item Modified parameters
+  @end itemize
 @item Context warnings and validation
 @item Attachment indicators when files are attached
 @end itemize
@@ -747,6 +862,49 @@ You can import custom GGUF model files:
 @item Optionally provide model parameters
 @item Wait for Ollama to create the model
 @end enumerate
+
+@section Vision Models
+
+Some models support vision capabilities for image analysis.
+
+@subsection Configuring Vision Support
+
+@table @code
+@item ollama-buddy-vision-enabled
+Whether to enable vision support (default: t).
+@example
+(setq ollama-buddy-vision-enabled t)
+@end example
+
+@item ollama-buddy-vision-models
+List of models known to support vision:
+@example
+(setq ollama-buddy-vision-models
+      '("gemma3:4b" "llama3.2:3b" "llama3.2:8b"))
+@end example
+
+@item ollama-buddy-image-formats
+Supported image file formats:
+@example
+(setq ollama-buddy-image-formats
+      '("\\.png$" "\\.jpg$" "\\.jpeg$" "\\.webp$" "\\.gif$"))
+@end example
+@end table
+
+@subsection Using Vision Models
+
+To analyze an image:
+@enumerate
+@item Select a vision-capable model
+@item Include an image path in your prompt, or use the "Analyze image" command
+@item The image will be automatically encoded and sent to the model
+@end enumerate
+
+Image paths can be:
+@itemize @bullet
+@item Quoted paths: @code{"path/to/image.png"}
+@item Unquoted paths: @code{/home/user/image.jpg}
+@end itemize
 
 @section Multishot Mode
 
@@ -2152,129 +2310,246 @@ Some popular prompts include:
 @item "Act as an English translator" - Translates text to proper English
 @end itemize
 
-@node ChatGPT and Claude Support
-@chapter ChatGPT and Claude Support
+@node Remote Providers
+@chapter Remote Providers
 
 @section Overview
 
-Ollama Buddy integrates with commercial AI services:
+Ollama Buddy integrates with multiple commercial AI services, each loaded on-demand:
+
+@table @asis
+@item OpenAI (prefix: @code{a:})
+Load with @code{(require 'ollama-buddy-openai nil t)}
+
+@item Claude/Anthropic (prefix: @code{c:})
+Load with @code{(require 'ollama-buddy-claude nil t)}
+
+@item Google Gemini (prefix: @code{g:})
+Load with @code{(require 'ollama-buddy-gemini nil t)}
+
+@item Grok/X (prefix: @code{k:})
+Load with @code{(require 'ollama-buddy-grok nil t)}
+
+@item Codestral/Mistral (prefix: @code{s:})
+Load with @code{(require 'ollama-buddy-codestral nil t)}
+@end table
+
+Local Ollama models use the @code{o:} prefix when remote models are available, or no prefix when only local models are present.
+
+@section Status Line Indicators
+
+The header line shows compact indicators for loaded providers:
+
 @itemize @bullet
-@item OpenAI's ChatGPT API
-@item Anthropic's Claude API
+@item @code{☁} - Currently using an Ollama cloud model
+@item @code{a} - OpenAI provider loaded
+@item @code{c} - Claude provider loaded
+@item @code{g} - Gemini provider loaded
+@item @code{k} - Grok provider loaded
+@item @code{s} - Codestral provider loaded
 @end itemize
 
-This allows you to:
-@itemize @bullet
-@item Use the latest commercial models when needed
-@item Compare responses between local and cloud models
-@item Leverage the strengths of different model families
-@end itemize
+Example: @code{☁acgks} means cloud model with all five external providers loaded.
 
 @section Setting Up API Access
 
-Before using commercial APIs, you need to set up API keys:
+Before using commercial APIs, you need to set up API keys. The recommended approach is to use Emacs' built-in auth-source:
 
-@subsection Secure API Key Storage
-The recommended approach is to use Emacs' built-in auth-source:
 @example
 ;; Add to ~/.authinfo.gpg (encrypted)
-machine api.openai.com login apikey password YOUR_OPENAI_API_KEY
-machine api.anthropic.com login apikey password YOUR_CLAUDE_API_KEY
+machine ollama-buddy-openai login apikey password YOUR_OPENAI_API_KEY
+machine ollama-buddy-claude login apikey password YOUR_CLAUDE_API_KEY
+machine ollama-buddy-gemini login apikey password YOUR_GEMINI_API_KEY
+machine ollama-buddy-grok login apikey password YOUR_GROK_API_KEY
+machine ollama-buddy-codestral login apikey password YOUR_CODESTRAL_API_KEY
 @end example
 
-@subsection Direct Configuration
-For testing or temporary use (less secure):
+Then configure with auth-source:
 @example
-(setq ollama-buddy-openai-api-key "your-openai-key")
-(setq ollama-buddy-claude-api-key "your-claude-key")
+(setq ollama-buddy-openai-api-key
+      (auth-source-pick-first-password :host "ollama-buddy-openai" :user "apikey"))
 @end example
 
-@section Selecting Commercial Models
+@section Selecting Remote Models
 
-Both OpenAI and Claude models appear in the model selection list with special prefixes:
-@itemize @bullet
-@item OpenAI models are prefixed with "openai:"
-@item Claude models are prefixed with "claude:"
-@end itemize
-
-To select a commercial model:
+All remote models appear in the model selection list with their provider prefix:
 @example
 M-x ollama-buddy--swap-model
 @end example
 or press @code{C-c m}.
 
-Choose the model from the completion list.
+Models will appear like: @code{a:gpt-4}, @code{c:claude-3-opus}, @code{g:gemini-pro}, etc.
 
-@section Configuring Commercial Models
+@section Provider Configuration
 
 @subsection OpenAI Configuration
 @table @code
+@item ollama-buddy-openai-api-key
+Your OpenAI API key.
+
 @item ollama-buddy-openai-default-model
 Default OpenAI model to use (e.g., "gpt-4").
-@example
-(setq ollama-buddy-openai-default-model "gpt-4")
-@end example
 
 @item ollama-buddy-openai-temperature
 Default temperature for OpenAI requests (0.0-2.0).
-@example
-(setq ollama-buddy-openai-temperature 0.7)
-@end example
 
 @item ollama-buddy-openai-max-tokens
 Maximum tokens to generate (nil for API default).
-@example
-(setq ollama-buddy-openai-max-tokens 2000)
-@end example
-
-@item ollama-buddy-openai-api-endpoint
-Custom API endpoint (defaults to OpenAI's standard endpoint).
-@example
-(setq ollama-buddy-openai-api-endpoint "https://api.openai.com/v1/chat/completions")
-@end example
 @end table
 
 @subsection Claude Configuration
 @table @code
+@item ollama-buddy-claude-api-key
+Your Anthropic Claude API key.
+
 @item ollama-buddy-claude-default-model
 Default Claude model to use.
-@example
-(setq ollama-buddy-claude-default-model "claude-3-opus-20240229")
-@end example
 
 @item ollama-buddy-claude-temperature
 Default temperature for Claude requests (0.0-1.0).
-@example
-(setq ollama-buddy-claude-temperature 0.7)
-@end example
 
 @item ollama-buddy-claude-max-tokens
-Maximum tokens to generate (nil for API default).
-@example
-(setq ollama-buddy-claude-max-tokens 2000)
-@end example
+Maximum tokens to generate.
+@end table
+
+@subsection Gemini Configuration
+@table @code
+@item ollama-buddy-gemini-api-key
+Your Google Gemini API key.
+
+@item ollama-buddy-gemini-default-model
+Default Gemini model to use.
+@end table
+
+@subsection Grok Configuration
+@table @code
+@item ollama-buddy-grok-api-key
+Your X/Grok API key.
+
+@item ollama-buddy-grok-default-model
+Default Grok model to use.
+@end table
+
+@subsection Codestral Configuration
+@table @code
+@item ollama-buddy-codestral-api-key
+Your Mistral Codestral API key.
+
+@item ollama-buddy-codestral-default-model
+Default Codestral model to use.
 @end table
 
 @section History Management
 
-Each API service maintains its own conversation history:
+Each provider maintains its own conversation history, ensuring context is preserved appropriately per service.
+
+@node Ollama Cloud Models
+@chapter Ollama Cloud Models
+
+@section Overview
+
+Ollama cloud models run on ollama.com infrastructure and provide access to large models without local hardware requirements. These models require authentication via the Ollama CLI.
+
+@section Available Cloud Models
+
+Cloud models are configured via @code{ollama-buddy-cloud-models}:
+
+@example
+(setq ollama-buddy-cloud-models
+  '("qwen3-coder:480b-cloud"
+    "kimi-k2.5:cloud"
+    "deepseek-v3.1:671b-cloud"
+    "gpt-oss:120b-cloud"
+    "gpt-oss:20b-cloud"
+    "glm-4.7:cloud"
+    "minimax-m2.1:cloud"))
+@end example
+
+Cloud models have a @code{-cloud} suffix in their names.
+
+@section Selecting Cloud Models
+
+To select a cloud model:
 @itemize @bullet
-@item Ollama history for local models
-@item OpenAI history for ChatGPT models
-@item Claude history for Claude models
+@item Use @code{C-u C-c m} (universal argument with model switch)
+@item Use the transient menu: @code{C-c O} then "Model > Cloud"
 @end itemize
 
-This ensures that context is maintained appropriately for each service.
+@section Cloud Authentication
 
-@section Improved Error Handling
+Authentication is handled via the Ollama CLI:
 
-As of version 0.9.20, Ollama Buddy includes enhanced error handling for ChatGPT and Claude:
+@table @asis
+@item Sign In (@code{M-x ollama-buddy-cloud-signin})
+Opens your browser for Ollama cloud login. Accessible from transient menu "Cloud Auth > Sign In".
+
+@item Sign Out (@code{M-x ollama-buddy-cloud-signout})
+Signs out from cloud services. Accessible from transient menu "Cloud Auth > Sign Out".
+
+@item Check Status (@code{M-x ollama-buddy-cloud-status})
+Verifies your authentication status. Accessible from transient menu "Cloud Auth > Auth Status".
+@end table
+
+@section Cloud Model Indicator
+
+When using a cloud model, the header line displays a @code{☁} symbol to indicate cloud model usage.
+
+@section Configuration
+
+@table @code
+@item ollama-buddy-cloud-models
+List of available Ollama cloud models.
+
+@item ollama-buddy-ollama-executable
+Path to the ollama CLI executable (default: "ollama"). Used for signin/signout commands.
+@end table
+
+@node Global System Prompt
+@chapter Global System Prompt
+
+@section Overview
+
+The global system prompt provides baseline formatting instructions that are automatically prepended to all requests, regardless of the session-specific system prompt. This ensures consistent response formatting across all interactions.
+
+@section Configuration
+
+@table @code
+@item ollama-buddy-global-system-prompt
+The global prompt content prepended to all requests.
+@example
+(setq ollama-buddy-global-system-prompt
+  "Format responses in plain prose. Avoid markdown tables unless
+specifically requested. Use clear paragraphs and bullet points
+for structured information.")
+@end example
+
+@item ollama-buddy-global-system-prompt-enabled
+Whether to enable the global system prompt (default: t).
+@example
+(setq ollama-buddy-global-system-prompt-enabled t)
+@end example
+@end table
+
+@section Toggling Global Prompt
+
+To toggle the global system prompt on or off:
+@example
+M-x ollama-buddy-toggle-global-system-prompt
+@end example
+or use the transient menu "Settings > Global Prompt".
+
+@section How It Works
+
+When enabled, the global system prompt is combined with any session-specific system prompt:
+
 @itemize @bullet
-@item Better Unicode character handling in JSON requests
-@item More robust error recovery
-@item Clearer error messages
-@item Consistent handling of API responses
+@item If both global and session prompts exist, they are combined with two newlines between them
+@item If only the global prompt exists, it is used alone
+@item If only a session prompt exists, it is used alone
+@item If neither exists, no system prompt is sent
 @end itemize
+
+This allows you to maintain consistent formatting while still using specialized prompts for specific tasks.
 
 @node Advanced Usage
 @chapter Advanced Usage
@@ -2303,29 +2578,23 @@ or press @code{C-c U} in the chat buffer.
 
 @section Customizing the Interface
 
-@subsection Interface Level
+@subsection Streaming Options
 
-Ollama Buddy has two interface levels:
-@itemize @bullet
-@item basic - Simplified for beginners
-@item advanced - Full feature set for power users
-@end itemize
+Control how responses are displayed:
 
-To toggle between them:
+@table @code
+@item ollama-buddy-streaming-enabled
+Toggle streaming mode where responses appear token by token.
 @example
-M-x ollama-buddy-toggle-interface-level
+M-x ollama-buddy-toggle-streaming
 @end example
-or press @code{C-c A} in the chat buffer.
 
-@subsection Model Colors
+@item ollama-buddy-auto-scroll
+Enable auto-scrolling during streaming output.
 
-Each model has a distinctive color to help identify responses.
-
-To toggle model colors:
-@example
-M-x ollama-buddy-toggle-model-colors
-@end example
-or press @code{C-c c} in the chat buffer.
+@item ollama-buddy-pulse-response
+Flash the response when streaming completes.
+@end table
 
 @subsection Debug Mode
 
@@ -2399,7 +2668,28 @@ Open the chat buffer.
 Send the current prompt to the AI.
 
 @item ollama-buddy--swap-model
-Switch to a different model.
+Switch to a different model. With prefix argument, select from cloud models.
+
+@item ollama-buddy--swap-model-cloud
+Switch to an Ollama cloud model.
+
+@item ollama-buddy-cloud-signin
+Sign in to Ollama cloud services.
+
+@item ollama-buddy-cloud-signout
+Sign out from Ollama cloud services.
+
+@item ollama-buddy-cloud-status
+Check Ollama cloud authentication status.
+
+@item ollama-buddy-toggle-global-system-prompt
+Toggle the global system prompt on or off.
+
+@item ollama-buddy-unload-model
+Unload a specific model to free up resources.
+
+@item ollama-buddy-unload-all-models
+Unload all currently running models.
 
 @item ollama-buddy-manage-models
 Display and manage available models.
@@ -2481,6 +2771,18 @@ Apply a Fabric pattern to selected text.
 
 @item ollama-buddy-toggle-markdown-conversion
 Toggle Markdown to Org conversion.
+
+@item ollama-buddy-toggle-streaming
+Toggle streaming mode for responses.
+
+@item ollama-buddy-toggle-reasoning-visibility
+Toggle visibility of reasoning/thinking sections in responses.
+
+@item ollama-buddy-switch-communication-backend
+Interactively switch between network-process and curl backends.
+
+@item ollama-buddy-test-communication-backend
+Test the current communication backend.
 
 @item ollama-buddy-toggle-debug-mode
 Toggle display of debug information.
@@ -2573,7 +2875,21 @@ Add specific parameters to a command definition.
 Ollama Buddy integrates with Ollama to run LLMs locally, offering privacy, customization, and seamless Emacs integration without relying on external API services.
 
 @subsection Does Ollama Buddy require an internet connection?
-Once you've installed Ollama and pulled your models, no internet connection is required for normal operation. Internet is only needed when pulling new models or syncing Fabric patterns.
+For local Ollama models, no internet connection is required after pulling them. Internet is needed for:
+@itemize @bullet
+@item Pulling new models from Ollama
+@item Using Ollama cloud models
+@item Using remote providers (OpenAI, Claude, Gemini, Grok, Codestral)
+@item Syncing Fabric patterns or Awesome ChatGPT Prompts
+@end itemize
+
+@subsection How do I use Ollama cloud models?
+Cloud models require authentication:
+@enumerate
+@item Run @code{M-x ollama-buddy-cloud-signin} to sign in
+@item Select cloud models with @code{C-u C-c m}
+@item The @code{☁} symbol in the header indicates cloud model usage
+@end enumerate
 
 @subsection Which models work best with Ollama Buddy?
 Most models supported by Ollama work well. Popular choices include:
@@ -2679,6 +2995,18 @@ Try:
 
 @subsection How do system prompts differ from regular prompts?
 System prompts provide overall instructions to the AI about its role and how to respond, while regular prompts are your specific questions or requests. System prompts persist across the conversation, affecting all responses, while regular prompts are one-time interactions.
+
+@subsection What is the global system prompt?
+The global system prompt is a baseline prompt automatically prepended to all requests. It's useful for consistent formatting instructions across all models. Toggle it with @code{M-x ollama-buddy-toggle-global-system-prompt}.
+
+@subsection How do I use image analysis/vision features?
+@enumerate
+@item Select a vision-capable model (e.g., gemma3:4b, llama3.2:3b)
+@item Include an image path in your prompt
+@item The image will be automatically detected and encoded
+@end enumerate
+
+Supported formats: PNG, JPG, JPEG, WebP, GIF.
 
 @subsection Can I share system prompts between different installations?
 Yes, the user system prompts are stored as plain text .org files in your `ollama-buddy-user-prompts-directory`. You can copy these files to share them with colleagues or between different machines.
