@@ -2472,11 +2472,10 @@ Ollama Buddy can track token usage statistics:
 
    To view detailed token usage statistics:
      M-x ollama-buddy-display-token-stats
-   or press ‘C-c u’ in the chat buffer.
+   or press 'C-c #' in the chat buffer.
 
-   To display a visual graph of token usage:
-     M-x ollama-buddy-display-token-graph
-   or press ‘C-c U’ in the chat buffer.
+   This displays a combined view with token usage graphs by model,
+   average token rates, and recent interactions.
 
 19.2 Customizing the Interface
 ==============================
@@ -2652,13 +2651,10 @@ File: ollama-buddy.info,  Node: API Reference,  Next: FAQ,  Prev: Advanced Usage
 ‘ollama-buddy-toggle-token-display’
      Toggle display of token statistics.
 
-‘ollama-buddy-display-token-stats’
-     Display token usage statistics.
+'ollama-buddy-display-token-stats'
+     Display token usage statistics with graphs and recent interactions.
 
-‘ollama-buddy-display-token-graph’
-     Display a visual graph of token usage.
-
-‘ollama-buddy-fabric-setup’
+'ollama-buddy-fabric-setup'
      Set up Fabric pattern integration.
 
 ‘ollama-buddy-fabric-sync-patterns’

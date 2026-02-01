@@ -340,10 +340,9 @@ x  Toggle Streaming
 A  Toggle Interface Level  H  Toggle History      N  New Session         P  Edit Parameter
 B  Toggle Debug Mode       X  Clear History       L  Load Session        G  Display Parameters
 T  Toggle Token Display    J  Edit History        S  Save Session        I  Parameter Help
-u  Token Stats                                    Q  List Sessions       K  Reset Parameters
-U  Token Usage Graph                              Z  Delete Session      F  Toggle Params in Header
-C-o Toggle Markdown->Org                                                 p  Parameter Profiles
-V  Toggle reasoning visibility                                           
+#  Token Stats                                    Q  List Sessions       K  Reset Parameters
+C-o Toggle Markdown->Org                          Z  Delete Session      F  Toggle Params in Header
+V  Toggle reasoning visibility                                           p  Parameter Profiles                                           
 #+end_src
 
 This visual layout makes it easy to discover and access the full range of Ollama Buddy's functionality. Let's explore each section in detail.
@@ -408,10 +407,9 @@ Commands to customize the display:
 - *Toggle Interface Level (A)*: Switch between basic and advanced interfaces
 - *Toggle Debug Mode (B)*: Enable/disable JSON debug information
 - *Toggle Token Display (T)*: Show/hide token usage statistics
-- *Display Token Stats (U)*: Show detailed token usage information
+- *Token Stats (#)*: Show detailed token usage statistics with graphs
 - *Toggle Markdown->Org (C-o)*: Enable/disable conversion to Org format
 - *Toggle reasoning visibility (V)*: Hide/show reasoning/thinking sections
-- *Token Usage Graph (g)*: Display a visual graph of token usage
 
 *** History Section
 
@@ -749,8 +747,7 @@ https://github.com/captainflasmr/ollama-buddy
 
 Demonstrating the Emacs package ollama-buddy, providing a convenient way to integrate Ollama's local LLM capabilities.
 
-Display Token Stats
-Display Token Usage Graph
+Display Token Stats (with graphs and recent interactions)
 
 https://melpa.org/#/ollama-buddy
 https://github.com/captainflasmr/ollama-buddy
@@ -938,8 +935,7 @@ OR
 | C-c m           | Change model                            |
 | C-c h           | Show help                               |
 | C-c i           | Show model info                         |
-| C-c U           | Show token statistics                   |
-| C-c U           | Show token graph                        |
+| C-c #           | Show token statistics                   |
 | C-c V           | Toggle reasoning visibility             |
 | C-c C-s         | Show system prompt                      |
 | C-u C-c C-c     | Set system prompt                       |
@@ -1944,7 +1940,6 @@ You can customize the list via =ollama-buddy-cloud-models=.
 | ollama-buddy-history-edit                 | View and edit the conversation history in a buffer.                            |
 | ollama-buddy-previous-history             | Navigate to previous item in prompt history.                                   |
 | ollama-buddy-toggle-params-in-header      | Toggle display of modified parameters in the header line.                      |
-| ollama-buddy-display-token-graph          | Display a visual graph of token usage statistics.                              |
 | ollama-buddy-toggle-token-display         | Toggle display of token statistics after each response.                        |
 | ollama-buddy-show-raw-model-info          | Retrieve and display raw JSON information about the current default MODEL.     |
 | ollama-buddy-history-cancel               | Cancel editing the history.                                                    |

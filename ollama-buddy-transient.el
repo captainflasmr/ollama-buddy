@@ -43,7 +43,6 @@
 (declare-function ollama-buddy-toggle-token-display "ollama-buddy")
 (declare-function ollama-buddy-display-token-stats "ollama-buddy")
 (declare-function ollama-buddy-toggle-markdown-conversion "ollama-buddy")
-(declare-function ollama-buddy-display-token-graph "ollama-buddy")
 (declare-function ollama-buddy-toggle-history "ollama-buddy")
 (declare-function ollama-buddy-clear-history "ollama-buddy")
 (declare-function ollama-buddy-history-edit "ollama-buddy")
@@ -115,8 +114,7 @@
   [
    ["Buffer"
     ("B" "Toggle Debug" ollama-buddy-toggle-debug-mode)
-    ("u" "Token Stats" ollama-buddy-display-token-stats)
-    ("U" "Token Graph" ollama-buddy-display-token-graph)
+    ("#" "Token Stats" ollama-buddy-display-token-stats)
     ("C" "Context Info" ollama-buddy-show-context-info)
     ]
    

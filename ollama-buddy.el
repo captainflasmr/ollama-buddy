@@ -347,10 +347,10 @@ with an empty messages array and keep_alive set to 0."
           (delete-region (point) (point-max))
           (insert " " selected-item))))))
 
-(defun ollama-buddy-display-token-graph ()
-  "Display a visual graph of token usage statistics."
+(defun ollama-buddy-display-token-stats ()
+  "Display a visual graph and statistics of token usage."
   (interactive)
-  (let ((buf (get-buffer-create "*Ollama Token Graph*")))
+  (let ((buf (get-buffer-create "*Ollama Token Stats*")))
     (with-current-buffer buf
       (let ((inhibit-read-only t))
         (org-mode)
@@ -358,11 +358,22 @@ with an empty messages array and keep_alive set to 0."
         (setq-local org-hide-leading-stars t)
         (erase-buffer)
 
-        (insert "#+title: Ollama Token Graph\n\n")
-        
+        (insert "#+title: Ollama Token Stats\n\n")
+
         (if (null ollama-buddy--token-usage-history)
             (insert "No token usage data available yet.")
-          
+
+          ;; Calculate summary stats
+          (let* ((total-tokens (apply #'+ (mapcar (lambda (info) (plist-get info :tokens))
+                                                  ollama-buddy--token-usage-history)))
+                 (avg-rate (/ (apply #'+ (mapcar (lambda (info) (plist-get info :rate))
+                                                 ollama-buddy--token-usage-history))
+                              (float (length ollama-buddy--token-usage-history)))))
+
+            ;; Summary section
+            (insert (format "Total tokens generated: *%d*  |  Average token rate: *%.2f* tokens/sec\n\n"
+                            total-tokens avg-rate)))
+
           ;; Group by model
           (let ((model-data (make-hash-table :test 'equal)))
             (dolist (info ollama-buddy--token-usage-history)
@@ -377,25 +388,25 @@ with an empty messages array and keep_alive set to 0."
                 (plist-put model-stats :rates
                            (cons rate (plist-get model-stats :rates)))
                 (puthash model model-stats model-data)))
-            
+
             ;; Display token count graph
             (insert "* Token Count by Model\n\n")
             (let* ((models nil)
                    (max-tokens 0)
                    (max-model-len 0))
-              
+
               ;; Gather data
               (maphash (lambda (model stats)
                          (push model models)
                          (setq max-tokens (max max-tokens (plist-get stats :tokens)))
                          (setq max-model-len (max max-model-len (length model))))
                        model-data)
-              
+
               ;; Sort models by token count
               (setq models (sort models (lambda (a b)
                                           (> (plist-get (gethash a model-data) :tokens)
                                              (plist-get (gethash b model-data) :tokens)))))
-              
+
               ;; Display bar chart
               (dolist (model models)
                 (let* ((stats (gethash model model-data))
@@ -408,7 +419,7 @@ with an empty messages array and keep_alive set to 0."
                                   model
                                   bar
                                   tokens count))))
-              
+
               ;; Display token rate graph
               (insert "\n* Average Token Rate by Model\n\n")
               (let ((max-rate 0))
@@ -419,7 +430,7 @@ with an empty messages array and keep_alive set to 0."
                                (let ((avg (/ (apply #'+ rates) (float (length rates)))))
                                  (setq max-rate (max max-rate avg))))))
                          model-data)
-                
+
                 ;; Display bar chart
                 (dolist (model models)
                   (let* ((stats (gethash model model-data))
@@ -431,7 +442,19 @@ with an empty messages array and keep_alive set to 0."
                                             max-model-len)
                                     model
                                     bar
-                                    avg-rate)))))))))
+                                    avg-rate))))))
+
+            ;; Recent interactions
+            (insert "\n* Recent Interactions\n\n")
+            (let ((recent (seq-take ollama-buddy--token-usage-history 10)))
+              (dolist (info recent)
+                (let ((model (plist-get info :model))
+                      (tokens (plist-get info :tokens))
+                      (rate (plist-get info :rate))
+                      (time (format-time-string "%Y-%m-%d %H:%M:%S"
+                                                (plist-get info :timestamp))))
+                  (insert (format "  *%s*: %d tokens (%.2f t/s) at %s\n"
+                                  model tokens rate time))))))))
       (goto-char (point-min))
       (view-mode 1))
     (display-buffer buf)))
@@ -1256,63 +1279,6 @@ With prefix argument ALL-MODELS, clear history for all models."
       ;; Update tracking variables
       (setq ollama-buddy--last-token-count ollama-buddy--current-token-count
             ollama-buddy--last-update-time current-time))))
-
-(defun ollama-buddy-display-token-stats ()
-  "Display token usage statistics."
-  (interactive)
-  (let ((buf (get-buffer-create "*Ollama Token Stats*")))
-    (with-current-buffer buf
-      (let ((inhibit-read-only t))
-        (org-mode)
-        (setq-local org-hide-emphasis-markers t)
-        (setq-local org-hide-leading-stars t)
-        (erase-buffer)
-
-        (insert "#+title: Ollama Token Stats\n\n")
-        
-        (if (null ollama-buddy--token-usage-history)
-            (insert "No token usage data available yet.")
-          (let* ((total-tokens (apply #'+ (mapcar (lambda (info) (plist-get info :tokens))
-                                                  ollama-buddy--token-usage-history)))
-                 (avg-rate (/ (apply #'+ (mapcar (lambda (info) (plist-get info :rate))
-                                                 ollama-buddy--token-usage-history))
-                              (float (length ollama-buddy--token-usage-history)))))
-            
-            ;; Summary stats
-            (insert (format "* Total tokens generated: %d\n\n" total-tokens))
-            (insert (format "* Average token rate: %.2f tokens/sec\n\n" avg-rate))
-            
-            ;; Model breakdown
-            (insert "* Tokens by model\n\n")
-            (let ((model-stats (make-hash-table :test 'equal)))
-              (dolist (info ollama-buddy--token-usage-history)
-                (let* ((model (plist-get info :model))
-                       (tokens (plist-get info :tokens))
-                       (current (gethash model model-stats '(0 0))))
-                  (puthash model
-                           (list (+ (car current) tokens) (1+ (cadr current)))
-                           model-stats)))
-              
-              (maphash (lambda (model stats)
-                         (insert (format "- *%s*" model))
-                         (insert (format ": %d tokens in %d responses\n"
-                                         (car stats) (cadr stats))))
-                       model-stats))
-            
-            ;; Recent history
-            (insert "\n* Recent interactions:\n\n")
-            (let ((recent (seq-take ollama-buddy--token-usage-history 10)))
-              (dolist (info recent)
-                (let ((model (plist-get info :model))
-                      (tokens (plist-get info :tokens))
-                      (rate (plist-get info :rate))
-                      (time (format-time-string "%Y-%m-%d %H:%M:%S"
-                                                (plist-get info :timestamp))))
-                  (insert (format "  *%s*: %d tokens (%.2f t/s) at %s\n"
-                                  model tokens rate time))))))
-          (goto-char (point-min))
-          (view-mode 1))))
-    (display-buffer buf)))
 
 (defun ollama-buddy-toggle-token-display ()
   "Toggle display of token statistics after each response."
@@ -3206,8 +3172,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     ;; Display Options keybindings
     (define-key map (kbd "C-c B") #'ollama-buddy-toggle-debug-mode)
     (define-key map (kbd "C-c T") #'ollama-buddy-toggle-token-display)
-    (define-key map (kbd "C-c u") #'ollama-buddy-display-token-stats)
-    (define-key map (kbd "C-c U") #'ollama-buddy-display-token-graph)
+    (define-key map (kbd "C-c #") #'ollama-buddy-display-token-stats)
     (define-key map (kbd "C-c C-o") #'ollama-buddy-toggle-markdown-conversion)
     (define-key map (kbd "C-c V") #'ollama-buddy-toggle-reasoning-visibility)
     

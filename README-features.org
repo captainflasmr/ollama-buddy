@@ -993,10 +993,9 @@ k  Kill/Cancel     b  Ollama Buddy Menu
 A  Toggle Interface Level  H  Toggle History      N  New Session         P  Edit Parameter
 B  Toggle Debug Mode       X  Clear History       L  Load Session        G  Display Parameters
 T  Toggle Token Display    V  Display History     S  Save Session        I  Parameter Help
-U  Display Token Stats     J  Edit History        Q  List Sessions       K  Reset Parameters
+#  Token Stats             J  Edit History        Q  List Sessions       K  Reset Parameters
 C-o Toggle Markdown->Org                          Z  Delete Session      F  Toggle Params in Header
 c  Toggle Model Colors                                                   p  Parameter Profiles
-g  Token Usage Graph
 #+end_src
 
 This visual layout makes it easy to discover and access the full range of Ollama Buddy's functionality. Let's explore each section in detail.
@@ -1059,10 +1058,9 @@ Commands to customize the display:
 - *Toggle Interface Level (A)*: Switch between basic and advanced interfaces
 - *Toggle Debug Mode (B)*: Enable/disable JSON debug information
 - *Toggle Token Display (T)*: Show/hide token usage statistics
-- *Display Token Stats (U)*: Show detailed token usage information
+- *Token Stats (#)*: Show detailed token usage statistics with graphs
 - *Toggle Markdown->Org (C-o)*: Enable/disable conversion to Org format
 - *Toggle Model Colors (c)*: Enable/disable model-specific colors
-- *Token Usage Graph (g)*: Display a visual graph of token usage
 
 **** History Section
 
