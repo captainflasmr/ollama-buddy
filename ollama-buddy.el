@@ -3242,7 +3242,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c 8") #'ollama-buddy-toggle-context-display-type)
 
     ;; file attachments
-    (define-key map (kbd "C-c 1") #'ollama-buddy-transient-attachment-menu)
+    (define-key map (kbd "C-c A") #'ollama-buddy-transient-attachment-menu)
     (define-key map (kbd "C-c C-a") #'ollama-buddy-attach-file)
     (define-key map (kbd "C-c C-w") #'ollama-buddy-show-attachments)
     (define-key map (kbd "C-c C-d") #'ollama-buddy-detach-file)

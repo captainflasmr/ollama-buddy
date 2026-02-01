@@ -186,7 +186,7 @@ Added file attachment system for including documents in conversations
   - Detach specific files
   - Clear all attachments
 - Added Dired integration for bulk file attachment
-- Included attachment menu in transient interface (C-c 1)
+- Included attachment menu in transient interface (C-c A)
 - Updated help text to document new attachment keybindings
 - Enhanced context calculation to include attachment token usage
 
@@ -217,7 +217,7 @@ Managing attached files is intuitive with dedicated commands:
 - =C-c C-w= - View all current attachments in a nicely formatted org mode buffer, folded to each file
 - =C-c C-d= - Detach specific files when you no longer need them
 - =C-c 0= - Clear all attachments at once
-- =C-c 1= - Access the full attachment menu via a transient interface
+- =C-c A= - Access the full attachment menu via a transient interface
 
 Working in Dired? No problem! You can attach files directly from your file browser:
 

@@ -224,7 +224,7 @@ Added file attachment system for including documents in conversations
   - Detach specific files
   - Clear all attachments
 - Added Dired integration for bulk file attachment
-- Included attachment menu in transient interface (C-c 1)
+- Included attachment menu in transient interface (C-c A)
 - Updated help text to document new attachment keybindings
 - Enhanced context calculation to include attachment token usage
 

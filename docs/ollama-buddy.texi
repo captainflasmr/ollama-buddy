@@ -1147,7 +1147,7 @@ You can customize supported file types by modifying @code{ollama-buddy-supported
 To attach a single file:
 
 @enumerate
-@item Press @code{C-c 1} to open the attachment menu
+@item Press @code{C-c A} to open the attachment menu
 @item Press @code{a} for "Attach file"
 @item Select the file from the file browser
 @item The file will be attached and its contents included in future prompts

@@ -1055,7 +1055,7 @@ Scripts
 
 To attach a single file:
 
-  1. Press ‘C-c 1’ to open the attachment menu
+  1. Press 'C-c A' to open the attachment menu
   2. Press ‘a’ for "Attach file"
   3. Select the file from the file browser
   4. The file will be attached and its contents included in future

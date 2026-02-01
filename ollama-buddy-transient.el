@@ -72,7 +72,7 @@
      
    ["Chat"
     ("o" "Open Chat" ollama-buddy--open-chat)
-    ("1" "Attachments" ollama-buddy-transient-attachment-menu)
+    ("A" "Attachments" ollama-buddy-transient-attachment-menu)
     ("b" "Custom Menu " ollama-buddy-menu)
     ]
 
