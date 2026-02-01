@@ -103,7 +103,8 @@ Added GitHub Copilot integration
 - Added =ollama-buddy-copilot.el= for GitHub Copilot Chat API support
 - Implemented GitHub OAuth device flow authentication (no API key needed)
 - =M-x ollama-buddy-copilot-login= opens browser for secure GitHub authentication
-- Uses "p:" prefix to identify Copilot models (e.g., p:gpt-4o, p:gpt-4)
+- Uses "p:" prefix to identify Copilot models
+- Supports OpenAI (gpt-4o, gpt-5), Anthropic (claude-sonnet-4, claude-opus-4.5), Google (gemini-2.5-pro), and xAI models
 - Header line shows "p" indicator when Copilot provider is loaded
 
 To use GitHub Copilot:

@@ -62,9 +62,26 @@
   :group 'ollama-buddy-copilot)
 
 (defcustom ollama-buddy-copilot-available-models
-  '("gpt-4o" "gpt-4" "gpt-3.5-turbo")
+  '(;; OpenAI models
+    "gpt-4.1"
+    "gpt-4o"
+    "gpt-5"
+    "gpt-5-mini"
+    ;; Anthropic models
+    "claude-sonnet-4"
+    "claude-sonnet-4.5"
+    "claude-haiku-4.5"
+    "claude-opus-4.1"
+    "claude-opus-4.5"
+    ;; Google models
+    "gemini-2.5-pro"
+    "gemini-3-flash"
+    "gemini-3-pro"
+    ;; xAI models
+    "grok-code-fast-1")
   "List of available Copilot models.
-These are the models available through GitHub Copilot Chat."
+These are the models available through GitHub Copilot Chat.
+Model availability depends on your Copilot subscription plan."
   :type '(repeat string)
   :group 'ollama-buddy-copilot)
 

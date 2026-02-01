@@ -21,7 +21,8 @@ Added GitHub Copilot integration
 - =M-x ollama-buddy-copilot-logout= removes saved authentication
 - =M-x ollama-buddy-copilot-status= checks authentication status
 - OAuth token persisted to =~/.emacs.d/ollama-buddy-copilot-token.json=
-- Uses "p:" prefix to identify Copilot models (e.g., p:gpt-4o, p:gpt-4, p:gpt-3.5-turbo)
+- Uses "p:" prefix to identify Copilot models
+- Supports OpenAI (gpt-4.1, gpt-4o, gpt-5), Anthropic (claude-sonnet-4, claude-opus-4.5), Google (gemini-2.5-pro, gemini-3-pro), and xAI (grok-code-fast-1) models
 - Supports conversation history and system prompts
 - Header line shows "p" indicator when Copilot provider is loaded
 
