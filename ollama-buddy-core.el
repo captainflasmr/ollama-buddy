@@ -1158,15 +1158,28 @@ and prefixed combinations like '@a', '@b', etc. for additional models."
   "Return the letter assigned to MODEL-NAME from `ollama-buddy--model-letters`."
   (car (rassoc model-name ollama-buddy--model-letters)))
 
+(defun ollama-buddy--count-models-with-prefix (prefix)
+  "Count the number of models in `ollama-buddy-remote-models' with PREFIX."
+  (if (and (boundp 'ollama-buddy-remote-models) ollama-buddy-remote-models)
+      (length (seq-filter (lambda (m) (string-prefix-p prefix m))
+                          ollama-buddy-remote-models))
+    0))
+
 (defun ollama-buddy--get-enabled-external-providers ()
-  "Return a list of enabled external LLM provider names with prefixes."
+  "Return a list of enabled external LLM provider names with prefixes and model counts."
   (let (providers)
-    (when (featurep 'ollama-buddy-openai) (push "a: OpenAI" providers))
-    (when (featurep 'ollama-buddy-claude) (push "c: Claude" providers))
-    (when (featurep 'ollama-buddy-gemini) (push "g: Gemini" providers))
-    (when (featurep 'ollama-buddy-grok) (push "k: Grok" providers))
-    (when (featurep 'ollama-buddy-copilot) (push "p: Copilot" providers))
-    (when (featurep 'ollama-buddy-codestral) (push "s: Codestral" providers))
+    (when (featurep 'ollama-buddy-openai)
+      (push (format "a: OpenAI (%d)" (ollama-buddy--count-models-with-prefix "a:")) providers))
+    (when (featurep 'ollama-buddy-claude)
+      (push (format "c: Claude (%d)" (ollama-buddy--count-models-with-prefix "c:")) providers))
+    (when (featurep 'ollama-buddy-gemini)
+      (push (format "g: Gemini (%d)" (ollama-buddy--count-models-with-prefix "g:")) providers))
+    (when (featurep 'ollama-buddy-grok)
+      (push (format "k: Grok (%d)" (ollama-buddy--count-models-with-prefix "k:")) providers))
+    (when (featurep 'ollama-buddy-copilot)
+      (push (format "p: Copilot (%d)" (ollama-buddy--count-models-with-prefix "p:")) providers))
+    (when (featurep 'ollama-buddy-codestral)
+      (push (format "s: Codestral (%d)" (ollama-buddy--count-models-with-prefix "s:")) providers))
     (nreverse providers)))
 
 (defun ollama-buddy--create-intro-message ()
