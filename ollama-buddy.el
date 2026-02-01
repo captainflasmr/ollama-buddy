@@ -100,6 +100,14 @@
 (declare-function ollama-buddy-curl--send "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--non-streaming-sentinel "ollama-buddy-curl")
 (declare-function ollama-buddy-curl-test "ollama-buddy-curl")
+(declare-function ollama-buddy-transient-menu "ollama-buddy-transient")
+(declare-function ollama-buddy-transient-auth-menu "ollama-buddy-transient")
+(declare-function ollama-buddy-transient-user-prompts-menu "ollama-buddy-transient")
+(declare-function ollama-buddy-transient-fabric-menu "ollama-buddy-transient")
+(declare-function ollama-buddy-transient-awesome-menu "ollama-buddy-transient")
+(declare-function ollama-buddy-transient-attachment-menu "ollama-buddy-transient")
+(declare-function ollama-buddy-transient-parameter-menu "ollama-buddy-transient")
+(declare-function ollama-buddy-transient-profile-menu "ollama-buddy-transient")
 
 (defvar ollama-buddy--reasoning-skip-newlines nil
   "Whether to skip leading newlines after reasoning section ends.")
@@ -1494,9 +1502,25 @@ With prefix argument ALL-MODELS, clear history for all models."
                                  (> (length json-str) 0))
                         (ignore-errors
                           (json-read-from-string json-str))))
+           (error-msg (when json-data (alist-get 'error json-data)))
            (text (when json-data
                    (alist-get 'content (alist-get 'message json-data)))))
-      
+
+      ;; Check for authentication errors (cloud models)
+      (when error-msg
+        (let ((is-auth-error (or (string-match-p "unauthorized\\|authentication\\|sign.?in\\|not.?logged" error-msg)
+                                 (string-match-p "401\\|403" error-msg))))
+          ;; Update auth cache if this is an auth error
+          (when is-auth-error
+            (ollama-buddy--set-cloud-auth-status nil))
+          (with-current-buffer ollama-buddy--chat-buffer
+            (let ((inhibit-read-only t))
+              (goto-char (point-max))
+              (if is-auth-error
+                  (insert (format "\n\n*Authentication Error:* %s\n\nPlease sign in using =C-c a= or =M-x ollama-buddy-cloud-signin=" error-msg))
+                (insert (format "\n\n*Error:* %s" error-msg)))))
+          (ollama-buddy--update-status (if is-auth-error "Auth Required" "Error"))))
+
       ;; Rest of the function remains the same...
       (when text
         ;; Set start time if this is the first token and start the update timer
@@ -1579,6 +1603,11 @@ With prefix argument ALL-MODELS, clear history for all models."
               
               ;; Check if this response is complete
               (when (eq (alist-get 'done json-data) t)
+
+                ;; Update cloud auth status on successful cloud model response
+                (when (and ollama-buddy--current-model
+                           (ollama-buddy--cloud-model-p ollama-buddy--current-model))
+                  (ollama-buddy--set-cloud-auth-status t))
 
                 ;; If we're still in a reasoning section at the end, force exit
                 (when (and ollama-buddy-hide-reasoning
@@ -1814,7 +1843,8 @@ The URL will be automatically opened in your default browser."
                  (insert output)))
              ;; Check for already signed in message
              (when (string-match-p "already signed in" output)
-               (message "Ollama cloud: Already signed in"))
+               (message "Ollama cloud: Already signed in")
+               (ollama-buddy--set-cloud-auth-status t))
              ;; Look for URL and auto-open browser
              (when (and (not ollama-buddy--signin-url-opened)
                         (string-match "https://[^\n\r\t ]+" output))
@@ -1829,7 +1859,9 @@ The URL will be automatically opened in your default browser."
               ((string-match-p "finished" event)
                (if ollama-buddy--signin-url-opened
                    (message "Ollama signin: Complete authentication in your browser")
-                 (message "Ollama signin completed"))
+                 (progn
+                   (message "Ollama signin completed")
+                   (ollama-buddy--set-cloud-auth-status t)))
                (ollama-buddy--update-status "Signed in"))
               ((string-match-p "exited abnormally" event)
                (message "Ollama signin failed. Check *ollama-signin* buffer for details")
@@ -1844,6 +1876,7 @@ The URL will be automatically opened in your default browser."
       (let ((exit-code (call-process ollama-buddy-ollama-executable nil nil nil "signout")))
         (if (zerop exit-code)
             (progn
+              (ollama-buddy--set-cloud-auth-status nil)
               (message "Signed out from Ollama cloud")
               (ollama-buddy--update-status "Signed out"))
           (message "Ollama signout failed with exit code %d" exit-code)))
@@ -1851,16 +1884,14 @@ The URL will be automatically opened in your default browser."
 
 (defun ollama-buddy-cloud-status ()
   "Check Ollama cloud authentication status.
-Attempts to verify if user is signed in by checking for cloud model access."
+Shows cached status. Use signin/signout to update or try a cloud model request."
   (interactive)
-  (if (executable-find ollama-buddy-ollama-executable)
-      (with-temp-buffer
-        (let ((exit-code (call-process ollama-buddy-ollama-executable nil t nil
-                                       "show" "--modelfile" "gpt-oss:20b-cloud")))
-          (if (zerop exit-code)
-              (message "Ollama cloud: Signed in (cloud models accessible)")
-            (message "Ollama cloud: Not signed in or cloud access unavailable"))))
-    (user-error "Cannot find ollama executable. Set `ollama-buddy-ollama-executable'")))
+  (let ((status ollama-buddy--cloud-auth-status))
+    (message "Ollama cloud: %s"
+             (pcase status
+               ('authenticated "Signed in")
+               ('not-authenticated "Not signed in (use C-c a to sign in)")
+               ('unknown "Unknown (try using a cloud model to verify)")))))
 
 ;; Update buffer initialization to check status
 (defun ollama-buddy--open-chat ()
@@ -3142,6 +3173,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c W") #'ollama-buddy-manage-models)
     (define-key map (kbd "C-c ?") #'ollama-buddy-open-info)
     (define-key map (kbd "C-c C-u") #'ollama-buddy-unload-all-models)
+    (define-key map (kbd "C-c a") #'ollama-buddy-transient-auth-menu)
     
     ;; Chat section keybindings from transient
     (define-key map (kbd "C-c C-c") #'ollama-buddy--send-prompt)

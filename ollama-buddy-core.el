@@ -1182,11 +1182,74 @@ and prefixed combinations like '@a', '@b', etc. for additional models."
       (push (format "s: Codestral (%d)" (ollama-buddy--count-models-with-prefix "s:")) providers))
     (nreverse providers)))
 
+(defvar ollama-buddy--cloud-auth-status 'unknown
+  "Cached Ollama cloud authentication status.
+Can be `unknown', `authenticated', or `not-authenticated'.
+Updated when signin/signout is called, auth errors are detected,
+or a successful cloud model response is received.")
+
+(defun ollama-buddy--cloud-auth-status-p ()
+  "Check if Ollama cloud is authenticated. Returns t if signed in, nil otherwise."
+  (eq ollama-buddy--cloud-auth-status 'authenticated))
+
+(defun ollama-buddy--set-cloud-auth-status (authenticated)
+  "Set the cloud authentication status cache.
+AUTHENTICATED should be t for authenticated, nil for not authenticated."
+  (setq ollama-buddy--cloud-auth-status (if authenticated 'authenticated 'not-authenticated)))
+
+(defun ollama-buddy--copilot-auth-status-p ()
+  "Check if GitHub Copilot is authenticated. Returns t if logged in, nil otherwise."
+  (when (featurep 'ollama-buddy-copilot)
+    (and (boundp 'ollama-buddy-copilot--oauth-token)
+         (or ollama-buddy-copilot--oauth-token
+             (when (fboundp 'ollama-buddy-copilot--load-oauth-token)
+               (ollama-buddy-copilot--load-oauth-token))))))
+
+(defun ollama-buddy--get-browser-auth-status ()
+  "Return a list of browser-auth providers with their status.
+Each element is a plist with :name, :authenticated, and :enabled."
+  (let (providers)
+    ;; Ollama Cloud - always available if ollama is running
+    (push (list :name "Ollama Cloud"
+                :enabled t
+                :authenticated (ollama-buddy--cloud-auth-status-p))
+          providers)
+    ;; GitHub Copilot - only if feature is loaded
+    (when (featurep 'ollama-buddy-copilot)
+      (push (list :name "GitHub Copilot"
+                  :enabled t
+                  :authenticated (ollama-buddy--copilot-auth-status-p))
+            providers))
+    (nreverse providers)))
+
+(defun ollama-buddy--cloud-auth-status-indicator ()
+  "Return the indicator for Ollama cloud auth status."
+  (pcase ollama-buddy--cloud-auth-status
+    ('authenticated "[✓]")
+    ('not-authenticated "[✗]")
+    ('unknown "[?]")))
+
+(defun ollama-buddy--format-auth-status ()
+  "Format browser-auth provider status for display."
+  (let ((providers (ollama-buddy--get-browser-auth-status)))
+    (when providers
+      (mapconcat
+       (lambda (p)
+         (let ((name (plist-get p :name)))
+           (format "%s %s"
+                   name
+                   (if (string= name "Ollama Cloud")
+                       (ollama-buddy--cloud-auth-status-indicator)
+                     (if (plist-get p :authenticated) "[✓]" "[✗]")))))
+       providers
+       " | "))))
+
 (defun ollama-buddy--create-intro-message ()
   "Create minimal welcome message with essential commands in org format."
   (setq-local org-hide-emphasis-markers t)
   (setq-local org-hide-leading-stars t)
   (let* ((external-providers (ollama-buddy--get-enabled-external-providers))
+         (auth-status (ollama-buddy--format-auth-status))
          (ollama-count (length (ollama-buddy--get-models)))
          (online-count (length ollama-buddy-remote-models))
          (cloud-count (length ollama-buddy-cloud-models))
@@ -1210,11 +1273,14 @@ and prefixed combinations like '@a', '@b', etc. for additional models."
 please run =ollama serve=\n\n")
            (when external-providers
              (concat (mapconcat #'identity external-providers " | ") "\n\n"))
+           (when auth-status
+             (concat "Auth: " auth-status "\n\n"))
            "- /Ask me anything!/       C-c C-c
 - /Main transient menu/    C-c O
 - /Manage models/          C-c W
 - /Select model/           C-c m" model-info "
-- /Select cloud model/     C-u C-c m" cloud-info)))
+- /Select cloud model/     C-u C-c m" cloud-info "
+- /Authentication/         C-c a")))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
 

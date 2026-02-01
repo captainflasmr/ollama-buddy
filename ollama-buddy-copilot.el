@@ -372,14 +372,27 @@ STATUS is the URL retrieval status."
 
 ;; API interaction functions
 
+(defun ollama-buddy-copilot--show-auth-error (message)
+  "Display auth error MESSAGE in the chat buffer with login instructions."
+  (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+    (let ((inhibit-read-only t))
+      (goto-char (point-max))
+      (insert (format "\n\n*Authentication Error:* %s\n\n" message))
+      (insert "Please login using =C-c a= or =M-x ollama-buddy-copilot-login=\n")
+      (insert "\n*** FAILED")
+      (ollama-buddy--prepare-prompt-area)
+      (ollama-buddy--update-status "Auth Required"))))
+
 (defun ollama-buddy-copilot--get-access-token (callback)
   "Get Copilot access token using OAuth token, then call CALLBACK with it.
 The token is cached until expiry."
-  (let ((oauth-token (ollama-buddy-copilot--ensure-oauth-token)))
-    (unless oauth-token
-      (error "Not authenticated. Run M-x ollama-buddy-copilot-login first"))
+  (cl-block ollama-buddy-copilot--get-access-token
+    (let ((oauth-token (ollama-buddy-copilot--ensure-oauth-token)))
+      (unless oauth-token
+        (ollama-buddy-copilot--show-auth-error "Not authenticated with GitHub Copilot")
+        (cl-return-from ollama-buddy-copilot--get-access-token nil))
 
-    (if (and ollama-buddy-copilot--access-token
+      (if (and ollama-buddy-copilot--access-token
              ollama-buddy-copilot--token-expiry
              (time-less-p (current-time) ollama-buddy-copilot--token-expiry))
         ;; Use cached token
@@ -399,7 +412,7 @@ The token is cached until expiry."
                (progn
                  ;; Token might be invalid, clear it
                  (setq ollama-buddy-copilot--oauth-token nil)
-                 (error "Failed to get Copilot access token. Try M-x ollama-buddy-copilot-login"))
+                 (ollama-buddy-copilot--show-auth-error "Failed to get Copilot access token"))
              (goto-char (point-min))
              (when (re-search-forward "\n\n" nil t)
                (let* ((json-object-type 'alist)
@@ -411,7 +424,7 @@ The token is cached until expiry."
                    (when expires-at
                      (setq ollama-buddy-copilot--token-expiry
                            (seconds-to-time expires-at))))
-                 (funcall callback ollama-buddy-copilot--access-token))))))))))
+                 (funcall callback ollama-buddy-copilot--access-token)))))))))))
 
 (defun ollama-buddy-copilot--send (prompt &optional model)
   "Send PROMPT to GitHub Copilot API using MODEL or default model asynchronously."
@@ -519,22 +532,31 @@ The token is cached until expiry."
 STATUS is the URL retrieval status, START-POINT is where to insert,
 PROMPT is the original prompt for history."
   (if (plist-get status :error)
-      (let ((error-body ""))
+      (let ((error-body "")
+            (error-details (prin1-to-string (plist-get status :error))))
         ;; Try to get the response body for more details
         (goto-char (point-min))
         (when (re-search-forward "\n\n" nil t)
           (setq error-body (buffer-substring-no-properties (point) (point-max))))
-        (with-current-buffer ollama-buddy--chat-buffer
-          (let ((inhibit-read-only t))
-            (goto-char start-point)
-            (delete-region start-point (point-max))
-            (insert "Error: URL retrieval failed\n")
-            (insert "Details: " (prin1-to-string (plist-get status :error)) "\n")
-            (when (> (length error-body) 0)
-              (insert "Response: " error-body "\n"))
-            (insert "\n\n*** FAILED")
-            (ollama-buddy--prepare-prompt-area)
-            (ollama-buddy--update-status "Failed - URL retrieval error"))))
+        ;; Check if this is an auth error
+        (let ((is-auth-error (or (string-match-p "unauthorized\\|authentication\\|401\\|403" error-details)
+                                 (string-match-p "unauthorized\\|authentication\\|401\\|403" error-body))))
+          (with-current-buffer ollama-buddy--chat-buffer
+            (let ((inhibit-read-only t))
+              (goto-char start-point)
+              (delete-region start-point (point-max))
+              (if is-auth-error
+                  (progn
+                    (insert "*Authentication Error:* Copilot API request failed\n\n")
+                    (insert "Please login using =C-c a= or =M-x ollama-buddy-copilot-login=\n"))
+                (progn
+                  (insert "Error: URL retrieval failed\n")
+                  (insert "Details: " error-details "\n")
+                  (when (> (length error-body) 0)
+                    (insert "Response: " error-body "\n"))))
+              (insert "\n\n*** FAILED")
+              (ollama-buddy--prepare-prompt-area)
+              (ollama-buddy--update-status (if is-auth-error "Auth Required" "Failed - URL retrieval error"))))))
     ;; Success - process the response
     (goto-char (point-min))
     (when (re-search-forward "\n\n" nil t)
@@ -552,7 +574,13 @@ PROMPT is the original prompt for history."
 
               ;; Extract the message content
               (if error-message
-                  (setq content (format "Error: %s" (alist-get 'message error-message)))
+                  (let* ((err-msg (alist-get 'message error-message))
+                         (is-auth-error (and err-msg
+                                             (or (string-match-p "unauthorized\\|authentication\\|token\\|credential" err-msg)
+                                                 (string-match-p "401\\|403" err-msg)))))
+                    (if is-auth-error
+                        (setq content (format "*Authentication Error:* %s\n\nPlease login using =C-c a= or =M-x ollama-buddy-copilot-login=" err-msg))
+                      (setq content (format "Error: %s" err-msg))))
                 (when choices
                   (setq content (alist-get 'content (alist-get 'message (aref choices 0))))))
 

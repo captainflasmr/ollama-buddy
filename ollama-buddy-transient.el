@@ -62,6 +62,9 @@
 (declare-function ollama-buddy-fabric-sync-patterns "ollama-buddy-fabric")
 (declare-function ollama-buddy-fabric-populate-patterns "ollama-buddy-fabric")
 (declare-function ollama-buddy-fabric-setup "ollama-buddy-fabric")
+(declare-function ollama-buddy-copilot-login "ollama-buddy-copilot")
+(declare-function ollama-buddy-copilot-logout "ollama-buddy-copilot")
+(declare-function ollama-buddy-copilot-status "ollama-buddy-copilot")
 
 (transient-define-prefix ollama-buddy-transient-menu ()
   "Ollama Buddy main menu."
@@ -72,6 +75,7 @@
    ["Chat"
     ("o" "Open Chat" ollama-buddy--open-chat)
     ("A" "Attachments" ollama-buddy-transient-attachment-menu)
+    ("a" "Authentication" ollama-buddy-transient-auth-menu)
     ("b" "Custom Menu " ollama-buddy-menu)
     ]
 
@@ -89,19 +93,13 @@
     ("C-s" "Show" ollama-buddy-show-system-prompt-info)
     ("r" "Reset" ollama-buddy-reset-system-prompt)
     ]
-   
+
    ["Model"
     ("W" "Manage" ollama-buddy-manage-models)
     ("m" "Switch" ollama-buddy--swap-model)
     ("c" "Cloud" ollama-buddy--swap-model-cloud)
     ("i" "Info" ollama-buddy-show-raw-model-info)
     ("M" "Multishot" ollama-buddy--multishot-prompt)
-    ]
-
-   ["Cloud Auth"
-    ("2" "Sign In" ollama-buddy-cloud-signin)
-    ("3" "Sign Out" ollama-buddy-cloud-signout)
-    ("4" "Auth Status" ollama-buddy-cloud-status)
     ]
 
    ["Roles"
@@ -263,6 +261,32 @@
     ("L" "Set as System Prompt" ollama-buddy-awesome-set-system-prompt)
     ("l" "List All Prompts" ollama-buddy-awesome-list-prompts)
     ("S" "Sync Latest Prompts" ollama-buddy-awesome-sync-prompts)
+    ("q" "Quit" transient-quit-one)]])
+
+(defun ollama-buddy--auth-cloud-description ()
+  "Return description for Ollama Cloud auth with status indicator."
+  (format "Ollama Cloud %s" (ollama-buddy--cloud-auth-status-indicator)))
+
+(defun ollama-buddy--auth-copilot-description ()
+  "Return description for GitHub Copilot auth with status indicator."
+  (format "GitHub Copilot %s"
+          (if (ollama-buddy--copilot-auth-status-p) "[✓]" "[✗]")))
+
+(transient-define-prefix ollama-buddy-transient-auth-menu ()
+  "Authentication menu for browser-based providers."
+  [:description
+   (lambda () (concat "Authentication - "
+                      (or (ollama-buddy--format-auth-status) "No providers")))
+   ["Ollama Cloud"
+    ("c" "Sign In" ollama-buddy-cloud-signin)
+    ("x" "Sign Out" ollama-buddy-cloud-signout)
+    ("s" "Status" ollama-buddy-cloud-status)]
+   [:if (lambda () (featurep 'ollama-buddy-copilot))
+    "GitHub Copilot"
+    ("p" "Login" ollama-buddy-copilot-login)
+    ("l" "Logout" ollama-buddy-copilot-logout)
+    ("t" "Status" ollama-buddy-copilot-status)]
+   ["Navigation"
     ("q" "Quit" transient-quit-one)]])
 
 (transient-define-prefix ollama-buddy-transient-attachment-menu ()
