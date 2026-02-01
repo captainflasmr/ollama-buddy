@@ -77,7 +77,6 @@
     ]
 
    ["Actions"
-    ("O" "Commands" ollama-buddy-transient-commands-menu)
     ("h" "Help/Menu" ollama-buddy--menu-help-assistant)
     ("l" "Send Region" (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))
     ("k" "Cancel" ollama-buddy--cancel-request)
@@ -254,27 +253,6 @@
     ("R" "Reset All" ollama-buddy-params-reset)
     ("H" "Help" ollama-buddy-params-help)
     ("F" "Toggle Display in Header" ollama-buddy-toggle-params-in-header)
-    ("q" "Quit" ollama-buddy-transient-menu)]
-   ])
-
-(transient-define-prefix ollama-buddy-transient-commands-menu ()
-  "Commands menu for Ollama Buddy."
-  ["Ollama Buddy Commands"
-   ["Code Operations"
-    ("r" "Refactor Code" (lambda () (interactive) (ollama-buddy--send-with-command 'refactor-code)))
-    ("d" "Describe Code" (lambda () (interactive) (ollama-buddy--send-with-command 'describe-code)))
-    ("g" "Git Commit Message" (lambda () (interactive) (ollama-buddy--send-with-command 'git-commit)))]
-   
-   ["Language Operations"
-    ("l" "Dictionary Lookup" (lambda () (interactive) (ollama-buddy--send-with-command 'dictionary-lookup)))
-    ("s" "Synonym Lookup" (lambda () (interactive) (ollama-buddy--send-with-command 'synonym)))
-    ("p" "Proofread Text" (lambda () (interactive) (ollama-buddy--send-with-command 'proofread)))]
-   
-   ["Custom"
-    ("C" "Custom Prompt" ollama-buddy--menu-custom-prompt)
-    ("m" "Minibuffer Prompt" ollama-buddy--menu-minibuffer-prompt)]
-   
-   ["Actions"
     ("q" "Quit" ollama-buddy-transient-menu)]
    ])
 
