@@ -88,7 +88,7 @@ interact with AI models directly from within Emacs for various tasks such as:
 @item Custom AI-powered workflows via roles
 @item Using pre-built prompt templates from Fabric
 @item Utilizing Awesome ChatGPT Prompts
-@item Integrating with commercial APIs (OpenAI, Claude, Gemini, Grok, Codestral)
+@item Integrating with commercial APIs (OpenAI, Claude, Gemini, Grok, Copilot, Codestral)
 @item Using Ollama cloud models
 @item Including files as context in conversations
 @end itemize
@@ -427,6 +427,7 @@ Each provider uses a prefix to identify its models:
 @item @code{c:} - Claude (e.g., @code{c:claude-3-opus})
 @item @code{g:} - Gemini (e.g., @code{g:gemini-pro})
 @item @code{k:} - Grok (e.g., @code{k:grok-1})
+@item @code{p:} - GitHub Copilot (e.g., @code{p:gpt-4o})
 @item @code{s:} - Codestral (e.g., @code{s:codestral-latest})
 @item @code{o:} - Ollama local (when remote providers are loaded)
 @end itemize
@@ -655,6 +656,7 @@ Corrects grammar, style, and spelling
 @item Connect to Anthropic's Claude API (prefix: @code{c:})
 @item Connect to Google Gemini API (prefix: @code{g:})
 @item Connect to X Grok API (prefix: @code{k:})
+@item Connect to GitHub Copilot Chat API (prefix: @code{p:})
 @item Connect to Mistral Codestral API (prefix: @code{s:})
 @item Use Ollama cloud models (indicated by @code{☁})
 @item Seamlessly switch between local and cloud models
@@ -2330,6 +2332,9 @@ Load with @code{(require 'ollama-buddy-gemini nil t)}
 @item Grok/X (prefix: @code{k:})
 Load with @code{(require 'ollama-buddy-grok nil t)}
 
+@item GitHub Copilot (prefix: @code{p:})
+Load with @code{(require 'ollama-buddy-copilot nil t)}
+
 @item Codestral/Mistral (prefix: @code{s:})
 Load with @code{(require 'ollama-buddy-codestral nil t)}
 @end table
@@ -2346,10 +2351,11 @@ The header line shows compact indicators for loaded providers:
 @item @code{c} - Claude provider loaded
 @item @code{g} - Gemini provider loaded
 @item @code{k} - Grok provider loaded
+@item @code{p} - GitHub Copilot provider loaded
 @item @code{s} - Codestral provider loaded
 @end itemize
 
-Example: @code{☁acgks} means cloud model with all five external providers loaded.
+Example: @code{☁acgkps} means cloud model with all six external providers loaded.
 
 @section Setting Up API Access
 
@@ -2361,6 +2367,7 @@ machine ollama-buddy-openai login apikey password YOUR_OPENAI_API_KEY
 machine ollama-buddy-claude login apikey password YOUR_CLAUDE_API_KEY
 machine ollama-buddy-gemini login apikey password YOUR_GEMINI_API_KEY
 machine ollama-buddy-grok login apikey password YOUR_GROK_API_KEY
+machine ollama-buddy-copilot login apikey password YOUR_GITHUB_TOKEN
 machine ollama-buddy-codestral login apikey password YOUR_CODESTRAL_API_KEY
 @end example
 
@@ -2429,6 +2436,21 @@ Your X/Grok API key.
 @item ollama-buddy-grok-default-model
 Default Grok model to use.
 @end table
+
+@subsection GitHub Copilot Configuration
+@table @code
+@item ollama-buddy-copilot-api-key
+Your GitHub personal access token with Copilot scope.
+Get your token from @url{https://github.com/settings/tokens}.
+
+@item ollama-buddy-copilot-default-model
+Default Copilot model to use (e.g., "gpt-4o").
+
+@item ollama-buddy-copilot-available-models
+List of models available through GitHub Copilot.
+@end table
+
+Note: GitHub Copilot requires an active Copilot subscription.
 
 @subsection Codestral Configuration
 @table @code

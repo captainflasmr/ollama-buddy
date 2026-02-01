@@ -11,6 +11,35 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-01 Sat> *1.2*
+
+Added GitHub Copilot integration
+
+- Added =ollama-buddy-copilot.el= for GitHub Copilot Chat API support
+- Implemented GitHub OAuth device flow authentication (no API key needed)
+- =M-x ollama-buddy-copilot-login= opens browser for secure GitHub authentication
+- =M-x ollama-buddy-copilot-logout= removes saved authentication
+- =M-x ollama-buddy-copilot-status= checks authentication status
+- OAuth token persisted to =~/.emacs.d/ollama-buddy-copilot-token.json=
+- Uses "p:" prefix to identify Copilot models (e.g., p:gpt-4o, p:gpt-4, p:gpt-3.5-turbo)
+- Supports conversation history and system prompts
+- Header line shows "p" indicator when Copilot provider is loaded
+
+To use GitHub Copilot:
+1. Ensure you have an active GitHub Copilot subscription
+2. Run =M-x ollama-buddy-copilot-login=
+3. Enter the code shown in your browser at github.com/login/device
+4. Select a Copilot model with =C-c m= (e.g., p:gpt-4o)
+
+#+begin_src elisp
+(use-package ollama-buddy
+  :bind
+  ("C-c o" . ollama-buddy-menu)
+  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  :config
+  (require 'ollama-buddy-copilot nil t))
+#+end_src
+
 ** <2026-01-31 Fri> *1.1.6*
 
 Removed model status buffer

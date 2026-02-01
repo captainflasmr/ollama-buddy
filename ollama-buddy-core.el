@@ -1165,6 +1165,7 @@ and prefixed combinations like '@a', '@b', etc. for additional models."
     (when (featurep 'ollama-buddy-claude) (push "c: Claude" providers))
     (when (featurep 'ollama-buddy-gemini) (push "g: Gemini" providers))
     (when (featurep 'ollama-buddy-grok) (push "k: Grok" providers))
+    (when (featurep 'ollama-buddy-copilot) (push "p: Copilot" providers))
     (when (featurep 'ollama-buddy-codestral) (push "s: Codestral" providers))
     (nreverse providers)))
 
@@ -1188,14 +1189,14 @@ and prefixed combinations like '@a', '@b', etc. for additional models."
            "#+begin_example\n"
            " ___ _ _      n _ n      ___       _   _ _ _\n"
            "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |\n"
-           "| | | | | .  | 1.1 | .  | . | | | . | . |__ |\n"
+           "| | | | | .  | 1.2 | .  | . | | | . | . |__ |\n"
            "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n"
            "#+end_example\n\n"
            (when (not (ollama-buddy--check-status))
              "** *THERE IS NO OLLAMA RUNNING*\n
 please run =ollama serve=\n\n")
            (when external-providers
-             (concat "Online: " (mapconcat #'identity external-providers " | ") "\n\n"))
+             (concat (mapconcat #'identity external-providers " | ") "\n\n"))
            "- /Ask me anything!/       C-c C-c
 - /Main transient menu/    C-c O
 - /Manage models/          C-c W
@@ -1818,6 +1819,7 @@ ACTUAL-MODEL is the model being used instead."
                                             (if (featurep 'ollama-buddy-claude) "c" "")
                                             (if (featurep 'ollama-buddy-gemini) "g" "")
                                             (if (featurep 'ollama-buddy-grok) "k" "")
+                                            (if (featurep 'ollama-buddy-copilot) "p" "")
                                             (if (featurep 'ollama-buddy-codestral) "s" ""))))
                                  (if (string-empty-p ind)
                                      ""

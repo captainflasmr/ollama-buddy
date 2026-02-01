@@ -72,7 +72,7 @@ directly from within Emacs for various tasks such as:
    • Using pre-built prompt templates from Fabric
    • Utilizing Awesome ChatGPT Prompts
    • Integrating with commercial APIs (OpenAI, Claude, Gemini, Grok,
-     Codestral)
+     Copilot, Codestral)
    • Using Ollama cloud models
    • Including files as context in conversations
 
@@ -368,6 +368,7 @@ Each provider uses a prefix to identify its models:
    • ‘c:’ - Claude (e.g., ‘c:claude-3-opus’)
    • ‘g:’ - Gemini (e.g., ‘g:gemini-pro’)
    • ‘k:’ - Grok (e.g., ‘k:grok-1’)
+   • ‘p:’ - GitHub Copilot (e.g., ‘p:gpt-4o’)
    • ‘s:’ - Codestral (e.g., ‘s:codestral-latest’)
    • ‘o:’ - Ollama local (when remote providers are loaded)
 
@@ -585,6 +586,7 @@ Proofreading
    • Connect to Anthropic's Claude API (prefix: ‘c:’)
    • Connect to Google Gemini API (prefix: ‘g:’)
    • Connect to X Grok API (prefix: ‘k:’)
+   • Connect to GitHub Copilot Chat API (prefix: ‘p:’)
    • Connect to Mistral Codestral API (prefix: ‘s:’)
    • Use Ollama cloud models (indicated by ‘☁’)
    • Seamlessly switch between local and cloud models
@@ -2199,6 +2201,9 @@ Google Gemini (prefix: ‘g:’)
 Grok/X (prefix: ‘k:’)
      Load with ‘(require 'ollama-buddy-grok nil t)’
 
+GitHub Copilot (prefix: ‘p:’)
+     Load with ‘(require 'ollama-buddy-copilot nil t)’
+
 Codestral/Mistral (prefix: ‘s:’)
      Load with ‘(require 'ollama-buddy-codestral nil t)’
 
@@ -2215,9 +2220,10 @@ The header line shows compact indicators for loaded providers:
    • ‘c’ - Claude provider loaded
    • ‘g’ - Gemini provider loaded
    • ‘k’ - Grok provider loaded
+   • ‘p’ - GitHub Copilot provider loaded
    • ‘s’ - Codestral provider loaded
 
-   Example: ‘☁acgks’ means cloud model with all five external providers
+   Example: ‘☁acgkps’ means cloud model with all six external providers
 loaded.
 
 16.3 Setting Up API Access
@@ -2231,6 +2237,7 @@ recommended approach is to use Emacs' built-in auth-source:
      machine ollama-buddy-claude login apikey password YOUR_CLAUDE_API_KEY
      machine ollama-buddy-gemini login apikey password YOUR_GEMINI_API_KEY
      machine ollama-buddy-grok login apikey password YOUR_GROK_API_KEY
+     machine ollama-buddy-copilot login apikey password YOUR_GITHUB_TOKEN
      machine ollama-buddy-codestral login apikey password YOUR_CODESTRAL_API_KEY
 
    Then configure with auth-source:
@@ -2299,7 +2306,22 @@ prefix:
 ‘ollama-buddy-grok-default-model’
      Default Grok model to use.
 
-16.5.5 Codestral Configuration
+16.5.5 GitHub Copilot Configuration
+-----------------------------------
+
+‘ollama-buddy-copilot-api-key’
+     Your GitHub personal access token with Copilot scope.  Get your
+     token from <https://github.com/settings/tokens>.
+
+‘ollama-buddy-copilot-default-model’
+     Default Copilot model to use (e.g., "gpt-4o").
+
+‘ollama-buddy-copilot-available-models’
+     List of models available through GitHub Copilot.
+
+   Note: GitHub Copilot requires an active Copilot subscription.
+
+16.5.6 Codestral Configuration
 ------------------------------
 
 ‘ollama-buddy-codestral-api-key’
@@ -3121,29 +3143,29 @@ Index
 Tag Table:
 Node: Top555
 Node: Introduction2431
-Node: Installation4448
-Node: Configuration7360
-Node: Quick Start14903
-Node: Core Features16801
-Node: Chat Interface20174
-Node: Working with Models23258
-Node: Context Management26955
-Node: File Attachments32564
-Node: Parameter Control38493
-Node: Session Management40896
-Node: User System Prompts42905
-Node: Roles and Commands51395
-Node: Fabric Pattern Integration62973
-Node: Awesome ChatGPT Prompts65200
-Node: Remote Providers69050
-Node: Ollama Cloud Models73024
-Node: Global System Prompt75022
-Node: Advanced Usage76726
-Node: API Reference79310
-Node: FAQ85081
-Node: Troubleshooting92134
-Node: Contributing94639
-Node: Index97307
+Node: Installation4457
+Node: Configuration7369
+Node: Quick Start14968
+Node: Core Features16866
+Node: Chat Interface20300
+Node: Working with Models23384
+Node: Context Management27081
+Node: File Attachments32690
+Node: Parameter Control38619
+Node: Session Management41022
+Node: User System Prompts43031
+Node: Roles and Commands51521
+Node: Fabric Pattern Integration63099
+Node: Awesome ChatGPT Prompts65326
+Node: Remote Providers69176
+Node: Ollama Cloud Models73857
+Node: Global System Prompt75855
+Node: Advanced Usage77559
+Node: API Reference80143
+Node: FAQ85914
+Node: Troubleshooting92967
+Node: Contributing95472
+Node: Index98140
 
 End Tag Table
 

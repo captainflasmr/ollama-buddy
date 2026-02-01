@@ -41,7 +41,7 @@ A simple text information screen will be presented on the first opening of the c
 ,#+begin_example
  ___ _ _      n _ n      ___       _   _ _ _
 |   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |
-| | | | | .  | 1.1 | .  | . | | | . | . |__ |
+| | | | | .  | 1.2 | .  | . | | | . | . |__ |
 |___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|
 ,#+end_example
 
@@ -55,7 +55,7 @@ A simple text information screen will be presented on the first opening of the c
 #+end_src
 
 The model counts show how many models are available in each category. If you have external LLM providers configured, you'll also see a line like:
-: Online: a: OpenAI | c: Claude | g: Gemini
+a: OpenAI | c: Claude | g: Gemini
 
 Press =C-c W= to open the =*Ollama Models Management*= buffer which shows:
 - All installed models with Select/Info/Pull/Copy/Delete/Unload actions
@@ -95,6 +95,31 @@ See *Screenshots / Demos* section for more videos/demonstration.
 See full list in :
 
 [[file:CHANGELOG.org]]
+
+** <2026-02-01 Sat> *1.2*
+
+Added GitHub Copilot integration
+
+- Added =ollama-buddy-copilot.el= for GitHub Copilot Chat API support
+- Implemented GitHub OAuth device flow authentication (no API key needed)
+- =M-x ollama-buddy-copilot-login= opens browser for secure GitHub authentication
+- Uses "p:" prefix to identify Copilot models (e.g., p:gpt-4o, p:gpt-4)
+- Header line shows "p" indicator when Copilot provider is loaded
+
+To use GitHub Copilot:
+1. Ensure you have an active GitHub Copilot subscription
+2. Run =M-x ollama-buddy-copilot-login=
+3. Enter the code shown in your browser at github.com/login/device
+4. Select a Copilot model with =C-c m= (e.g., p:gpt-4o)
+
+#+begin_src elisp
+(use-package ollama-buddy
+  :bind
+  ("C-c o" . ollama-buddy-menu)
+  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  :config
+  (require 'ollama-buddy-copilot nil t))
+#+end_src
 
 ** <2026-01-31 Fri> *1.1.5*
 
