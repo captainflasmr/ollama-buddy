@@ -1503,18 +1503,15 @@ For parameters with 4 or fewer characters, returns the full name."
   "Move point to prompt if response is wholly visible in WINDOW.
 RESPONSE-START is the position where the response began.
 Returns non-nil if point was moved.
-Respects `ollama-buddy-auto-scroll' - if disabled, never moves point."
-  (when (and ollama-buddy-auto-scroll
-             ollama-buddy-goto-prompt-on-visible-completion
+Controlled by `ollama-buddy-goto-prompt-on-visible-completion'."
+  (when (and ollama-buddy-goto-prompt-on-visible-completion
              window
-             response-start)
-    ;; Calculate if response fits in window by counting lines
-    (let* ((window-height (window-body-height window))
-           (response-lines (count-lines response-start (point-max))))
-      (when (< response-lines window-height)
-        (goto-char (point-max))
-        (set-window-point window (point-max))
-        t))))
+             response-start
+             (pos-visible-in-window-p response-start window)
+             (pos-visible-in-window-p (point-max) window))
+    (goto-char (point-max))
+    (set-window-point window (point-max))
+    t))
 
 (defun ollama-buddy--prepare-prompt-area (&optional new-prompt keep-content system-prompt suffix-prompt)
   "Prepare the prompt area in the buffer.
