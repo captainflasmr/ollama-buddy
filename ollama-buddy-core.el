@@ -1174,7 +1174,7 @@ and prefixed combinations like '@a', '@b', etc. for additional models."
     0))
 
 (defun ollama-buddy--get-enabled-external-providers ()
-  "Return a list of enabled external LLM provider names with prefixes and model counts."
+  "Return a list of enabled external LLM provider names with info."
   (let (providers)
     (when (featurep 'ollama-buddy-openai)
       (push (format "a: OpenAI (%d)" (ollama-buddy--count-models-with-prefix "a:")) providers))
@@ -1260,11 +1260,11 @@ Each element is a plist with :name, :authenticated, and :enabled."
          (auth-status (ollama-buddy--format-auth-status))
          (ollama-count (length (ollama-buddy--get-models)))
          (online-count (length ollama-buddy-remote-models))
-         (cloud-count (length ollama-buddy-cloud-models))
+         ;; (cloud-count (length ollama-buddy-cloud-models))
          (model-info (if (> online-count 0)
                          (format " (%d ollama / %d online)" ollama-count online-count)
                        (format " (%d ollama)" ollama-count)))
-         (cloud-info (format " (%d cloud)" cloud-count))
+         ;; (cloud-info (format " (%d cloud)" cloud-count))
          (message-text
           (concat
            (when (= (buffer-size) 0)
@@ -1914,16 +1914,17 @@ ACTUAL-MODEL is the model being used instead."
                            ""
                          (format " [%s]" param-str)))))
            (cloud-indicator (if (ollama-buddy--cloud-model-p model) "☁" ""))
-           (external-indicator (let ((ind (concat
-                                            (if (featurep 'ollama-buddy-openai) "a" "")
-                                            (if (featurep 'ollama-buddy-claude) "c" "")
-                                            (if (featurep 'ollama-buddy-gemini) "g" "")
-                                            (if (featurep 'ollama-buddy-grok) "k" "")
-                                            (if (featurep 'ollama-buddy-copilot) "p" "")
-                                            (if (featurep 'ollama-buddy-codestral) "s" ""))))
-                                 (if (string-empty-p ind)
-                                     ""
-                                   (propertize ind 'face '(:weight bold))))))
+           ;; (external-indicator (let ((ind (concat
+           ;;                                  (if (featurep 'ollama-buddy-openai) "a" "")
+           ;;                                  (if (featurep 'ollama-buddy-claude) "c" "")
+           ;;                                  (if (featurep 'ollama-buddy-gemini) "g" "")
+           ;;                                  (if (featurep 'ollama-buddy-grok) "k" "")
+           ;;                                  (if (featurep 'ollama-buddy-copilot) "p" "")
+           ;;                                  (if (featurep 'ollama-buddy-codestral) "s" ""))))
+           ;;                       (if (string-empty-p ind)
+           ;;                           ""
+           ;;                         (propertize ind 'face '(:weight bold)))))
+           )
       (setq header-line-format
             (concat
              (format " %s%s %s%s%s%s %s%s%s %s %s %s%s"
