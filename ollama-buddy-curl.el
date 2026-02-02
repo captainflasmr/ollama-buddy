@@ -251,14 +251,16 @@ When complete, CALLBACK is called with the status response and result."
   ;; Display content in chat buffer
   (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
     (with-current-buffer ollama-buddy--chat-buffer
-      (let ((inhibit-read-only t)
-            (window (get-buffer-window ollama-buddy--chat-buffer t))
-            (was-at-end (= (point) (point-max))))
-        
+      (let* ((inhibit-read-only t)
+             (window (get-buffer-window ollama-buddy--chat-buffer t))
+             (old-point (and window (window-point window)))
+             (was-at-end (and window (>= old-point (point-max))))
+             (old-window-start (and window (window-start window))))
+
         ;; Insert content at end of buffer
         (save-excursion
           (goto-char (point-max))
-          
+
           ;; Handle reasoning hiding
           (let ((should-show-content t))
             (when ollama-buddy-hide-reasoning
@@ -268,10 +270,10 @@ When complete, CALLBACK is called with the status response and result."
                  ((and reasoning-marker (eq (car reasoning-marker) 'start))
                   (setq ollama-buddy--in-reasoning-section t
                         should-show-content nil)
-                  (insert (format "[%s...]" 
-                                  (capitalize 
-                                   (replace-regexp-in-string 
-                                    "[<>]" "" 
+                  (insert (format "[%s...]"
+                                  (capitalize
+                                   (replace-regexp-in-string
+                                    "[<>]" ""
                                     (cadr reasoning-marker))))))
                  ;; End of reasoning section
                  ((and reasoning-marker (eq (car reasoning-marker) 'end))
@@ -283,14 +285,21 @@ When complete, CALLBACK is called with the status response and result."
                  ;; Inside reasoning section
                  (ollama-buddy--in-reasoning-section
                   (setq should-show-content nil)))))
-            
+
             ;; Insert content if not hidden
             (when should-show-content
-              (insert content)))
-          
-          ;; Keep window at end if it was there (and auto-scroll is enabled)
-          (when (and window was-at-end ollama-buddy-auto-scroll)
-            (set-window-point window (point-max))))))))
+              (insert content))))
+
+        ;; Window state management
+        (when window
+          (cond
+           ;; Auto-scroll enabled and was at end, follow output
+           ((and was-at-end ollama-buddy-auto-scroll)
+            (set-window-point window (point-max)))
+           ;; Otherwise restore original position
+           (t
+            (set-window-point window old-point)
+            (set-window-start window old-window-start t))))))))
 
 (defun ollama-buddy-curl--handle-completion (_json-data)
   "Handle completion of curl response."
@@ -318,7 +327,9 @@ When complete, CALLBACK is called with the status response and result."
         ;; Update chat buffer
         (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
           (with-current-buffer ollama-buddy--chat-buffer
-            (let ((inhibit-read-only t))
+            (let ((inhibit-read-only t)
+                  (response-start ollama-buddy--response-start-position)
+                  (window (get-buffer-window ollama-buddy--chat-buffer t)))
               (goto-char (point-max))
 
               ;; Pulse the response region to indicate completion
@@ -355,7 +366,10 @@ When complete, CALLBACK is called with the status response and result."
                                   (plist-get last-info :rate)))))
 
               (insert "\n\n*** FINISHED")
-              (ollama-buddy--prepare-prompt-area))))
+              (ollama-buddy--prepare-prompt-area)
+
+              ;; Move to prompt if response is wholly visible
+              (ollama-buddy--maybe-goto-prompt window response-start))))
         
         ;; Reset tracking variables
         (setq ollama-buddy--current-token-count 0

@@ -233,6 +233,14 @@ to indicate completion."
   :type 'boolean
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-goto-prompt-on-visible-completion t
+  "Whether to move point to the prompt when the response is wholly visible.
+When non-nil (default), after a response completes and if the entire
+response is visible in the window, point moves to the new prompt position.
+When nil, point stays in its original position regardless of visibility."
+  :type 'boolean
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-default-model nil
   "Default Ollama model to use."
   :type 'string
@@ -1272,15 +1280,13 @@ Each element is a plist with :name, :authenticated, and :enabled."
              "** *THERE IS NO OLLAMA RUNNING*\n
 please run =ollama serve=\n\n")
            (when external-providers
-             (concat (mapconcat #'identity external-providers " | ") "\n\n"))
+             (concat (mapconcat #'identity external-providers " ") "\n\n"))
            (when auth-status
              (concat "Auth: " auth-status "\n\n"))
-           "- /Ask me anything!/       C-c C-c
+           "- /Ask me anything!/       C-c C-c / C-c RET
 - /Main transient menu/    C-c O
 - /Manage models/          C-c W
-- /Select model/           C-c m" model-info "
-- /Select cloud model/     C-u C-c m" cloud-info "
-- /Authentication/         C-c a")))
+- /Select model/           C-c m" model-info)))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
 
@@ -1492,6 +1498,21 @@ For parameters with 4 or fewer characters, returns the full name."
         param-name
       (concat (substring param-name 0 2)
               (substring param-name (- param-len 2) param-len)))))
+
+(defun ollama-buddy--maybe-goto-prompt (window response-start)
+  "Move point to prompt if response is wholly visible in WINDOW.
+RESPONSE-START is the position where the response began.
+Returns non-nil if point was moved."
+  (when (and ollama-buddy-goto-prompt-on-visible-completion
+             window
+             response-start)
+    ;; Calculate if response fits in window by counting lines
+    (let* ((window-height (window-body-height window))
+           (response-lines (count-lines response-start (point-max))))
+      (when (< response-lines window-height)
+        (goto-char (point-max))
+        (set-window-point window (point-max))
+        t))))
 
 (defun ollama-buddy--prepare-prompt-area (&optional new-prompt keep-content system-prompt suffix-prompt)
   "Prepare the prompt area in the buffer.
@@ -1905,9 +1926,9 @@ ACTUAL-MODEL is the model being used instead."
                                    (propertize ind 'face '(:weight bold))))))
       (setq header-line-format
             (concat
-             (format " %s%s%s %s%s%s%s %s%s%s %s %s %s%s"
+             (format " %s%s %s%s%s%s %s%s%s %s %s %s%s"
                      cloud-indicator
-                     external-indicator
+                     ;; external-indicator
 
                      (ollama-buddy--add-context-to-status-format)
                      

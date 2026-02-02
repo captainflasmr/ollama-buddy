@@ -586,39 +586,43 @@ PROMPT is the original prompt for history."
 
               ;; Update the chat buffer
               (with-current-buffer ollama-buddy--chat-buffer
-                (let ((inhibit-read-only t))
-                  (goto-char start-point)
-                  (delete-region start-point (point-max))
+                (let* ((inhibit-read-only t)
+                       (window (get-buffer-window ollama-buddy--chat-buffer t)))
+                  (save-excursion
+                    (goto-char start-point)
+                    (delete-region start-point (point-max))
 
-                  ;; Insert the content
-                  (insert content)
+                    ;; Insert the content
+                    (insert content)
 
-                  ;; Convert markdown to org if enabled
-                  (when ollama-buddy-convert-markdown-to-org
-                    (ollama-buddy--md-to-org-convert-region start-point (point-max)))
+                    ;; Convert markdown to org if enabled
+                    (when ollama-buddy-convert-markdown-to-org
+                      (ollama-buddy--md-to-org-convert-region start-point (point-max)))
 
-                  ;; Write to register
-                  (let* ((reg-char ollama-buddy-default-register)
-                         (current (get-register reg-char))
-                         (new-content (concat (if (stringp current) current "") content)))
-                    (set-register reg-char new-content))
+                    ;; Write to register
+                    (let* ((reg-char ollama-buddy-default-register)
+                           (current (get-register reg-char))
+                           (new-content (concat (if (stringp current) current "") content)))
+                      (set-register reg-char new-content))
 
-                  ;; Add to history
-                  (when ollama-buddy-history-enabled
-                    (ollama-buddy--add-to-history "user" prompt)
-                    (ollama-buddy--add-to-history "assistant" content))
+                    ;; Add to history
+                    (when ollama-buddy-history-enabled
+                      (ollama-buddy--add-to-history "user" prompt)
+                      (ollama-buddy--add-to-history "assistant" content))
 
-                  ;; Calculate token count
-                  (setq ollama-buddy-copilot--current-token-count
-                        (length (split-string content "\\b" t)))
+                    ;; Calculate token count
+                    (setq ollama-buddy-copilot--current-token-count
+                          (length (split-string content "\\b" t)))
 
-                  ;; Show token stats if enabled
-                  (when ollama-buddy-display-token-stats
-                    (insert (format "\n\n*** Token Stats\n[%d tokens]"
-                                    ollama-buddy-copilot--current-token-count)))
+                    ;; Show token stats if enabled
+                    (when ollama-buddy-display-token-stats
+                      (insert (format "\n\n*** Token Stats\n[%d tokens]"
+                                      ollama-buddy-copilot--current-token-count)))
 
-                  (insert "\n\n*** FINISHED")
-                  (ollama-buddy--prepare-prompt-area)
+                    (insert "\n\n*** FINISHED")
+                    (ollama-buddy--prepare-prompt-area))
+                  ;; Move to prompt only if response fits in window
+                  (ollama-buddy--maybe-goto-prompt window start-point)
                   (ollama-buddy--update-status
                    (format "Finished [%d tokens]"
                            ollama-buddy-copilot--current-token-count)))))

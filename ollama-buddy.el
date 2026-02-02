@@ -1546,10 +1546,12 @@ With prefix argument ALL-MODELS, clear history for all models."
                  (window (get-buffer-window ollama-buddy--chat-buffer t))
                  (old-point (and window (window-point window)))
                  (at-end (and window (>= old-point (point-max))))
-                 (old-window-start (and window (window-start window))))
+                 (old-window-start (and window (window-start window)))
+                 (response-start ollama-buddy--response-start-position)
+                 (completed nil))
             (save-excursion
               (goto-char (point-max))
-              
+
               (setq ollama-buddy--reasoning-marker-found nil)
               
               (when ollama-buddy-hide-reasoning
@@ -1733,12 +1735,21 @@ With prefix argument ALL-MODELS, clear history for all models."
                     (ollama-buddy--prepare-prompt-area)
                     (ollama-buddy--update-status (format "Finished [%d %.1f t/s]"
                                                          (plist-get (car ollama-buddy--token-usage-history) :tokens)
-                                                         (plist-get (car ollama-buddy--token-usage-history) :rate)))))))
+                                                         (plist-get (car ollama-buddy--token-usage-history) :rate)))))
+                (setq completed t))) ; closes when-done AND save-excursion
+            ;; Window state management (must be outside save-excursion)
             (when window
-              (if (and at-end ollama-buddy-auto-scroll)
-                  (set-window-point window (point-max))
-                (set-window-point window old-point))
-              (set-window-start window old-window-start t))))))))
+              (cond
+               ;; On completion with visible response, move to prompt
+               ((and completed (ollama-buddy--maybe-goto-prompt window response-start))
+                nil)
+               ;; Auto-scroll enabled and was at end, follow output
+               ((and at-end ollama-buddy-auto-scroll)
+                (set-window-point window (point-max)))
+               ;; Otherwise restore original position
+               (t
+                (set-window-point window old-point)
+                (set-window-start window old-window-start t))))))))))
 
 (defun ollama-buddy--stream-sentinel (_proc event)
   "Handle stream completion EVENT."
@@ -1766,10 +1777,21 @@ With prefix argument ALL-MODELS, clear history for all models."
       (setq ollama-buddy--current-request-temporary-model nil))
     
     (with-current-buffer ollama-buddy--chat-buffer
-      (let ((inhibit-read-only t))
-        (goto-char (point-max))
-        (insert msg)
-        (ollama-buddy--prepare-prompt-area)))
+      (let* ((inhibit-read-only t)
+             (window (get-buffer-window ollama-buddy--chat-buffer t))
+             (response-start ollama-buddy--response-start-position)
+             (old-point (and window (window-point window)))
+             (old-window-start (and window (window-start window))))
+        (save-excursion
+          (goto-char (point-max))
+          (insert msg)
+          (ollama-buddy--prepare-prompt-area))
+        ;; Window state management - same logic as stream filter
+        (when window
+          (unless (ollama-buddy--maybe-goto-prompt window response-start)
+            (when (not ollama-buddy-auto-scroll)
+              (set-window-point window old-point)
+              (set-window-start window old-window-start t))))))
     
     ;; Only show token stats in status if we completed successfully
     (if (string= status "Completed")
