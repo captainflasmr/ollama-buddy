@@ -1273,7 +1273,7 @@ Each element is a plist with :name, :authenticated, and :enabled."
            "#+begin_example\n"
            " ___ _ _      n _ n      ___       _   _ _ _\n"
            "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |\n"
-           "| | | | | .  | 1.2 | .  | . | | | . | . |__ |\n"
+           "| | | | | .  |1.2.1| .  | . | | | . | . |__ |\n"
            "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n"
            "#+end_example\n\n"
            (when (not (ollama-buddy--check-status))
@@ -1914,6 +1914,10 @@ ACTUAL-MODEL is the model being used instead."
                            ""
                          (format " [%s]" param-str)))))
            (cloud-indicator (if (ollama-buddy--cloud-model-p model) "☁" ""))
+           (attachment-indicator (if ollama-buddy--current-attachments
+                                     (propertize (format "📎%d " (length ollama-buddy--current-attachments))
+                                                 'face '(:weight bold))
+                                   ""))
            ;; (external-indicator (let ((ind (concat
            ;;                                  (if (featurep 'ollama-buddy-openai) "a" "")
            ;;                                  (if (featurep 'ollama-buddy-claude) "c" "")
@@ -1927,8 +1931,9 @@ ACTUAL-MODEL is the model being used instead."
            )
       (setq header-line-format
             (concat
-             (format " %s%s %s%s%s%s %s%s%s %s %s %s%s"
+             (format " %s%s%s %s%s%s%s %s%s%s %s %s %s%s"
                      cloud-indicator
+                     attachment-indicator
                      ;; external-indicator
 
                      (ollama-buddy--add-context-to-status-format)

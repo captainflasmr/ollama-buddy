@@ -11,6 +11,15 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-02 Sun> *1.2.1*
+
+Added attachment count indicator to header-line
+
+- Header-line now displays 📎N (paperclip + count) when files are attached
+- Provides constant visual reminder of attachment context before sending
+- Indicator appears in bold near the beginning of the status line
+- Empty when no attachments are present
+
 ** <2026-02-01 Sat> *1.2*
 
 Added GitHub Copilot integration
