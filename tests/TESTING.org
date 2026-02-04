@@ -1,0 +1,187 @@
+- Ollama Buddy Testing Setup
+
+This document describes the ERT-based testing infrastructure for ollama-buddy.
+
+** Quick Start
+
+#+begin_src bash
+# Run all tests
+make test
+
+# Run only core tests (pure functions)
+make test-core
+
+# Full CI check (byte-compile + tests)
+make ci
+
+# See all available targets
+make help
+#+end_src
+
+** Directory Structure
+
+#+begin_src 
+ollama-buddy/
+├── Makefile                          # Top-level build/test commands
+├── tests/
+│   ├── TESTING.md                    # This file
+│   ├── test-helper.el                # Shared test utilities and fixtures
+│   ├── ollama-buddy-core-test.el     # Core module tests (23 tests)
+│   ├── sample-configs.el             # Sample use-package configurations
+│   ├── server.py                     # Mock Ollama server for offline testing
+│   ├── curl-tests.sh                 # Interactive curl tests
+│   └── README.org                    # Manual testing procedures
+#+end_src
+
+** Makefile Targets
+
+| Target         | Description                         |
+|----------------|-------------------------------------|
+| =test=         | Run all ERT tests                   |
+| =test-core=    | Run tests tagged =:core=            |
+| =lint=         | Run package-lint on all elisp files |
+| =checkdoc=     | Run checkdoc on all elisp files     |
+| =byte-compile= | Byte-compile all elisp files        |
+| =clean=        | Remove =.elc= files                 |
+| =ci=           | Full CI check (byte-compile + test) |
+| =help=         | Show available targets              |
+
+** Test Categories (Tags)
+
+Tests are organized using ERT tags:
+
+- =:core= - Core functionality tests (pure functions, utilities)
+- =:api= - API interaction tests (may need mocking)
+- =:ui= - User interface tests (buffers, display)
+- =:provider= - Provider-specific tests (openai, claude, etc.)
+
+Run specific tags with:
+#+begin_src bash
+emacs -Q --batch -L . -L tests \
+  -l tests/test-helper.el \
+  -l tests/ollama-buddy-core-test.el \
+  --eval "(ert-run-tests-batch-and-exit '(tag core))"
+#+end_src
+
+** Writing New Tests
+
+*** 1. Create a test file
+
+Name it =tests/<module>-test.el= (e.g., =tests/ollama-buddy-openai-test.el=).
+
+*** 2. Use the test helper
+
+#+begin_src elisp
+;;; ollama-buddy-foo-test.el --- Tests for foo -*- lexical-binding: t; -*-
+
+(require 'ert)
+(require 'test-helper)
+(require 'ollama-buddy-foo)
+
+(ert-deftest ollama-buddy-test-foo-basic ()
+  "Test basic foo functionality."
+  :tags '(core)
+  (with-ollama-buddy-test-env
+    (should (equal expected (ollama-buddy-foo-function input)))))
+
+(provide 'ollama-buddy-foo-test)
+;;; ollama-buddy-foo-test.el ends here
+#+end_src
+
+*** 3. Available test utilities
+
+From =test-helper.el=:
+
+- =with-ollama-buddy-test-env= - Macro that sets up isolated test environment
+- =with-temp-ollama-buffer= - Macro for buffer-related tests
+- =test-helper-make-response= - Create mock API responses
+- =test-helper--sample-models= - List of sample local models
+- =test-helper--sample-cloud-models= - List of sample cloud models
+
+** Current Test Coverage
+
+*** ollama-buddy-core-test.el (23 tests)
+
+*Token Estimation:*
+- =ollama-buddy-test-estimate-token-count-empty=
+- =ollama-buddy-test-estimate-token-count-single-word=
+- =ollama-buddy-test-estimate-token-count-sentence=
+- =ollama-buddy-test-estimate-token-count-longer-text=
+
+*Cloud Model Detection:*
+- =ollama-buddy-test-cloud-model-p-suffix=
+- =ollama-buddy-test-cloud-model-p-in-list=
+- =ollama-buddy-test-cloud-model-p-local=
+- =ollama-buddy-test-cloud-model-p-nil=
+
+*Title Extraction:*
+- =ollama-buddy-test-extract-title-you-are=
+- =ollama-buddy-test-extract-title-act-as=
+- =ollama-buddy-test-extract-title-i-want-you=
+- =ollama-buddy-test-extract-title-your-role=
+- =ollama-buddy-test-extract-title-fallback=
+- =ollama-buddy-test-extract-title-nil=
+- =ollama-buddy-test-extract-title-empty=
+
+*Unicode Escaping:*
+- =ollama-buddy-test-escape-unicode-ascii=
+- =ollama-buddy-test-escape-unicode-non-ascii=
+- =ollama-buddy-test-escape-unicode-mixed=
+- =ollama-buddy-test-escape-unicode-empty=
+
+*Model Name Handling:*
+- =ollama-buddy-test-get-real-model-name-with-prefix=
+- =ollama-buddy-test-get-real-model-name-no-prefix=
+- =ollama-buddy-test-get-real-model-name-no-remote=
+
+*Provider Detection:*
+- =ollama-buddy-test-get-enabled-external-providers-none=
+
+** Future Test Areas
+
+Priority areas for expanding test coverage:
+
+1. *API Mocking* - Use =server.py= with ERT for HTTP interaction tests
+2. *Provider Tests* - Test each provider module (openai, claude, etc.)
+3. *Buffer Operations* - Test chat buffer initialization, header line
+4. *History Management* - Test conversation history functions
+5. *Streaming* - Test streaming response handling
+
+** Mock Server
+
+The =server.py= provides a mock Ollama API for offline testing:
+
+#+begin_src bash
+# Start the mock server
+python3 tests/server.py
+
+# It provides endpoints:
+# - /api/tags (list models)
+# - /api/generate (completion)
+# - /api/chat (chat completion)
+#+end_src
+
+** CI Integration
+
+For GitHub Actions, create =.github/workflows/test.yml=:
+
+#+begin_src yaml
+name: Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        emacs-version: ['28.1', '29.4', '30.1']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: purcell/setup-emacs@master
+        with:
+          version: ${{ matrix.emacs-version }}
+      - run: make ci
+#+end_src
+
+-----
+
+*Setup created: 2026-02-03*
