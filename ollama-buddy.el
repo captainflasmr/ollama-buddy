@@ -2199,6 +2199,11 @@ authentication via `ollama signin'."
     (unless (ollama-buddy--check-context-before-send)
       (user-error "Context too far over limit to send")))
 
+  ;; Process inline web search delimiters if web-search module is loaded
+  (when (and (featurep 'ollama-buddy-web-search)
+             (fboundp 'ollama-buddy-web-search-process-inline))
+    (setq prompt (ollama-buddy-web-search-process-inline prompt)))
+
   ;; Original Ollama send code with vision additions
   (let* ((model-info (ollama-buddy--get-valid-model specified-model))
          (model (car model-info))

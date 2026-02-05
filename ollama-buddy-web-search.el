@@ -414,5 +414,56 @@ Returns nil if no searches are attached."
   (apply #'+ (mapcar (lambda (s) (or (plist-get s :tokens) 0))
                      ollama-buddy-web-search--current-results)))
 
+;; Inline search delimiter support
+
+(defconst ollama-buddy-web-search--inline-regexp
+  "@search(\\([^)]+\\))"
+  "Regexp to match inline search delimiters: @search(query).")
+
+(defun ollama-buddy-web-search-extract-inline-queries (text)
+  "Extract all inline search queries from TEXT.
+Returns list of query strings found in /search: query/ delimiters."
+  (let ((queries nil)
+        (start 0))
+    (while (string-match ollama-buddy-web-search--inline-regexp text start)
+      (push (string-trim (match-string 1 text)) queries)
+      (setq start (match-end 0)))
+    (nreverse queries)))
+
+(defun ollama-buddy-web-search-remove-inline-delimiters (text)
+  "Remove inline search delimiters from TEXT, returning cleaned text."
+  (replace-regexp-in-string ollama-buddy-web-search--inline-regexp "" text))
+
+(defun ollama-buddy-web-search-process-inline (text)
+  "Process TEXT for inline search queries.
+Extracts /search: query/ patterns, performs searches, attaches results.
+Returns the text with search delimiters removed."
+  (let ((queries (ollama-buddy-web-search-extract-inline-queries text)))
+    (when queries
+      (dolist (query queries)
+        (message "Inline web search: %s" query)
+        ;; Perform synchronous search and attach
+        (let ((result (ollama-buddy-web-search--fetch-sync query)))
+          (if (car result)
+              (let* ((results (cdr result))
+                     (limited-results (seq-take results ollama-buddy-web-search-max-results))
+                     (formatted-content (ollama-buddy-web-search--format-results
+                                         limited-results query))
+                     (token-estimate (ollama-buddy-web-search--estimate-tokens formatted-content))
+                     (search-attachment
+                      (list :query query
+                            :content formatted-content
+                            :results limited-results
+                            :size (length formatted-content)
+                            :tokens token-estimate
+                            :timestamp (current-time))))
+                ;; Add to search results
+                (push search-attachment ollama-buddy-web-search--current-results)
+                (message "Attached: \"%s\" (%d results, ~%d tokens)"
+                         query (length limited-results) token-estimate))
+            (message "Search failed for: %s" query)))))
+    ;; Return text with delimiters removed
+    (ollama-buddy-web-search-remove-inline-delimiters text)))
+
 (provide 'ollama-buddy-web-search)
 ;;; ollama-buddy-web-search.el ends here
