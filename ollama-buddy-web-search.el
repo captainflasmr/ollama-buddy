@@ -368,10 +368,15 @@ Returns (success . results-or-error)."
               (let* ((formatted-content (ollama-buddy-web-search--format-results
                                          limited-results query content-map))
                      (token-estimate (ollama-buddy-web-search--estimate-tokens formatted-content))
+                     ;; Convert hash-table to alist for storage
+                     (content-alist (let (pairs)
+                                      (maphash (lambda (k v) (push (cons k v) pairs)) content-map)
+                                      pairs))
                      (search-attachment
                       (list :query query
                             :content formatted-content
                             :results limited-results
+                            :content-map content-alist
                             :size (length formatted-content)
                             :tokens token-estimate
                             :timestamp (current-time))))
@@ -491,10 +496,15 @@ Returns the text with search delimiters removed."
                      (formatted-content (ollama-buddy-web-search--format-results
                                          limited-results query content-map))
                      (token-estimate (ollama-buddy-web-search--estimate-tokens formatted-content))
+                     ;; Convert hash-table to alist for storage
+                     (content-alist (let (pairs)
+                                      (maphash (lambda (k v) (push (cons k v) pairs)) content-map)
+                                      pairs))
                      (search-attachment
                       (list :query query
                             :content formatted-content
                             :results limited-results
+                            :content-map content-alist
                             :size (length formatted-content)
                             :tokens token-estimate
                             :timestamp (current-time))))

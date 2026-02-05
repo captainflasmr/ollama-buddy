@@ -117,6 +117,7 @@
 (declare-function ollama-buddy-web-search-clear "ollama-buddy-web-search")
 (declare-function ollama-buddy-web-search-get-context "ollama-buddy-web-search")
 (declare-function ollama-buddy-web-search-count "ollama-buddy-web-search")
+(declare-function ollama-buddy-web-search--org-escape "ollama-buddy-web-search")
 
 (defvar ollama-buddy--reasoning-skip-newlines nil
   "Whether to skip leading newlines after reasoning section ends.")
@@ -3188,21 +3189,30 @@ When the operation completes, CALLBACK is called with no arguments if provided."
               (dolist (search ollama-buddy-web-search--current-results)
                 (let ((query (plist-get search :query))
                       (results (plist-get search :results))
+                      (content-map (plist-get search :content-map))
                       (tokens (plist-get search :tokens))
+                      (size (plist-get search :size))
                       (timestamp (plist-get search :timestamp)))
                   (insert (format "\n** %s\n" query))
-                  (insert (format ":PROPERTIES:\n:RESULTS: %d\n:TOKENS: ~%d\n:TIME: %s\n:END:\n"
-                                  (length results) tokens
+                  (insert (format ":PROPERTIES:\n:RESULTS: %d\n:TOKENS: ~%d\n:SIZE: %d bytes\n:TIME: %s\n:END:\n"
+                                  (length results) tokens (or size 0)
                                   (format-time-string "%Y-%m-%d %H:%M:%S" timestamp)))
-                  ;; Show each result as a sub-heading
+                  ;; Show each result as a sub-heading with full content
                   (let ((idx 0))
                     (dolist (result results)
                       (cl-incf idx)
-                      (let ((title (or (alist-get 'title result) "Untitled"))
-                            (url (or (alist-get 'url result) (alist-get 'link result) "")))
-                        (insert (format "*** %d. %s\n" idx title))
+                      (let* ((title (or (alist-get 'title result) "Untitled"))
+                             (url (or (alist-get 'url result) (alist-get 'link result) ""))
+                             (content (when content-map (cdr (assoc url content-map)))))
+                        (insert (format "\n*** %d. %s\n" idx title))
                         (when (not (string-empty-p url))
-                          (insert (format ":PROPERTIES:\n:URL: %s\n:END:\n" url)))))))))
+                          (insert (format ":PROPERTIES:\n:URL: %s\n:END:\n" url)))
+                        (when (and content (not (string-empty-p content)))
+                          (insert "#+begin_example\n")
+                          (insert (if (fboundp 'ollama-buddy-web-search--org-escape)
+                                      (ollama-buddy-web-search--org-escape content)
+                                    content))
+                          (insert "\n#+end_example\n"))))))))
 
             (goto-char (point-min))
             (view-mode 1)
