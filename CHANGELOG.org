@@ -11,6 +11,78 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-05 Wed> *1.3*
+
+Added Web Search Integration
+
+This release introduces real-time web search capabilities through Ollama's Web Search API, allowing LLMs to access current information from the web.
+
+*** Web Search Pipeline
+
+The web search feature implements a multi-stage pipeline:
+
+1. *Query to Ollama API*: Search queries are sent to =https://ollama.com/api/web_search= via REST API with Bearer token authentication
+2. *URL Extraction*: The API returns search results with URLs (the content snippets from the API are currently ignored in favor of fetching full page content)
+3. *eww/shr Processing*: Each URL is fetched and processed through Emacs' built-in eww/shr HTML renderer, which:
+   - Parses the HTML using =libxml-parse-html-region=
+   - Extracts the main content (looking for =<article>=, =<main>=, or content divs)
+   - Renders to clean plain text using =shr-insert-document=
+   - Escapes org-mode special characters (=*= and =#= at line starts become =,*= and =,#=)
+4. *Context Attachment*: The cleaned text is formatted with org headings and attached to the conversation context
+5. *LLM Submission*: The search results are included when sending prompts to any configured LLM provider
+
+*** Features
+
+- Added =ollama-buddy-web-search.el= module
+- Inline search syntax: =@search(query)= in prompts automatically triggers search
+- Manual commands:
+  - =M-x ollama-buddy-web-search= - Search and display results in a buffer
+  - =M-x ollama-buddy-web-search-attach= - Search and attach to conversation context
+- Keybindings: =C-c / s= (search), =C-c / a= (attach)
+- Transient menu: =C-c O /= for web search operations
+- Async URL fetching for better performance
+- Status line shows 🔍N indicator when web searches are attached
+- Web searches integrated into attachment system:
+  - =C-c C-w= shows both file attachments and web searches
+  - =C-c 0= clears all attachments including web searches
+- Full content display in attachment viewer with org-mode folding
+
+*** Provider Support
+
+Web search works with all LLM providers:
+- Local Ollama models (=o:= prefix)
+- OpenAI (=a:= prefix)
+- Anthropic Claude (=c:= prefix)
+- Google Gemini (=g:= prefix)
+- X Grok (=k:= prefix)
+- GitHub Copilot (=p:= prefix)
+- Mistral Codestral (=s:= prefix)
+
+*** Configuration
+
+#+begin_src elisp
+;; Required: Get API key from https://ollama.com/settings/keys
+(setq ollama-buddy-web-search-api-key "your-api-key")
+
+;; Optional customizations
+(setq ollama-buddy-web-search-max-results 5)        ; Number of URLs to fetch
+(setq ollama-buddy-web-search-snippet-length 2000)  ; Max chars per result
+(setq ollama-buddy-web-search-include-urls nil)     ; Include URLs in context
+
+;; Load the module
+(require 'ollama-buddy-web-search nil t)
+#+end_src
+
+*** Example Usage
+
+#+begin_src
+;; Inline search in prompt
+What are the key points from @search(emacs 30 new features)?
+
+;; Multiple searches
+Compare @search(rust async) with @search(go concurrency)
+#+end_src
+
 ** <2026-02-02 Sun> *1.2.1*
 
 Added attachment count indicator to header-line
