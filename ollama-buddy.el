@@ -112,9 +112,6 @@
 ;; Web search forward declarations
 (declare-function ollama-buddy-web-search "ollama-buddy-web-search")
 (declare-function ollama-buddy-web-search-attach "ollama-buddy-web-search")
-(declare-function ollama-buddy-web-search-detach "ollama-buddy-web-search")
-(declare-function ollama-buddy-web-search-show "ollama-buddy-web-search")
-(declare-function ollama-buddy-web-search-clear "ollama-buddy-web-search")
 (declare-function ollama-buddy-web-search-get-context "ollama-buddy-web-search")
 (declare-function ollama-buddy-web-search-count "ollama-buddy-web-search")
 (declare-function ollama-buddy-web-search--org-escape "ollama-buddy-web-search")
@@ -3236,29 +3233,23 @@ When the operation completes, CALLBACK is called with no arguments if provided."
   (message "File detached: %s" file))
 
 (defun ollama-buddy-clear-attachments ()
-  "Clear all current file attachments."
-  (interactive)
-  (when (or (null ollama-buddy--current-attachments)
-            (yes-or-no-p "Clear all attached files? "))
-    (setq ollama-buddy--current-attachments nil)
-    (ollama-buddy--update-status "All attachments cleared")
-    (message "All attachments cleared")))
-
-(defun ollama-buddy-clear-all-context ()
-  "Clear all context: file attachments and web search results."
+  "Clear all current attachments including file attachments and web searches."
   (interactive)
   (let ((has-attachments ollama-buddy--current-attachments)
         (has-web-search (and (featurep 'ollama-buddy-web-search)
                             (boundp 'ollama-buddy-web-search--current-results)
                             ollama-buddy-web-search--current-results)))
     (when (or (and (not has-attachments) (not has-web-search))
-              (yes-or-no-p "Clear all attachments and web search results? "))
+              (yes-or-no-p "Clear all attachments and web searches? "))
       (setq ollama-buddy--current-attachments nil)
       (when (featurep 'ollama-buddy-web-search)
         (when (boundp 'ollama-buddy-web-search--current-results)
           (setq ollama-buddy-web-search--current-results nil)))
-      (ollama-buddy--update-status "All context cleared")
-      (message "All attachments and web search results cleared"))))
+      (ollama-buddy--update-status "All attachments cleared")
+      (message "All attachments cleared"))))
+
+(defalias 'ollama-buddy-clear-all-context 'ollama-buddy-clear-attachments
+  "Alias for `ollama-buddy-clear-attachments'.")
 
 ;; dired integration
 
@@ -3365,9 +3356,6 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     ;; web search (requires ollama-buddy-web-search)
     (define-key map (kbd "C-c / s") #'ollama-buddy-web-search)
     (define-key map (kbd "C-c / a") #'ollama-buddy-web-search-attach)
-    (define-key map (kbd "C-c / d") #'ollama-buddy-web-search-detach)
-    (define-key map (kbd "C-c / c") #'ollama-buddy-web-search-clear)
-    (define-key map (kbd "C-c 9") #'ollama-buddy-clear-all-context)
 
     (define-key map (kbd "C-c e") #'ollama-buddy-switch-communication-backend)
     

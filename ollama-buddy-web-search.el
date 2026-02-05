@@ -14,8 +14,9 @@
 ;; Usage:
 ;;   M-x ollama-buddy-web-search           - Search and display results
 ;;   M-x ollama-buddy-web-search-attach    - Search and attach to context
-;;   M-x ollama-buddy-web-search-detach    - Remove search results from context
+;;   Use @search(query) inline in prompts  - Automatic search and attach
 ;;
+;; Web searches are cleared with M-x ollama-buddy-clear-attachments.
 ;; The search results appear in the status line as 🔍N (N = number of searches).
 
 ;;; Code:
@@ -405,35 +406,6 @@ Returns (success . results-or-error)."
                 (message "Web search attached: \"%s\" (%d results, ~%d tokens)"
                          query (length limited-results) token-estimate)))))
        (message "Web search failed: %s" result)))))
-
-(defun ollama-buddy-web-search-detach (&optional query)
-  "Remove web search results from context.
-If QUERY is provided, remove that specific search; otherwise prompt."
-  (interactive
-   (list (when ollama-buddy-web-search--current-results
-           (completing-read "Detach web search: "
-                           (mapcar (lambda (r) (plist-get r :query))
-                                   ollama-buddy-web-search--current-results)
-                           nil t))))
-  (if (null ollama-buddy-web-search--current-results)
-      (message "No web search results attached")
-    (setq ollama-buddy-web-search--current-results
-          (cl-remove query ollama-buddy-web-search--current-results
-                     :test #'string= :key (lambda (r) (plist-get r :query))))
-    (ollama-buddy--update-status
-     (format "Web search detached (%d remaining)"
-             (length ollama-buddy-web-search--current-results)))
-    (message "Web search detached: \"%s\"" query)))
-
-(defun ollama-buddy-web-search-clear ()
-  "Clear all web search results from context."
-  (interactive)
-  (when (or (null ollama-buddy-web-search--current-results)
-            (y-or-n-p (format "Clear all %d web search result(s)? "
-                             (length ollama-buddy-web-search--current-results))))
-    (setq ollama-buddy-web-search--current-results nil)
-    (ollama-buddy--update-status "All web searches cleared")
-    (message "All web search results cleared")))
 
 ;; Context integration functions
 
