@@ -65,6 +65,9 @@
 (declare-function ollama-buddy-copilot-login "ollama-buddy-copilot")
 (declare-function ollama-buddy-copilot-logout "ollama-buddy-copilot")
 (declare-function ollama-buddy-copilot-status "ollama-buddy-copilot")
+(declare-function ollama-buddy-web-search "ollama-buddy-web-search")
+(declare-function ollama-buddy-web-search-attach "ollama-buddy-web-search")
+(declare-function ollama-buddy-web-search-count "ollama-buddy-web-search")
 
 (transient-define-prefix ollama-buddy-transient-menu ()
   "Ollama Buddy main menu."
@@ -75,6 +78,7 @@
    ["Chat"
     ("o" "Open Chat" ollama-buddy--open-chat)
     ("A" "Attachments" ollama-buddy-transient-attachment-menu)
+    ("/" "Web Search" ollama-buddy-transient-web-search-menu)
     ("a" "Authentication" ollama-buddy-transient-auth-menu)
     ("b" "Custom Menu " ollama-buddy-menu)
     ]
@@ -297,6 +301,33 @@
    ("d" "Detach file" ollama-buddy-detach-file)
    ("0" "Clear all attachments" ollama-buddy-clear-attachments)
    ("q" "Quit" transient-quit-one)])
+
+(defun ollama-buddy--web-search-status ()
+  "Return web search status for transient display."
+  (if (and (featurep 'ollama-buddy-web-search)
+           (fboundp 'ollama-buddy-web-search-count))
+      (let ((count (ollama-buddy-web-search-count)))
+        (if (> count 0)
+            (format "🔍 %d attached" count)
+          "No searches attached"))
+    "Module not loaded"))
+
+(transient-define-prefix ollama-buddy-transient-web-search-menu ()
+  "Web search menu for Ollama Buddy."
+  [:description
+   (lambda () (concat "Web Search - " (ollama-buddy--web-search-status)))
+   ["Search"
+    ("s" "Search & Display" ollama-buddy-web-search)
+    ("a" "Search & Attach" ollama-buddy-web-search-attach)]
+   ["Manage"
+    ("w" "Show Attachments" ollama-buddy-show-attachments)
+    ("0" "Clear All" ollama-buddy-clear-attachments)]
+   ["Info"
+    :description
+    (lambda ()
+      "Use @search(query) inline in prompts for automatic search")]
+   ["Navigation"
+    ("q" "Quit" transient-quit-one)]])
 
 (transient-define-prefix ollama-buddy-transient-user-prompts-menu ()
   "Transient menu for user system prompts."
