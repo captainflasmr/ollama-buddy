@@ -96,45 +96,115 @@ Adds comma before lines starting with * or #+ to prevent org interpretation."
     (replace-regexp-in-string "^\\([*#]\\)" ",\\1" text)))
 
 
-(defun ollama-buddy-web-search--fetch-url-with-shr (url)
-  "Fetch URL and render clean text using eww/shr."
-  (condition-case err
-      (with-temp-buffer
-        (url-insert-file-contents url)
-        (let* ((dom (libxml-parse-html-region (point-min) (point-max)))
-               ;; Try to find main content area
-               (main (or (car (dom-by-tag dom 'article))
-                         (car (dom-by-tag dom 'main))
-                         (car (dom-by-class dom "content"))
-                         (car (dom-by-class dom "main"))
-                         dom)))
-          (erase-buffer)
-          (let ((shr-width 80)
-                (shr-use-fonts nil))
-            (shr-insert-document main))
-          (string-trim (buffer-substring-no-properties (point-min) (point-max)))))
-    (error
-     (message "Failed to fetch %s: %s" url (error-message-string err))
-     nil)))
+(defun ollama-buddy-web-search--render-html-to-text (html-string)
+  "Render HTML-STRING to plain text using shr."
+  (with-temp-buffer
+    (insert html-string)
+    (let* ((dom (libxml-parse-html-region (point-min) (point-max)))
+           (main (or (car (dom-by-tag dom 'article))
+                     (car (dom-by-tag dom 'main))
+                     (car (dom-by-class dom "content"))
+                     (car (dom-by-class dom "main"))
+                     dom)))
+      (erase-buffer)
+      (let ((shr-width 80)
+            (shr-use-fonts nil))
+        (shr-insert-document main))
+      (string-trim (buffer-substring-no-properties (point-min) (point-max))))))
 
-(defun ollama-buddy-web-search--get-result-content (result)
-  "Get content for RESULT by fetching URL via eww/shr."
+(defun ollama-buddy-web-search--fetch-url-async (url callback)
+  "Fetch URL asynchronously and call CALLBACK with rendered text.
+CALLBACK is called with (url content) where content may be nil on error."
+  (condition-case err
+      (url-retrieve
+       url
+       (lambda (status url callback)
+         (if (plist-get status :error)
+             (progn
+               (message "Failed to fetch %s: %s" url (plist-get status :error))
+               (funcall callback url nil))
+           (goto-char (point-min))
+           (if (re-search-forward "\r?\n\r?\n" nil t)
+               (let* ((html (buffer-substring-no-properties (point) (point-max)))
+                      (content (condition-case nil
+                                   (ollama-buddy-web-search--render-html-to-text html)
+                                 (error nil))))
+                 (funcall callback url content))
+             (funcall callback url nil)))
+         (kill-buffer))
+       (list url callback)
+       t t)
+    (error
+     (message "Error starting fetch for %s: %s" url (error-message-string err))
+     (funcall callback url nil))))
+
+(defun ollama-buddy-web-search--fetch-all-urls-async (results callback)
+  "Fetch all URLs from RESULTS asynchronously.
+CALLBACK is called with results alist mapping URLs to content when all complete."
+  (let* ((urls (delq nil (mapcar (lambda (r)
+                                   (or (alist-get 'url r) (alist-get 'link r)))
+                                 results)))
+         (total (length urls))
+         (completed 0)
+         (content-map (make-hash-table :test 'equal)))
+    (if (= total 0)
+        (funcall callback content-map)
+      (message "Fetching %d URLs..." total)
+      (dolist (url urls)
+        (ollama-buddy-web-search--fetch-url-async
+         url
+         (lambda (url content)
+           (puthash url (or content "") content-map)
+           (cl-incf completed)
+           (message "Fetched %d/%d URLs" completed total)
+           (when (= completed total)
+             (funcall callback content-map))))))))
+
+(defun ollama-buddy-web-search--get-result-content-from-map (result content-map)
+  "Get content for RESULT from pre-fetched CONTENT-MAP."
   (let ((url (or (alist-get 'url result)
                  (alist-get 'link result)
                  "")))
     (if (not (string-empty-p url))
-        (progn
-          (message "Fetching %s..." url)
-          (or (ollama-buddy-web-search--fetch-url-with-shr url) ""))
+        (or (gethash url content-map) "")
       "")))
 
-(defun ollama-buddy-web-search--format-results (results query)
-  "Format search RESULTS for QUERY as context string."
+(defun ollama-buddy-web-search--fetch-url-sync (url)
+  "Fetch URL synchronously and return rendered text."
+  (condition-case err
+      (with-temp-buffer
+        (url-insert-file-contents url)
+        (let ((html (buffer-substring-no-properties (point-min) (point-max))))
+          (ollama-buddy-web-search--render-html-to-text html)))
+    (error
+     (message "Failed to fetch %s: %s" url (error-message-string err))
+     "")))
+
+(defun ollama-buddy-web-search--fetch-all-urls-sync (results)
+  "Fetch all URLs from RESULTS synchronously.
+Returns a hash-table mapping URLs to content."
+  (let ((content-map (make-hash-table :test 'equal))
+        (urls (delq nil (mapcar (lambda (r)
+                                  (or (alist-get 'url r) (alist-get 'link r)))
+                                results)))
+        (idx 0)
+        (total (length results)))
+    (dolist (url urls)
+      (cl-incf idx)
+      (message "Fetching URL %d/%d..." idx total)
+      (puthash url (ollama-buddy-web-search--fetch-url-sync url) content-map))
+    content-map))
+
+(defun ollama-buddy-web-search--format-results (results query &optional content-map)
+  "Format search RESULTS for QUERY as context string.
+CONTENT-MAP is a hash-table mapping URLs to pre-fetched content."
   (let ((formatted-results
          (mapconcat
           (lambda (result)
             (let* ((title (or (alist-get 'title result) "Untitled"))
-                   (content (ollama-buddy-web-search--get-result-content result))
+                   (content (if content-map
+                                (ollama-buddy-web-search--get-result-content-from-map result content-map)
+                              ""))
                    (url (or (alist-get 'url result)
                             (alist-get 'link result)
                             ""))
@@ -235,34 +305,40 @@ Returns (success . results-or-error)."
    query
    (lambda (success result)
      (if success
-         (let ((buf (get-buffer-create "*Ollama Web Search*")))
-           (with-current-buffer buf
-             (let ((inhibit-read-only t))
-               (erase-buffer)
-               (insert "#+TITLE: Web Search Results\n")
-               (insert (format "#+SUBTITLE: Query: %s\n" query))
-               (insert (format "#+DATE: %s\n\n" (format-time-string "%Y-%m-%d %H:%M")))
-               (insert (format "Found *%d* results:\n\n" (length result)))
-               (let ((idx 0))
-                 (dolist (item result)
-                   (cl-incf idx)
-                   (let* ((title (or (alist-get 'title item) "Untitled"))
-                          (content (ollama-buddy-web-search--get-result-content item))
-                          (snippet (truncate-string-to-width
-                                    (or content "") ollama-buddy-web-search-snippet-length))
-                          (url (or (alist-get 'url item)
-                                   (alist-get 'link item)
-                                   "")))
-                     (insert (format "* %d. %s\n" idx title))
-                     (when (not (string-empty-p url))
-                       (insert (format ":PROPERTIES:\n:URL: %s\n:END:\n" url)))
-                     (insert "#+begin_example\n")
-                     (insert (ollama-buddy-web-search--org-escape snippet))
-                     (insert "\n#+end_example\n\n"))))
-               (goto-char (point-min))
-               (org-mode)
-               (view-mode 1)))
-           (display-buffer buf))
+         ;; Fetch all URLs asynchronously, then display
+         (ollama-buddy-web-search--fetch-all-urls-async
+          result
+          (lambda (content-map)
+            (let ((buf (get-buffer-create "*Ollama Web Search*")))
+              (with-current-buffer buf
+                (let ((inhibit-read-only t))
+                  (erase-buffer)
+                  (insert "#+TITLE: Web Search Results\n")
+                  (insert (format "#+SUBTITLE: Query: %s\n" query))
+                  (insert (format "#+DATE: %s\n\n" (format-time-string "%Y-%m-%d %H:%M")))
+                  (insert (format "Found *%d* results:\n\n" (length result)))
+                  (let ((idx 0))
+                    (dolist (item result)
+                      (cl-incf idx)
+                      (let* ((title (or (alist-get 'title item) "Untitled"))
+                             (content (ollama-buddy-web-search--get-result-content-from-map
+                                       item content-map))
+                             (snippet (truncate-string-to-width
+                                       (or content "") ollama-buddy-web-search-snippet-length))
+                             (url (or (alist-get 'url item)
+                                      (alist-get 'link item)
+                                      "")))
+                        (insert (format "* %d. %s\n" idx title))
+                        (when (not (string-empty-p url))
+                          (insert (format ":PROPERTIES:\n:URL: %s\n:END:\n" url)))
+                        (insert "#+begin_example\n")
+                        (insert (ollama-buddy-web-search--org-escape snippet))
+                        (insert "\n#+end_example\n\n"))))
+                  (goto-char (point-min))
+                  (org-mode)
+                  (view-mode 1)))
+              (display-buffer buf)
+              (message "Web search complete: %d results" (length result)))))
        (message "Web search failed: %s" result)))))
 
 (defun ollama-buddy-web-search-attach (query)
@@ -279,46 +355,51 @@ Returns (success . results-or-error)."
         (ollama-buddy-web-search-detach query)
       (user-error "Search attachment cancelled")))
 
-  (let ((result (ollama-buddy-web-search--fetch-sync query)))
-    (if (car result)
-        (let* ((results (cdr result))
-               (limited-results (seq-take results ollama-buddy-web-search-max-results))
-               (formatted-content (ollama-buddy-web-search--format-results
-                                  limited-results query))
-               (token-estimate (ollama-buddy-web-search--estimate-tokens formatted-content))
-               (search-attachment
-                (list :query query
-                      :content formatted-content
-                      :results limited-results
-                      :size (length formatted-content)
-                      :tokens token-estimate
-                      :timestamp (current-time))))
+  ;; Async fetch search results, then fetch URLs, then attach
+  (ollama-buddy-web-search--fetch
+   query
+   (lambda (success result)
+     (if success
+         (let ((limited-results (seq-take result ollama-buddy-web-search-max-results)))
+           ;; Fetch all URLs asynchronously
+           (ollama-buddy-web-search--fetch-all-urls-async
+            limited-results
+            (lambda (content-map)
+              (let* ((formatted-content (ollama-buddy-web-search--format-results
+                                         limited-results query content-map))
+                     (token-estimate (ollama-buddy-web-search--estimate-tokens formatted-content))
+                     (search-attachment
+                      (list :query query
+                            :content formatted-content
+                            :results limited-results
+                            :size (length formatted-content)
+                            :tokens token-estimate
+                            :timestamp (current-time))))
 
-          ;; Add to search results
-          (push search-attachment ollama-buddy-web-search--current-results)
+                ;; Add to search results
+                (push search-attachment ollama-buddy-web-search--current-results)
 
-          ;; Update display
-          (ollama-buddy--update-status
-           (format "Web search attached: \"%s\""
-                   (if (> (length query) 30)
-                       (concat (substring query 0 27) "...")
-                     query)))
+                ;; Update display
+                (ollama-buddy--update-status
+                 (format "Web search attached: \"%s\""
+                         (if (> (length query) 30)
+                             (concat (substring query 0 27) "...")
+                           query)))
 
-          ;; Show in chat buffer
-          (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-            (let ((inhibit-read-only t))
-              (goto-char (point-max))
-              (insert (format "\n\n- 🔍 Web search attached: \"%s\" (%d results%s)\n"
-                             query
-                             (length limited-results)
-                             (if ollama-buddy-web-search-show-token-estimate
-                                 (format ", ~%d tokens" token-estimate)
-                               "")))))
+                ;; Show in chat buffer
+                (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+                  (let ((inhibit-read-only t))
+                    (goto-char (point-max))
+                    (insert (format "\n\n- 🔍 Web search attached: \"%s\" (%d results%s)\n"
+                                    query
+                                    (length limited-results)
+                                    (if ollama-buddy-web-search-show-token-estimate
+                                        (format ", ~%d tokens" token-estimate)
+                                      "")))))
 
-          (message "Web search attached: \"%s\" (%d results, ~%d tokens)"
-                   query (length limited-results) token-estimate))
-
-      (message "Web search failed: %s" (cdr result)))))
+                (message "Web search attached: \"%s\" (%d results, ~%d tokens)"
+                         query (length limited-results) token-estimate)))))
+       (message "Web search failed: %s" result)))))
 
 (defun ollama-buddy-web-search-detach (&optional query)
   "Remove web search results from context.
@@ -393,19 +474,21 @@ Returns list of query strings found in /search: query/ delimiters."
 
 (defun ollama-buddy-web-search-process-inline (text)
   "Process TEXT for inline search queries.
-Extracts /search: query/ patterns, performs searches, attaches results.
+Extracts @search(query) patterns, performs searches, attaches results.
 Returns the text with search delimiters removed."
   (let ((queries (ollama-buddy-web-search-extract-inline-queries text)))
     (when queries
       (dolist (query queries)
         (message "Inline web search: %s" query)
-        ;; Perform synchronous search and attach
+        ;; Perform synchronous search and attach (with URL content fetching)
         (let ((result (ollama-buddy-web-search--fetch-sync query)))
           (if (car result)
               (let* ((results (cdr result))
                      (limited-results (seq-take results ollama-buddy-web-search-max-results))
+                     ;; Fetch URL content synchronously for inline searches
+                     (content-map (ollama-buddy-web-search--fetch-all-urls-sync limited-results))
                      (formatted-content (ollama-buddy-web-search--format-results
-                                         limited-results query))
+                                         limited-results query content-map))
                      (token-estimate (ollama-buddy-web-search--estimate-tokens formatted-content))
                      (search-attachment
                       (list :query query
