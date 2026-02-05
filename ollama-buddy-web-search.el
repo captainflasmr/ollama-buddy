@@ -349,49 +349,6 @@ If QUERY is provided, remove that specific search; otherwise prompt."
     (ollama-buddy--update-status "All web searches cleared")
     (message "All web search results cleared")))
 
-(defun ollama-buddy-web-search-show ()
-  "Display currently attached web search results."
-  (interactive)
-  (if (null ollama-buddy-web-search--current-results)
-      (message "No web search results attached")
-    (let ((buf (get-buffer-create "*Ollama Web Search Context*")))
-      (with-current-buffer buf
-        (let ((inhibit-read-only t))
-          (erase-buffer)
-          (org-mode)
-          (insert "#+TITLE: Attached Web Search Results\n\n")
-          (insert (format "Total searches: %d\n\n"
-                         (length ollama-buddy-web-search--current-results)))
-          (dolist (search ollama-buddy-web-search--current-results)
-            (insert (format "* Search: \"%s\"\n" (plist-get search :query)))
-            (insert ":PROPERTIES:\n")
-            (insert (format ":RESULTS: %d\n" (length (plist-get search :results))))
-            (insert (format ":TOKENS: ~%d\n" (plist-get search :tokens)))
-            (insert (format ":ATTACHED: %s\n"
-                           (format-time-string "%Y-%m-%d %H:%M:%S"
-                                              (plist-get search :timestamp))))
-            (insert ":END:\n\n")
-            ;; Format each result as a sub-heading
-            (let ((idx 0))
-              (dolist (result (plist-get search :results))
-                (cl-incf idx)
-                (let* ((title (or (alist-get 'title result) "Untitled"))
-                       (content (ollama-buddy-web-search--get-result-content result))
-                       (snippet (truncate-string-to-width
-                                 (or content "") ollama-buddy-web-search-snippet-length))
-                       (url (or (alist-get 'url result)
-                                (alist-get 'link result)
-                                "")))
-                  (insert (format "** %d. %s\n" idx title))
-                  (when (not (string-empty-p url))
-                    (insert (format ":PROPERTIES:\n:URL: %s\n:END:\n" url)))
-                  (insert "#+begin_example\n")
-                  (insert (ollama-buddy-web-search--org-escape snippet))
-                  (insert "\n#+end_example\n\n")))))
-          (goto-char (point-min))
-          (view-mode 1)))
-      (display-buffer buf))))
-
 ;; Context integration functions
 
 (defun ollama-buddy-web-search-get-context ()

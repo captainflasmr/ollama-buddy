@@ -3150,32 +3150,64 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (message "File attached: %s" file)))
 
 (defun ollama-buddy-show-attachments ()
-  "Display currently attached files."
+  "Display currently attached files and web searches."
   (interactive)
-  (if (null ollama-buddy--current-attachments)
-      (message "No files attached to current conversation")
-    (let ((buf (get-buffer-create "*Ollama Attachments*")))
-      (with-current-buffer buf
-        (let ((inhibit-read-only t))
-          (org-mode)
-          (setq-local org-hide-emphasis-markers t)
-          (setq-local org-hide-leading-stars t)
-          (erase-buffer)
-          
-          (insert "#+title: Current File Attachments\n")
-          (dolist (attachment ollama-buddy--current-attachments)
-            (let ((file (plist-get attachment :file))
-                  (size (plist-get attachment :size))
-                  (type (plist-get attachment :type)))
-              (insert (format "\n* %s\n" file))
-              (insert (format "\nSize: %d bytes, Type: %s\n" size (or type "unknown")))
-              (insert (format "\n%s\n\n" 
-                              (substring (plist-get attachment :content) 0 
-                                         (length (plist-get attachment :content)))))))
-          (goto-char (point-min))
-          (view-mode 1)
-          (org-content)))
-      (display-buffer buf))))
+  (let ((has-files ollama-buddy--current-attachments)
+        (has-searches (and (featurep 'ollama-buddy-web-search)
+                           (boundp 'ollama-buddy-web-search--current-results)
+                           ollama-buddy-web-search--current-results)))
+    (if (and (null has-files) (null has-searches))
+        (message "No files or web searches attached to current conversation")
+      (let ((buf (get-buffer-create "*Ollama Attachments*")))
+        (with-current-buffer buf
+          (let ((inhibit-read-only t))
+            (org-mode)
+            (setq-local org-hide-emphasis-markers t)
+            (setq-local org-hide-leading-stars t)
+            (erase-buffer)
+
+            (insert "#+title: Current Context Attachments\n\n")
+
+            ;; File attachments section
+            (when has-files
+              (insert (format "* File Attachments (%d)\n" (length ollama-buddy--current-attachments)))
+              (dolist (attachment ollama-buddy--current-attachments)
+                (let ((file (plist-get attachment :file))
+                      (size (plist-get attachment :size))
+                      (type (plist-get attachment :type)))
+                  (insert (format "\n** %s\n" (file-name-nondirectory file)))
+                  (insert (format ":PROPERTIES:\n:PATH: %s\n:SIZE: %d bytes\n:TYPE: %s\n:END:\n"
+                                  file size (or type "unknown")))
+                  (insert "#+begin_example\n")
+                  (insert (plist-get attachment :content))
+                  (insert "\n#+end_example\n"))))
+
+            ;; Web search attachments section
+            (when has-searches
+              (insert (format "\n* Web Searches (%d)\n" (length ollama-buddy-web-search--current-results)))
+              (dolist (search ollama-buddy-web-search--current-results)
+                (let ((query (plist-get search :query))
+                      (results (plist-get search :results))
+                      (tokens (plist-get search :tokens))
+                      (timestamp (plist-get search :timestamp)))
+                  (insert (format "\n** %s\n" query))
+                  (insert (format ":PROPERTIES:\n:RESULTS: %d\n:TOKENS: ~%d\n:TIME: %s\n:END:\n"
+                                  (length results) tokens
+                                  (format-time-string "%Y-%m-%d %H:%M:%S" timestamp)))
+                  ;; Show each result as a sub-heading
+                  (let ((idx 0))
+                    (dolist (result results)
+                      (cl-incf idx)
+                      (let ((title (or (alist-get 'title result) "Untitled"))
+                            (url (or (alist-get 'url result) (alist-get 'link result) "")))
+                        (insert (format "*** %d. %s\n" idx title))
+                        (when (not (string-empty-p url))
+                          (insert (format ":PROPERTIES:\n:URL: %s\n:END:\n" url)))))))))
+
+            (goto-char (point-min))
+            (view-mode 1)
+            (org-content)))
+        (display-buffer buf)))))
 
 (defun ollama-buddy-detach-file (file)
   "Remove FILE from current attachments."
@@ -3324,7 +3356,6 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c / s") #'ollama-buddy-web-search)
     (define-key map (kbd "C-c / a") #'ollama-buddy-web-search-attach)
     (define-key map (kbd "C-c / d") #'ollama-buddy-web-search-detach)
-    (define-key map (kbd "C-c / l") #'ollama-buddy-web-search-show)
     (define-key map (kbd "C-c / c") #'ollama-buddy-web-search-clear)
     (define-key map (kbd "C-c 9") #'ollama-buddy-clear-all-context)
 
