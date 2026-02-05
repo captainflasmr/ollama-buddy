@@ -109,6 +109,15 @@
 (declare-function ollama-buddy-transient-parameter-menu "ollama-buddy-transient")
 (declare-function ollama-buddy-transient-profile-menu "ollama-buddy-transient")
 
+;; Web search forward declarations
+(declare-function ollama-buddy-web-search "ollama-buddy-web-search")
+(declare-function ollama-buddy-web-search-attach "ollama-buddy-web-search")
+(declare-function ollama-buddy-web-search-detach "ollama-buddy-web-search")
+(declare-function ollama-buddy-web-search-show "ollama-buddy-web-search")
+(declare-function ollama-buddy-web-search-clear "ollama-buddy-web-search")
+(declare-function ollama-buddy-web-search-get-context "ollama-buddy-web-search")
+(declare-function ollama-buddy-web-search-count "ollama-buddy-web-search")
+
 (defvar ollama-buddy--reasoning-skip-newlines nil
   "Whether to skip leading newlines after reasoning section ends.")
 
@@ -2011,7 +2020,7 @@ Shows cached status. Use signin/signout to update or try a cloud model request."
 
 (defun ollama-buddy--calculate-prompt-context-percentage ()
   "Calculate and return the context percentage for the current prompt."
-  (let* ((model (or ollama-buddy--current-model 
+  (let* ((model (or ollama-buddy--current-model
                     ollama-buddy-default-model))
          (total-tokens 0)
          (history-tokens 0)
@@ -2025,27 +2034,33 @@ Shows cached status. Use signin/signout to update or try a cloud model request."
                 (format "%s" content)))
             ollama-buddy--current-attachments
             " ")))
+         ;; Web search tokens
+         (web-search-tokens
+          (if (and (featurep 'ollama-buddy-web-search)
+                   (fboundp 'ollama-buddy-web-search-total-tokens))
+              (ollama-buddy-web-search-total-tokens)
+            0))
          (prompt-tokens
           (ollama-buddy--estimate-token-count
            (car (ollama-buddy--get-prompt-content))))
-         (system-prompt-tokens 
+         (system-prompt-tokens
           (if ollama-buddy--current-system-prompt
               (ollama-buddy--estimate-token-count ollama-buddy--current-system-prompt)
             0)))
-    
+
     ;; Calculate history tokens
     (when history
       (dolist (msg history)
         (let ((content (alist-get 'content msg)))
           (when content
-            (setq total-tokens (+ total-tokens 
+            (setq total-tokens (+ total-tokens
                                   (ollama-buddy--estimate-token-count content)))))))
 
     (setq history-tokens total-tokens)
-    
+
     ;; Add system prompt tokens if not already in history
     (when (and ollama-buddy--current-system-prompt
-               (not (seq-find (lambda (msg) 
+               (not (seq-find (lambda (msg)
                                 (string= (alist-get 'role msg) "system"))
                               history)))
       (setq total-tokens (+ total-tokens system-prompt-tokens)))
@@ -2054,28 +2069,33 @@ Shows cached status. Use signin/signout to update or try a cloud model request."
     (when ollama-buddy--current-attachments
       (setq total-tokens (+ total-tokens attachment-tokens)))
 
+    ;; and web search results
+    (when (> web-search-tokens 0)
+      (setq total-tokens (+ total-tokens web-search-tokens)))
+
     (setq total-tokens (+ total-tokens prompt-tokens))
-    
+
     ;; Calculate total tokens and percentage
     (let* ((context-percentage (/ (float total-tokens) max-context-size)))
-      
+
       ;; Save the current percentage
       (setq ollama-buddy--current-context-percentage context-percentage)
-      
+
       ;; Save the total token count
       (setq ollama-buddy--current-context-tokens total-tokens)
-      
+
       ;; Save the maximum context size
       (setq ollama-buddy--current-context-max-size max-context-size)
-      
+
       ;; Save the breakdown for detailed display
       (setq ollama-buddy--current-context-breakdown
             (list :history-tokens history-tokens
                   :prompt-tokens prompt-tokens
                   :system-tokens system-prompt-tokens
                   :attachment-tokens attachment-tokens
+                  :web-search-tokens web-search-tokens
                   :total-tokens total-tokens))
-      
+
       ;; Return the percentage
       context-percentage)))
 
@@ -2119,13 +2139,15 @@ Shows cached status. Use signin/signout to update or try a cloud model request."
           ;; Show breakdown if available
           (when ollama-buddy--current-context-breakdown
             (let ((breakdown ollama-buddy--current-context-breakdown))
-              (insert (format "  History          : %d tokens\n" 
+              (insert (format "  History          : %d tokens\n"
                               (plist-get breakdown :history-tokens)))
-              (insert (format "  System prompt    : %d tokens\n" 
+              (insert (format "  System prompt    : %d tokens\n"
                               (plist-get breakdown :system-tokens)))
-              (insert (format "  Attachments      : %d tokens\n" 
+              (insert (format "  Attachments      : %d tokens\n"
                               (plist-get breakdown :attachment-tokens)))
-              (insert (format "  Current prompt   : %d tokens\n" 
+              (insert (format "  Web search       : %d tokens\n"
+                              (or (plist-get breakdown :web-search-tokens) 0)))
+              (insert (format "  Current prompt   : %d tokens\n"
                               (plist-get breakdown :prompt-tokens))))))
 
         (goto-char (point-min))
@@ -2213,12 +2235,22 @@ authentication via `ollama signin'."
                                  content)))
                      ollama-buddy--current-attachments
                      ""))))
+         ;; Get web search context if available
+         (web-search-context
+          (when (and (featurep 'ollama-buddy-web-search)
+                     (fboundp 'ollama-buddy-web-search-get-context))
+            (ollama-buddy-web-search-get-context)))
+         ;; Combine all context
+         (combined-context
+          (let ((contexts (delq nil (list attachment-context web-search-context))))
+            (when contexts
+              (concat "\n\n" (mapconcat #'identity contexts "\n\n")))))
          ;; Create the current message, handling vision content if needed
          (current-message (if has-images
                               (ollama-buddy--create-vision-message prompt image-files)
                             `((role . "user")
-                              (content . ,(if attachment-context
-                                              (concat prompt attachment-context)
+                              (content . ,(if combined-context
+                                              (concat prompt combined-context)
                                             prompt)))))
          ;; Add the current message to the messages
          (messages-all (append messages-with-system (list current-message)))
@@ -3165,6 +3197,22 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (ollama-buddy--update-status "All attachments cleared")
     (message "All attachments cleared")))
 
+(defun ollama-buddy-clear-all-context ()
+  "Clear all context: file attachments and web search results."
+  (interactive)
+  (let ((has-attachments ollama-buddy--current-attachments)
+        (has-web-search (and (featurep 'ollama-buddy-web-search)
+                            (boundp 'ollama-buddy-web-search--current-results)
+                            ollama-buddy-web-search--current-results)))
+    (when (or (and (not has-attachments) (not has-web-search))
+              (yes-or-no-p "Clear all attachments and web search results? "))
+      (setq ollama-buddy--current-attachments nil)
+      (when (featurep 'ollama-buddy-web-search)
+        (when (boundp 'ollama-buddy-web-search--current-results)
+          (setq ollama-buddy-web-search--current-results nil)))
+      (ollama-buddy--update-status "All context cleared")
+      (message "All attachments and web search results cleared"))))
+
 ;; dired integration
 
 (defun ollama-buddy-dired-attach-marked-files ()
@@ -3266,6 +3314,14 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c C-w") #'ollama-buddy-show-attachments)
     (define-key map (kbd "C-c C-d") #'ollama-buddy-detach-file)
     (define-key map (kbd "C-c 0") #'ollama-buddy-clear-attachments)
+
+    ;; web search (requires ollama-buddy-web-search)
+    (define-key map (kbd "C-c / s") #'ollama-buddy-web-search)
+    (define-key map (kbd "C-c / a") #'ollama-buddy-web-search-attach)
+    (define-key map (kbd "C-c / d") #'ollama-buddy-web-search-detach)
+    (define-key map (kbd "C-c / l") #'ollama-buddy-web-search-show)
+    (define-key map (kbd "C-c / c") #'ollama-buddy-web-search-clear)
+    (define-key map (kbd "C-c 9") #'ollama-buddy-clear-all-context)
 
     (define-key map (kbd "C-c e") #'ollama-buddy-switch-communication-backend)
     

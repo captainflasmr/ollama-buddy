@@ -49,6 +49,11 @@
 (declare-function ollama-buddy-curl--non-streaming-sentinel "ollama-buddy-curl")
 (declare-function ollama-buddy-curl-test "ollama-buddy-curl")
 
+;; Web search forward declarations
+(declare-function ollama-buddy-web-search-count "ollama-buddy-web-search")
+(declare-function ollama-buddy-web-search-get-context "ollama-buddy-web-search")
+(declare-function ollama-buddy-web-search-total-tokens "ollama-buddy-web-search")
+
 (defgroup ollama-buddy-params nil
   "Customization group for Ollama API parameters."
   :group 'ollama-buddy
@@ -1917,6 +1922,12 @@ ACTUAL-MODEL is the model being used instead."
                                      (propertize (format "📎%d " (length ollama-buddy--current-attachments))
                                                  'face '(:weight bold))
                                    ""))
+           (web-search-indicator (if (and (featurep 'ollama-buddy-web-search)
+                                          (fboundp 'ollama-buddy-web-search-count)
+                                          (> (ollama-buddy-web-search-count) 0))
+                                     (propertize (format "🔍%d " (ollama-buddy-web-search-count))
+                                                 'face '(:weight bold))
+                                   ""))
            ;; (external-indicator (let ((ind (concat
            ;;                                  (if (featurep 'ollama-buddy-openai) "a" "")
            ;;                                  (if (featurep 'ollama-buddy-claude) "c" "")
@@ -1930,9 +1941,10 @@ ACTUAL-MODEL is the model being used instead."
            )
       (setq header-line-format
             (concat
-             (format " %s%s%s %s%s%s%s %s%s%s %s %s %s%s"
+             (format " %s%s%s%s %s%s%s%s %s%s%s %s %s %s%s"
                      cloud-indicator
                      attachment-indicator
+                     web-search-indicator
                      ;; external-indicator
 
                      (ollama-buddy--add-context-to-status-format)

@@ -2146,15 +2146,18 @@ Ollama now supports tool calling through the =/api/chat= endpoint with a =tools=
 
 *References:* [[https://ollama.com/blog/tool-support][Ollama Tool Support Blog]]
 
-*** TODO Web Search API Integration
+*** DOING Web Search API Integration
 
 Ollama provides a web search API at =https://ollama.com/api/web_search= requiring an API key. Could enable grounded responses with current information.
 
-*Implementation considerations:*
-- Add =ollama-buddy-web-search-api-key= customization
-- Implement =ollama-buddy-web-search= function
-- Option to automatically augment prompts with search results
-- Display source URLs in responses
+*Implemented in =ollama-buddy-web-search.el=:*
+- =ollama-buddy-web-search-api-key= customization
+- =ollama-buddy-web-search= - interactive search with results display
+- =ollama-buddy-web-search-attach= - search and attach results to context
+- =ollama-buddy-web-search-detach= / =ollama-buddy-web-search-clear= - manage attached searches
+- Status line shows =🔍N= indicator for attached web searches
+- Token estimation for context budget awareness
+- Keybindings: =C-c / s/a/d/l/c=
 
 *References:* [[https://ollama.com/blog/web-search][Ollama Web Search Blog]]
 
