@@ -31,6 +31,10 @@
 (require 'cl-lib)
 (require 'ollama-buddy-core)
 
+;; Web search forward declarations
+(declare-function ollama-buddy-web-search-process-inline "ollama-buddy-web-search")
+(declare-function ollama-buddy-web-search-get-context "ollama-buddy-web-search")
+
 (defgroup ollama-buddy-copilot nil
   "GitHub Copilot Chat integration for Ollama Buddy."
   :group 'ollama-buddy
@@ -428,6 +432,11 @@ The token is cached until expiry."
 
 (defun ollama-buddy-copilot--send (prompt &optional model)
   "Send PROMPT to GitHub Copilot API using MODEL or default model asynchronously."
+  ;; Process inline web search delimiters if web-search module is loaded
+  (when (and (featurep 'ollama-buddy-web-search)
+             (fboundp 'ollama-buddy-web-search-process-inline))
+    (setq prompt (ollama-buddy-web-search-process-inline prompt)))
+
   ;; Set up the current model
   (setq ollama-buddy--current-model
         (or model
@@ -463,14 +472,21 @@ The token is cached until expiry."
                                  content)))
                      ollama-buddy--current-attachments
                      ""))))
+         (web-search-context
+          (when (and (featurep 'ollama-buddy-web-search)
+                     (fboundp 'ollama-buddy-web-search-get-context))
+            (ollama-buddy-web-search-get-context)))
+         (full-context
+          (let ((contexts (delq nil (list attachment-context web-search-context))))
+            (when contexts (mapconcat #'identity contexts "\n\n"))))
          (messages (vconcat []
                             (append
                              (when (and system-prompt (not (string-empty-p system-prompt)))
                                `(((role . "system") (content . ,system-prompt))))
                              history
                              `(((role . "user")
-                                (content . ,(if attachment-context
-                                                (concat prompt attachment-context)
+                                (content . ,(if full-context
+                                                (concat prompt "\n\n" full-context)
                                               prompt)))))))
          (max-tokens (or ollama-buddy-copilot-max-tokens 4096))
          (json-payload

@@ -469,8 +469,9 @@ Returns list of query strings found in /search: query/ delimiters."
     (nreverse queries)))
 
 (defun ollama-buddy-web-search-remove-inline-delimiters (text)
-  "Remove inline search delimiters from TEXT, returning cleaned text."
-  (replace-regexp-in-string ollama-buddy-web-search--inline-regexp "" text))
+  "Replace inline search delimiters with just the query text.
+@search(query) becomes query, preserving the search text in the prompt."
+  (replace-regexp-in-string ollama-buddy-web-search--inline-regexp "\\1" text))
 
 (defun ollama-buddy-web-search-process-inline (text)
   "Process TEXT for inline search queries.

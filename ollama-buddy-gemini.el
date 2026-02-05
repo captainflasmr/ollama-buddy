@@ -19,6 +19,10 @@
 (require 'cl-lib)
 (require 'ollama-buddy-core)
 
+;; Web search forward declarations
+(declare-function ollama-buddy-web-search-process-inline "ollama-buddy-web-search")
+(declare-function ollama-buddy-web-search-get-context "ollama-buddy-web-search")
+
 (defgroup ollama-buddy-gemini nil
   "Google Gemini integration for Ollama Buddy."
   :group 'ollama-buddy
@@ -116,6 +120,11 @@ Use nil for API default behavior (adaptive)."
 (defun ollama-buddy-gemini--send (prompt &optional model)
   "Send PROMPT to Gemini's API using MODEL or default model asynchronously."
   (when (ollama-buddy-gemini--verify-api-key)
+    ;; Process inline web search delimiters if web-search module is loaded
+    (when (and (featurep 'ollama-buddy-web-search)
+               (fboundp 'ollama-buddy-web-search-process-inline))
+      (setq prompt (ollama-buddy-web-search-process-inline prompt)))
+
     ;; Set up the current model
     (setq ollama-buddy--current-model
           (or model
@@ -147,6 +156,13 @@ Use nil for API default behavior (adaptive)."
                                    content)))
                        ollama-buddy--current-attachments
                        ""))))
+           (web-search-context
+            (when (and (featurep 'ollama-buddy-web-search)
+                       (fboundp 'ollama-buddy-web-search-get-context))
+              (ollama-buddy-web-search-get-context)))
+           (full-context
+            (let ((contexts (delq nil (list attachment-context web-search-context))))
+              (when contexts (mapconcat #'identity contexts "\n\n"))))
            ;; For Gemini, we need to handle the system prompt differently
            (messages-with-system
             (if (and system-prompt (not (string-empty-p system-prompt)))
@@ -156,8 +172,8 @@ Use nil for API default behavior (adaptive)."
            ;; Add the current prompt to the messages
            (messages-all (append messages-with-system
                                  `(((role . "user")
-                                    (content . ,(if attachment-context
-                                                    (concat prompt attachment-context)
+                                    (content . ,(if full-context
+                                                    (concat prompt "\n\n" full-context)
                                                   prompt))))))
            ;; Build the API endpoint with the model name
            (api-endpoint (format ollama-buddy-gemini-api-endpoint model-name))
