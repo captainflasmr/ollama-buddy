@@ -11,6 +11,29 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-06 Thu> *1.3.1*
+
+Role Menu Improvements
+
+*** Per-Role Menu Columns
+
+Each role preset can now define its own =ollama-buddy-menu-columns= setting, allowing different menu layouts per role. The role creator now prompts for column count when creating new roles.
+
+#+begin_src elisp
+;; In a role preset file:
+(setq ollama-buddy-menu-columns 3)
+#+end_src
+
+*** Menu Display Fix
+
+Fixed an issue where the custom menu could be truncated when the number of rows exceeded =max-mini-window-height=. The menu now dynamically adjusts to ensure all items are visible.
+
+*** Role Preset Refinements
+
+Streamlined built-in role presets by removing less commonly used commands:
+- Removed: =kill-request=, =create-role=, =open-roles-directory=, =token-stats=, =show-history=, =delete-sessions=
+- All presets now include =ollama-buddy-menu-columns= setting (default: 3)
+
 ** <2026-02-05 Wed> *1.3*
 
 Added Web Search Integration

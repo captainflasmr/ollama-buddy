@@ -2055,6 +2055,7 @@ The most user-friendly approach:
 @enumerate
 @item Press @code{C-c E} or run @code{M-x ollama-buddy-role-creator-create-new-role}
 @item Enter a name for your role (e.g., "programmer")
+@item Enter the number of menu columns (default: 2)
 @item For each command you want to add:
   @itemize @bullet
   @item Specify a command name (e.g., "refactor-code")
@@ -2080,6 +2081,9 @@ For more advanced customization, create role files manually:
 ;; ollama-buddy preset for role: programmer
 (require 'ollama-buddy)
 
+;; Menu display columns for this role (optional, default is 2)
+(setq ollama-buddy-menu-columns 3)
+
 (setq ollama-buddy-command-definitions
   '(
     ;; Standard commands - always include these
@@ -2087,21 +2091,16 @@ For more advanced customization, create role files manually:
      :key ?o
      :description "Open chat buffer"
      :action ollama-buddy--open-chat)
-    
+
     (show-models
      :key ?v
      :description "View model status"
      :action ollama-buddy-show-model-status)
-    
+
     (switch-role
      :key ?R
      :description "Switch roles"
      :action ollama-buddy-roles-switch-role)
-    
-    (create-role
-     :key ?E
-     :description "Create new role"
-     :action ollama-buddy-role-creator-create-new-role)
     
     (open-roles-directory
      :key ?D
@@ -2166,6 +2165,17 @@ M-x ollama-buddy-roles-open-directory
 or press @code{C-c D} in the chat buffer.
 
 @section Advanced Role Customization
+
+@subsection Per-Role Menu Columns
+
+Each role can define its own menu column layout by setting @code{ollama-buddy-menu-columns} in the role file. This allows roles with many commands to use more columns, while simpler roles can use fewer:
+
+@example
+;; In your role preset file:
+(setq ollama-buddy-menu-columns 3)  ; Use 3 columns for this role
+@end example
+
+When you switch roles, the menu column setting changes accordingly. The menu display automatically adjusts its height to ensure all items are visible, regardless of the number of rows.
 
 @subsection Command-Specific Models
 

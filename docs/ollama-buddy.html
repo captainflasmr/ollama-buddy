@@ -276,9 +276,10 @@ allowing you to leverage powerful large language models (LLMs) directly within y
     <li><a id="toc-Managing-Role-Files" href="#Managing-Role-Files">14.6 Managing Role Files</a></li>
     <li><a id="toc-Advanced-Role-Customization" href="#Advanced-Role-Customization">14.7 Advanced Role Customization</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Command_002dSpecific-Models" href="#Command_002dSpecific-Models">14.7.1 Command-Specific Models</a></li>
-      <li><a id="toc-Command_002dSpecific-Parameters-1" href="#Command_002dSpecific-Parameters-1">14.7.2 Command-Specific Parameters</a></li>
-      <li><a id="toc-Creating-New-Commands" href="#Creating-New-Commands">14.7.3 Creating New Commands</a></li>
+      <li><a id="toc-Per_002dRole-Menu-Columns" href="#Per_002dRole-Menu-Columns">14.7.1 Per-Role Menu Columns</a></li>
+      <li><a id="toc-Command_002dSpecific-Models" href="#Command_002dSpecific-Models">14.7.2 Command-Specific Models</a></li>
+      <li><a id="toc-Command_002dSpecific-Parameters-1" href="#Command_002dSpecific-Parameters-1">14.7.3 Command-Specific Parameters</a></li>
+      <li><a id="toc-Creating-New-Commands" href="#Creating-New-Commands">14.7.4 Creating New Commands</a></li>
     </ul></li>
     <li><a id="toc-Role-Examples" href="#Role-Examples">14.8 Role Examples</a>
     <ul class="toc-numbered-mark">
@@ -3089,6 +3090,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 <ol class="enumerate">
 <li> Press <code class="code">C-c E</code> or run <code class="code">M-x ollama-buddy-role-creator-create-new-role</code>
 </li><li> Enter a name for your role (e.g., &quot;programmer&quot;)
+</li><li> Enter the number of menu columns (default: 2)
 </li><li> For each command you want to add:
   <ul class="itemize mark-bullet">
 <li>Specify a command name (e.g., &quot;refactor-code&quot;)
@@ -3116,6 +3118,9 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 <pre class="example-preformatted">;; ollama-buddy preset for role: programmer
 (require 'ollama-buddy)
 
+;; Menu display columns for this role (optional, default is 2)
+(setq ollama-buddy-menu-columns 3)
+
 (setq ollama-buddy-command-definitions
   '(
     ;; Standard commands - always include these
@@ -3123,21 +3128,16 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
      :key ?o
      :description &quot;Open chat buffer&quot;
      :action ollama-buddy--open-chat)
-    
+
     (show-models
      :key ?v
      :description &quot;View model status&quot;
      :action ollama-buddy-show-model-status)
-    
+
     (switch-role
      :key ?R
      :description &quot;Switch roles&quot;
      :action ollama-buddy-roles-switch-role)
-    
-    (create-role
-     :key ?E
-     :description &quot;Create new role&quot;
-     :action ollama-buddy-role-creator-create-new-role)
     
     (open-roles-directory
      :key ?D
@@ -3211,12 +3211,26 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 <h3 class="section"><span>14.7 Advanced Role Customization<a class="copiable-link" href="#Advanced-Role-Customization"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#Command_002dSpecific-Models" accesskey="1">Command-Specific Models</a></li>
-<li><a href="#Command_002dSpecific-Parameters-1" accesskey="2">Command-Specific Parameters</a></li>
-<li><a href="#Creating-New-Commands" accesskey="3">Creating New Commands</a></li>
+<li><a href="#Per_002dRole-Menu-Columns" accesskey="1">Per-Role Menu Columns</a></li>
+<li><a href="#Command_002dSpecific-Models" accesskey="2">Command-Specific Models</a></li>
+<li><a href="#Command_002dSpecific-Parameters-1" accesskey="3">Command-Specific Parameters</a></li>
+<li><a href="#Creating-New-Commands" accesskey="4">Creating New Commands</a></li>
 </ul>
+<div class="subsection-level-extent" id="Per_002dRole-Menu-Columns">
+<h4 class="subsection"><span>14.7.1 Per-Role Menu Columns<a class="copiable-link" href="#Per_002dRole-Menu-Columns"> &para;</a></span></h4>
+
+<p>Each role can define its own menu column layout by setting <code class="code">ollama-buddy-menu-columns</code> in the role file. This allows roles with many commands to use more columns, while simpler roles can use fewer:
+</p>
+<div class="example">
+<pre class="example-preformatted">;; In your role preset file:
+(setq ollama-buddy-menu-columns 3)  ; Use 3 columns for this role
+</pre></div>
+
+<p>When you switch roles, the menu column setting changes accordingly. The menu display automatically adjusts its height to ensure all items are visible, regardless of the number of rows.
+</p>
+</div>
 <div class="subsection-level-extent" id="Command_002dSpecific-Models">
-<h4 class="subsection"><span>14.7.1 Command-Specific Models<a class="copiable-link" href="#Command_002dSpecific-Models"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.7.2 Command-Specific Models<a class="copiable-link" href="#Command_002dSpecific-Models"> &para;</a></span></h4>
 
 <p>Assign specific models to commands for optimal performance:
 </p>
@@ -3226,7 +3240,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 
 </div>
 <div class="subsection-level-extent" id="Command_002dSpecific-Parameters-1">
-<h4 class="subsection"><span>14.7.2 Command-Specific Parameters<a class="copiable-link" href="#Command_002dSpecific-Parameters-1"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.7.3 Command-Specific Parameters<a class="copiable-link" href="#Command_002dSpecific-Parameters-1"> &para;</a></span></h4>
 
 <p>Optimize parameters for specific commands:
 </p>
@@ -3239,7 +3253,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 
 </div>
 <div class="subsection-level-extent" id="Creating-New-Commands">
-<h4 class="subsection"><span>14.7.3 Creating New Commands<a class="copiable-link" href="#Creating-New-Commands"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.7.4 Creating New Commands<a class="copiable-link" href="#Creating-New-Commands"> &para;</a></span></h4>
 
 <p>Add entirely new commands to your menu:
 </p>

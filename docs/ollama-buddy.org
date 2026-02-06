@@ -195,10 +195,11 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Switching-Roles][14.5 Switching Roles]]
   - [[#Managing-Role-Files][14.6 Managing Role Files]]
   - [[#Advanced-Role-Customization][14.7 Advanced Role Customization]]
-    - [[#Command_002dSpecific-Models][14.7.1 Command-Specific Models]]
-    - [[#Command_002dSpecific-Parameters-1][14.7.2 Command-Specific
+    - [[#Per_002dRole-Menu-Columns][14.7.1 Per-Role Menu Columns]]
+    - [[#Command_002dSpecific-Models][14.7.2 Command-Specific Models]]
+    - [[#Command_002dSpecific-Parameters-1][14.7.3 Command-Specific
       Parameters]]
-    - [[#Creating-New-Commands][14.7.3 Creating New Commands]]
+    - [[#Creating-New-Commands][14.7.4 Creating New Commands]]
   - [[#Role-Examples][14.8 Role Examples]]
     - [[#Programming-Role][14.8.1 Programming Role]]
     - [[#Writing-Role][14.8.2 Writing Role]]
@@ -3120,7 +3121,8 @@ The most user-friendly approach:
 
 1. Press =C-c E= or run =M-x ollama-buddy-role-creator-create-new-role=
 2. Enter a name for your role (e.g., "programmer")
-3. For each command you want to add:
+3. Enter the number of menu columns (default: 2)
+4. For each command you want to add:
    - Specify a command name (e.g., "refactor-code")
    - Choose a key shortcut for the menu
    - Add a description
@@ -3145,6 +3147,9 @@ For more advanced customization, create role files manually:
 ;; ollama-buddy preset for role: programmer
 (require 'ollama-buddy)
 
+;; Menu display columns for this role (optional, default is 2)
+(setq ollama-buddy-menu-columns 3)
+
 (setq ollama-buddy-command-definitions
   '(
     ;; Standard commands - always include these
@@ -3152,21 +3157,16 @@ For more advanced customization, create role files manually:
      :key ?o
      :description "Open chat buffer"
      :action ollama-buddy--open-chat)
-    
+
     (show-models
      :key ?v
      :description "View model status"
      :action ollama-buddy-show-model-status)
-    
+
     (switch-role
      :key ?R
      :description "Switch roles"
      :action ollama-buddy-roles-switch-role)
-    
-    (create-role
-     :key ?E
-     :description "Create new role"
-     :action ollama-buddy-role-creator-create-new-role)
     
     (open-roles-directory
      :key ?D
@@ -3251,12 +3251,32 @@ or press =C-c D= in the chat buffer.
 :CUSTOM_ID: advanced-role-customization
 :CLASS: section
 :END:
+- [[#Per_002dRole-Menu-Columns][Per-Role Menu Columns]]
 - [[#Command_002dSpecific-Models][Command-Specific Models]]
 - [[#Command_002dSpecific-Parameters-1][Command-Specific Parameters]]
 - [[#Creating-New-Commands][Creating New Commands]]
 
+<<Per_002dRole-Menu-Columns>>
+**** 14.7.1 Per-Role Menu Columns [[#Per_002dRole-Menu-Columns][¶]]
+:PROPERTIES:
+:CUSTOM_ID: per-role-menu-columns
+:CLASS: subsection
+:END:
+Each role can define its own menu column layout by setting
+=ollama-buddy-menu-columns= in the role file. This allows roles with
+many commands to use more columns, while simpler roles can use fewer:
+
+#+begin_src example-preformatted
+;; In your role preset file:
+(setq ollama-buddy-menu-columns 3)  ; Use 3 columns for this role
+#+end_src
+
+When you switch roles, the menu column setting changes accordingly. The
+menu display automatically adjusts its height to ensure all items are
+visible, regardless of the number of rows.
+
 <<Command_002dSpecific-Models>>
-**** 14.7.1 Command-Specific Models [[#Command_002dSpecific-Models][¶]]
+**** 14.7.2 Command-Specific Models [[#Command_002dSpecific-Models][¶]]
 :PROPERTIES:
 :CUSTOM_ID: command-specific-models
 :CLASS: subsection
@@ -3268,7 +3288,7 @@ Assign specific models to commands for optimal performance:
 #+end_src
 
 <<Command_002dSpecific-Parameters-1>>
-**** 14.7.2 Command-Specific Parameters [[#Command_002dSpecific-Parameters-1][¶]]
+**** 14.7.3 Command-Specific Parameters [[#Command_002dSpecific-Parameters-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: command-specific-parameters-1
 :CLASS: subsection
@@ -3283,7 +3303,7 @@ Optimize parameters for specific commands:
 #+end_src
 
 <<Creating-New-Commands>>
-**** 14.7.3 Creating New Commands [[#Creating-New-Commands][¶]]
+**** 14.7.4 Creating New Commands [[#Creating-New-Commands][¶]]
 :PROPERTIES:
 :CUSTOM_ID: creating-new-commands
 :CLASS: subsection

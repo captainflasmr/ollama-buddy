@@ -96,6 +96,14 @@ See full list in :
 
 [[file:CHANGELOG.org]]
 
+** <2026-02-06 Thu> *1.3.1*
+
+Role Menu Improvements
+
+- Per-role =ollama-buddy-menu-columns= - each role preset can define its own menu column layout
+- Fixed menu display truncation when rows exceeded =max-mini-window-height=
+- Streamlined role presets by removing less commonly used commands
+
 ** <2026-02-05 Wed> *1.3*
 
 Added Web Search Integration with Ollama's Web Search API

@@ -1962,7 +1962,8 @@ The most user-friendly approach:
   1. Press ‘C-c E’ or run ‘M-x
      ollama-buddy-role-creator-create-new-role’
   2. Enter a name for your role (e.g., "programmer")
-  3. For each command you want to add:
+  3. Enter the number of menu columns (default: 2)
+  4. For each command you want to add:
         • Specify a command name (e.g., "refactor-code")
         • Choose a key shortcut for the menu
         • Add a description
@@ -1984,6 +1985,9 @@ For more advanced customization, create role files manually:
      ;; ollama-buddy preset for role: programmer
      (require 'ollama-buddy)
 
+     ;; Menu display columns for this role (optional, default is 2)
+     (setq ollama-buddy-menu-columns 3)
+
      (setq ollama-buddy-command-definitions
        '(
          ;; Standard commands - always include these
@@ -2001,11 +2005,6 @@ For more advanced customization, create role files manually:
           :key ?R
           :description "Switch roles"
           :action ollama-buddy-roles-switch-role)
-
-         (create-role
-          :key ?E
-          :description "Create new role"
-          :action ollama-buddy-role-creator-create-new-role)
 
          (open-roles-directory
           :key ?D
@@ -2066,14 +2065,28 @@ you can customize it:
 14.7 Advanced Role Customization
 ================================
 
-14.7.1 Command-Specific Models
+14.7.1 Per-Role Menu Columns
+----------------------------
+
+Each role can define its own menu column layout by setting
+‘ollama-buddy-menu-columns’ in the role file.  This allows roles with
+many commands to use more columns, while simpler roles can use fewer:
+
+     ;; In your role preset file:
+     (setq ollama-buddy-menu-columns 3)  ; Use 3 columns for this role
+
+   When you switch roles, the menu column setting changes accordingly.
+The menu display automatically adjusts its height to ensure all items
+are visible, regardless of the number of rows.
+
+14.7.2 Command-Specific Models
 ------------------------------
 
 Assign specific models to commands for optimal performance:
 
      (ollama-buddy-add-model-to-menu-entry 'refactor-code "codellama:7b")
 
-14.7.2 Command-Specific Parameters
+14.7.3 Command-Specific Parameters
 ----------------------------------
 
 Optimize parameters for specific commands:
@@ -2083,7 +2096,7 @@ Optimize parameters for specific commands:
        'top_p 0.7
        'repeat_penalty 1.3)
 
-14.7.3 Creating New Commands
+14.7.4 Creating New Commands
 ----------------------------
 
 Add entirely new commands to your menu:
@@ -3376,17 +3389,17 @@ Node: Parameter Control45607
 Node: Session Management48004
 Node: User System Prompts50013
 Node: Roles and Commands58503
-Node: Fabric Pattern Integration70081
-Node: Awesome ChatGPT Prompts72308
-Node: Remote Providers76158
-Node: Ollama Cloud Models80839
-Node: Global System Prompt82837
-Node: Advanced Usage84541
-Node: API Reference87107
-Node: FAQ92830
-Node: Troubleshooting99883
-Node: Contributing102388
-Node: Index105056
+Node: Fabric Pattern Integration70656
+Node: Awesome ChatGPT Prompts72883
+Node: Remote Providers76733
+Node: Ollama Cloud Models81414
+Node: Global System Prompt83412
+Node: Advanced Usage85116
+Node: API Reference87682
+Node: FAQ93405
+Node: Troubleshooting100458
+Node: Contributing102963
+Node: Index105631
 
 End Tag Table
 
