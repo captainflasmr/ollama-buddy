@@ -3,7 +3,7 @@
 <!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<!-- Copyright © 2024-2025 James Dyer
+<!-- Copyright © 2024-2026 James Dyer
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.3
@@ -191,224 +191,245 @@ allowing you to leverage powerful large language models (LLMs) directly within y
     <li><a id="toc-Best-Practices" href="#Best-Practices">9.9 Best Practices</a></li>
     <li><a id="toc-Troubleshooting-Attachments" href="#Troubleshooting-Attachments">9.10 Troubleshooting Attachments</a></li>
   </ul></li>
-  <li><a id="toc-Parameter-Control-1" href="#Parameter-Control">10 Parameter Control</a>
+  <li><a id="toc-Web-Search" href="#Web-Search">10 Web Search</a>
   <ul class="toc-numbered-mark">
-    <li><a id="toc-Understanding-Parameters" href="#Understanding-Parameters">10.1 Understanding Parameters</a></li>
-    <li><a id="toc-Viewing-Current-Parameters" href="#Viewing-Current-Parameters">10.2 Viewing Current Parameters</a></li>
-    <li><a id="toc-Editing-Parameters" href="#Editing-Parameters">10.3 Editing Parameters</a></li>
-    <li><a id="toc-Parameter-Profiles" href="#Parameter-Profiles">10.4 Parameter Profiles</a></li>
-    <li><a id="toc-Command_002dSpecific-Parameters" href="#Command_002dSpecific-Parameters">10.5 Command-Specific Parameters</a></li>
-    <li><a id="toc-Reset-Parameters" href="#Reset-Parameters">10.6 Reset Parameters</a></li>
-    <li><a id="toc-Displaying-Parameters-in-Header" href="#Displaying-Parameters-in-Header">10.7 Displaying Parameters in Header</a></li>
+    <li><a id="toc-Overview-1" href="#Overview-1">10.1 Overview</a></li>
+    <li><a id="toc-How-It-Works" href="#How-It-Works">10.2 How It Works</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-eww-Mode-_0028Default_002c-Recommended_0029" href="#eww-Mode-_0028Default_002c-Recommended_0029">10.2.1 eww Mode (Default, Recommended)</a></li>
+      <li><a id="toc-API-Mode-_0028Experimental_0029" href="#API-Mode-_0028Experimental_0029">10.2.2 API Mode (Experimental)</a></li>
+    </ul></li>
+    <li><a id="toc-Configuration-1" href="#Configuration-2">10.3 Configuration</a></li>
+    <li><a id="toc-Usage" href="#Usage">10.4 Usage</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Inline-Search-Syntax" href="#Inline-Search-Syntax">10.4.1 Inline Search Syntax</a></li>
+      <li><a id="toc-Manual-Search-Commands" href="#Manual-Search-Commands">10.4.2 Manual Search Commands</a></li>
+      <li><a id="toc-Transient-Menu" href="#Transient-Menu">10.4.3 Transient Menu</a></li>
+    </ul></li>
+    <li><a id="toc-Viewing-Web-Search-Results" href="#Viewing-Web-Search-Results">10.5 Viewing Web Search Results</a></li>
+    <li><a id="toc-Managing-Web-Searches" href="#Managing-Web-Searches">10.6 Managing Web Searches</a></li>
+    <li><a id="toc-Provider-Support" href="#Provider-Support">10.7 Provider Support</a></li>
+    <li><a id="toc-Troubleshooting" href="#Troubleshooting-1">10.8 Troubleshooting</a></li>
   </ul></li>
-  <li><a id="toc-Session-Management" href="#Session-Management">11 Session Management</a>
+  <li><a id="toc-Parameter-Control-1" href="#Parameter-Control">11 Parameter Control</a>
   <ul class="toc-numbered-mark">
-    <li><a id="toc-Understanding-Sessions" href="#Understanding-Sessions">11.1 Understanding Sessions</a></li>
-    <li><a id="toc-Creating-a-New-Session" href="#Creating-a-New-Session">11.2 Creating a New Session</a></li>
-    <li><a id="toc-Saving-a-Session" href="#Saving-a-Session">11.3 Saving a Session</a></li>
-    <li><a id="toc-Loading-a-Session" href="#Loading-a-Session">11.4 Loading a Session</a></li>
-    <li><a id="toc-Managing-Sessions" href="#Managing-Sessions">11.5 Managing Sessions</a></li>
-    <li><a id="toc-Conversation-History" href="#Conversation-History">11.6 Conversation History</a></li>
+    <li><a id="toc-Understanding-Parameters" href="#Understanding-Parameters">11.1 Understanding Parameters</a></li>
+    <li><a id="toc-Viewing-Current-Parameters" href="#Viewing-Current-Parameters">11.2 Viewing Current Parameters</a></li>
+    <li><a id="toc-Editing-Parameters" href="#Editing-Parameters">11.3 Editing Parameters</a></li>
+    <li><a id="toc-Parameter-Profiles" href="#Parameter-Profiles">11.4 Parameter Profiles</a></li>
+    <li><a id="toc-Command_002dSpecific-Parameters" href="#Command_002dSpecific-Parameters">11.5 Command-Specific Parameters</a></li>
+    <li><a id="toc-Reset-Parameters" href="#Reset-Parameters">11.6 Reset Parameters</a></li>
+    <li><a id="toc-Displaying-Parameters-in-Header" href="#Displaying-Parameters-in-Header">11.7 Displaying Parameters in Header</a></li>
   </ul></li>
-  <li><a id="toc-User-System-Prompts" href="#User-System-Prompts">12 User System Prompts</a>
+  <li><a id="toc-Session-Management" href="#Session-Management">12 Session Management</a>
   <ul class="toc-numbered-mark">
-    <li><a id="toc-Overview-1" href="#Overview-1">12.1 Overview</a></li>
-    <li><a id="toc-Accessing-the-System-Prompts-Menu" href="#Accessing-the-System-Prompts-Menu">12.2 Accessing the System Prompts Menu</a></li>
-    <li><a id="toc-Saving-System-Prompts" href="#Saving-System-Prompts">12.3 Saving System Prompts</a></li>
-    <li><a id="toc-Loading-Saved-Prompts" href="#Loading-Saved-Prompts">12.4 Loading Saved Prompts</a></li>
-    <li><a id="toc-Managing-Your-Prompt-Library" href="#Managing-Your-Prompt-Library">12.5 Managing Your Prompt Library</a>
-    <ul class="toc-numbered-mark">
-      <li><a id="toc-Viewing-All-Prompts" href="#Viewing-All-Prompts">12.5.1 Viewing All Prompts</a></li>
-      <li><a id="toc-Editing-Prompts" href="#Editing-Prompts">12.5.2 Editing Prompts</a></li>
-      <li><a id="toc-Creating-New-Prompts" href="#Creating-New-Prompts">12.5.3 Creating New Prompts</a></li>
-      <li><a id="toc-Deleting-Prompts" href="#Deleting-Prompts">12.5.4 Deleting Prompts</a></li>
-    </ul></li>
-    <li><a id="toc-Categories-and-Organization" href="#Categories-and-Organization">12.6 Categories and Organization</a></li>
-    <li><a id="toc-Prompt-Storage-Format" href="#Prompt-Storage-Format">12.7 Prompt Storage Format</a></li>
-    <li><a id="toc-Best-Practices-for-System-Prompts" href="#Best-Practices-for-System-Prompts">12.8 Best Practices for System Prompts</a>
-    <ul class="toc-numbered-mark">
-      <li><a id="toc-Components-of-Effective-Prompts" href="#Components-of-Effective-Prompts">12.8.1 Components of Effective Prompts</a></li>
-      <li><a id="toc-Example-Patterns" href="#Example-Patterns">12.8.2 Example Patterns</a></li>
-    </ul></li>
-    <li><a id="toc-Example-System-Prompts" href="#Example-System-Prompts">12.9 Example System Prompts</a>
-    <ul class="toc-numbered-mark">
-      <li><a id="toc-Technical-Writing-Assistant" href="#Technical-Writing-Assistant">12.9.1 Technical Writing Assistant</a></li>
-      <li><a id="toc-Code-Reviewer" href="#Code-Reviewer">12.9.2 Code Reviewer</a></li>
-    </ul></li>
-    <li><a id="toc-Workflow-Examples" href="#Workflow-Examples">12.10 Workflow Examples</a>
-    <ul class="toc-numbered-mark">
-      <li><a id="toc-Python-Code-Assistance" href="#Python-Code-Assistance">12.10.1 Python Code Assistance</a></li>
-      <li><a id="toc-Technical-Writing-Help" href="#Technical-Writing-Help">12.10.2 Technical Writing Help</a></li>
-    </ul></li>
-    <li><a id="toc-Integration-with-Roles" href="#Integration-with-Roles">12.11 Integration with Roles</a></li>
+    <li><a id="toc-Understanding-Sessions" href="#Understanding-Sessions">12.1 Understanding Sessions</a></li>
+    <li><a id="toc-Creating-a-New-Session" href="#Creating-a-New-Session">12.2 Creating a New Session</a></li>
+    <li><a id="toc-Saving-a-Session" href="#Saving-a-Session">12.3 Saving a Session</a></li>
+    <li><a id="toc-Loading-a-Session" href="#Loading-a-Session">12.4 Loading a Session</a></li>
+    <li><a id="toc-Managing-Sessions" href="#Managing-Sessions">12.5 Managing Sessions</a></li>
+    <li><a id="toc-Conversation-History" href="#Conversation-History">12.6 Conversation History</a></li>
   </ul></li>
-  <li><a id="toc-Roles-and-Commands" href="#Roles-and-Commands">13 Roles and Commands</a>
+  <li><a id="toc-User-System-Prompts" href="#User-System-Prompts">13 User System Prompts</a>
   <ul class="toc-numbered-mark">
-    <li><a id="toc-Understanding-Roles" href="#Understanding-Roles">13.1 Understanding Roles</a></li>
-    <li><a id="toc-Role-File-Naming-Convention" href="#Role-File-Naming-Convention">13.2 Role File Naming Convention</a></li>
-    <li><a id="toc-Built_002din-Commands" href="#Built_002din-Commands">13.3 Built-in Commands</a></li>
-    <li><a id="toc-Creating-Custom-Roles" href="#Creating-Custom-Roles">13.4 Creating Custom Roles</a>
+    <li><a id="toc-Overview-2" href="#Overview-2">13.1 Overview</a></li>
+    <li><a id="toc-Accessing-the-System-Prompts-Menu" href="#Accessing-the-System-Prompts-Menu">13.2 Accessing the System Prompts Menu</a></li>
+    <li><a id="toc-Saving-System-Prompts" href="#Saving-System-Prompts">13.3 Saving System Prompts</a></li>
+    <li><a id="toc-Loading-Saved-Prompts" href="#Loading-Saved-Prompts">13.4 Loading Saved Prompts</a></li>
+    <li><a id="toc-Managing-Your-Prompt-Library" href="#Managing-Your-Prompt-Library">13.5 Managing Your Prompt Library</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Interactive-Role-Creator" href="#Interactive-Role-Creator">13.4.1 Interactive Role Creator</a></li>
-      <li><a id="toc-Manual-Role-Creation" href="#Manual-Role-Creation">13.4.2 Manual Role Creation</a></li>
+      <li><a id="toc-Viewing-All-Prompts" href="#Viewing-All-Prompts">13.5.1 Viewing All Prompts</a></li>
+      <li><a id="toc-Editing-Prompts" href="#Editing-Prompts">13.5.2 Editing Prompts</a></li>
+      <li><a id="toc-Creating-New-Prompts" href="#Creating-New-Prompts">13.5.3 Creating New Prompts</a></li>
+      <li><a id="toc-Deleting-Prompts" href="#Deleting-Prompts">13.5.4 Deleting Prompts</a></li>
     </ul></li>
-    <li><a id="toc-Switching-Roles" href="#Switching-Roles">13.5 Switching Roles</a></li>
-    <li><a id="toc-Managing-Role-Files" href="#Managing-Role-Files">13.6 Managing Role Files</a></li>
-    <li><a id="toc-Advanced-Role-Customization" href="#Advanced-Role-Customization">13.7 Advanced Role Customization</a>
+    <li><a id="toc-Categories-and-Organization" href="#Categories-and-Organization">13.6 Categories and Organization</a></li>
+    <li><a id="toc-Prompt-Storage-Format" href="#Prompt-Storage-Format">13.7 Prompt Storage Format</a></li>
+    <li><a id="toc-Best-Practices-for-System-Prompts" href="#Best-Practices-for-System-Prompts">13.8 Best Practices for System Prompts</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Command_002dSpecific-Models" href="#Command_002dSpecific-Models">13.7.1 Command-Specific Models</a></li>
-      <li><a id="toc-Command_002dSpecific-Parameters-1" href="#Command_002dSpecific-Parameters-1">13.7.2 Command-Specific Parameters</a></li>
-      <li><a id="toc-Creating-New-Commands" href="#Creating-New-Commands">13.7.3 Creating New Commands</a></li>
+      <li><a id="toc-Components-of-Effective-Prompts" href="#Components-of-Effective-Prompts">13.8.1 Components of Effective Prompts</a></li>
+      <li><a id="toc-Example-Patterns" href="#Example-Patterns">13.8.2 Example Patterns</a></li>
     </ul></li>
-    <li><a id="toc-Role-Examples" href="#Role-Examples">13.8 Role Examples</a>
+    <li><a id="toc-Example-System-Prompts" href="#Example-System-Prompts">13.9 Example System Prompts</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Programming-Role" href="#Programming-Role">13.8.1 Programming Role</a></li>
-      <li><a id="toc-Writing-Role" href="#Writing-Role">13.8.2 Writing Role</a></li>
+      <li><a id="toc-Technical-Writing-Assistant" href="#Technical-Writing-Assistant">13.9.1 Technical Writing Assistant</a></li>
+      <li><a id="toc-Code-Reviewer" href="#Code-Reviewer">13.9.2 Code Reviewer</a></li>
     </ul></li>
-    <li><a id="toc-Tips-for-Effective-Role-Usage" href="#Tips-for-Effective-Role-Usage">13.9 Tips for Effective Role Usage</a></li>
+    <li><a id="toc-Workflow-Examples" href="#Workflow-Examples">13.10 Workflow Examples</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Python-Code-Assistance" href="#Python-Code-Assistance">13.10.1 Python Code Assistance</a></li>
+      <li><a id="toc-Technical-Writing-Help" href="#Technical-Writing-Help">13.10.2 Technical Writing Help</a></li>
+    </ul></li>
+    <li><a id="toc-Integration-with-Roles" href="#Integration-with-Roles">13.11 Integration with Roles</a></li>
   </ul></li>
-  <li><a id="toc-Fabric-Pattern-Integration" href="#Fabric-Pattern-Integration">14 Fabric Pattern Integration</a>
+  <li><a id="toc-Roles-and-Commands" href="#Roles-and-Commands">14 Roles and Commands</a>
   <ul class="toc-numbered-mark">
-    <li><a id="toc-What-are-Fabric-Patterns_003f" href="#What-are-Fabric-Patterns_003f">14.1 What are Fabric Patterns?</a></li>
-    <li><a id="toc-Setting-Up-Fabric-Integration" href="#Setting-Up-Fabric-Integration">14.2 Setting Up Fabric Integration</a></li>
-    <li><a id="toc-Using-Fabric-Patterns" href="#Using-Fabric-Patterns">14.3 Using Fabric Patterns</a></li>
-    <li><a id="toc-Browsing-Available-Patterns" href="#Browsing-Available-Patterns">14.4 Browsing Available Patterns</a></li>
-    <li><a id="toc-Viewing-Pattern-Details" href="#Viewing-Pattern-Details">14.5 Viewing Pattern Details</a></li>
-    <li><a id="toc-Updating-Patterns" href="#Updating-Patterns">14.6 Updating Patterns</a></li>
-    <li><a id="toc-Using-Patterns-by-Category" href="#Using-Patterns-by-Category">14.7 Using Patterns by Category</a></li>
-  </ul></li>
-  <li><a id="toc-Awesome-ChatGPT-Prompts" href="#Awesome-ChatGPT-Prompts">15 Awesome ChatGPT Prompts</a>
-  <ul class="toc-numbered-mark">
-    <li><a id="toc-What-is-Awesome-ChatGPT-Prompts_003f" href="#What-is-Awesome-ChatGPT-Prompts_003f">15.1 What is Awesome ChatGPT Prompts?</a></li>
-    <li><a id="toc-Setting-Up-Awesome-ChatGPT-Prompts" href="#Setting-Up-Awesome-ChatGPT-Prompts">15.2 Setting Up Awesome ChatGPT Prompts</a></li>
-    <li><a id="toc-Using-Awesome-ChatGPT-Prompts" href="#Using-Awesome-ChatGPT-Prompts">15.3 Using Awesome ChatGPT Prompts</a></li>
-    <li><a id="toc-Browsing-Available-Prompts" href="#Browsing-Available-Prompts">15.4 Browsing Available Prompts</a></li>
-    <li><a id="toc-Categorized-Browsing" href="#Categorized-Browsing">15.5 Categorized Browsing</a></li>
-    <li><a id="toc-Viewing-Prompt-Details" href="#Viewing-Prompt-Details">15.6 Viewing Prompt Details</a></li>
-    <li><a id="toc-Updating-Prompts" href="#Updating-Prompts">15.7 Updating Prompts</a></li>
-    <li><a id="toc-Setting-Without-Sending" href="#Setting-Without-Sending">15.8 Setting Without Sending</a></li>
-    <li><a id="toc-Example-Usage" href="#Example-Usage">15.9 Example Usage</a></li>
-  </ul></li>
-  <li><a id="toc-Remote-Providers" href="#Remote-Providers">16 Remote Providers</a>
-  <ul class="toc-numbered-mark">
-    <li><a id="toc-Overview-2" href="#Overview-2">16.1 Overview</a></li>
-    <li><a id="toc-Status-Line-Indicators" href="#Status-Line-Indicators">16.2 Status Line Indicators</a></li>
-    <li><a id="toc-Setting-Up-API-Access" href="#Setting-Up-API-Access">16.3 Setting Up API Access</a></li>
-    <li><a id="toc-Selecting-Remote-Models" href="#Selecting-Remote-Models">16.4 Selecting Remote Models</a></li>
-    <li><a id="toc-Provider-Configuration" href="#Provider-Configuration">16.5 Provider Configuration</a>
+    <li><a id="toc-Understanding-Roles" href="#Understanding-Roles">14.1 Understanding Roles</a></li>
+    <li><a id="toc-Role-File-Naming-Convention" href="#Role-File-Naming-Convention">14.2 Role File Naming Convention</a></li>
+    <li><a id="toc-Built_002din-Commands" href="#Built_002din-Commands">14.3 Built-in Commands</a></li>
+    <li><a id="toc-Creating-Custom-Roles" href="#Creating-Custom-Roles">14.4 Creating Custom Roles</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-OpenAI-Configuration" href="#OpenAI-Configuration">16.5.1 OpenAI Configuration</a></li>
-      <li><a id="toc-Claude-Configuration" href="#Claude-Configuration">16.5.2 Claude Configuration</a></li>
-      <li><a id="toc-Gemini-Configuration" href="#Gemini-Configuration">16.5.3 Gemini Configuration</a></li>
-      <li><a id="toc-Grok-Configuration" href="#Grok-Configuration">16.5.4 Grok Configuration</a></li>
-      <li><a id="toc-Codestral-Configuration" href="#Codestral-Configuration">16.5.5 Codestral Configuration</a></li>
+      <li><a id="toc-Interactive-Role-Creator" href="#Interactive-Role-Creator">14.4.1 Interactive Role Creator</a></li>
+      <li><a id="toc-Manual-Role-Creation" href="#Manual-Role-Creation">14.4.2 Manual Role Creation</a></li>
     </ul></li>
-    <li><a id="toc-History-Management" href="#History-Management">16.6 History Management</a></li>
+    <li><a id="toc-Switching-Roles" href="#Switching-Roles">14.5 Switching Roles</a></li>
+    <li><a id="toc-Managing-Role-Files" href="#Managing-Role-Files">14.6 Managing Role Files</a></li>
+    <li><a id="toc-Advanced-Role-Customization" href="#Advanced-Role-Customization">14.7 Advanced Role Customization</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Command_002dSpecific-Models" href="#Command_002dSpecific-Models">14.7.1 Command-Specific Models</a></li>
+      <li><a id="toc-Command_002dSpecific-Parameters-1" href="#Command_002dSpecific-Parameters-1">14.7.2 Command-Specific Parameters</a></li>
+      <li><a id="toc-Creating-New-Commands" href="#Creating-New-Commands">14.7.3 Creating New Commands</a></li>
+    </ul></li>
+    <li><a id="toc-Role-Examples" href="#Role-Examples">14.8 Role Examples</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Programming-Role" href="#Programming-Role">14.8.1 Programming Role</a></li>
+      <li><a id="toc-Writing-Role" href="#Writing-Role">14.8.2 Writing Role</a></li>
+    </ul></li>
+    <li><a id="toc-Tips-for-Effective-Role-Usage" href="#Tips-for-Effective-Role-Usage">14.9 Tips for Effective Role Usage</a></li>
   </ul></li>
-  <li><a id="toc-Ollama-Cloud-Models" href="#Ollama-Cloud-Models">17 Ollama Cloud Models</a>
+  <li><a id="toc-Fabric-Pattern-Integration" href="#Fabric-Pattern-Integration">15 Fabric Pattern Integration</a>
+  <ul class="toc-numbered-mark">
+    <li><a id="toc-What-are-Fabric-Patterns_003f" href="#What-are-Fabric-Patterns_003f">15.1 What are Fabric Patterns?</a></li>
+    <li><a id="toc-Setting-Up-Fabric-Integration" href="#Setting-Up-Fabric-Integration">15.2 Setting Up Fabric Integration</a></li>
+    <li><a id="toc-Using-Fabric-Patterns" href="#Using-Fabric-Patterns">15.3 Using Fabric Patterns</a></li>
+    <li><a id="toc-Browsing-Available-Patterns" href="#Browsing-Available-Patterns">15.4 Browsing Available Patterns</a></li>
+    <li><a id="toc-Viewing-Pattern-Details" href="#Viewing-Pattern-Details">15.5 Viewing Pattern Details</a></li>
+    <li><a id="toc-Updating-Patterns" href="#Updating-Patterns">15.6 Updating Patterns</a></li>
+    <li><a id="toc-Using-Patterns-by-Category" href="#Using-Patterns-by-Category">15.7 Using Patterns by Category</a></li>
+  </ul></li>
+  <li><a id="toc-Awesome-ChatGPT-Prompts" href="#Awesome-ChatGPT-Prompts">16 Awesome ChatGPT Prompts</a>
+  <ul class="toc-numbered-mark">
+    <li><a id="toc-What-is-Awesome-ChatGPT-Prompts_003f" href="#What-is-Awesome-ChatGPT-Prompts_003f">16.1 What is Awesome ChatGPT Prompts?</a></li>
+    <li><a id="toc-Setting-Up-Awesome-ChatGPT-Prompts" href="#Setting-Up-Awesome-ChatGPT-Prompts">16.2 Setting Up Awesome ChatGPT Prompts</a></li>
+    <li><a id="toc-Using-Awesome-ChatGPT-Prompts" href="#Using-Awesome-ChatGPT-Prompts">16.3 Using Awesome ChatGPT Prompts</a></li>
+    <li><a id="toc-Browsing-Available-Prompts" href="#Browsing-Available-Prompts">16.4 Browsing Available Prompts</a></li>
+    <li><a id="toc-Categorized-Browsing" href="#Categorized-Browsing">16.5 Categorized Browsing</a></li>
+    <li><a id="toc-Viewing-Prompt-Details" href="#Viewing-Prompt-Details">16.6 Viewing Prompt Details</a></li>
+    <li><a id="toc-Updating-Prompts" href="#Updating-Prompts">16.7 Updating Prompts</a></li>
+    <li><a id="toc-Setting-Without-Sending" href="#Setting-Without-Sending">16.8 Setting Without Sending</a></li>
+    <li><a id="toc-Example-Usage" href="#Example-Usage">16.9 Example Usage</a></li>
+  </ul></li>
+  <li><a id="toc-Remote-Providers" href="#Remote-Providers">17 Remote Providers</a>
   <ul class="toc-numbered-mark">
     <li><a id="toc-Overview-3" href="#Overview-3">17.1 Overview</a></li>
-    <li><a id="toc-Available-Cloud-Models" href="#Available-Cloud-Models">17.2 Available Cloud Models</a></li>
-    <li><a id="toc-Selecting-Cloud-Models" href="#Selecting-Cloud-Models">17.3 Selecting Cloud Models</a></li>
-    <li><a id="toc-Cloud-Authentication" href="#Cloud-Authentication">17.4 Cloud Authentication</a></li>
-    <li><a id="toc-Cloud-Model-Indicator" href="#Cloud-Model-Indicator">17.5 Cloud Model Indicator</a></li>
-    <li><a id="toc-Configuration-1" href="#Configuration-2">17.6 Configuration</a></li>
+    <li><a id="toc-Status-Line-Indicators" href="#Status-Line-Indicators">17.2 Status Line Indicators</a></li>
+    <li><a id="toc-Setting-Up-API-Access" href="#Setting-Up-API-Access">17.3 Setting Up API Access</a></li>
+    <li><a id="toc-Selecting-Remote-Models" href="#Selecting-Remote-Models">17.4 Selecting Remote Models</a></li>
+    <li><a id="toc-Provider-Configuration" href="#Provider-Configuration">17.5 Provider Configuration</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-OpenAI-Configuration" href="#OpenAI-Configuration">17.5.1 OpenAI Configuration</a></li>
+      <li><a id="toc-Claude-Configuration" href="#Claude-Configuration">17.5.2 Claude Configuration</a></li>
+      <li><a id="toc-Gemini-Configuration" href="#Gemini-Configuration">17.5.3 Gemini Configuration</a></li>
+      <li><a id="toc-Grok-Configuration" href="#Grok-Configuration">17.5.4 Grok Configuration</a></li>
+      <li><a id="toc-GitHub-Copilot-Configuration" href="#GitHub-Copilot-Configuration">17.5.5 GitHub Copilot Configuration</a></li>
+      <li><a id="toc-Codestral-Configuration" href="#Codestral-Configuration">17.5.6 Codestral Configuration</a></li>
+    </ul></li>
+    <li><a id="toc-History-Management" href="#History-Management">17.6 History Management</a></li>
   </ul></li>
-  <li><a id="toc-Global-System-Prompt" href="#Global-System-Prompt">18 Global System Prompt</a>
+  <li><a id="toc-Ollama-Cloud-Models" href="#Ollama-Cloud-Models">18 Ollama Cloud Models</a>
   <ul class="toc-numbered-mark">
     <li><a id="toc-Overview-4" href="#Overview-4">18.1 Overview</a></li>
-    <li><a id="toc-Configuration-2" href="#Configuration-3">18.2 Configuration</a></li>
-    <li><a id="toc-Toggling-Global-Prompt" href="#Toggling-Global-Prompt">18.3 Toggling Global Prompt</a></li>
-    <li><a id="toc-How-It-Works" href="#How-It-Works">18.4 How It Works</a></li>
+    <li><a id="toc-Available-Cloud-Models" href="#Available-Cloud-Models">18.2 Available Cloud Models</a></li>
+    <li><a id="toc-Selecting-Cloud-Models" href="#Selecting-Cloud-Models">18.3 Selecting Cloud Models</a></li>
+    <li><a id="toc-Cloud-Authentication" href="#Cloud-Authentication">18.4 Cloud Authentication</a></li>
+    <li><a id="toc-Cloud-Model-Indicator" href="#Cloud-Model-Indicator">18.5 Cloud Model Indicator</a></li>
+    <li><a id="toc-Configuration-2" href="#Configuration-3">18.6 Configuration</a></li>
   </ul></li>
-  <li><a id="toc-Advanced-Usage" href="#Advanced-Usage">19 Advanced Usage</a>
+  <li><a id="toc-Global-System-Prompt" href="#Global-System-Prompt">19 Global System Prompt</a>
   <ul class="toc-numbered-mark">
-    <li><a id="toc-Managing-Token-Usage" href="#Managing-Token-Usage">19.1 Managing Token Usage</a></li>
-    <li><a id="toc-Customizing-the-Interface" href="#Customizing-the-Interface">19.2 Customizing the Interface</a>
-    <ul class="toc-numbered-mark">
-      <li><a id="toc-Streaming-Options" href="#Streaming-Options">19.2.1 Streaming Options</a></li>
-      <li><a id="toc-Debug-Mode" href="#Debug-Mode">19.2.2 Debug Mode</a></li>
-    </ul></li>
-    <li><a id="toc-Editing-Conversation-History" href="#Editing-Conversation-History">19.3 Editing Conversation History</a></li>
-    <li><a id="toc-Advanced-System-Prompt-Management" href="#Advanced-System-Prompt-Management">19.4 Advanced System Prompt Management</a>
-    <ul class="toc-numbered-mark">
-      <li><a id="toc-Setting-a-system-prompt-without-sending" href="#Setting-a-system-prompt-without-sending">19.4.1 Setting a system prompt without sending</a></li>
-      <li><a id="toc-Using-a-system-prompt-from-Fabric" href="#Using-a-system-prompt-from-Fabric">19.4.2 Using a system prompt from Fabric</a></li>
-    </ul></li>
-    <li><a id="toc-Using-Direct-API-Access" href="#Using-Direct-API-Access">19.5 Using Direct API Access</a></li>
+    <li><a id="toc-Overview-5" href="#Overview-5">19.1 Overview</a></li>
+    <li><a id="toc-Configuration-3" href="#Configuration-4">19.2 Configuration</a></li>
+    <li><a id="toc-Toggling-Global-Prompt" href="#Toggling-Global-Prompt">19.3 Toggling Global Prompt</a></li>
+    <li><a id="toc-How-It-Works-1" href="#How-It-Works-1">19.4 How It Works</a></li>
   </ul></li>
-  <li><a id="toc-API-Reference" href="#API-Reference">20 API Reference</a>
+  <li><a id="toc-Advanced-Usage" href="#Advanced-Usage">20 Advanced Usage</a>
   <ul class="toc-numbered-mark">
-    <li><a id="toc-Interactive-Functions" href="#Interactive-Functions">20.1 Interactive Functions</a></li>
-    <li><a id="toc-Core-Functions" href="#Core-Functions">20.2 Core Functions</a></li>
-    <li><a id="toc-Customization-Functions" href="#Customization-Functions">20.3 Customization Functions</a></li>
+    <li><a id="toc-Managing-Token-Usage" href="#Managing-Token-Usage">20.1 Managing Token Usage</a></li>
+    <li><a id="toc-Customizing-the-Interface" href="#Customizing-the-Interface">20.2 Customizing the Interface</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Streaming-Options" href="#Streaming-Options">20.2.1 Streaming Options</a></li>
+      <li><a id="toc-Debug-Mode" href="#Debug-Mode">20.2.2 Debug Mode</a></li>
+    </ul></li>
+    <li><a id="toc-Editing-Conversation-History" href="#Editing-Conversation-History">20.3 Editing Conversation History</a></li>
+    <li><a id="toc-Advanced-System-Prompt-Management" href="#Advanced-System-Prompt-Management">20.4 Advanced System Prompt Management</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Setting-a-system-prompt-without-sending" href="#Setting-a-system-prompt-without-sending">20.4.1 Setting a system prompt without sending</a></li>
+      <li><a id="toc-Using-a-system-prompt-from-Fabric" href="#Using-a-system-prompt-from-Fabric">20.4.2 Using a system prompt from Fabric</a></li>
+    </ul></li>
+    <li><a id="toc-Using-Direct-API-Access" href="#Using-Direct-API-Access">20.5 Using Direct API Access</a></li>
   </ul></li>
-  <li><a id="toc-Frequently-Asked-Questions" href="#FAQ">21 Frequently Asked Questions</a>
+  <li><a id="toc-API-Reference" href="#API-Reference">21 API Reference</a>
   <ul class="toc-numbered-mark">
-    <li><a id="toc-General-Questions" href="#General-Questions">21.1 General Questions</a>
-    <ul class="toc-numbered-mark">
-      <li><a id="toc-What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f" href="#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f">21.1.1 What is the difference between Ollama Buddy and other AI assistants?</a></li>
-      <li><a id="toc-Does-Ollama-Buddy-require-an-internet-connection_003f" href="#Does-Ollama-Buddy-require-an-internet-connection_003f">21.1.2 Does Ollama Buddy require an internet connection?</a></li>
-      <li><a id="toc-How-do-I-use-Ollama-cloud-models_003f" href="#How-do-I-use-Ollama-cloud-models_003f">21.1.3 How do I use Ollama cloud models?</a></li>
-      <li><a id="toc-Which-models-work-best-with-Ollama-Buddy_003f" href="#Which-models-work-best-with-Ollama-Buddy_003f">21.1.4 Which models work best with Ollama Buddy?</a></li>
-      <li><a id="toc-How-much-RAM-do-I-need_003f" href="#How-much-RAM-do-I-need_003f">21.1.5 How much RAM do I need?</a></li>
-    </ul></li>
-    <li><a id="toc-Usage-Questions" href="#Usage-Questions">21.2 Usage Questions</a>
-    <ul class="toc-numbered-mark">
-      <li><a id="toc-How-do-I-cancel-a-request-that_0027s-taking-too-long_003f" href="#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f">21.2.1 How do I cancel a request that&rsquo;s taking too long?</a></li>
-      <li><a id="toc-How-can-I-save-my-conversations_003f" href="#How-can-I-save-my-conversations_003f">21.2.2 How can I save my conversations?</a></li>
-      <li><a id="toc-Can-I-use-multiple-models-in-the-same-conversation_003f" href="#Can-I-use-multiple-models-in-the-same-conversation_003f">21.2.3 Can I use multiple models in the same conversation?</a></li>
-      <li><a id="toc-How-do-I-clear-the-conversation-history_003f" href="#How-do-I-clear-the-conversation-history_003f">21.2.4 How do I clear the conversation history?</a></li>
-      <li><a id="toc-How-can-I-create-a-custom-command_003f" href="#How-can-I-create-a-custom-command_003f">21.2.5 How can I create a custom command?</a></li>
-      <li><a id="toc-How-can-I-manage-context-windows_003f" href="#How-can-I-manage-context-windows_003f">21.2.6 How can I manage context windows?</a></li>
-      <li><a id="toc-What-happens-when-I-exceed-the-context-limit_003f" href="#What-happens-when-I-exceed-the-context-limit_003f">21.2.7 What happens when I exceed the context limit?</a></li>
-      <li><a id="toc-How-do-I-create-effective-system-prompts_003f" href="#How-do-I-create-effective-system-prompts_003f">21.2.8 How do I create effective system prompts?</a></li>
-      <li><a id="toc-Where-are-my-system-prompts-stored_003f" href="#Where-are-my-system-prompts-stored_003f">21.2.9 Where are my system prompts stored?</a></li>
-    </ul></li>
-    <li><a id="toc-Troubleshooting" href="#Troubleshooting-1">21.3 Troubleshooting</a>
-    <ul class="toc-numbered-mark">
-      <li><a id="toc-Ollama-Buddy-shows-_0022OFFLINE_0022-status" href="#Ollama-Buddy-shows-_0022OFFLINE_0022-status">21.3.1 Ollama Buddy shows &quot;OFFLINE&quot; status</a></li>
-      <li><a id="toc-Responses-are-slow-or-the-model-seems-to-hang" href="#Responses-are-slow-or-the-model-seems-to-hang">21.3.2 Responses are slow or the model seems to hang</a></li>
-      <li><a id="toc-Getting-_0022error-parsing-model_0022-when-pulling-a-model" href="#Getting-_0022error-parsing-model_0022-when-pulling-a-model">21.3.3 Getting &quot;error parsing model&quot; when pulling a model</a></li>
-      <li><a id="toc-Model-responses-are-low-quality-or-truncated" href="#Model-responses-are-low-quality-or-truncated">21.3.4 Model responses are low quality or truncated</a></li>
-      <li><a id="toc-How-do-system-prompts-differ-from-regular-prompts_003f" href="#How-do-system-prompts-differ-from-regular-prompts_003f">21.3.5 How do system prompts differ from regular prompts?</a></li>
-      <li><a id="toc-What-is-the-global-system-prompt_003f" href="#What-is-the-global-system-prompt_003f">21.3.6 What is the global system prompt?</a></li>
-      <li><a id="toc-How-do-I-use-image-analysis_002fvision-features_003f" href="#How-do-I-use-image-analysis_002fvision-features_003f">21.3.7 How do I use image analysis/vision features?</a></li>
-      <li><a id="toc-Can-I-share-system-prompts-between-different-installations_003f" href="#Can-I-share-system-prompts-between-different-installations_003f">21.3.8 Can I share system prompts between different installations?</a></li>
-    </ul></li>
+    <li><a id="toc-Interactive-Functions" href="#Interactive-Functions">21.1 Interactive Functions</a></li>
+    <li><a id="toc-Core-Functions" href="#Core-Functions">21.2 Core Functions</a></li>
+    <li><a id="toc-Customization-Functions" href="#Customization-Functions">21.3 Customization Functions</a></li>
   </ul></li>
-  <li><a id="toc-Troubleshooting-1" href="#Troubleshooting">22 Troubleshooting</a>
+  <li><a id="toc-Frequently-Asked-Questions" href="#FAQ">22 Frequently Asked Questions</a>
   <ul class="toc-numbered-mark">
-    <li><a id="toc-Common-Issues" href="#Common-Issues">22.1 Common Issues</a>
+    <li><a id="toc-General-Questions" href="#General-Questions">22.1 General Questions</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Connection-Problems" href="#Connection-Problems">22.1.1 Connection Problems</a></li>
-      <li><a id="toc-Model-Problems" href="#Model-Problems">22.1.2 Model Problems</a></li>
-      <li><a id="toc-Interface-Issues" href="#Interface-Issues">22.1.3 Interface Issues</a></li>
+      <li><a id="toc-What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f" href="#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f">22.1.1 What is the difference between Ollama Buddy and other AI assistants?</a></li>
+      <li><a id="toc-Does-Ollama-Buddy-require-an-internet-connection_003f" href="#Does-Ollama-Buddy-require-an-internet-connection_003f">22.1.2 Does Ollama Buddy require an internet connection?</a></li>
+      <li><a id="toc-How-do-I-use-Ollama-cloud-models_003f" href="#How-do-I-use-Ollama-cloud-models_003f">22.1.3 How do I use Ollama cloud models?</a></li>
+      <li><a id="toc-Which-models-work-best-with-Ollama-Buddy_003f" href="#Which-models-work-best-with-Ollama-Buddy_003f">22.1.4 Which models work best with Ollama Buddy?</a></li>
+      <li><a id="toc-How-much-RAM-do-I-need_003f" href="#How-much-RAM-do-I-need_003f">22.1.5 How much RAM do I need?</a></li>
     </ul></li>
-    <li><a id="toc-Debugging" href="#Debugging">22.2 Debugging</a>
+    <li><a id="toc-Usage-Questions" href="#Usage-Questions">22.2 Usage Questions</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Enable-Debug-Mode" href="#Enable-Debug-Mode">22.2.1 Enable Debug Mode</a></li>
-      <li><a id="toc-Check-Logs" href="#Check-Logs">22.2.2 Check Logs</a></li>
-      <li><a id="toc-Report-Issues" href="#Report-Issues">22.2.3 Report Issues</a></li>
+      <li><a id="toc-How-do-I-cancel-a-request-that_0027s-taking-too-long_003f" href="#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f">22.2.1 How do I cancel a request that&rsquo;s taking too long?</a></li>
+      <li><a id="toc-How-can-I-save-my-conversations_003f" href="#How-can-I-save-my-conversations_003f">22.2.2 How can I save my conversations?</a></li>
+      <li><a id="toc-Can-I-use-multiple-models-in-the-same-conversation_003f" href="#Can-I-use-multiple-models-in-the-same-conversation_003f">22.2.3 Can I use multiple models in the same conversation?</a></li>
+      <li><a id="toc-How-do-I-clear-the-conversation-history_003f" href="#How-do-I-clear-the-conversation-history_003f">22.2.4 How do I clear the conversation history?</a></li>
+      <li><a id="toc-How-can-I-create-a-custom-command_003f" href="#How-can-I-create-a-custom-command_003f">22.2.5 How can I create a custom command?</a></li>
+      <li><a id="toc-How-can-I-manage-context-windows_003f" href="#How-can-I-manage-context-windows_003f">22.2.6 How can I manage context windows?</a></li>
+      <li><a id="toc-What-happens-when-I-exceed-the-context-limit_003f" href="#What-happens-when-I-exceed-the-context-limit_003f">22.2.7 What happens when I exceed the context limit?</a></li>
+      <li><a id="toc-How-do-I-create-effective-system-prompts_003f" href="#How-do-I-create-effective-system-prompts_003f">22.2.8 How do I create effective system prompts?</a></li>
+      <li><a id="toc-Where-are-my-system-prompts-stored_003f" href="#Where-are-my-system-prompts-stored_003f">22.2.9 Where are my system prompts stored?</a></li>
+    </ul></li>
+    <li><a id="toc-Troubleshooting-1" href="#Troubleshooting-2">22.3 Troubleshooting</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Ollama-Buddy-shows-_0022OFFLINE_0022-status" href="#Ollama-Buddy-shows-_0022OFFLINE_0022-status">22.3.1 Ollama Buddy shows &quot;OFFLINE&quot; status</a></li>
+      <li><a id="toc-Responses-are-slow-or-the-model-seems-to-hang" href="#Responses-are-slow-or-the-model-seems-to-hang">22.3.2 Responses are slow or the model seems to hang</a></li>
+      <li><a id="toc-Getting-_0022error-parsing-model_0022-when-pulling-a-model" href="#Getting-_0022error-parsing-model_0022-when-pulling-a-model">22.3.3 Getting &quot;error parsing model&quot; when pulling a model</a></li>
+      <li><a id="toc-Model-responses-are-low-quality-or-truncated" href="#Model-responses-are-low-quality-or-truncated">22.3.4 Model responses are low quality or truncated</a></li>
+      <li><a id="toc-How-do-system-prompts-differ-from-regular-prompts_003f" href="#How-do-system-prompts-differ-from-regular-prompts_003f">22.3.5 How do system prompts differ from regular prompts?</a></li>
+      <li><a id="toc-What-is-the-global-system-prompt_003f" href="#What-is-the-global-system-prompt_003f">22.3.6 What is the global system prompt?</a></li>
+      <li><a id="toc-How-do-I-use-image-analysis_002fvision-features_003f" href="#How-do-I-use-image-analysis_002fvision-features_003f">22.3.7 How do I use image analysis/vision features?</a></li>
+      <li><a id="toc-Can-I-share-system-prompts-between-different-installations_003f" href="#Can-I-share-system-prompts-between-different-installations_003f">22.3.8 Can I share system prompts between different installations?</a></li>
     </ul></li>
   </ul></li>
-  <li><a id="toc-Contributing" href="#Contributing">23 Contributing</a>
+  <li><a id="toc-Troubleshooting-2" href="#Troubleshooting">23 Troubleshooting</a>
   <ul class="toc-numbered-mark">
-    <li><a id="toc-Getting-Started" href="#Getting-Started">23.1 Getting Started</a></li>
-    <li><a id="toc-Development-Setup" href="#Development-Setup">23.2 Development Setup</a>
+    <li><a id="toc-Common-Issues" href="#Common-Issues">23.1 Common Issues</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Required-Tools" href="#Required-Tools">23.2.1 Required Tools</a></li>
-      <li><a id="toc-Recommended-Packages" href="#Recommended-Packages">23.2.2 Recommended Packages</a></li>
+      <li><a id="toc-Connection-Problems" href="#Connection-Problems">23.1.1 Connection Problems</a></li>
+      <li><a id="toc-Model-Problems" href="#Model-Problems">23.1.2 Model Problems</a></li>
+      <li><a id="toc-Interface-Issues" href="#Interface-Issues">23.1.3 Interface Issues</a></li>
     </ul></li>
-    <li><a id="toc-Coding-Guidelines" href="#Coding-Guidelines">23.3 Coding Guidelines</a></li>
-    <li><a id="toc-Testing" href="#Testing">23.4 Testing</a>
+    <li><a id="toc-Debugging" href="#Debugging">23.2 Debugging</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Run-Existing-Tests" href="#Run-Existing-Tests">23.4.1 Run Existing Tests</a></li>
-      <li><a id="toc-Adding-New-Tests" href="#Adding-New-Tests">23.4.2 Adding New Tests</a></li>
+      <li><a id="toc-Enable-Debug-Mode" href="#Enable-Debug-Mode">23.2.1 Enable Debug Mode</a></li>
+      <li><a id="toc-Check-Logs" href="#Check-Logs">23.2.2 Check Logs</a></li>
+      <li><a id="toc-Report-Issues" href="#Report-Issues">23.2.3 Report Issues</a></li>
     </ul></li>
-    <li><a id="toc-Feature-Requests-and-Bug-Reports" href="#Feature-Requests-and-Bug-Reports">23.5 Feature Requests and Bug Reports</a>
+  </ul></li>
+  <li><a id="toc-Contributing" href="#Contributing">24 Contributing</a>
+  <ul class="toc-numbered-mark">
+    <li><a id="toc-Getting-Started" href="#Getting-Started">24.1 Getting Started</a></li>
+    <li><a id="toc-Development-Setup" href="#Development-Setup">24.2 Development Setup</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-User-System-Prompts-Issues" href="#User-System-Prompts-Issues">23.5.1 User System Prompts Issues</a></li>
+      <li><a id="toc-Required-Tools" href="#Required-Tools">24.2.1 Required Tools</a></li>
+      <li><a id="toc-Recommended-Packages" href="#Recommended-Packages">24.2.2 Recommended Packages</a></li>
+    </ul></li>
+    <li><a id="toc-Coding-Guidelines" href="#Coding-Guidelines">24.3 Coding Guidelines</a></li>
+    <li><a id="toc-Testing" href="#Testing">24.4 Testing</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Run-Existing-Tests" href="#Run-Existing-Tests">24.4.1 Run Existing Tests</a></li>
+      <li><a id="toc-Adding-New-Tests" href="#Adding-New-Tests">24.4.2 Adding New Tests</a></li>
+    </ul></li>
+    <li><a id="toc-Feature-Requests-and-Bug-Reports" href="#Feature-Requests-and-Bug-Reports">24.5 Feature Requests and Bug Reports</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-User-System-Prompts-Issues" href="#User-System-Prompts-Issues">24.5.1 User System Prompts Issues</a></li>
     </ul></li>
   </ul></li>
   <li><a id="toc-Index" href="#Index" rel="index">Index</a></li>
@@ -443,9 +464,10 @@ interact with AI models directly from within Emacs for various tasks such as:
 </li><li>Custom AI-powered workflows via roles
 </li><li>Using pre-built prompt templates from Fabric
 </li><li>Utilizing Awesome ChatGPT Prompts
-</li><li>Integrating with commercial APIs (OpenAI, Claude, Gemini, Grok, Codestral)
+</li><li>Integrating with commercial APIs (OpenAI, Claude, Gemini, Grok, Copilot, Codestral)
 </li><li>Using Ollama cloud models
 </li><li>Including files as context in conversations
+</li><li>Real-time web search to provide current information to LLMs
 </li></ul>
 
 <p>Instead of context-switching to web interfaces or terminal applications, Ollama Buddy brings 
@@ -879,6 +901,7 @@ machine ollama-buddy-codestral login apikey password YOUR_KEY
 </li><li><code class="code">c:</code> - Claude (e.g., <code class="code">c:claude-3-opus</code>)
 </li><li><code class="code">g:</code> - Gemini (e.g., <code class="code">g:gemini-pro</code>)
 </li><li><code class="code">k:</code> - Grok (e.g., <code class="code">k:grok-1</code>)
+</li><li><code class="code">p:</code> - GitHub Copilot (e.g., <code class="code">p:gpt-4o</code>)
 </li><li><code class="code">s:</code> - Codestral (e.g., <code class="code">s:codestral-latest</code>)
 </li><li><code class="code">o:</code> - Ollama local (when remote providers are loaded)
 </li></ul>
@@ -1187,6 +1210,7 @@ Next: <a href="#Chat-Interface" accesskey="n" rel="next">Chat Interface</a>, Pre
 </li><li>Connect to Anthropic&rsquo;s Claude API (prefix: <code class="code">c:</code>)
 </li><li>Connect to Google Gemini API (prefix: <code class="code">g:</code>)
 </li><li>Connect to X Grok API (prefix: <code class="code">k:</code>)
+</li><li>Connect to GitHub Copilot Chat API (prefix: <code class="code">p:</code>)
 </li><li>Connect to Mistral Codestral API (prefix: <code class="code">s:</code>)
 </li><li>Use Ollama cloud models (indicated by <code class="code">☁</code>)
 </li><li>Seamlessly switch between local and cloud models
@@ -1781,7 +1805,7 @@ Next: <a href="#File-Attachments" accesskey="n" rel="next">File Attachments</a>,
 <div class="chapter-level-extent" id="File-Attachments">
 <div class="nav-panel">
 <p>
-Next: <a href="#Parameter-Control" accesskey="n" rel="next">Parameter Control</a>, Previous: <a href="#Context-Management" accesskey="p" rel="prev">Context Management</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
+Next: <a href="#Web-Search" accesskey="n" rel="next">Web Search</a>, Previous: <a href="#Context-Management" accesskey="p" rel="prev">Context Management</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
 </div>
 <h2 class="chapter" id="File-Attachments-2"><span>9 File Attachments<a class="copiable-link" href="#File-Attachments-2"> &para;</a></span></h2>
 
@@ -2078,12 +2102,280 @@ Next: <a href="#Parameter-Control" accesskey="n" rel="next">Parameter Control</a
 <hr>
 </div>
 </div>
+<div class="chapter-level-extent" id="Web-Search">
+<div class="nav-panel">
+<p>
+Next: <a href="#Parameter-Control" accesskey="n" rel="next">Parameter Control</a>, Previous: <a href="#File-Attachments" accesskey="p" rel="prev">File Attachments</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<h2 class="chapter" id="Web-Search-1"><span>10 Web Search<a class="copiable-link" href="#Web-Search-1"> &para;</a></span></h2>
+
+<ul class="mini-toc">
+<li><a href="#Overview-1" accesskey="1">Overview</a></li>
+<li><a href="#How-It-Works" accesskey="2">How It Works</a></li>
+<li><a href="#Configuration-2" accesskey="3">Configuration</a></li>
+<li><a href="#Usage" accesskey="4">Usage</a></li>
+<li><a href="#Viewing-Web-Search-Results" accesskey="5">Viewing Web Search Results</a></li>
+<li><a href="#Managing-Web-Searches" accesskey="6">Managing Web Searches</a></li>
+<li><a href="#Provider-Support" accesskey="7">Provider Support</a></li>
+<li><a href="#Troubleshooting-1" accesskey="8">Troubleshooting</a></li>
+</ul>
+<div class="section-level-extent" id="Overview-1">
+<h3 class="section"><span>10.1 Overview<a class="copiable-link" href="#Overview-1"> &para;</a></span></h3>
+
+<p>Web search integration allows Ollama Buddy to fetch real-time information from the web and include it as context for your LLM conversations. This is particularly useful for:
+</p>
+<ul class="itemize mark-bullet">
+<li>Getting current information beyond the model&rsquo;s training cutoff
+</li><li>Researching topics and summarizing findings
+</li><li>Fact-checking with up-to-date sources
+</li><li>Comparing information from multiple web sources
+</li></ul>
+
+</div>
+<div class="section-level-extent" id="How-It-Works">
+<h3 class="section"><span>10.2 How It Works<a class="copiable-link" href="#How-It-Works"> &para;</a></span></h3>
+
+<p>The web search feature implements a multi-stage pipeline. Content can be retrieved using two methods, controlled by <code class="code">ollama-buddy-web-search-content-source</code>:
+</p>
+<ul class="mini-toc">
+<li><a href="#eww-Mode-_0028Default_002c-Recommended_0029" accesskey="1">eww Mode (Default, Recommended)</a></li>
+<li><a href="#API-Mode-_0028Experimental_0029" accesskey="2">API Mode (Experimental)</a></li>
+</ul>
+<div class="subsection-level-extent" id="eww-Mode-_0028Default_002c-Recommended_0029">
+<h4 class="subsection"><span>10.2.1 eww Mode (Default, Recommended)<a class="copiable-link" href="#eww-Mode-_0028Default_002c-Recommended_0029"> &para;</a></span></h4>
+
+<p>When <code class="code">ollama-buddy-web-search-content-source</code> is set to <code class="code">'eww</code> (the default):
+</p>
+<ol class="enumerate">
+<li> <strong class="strong">Query to Ollama API</strong>: Search queries are sent to Ollama&rsquo;s Web Search API (<code class="code">https://ollama.com/api/web_search</code>) via REST with Bearer token authentication.
+
+</li><li> <strong class="strong">URL Extraction</strong>: The API returns search results containing URLs.
+
+</li><li> <strong class="strong">eww/shr Processing</strong>: Each URL is fetched and processed through Emacs&rsquo; built-in eww/shr HTML renderer:
+<ul class="itemize mark-minus">
+<li>HTML is parsed using <code class="code">libxml-parse-html-region</code>
+</li><li>Main content is extracted (looking for <code class="code">&lt;article&gt;</code>, <code class="code">&lt;main&gt;</code>, or content divs)
+</li><li>Content is rendered to clean plain text using <code class="code">shr-insert-document</code>
+</li><li>Org-mode special characters are escaped (<code class="code">*</code> and <code class="code">#</code> at line starts become <code class="code">,*</code> and <code class="code">,#</code>)
+</li></ul>
+
+</li><li> <strong class="strong">Context Attachment</strong>: The cleaned text is formatted with org headings and attached to the conversation context.
+
+</li><li> <strong class="strong">LLM Submission</strong>: The search results are included when sending prompts to any configured LLM provider.
+</li></ol>
+
+<p>This mode produces cleaner, more complete content but requires additional HTTP requests to fetch each URL.
+</p>
+</div>
+<div class="subsection-level-extent" id="API-Mode-_0028Experimental_0029">
+<h4 class="subsection"><span>10.2.2 API Mode (Experimental)<a class="copiable-link" href="#API-Mode-_0028Experimental_0029"> &para;</a></span></h4>
+
+<p>When <code class="code">ollama-buddy-web-search-content-source</code> is set to <code class="code">'api</code>:
+</p>
+<ol class="enumerate">
+<li> <strong class="strong">Query to Ollama API</strong>: Search queries are sent to the Web Search API.
+
+</li><li> <strong class="strong">Direct Content</strong>: Content snippets returned directly by the Ollama API are used without fetching individual URLs.
+
+</li><li> <strong class="strong">Context Attachment</strong>: The API-provided content is formatted and attached to the conversation context.
+</li></ol>
+
+<p>This mode is faster (no additional HTTP requests) but the content quality depends on what the Ollama API returns, which may be less refined than eww-rendered pages. Use this mode when speed is more important than content completeness.
+</p>
+</div>
+</div>
+<div class="section-level-extent" id="Configuration-2">
+<h3 class="section"><span>10.3 Configuration<a class="copiable-link" href="#Configuration-2"> &para;</a></span></h3>
+
+<p>To use web search, you need an API key from Ollama:
+</p>
+<ol class="enumerate">
+<li> Visit <a class="url" href="https://ollama.com/settings/keys">https://ollama.com/settings/keys</a>
+</li><li> Create a new API key
+</li><li> Configure in Emacs:
+</li></ol>
+
+<div class="example lisp">
+<pre class="lisp-preformatted">;; Required: Set your API key
+(setq ollama-buddy-web-search-api-key &quot;your-api-key-here&quot;)
+
+;; Optional customizations
+(setq ollama-buddy-web-search-max-results 5)        ; Number of URLs to fetch (default: 5)
+(setq ollama-buddy-web-search-snippet-length 2000)  ; Max chars per result (default: 500)
+(setq ollama-buddy-web-search-include-urls nil)     ; Include URLs in context (default: nil)
+(setq ollama-buddy-web-search-content-source 'eww)  ; Content source: 'eww (default) or 'api
+
+;; Load the module
+(require 'ollama-buddy-web-search nil t)
+</pre></div>
+
+</div>
+<div class="section-level-extent" id="Usage">
+<h3 class="section"><span>10.4 Usage<a class="copiable-link" href="#Usage"> &para;</a></span></h3>
+
+<ul class="mini-toc">
+<li><a href="#Inline-Search-Syntax" accesskey="1">Inline Search Syntax</a></li>
+<li><a href="#Manual-Search-Commands" accesskey="2">Manual Search Commands</a></li>
+<li><a href="#Transient-Menu" accesskey="3">Transient Menu</a></li>
+</ul>
+<div class="subsection-level-extent" id="Inline-Search-Syntax">
+<h4 class="subsection"><span>10.4.1 Inline Search Syntax<a class="copiable-link" href="#Inline-Search-Syntax"> &para;</a></span></h4>
+
+<p>The most convenient way to use web search is with inline syntax directly in your prompts:
+</p>
+<div class="example">
+<pre class="example-preformatted">Tell me about @search(latest emacs 30 features) and summarize the key points.
+</pre></div>
+
+<p>Multiple searches can be combined:
+</p>
+<div class="example">
+<pre class="example-preformatted">Compare @search(rust async programming) with @search(go concurrency model)
+</pre></div>
+
+<p>When you send the prompt, Ollama Buddy will:
+</p><ol class="enumerate">
+<li> Extract all <code class="code">@search(query)</code> patterns
+</li><li> Perform each search and fetch URL contents
+</li><li> Attach results to the conversation context
+</li><li> Replace the search syntax with just the query text
+</li><li> Send the prompt with the attached web context
+</li></ol>
+
+</div>
+<div class="subsection-level-extent" id="Manual-Search-Commands">
+<h4 class="subsection"><span>10.4.2 Manual Search Commands<a class="copiable-link" href="#Manual-Search-Commands"> &para;</a></span></h4>
+
+<dl class="table">
+<dt><kbd class="kbd">C-c / s</kbd></dt>
+<dd><p>Search and display results in a buffer (<code class="code">ollama-buddy-web-search</code>)
+</p>
+</dd>
+<dt><kbd class="kbd">C-c / a</kbd></dt>
+<dd><p>Search and attach results to conversation context (<code class="code">ollama-buddy-web-search-attach</code>)
+</p></dd>
+</dl>
+
+</div>
+<div class="subsection-level-extent" id="Transient-Menu">
+<h4 class="subsection"><span>10.4.3 Transient Menu<a class="copiable-link" href="#Transient-Menu"> &para;</a></span></h4>
+
+<p>Access the web search menu via <code class="code">C-c O /</code> which provides:
+</p>
+<ul class="itemize mark-bullet">
+<li>Search &amp; Display - perform search and show results
+</li><li>Search &amp; Attach - perform search and attach to context
+</li><li>Show Attachments - view all attachments including web searches
+</li><li>Clear All - remove all attachments and web searches
+</li></ul>
+
+</div>
+</div>
+<div class="section-level-extent" id="Viewing-Web-Search-Results">
+<h3 class="section"><span>10.5 Viewing Web Search Results<a class="copiable-link" href="#Viewing-Web-Search-Results"> &para;</a></span></h3>
+
+<p>Web search results are integrated into the attachment system. Use <code class="code">C-c C-w</code> to view all attachments, which displays both file attachments and web searches in an org-mode buffer:
+</p>
+<div class="example">
+<pre class="example-preformatted">* Web Searches (1)
+
+** what is the latest manchester united result
+:PROPERTIES:
+:RESULTS: 5
+:TOKENS: ~1234
+:SIZE: 5678 bytes
+:TIME: 2024-01-15 10:30:00
+:END:
+
+*** 1. First Result Title
+:PROPERTIES:
+:URL: https://example.com/page1
+:END:
+#+begin_example
+Full content from this URL...
+#+end_example
+
+*** 2. Second Result Title
+...
+</pre></div>
+
+<p>The org-mode structure allows you to collapse/expand individual results.
+</p>
+</div>
+<div class="section-level-extent" id="Managing-Web-Searches">
+<h3 class="section"><span>10.6 Managing Web Searches<a class="copiable-link" href="#Managing-Web-Searches"> &para;</a></span></h3>
+
+<p>Web searches are treated as attachments:
+</p>
+<ul class="itemize mark-bullet">
+<li>Status line shows <code class="code">🔍N</code> when N web searches are attached
+</li><li><code class="code">C-c 0</code> clears all attachments including web searches
+</li><li>Web search context is automatically included in prompts to all LLM providers
+</li></ul>
+
+</div>
+<div class="section-level-extent" id="Provider-Support">
+<h3 class="section"><span>10.7 Provider Support<a class="copiable-link" href="#Provider-Support"> &para;</a></span></h3>
+
+<p>Web search works with all configured LLM providers:
+</p>
+<dl class="table">
+<dt>Local Ollama</dt>
+<dd><p>Models with <code class="code">o:</code> prefix or no prefix
+</p>
+</dd>
+<dt>OpenAI</dt>
+<dd><p>Models with <code class="code">a:</code> prefix
+</p>
+</dd>
+<dt>Anthropic Claude</dt>
+<dd><p>Models with <code class="code">c:</code> prefix
+</p>
+</dd>
+<dt>Google Gemini</dt>
+<dd><p>Models with <code class="code">g:</code> prefix
+</p>
+</dd>
+<dt>X Grok</dt>
+<dd><p>Models with <code class="code">k:</code> prefix
+</p>
+</dd>
+<dt>GitHub Copilot</dt>
+<dd><p>Models with <code class="code">p:</code> prefix
+</p>
+</dd>
+<dt>Mistral Codestral</dt>
+<dd><p>Models with <code class="code">s:</code> prefix
+</p></dd>
+</dl>
+
+</div>
+<div class="section-level-extent" id="Troubleshooting-1">
+<h3 class="section"><span>10.8 Troubleshooting<a class="copiable-link" href="#Troubleshooting-1"> &para;</a></span></h3>
+
+<dl class="table">
+<dt>401 Unauthorized error</dt>
+<dd><p>Ensure you&rsquo;re using an API key from <a class="url" href="https://ollama.com/settings/keys">https://ollama.com/settings/keys</a>, not the token from <code class="code">ollama signin</code> (cloud authentication).
+</p>
+</dd>
+<dt>Empty search results</dt>
+<dd><p>Some websites may block automated requests or have content that doesn&rsquo;t extract well. Try different search queries.
+</p>
+</dd>
+<dt>Slow searches</dt>
+<dd><p>URL fetching is asynchronous for display and attach commands. Inline searches in prompts use synchronous fetching to ensure results are ready before sending.
+</p></dd>
+</dl>
+
+<hr>
+</div>
+</div>
 <div class="chapter-level-extent" id="Parameter-Control">
 <div class="nav-panel">
 <p>
-Next: <a href="#Session-Management" accesskey="n" rel="next">Session Management</a>, Previous: <a href="#File-Attachments" accesskey="p" rel="prev">File Attachments</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
+Next: <a href="#Session-Management" accesskey="n" rel="next">Session Management</a>, Previous: <a href="#Web-Search" accesskey="p" rel="prev">Web Search</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
 </div>
-<h2 class="chapter" id="Parameter-Control-2"><span>10 Parameter Control<a class="copiable-link" href="#Parameter-Control-2"> &para;</a></span></h2>
+<h2 class="chapter" id="Parameter-Control-2"><span>11 Parameter Control<a class="copiable-link" href="#Parameter-Control-2"> &para;</a></span></h2>
 
 <ul class="mini-toc">
 <li><a href="#Understanding-Parameters" accesskey="1">Understanding Parameters</a></li>
@@ -2095,7 +2387,7 @@ Next: <a href="#Session-Management" accesskey="n" rel="next">Session Management<
 <li><a href="#Displaying-Parameters-in-Header" accesskey="7">Displaying Parameters in Header</a></li>
 </ul>
 <div class="section-level-extent" id="Understanding-Parameters">
-<h3 class="section"><span>10.1 Understanding Parameters<a class="copiable-link" href="#Understanding-Parameters"> &para;</a></span></h3>
+<h3 class="section"><span>11.1 Understanding Parameters<a class="copiable-link" href="#Understanding-Parameters"> &para;</a></span></h3>
 
 <p>Ollama&rsquo;s models support various parameters that control their behavior:
 </p>
@@ -2119,7 +2411,7 @@ Next: <a href="#Session-Management" accesskey="n" rel="next">Session Management<
 
 </div>
 <div class="section-level-extent" id="Viewing-Current-Parameters">
-<h3 class="section"><span>10.2 Viewing Current Parameters<a class="copiable-link" href="#Viewing-Current-Parameters"> &para;</a></span></h3>
+<h3 class="section"><span>11.2 Viewing Current Parameters<a class="copiable-link" href="#Viewing-Current-Parameters"> &para;</a></span></h3>
 
 <p>To view all current parameters:
 </p><div class="example">
@@ -2131,7 +2423,7 @@ Next: <a href="#Session-Management" accesskey="n" rel="next">Session Management<
 </p>
 </div>
 <div class="section-level-extent" id="Editing-Parameters">
-<h3 class="section"><span>10.3 Editing Parameters<a class="copiable-link" href="#Editing-Parameters"> &para;</a></span></h3>
+<h3 class="section"><span>11.3 Editing Parameters<a class="copiable-link" href="#Editing-Parameters"> &para;</a></span></h3>
 
 <p>To edit parameters:
 </p>
@@ -2145,7 +2437,7 @@ Next: <a href="#Session-Management" accesskey="n" rel="next">Session Management<
 </p>
 </div>
 <div class="section-level-extent" id="Parameter-Profiles">
-<h3 class="section"><span>10.4 Parameter Profiles<a class="copiable-link" href="#Parameter-Profiles"> &para;</a></span></h3>
+<h3 class="section"><span>11.4 Parameter Profiles<a class="copiable-link" href="#Parameter-Profiles"> &para;</a></span></h3>
 
 <p>Ollama Buddy comes with predefined parameter profiles for different use cases:
 </p>
@@ -2171,7 +2463,7 @@ Next: <a href="#Session-Management" accesskey="n" rel="next">Session Management<
 </p>
 </div>
 <div class="section-level-extent" id="Command_002dSpecific-Parameters">
-<h3 class="section"><span>10.5 Command-Specific Parameters<a class="copiable-link" href="#Command_002dSpecific-Parameters"> &para;</a></span></h3>
+<h3 class="section"><span>11.5 Command-Specific Parameters<a class="copiable-link" href="#Command_002dSpecific-Parameters"> &para;</a></span></h3>
 
 <p>Some commands have pre-configured parameters. For example:
 </p><ul class="itemize mark-bullet">
@@ -2183,7 +2475,7 @@ Next: <a href="#Session-Management" accesskey="n" rel="next">Session Management<
 </p>
 </div>
 <div class="section-level-extent" id="Reset-Parameters">
-<h3 class="section"><span>10.6 Reset Parameters<a class="copiable-link" href="#Reset-Parameters"> &para;</a></span></h3>
+<h3 class="section"><span>11.6 Reset Parameters<a class="copiable-link" href="#Reset-Parameters"> &para;</a></span></h3>
 
 <p>To reset all parameters to default values:
 </p><div class="example">
@@ -2193,7 +2485,7 @@ Next: <a href="#Session-Management" accesskey="n" rel="next">Session Management<
 </p>
 </div>
 <div class="section-level-extent" id="Displaying-Parameters-in-Header">
-<h3 class="section"><span>10.7 Displaying Parameters in Header<a class="copiable-link" href="#Displaying-Parameters-in-Header"> &para;</a></span></h3>
+<h3 class="section"><span>11.7 Displaying Parameters in Header<a class="copiable-link" href="#Displaying-Parameters-in-Header"> &para;</a></span></h3>
 
 <p>To toggle whether modified parameters are shown in the header:
 </p><div class="example">
@@ -2209,7 +2501,7 @@ Next: <a href="#Session-Management" accesskey="n" rel="next">Session Management<
 <p>
 Next: <a href="#User-System-Prompts" accesskey="n" rel="next">User System Prompts</a>, Previous: <a href="#Parameter-Control" accesskey="p" rel="prev">Parameter Control</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
 </div>
-<h2 class="chapter" id="Session-Management-1"><span>11 Session Management<a class="copiable-link" href="#Session-Management-1"> &para;</a></span></h2>
+<h2 class="chapter" id="Session-Management-1"><span>12 Session Management<a class="copiable-link" href="#Session-Management-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
 <li><a href="#Understanding-Sessions" accesskey="1">Understanding Sessions</a></li>
@@ -2220,7 +2512,7 @@ Next: <a href="#User-System-Prompts" accesskey="n" rel="next">User System Prompt
 <li><a href="#Conversation-History" accesskey="6">Conversation History</a></li>
 </ul>
 <div class="section-level-extent" id="Understanding-Sessions">
-<h3 class="section"><span>11.1 Understanding Sessions<a class="copiable-link" href="#Understanding-Sessions"> &para;</a></span></h3>
+<h3 class="section"><span>12.1 Understanding Sessions<a class="copiable-link" href="#Understanding-Sessions"> &para;</a></span></h3>
 
 <p>Sessions in Ollama Buddy allow you to:
 </p><ul class="itemize mark-bullet">
@@ -2232,7 +2524,7 @@ Next: <a href="#User-System-Prompts" accesskey="n" rel="next">User System Prompt
 
 </div>
 <div class="section-level-extent" id="Creating-a-New-Session">
-<h3 class="section"><span>11.2 Creating a New Session<a class="copiable-link" href="#Creating-a-New-Session"> &para;</a></span></h3>
+<h3 class="section"><span>12.2 Creating a New Session<a class="copiable-link" href="#Creating-a-New-Session"> &para;</a></span></h3>
 
 <p>To start a fresh session:
 </p><div class="example">
@@ -2244,7 +2536,7 @@ Next: <a href="#User-System-Prompts" accesskey="n" rel="next">User System Prompt
 </p>
 </div>
 <div class="section-level-extent" id="Saving-a-Session">
-<h3 class="section"><span>11.3 Saving a Session<a class="copiable-link" href="#Saving-a-Session"> &para;</a></span></h3>
+<h3 class="section"><span>12.3 Saving a Session<a class="copiable-link" href="#Saving-a-Session"> &para;</a></span></h3>
 
 <p>To save the current session:
 </p><div class="example">
@@ -2256,7 +2548,7 @@ Next: <a href="#User-System-Prompts" accesskey="n" rel="next">User System Prompt
 </p>
 </div>
 <div class="section-level-extent" id="Loading-a-Session">
-<h3 class="section"><span>11.4 Loading a Session<a class="copiable-link" href="#Loading-a-Session"> &para;</a></span></h3>
+<h3 class="section"><span>12.4 Loading a Session<a class="copiable-link" href="#Loading-a-Session"> &para;</a></span></h3>
 
 <p>To load a previously saved session:
 </p><div class="example">
@@ -2268,7 +2560,7 @@ Next: <a href="#User-System-Prompts" accesskey="n" rel="next">User System Prompt
 </p>
 </div>
 <div class="section-level-extent" id="Managing-Sessions">
-<h3 class="section"><span>11.5 Managing Sessions<a class="copiable-link" href="#Managing-Sessions"> &para;</a></span></h3>
+<h3 class="section"><span>12.5 Managing Sessions<a class="copiable-link" href="#Managing-Sessions"> &para;</a></span></h3>
 
 <p>To see a list of all saved sessions:
 </p><div class="example">
@@ -2291,7 +2583,7 @@ Next: <a href="#User-System-Prompts" accesskey="n" rel="next">User System Prompt
 </p>
 </div>
 <div class="section-level-extent" id="Conversation-History">
-<h3 class="section"><span>11.6 Conversation History<a class="copiable-link" href="#Conversation-History"> &para;</a></span></h3>
+<h3 class="section"><span>12.6 Conversation History<a class="copiable-link" href="#Conversation-History"> &para;</a></span></h3>
 
 <p>Sessions save the conversation history for each model separately.
 </p>
@@ -2321,10 +2613,10 @@ Next: <a href="#User-System-Prompts" accesskey="n" rel="next">User System Prompt
 <p>
 Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands</a>, Previous: <a href="#Session-Management" accesskey="p" rel="prev">Session Management</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
 </div>
-<h2 class="chapter" id="User-System-Prompts-1"><span>12 User System Prompts<a class="copiable-link" href="#User-System-Prompts-1"> &para;</a></span></h2>
+<h2 class="chapter" id="User-System-Prompts-1"><span>13 User System Prompts<a class="copiable-link" href="#User-System-Prompts-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Overview-1" accesskey="1">Overview</a></li>
+<li><a href="#Overview-2" accesskey="1">Overview</a></li>
 <li><a href="#Accessing-the-System-Prompts-Menu" accesskey="2">Accessing the System Prompts Menu</a></li>
 <li><a href="#Saving-System-Prompts" accesskey="3">Saving System Prompts</a></li>
 <li><a href="#Loading-Saved-Prompts" accesskey="4">Loading Saved Prompts</a></li>
@@ -2336,8 +2628,8 @@ Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands<
 <li><a href="#Workflow-Examples">Workflow Examples</a></li>
 <li><a href="#Integration-with-Roles">Integration with Roles</a></li>
 </ul>
-<div class="section-level-extent" id="Overview-1">
-<h3 class="section"><span>12.1 Overview<a class="copiable-link" href="#Overview-1"> &para;</a></span></h3>
+<div class="section-level-extent" id="Overview-2">
+<h3 class="section"><span>13.1 Overview<a class="copiable-link" href="#Overview-2"> &para;</a></span></h3>
 
 <p>The User System Prompts feature allows you to save, organize, and reuse effective system prompts for your conversations with AI models. This feature is particularly valuable for:
 </p>
@@ -2353,7 +2645,7 @@ Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands<
 </p>
 </div>
 <div class="section-level-extent" id="Accessing-the-System-Prompts-Menu">
-<h3 class="section"><span>12.2 Accessing the System Prompts Menu<a class="copiable-link" href="#Accessing-the-System-Prompts-Menu"> &para;</a></span></h3>
+<h3 class="section"><span>13.2 Accessing the System Prompts Menu<a class="copiable-link" href="#Accessing-the-System-Prompts-Menu"> &para;</a></span></h3>
 
 <p>To access the system prompts menu:
 </p><div class="example">
@@ -2399,7 +2691,7 @@ Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands<
 
 </div>
 <div class="section-level-extent" id="Saving-System-Prompts">
-<h3 class="section"><span>12.3 Saving System Prompts<a class="copiable-link" href="#Saving-System-Prompts"> &para;</a></span></h3>
+<h3 class="section"><span>13.3 Saving System Prompts<a class="copiable-link" href="#Saving-System-Prompts"> &para;</a></span></h3>
 
 <p>To save a system prompt:
 </p>
@@ -2414,7 +2706,7 @@ Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands<
 
 </div>
 <div class="section-level-extent" id="Loading-Saved-Prompts">
-<h3 class="section"><span>12.4 Loading Saved Prompts<a class="copiable-link" href="#Loading-Saved-Prompts"> &para;</a></span></h3>
+<h3 class="section"><span>13.4 Loading Saved Prompts<a class="copiable-link" href="#Loading-Saved-Prompts"> &para;</a></span></h3>
 
 <p>To load a previously saved prompt:
 </p>
@@ -2429,7 +2721,7 @@ Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands<
 </p>
 </div>
 <div class="section-level-extent" id="Managing-Your-Prompt-Library">
-<h3 class="section"><span>12.5 Managing Your Prompt Library<a class="copiable-link" href="#Managing-Your-Prompt-Library"> &para;</a></span></h3>
+<h3 class="section"><span>13.5 Managing Your Prompt Library<a class="copiable-link" href="#Managing-Your-Prompt-Library"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#Viewing-All-Prompts" accesskey="1">Viewing All Prompts</a></li>
@@ -2438,7 +2730,7 @@ Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands<
 <li><a href="#Deleting-Prompts" accesskey="4">Deleting Prompts</a></li>
 </ul>
 <div class="subsection-level-extent" id="Viewing-All-Prompts">
-<h4 class="subsection"><span>12.5.1 Viewing All Prompts<a class="copiable-link" href="#Viewing-All-Prompts"> &para;</a></span></h4>
+<h4 class="subsection"><span>13.5.1 Viewing All Prompts<a class="copiable-link" href="#Viewing-All-Prompts"> &para;</a></span></h4>
 
 <p>To view your entire prompt collection:
 </p><div class="example">
@@ -2455,7 +2747,7 @@ Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands<
 
 </div>
 <div class="subsection-level-extent" id="Editing-Prompts">
-<h4 class="subsection"><span>12.5.2 Editing Prompts<a class="copiable-link" href="#Editing-Prompts"> &para;</a></span></h4>
+<h4 class="subsection"><span>13.5.2 Editing Prompts<a class="copiable-link" href="#Editing-Prompts"> &para;</a></span></h4>
 
 <p>To edit an existing prompt:
 </p><div class="example">
@@ -2467,7 +2759,7 @@ Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands<
 </p>
 </div>
 <div class="subsection-level-extent" id="Creating-New-Prompts">
-<h4 class="subsection"><span>12.5.3 Creating New Prompts<a class="copiable-link" href="#Creating-New-Prompts"> &para;</a></span></h4>
+<h4 class="subsection"><span>13.5.3 Creating New Prompts<a class="copiable-link" href="#Creating-New-Prompts"> &para;</a></span></h4>
 
 <p>To create a new prompt from scratch:
 </p><div class="example">
@@ -2479,7 +2771,7 @@ Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands<
 </p>
 </div>
 <div class="subsection-level-extent" id="Deleting-Prompts">
-<h4 class="subsection"><span>12.5.4 Deleting Prompts<a class="copiable-link" href="#Deleting-Prompts"> &para;</a></span></h4>
+<h4 class="subsection"><span>13.5.4 Deleting Prompts<a class="copiable-link" href="#Deleting-Prompts"> &para;</a></span></h4>
 
 <p>To delete a prompt:
 </p><div class="example">
@@ -2492,7 +2784,7 @@ Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands<
 </div>
 </div>
 <div class="section-level-extent" id="Categories-and-Organization">
-<h3 class="section"><span>12.6 Categories and Organization<a class="copiable-link" href="#Categories-and-Organization"> &para;</a></span></h3>
+<h3 class="section"><span>13.6 Categories and Organization<a class="copiable-link" href="#Categories-and-Organization"> &para;</a></span></h3>
 
 <p>Prompts are organized into categories for easier management. Default categories include:
 </p>
@@ -2514,7 +2806,7 @@ Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands<
 
 </div>
 <div class="section-level-extent" id="Prompt-Storage-Format">
-<h3 class="section"><span>12.7 Prompt Storage Format<a class="copiable-link" href="#Prompt-Storage-Format"> &para;</a></span></h3>
+<h3 class="section"><span>13.7 Prompt Storage Format<a class="copiable-link" href="#Prompt-Storage-Format"> &para;</a></span></h3>
 
 <p>System prompts are stored as Org mode files with a specific naming convention:
 </p>
@@ -2548,14 +2840,14 @@ When asked to debug, first identify the likely cause before suggesting fixes.
 
 </div>
 <div class="section-level-extent" id="Best-Practices-for-System-Prompts">
-<h3 class="section"><span>12.8 Best Practices for System Prompts<a class="copiable-link" href="#Best-Practices-for-System-Prompts"> &para;</a></span></h3>
+<h3 class="section"><span>13.8 Best Practices for System Prompts<a class="copiable-link" href="#Best-Practices-for-System-Prompts"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#Components-of-Effective-Prompts" accesskey="1">Components of Effective Prompts</a></li>
 <li><a href="#Example-Patterns" accesskey="2">Example Patterns</a></li>
 </ul>
 <div class="subsection-level-extent" id="Components-of-Effective-Prompts">
-<h4 class="subsection"><span>12.8.1 Components of Effective Prompts<a class="copiable-link" href="#Components-of-Effective-Prompts"> &para;</a></span></h4>
+<h4 class="subsection"><span>13.8.1 Components of Effective Prompts<a class="copiable-link" href="#Components-of-Effective-Prompts"> &para;</a></span></h4>
 
 <p>Well-designed system prompts typically include:
 </p>
@@ -2569,7 +2861,7 @@ When asked to debug, first identify the likely cause before suggesting fixes.
 
 </div>
 <div class="subsection-level-extent" id="Example-Patterns">
-<h4 class="subsection"><span>12.8.2 Example Patterns<a class="copiable-link" href="#Example-Patterns"> &para;</a></span></h4>
+<h4 class="subsection"><span>13.8.2 Example Patterns<a class="copiable-link" href="#Example-Patterns"> &para;</a></span></h4>
 
 <dl class="table">
 <dt>Expert Role</dt>
@@ -2592,14 +2884,14 @@ When asked to debug, first identify the likely cause before suggesting fixes.
 </div>
 </div>
 <div class="section-level-extent" id="Example-System-Prompts">
-<h3 class="section"><span>12.9 Example System Prompts<a class="copiable-link" href="#Example-System-Prompts"> &para;</a></span></h3>
+<h3 class="section"><span>13.9 Example System Prompts<a class="copiable-link" href="#Example-System-Prompts"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#Technical-Writing-Assistant" accesskey="1">Technical Writing Assistant</a></li>
 <li><a href="#Code-Reviewer" accesskey="2">Code Reviewer</a></li>
 </ul>
 <div class="subsection-level-extent" id="Technical-Writing-Assistant">
-<h4 class="subsection"><span>12.9.1 Technical Writing Assistant<a class="copiable-link" href="#Technical-Writing-Assistant"> &para;</a></span></h4>
+<h4 class="subsection"><span>13.9.1 Technical Writing Assistant<a class="copiable-link" href="#Technical-Writing-Assistant"> &para;</a></span></h4>
 
 <div class="example">
 <pre class="example-preformatted">You are a technical writing expert who specializes in creating clear, concise, 
@@ -2617,7 +2909,7 @@ the target audience while preserving technical accuracy.
 
 </div>
 <div class="subsection-level-extent" id="Code-Reviewer">
-<h4 class="subsection"><span>12.9.2 Code Reviewer<a class="copiable-link" href="#Code-Reviewer"> &para;</a></span></h4>
+<h4 class="subsection"><span>13.9.2 Code Reviewer<a class="copiable-link" href="#Code-Reviewer"> &para;</a></span></h4>
 
 <div class="example">
 <pre class="example-preformatted">You are an experienced code reviewer with expertise in software engineering 
@@ -2635,14 +2927,14 @@ Balance constructive criticism with acknowledgment of well-written code.
 </div>
 </div>
 <div class="section-level-extent" id="Workflow-Examples">
-<h3 class="section"><span>12.10 Workflow Examples<a class="copiable-link" href="#Workflow-Examples"> &para;</a></span></h3>
+<h3 class="section"><span>13.10 Workflow Examples<a class="copiable-link" href="#Workflow-Examples"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#Python-Code-Assistance" accesskey="1">Python Code Assistance</a></li>
 <li><a href="#Technical-Writing-Help" accesskey="2">Technical Writing Help</a></li>
 </ul>
 <div class="subsection-level-extent" id="Python-Code-Assistance">
-<h4 class="subsection"><span>12.10.1 Python Code Assistance<a class="copiable-link" href="#Python-Code-Assistance"> &para;</a></span></h4>
+<h4 class="subsection"><span>13.10.1 Python Code Assistance<a class="copiable-link" href="#Python-Code-Assistance"> &para;</a></span></h4>
 
 <ol class="enumerate">
 <li> Load your &quot;Python Expert&quot; system prompt with <code class="code">C-c s L</code>
@@ -2653,7 +2945,7 @@ Balance constructive criticism with acknowledgment of well-written code.
 
 </div>
 <div class="subsection-level-extent" id="Technical-Writing-Help">
-<h4 class="subsection"><span>12.10.2 Technical Writing Help<a class="copiable-link" href="#Technical-Writing-Help"> &para;</a></span></h4>
+<h4 class="subsection"><span>13.10.2 Technical Writing Help<a class="copiable-link" href="#Technical-Writing-Help"> &para;</a></span></h4>
 
 <ol class="enumerate">
 <li> Create a new system prompt for technical writing (<code class="code">C-c s N</code>)
@@ -2666,7 +2958,7 @@ Balance constructive criticism with acknowledgment of well-written code.
 </div>
 </div>
 <div class="section-level-extent" id="Integration-with-Roles">
-<h3 class="section"><span>12.11 Integration with Roles<a class="copiable-link" href="#Integration-with-Roles"> &para;</a></span></h3>
+<h3 class="section"><span>13.11 Integration with Roles<a class="copiable-link" href="#Integration-with-Roles"> &para;</a></span></h3>
 
 <p>System prompts can be integrated with Ollama Buddy roles for more specialized workflows:
 </p>
@@ -2687,7 +2979,7 @@ Balance constructive criticism with acknowledgment of well-written code.
 <p>
 Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Pattern Integration</a>, Previous: <a href="#User-System-Prompts" accesskey="p" rel="prev">User System Prompts</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
 </div>
-<h2 class="chapter" id="Roles-and-Commands-1"><span>13 Roles and Commands<a class="copiable-link" href="#Roles-and-Commands-1"> &para;</a></span></h2>
+<h2 class="chapter" id="Roles-and-Commands-1"><span>14 Roles and Commands<a class="copiable-link" href="#Roles-and-Commands-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
 <li><a href="#Understanding-Roles" accesskey="1">Understanding Roles</a></li>
@@ -2701,7 +2993,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 <li><a href="#Tips-for-Effective-Role-Usage" accesskey="9">Tips for Effective Role Usage</a></li>
 </ul>
 <div class="section-level-extent" id="Understanding-Roles">
-<h3 class="section"><span>13.1 Understanding Roles<a class="copiable-link" href="#Understanding-Roles"> &para;</a></span></h3>
+<h3 class="section"><span>14.1 Understanding Roles<a class="copiable-link" href="#Understanding-Roles"> &para;</a></span></h3>
 
 <p>Roles in Ollama Buddy are collections of commands with specific configurations:
 </p><ul class="itemize mark-bullet">
@@ -2715,7 +3007,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 </p>
 </div>
 <div class="section-level-extent" id="Role-File-Naming-Convention">
-<h3 class="section"><span>13.2 Role File Naming Convention<a class="copiable-link" href="#Role-File-Naming-Convention"> &para;</a></span></h3>
+<h3 class="section"><span>14.2 Role File Naming Convention<a class="copiable-link" href="#Role-File-Naming-Convention"> &para;</a></span></h3>
 
 <p>The file naming convention is critical to understand how roles, preset files, and menu configurations work together:
 </p>
@@ -2749,7 +3041,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 </p>
 </div>
 <div class="section-level-extent" id="Built_002din-Commands">
-<h3 class="section"><span>13.3 Built-in Commands<a class="copiable-link" href="#Built_002din-Commands"> &para;</a></span></h3>
+<h3 class="section"><span>14.3 Built-in Commands<a class="copiable-link" href="#Built_002din-Commands"> &para;</a></span></h3>
 
 <p>Ollama Buddy comes with several built-in commands:
 </p>
@@ -2781,7 +3073,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 
 </div>
 <div class="section-level-extent" id="Creating-Custom-Roles">
-<h3 class="section"><span>13.4 Creating Custom Roles<a class="copiable-link" href="#Creating-Custom-Roles"> &para;</a></span></h3>
+<h3 class="section"><span>14.4 Creating Custom Roles<a class="copiable-link" href="#Creating-Custom-Roles"> &para;</a></span></h3>
 
 <p>There are two ways to create custom roles:
 </p>
@@ -2790,7 +3082,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 <li><a href="#Manual-Role-Creation" accesskey="2">Manual Role Creation</a></li>
 </ul>
 <div class="subsection-level-extent" id="Interactive-Role-Creator">
-<h4 class="subsection"><span>13.4.1 Interactive Role Creator<a class="copiable-link" href="#Interactive-Role-Creator"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.4.1 Interactive Role Creator<a class="copiable-link" href="#Interactive-Role-Creator"> &para;</a></span></h4>
 
 <p>The most user-friendly approach:
 </p>
@@ -2811,7 +3103,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 </p>
 </div>
 <div class="subsection-level-extent" id="Manual-Role-Creation">
-<h4 class="subsection"><span>13.4.2 Manual Role Creation<a class="copiable-link" href="#Manual-Role-Creation"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.4.2 Manual Role Creation<a class="copiable-link" href="#Manual-Role-Creation"> &para;</a></span></h4>
 
 <p>For more advanced customization, create role files manually:
 </p>
@@ -2881,7 +3173,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 </div>
 </div>
 <div class="section-level-extent" id="Switching-Roles">
-<h3 class="section"><span>13.5 Switching Roles<a class="copiable-link" href="#Switching-Roles"> &para;</a></span></h3>
+<h3 class="section"><span>14.5 Switching Roles<a class="copiable-link" href="#Switching-Roles"> &para;</a></span></h3>
 
 <p>To switch between roles:
 </p><div class="example">
@@ -2893,7 +3185,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 </p>
 </div>
 <div class="section-level-extent" id="Managing-Role-Files">
-<h3 class="section"><span>13.6 Managing Role Files<a class="copiable-link" href="#Managing-Role-Files"> &para;</a></span></h3>
+<h3 class="section"><span>14.6 Managing Role Files<a class="copiable-link" href="#Managing-Role-Files"> &para;</a></span></h3>
 
 <p>Roles are stored as Elisp files in the <code class="code">ollama-buddy-roles-directory</code>.
 </p>
@@ -2916,7 +3208,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 </p>
 </div>
 <div class="section-level-extent" id="Advanced-Role-Customization">
-<h3 class="section"><span>13.7 Advanced Role Customization<a class="copiable-link" href="#Advanced-Role-Customization"> &para;</a></span></h3>
+<h3 class="section"><span>14.7 Advanced Role Customization<a class="copiable-link" href="#Advanced-Role-Customization"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#Command_002dSpecific-Models" accesskey="1">Command-Specific Models</a></li>
@@ -2924,7 +3216,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 <li><a href="#Creating-New-Commands" accesskey="3">Creating New Commands</a></li>
 </ul>
 <div class="subsection-level-extent" id="Command_002dSpecific-Models">
-<h4 class="subsection"><span>13.7.1 Command-Specific Models<a class="copiable-link" href="#Command_002dSpecific-Models"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.7.1 Command-Specific Models<a class="copiable-link" href="#Command_002dSpecific-Models"> &para;</a></span></h4>
 
 <p>Assign specific models to commands for optimal performance:
 </p>
@@ -2934,7 +3226,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 
 </div>
 <div class="subsection-level-extent" id="Command_002dSpecific-Parameters-1">
-<h4 class="subsection"><span>13.7.2 Command-Specific Parameters<a class="copiable-link" href="#Command_002dSpecific-Parameters-1"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.7.2 Command-Specific Parameters<a class="copiable-link" href="#Command_002dSpecific-Parameters-1"> &para;</a></span></h4>
 
 <p>Optimize parameters for specific commands:
 </p>
@@ -2947,7 +3239,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 
 </div>
 <div class="subsection-level-extent" id="Creating-New-Commands">
-<h4 class="subsection"><span>13.7.3 Creating New Commands<a class="copiable-link" href="#Creating-New-Commands"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.7.3 Creating New Commands<a class="copiable-link" href="#Creating-New-Commands"> &para;</a></span></h4>
 
 <p>Add entirely new commands to your menu:
 </p>
@@ -2963,14 +3255,14 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 </div>
 </div>
 <div class="section-level-extent" id="Role-Examples">
-<h3 class="section"><span>13.8 Role Examples<a class="copiable-link" href="#Role-Examples"> &para;</a></span></h3>
+<h3 class="section"><span>14.8 Role Examples<a class="copiable-link" href="#Role-Examples"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#Programming-Role" accesskey="1">Programming Role</a></li>
 <li><a href="#Writing-Role" accesskey="2">Writing Role</a></li>
 </ul>
 <div class="subsection-level-extent" id="Programming-Role">
-<h4 class="subsection"><span>13.8.1 Programming Role<a class="copiable-link" href="#Programming-Role"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.8.1 Programming Role<a class="copiable-link" href="#Programming-Role"> &para;</a></span></h4>
 
 <p>A complete example of a programming-focused role:
 </p>
@@ -3020,7 +3312,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 
 </div>
 <div class="subsection-level-extent" id="Writing-Role">
-<h4 class="subsection"><span>13.8.2 Writing Role<a class="copiable-link" href="#Writing-Role"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.8.2 Writing Role<a class="copiable-link" href="#Writing-Role"> &para;</a></span></h4>
 
 <p>A complete example of a writing-focused role:
 </p>
@@ -3071,7 +3363,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 </div>
 </div>
 <div class="section-level-extent" id="Tips-for-Effective-Role-Usage">
-<h3 class="section"><span>13.9 Tips for Effective Role Usage<a class="copiable-link" href="#Tips-for-Effective-Role-Usage"> &para;</a></span></h3>
+<h3 class="section"><span>14.9 Tips for Effective Role Usage<a class="copiable-link" href="#Tips-for-Effective-Role-Usage"> &para;</a></span></h3>
 
 <ol class="enumerate">
 <li> Group related commands: Create roles around specific workflows or tasks
@@ -3089,7 +3381,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 <p>
 Next: <a href="#Awesome-ChatGPT-Prompts" accesskey="n" rel="next">Awesome ChatGPT Prompts</a>, Previous: <a href="#Roles-and-Commands" accesskey="p" rel="prev">Roles and Commands</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
 </div>
-<h2 class="chapter" id="Fabric-Pattern-Integration-1"><span>14 Fabric Pattern Integration<a class="copiable-link" href="#Fabric-Pattern-Integration-1"> &para;</a></span></h2>
+<h2 class="chapter" id="Fabric-Pattern-Integration-1"><span>15 Fabric Pattern Integration<a class="copiable-link" href="#Fabric-Pattern-Integration-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
 <li><a href="#What-are-Fabric-Patterns_003f" accesskey="1">What are Fabric Patterns?</a></li>
@@ -3101,7 +3393,7 @@ Next: <a href="#Awesome-ChatGPT-Prompts" accesskey="n" rel="next">Awesome ChatGP
 <li><a href="#Using-Patterns-by-Category" accesskey="7">Using Patterns by Category</a></li>
 </ul>
 <div class="section-level-extent" id="What-are-Fabric-Patterns_003f">
-<h3 class="section"><span>14.1 What are Fabric Patterns?<a class="copiable-link" href="#What-are-Fabric-Patterns_003f"> &para;</a></span></h3>
+<h3 class="section"><span>15.1 What are Fabric Patterns?<a class="copiable-link" href="#What-are-Fabric-Patterns_003f"> &para;</a></span></h3>
 
 <p>Fabric patterns are pre-defined prompt templates from Daniel Miessler&rsquo;s Fabric project (<a class="url" href="https://github.com/danielmiessler/fabric">https://github.com/danielmiessler/fabric</a>). They provide optimized prompts for various tasks, categorized as:
 </p>
@@ -3114,7 +3406,7 @@ Next: <a href="#Awesome-ChatGPT-Prompts" accesskey="n" rel="next">Awesome ChatGP
 
 </div>
 <div class="section-level-extent" id="Setting-Up-Fabric-Integration">
-<h3 class="section"><span>14.2 Setting Up Fabric Integration<a class="copiable-link" href="#Setting-Up-Fabric-Integration"> &para;</a></span></h3>
+<h3 class="section"><span>15.2 Setting Up Fabric Integration<a class="copiable-link" href="#Setting-Up-Fabric-Integration"> &para;</a></span></h3>
 
 <p>To set up Fabric integration:
 </p><div class="example">
@@ -3130,7 +3422,7 @@ Next: <a href="#Awesome-ChatGPT-Prompts" accesskey="n" rel="next">Awesome ChatGP
 
 </div>
 <div class="section-level-extent" id="Using-Fabric-Patterns">
-<h3 class="section"><span>14.3 Using Fabric Patterns<a class="copiable-link" href="#Using-Fabric-Patterns"> &para;</a></span></h3>
+<h3 class="section"><span>15.3 Using Fabric Patterns<a class="copiable-link" href="#Using-Fabric-Patterns"> &para;</a></span></h3>
 
 <p>To use a Fabric pattern:
 </p><div class="example">
@@ -3148,7 +3440,7 @@ Next: <a href="#Awesome-ChatGPT-Prompts" accesskey="n" rel="next">Awesome ChatGP
 </p>
 </div>
 <div class="section-level-extent" id="Browsing-Available-Patterns">
-<h3 class="section"><span>14.4 Browsing Available Patterns<a class="copiable-link" href="#Browsing-Available-Patterns"> &para;</a></span></h3>
+<h3 class="section"><span>15.4 Browsing Available Patterns<a class="copiable-link" href="#Browsing-Available-Patterns"> &para;</a></span></h3>
 
 <p>To see all available patterns:
 </p><div class="example">
@@ -3165,7 +3457,7 @@ Next: <a href="#Awesome-ChatGPT-Prompts" accesskey="n" rel="next">Awesome ChatGP
 
 </div>
 <div class="section-level-extent" id="Viewing-Pattern-Details">
-<h3 class="section"><span>14.5 Viewing Pattern Details<a class="copiable-link" href="#Viewing-Pattern-Details"> &para;</a></span></h3>
+<h3 class="section"><span>15.5 Viewing Pattern Details<a class="copiable-link" href="#Viewing-Pattern-Details"> &para;</a></span></h3>
 
 <p>To see the full content of a specific pattern:
 </p><div class="example">
@@ -3181,7 +3473,7 @@ Next: <a href="#Awesome-ChatGPT-Prompts" accesskey="n" rel="next">Awesome ChatGP
 
 </div>
 <div class="section-level-extent" id="Updating-Patterns">
-<h3 class="section"><span>14.6 Updating Patterns<a class="copiable-link" href="#Updating-Patterns"> &para;</a></span></h3>
+<h3 class="section"><span>15.6 Updating Patterns<a class="copiable-link" href="#Updating-Patterns"> &para;</a></span></h3>
 
 <p>To sync with the latest patterns from GitHub:
 </p><div class="example">
@@ -3191,7 +3483,7 @@ Next: <a href="#Awesome-ChatGPT-Prompts" accesskey="n" rel="next">Awesome ChatGP
 </p>
 </div>
 <div class="section-level-extent" id="Using-Patterns-by-Category">
-<h3 class="section"><span>14.7 Using Patterns by Category<a class="copiable-link" href="#Using-Patterns-by-Category"> &para;</a></span></h3>
+<h3 class="section"><span>15.7 Using Patterns by Category<a class="copiable-link" href="#Using-Patterns-by-Category"> &para;</a></span></h3>
 
 <p>You can quickly access patterns by category:
 </p><ul class="itemize mark-bullet">
@@ -3209,7 +3501,7 @@ Next: <a href="#Awesome-ChatGPT-Prompts" accesskey="n" rel="next">Awesome ChatGP
 <p>
 Next: <a href="#Remote-Providers" accesskey="n" rel="next">Remote Providers</a>, Previous: <a href="#Fabric-Pattern-Integration" accesskey="p" rel="prev">Fabric Pattern Integration</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
 </div>
-<h2 class="chapter" id="Awesome-ChatGPT-Prompts-1"><span>15 Awesome ChatGPT Prompts<a class="copiable-link" href="#Awesome-ChatGPT-Prompts-1"> &para;</a></span></h2>
+<h2 class="chapter" id="Awesome-ChatGPT-Prompts-1"><span>16 Awesome ChatGPT Prompts<a class="copiable-link" href="#Awesome-ChatGPT-Prompts-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
 <li><a href="#What-is-Awesome-ChatGPT-Prompts_003f" accesskey="1">What is Awesome ChatGPT Prompts?</a></li>
@@ -3223,7 +3515,7 @@ Next: <a href="#Remote-Providers" accesskey="n" rel="next">Remote Providers</a>,
 <li><a href="#Example-Usage" accesskey="9">Example Usage</a></li>
 </ul>
 <div class="section-level-extent" id="What-is-Awesome-ChatGPT-Prompts_003f">
-<h3 class="section"><span>15.1 What is Awesome ChatGPT Prompts?<a class="copiable-link" href="#What-is-Awesome-ChatGPT-Prompts_003f"> &para;</a></span></h3>
+<h3 class="section"><span>16.1 What is Awesome ChatGPT Prompts?<a class="copiable-link" href="#What-is-Awesome-ChatGPT-Prompts_003f"> &para;</a></span></h3>
 
 <p>Awesome ChatGPT Prompts is a curated collection of prompt templates created by the community and maintained in the GitHub repository at <a class="url" href="https://github.com/f/awesome-chatgpt-prompts">https://github.com/f/awesome-chatgpt-prompts</a>. These prompts are designed to make ChatGPT (and other LLMs) act as various specialized personas or experts, such as:
 </p>
@@ -3237,7 +3529,7 @@ Next: <a href="#Remote-Providers" accesskey="n" rel="next">Remote Providers</a>,
 
 </div>
 <div class="section-level-extent" id="Setting-Up-Awesome-ChatGPT-Prompts">
-<h3 class="section"><span>15.2 Setting Up Awesome ChatGPT Prompts<a class="copiable-link" href="#Setting-Up-Awesome-ChatGPT-Prompts"> &para;</a></span></h3>
+<h3 class="section"><span>16.2 Setting Up Awesome ChatGPT Prompts<a class="copiable-link" href="#Setting-Up-Awesome-ChatGPT-Prompts"> &para;</a></span></h3>
 
 <p>To set up the Awesome ChatGPT Prompts integration:
 </p><div class="example">
@@ -3253,7 +3545,7 @@ Next: <a href="#Remote-Providers" accesskey="n" rel="next">Remote Providers</a>,
 
 </div>
 <div class="section-level-extent" id="Using-Awesome-ChatGPT-Prompts">
-<h3 class="section"><span>15.3 Using Awesome ChatGPT Prompts<a class="copiable-link" href="#Using-Awesome-ChatGPT-Prompts"> &para;</a></span></h3>
+<h3 class="section"><span>16.3 Using Awesome ChatGPT Prompts<a class="copiable-link" href="#Using-Awesome-ChatGPT-Prompts"> &para;</a></span></h3>
 
 <p>To use an Awesome ChatGPT Prompt:
 </p><div class="example">
@@ -3271,7 +3563,7 @@ Next: <a href="#Remote-Providers" accesskey="n" rel="next">Remote Providers</a>,
 </p>
 </div>
 <div class="section-level-extent" id="Browsing-Available-Prompts">
-<h3 class="section"><span>15.4 Browsing Available Prompts<a class="copiable-link" href="#Browsing-Available-Prompts"> &para;</a></span></h3>
+<h3 class="section"><span>16.4 Browsing Available Prompts<a class="copiable-link" href="#Browsing-Available-Prompts"> &para;</a></span></h3>
 
 <p>To see all available prompts:
 </p><div class="example">
@@ -3288,7 +3580,7 @@ Next: <a href="#Remote-Providers" accesskey="n" rel="next">Remote Providers</a>,
 
 </div>
 <div class="section-level-extent" id="Categorized-Browsing">
-<h3 class="section"><span>15.5 Categorized Browsing<a class="copiable-link" href="#Categorized-Browsing"> &para;</a></span></h3>
+<h3 class="section"><span>16.5 Categorized Browsing<a class="copiable-link" href="#Categorized-Browsing"> &para;</a></span></h3>
 
 <p>Ollama Buddy automatically categorizes the Awesome ChatGPT Prompts into useful groups:
 </p><ul class="itemize mark-bullet">
@@ -3312,7 +3604,7 @@ Next: <a href="#Remote-Providers" accesskey="n" rel="next">Remote Providers</a>,
 </p>
 </div>
 <div class="section-level-extent" id="Viewing-Prompt-Details">
-<h3 class="section"><span>15.6 Viewing Prompt Details<a class="copiable-link" href="#Viewing-Prompt-Details"> &para;</a></span></h3>
+<h3 class="section"><span>16.6 Viewing Prompt Details<a class="copiable-link" href="#Viewing-Prompt-Details"> &para;</a></span></h3>
 
 <p>To see the full content of a specific prompt:
 </p><div class="example">
@@ -3324,7 +3616,7 @@ Next: <a href="#Remote-Providers" accesskey="n" rel="next">Remote Providers</a>,
 </p>
 </div>
 <div class="section-level-extent" id="Updating-Prompts">
-<h3 class="section"><span>15.7 Updating Prompts<a class="copiable-link" href="#Updating-Prompts"> &para;</a></span></h3>
+<h3 class="section"><span>16.7 Updating Prompts<a class="copiable-link" href="#Updating-Prompts"> &para;</a></span></h3>
 
 <p>To sync with the latest prompts from GitHub:
 </p><div class="example">
@@ -3334,7 +3626,7 @@ Next: <a href="#Remote-Providers" accesskey="n" rel="next">Remote Providers</a>,
 </p>
 </div>
 <div class="section-level-extent" id="Setting-Without-Sending">
-<h3 class="section"><span>15.8 Setting Without Sending<a class="copiable-link" href="#Setting-Without-Sending"> &para;</a></span></h3>
+<h3 class="section"><span>16.8 Setting Without Sending<a class="copiable-link" href="#Setting-Without-Sending"> &para;</a></span></h3>
 
 <p>To set a prompt as the system prompt without sending text:
 </p><div class="example">
@@ -3346,7 +3638,7 @@ Next: <a href="#Remote-Providers" accesskey="n" rel="next">Remote Providers</a>,
 </p>
 </div>
 <div class="section-level-extent" id="Example-Usage">
-<h3 class="section"><span>15.9 Example Usage<a class="copiable-link" href="#Example-Usage"> &para;</a></span></h3>
+<h3 class="section"><span>16.9 Example Usage<a class="copiable-link" href="#Example-Usage"> &para;</a></span></h3>
 
 <p>Some popular prompts include:
 </p><ul class="itemize mark-bullet">
@@ -3365,18 +3657,18 @@ Next: <a href="#Remote-Providers" accesskey="n" rel="next">Remote Providers</a>,
 <p>
 Next: <a href="#Ollama-Cloud-Models" accesskey="n" rel="next">Ollama Cloud Models</a>, Previous: <a href="#Awesome-ChatGPT-Prompts" accesskey="p" rel="prev">Awesome ChatGPT Prompts</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
 </div>
-<h2 class="chapter" id="Remote-Providers-1"><span>16 Remote Providers<a class="copiable-link" href="#Remote-Providers-1"> &para;</a></span></h2>
+<h2 class="chapter" id="Remote-Providers-1"><span>17 Remote Providers<a class="copiable-link" href="#Remote-Providers-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Overview-2" accesskey="1">Overview</a></li>
+<li><a href="#Overview-3" accesskey="1">Overview</a></li>
 <li><a href="#Status-Line-Indicators" accesskey="2">Status Line Indicators</a></li>
 <li><a href="#Setting-Up-API-Access" accesskey="3">Setting Up API Access</a></li>
 <li><a href="#Selecting-Remote-Models" accesskey="4">Selecting Remote Models</a></li>
 <li><a href="#Provider-Configuration" accesskey="5">Provider Configuration</a></li>
 <li><a href="#History-Management" accesskey="6">History Management</a></li>
 </ul>
-<div class="section-level-extent" id="Overview-2">
-<h3 class="section"><span>16.1 Overview<a class="copiable-link" href="#Overview-2"> &para;</a></span></h3>
+<div class="section-level-extent" id="Overview-3">
+<h3 class="section"><span>17.1 Overview<a class="copiable-link" href="#Overview-3"> &para;</a></span></h3>
 
 <p>Ollama Buddy integrates with multiple commercial AI services, each loaded on-demand:
 </p>
@@ -3397,6 +3689,10 @@ Next: <a href="#Ollama-Cloud-Models" accesskey="n" rel="next">Ollama Cloud Model
 <dd><p>Load with <code class="code">(require 'ollama-buddy-grok nil t)</code>
 </p>
 </dd>
+<dt>GitHub Copilot (prefix: <code class="code">p:</code>)</dt>
+<dd><p>Load with <code class="code">(require 'ollama-buddy-copilot nil t)</code>
+</p>
+</dd>
 <dt>Codestral/Mistral (prefix: <code class="code">s:</code>)</dt>
 <dd><p>Load with <code class="code">(require 'ollama-buddy-codestral nil t)</code>
 </p></dd>
@@ -3406,7 +3702,7 @@ Next: <a href="#Ollama-Cloud-Models" accesskey="n" rel="next">Ollama Cloud Model
 </p>
 </div>
 <div class="section-level-extent" id="Status-Line-Indicators">
-<h3 class="section"><span>16.2 Status Line Indicators<a class="copiable-link" href="#Status-Line-Indicators"> &para;</a></span></h3>
+<h3 class="section"><span>17.2 Status Line Indicators<a class="copiable-link" href="#Status-Line-Indicators"> &para;</a></span></h3>
 
 <p>The header line shows compact indicators for loaded providers:
 </p>
@@ -3416,14 +3712,15 @@ Next: <a href="#Ollama-Cloud-Models" accesskey="n" rel="next">Ollama Cloud Model
 </li><li><code class="code">c</code> - Claude provider loaded
 </li><li><code class="code">g</code> - Gemini provider loaded
 </li><li><code class="code">k</code> - Grok provider loaded
+</li><li><code class="code">p</code> - GitHub Copilot provider loaded
 </li><li><code class="code">s</code> - Codestral provider loaded
 </li></ul>
 
-<p>Example: <code class="code">☁acgks</code> means cloud model with all five external providers loaded.
+<p>Example: <code class="code">☁acgkps</code> means cloud model with all six external providers loaded.
 </p>
 </div>
 <div class="section-level-extent" id="Setting-Up-API-Access">
-<h3 class="section"><span>16.3 Setting Up API Access<a class="copiable-link" href="#Setting-Up-API-Access"> &para;</a></span></h3>
+<h3 class="section"><span>17.3 Setting Up API Access<a class="copiable-link" href="#Setting-Up-API-Access"> &para;</a></span></h3>
 
 <p>Before using commercial APIs, you need to set up API keys. The recommended approach is to use Emacs&rsquo; built-in auth-source:
 </p>
@@ -3433,6 +3730,7 @@ machine ollama-buddy-openai login apikey password YOUR_OPENAI_API_KEY
 machine ollama-buddy-claude login apikey password YOUR_CLAUDE_API_KEY
 machine ollama-buddy-gemini login apikey password YOUR_GEMINI_API_KEY
 machine ollama-buddy-grok login apikey password YOUR_GROK_API_KEY
+machine ollama-buddy-copilot login apikey password YOUR_GITHUB_TOKEN
 machine ollama-buddy-codestral login apikey password YOUR_CODESTRAL_API_KEY
 </pre></div>
 
@@ -3444,7 +3742,7 @@ machine ollama-buddy-codestral login apikey password YOUR_CODESTRAL_API_KEY
 
 </div>
 <div class="section-level-extent" id="Selecting-Remote-Models">
-<h3 class="section"><span>16.4 Selecting Remote Models<a class="copiable-link" href="#Selecting-Remote-Models"> &para;</a></span></h3>
+<h3 class="section"><span>17.4 Selecting Remote Models<a class="copiable-link" href="#Selecting-Remote-Models"> &para;</a></span></h3>
 
 <p>All remote models appear in the model selection list with their provider prefix:
 </p><div class="example">
@@ -3456,17 +3754,18 @@ machine ollama-buddy-codestral login apikey password YOUR_CODESTRAL_API_KEY
 </p>
 </div>
 <div class="section-level-extent" id="Provider-Configuration">
-<h3 class="section"><span>16.5 Provider Configuration<a class="copiable-link" href="#Provider-Configuration"> &para;</a></span></h3>
+<h3 class="section"><span>17.5 Provider Configuration<a class="copiable-link" href="#Provider-Configuration"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#OpenAI-Configuration" accesskey="1">OpenAI Configuration</a></li>
 <li><a href="#Claude-Configuration" accesskey="2">Claude Configuration</a></li>
 <li><a href="#Gemini-Configuration" accesskey="3">Gemini Configuration</a></li>
 <li><a href="#Grok-Configuration" accesskey="4">Grok Configuration</a></li>
-<li><a href="#Codestral-Configuration" accesskey="5">Codestral Configuration</a></li>
+<li><a href="#GitHub-Copilot-Configuration" accesskey="5">GitHub Copilot Configuration</a></li>
+<li><a href="#Codestral-Configuration" accesskey="6">Codestral Configuration</a></li>
 </ul>
 <div class="subsection-level-extent" id="OpenAI-Configuration">
-<h4 class="subsection"><span>16.5.1 OpenAI Configuration<a class="copiable-link" href="#OpenAI-Configuration"> &para;</a></span></h4>
+<h4 class="subsection"><span>17.5.1 OpenAI Configuration<a class="copiable-link" href="#OpenAI-Configuration"> &para;</a></span></h4>
 <dl class="table">
 <dt><code class="code">ollama-buddy-openai-api-key</code></dt>
 <dd><p>Your OpenAI API key.
@@ -3487,7 +3786,7 @@ machine ollama-buddy-codestral login apikey password YOUR_CODESTRAL_API_KEY
 
 </div>
 <div class="subsection-level-extent" id="Claude-Configuration">
-<h4 class="subsection"><span>16.5.2 Claude Configuration<a class="copiable-link" href="#Claude-Configuration"> &para;</a></span></h4>
+<h4 class="subsection"><span>17.5.2 Claude Configuration<a class="copiable-link" href="#Claude-Configuration"> &para;</a></span></h4>
 <dl class="table">
 <dt><code class="code">ollama-buddy-claude-api-key</code></dt>
 <dd><p>Your Anthropic Claude API key.
@@ -3508,7 +3807,7 @@ machine ollama-buddy-codestral login apikey password YOUR_CODESTRAL_API_KEY
 
 </div>
 <div class="subsection-level-extent" id="Gemini-Configuration">
-<h4 class="subsection"><span>16.5.3 Gemini Configuration<a class="copiable-link" href="#Gemini-Configuration"> &para;</a></span></h4>
+<h4 class="subsection"><span>17.5.3 Gemini Configuration<a class="copiable-link" href="#Gemini-Configuration"> &para;</a></span></h4>
 <dl class="table">
 <dt><code class="code">ollama-buddy-gemini-api-key</code></dt>
 <dd><p>Your Google Gemini API key.
@@ -3521,7 +3820,7 @@ machine ollama-buddy-codestral login apikey password YOUR_CODESTRAL_API_KEY
 
 </div>
 <div class="subsection-level-extent" id="Grok-Configuration">
-<h4 class="subsection"><span>16.5.4 Grok Configuration<a class="copiable-link" href="#Grok-Configuration"> &para;</a></span></h4>
+<h4 class="subsection"><span>17.5.4 Grok Configuration<a class="copiable-link" href="#Grok-Configuration"> &para;</a></span></h4>
 <dl class="table">
 <dt><code class="code">ollama-buddy-grok-api-key</code></dt>
 <dd><p>Your X/Grok API key.
@@ -3533,8 +3832,28 @@ machine ollama-buddy-codestral login apikey password YOUR_CODESTRAL_API_KEY
 </dl>
 
 </div>
+<div class="subsection-level-extent" id="GitHub-Copilot-Configuration">
+<h4 class="subsection"><span>17.5.5 GitHub Copilot Configuration<a class="copiable-link" href="#GitHub-Copilot-Configuration"> &para;</a></span></h4>
+<dl class="table">
+<dt><code class="code">ollama-buddy-copilot-api-key</code></dt>
+<dd><p>Your GitHub personal access token with Copilot scope.
+Get your token from <a class="url" href="https://github.com/settings/tokens">https://github.com/settings/tokens</a>.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-copilot-default-model</code></dt>
+<dd><p>Default Copilot model to use (e.g., &quot;gpt-4o&quot;).
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-copilot-available-models</code></dt>
+<dd><p>List of models available through GitHub Copilot.
+</p></dd>
+</dl>
+
+<p>Note: GitHub Copilot requires an active Copilot subscription.
+</p>
+</div>
 <div class="subsection-level-extent" id="Codestral-Configuration">
-<h4 class="subsection"><span>16.5.5 Codestral Configuration<a class="copiable-link" href="#Codestral-Configuration"> &para;</a></span></h4>
+<h4 class="subsection"><span>17.5.6 Codestral Configuration<a class="copiable-link" href="#Codestral-Configuration"> &para;</a></span></h4>
 <dl class="table">
 <dt><code class="code">ollama-buddy-codestral-api-key</code></dt>
 <dd><p>Your Mistral Codestral API key.
@@ -3548,7 +3867,7 @@ machine ollama-buddy-codestral login apikey password YOUR_CODESTRAL_API_KEY
 </div>
 </div>
 <div class="section-level-extent" id="History-Management">
-<h3 class="section"><span>16.6 History Management<a class="copiable-link" href="#History-Management"> &para;</a></span></h3>
+<h3 class="section"><span>17.6 History Management<a class="copiable-link" href="#History-Management"> &para;</a></span></h3>
 
 <p>Each provider maintains its own conversation history, ensuring context is preserved appropriately per service.
 </p>
@@ -3560,24 +3879,24 @@ machine ollama-buddy-codestral login apikey password YOUR_CODESTRAL_API_KEY
 <p>
 Next: <a href="#Global-System-Prompt" accesskey="n" rel="next">Global System Prompt</a>, Previous: <a href="#Remote-Providers" accesskey="p" rel="prev">Remote Providers</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
 </div>
-<h2 class="chapter" id="Ollama-Cloud-Models-1"><span>17 Ollama Cloud Models<a class="copiable-link" href="#Ollama-Cloud-Models-1"> &para;</a></span></h2>
+<h2 class="chapter" id="Ollama-Cloud-Models-1"><span>18 Ollama Cloud Models<a class="copiable-link" href="#Ollama-Cloud-Models-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Overview-3" accesskey="1">Overview</a></li>
+<li><a href="#Overview-4" accesskey="1">Overview</a></li>
 <li><a href="#Available-Cloud-Models" accesskey="2">Available Cloud Models</a></li>
 <li><a href="#Selecting-Cloud-Models" accesskey="3">Selecting Cloud Models</a></li>
 <li><a href="#Cloud-Authentication" accesskey="4">Cloud Authentication</a></li>
 <li><a href="#Cloud-Model-Indicator" accesskey="5">Cloud Model Indicator</a></li>
-<li><a href="#Configuration-2" accesskey="6">Configuration</a></li>
+<li><a href="#Configuration-3" accesskey="6">Configuration</a></li>
 </ul>
-<div class="section-level-extent" id="Overview-3">
-<h3 class="section"><span>17.1 Overview<a class="copiable-link" href="#Overview-3"> &para;</a></span></h3>
+<div class="section-level-extent" id="Overview-4">
+<h3 class="section"><span>18.1 Overview<a class="copiable-link" href="#Overview-4"> &para;</a></span></h3>
 
 <p>Ollama cloud models run on ollama.com infrastructure and provide access to large models without local hardware requirements. These models require authentication via the Ollama CLI.
 </p>
 </div>
 <div class="section-level-extent" id="Available-Cloud-Models">
-<h3 class="section"><span>17.2 Available Cloud Models<a class="copiable-link" href="#Available-Cloud-Models"> &para;</a></span></h3>
+<h3 class="section"><span>18.2 Available Cloud Models<a class="copiable-link" href="#Available-Cloud-Models"> &para;</a></span></h3>
 
 <p>Cloud models are configured via <code class="code">ollama-buddy-cloud-models</code>:
 </p>
@@ -3596,7 +3915,7 @@ Next: <a href="#Global-System-Prompt" accesskey="n" rel="next">Global System Pro
 </p>
 </div>
 <div class="section-level-extent" id="Selecting-Cloud-Models">
-<h3 class="section"><span>17.3 Selecting Cloud Models<a class="copiable-link" href="#Selecting-Cloud-Models"> &para;</a></span></h3>
+<h3 class="section"><span>18.3 Selecting Cloud Models<a class="copiable-link" href="#Selecting-Cloud-Models"> &para;</a></span></h3>
 
 <p>To select a cloud model:
 </p><ul class="itemize mark-bullet">
@@ -3606,7 +3925,7 @@ Next: <a href="#Global-System-Prompt" accesskey="n" rel="next">Global System Pro
 
 </div>
 <div class="section-level-extent" id="Cloud-Authentication">
-<h3 class="section"><span>17.4 Cloud Authentication<a class="copiable-link" href="#Cloud-Authentication"> &para;</a></span></h3>
+<h3 class="section"><span>18.4 Cloud Authentication<a class="copiable-link" href="#Cloud-Authentication"> &para;</a></span></h3>
 
 <p>Authentication is handled via the Ollama CLI:
 </p>
@@ -3626,13 +3945,13 @@ Next: <a href="#Global-System-Prompt" accesskey="n" rel="next">Global System Pro
 
 </div>
 <div class="section-level-extent" id="Cloud-Model-Indicator">
-<h3 class="section"><span>17.5 Cloud Model Indicator<a class="copiable-link" href="#Cloud-Model-Indicator"> &para;</a></span></h3>
+<h3 class="section"><span>18.5 Cloud Model Indicator<a class="copiable-link" href="#Cloud-Model-Indicator"> &para;</a></span></h3>
 
 <p>When using a cloud model, the header line displays a <code class="code">☁</code> symbol to indicate cloud model usage.
 </p>
 </div>
-<div class="section-level-extent" id="Configuration-2">
-<h3 class="section"><span>17.6 Configuration<a class="copiable-link" href="#Configuration-2"> &para;</a></span></h3>
+<div class="section-level-extent" id="Configuration-3">
+<h3 class="section"><span>18.6 Configuration<a class="copiable-link" href="#Configuration-3"> &para;</a></span></h3>
 
 <dl class="table">
 <dt><code class="code">ollama-buddy-cloud-models</code></dt>
@@ -3652,22 +3971,22 @@ Next: <a href="#Global-System-Prompt" accesskey="n" rel="next">Global System Pro
 <p>
 Next: <a href="#Advanced-Usage" accesskey="n" rel="next">Advanced Usage</a>, Previous: <a href="#Ollama-Cloud-Models" accesskey="p" rel="prev">Ollama Cloud Models</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
 </div>
-<h2 class="chapter" id="Global-System-Prompt-1"><span>18 Global System Prompt<a class="copiable-link" href="#Global-System-Prompt-1"> &para;</a></span></h2>
+<h2 class="chapter" id="Global-System-Prompt-1"><span>19 Global System Prompt<a class="copiable-link" href="#Global-System-Prompt-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Overview-4" accesskey="1">Overview</a></li>
-<li><a href="#Configuration-3" accesskey="2">Configuration</a></li>
+<li><a href="#Overview-5" accesskey="1">Overview</a></li>
+<li><a href="#Configuration-4" accesskey="2">Configuration</a></li>
 <li><a href="#Toggling-Global-Prompt" accesskey="3">Toggling Global Prompt</a></li>
-<li><a href="#How-It-Works" accesskey="4">How It Works</a></li>
+<li><a href="#How-It-Works-1" accesskey="4">How It Works</a></li>
 </ul>
-<div class="section-level-extent" id="Overview-4">
-<h3 class="section"><span>18.1 Overview<a class="copiable-link" href="#Overview-4"> &para;</a></span></h3>
+<div class="section-level-extent" id="Overview-5">
+<h3 class="section"><span>19.1 Overview<a class="copiable-link" href="#Overview-5"> &para;</a></span></h3>
 
 <p>The global system prompt provides baseline formatting instructions that are automatically prepended to all requests, regardless of the session-specific system prompt. This ensures consistent response formatting across all interactions.
 </p>
 </div>
-<div class="section-level-extent" id="Configuration-3">
-<h3 class="section"><span>18.2 Configuration<a class="copiable-link" href="#Configuration-3"> &para;</a></span></h3>
+<div class="section-level-extent" id="Configuration-4">
+<h3 class="section"><span>19.2 Configuration<a class="copiable-link" href="#Configuration-4"> &para;</a></span></h3>
 
 <dl class="table">
 <dt><code class="code">ollama-buddy-global-system-prompt</code></dt>
@@ -3690,7 +4009,7 @@ for structured information.&quot;)
 
 </div>
 <div class="section-level-extent" id="Toggling-Global-Prompt">
-<h3 class="section"><span>18.3 Toggling Global Prompt<a class="copiable-link" href="#Toggling-Global-Prompt"> &para;</a></span></h3>
+<h3 class="section"><span>19.3 Toggling Global Prompt<a class="copiable-link" href="#Toggling-Global-Prompt"> &para;</a></span></h3>
 
 <p>To toggle the global system prompt on or off:
 </p><div class="example">
@@ -3699,8 +4018,8 @@ for structured information.&quot;)
 <p>or use the transient menu &quot;Settings &gt; Global Prompt&quot;.
 </p>
 </div>
-<div class="section-level-extent" id="How-It-Works">
-<h3 class="section"><span>18.4 How It Works<a class="copiable-link" href="#How-It-Works"> &para;</a></span></h3>
+<div class="section-level-extent" id="How-It-Works-1">
+<h3 class="section"><span>19.4 How It Works<a class="copiable-link" href="#How-It-Works-1"> &para;</a></span></h3>
 
 <p>When enabled, the global system prompt is combined with any session-specific system prompt:
 </p>
@@ -3721,7 +4040,7 @@ for structured information.&quot;)
 <p>
 Next: <a href="#API-Reference" accesskey="n" rel="next">API Reference</a>, Previous: <a href="#Global-System-Prompt" accesskey="p" rel="prev">Global System Prompt</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
 </div>
-<h2 class="chapter" id="Advanced-Usage-1"><span>19 Advanced Usage<a class="copiable-link" href="#Advanced-Usage-1"> &para;</a></span></h2>
+<h2 class="chapter" id="Advanced-Usage-1"><span>20 Advanced Usage<a class="copiable-link" href="#Advanced-Usage-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
 <li><a href="#Managing-Token-Usage" accesskey="1">Managing Token Usage</a></li>
@@ -3731,7 +4050,7 @@ Next: <a href="#API-Reference" accesskey="n" rel="next">API Reference</a>, Previ
 <li><a href="#Using-Direct-API-Access" accesskey="5">Using Direct API Access</a></li>
 </ul>
 <div class="section-level-extent" id="Managing-Token-Usage">
-<h3 class="section"><span>19.1 Managing Token Usage<a class="copiable-link" href="#Managing-Token-Usage"> &para;</a></span></h3>
+<h3 class="section"><span>20.1 Managing Token Usage<a class="copiable-link" href="#Managing-Token-Usage"> &para;</a></span></h3>
 
 <p>Ollama Buddy can track token usage statistics:
 </p>
@@ -3751,14 +4070,14 @@ Next: <a href="#API-Reference" accesskey="n" rel="next">API Reference</a>, Previ
 </p>
 </div>
 <div class="section-level-extent" id="Customizing-the-Interface">
-<h3 class="section"><span>19.2 Customizing the Interface<a class="copiable-link" href="#Customizing-the-Interface"> &para;</a></span></h3>
+<h3 class="section"><span>20.2 Customizing the Interface<a class="copiable-link" href="#Customizing-the-Interface"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#Streaming-Options" accesskey="1">Streaming Options</a></li>
 <li><a href="#Debug-Mode" accesskey="2">Debug Mode</a></li>
 </ul>
 <div class="subsection-level-extent" id="Streaming-Options">
-<h4 class="subsection"><span>19.2.1 Streaming Options<a class="copiable-link" href="#Streaming-Options"> &para;</a></span></h4>
+<h4 class="subsection"><span>20.2.1 Streaming Options<a class="copiable-link" href="#Streaming-Options"> &para;</a></span></h4>
 
 <p>Control how responses are displayed:
 </p>
@@ -3781,7 +4100,7 @@ Next: <a href="#API-Reference" accesskey="n" rel="next">API Reference</a>, Previ
 
 </div>
 <div class="subsection-level-extent" id="Debug-Mode">
-<h4 class="subsection"><span>19.2.2 Debug Mode<a class="copiable-link" href="#Debug-Mode"> &para;</a></span></h4>
+<h4 class="subsection"><span>20.2.2 Debug Mode<a class="copiable-link" href="#Debug-Mode"> &para;</a></span></h4>
 
 <p>For advanced troubleshooting, you can enable debug mode:
 </p><div class="example">
@@ -3794,7 +4113,7 @@ Next: <a href="#API-Reference" accesskey="n" rel="next">API Reference</a>, Previ
 </div>
 </div>
 <div class="section-level-extent" id="Editing-Conversation-History">
-<h3 class="section"><span>19.3 Editing Conversation History<a class="copiable-link" href="#Editing-Conversation-History"> &para;</a></span></h3>
+<h3 class="section"><span>20.3 Editing Conversation History<a class="copiable-link" href="#Editing-Conversation-History"> &para;</a></span></h3>
 
 <p>To manually edit conversation history:
 </p><div class="example">
@@ -3808,7 +4127,7 @@ Next: <a href="#API-Reference" accesskey="n" rel="next">API Reference</a>, Previ
 </p>
 </div>
 <div class="section-level-extent" id="Advanced-System-Prompt-Management">
-<h3 class="section"><span>19.4 Advanced System Prompt Management<a class="copiable-link" href="#Advanced-System-Prompt-Management"> &para;</a></span></h3>
+<h3 class="section"><span>20.4 Advanced System Prompt Management<a class="copiable-link" href="#Advanced-System-Prompt-Management"> &para;</a></span></h3>
 
 <p>For more control over system prompts:
 </p>
@@ -3817,7 +4136,7 @@ Next: <a href="#API-Reference" accesskey="n" rel="next">API Reference</a>, Previ
 <li><a href="#Using-a-system-prompt-from-Fabric" accesskey="2">Using a system prompt from Fabric</a></li>
 </ul>
 <div class="subsection-level-extent" id="Setting-a-system-prompt-without-sending">
-<h4 class="subsection"><span>19.4.1 Setting a system prompt without sending<a class="copiable-link" href="#Setting-a-system-prompt-without-sending"> &para;</a></span></h4>
+<h4 class="subsection"><span>20.4.1 Setting a system prompt without sending<a class="copiable-link" href="#Setting-a-system-prompt-without-sending"> &para;</a></span></h4>
 <div class="example">
 <pre class="example-preformatted">(ollama-buddy-set-system-prompt)
 </pre></div>
@@ -3825,7 +4144,7 @@ Next: <a href="#API-Reference" accesskey="n" rel="next">API Reference</a>, Previ
 </p>
 </div>
 <div class="subsection-level-extent" id="Using-a-system-prompt-from-Fabric">
-<h4 class="subsection"><span>19.4.2 Using a system prompt from Fabric<a class="copiable-link" href="#Using-a-system-prompt-from-Fabric"> &para;</a></span></h4>
+<h4 class="subsection"><span>20.4.2 Using a system prompt from Fabric<a class="copiable-link" href="#Using-a-system-prompt-from-Fabric"> &para;</a></span></h4>
 <div class="example">
 <pre class="example-preformatted">M-x ollama-buddy-fabric-set-system-prompt
 </pre></div>
@@ -3834,7 +4153,7 @@ Next: <a href="#API-Reference" accesskey="n" rel="next">API Reference</a>, Previ
 </div>
 </div>
 <div class="section-level-extent" id="Using-Direct-API-Access">
-<h3 class="section"><span>19.5 Using Direct API Access<a class="copiable-link" href="#Using-Direct-API-Access"> &para;</a></span></h3>
+<h3 class="section"><span>20.5 Using Direct API Access<a class="copiable-link" href="#Using-Direct-API-Access"> &para;</a></span></h3>
 
 <p>For direct programmatic access to Ollama:
 </p>
@@ -3857,7 +4176,7 @@ Next: <a href="#API-Reference" accesskey="n" rel="next">API Reference</a>, Previ
 <p>
 Next: <a href="#FAQ" accesskey="n" rel="next">Frequently Asked Questions</a>, Previous: <a href="#Advanced-Usage" accesskey="p" rel="prev">Advanced Usage</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
 </div>
-<h2 class="chapter" id="API-Reference-1"><span>20 API Reference<a class="copiable-link" href="#API-Reference-1"> &para;</a></span></h2>
+<h2 class="chapter" id="API-Reference-1"><span>21 API Reference<a class="copiable-link" href="#API-Reference-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
 <li><a href="#Interactive-Functions" accesskey="1">Interactive Functions</a></li>
@@ -3865,7 +4184,7 @@ Next: <a href="#FAQ" accesskey="n" rel="next">Frequently Asked Questions</a>, Pr
 <li><a href="#Customization-Functions" accesskey="3">Customization Functions</a></li>
 </ul>
 <div class="section-level-extent" id="Interactive-Functions">
-<h3 class="section"><span>20.1 Interactive Functions<a class="copiable-link" href="#Interactive-Functions"> &para;</a></span></h3>
+<h3 class="section"><span>21.1 Interactive Functions<a class="copiable-link" href="#Interactive-Functions"> &para;</a></span></h3>
 
 <dl class="table">
 <dt><code class="code">ollama-buddy-menu</code></dt>
@@ -4088,7 +4407,7 @@ Next: <a href="#FAQ" accesskey="n" rel="next">Frequently Asked Questions</a>, Pr
 
 </div>
 <div class="section-level-extent" id="Core-Functions">
-<h3 class="section"><span>20.2 Core Functions<a class="copiable-link" href="#Core-Functions"> &para;</a></span></h3>
+<h3 class="section"><span>21.2 Core Functions<a class="copiable-link" href="#Core-Functions"> &para;</a></span></h3>
 
 <dl class="table">
 <dt><code class="code">ollama-buddy--send</code></dt>
@@ -4126,7 +4445,7 @@ Next: <a href="#FAQ" accesskey="n" rel="next">Frequently Asked Questions</a>, Pr
 
 </div>
 <div class="section-level-extent" id="Customization-Functions">
-<h3 class="section"><span>20.3 Customization Functions<a class="copiable-link" href="#Customization-Functions"> &para;</a></span></h3>
+<h3 class="section"><span>21.3 Customization Functions<a class="copiable-link" href="#Customization-Functions"> &para;</a></span></h3>
 
 <dl class="table">
 <dt><code class="code">ollama-buddy-update-command-with-params</code></dt>
@@ -4154,15 +4473,15 @@ Next: <a href="#FAQ" accesskey="n" rel="next">Frequently Asked Questions</a>, Pr
 <p>
 Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, Previous: <a href="#API-Reference" accesskey="p" rel="prev">API Reference</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
 </div>
-<h2 class="chapter" id="Frequently-Asked-Questions"><span>21 Frequently Asked Questions<a class="copiable-link" href="#Frequently-Asked-Questions"> &para;</a></span></h2>
+<h2 class="chapter" id="Frequently-Asked-Questions"><span>22 Frequently Asked Questions<a class="copiable-link" href="#Frequently-Asked-Questions"> &para;</a></span></h2>
 
 <ul class="mini-toc">
 <li><a href="#General-Questions" accesskey="1">General Questions</a></li>
 <li><a href="#Usage-Questions" accesskey="2">Usage Questions</a></li>
-<li><a href="#Troubleshooting-1" accesskey="3">Troubleshooting</a></li>
+<li><a href="#Troubleshooting-2" accesskey="3">Troubleshooting</a></li>
 </ul>
 <div class="section-level-extent" id="General-Questions">
-<h3 class="section"><span>21.1 General Questions<a class="copiable-link" href="#General-Questions"> &para;</a></span></h3>
+<h3 class="section"><span>22.1 General Questions<a class="copiable-link" href="#General-Questions"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f" accesskey="1">What is the difference between Ollama Buddy and other AI assistants?</a></li>
@@ -4172,12 +4491,12 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 <li><a href="#How-much-RAM-do-I-need_003f" accesskey="5">How much RAM do I need?</a></li>
 </ul>
 <div class="subsection-level-extent" id="What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f">
-<h4 class="subsection"><span>21.1.1 What is the difference between Ollama Buddy and other AI assistants?<a class="copiable-link" href="#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f"> &para;</a></span></h4>
+<h4 class="subsection"><span>22.1.1 What is the difference between Ollama Buddy and other AI assistants?<a class="copiable-link" href="#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f"> &para;</a></span></h4>
 <p>Ollama Buddy integrates with Ollama to run LLMs locally, offering privacy, customization, and seamless Emacs integration without relying on external API services.
 </p>
 </div>
 <div class="subsection-level-extent" id="Does-Ollama-Buddy-require-an-internet-connection_003f">
-<h4 class="subsection"><span>21.1.2 Does Ollama Buddy require an internet connection?<a class="copiable-link" href="#Does-Ollama-Buddy-require-an-internet-connection_003f"> &para;</a></span></h4>
+<h4 class="subsection"><span>22.1.2 Does Ollama Buddy require an internet connection?<a class="copiable-link" href="#Does-Ollama-Buddy-require-an-internet-connection_003f"> &para;</a></span></h4>
 <p>For local Ollama models, no internet connection is required after pulling them. Internet is needed for:
 </p><ul class="itemize mark-bullet">
 <li>Pulling new models from Ollama
@@ -4188,7 +4507,7 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 
 </div>
 <div class="subsection-level-extent" id="How-do-I-use-Ollama-cloud-models_003f">
-<h4 class="subsection"><span>21.1.3 How do I use Ollama cloud models?<a class="copiable-link" href="#How-do-I-use-Ollama-cloud-models_003f"> &para;</a></span></h4>
+<h4 class="subsection"><span>22.1.3 How do I use Ollama cloud models?<a class="copiable-link" href="#How-do-I-use-Ollama-cloud-models_003f"> &para;</a></span></h4>
 <p>Cloud models require authentication:
 </p><ol class="enumerate">
 <li> Run <code class="code">M-x ollama-buddy-cloud-signin</code> to sign in
@@ -4198,7 +4517,7 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 
 </div>
 <div class="subsection-level-extent" id="Which-models-work-best-with-Ollama-Buddy_003f">
-<h4 class="subsection"><span>21.1.4 Which models work best with Ollama Buddy?<a class="copiable-link" href="#Which-models-work-best-with-Ollama-Buddy_003f"> &para;</a></span></h4>
+<h4 class="subsection"><span>22.1.4 Which models work best with Ollama Buddy?<a class="copiable-link" href="#Which-models-work-best-with-Ollama-Buddy_003f"> &para;</a></span></h4>
 <p>Most models supported by Ollama work well. Popular choices include:
 </p><ul class="itemize mark-bullet">
 <li>llama3:latest - Good general purpose assistant
@@ -4209,7 +4528,7 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 
 </div>
 <div class="subsection-level-extent" id="How-much-RAM-do-I-need_003f">
-<h4 class="subsection"><span>21.1.5 How much RAM do I need?<a class="copiable-link" href="#How-much-RAM-do-I-need_003f"> &para;</a></span></h4>
+<h4 class="subsection"><span>22.1.5 How much RAM do I need?<a class="copiable-link" href="#How-much-RAM-do-I-need_003f"> &para;</a></span></h4>
 <p>It depends on the model:
 </p><ul class="itemize mark-bullet">
 <li>Small models (7B) - 8GB minimum, 16GB recommended
@@ -4222,7 +4541,7 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 </div>
 </div>
 <div class="section-level-extent" id="Usage-Questions">
-<h3 class="section"><span>21.2 Usage Questions<a class="copiable-link" href="#Usage-Questions"> &para;</a></span></h3>
+<h3 class="section"><span>22.2 Usage Questions<a class="copiable-link" href="#Usage-Questions"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f" accesskey="1">How do I cancel a request that&rsquo;s taking too long?</a></li>
@@ -4236,32 +4555,32 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 <li><a href="#Where-are-my-system-prompts-stored_003f" accesskey="9">Where are my system prompts stored?</a></li>
 </ul>
 <div class="subsection-level-extent" id="How-do-I-cancel-a-request-that_0027s-taking-too-long_003f">
-<h4 class="subsection"><span>21.2.1 How do I cancel a request that&rsquo;s taking too long?<a class="copiable-link" href="#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f"> &para;</a></span></h4>
+<h4 class="subsection"><span>22.2.1 How do I cancel a request that&rsquo;s taking too long?<a class="copiable-link" href="#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f"> &para;</a></span></h4>
 <p>Press <code class="code">C-c k</code> in the chat buffer or select &quot;Kill Request&quot; from the menu.
 </p>
 </div>
 <div class="subsection-level-extent" id="How-can-I-save-my-conversations_003f">
-<h4 class="subsection"><span>21.2.2 How can I save my conversations?<a class="copiable-link" href="#How-can-I-save-my-conversations_003f"> &para;</a></span></h4>
+<h4 class="subsection"><span>22.2.2 How can I save my conversations?<a class="copiable-link" href="#How-can-I-save-my-conversations_003f"> &para;</a></span></h4>
 <p>Use <code class="code">C-c S</code> to save the current session, giving it a name. You can restore it later with <code class="code">C-c L</code>.
 </p>
 </div>
 <div class="subsection-level-extent" id="Can-I-use-multiple-models-in-the-same-conversation_003f">
-<h4 class="subsection"><span>21.2.3 Can I use multiple models in the same conversation?<a class="copiable-link" href="#Can-I-use-multiple-models-in-the-same-conversation_003f"> &para;</a></span></h4>
+<h4 class="subsection"><span>22.2.3 Can I use multiple models in the same conversation?<a class="copiable-link" href="#Can-I-use-multiple-models-in-the-same-conversation_003f"> &para;</a></span></h4>
 <p>Yes, you can switch models at any time with <code class="code">C-c m</code>. Each model maintains its own conversation history.
 </p>
 </div>
 <div class="subsection-level-extent" id="How-do-I-clear-the-conversation-history_003f">
-<h4 class="subsection"><span>21.2.4 How do I clear the conversation history?<a class="copiable-link" href="#How-do-I-clear-the-conversation-history_003f"> &para;</a></span></h4>
+<h4 class="subsection"><span>22.2.4 How do I clear the conversation history?<a class="copiable-link" href="#How-do-I-clear-the-conversation-history_003f"> &para;</a></span></h4>
 <p>Press <code class="code">C-c X</code> to clear history, or <code class="code">C-c N</code> to start a completely new session.
 </p>
 </div>
 <div class="subsection-level-extent" id="How-can-I-create-a-custom-command_003f">
-<h4 class="subsection"><span>21.2.5 How can I create a custom command?<a class="copiable-link" href="#How-can-I-create-a-custom-command_003f"> &para;</a></span></h4>
+<h4 class="subsection"><span>22.2.5 How can I create a custom command?<a class="copiable-link" href="#How-can-I-create-a-custom-command_003f"> &para;</a></span></h4>
 <p>The easiest way is through the role creator: press <code class="code">C-c E</code> and follow the prompts to create commands with specific prompts, models, and parameters.
 </p>
 </div>
 <div class="subsection-level-extent" id="How-can-I-manage-context-windows_003f">
-<h4 class="subsection"><span>21.2.6 How can I manage context windows?<a class="copiable-link" href="#How-can-I-manage-context-windows_003f"> &para;</a></span></h4>
+<h4 class="subsection"><span>22.2.6 How can I manage context windows?<a class="copiable-link" href="#How-can-I-manage-context-windows_003f"> &para;</a></span></h4>
 <p>Ollama Buddy provides several options:
 </p><ul class="itemize mark-bullet">
 <li>Enable context monitoring with <code class="code">(setq ollama-buddy-show-context-percentage t)</code>
@@ -4272,7 +4591,7 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 
 </div>
 <div class="subsection-level-extent" id="What-happens-when-I-exceed-the-context-limit_003f">
-<h4 class="subsection"><span>21.2.7 What happens when I exceed the context limit?<a class="copiable-link" href="#What-happens-when-I-exceed-the-context-limit_003f"> &para;</a></span></h4>
+<h4 class="subsection"><span>22.2.7 What happens when I exceed the context limit?<a class="copiable-link" href="#What-happens-when-I-exceed-the-context-limit_003f"> &para;</a></span></h4>
 <p>When context monitoring is enabled:
 </p><ul class="itemize mark-bullet">
 <li>You&rsquo;ll get a warning when approaching the limit (85-100%)
@@ -4282,7 +4601,7 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 
 </div>
 <div class="subsection-level-extent" id="How-do-I-create-effective-system-prompts_003f">
-<h4 class="subsection"><span>21.2.8 How do I create effective system prompts?<a class="copiable-link" href="#How-do-I-create-effective-system-prompts_003f"> &para;</a></span></h4>
+<h4 class="subsection"><span>22.2.8 How do I create effective system prompts?<a class="copiable-link" href="#How-do-I-create-effective-system-prompts_003f"> &para;</a></span></h4>
 <p>Effective system prompts typically include:
 </p><ul class="itemize mark-bullet">
 <li>Clear role definition for the AI
@@ -4294,13 +4613,13 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 </p>
 </div>
 <div class="subsection-level-extent" id="Where-are-my-system-prompts-stored_003f">
-<h4 class="subsection"><span>21.2.9 Where are my system prompts stored?<a class="copiable-link" href="#Where-are-my-system-prompts-stored_003f"> &para;</a></span></h4>
+<h4 class="subsection"><span>22.2.9 Where are my system prompts stored?<a class="copiable-link" href="#Where-are-my-system-prompts-stored_003f"> &para;</a></span></h4>
 <p>System prompts are stored as .org files in the directory specified by &lsquo;ollama-buddy-user-prompts-directory&lsquo;, which defaults to &lsquo;~/.emacs.d/ollama-buddy-user-prompts/&lsquo;.
 </p>
 </div>
 </div>
-<div class="section-level-extent" id="Troubleshooting-1">
-<h3 class="section"><span>21.3 Troubleshooting<a class="copiable-link" href="#Troubleshooting-1"> &para;</a></span></h3>
+<div class="section-level-extent" id="Troubleshooting-2">
+<h3 class="section"><span>22.3 Troubleshooting<a class="copiable-link" href="#Troubleshooting-2"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#Ollama-Buddy-shows-_0022OFFLINE_0022-status" accesskey="1">Ollama Buddy shows &quot;OFFLINE&quot; status</a></li>
@@ -4313,7 +4632,7 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 <li><a href="#Can-I-share-system-prompts-between-different-installations_003f" accesskey="8">Can I share system prompts between different installations?</a></li>
 </ul>
 <div class="subsection-level-extent" id="Ollama-Buddy-shows-_0022OFFLINE_0022-status">
-<h4 class="subsection"><span>21.3.1 Ollama Buddy shows &quot;OFFLINE&quot; status<a class="copiable-link" href="#Ollama-Buddy-shows-_0022OFFLINE_0022-status"> &para;</a></span></h4>
+<h4 class="subsection"><span>22.3.1 Ollama Buddy shows &quot;OFFLINE&quot; status<a class="copiable-link" href="#Ollama-Buddy-shows-_0022OFFLINE_0022-status"> &para;</a></span></h4>
 <p>Ensure that:
 </p><ul class="itemize mark-bullet">
 <li>Ollama is installed and running
@@ -4323,7 +4642,7 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 
 </div>
 <div class="subsection-level-extent" id="Responses-are-slow-or-the-model-seems-to-hang">
-<h4 class="subsection"><span>21.3.2 Responses are slow or the model seems to hang<a class="copiable-link" href="#Responses-are-slow-or-the-model-seems-to-hang"> &para;</a></span></h4>
+<h4 class="subsection"><span>22.3.2 Responses are slow or the model seems to hang<a class="copiable-link" href="#Responses-are-slow-or-the-model-seems-to-hang"> &para;</a></span></h4>
 <p>Try:
 </p><ul class="itemize mark-bullet">
 <li>Using a smaller model
@@ -4334,7 +4653,7 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 
 </div>
 <div class="subsection-level-extent" id="Getting-_0022error-parsing-model_0022-when-pulling-a-model">
-<h4 class="subsection"><span>21.3.3 Getting &quot;error parsing model&quot; when pulling a model<a class="copiable-link" href="#Getting-_0022error-parsing-model_0022-when-pulling-a-model"> &para;</a></span></h4>
+<h4 class="subsection"><span>22.3.3 Getting &quot;error parsing model&quot; when pulling a model<a class="copiable-link" href="#Getting-_0022error-parsing-model_0022-when-pulling-a-model"> &para;</a></span></h4>
 <p>This usually means:
 </p><ul class="itemize mark-bullet">
 <li>The model name is incorrect
@@ -4344,7 +4663,7 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 
 </div>
 <div class="subsection-level-extent" id="Model-responses-are-low-quality-or-truncated">
-<h4 class="subsection"><span>21.3.4 Model responses are low quality or truncated<a class="copiable-link" href="#Model-responses-are-low-quality-or-truncated"> &para;</a></span></h4>
+<h4 class="subsection"><span>22.3.4 Model responses are low quality or truncated<a class="copiable-link" href="#Model-responses-are-low-quality-or-truncated"> &para;</a></span></h4>
 <p>Try:
 </p><ul class="itemize mark-bullet">
 <li>Increasing the <code class="code">temperature</code> parameter for more creative responses
@@ -4355,17 +4674,17 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 
 </div>
 <div class="subsection-level-extent" id="How-do-system-prompts-differ-from-regular-prompts_003f">
-<h4 class="subsection"><span>21.3.5 How do system prompts differ from regular prompts?<a class="copiable-link" href="#How-do-system-prompts-differ-from-regular-prompts_003f"> &para;</a></span></h4>
+<h4 class="subsection"><span>22.3.5 How do system prompts differ from regular prompts?<a class="copiable-link" href="#How-do-system-prompts-differ-from-regular-prompts_003f"> &para;</a></span></h4>
 <p>System prompts provide overall instructions to the AI about its role and how to respond, while regular prompts are your specific questions or requests. System prompts persist across the conversation, affecting all responses, while regular prompts are one-time interactions.
 </p>
 </div>
 <div class="subsection-level-extent" id="What-is-the-global-system-prompt_003f">
-<h4 class="subsection"><span>21.3.6 What is the global system prompt?<a class="copiable-link" href="#What-is-the-global-system-prompt_003f"> &para;</a></span></h4>
+<h4 class="subsection"><span>22.3.6 What is the global system prompt?<a class="copiable-link" href="#What-is-the-global-system-prompt_003f"> &para;</a></span></h4>
 <p>The global system prompt is a baseline prompt automatically prepended to all requests. It&rsquo;s useful for consistent formatting instructions across all models. Toggle it with <code class="code">M-x ollama-buddy-toggle-global-system-prompt</code>.
 </p>
 </div>
 <div class="subsection-level-extent" id="How-do-I-use-image-analysis_002fvision-features_003f">
-<h4 class="subsection"><span>21.3.7 How do I use image analysis/vision features?<a class="copiable-link" href="#How-do-I-use-image-analysis_002fvision-features_003f"> &para;</a></span></h4>
+<h4 class="subsection"><span>22.3.7 How do I use image analysis/vision features?<a class="copiable-link" href="#How-do-I-use-image-analysis_002fvision-features_003f"> &para;</a></span></h4>
 <ol class="enumerate">
 <li> Select a vision-capable model (e.g., gemma3:4b, llama3.2:3b)
 </li><li> Include an image path in your prompt
@@ -4376,7 +4695,7 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 </p>
 </div>
 <div class="subsection-level-extent" id="Can-I-share-system-prompts-between-different-installations_003f">
-<h4 class="subsection"><span>21.3.8 Can I share system prompts between different installations?<a class="copiable-link" href="#Can-I-share-system-prompts-between-different-installations_003f"> &para;</a></span></h4>
+<h4 class="subsection"><span>22.3.8 Can I share system prompts between different installations?<a class="copiable-link" href="#Can-I-share-system-prompts-between-different-installations_003f"> &para;</a></span></h4>
 <p>Yes, the user system prompts are stored as plain text .org files in your &lsquo;ollama-buddy-user-prompts-directory&lsquo;. You can copy these files to share them with colleagues or between different machines.
 </p>
 <hr>
@@ -4388,14 +4707,14 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 <p>
 Next: <a href="#Contributing" accesskey="n" rel="next">Contributing</a>, Previous: <a href="#FAQ" accesskey="p" rel="prev">Frequently Asked Questions</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
 </div>
-<h2 class="chapter" id="Troubleshooting-2"><span>22 Troubleshooting<a class="copiable-link" href="#Troubleshooting-2"> &para;</a></span></h2>
+<h2 class="chapter" id="Troubleshooting-3"><span>23 Troubleshooting<a class="copiable-link" href="#Troubleshooting-3"> &para;</a></span></h2>
 
 <ul class="mini-toc">
 <li><a href="#Common-Issues" accesskey="1">Common Issues</a></li>
 <li><a href="#Debugging" accesskey="2">Debugging</a></li>
 </ul>
 <div class="section-level-extent" id="Common-Issues">
-<h3 class="section"><span>22.1 Common Issues<a class="copiable-link" href="#Common-Issues"> &para;</a></span></h3>
+<h3 class="section"><span>23.1 Common Issues<a class="copiable-link" href="#Common-Issues"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#Connection-Problems" accesskey="1">Connection Problems</a></li>
@@ -4403,7 +4722,7 @@ Next: <a href="#Contributing" accesskey="n" rel="next">Contributing</a>, Previou
 <li><a href="#Interface-Issues" accesskey="3">Interface Issues</a></li>
 </ul>
 <div class="subsection-level-extent" id="Connection-Problems">
-<h4 class="subsection"><span>22.1.1 Connection Problems<a class="copiable-link" href="#Connection-Problems"> &para;</a></span></h4>
+<h4 class="subsection"><span>23.1.1 Connection Problems<a class="copiable-link" href="#Connection-Problems"> &para;</a></span></h4>
 
 <dl class="table">
 <dt>Symptom: Unable to connect to Ollama server</dt>
@@ -4425,7 +4744,7 @@ Next: <a href="#Contributing" accesskey="n" rel="next">Contributing</a>, Previou
 
 </div>
 <div class="subsection-level-extent" id="Model-Problems">
-<h4 class="subsection"><span>22.1.2 Model Problems<a class="copiable-link" href="#Model-Problems"> &para;</a></span></h4>
+<h4 class="subsection"><span>23.1.2 Model Problems<a class="copiable-link" href="#Model-Problems"> &para;</a></span></h4>
 
 <dl class="table">
 <dt>Symptom: Model loads but gives poor responses</dt>
@@ -4449,7 +4768,7 @@ Next: <a href="#Contributing" accesskey="n" rel="next">Contributing</a>, Previou
 
 </div>
 <div class="subsection-level-extent" id="Interface-Issues">
-<h4 class="subsection"><span>22.1.3 Interface Issues<a class="copiable-link" href="#Interface-Issues"> &para;</a></span></h4>
+<h4 class="subsection"><span>23.1.3 Interface Issues<a class="copiable-link" href="#Interface-Issues"> &para;</a></span></h4>
 
 <dl class="table">
 <dt>Symptom: Chat buffer becomes unresponsive</dt>
@@ -4473,7 +4792,7 @@ Next: <a href="#Contributing" accesskey="n" rel="next">Contributing</a>, Previou
 </div>
 </div>
 <div class="section-level-extent" id="Debugging">
-<h3 class="section"><span>22.2 Debugging<a class="copiable-link" href="#Debugging"> &para;</a></span></h3>
+<h3 class="section"><span>23.2 Debugging<a class="copiable-link" href="#Debugging"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#Enable-Debug-Mode" accesskey="1">Enable Debug Mode</a></li>
@@ -4481,7 +4800,7 @@ Next: <a href="#Contributing" accesskey="n" rel="next">Contributing</a>, Previou
 <li><a href="#Report-Issues" accesskey="3">Report Issues</a></li>
 </ul>
 <div class="subsection-level-extent" id="Enable-Debug-Mode">
-<h4 class="subsection"><span>22.2.1 Enable Debug Mode<a class="copiable-link" href="#Enable-Debug-Mode"> &para;</a></span></h4>
+<h4 class="subsection"><span>23.2.1 Enable Debug Mode<a class="copiable-link" href="#Enable-Debug-Mode"> &para;</a></span></h4>
 
 <p>To get more information about what&rsquo;s happening:
 </p><div class="example">
@@ -4492,7 +4811,7 @@ Next: <a href="#Contributing" accesskey="n" rel="next">Contributing</a>, Previou
 </p>
 </div>
 <div class="subsection-level-extent" id="Check-Logs">
-<h4 class="subsection"><span>22.2.2 Check Logs<a class="copiable-link" href="#Check-Logs"> &para;</a></span></h4>
+<h4 class="subsection"><span>23.2.2 Check Logs<a class="copiable-link" href="#Check-Logs"> &para;</a></span></h4>
 
 <p>Ollama logs can be useful for troubleshooting:
 </p><div class="example">
@@ -4501,7 +4820,7 @@ Next: <a href="#Contributing" accesskey="n" rel="next">Contributing</a>, Previou
 
 </div>
 <div class="subsection-level-extent" id="Report-Issues">
-<h4 class="subsection"><span>22.2.3 Report Issues<a class="copiable-link" href="#Report-Issues"> &para;</a></span></h4>
+<h4 class="subsection"><span>23.2.3 Report Issues<a class="copiable-link" href="#Report-Issues"> &para;</a></span></h4>
 
 <p>If you encounter a bug:
 </p><ol class="enumerate">
@@ -4527,7 +4846,7 @@ Next: <a href="#Contributing" accesskey="n" rel="next">Contributing</a>, Previou
 <p>
 Next: <a href="#Index" accesskey="n" rel="next">Index</a>, Previous: <a href="#Troubleshooting" accesskey="p" rel="prev">Troubleshooting</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
 </div>
-<h2 class="chapter" id="Contributing-1"><span>23 Contributing<a class="copiable-link" href="#Contributing-1"> &para;</a></span></h2>
+<h2 class="chapter" id="Contributing-1"><span>24 Contributing<a class="copiable-link" href="#Contributing-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
 <li><a href="#Getting-Started" accesskey="1">Getting Started</a></li>
@@ -4537,7 +4856,7 @@ Next: <a href="#Index" accesskey="n" rel="next">Index</a>, Previous: <a href="#T
 <li><a href="#Feature-Requests-and-Bug-Reports" accesskey="5">Feature Requests and Bug Reports</a></li>
 </ul>
 <div class="section-level-extent" id="Getting-Started">
-<h3 class="section"><span>23.1 Getting Started<a class="copiable-link" href="#Getting-Started"> &para;</a></span></h3>
+<h3 class="section"><span>24.1 Getting Started<a class="copiable-link" href="#Getting-Started"> &para;</a></span></h3>
 
 <p>Ollama Buddy is an open-source project, and contributions are welcome!
 </p>
@@ -4554,14 +4873,14 @@ Next: <a href="#Index" accesskey="n" rel="next">Index</a>, Previous: <a href="#T
 
 </div>
 <div class="section-level-extent" id="Development-Setup">
-<h3 class="section"><span>23.2 Development Setup<a class="copiable-link" href="#Development-Setup"> &para;</a></span></h3>
+<h3 class="section"><span>24.2 Development Setup<a class="copiable-link" href="#Development-Setup"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#Required-Tools" accesskey="1">Required Tools</a></li>
 <li><a href="#Recommended-Packages" accesskey="2">Recommended Packages</a></li>
 </ul>
 <div class="subsection-level-extent" id="Required-Tools">
-<h4 class="subsection"><span>23.2.1 Required Tools<a class="copiable-link" href="#Required-Tools"> &para;</a></span></h4>
+<h4 class="subsection"><span>24.2.1 Required Tools<a class="copiable-link" href="#Required-Tools"> &para;</a></span></h4>
 
 <ul class="itemize mark-bullet">
 <li>Emacs 28.1+
@@ -4571,7 +4890,7 @@ Next: <a href="#Index" accesskey="n" rel="next">Index</a>, Previous: <a href="#T
 
 </div>
 <div class="subsection-level-extent" id="Recommended-Packages">
-<h4 class="subsection"><span>23.2.2 Recommended Packages<a class="copiable-link" href="#Recommended-Packages"> &para;</a></span></h4>
+<h4 class="subsection"><span>24.2.2 Recommended Packages<a class="copiable-link" href="#Recommended-Packages"> &para;</a></span></h4>
 
 <ul class="itemize mark-bullet">
 <li>package-lint
@@ -4582,7 +4901,7 @@ Next: <a href="#Index" accesskey="n" rel="next">Index</a>, Previous: <a href="#T
 </div>
 </div>
 <div class="section-level-extent" id="Coding-Guidelines">
-<h3 class="section"><span>23.3 Coding Guidelines<a class="copiable-link" href="#Coding-Guidelines"> &para;</a></span></h3>
+<h3 class="section"><span>24.3 Coding Guidelines<a class="copiable-link" href="#Coding-Guidelines"> &para;</a></span></h3>
 
 <ul class="itemize mark-bullet">
 <li>Follow Emacs Lisp conventions
@@ -4595,14 +4914,14 @@ Next: <a href="#Index" accesskey="n" rel="next">Index</a>, Previous: <a href="#T
 
 </div>
 <div class="section-level-extent" id="Testing">
-<h3 class="section"><span>23.4 Testing<a class="copiable-link" href="#Testing"> &para;</a></span></h3>
+<h3 class="section"><span>24.4 Testing<a class="copiable-link" href="#Testing"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#Run-Existing-Tests" accesskey="1">Run Existing Tests</a></li>
 <li><a href="#Adding-New-Tests" accesskey="2">Adding New Tests</a></li>
 </ul>
 <div class="subsection-level-extent" id="Run-Existing-Tests">
-<h4 class="subsection"><span>23.4.1 Run Existing Tests<a class="copiable-link" href="#Run-Existing-Tests"> &para;</a></span></h4>
+<h4 class="subsection"><span>24.4.1 Run Existing Tests<a class="copiable-link" href="#Run-Existing-Tests"> &para;</a></span></h4>
 
 <p>The package includes comprehensive tests:
 </p>
@@ -4615,7 +4934,7 @@ M-x ollama-buddy-parameter-run-tests
 
 </div>
 <div class="subsection-level-extent" id="Adding-New-Tests">
-<h4 class="subsection"><span>23.4.2 Adding New Tests<a class="copiable-link" href="#Adding-New-Tests"> &para;</a></span></h4>
+<h4 class="subsection"><span>24.4.2 Adding New Tests<a class="copiable-link" href="#Adding-New-Tests"> &para;</a></span></h4>
 
 <p>When adding features, please also add tests:
 </p><ul class="itemize mark-bullet">
@@ -4627,7 +4946,7 @@ M-x ollama-buddy-parameter-run-tests
 </div>
 </div>
 <div class="section-level-extent" id="Feature-Requests-and-Bug-Reports">
-<h3 class="section"><span>23.5 Feature Requests and Bug Reports<a class="copiable-link" href="#Feature-Requests-and-Bug-Reports"> &para;</a></span></h3>
+<h3 class="section"><span>24.5 Feature Requests and Bug Reports<a class="copiable-link" href="#Feature-Requests-and-Bug-Reports"> &para;</a></span></h3>
 
 <ul class="itemize mark-bullet">
 <li>Use GitHub Issues for bug reports and feature requests
@@ -4639,7 +4958,7 @@ M-x ollama-buddy-parameter-run-tests
 <li><a href="#User-System-Prompts-Issues" accesskey="1">User System Prompts Issues</a></li>
 </ul>
 <div class="subsection-level-extent" id="User-System-Prompts-Issues">
-<h4 class="subsection"><span>23.5.1 User System Prompts Issues<a class="copiable-link" href="#User-System-Prompts-Issues"> &para;</a></span></h4>
+<h4 class="subsection"><span>24.5.1 User System Prompts Issues<a class="copiable-link" href="#User-System-Prompts-Issues"> &para;</a></span></h4>
 
 <dl class="table">
 <dt>Symptom: Cannot save system prompts</dt>

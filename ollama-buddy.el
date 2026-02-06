@@ -3200,7 +3200,10 @@ When the operation completes, CALLBACK is called with no arguments if provided."
                       (cl-incf idx)
                       (let* ((title (or (alist-get 'title result) "Untitled"))
                              (url (or (alist-get 'url result) (alist-get 'link result) ""))
-                             (content (when content-map (cdr (assoc url content-map)))))
+                             ;; Try content-map first (eww mode), then API content directly
+                             (content (or (when content-map (cdr (assoc url content-map)))
+                                          (when (fboundp 'ollama-buddy-web-search--get-api-content)
+                                            (ollama-buddy-web-search--get-api-content result)))))
                         (insert (format "\n*** %d. %s\n" idx title))
                         (when (not (string-empty-p url))
                           (insert (format ":PROPERTIES:\n:URL: %s\n:END:\n" url)))

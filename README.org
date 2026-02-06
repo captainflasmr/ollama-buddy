@@ -121,8 +121,14 @@ To use web search:
   ("C-c O" . ollama-buddy-transient-menu-wrapper)
   :config
   (setq ollama-buddy-web-search-api-key "your-api-key-here")
+  ;; Content source: 'eww (default, recommended) or 'api (faster, experimental)
+  (setq ollama-buddy-web-search-content-source 'eww)
   (require 'ollama-buddy-web-search nil t))
 #+end_src
+
+Content source options:
+- =eww= (default) - Fetches URLs and renders through eww/shr for cleaner content
+- =api= - Uses Ollama API content directly (faster but less refined)
 
 ** <2026-02-02 Sun> *1.2.1*
 
@@ -2195,6 +2201,7 @@ Ollama provides a web search API at =https://ollama.com/api/web_search= requirin
 - Status line shows =🔍N= indicator for attached web searches
 - Token estimation for context budget awareness
 - Keybindings: =C-c / s/a/d/l/c=
+- =ollama-buddy-web-search-content-source= - choose between ='eww= (default, fetches URLs via eww/shr) or ='api= (uses Ollama API content directly)
 
 *References:* [[https://ollama.com/blog/web-search][Ollama Web Search Blog]]
 

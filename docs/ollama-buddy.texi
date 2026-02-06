@@ -1334,12 +1334,16 @@ Web search integration allows Ollama Buddy to fetch real-time information from t
 
 @section How It Works
 
-The web search feature implements a multi-stage pipeline:
+The web search feature implements a multi-stage pipeline. Content can be retrieved using two methods, controlled by @code{ollama-buddy-web-search-content-source}:
+
+@subsection eww Mode (Default, Recommended)
+
+When @code{ollama-buddy-web-search-content-source} is set to @code{'eww} (the default):
 
 @enumerate
 @item @strong{Query to Ollama API}: Search queries are sent to Ollama's Web Search API (@code{https://ollama.com/api/web_search}) via REST with Bearer token authentication.
 
-@item @strong{URL Extraction}: The API returns search results containing URLs. The content snippets from the API are ignored in favor of fetching the full page content.
+@item @strong{URL Extraction}: The API returns search results containing URLs.
 
 @item @strong{eww/shr Processing}: Each URL is fetched and processed through Emacs' built-in eww/shr HTML renderer:
 @itemize @minus
@@ -1353,6 +1357,22 @@ The web search feature implements a multi-stage pipeline:
 
 @item @strong{LLM Submission}: The search results are included when sending prompts to any configured LLM provider.
 @end enumerate
+
+This mode produces cleaner, more complete content but requires additional HTTP requests to fetch each URL.
+
+@subsection API Mode (Experimental)
+
+When @code{ollama-buddy-web-search-content-source} is set to @code{'api}:
+
+@enumerate
+@item @strong{Query to Ollama API}: Search queries are sent to the Web Search API.
+
+@item @strong{Direct Content}: Content snippets returned directly by the Ollama API are used without fetching individual URLs.
+
+@item @strong{Context Attachment}: The API-provided content is formatted and attached to the conversation context.
+@end enumerate
+
+This mode is faster (no additional HTTP requests) but the content quality depends on what the Ollama API returns, which may be less refined than eww-rendered pages. Use this mode when speed is more important than content completeness.
 
 @section Configuration
 
@@ -1372,6 +1392,7 @@ To use web search, you need an API key from Ollama:
 (setq ollama-buddy-web-search-max-results 5)        ; Number of URLs to fetch (default: 5)
 (setq ollama-buddy-web-search-snippet-length 2000)  ; Max chars per result (default: 500)
 (setq ollama-buddy-web-search-include-urls nil)     ; Include URLs in context (default: nil)
+(setq ollama-buddy-web-search-content-source 'eww)  ; Content source: 'eww (default) or 'api
 
 ;; Load the module
 (require 'ollama-buddy-web-search nil t)

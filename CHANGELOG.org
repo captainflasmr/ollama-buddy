@@ -68,10 +68,19 @@ Web search works with all LLM providers:
 (setq ollama-buddy-web-search-max-results 5)        ; Number of URLs to fetch
 (setq ollama-buddy-web-search-snippet-length 2000)  ; Max chars per result
 (setq ollama-buddy-web-search-include-urls nil)     ; Include URLs in context
+(setq ollama-buddy-web-search-content-source 'eww)  ; Content source (see below)
 
 ;; Load the module
 (require 'ollama-buddy-web-search nil t)
 #+end_src
+
+*** Content Source Options
+
+The =ollama-buddy-web-search-content-source= variable controls how content is retrieved:
+
+- =eww= (default, recommended) - Fetches each URL and renders HTML through Emacs' eww/shr. Produces cleaner, more complete content but requires additional HTTP requests.
+
+- =api= (experimental) - Uses content returned directly from the Ollama API without fetching individual URLs. Faster but content quality depends on what the API returns.
 
 *** Example Usage
 

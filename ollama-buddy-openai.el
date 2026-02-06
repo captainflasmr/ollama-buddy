@@ -203,14 +203,25 @@ Use nil for API default behavior (adaptive)."
                  (if (plist-get status :error)
                      (progn
                        (with-current-buffer ollama-buddy--chat-buffer
-                         (let ((inhibit-read-only t))
+                         (let* ((inhibit-read-only t)
+                                (err (plist-get status :error))
+                                (err-code (and (listp err) (cadr err)))
+                                (friendly-msg
+                                 (pcase err-code
+                                   (429 "Rate limit exceeded. Check your OpenAI usage/billing at https://platform.openai.com/account/usage")
+                                   (401 "Invalid API key. Check your key at https://platform.openai.com/api-keys")
+                                   (403 "Access denied. Your API key may not have access to this model")
+                                   (500 "OpenAI server error. Try again later")
+                                   (502 "OpenAI gateway error. Try again later")
+                                   (503 "OpenAI service unavailable. Try again later")
+                                   (_ (format "HTTP error %s" err-code)))))
                            (goto-char start-point)
                            (delete-region start-point (point-max))
-                           (insert "Error: URL retrieval failed\n")
-                           (insert "Details: " (prin1-to-string (plist-get status :error)) "\n")
+                           (insert "Error: " friendly-msg "\n")
+                           (insert "Details: " (prin1-to-string err) "\n")
                            (insert "\n\n*** FAILED")
                            (ollama-buddy--prepare-prompt-area)
-                           (ollama-buddy--update-status "Failed - URL retrieval error"))))
+                           (ollama-buddy--update-status (format "Failed - %s" friendly-msg)))))
                    
                    ;; Success - process the response
                    (progn
@@ -299,9 +310,16 @@ Use nil for API default behavior (adaptive)."
        "https://api.openai.com/v1/models"
        (lambda (status)
          (if (plist-get status :error)
-             (progn
-               (message "Error fetching OpenAI models: %s" (prin1-to-string (plist-get status :error)))
-               (ollama-buddy--update-status "Failed to fetch OpenAI models"))
+             (let* ((err (plist-get status :error))
+                    (err-code (and (listp err) (cadr err)))
+                    (friendly-msg
+                     (pcase err-code
+                       (429 "Rate limit - check OpenAI usage/billing")
+                       (401 "Invalid API key")
+                       (403 "Access denied")
+                       (_ (format "HTTP %s" err-code)))))
+               (message "Error fetching OpenAI models: %s" friendly-msg)
+               (ollama-buddy--update-status (format "Failed: %s" friendly-msg)))
            
            ;; Success - process the response
            (progn
