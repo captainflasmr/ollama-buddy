@@ -2520,6 +2520,9 @@ authentication via `ollama signin'."
                          items))
                 (total (length formatted-items))
                 (rows (ceiling (/ total (float ollama-buddy-menu-columns))))
+                ;; Ensure menu is fully visible by setting max-mini-window-height
+                ;; Add 2 for header line and some padding
+                (max-mini-window-height (+ rows 2))
                 (padded-items (append formatted-items
                                       (make-list (- (* rows
                                                        ollama-buddy-menu-columns)

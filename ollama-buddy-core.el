@@ -307,11 +307,6 @@ These are the only parameters that will be sent to Ollama."
      :description "Open chat buffer"
      :action ollama-buddy--open-chat)
     
-    (unload-all-models
-     :key ?U
-     :description "Unload all models"
-     :action ollama-buddy-unload-all-models)
-    
     (send-region
      :key ?l
      :description "Send region"
@@ -325,26 +320,10 @@ These are the only parameters that will be sent to Ollama."
                  (ollama-buddy--open-chat)
                  (insert selected-text))))
     
-    (kill-request
-     :key ?k
-     :description "Kill request"
-     :action (lambda ()
-               (delete-process ollama-buddy--active-process)))
-    
     (switch-role
      :key ?R
      :description "Switch roles"
      :action ollama-buddy-roles-switch-role)
-    
-    (create-role
-     :key ?E
-     :description "Create new role"
-     :action ollama-buddy-role-creator-create-new-role)
-    
-    (open-roles-directory
-     :key ?D
-     :description "Open roles directory"
-     :action ollama-buddy-roles-open-directory)
     
     ;; Custom commands
     (refactor-code
@@ -377,7 +356,7 @@ These are the only parameters that will be sent to Ollama."
      :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup)))
     
     (synonym
-     :key ?n
+     :key ?s
      :description "Word synonym"
      :prompt "list synonyms for word:"
      :system "You are a linguistic expert who provides contextually grouped synonyms with notes on connotation, formality levels, and usage contexts to help find the most precise alternative word for specific situations."
@@ -399,25 +378,7 @@ These are the only parameters that will be sent to Ollama."
     (minibuffer-prompt
      :key ?i
      :description "Minibuffer Prompt"
-     :action ollama-buddy--menu-minibuffer-prompt)
-
-    (analyze-image
-     :key ?I
-     :description "Analyze an image"
-     :prompt "Analyze this image and describe what you see in detail:"
-     :system "You are a vision assistant that can analyze images. Describe the content of the image in detail, noting any text, people, objects, colors, and context you can identify."
-     :action (lambda ()
-               (let ((file (read-file-name "Select image file: " nil nil t)))
-                 (when (and file (file-exists-p file))
-                   (ollama-buddy--open-chat)
-                   (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-                     (insert (format "Analyze this image and describe what you see in detail: %s" file)))
-                   (ollama-buddy--send (format "Analyze this image and describe what you see in detail: %s" file))))))
-    
-    (quit
-     :key ?q
-     :description "Quit"
-     :action (lambda () (message "Quit Ollama Shell menu."))))
+     :action ollama-buddy--menu-minibuffer-prompt))
   "Comprehensive command definitions for Ollama Buddy.
 Each command is defined with:
   :key - Character for menu selection
@@ -500,7 +461,7 @@ combined with session-specific prompts (personas, roles, etc.)."
   :type 'integer
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-menu-columns 5
+(defcustom ollama-buddy-menu-columns 2
   "Number of columns to display in the Ollama Buddy menu."
   :type 'integer
   :group 'ollama-buddy)
