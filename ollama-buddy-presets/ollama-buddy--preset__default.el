@@ -1,6 +1,10 @@
 ;; ollama-buddy preset for role: default
 ;; Generated manually
 (require 'ollama-buddy)
+
+;; Menu display columns for this role
+(setq ollama-buddy-menu-columns 3)
+
 (setq ollama-buddy-command-definitions
       '(    
         ;; General Commands
@@ -8,11 +12,6 @@
          :key ?o
          :description "Open chat buffer"
          :action ollama-buddy--open-chat)
-        
-        (show-models
-         :key ?v
-         :description "View model status"
-         :action ollama-buddy-show-model-status)
         
         (send-region
          :key ?l
@@ -27,26 +26,10 @@
                      (ollama-buddy--open-chat)
                      (insert selected-text))))
         
-        (kill-request
-         :key ?k
-         :description "Kill request"
-         :action (lambda ()
-                   (delete-process ollama-buddy--active-process)))
-        
         (switch-role
          :key ?R
          :description "Switch roles"
          :action ollama-buddy-roles-switch-role)
-        
-        (create-role
-         :key ?E
-         :description "Create new role"
-         :action ollama-buddy-role-creator-create-new-role)
-        
-        (open-roles-directory
-         :key ?D
-         :description "Open roles directory"
-         :action ollama-buddy-roles-open-directory)
         
         ;; Custom commands
         (refactor-code
@@ -91,13 +74,6 @@
          :system "You are a professional editor who identifies and corrects grammar, spelling, punctuation, and style errors with brief explanations of corrections, providing both the corrected text and a list of changes made."
          :action (lambda () (ollama-buddy--send-with-command 'proofread)))
         
-        (make-concise
-         :key ?z
-         :description "Make concise"
-         :prompt "reduce wordiness while preserving meaning:"
-         :system "You are a concise writing specialist who eliminates redundancy, replaces wordy phrases with simpler alternatives, uses active voice, combines sentences, and removes unnecessary qualifiers while preserving the original meaning and tone."
-         :action (lambda () (ollama-buddy--send-with-command 'make-concise)))
-        
         ;; System Commands
         (custom-prompt
          :key ?e
@@ -108,26 +84,6 @@
          :key ?i
          :description "Minibuffer Prompt"
          :action ollama-buddy--menu-minibuffer-prompt)
-        
-        (token-stats
-         :key ?U
-         :description "Token Usage Stats"
-         :action ollama-buddy-display-token-stats)
-        
-        (show-history
-         :key ?V
-         :description "View conversation history"
-         :action (lambda () (ollama-buddy--display-history 1)))
-        
-        (list-sessions
-         :key ?Y
-         :description "List sessions"
-         :action ollama-buddy-sessions-list)
-        
-        (delete-sessions
-         :key ?K
-         :description "Delete session"
-         :action ollama-buddy-sessions-delete)
         
         (quit
          :key ?q
