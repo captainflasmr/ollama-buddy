@@ -96,6 +96,13 @@ See full list in :
 
 [[file:CHANGELOG.org]]
 
+** <2026-02-06 Thu> *1.3.2*
+
+New Role Presets: Tutor and Documenter
+
+- *Tutor*: Educational assistant with explanation commands (eli5, analogies, step-by-step), assessment (quizzes, practice problems), and Emacs Info integration with completing-read for browsing info nodes
+- *Documenter*: Technical writing assistant for READMEs, API docs, docstrings, changelogs, FAQs, and troubleshooting guides
+
 ** <2026-02-06 Thu> *1.3.1*
 
 Role Menu Improvements
@@ -1569,13 +1576,16 @@ Roles in Ollama Buddy are essentially profiles tailored to specific tasks:
 - Open role directory with =M-x ollama-buddy-roles-open-directory= or menu option =D=
 
 Preconfigured presets available:
-- ollama-buddy--preset__buffy.el
-- ollama-buddy--preset__default.el
-- ollama-buddy--preset__emacs.el
-- ollama-buddy--preset__developer.el
-- ollama-buddy--preset__janeway.el
-- ollama-buddy--preset__translator.el
-- ollama-buddy--preset__writer.el
+- ollama-buddy--preset__bard.el - Shakespearean style responses
+- ollama-buddy--preset__buffy.el - Witty pop-culture responses
+- ollama-buddy--preset__default.el - General purpose commands
+- ollama-buddy--preset__developer.el - Programming focused
+- ollama-buddy--preset__documenter.el - Technical documentation assistant
+- ollama-buddy--preset__emacs.el - Emacs Lisp development
+- ollama-buddy--preset__janeway.el - Diplomatic, thoughtful responses
+- ollama-buddy--preset__translator.el - Multi-language translation
+- ollama-buddy--preset__tutor.el - Educational assistant with Emacs Info integration
+- ollama-buddy--preset__writer.el - Creative writing focused
 
 ** Session Management
 

@@ -287,6 +287,7 @@ allowing you to leverage powerful large language models (LLMs) directly within y
       <li><a id="toc-Writing-Role" href="#Writing-Role">14.8.2 Writing Role</a></li>
     </ul></li>
     <li><a id="toc-Tips-for-Effective-Role-Usage" href="#Tips-for-Effective-Role-Usage">14.9 Tips for Effective Role Usage</a></li>
+    <li><a id="toc-Built_002din-Role-Presets" href="#Built_002din-Role-Presets">14.10 Built-in Role Presets</a></li>
   </ul></li>
   <li><a id="toc-Fabric-Pattern-Integration" href="#Fabric-Pattern-Integration">15 Fabric Pattern Integration</a>
   <ul class="toc-numbered-mark">
@@ -2992,6 +2993,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 <li><a href="#Advanced-Role-Customization" accesskey="7">Advanced Role Customization</a></li>
 <li><a href="#Role-Examples" accesskey="8">Role Examples</a></li>
 <li><a href="#Tips-for-Effective-Role-Usage" accesskey="9">Tips for Effective Role Usage</a></li>
+<li><a href="#Built_002din-Role-Presets">Built-in Role Presets</a></li>
 </ul>
 <div class="section-level-extent" id="Understanding-Roles">
 <h3 class="section"><span>14.1 Understanding Roles<a class="copiable-link" href="#Understanding-Roles"> &para;</a></span></h3>
@@ -3387,6 +3389,70 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 </li><li> Create specialized roles: Consider roles for programming, writing, translation, or domain-specific knowledge
 </li></ol>
 
+</div>
+<div class="section-level-extent" id="Built_002din-Role-Presets">
+<h3 class="section"><span>14.10 Built-in Role Presets<a class="copiable-link" href="#Built_002din-Role-Presets"> &para;</a></span></h3>
+
+<p>Ollama Buddy comes with several pre-configured role presets that you can use immediately or customize:
+</p>
+<dl class="table">
+<dt><strong class="strong">default</strong></dt>
+<dd><p>The standard preset with general-purpose commands for chat, code operations, and text manipulation.
+</p>
+</dd>
+<dt><strong class="strong">developer</strong></dt>
+<dd><p>Focused on programming tasks including code explanation, refactoring, bug fixing, and code review.
+</p>
+</dd>
+<dt><strong class="strong">emacs</strong></dt>
+<dd><p>Specialized for Emacs Lisp development with commands for Elisp-specific help, package development, and Emacs configuration.
+</p>
+</dd>
+<dt><strong class="strong">writer</strong></dt>
+<dd><p>Creative writing focused with commands for storytelling, poetry, copywriting, and content creation.
+</p>
+</dd>
+<dt><strong class="strong">translator</strong></dt>
+<dd><p>Multi-language translation support with formal/informal tone options and localization assistance.
+</p>
+</dd>
+<dt><strong class="strong">tutor</strong></dt>
+<dd><p>Educational assistant for learning and understanding concepts. Features include:
+</p><ul class="itemize mark-bullet">
+<li>Multiple explanation levels (simple, in-depth, ELI5)
+</li><li>Quiz and practice problem generation
+</li><li>Prerequisite and related topic exploration
+</li><li>Common mistakes identification
+</li><li>Emacs Info documentation integration with completing-read for browsing info nodes
+</li></ul>
+
+</dd>
+<dt><strong class="strong">documenter</strong></dt>
+<dd><p>Technical documentation assistant for creating professional documentation:
+</p><ul class="itemize mark-bullet">
+<li>README and quick start guide generation
+</li><li>Architecture documentation
+</li><li>API documentation and docstring generation
+</li><li>Changelog and release notes writing
+</li><li>FAQ and troubleshooting guide creation
+</li></ul>
+
+</dd>
+<dt><strong class="strong">bard</strong></dt>
+<dd><p>Shakespearean-style responses with dramatic flair and poetic language.
+</p>
+</dd>
+<dt><strong class="strong">buffy</strong></dt>
+<dd><p>Witty, pop-culture-savvy responses inspired by Buffy Summers.
+</p>
+</dd>
+<dt><strong class="strong">janeway</strong></dt>
+<dd><p>Diplomatic and thoughtful responses inspired by Captain Janeway.
+</p></dd>
+</dl>
+
+<p>To switch between these presets, use <code class="code">M-x ollama-buddy-roles-switch-role</code> or press <code class="code">R</code> in the Ollama Buddy menu.
+</p>
 <hr>
 </div>
 </div>

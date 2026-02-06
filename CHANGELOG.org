@@ -11,6 +11,38 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-06 Thu> *1.3.2*
+
+New Role Presets: Tutor and Documenter
+
+*** Tutor Preset
+
+A new educational assistant role for learning and understanding concepts. Features include:
+
+- *Explanation commands*: =explain-simply=, =explain-deeply=, =eli5=, =analogy=, =step-by-step=
+- *Assessment commands*: =quiz-me=, =check-understanding=, =practice-problems=
+- *Context commands*: =prerequisites=, =related-topics=, =real-world=, =common-mistakes=
+- *Emacs Info integration*: Browse and fetch info nodes with completion
+  - =I= - Fetch info node with all subnodes
+  - =b= - Fetch single info node
+  - Completion support for browsing manuals (elisp, emacs, org, etc.)
+  - Cached node lists for fast subsequent access
+
+Example workflow for learning Emacs:
+1. Press =I=, select "elisp", then browse to "(elisp)Hooks"
+2. Content is inserted into your buffer
+3. Select text and use =s= (explain simply) or =z= (quiz me)
+
+*** Documenter Preset
+
+A technical documentation assistant role. Features include:
+
+- *README & Overview*: =write-readme=, =quick-start=, =architecture-doc=
+- *Code Documentation*: =add-comments=, =write-docstring=, =api-docs=, =usage-examples=
+- *Release Notes*: =changelog-entry=, =release-notes=
+- *Support Docs*: =troubleshooting=, =faq=
+- *Improvement*: =improve-docs=, =simplify-docs=
+
 ** <2026-02-06 Thu> *1.3.1*
 
 Role Menu Improvements

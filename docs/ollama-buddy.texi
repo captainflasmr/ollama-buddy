@@ -2317,6 +2317,58 @@ A complete example of a writing-focused role:
 @item Create specialized roles: Consider roles for programming, writing, translation, or domain-specific knowledge
 @end enumerate
 
+@section Built-in Role Presets
+
+Ollama Buddy comes with several pre-configured role presets that you can use immediately or customize:
+
+@table @strong
+@item default
+The standard preset with general-purpose commands for chat, code operations, and text manipulation.
+
+@item developer
+Focused on programming tasks including code explanation, refactoring, bug fixing, and code review.
+
+@item emacs
+Specialized for Emacs Lisp development with commands for Elisp-specific help, package development, and Emacs configuration.
+
+@item writer
+Creative writing focused with commands for storytelling, poetry, copywriting, and content creation.
+
+@item translator
+Multi-language translation support with formal/informal tone options and localization assistance.
+
+@item tutor
+Educational assistant for learning and understanding concepts. Features include:
+@itemize @bullet
+@item Multiple explanation levels (simple, in-depth, ELI5)
+@item Quiz and practice problem generation
+@item Prerequisite and related topic exploration
+@item Common mistakes identification
+@item Emacs Info documentation integration with completing-read for browsing info nodes
+@end itemize
+
+@item documenter
+Technical documentation assistant for creating professional documentation:
+@itemize @bullet
+@item README and quick start guide generation
+@item Architecture documentation
+@item API documentation and docstring generation
+@item Changelog and release notes writing
+@item FAQ and troubleshooting guide creation
+@end itemize
+
+@item bard
+Shakespearean-style responses with dramatic flair and poetic language.
+
+@item buffy
+Witty, pop-culture-savvy responses inspired by Buffy Summers.
+
+@item janeway
+Diplomatic and thoughtful responses inspired by Captain Janeway.
+@end table
+
+To switch between these presets, use @code{M-x ollama-buddy-roles-switch-role} or press @code{R} in the Ollama Buddy menu.
+
 @node Fabric Pattern Integration
 @chapter Fabric Pattern Integration
 

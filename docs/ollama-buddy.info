@@ -2219,6 +2219,64 @@ A complete example of a writing-focused role:
   5. Create specialized roles: Consider roles for programming, writing,
      translation, or domain-specific knowledge
 
+14.10 Built-in Role Presets
+===========================
+
+Ollama Buddy comes with several pre-configured role presets that you can
+use immediately or customize:
+
+*default*
+     The standard preset with general-purpose commands for chat, code
+     operations, and text manipulation.
+
+*developer*
+     Focused on programming tasks including code explanation,
+     refactoring, bug fixing, and code review.
+
+*emacs*
+     Specialized for Emacs Lisp development with commands for
+     Elisp-specific help, package development, and Emacs configuration.
+
+*writer*
+     Creative writing focused with commands for storytelling, poetry,
+     copywriting, and content creation.
+
+*translator*
+     Multi-language translation support with formal/informal tone
+     options and localization assistance.
+
+*tutor*
+     Educational assistant for learning and understanding concepts.
+     Features include:
+        • Multiple explanation levels (simple, in-depth, ELI5)
+        • Quiz and practice problem generation
+        • Prerequisite and related topic exploration
+        • Common mistakes identification
+        • Emacs Info documentation integration with completing-read for
+          browsing info nodes
+
+*documenter*
+     Technical documentation assistant for creating professional
+     documentation:
+        • README and quick start guide generation
+        • Architecture documentation
+        • API documentation and docstring generation
+        • Changelog and release notes writing
+        • FAQ and troubleshooting guide creation
+
+*bard*
+     Shakespearean-style responses with dramatic flair and poetic
+     language.
+
+*buffy*
+     Witty, pop-culture-savvy responses inspired by Buffy Summers.
+
+*janeway*
+     Diplomatic and thoughtful responses inspired by Captain Janeway.
+
+   To switch between these presets, use ‘M-x
+ollama-buddy-roles-switch-role’ or press ‘R’ in the Ollama Buddy menu.
+
 
 File: ollama-buddy.info,  Node: Fabric Pattern Integration,  Next: Awesome ChatGPT Prompts,  Prev: Roles and Commands,  Up: Top
 
@@ -3389,17 +3447,17 @@ Node: Parameter Control45607
 Node: Session Management48004
 Node: User System Prompts50013
 Node: Roles and Commands58503
-Node: Fabric Pattern Integration70656
-Node: Awesome ChatGPT Prompts72883
-Node: Remote Providers76733
-Node: Ollama Cloud Models81414
-Node: Global System Prompt83412
-Node: Advanced Usage85116
-Node: API Reference87682
-Node: FAQ93405
-Node: Troubleshooting100458
-Node: Contributing102963
-Node: Index105631
+Node: Fabric Pattern Integration72576
+Node: Awesome ChatGPT Prompts74803
+Node: Remote Providers78653
+Node: Ollama Cloud Models83334
+Node: Global System Prompt85332
+Node: Advanced Usage87036
+Node: API Reference89602
+Node: FAQ95325
+Node: Troubleshooting102378
+Node: Contributing104883
+Node: Index107551
 
 End Tag Table
 

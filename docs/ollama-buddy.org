@@ -205,6 +205,7 @@ language models (LLMs) directly within your Emacs workflow.
     - [[#Writing-Role][14.8.2 Writing Role]]
   - [[#Tips-for-Effective-Role-Usage][14.9 Tips for Effective Role
     Usage]]
+  - [[#Built_002din-Role-Presets][14.10 Built-in Role Presets]]
 - [[#Fabric-Pattern-Integration][15 Fabric Pattern Integration]]
   - [[#What-are-Fabric-Patterns_003f][15.1 What are Fabric Patterns?]]
   - [[#Setting-Up-Fabric-Integration][15.2 Setting Up Fabric
@@ -3022,6 +3023,7 @@ Previous: [[#User-System-Prompts][User System Prompts]], Up:
 - [[#Advanced-Role-Customization][Advanced Role Customization]]
 - [[#Role-Examples][Role Examples]]
 - [[#Tips-for-Effective-Role-Usage][Tips for Effective Role Usage]]
+- [[#Built_002din-Role-Presets][Built-in Role Presets]]
 
 <<Understanding-Roles>>
 *** 14.1 Understanding Roles [[#Understanding-Roles][¶]]
@@ -3448,6 +3450,62 @@ A complete example of a writing-focused role:
    your role files
 5. Create specialized roles: Consider roles for programming, writing,
    translation, or domain-specific knowledge
+
+<<Built_002din-Role-Presets>>
+*** 14.10 Built-in Role Presets [[#Built_002din-Role-Presets][¶]]
+:PROPERTIES:
+:CUSTOM_ID: built-in-role-presets
+:CLASS: section
+:END:
+Ollama Buddy comes with several pre-configured role presets that you can
+use immediately or customize:
+
+- *default* :: The standard preset with general-purpose commands for
+  chat, code operations, and text manipulation.
+
+- *developer* :: Focused on programming tasks including code
+  explanation, refactoring, bug fixing, and code review.
+
+- *emacs* :: Specialized for Emacs Lisp development with commands for
+  Elisp-specific help, package development, and Emacs configuration.
+
+- *writer* :: Creative writing focused with commands for storytelling,
+  poetry, copywriting, and content creation.
+
+- *translator* :: Multi-language translation support with
+  formal/informal tone options and localization assistance.
+
+- *tutor* :: Educational assistant for learning and understanding
+  concepts. Features include:
+
+  - Multiple explanation levels (simple, in-depth, ELI5)
+  - Quiz and practice problem generation
+  - Prerequisite and related topic exploration
+  - Common mistakes identification
+  - Emacs Info documentation integration with completing-read for
+    browsing info nodes
+
+- *documenter* :: Technical documentation assistant for creating
+  professional documentation:
+
+  - README and quick start guide generation
+  - Architecture documentation
+  - API documentation and docstring generation
+  - Changelog and release notes writing
+  - FAQ and troubleshooting guide creation
+
+- *bard* :: Shakespearean-style responses with dramatic flair and poetic
+  language.
+
+- *buffy* :: Witty, pop-culture-savvy responses inspired by Buffy
+  Summers.
+
+- *janeway* :: Diplomatic and thoughtful responses inspired by Captain
+  Janeway.
+
+To switch between these presets, use
+=M-x ollama-buddy-roles-switch-role= or press =R= in the Ollama Buddy
+menu.
 
 --------------
 
