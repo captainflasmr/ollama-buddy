@@ -59,6 +59,13 @@
     (should (ollama-buddy--cloud-model-p "qwen3-coder:480b-cloud"))
     (should (ollama-buddy--cloud-model-p "deepseek-v3.1:671b-cloud"))))
 
+(ert-deftest ollama-buddy-test-cloud-model-p-prefix ()
+  "Test cloud model detection by cl: prefix."
+  :tags '(core)
+  (with-ollama-buddy-test-env
+    (should (ollama-buddy--cloud-model-p "cl:qwen3-coder:480b-cloud"))
+    (should (ollama-buddy--cloud-model-p "cl:some-model"))))
+
 (ert-deftest ollama-buddy-test-cloud-model-p-local ()
   "Test that local models are not detected as cloud."
   :tags '(core)
@@ -188,13 +195,20 @@
                    (ollama-buddy--get-real-model-name "llama3.2:1b")))))
 
 (ert-deftest ollama-buddy-test-get-real-model-name-no-remote ()
-  "Test model name when no remote models configured."
+  "Test model name when no remote models configured but cloud models exist."
   :tags '(core)
   (with-ollama-buddy-test-env
-    ;; With no remote models, prefix should NOT be stripped
+    ;; With cloud models present, o: prefix should be stripped
     (let ((ollama-buddy-remote-models nil))
-      (should (equal "o:llama3.2:1b"
+      (should (equal "llama3.2:1b"
                      (ollama-buddy--get-real-model-name "o:llama3.2:1b"))))))
+
+(ert-deftest ollama-buddy-test-get-real-model-name-cloud-prefix ()
+  "Test extracting real model name from cl: prefixed cloud model."
+  :tags '(core)
+  (with-ollama-buddy-test-env
+    (should (equal "qwen3-coder:480b-cloud"
+                   (ollama-buddy--get-real-model-name "cl:qwen3-coder:480b-cloud")))))
 
 ;;; Provider Indicator Tests
 ;; ============================================================================
@@ -205,6 +219,56 @@
   ;; When no provider features are present
   (cl-letf (((symbol-function 'featurep) (lambda (_) nil)))
     (should (equal '() (ollama-buddy--get-enabled-external-providers)))))
+
+;;; Cloud Model Auto-Pull Tests
+;; ============================================================================
+
+(ert-deftest ollama-buddy-test-ensure-cloud-non-cloud-skips ()
+  "Test that a non-cloud model skips the pull check entirely."
+  :tags '(core)
+  (with-ollama-buddy-test-env
+    (let ((pull-called nil))
+      (cl-letf (((symbol-function 'call-process)
+                 (lambda (&rest _) (setq pull-called t) 0)))
+        (ollama-buddy--ensure-cloud-model-available "llama3.2:1b")
+        (should-not pull-called)))))
+
+(ert-deftest ollama-buddy-test-ensure-cloud-cached-skips ()
+  "Test that a cloud model already in cache does not trigger a pull."
+  :tags '(core)
+  (with-ollama-buddy-test-env
+    (let ((pull-called nil)
+          ;; Simulate the model already present in cache
+          (ollama-buddy--models-cache '("o:qwen3-coder:480b-cloud"))
+          (ollama-buddy--models-cache-timestamp (float-time)))
+      (cl-letf (((symbol-function 'call-process)
+                 (lambda (&rest _) (setq pull-called t) 0))
+                ((symbol-function 'ollama-buddy--ollama-running)
+                 (lambda () t)))
+        (ollama-buddy--ensure-cloud-model-available "cl:qwen3-coder:480b-cloud")
+        (should-not pull-called)))))
+
+(ert-deftest ollama-buddy-test-ensure-cloud-pulls-when-missing ()
+  "Test that a cloud model not in cache triggers an ollama pull."
+  :tags '(core)
+  (with-ollama-buddy-test-env
+    (let ((pull-called nil)
+          (pulled-model nil)
+          (ollama-buddy--models-cache '("o:llama3.2:1b"))
+          (ollama-buddy--models-cache-timestamp (float-time)))
+      (cl-letf (((symbol-function 'call-process)
+                 (lambda (_prog &rest args)
+                   (setq pull-called t
+                         pulled-model (nth 4 args))
+                   0))
+                ((symbol-function 'ollama-buddy--ollama-running)
+                 (lambda () t)))
+        (ollama-buddy--ensure-cloud-model-available "cl:deepseek-v3.1:671b-cloud")
+        (should pull-called)
+        (should (equal "deepseek-v3.1:671b-cloud" pulled-model))
+        ;; Cache should be invalidated
+        (should-not ollama-buddy--models-cache)
+        (should-not ollama-buddy--models-cache-timestamp)))))
 
 (provide 'ollama-buddy-core-test)
 ;;; ollama-buddy-core-test.el ends here

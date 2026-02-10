@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 1.3
+;; Version: 1.3.3
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -1830,18 +1830,17 @@ Optional MENU-COLUMNS specifies the number of columns for the menu display."
         (ollama-buddy--update-status (concat "Stream " status))))))
 
 (defun ollama-buddy--swap-model (&optional arg)
-  "Swap ollama model, including OpenAI models if available.
-With prefix ARG (\\[universal-argument]), select from cloud models instead.
-Cloud models run on ollama.com infrastructure and require authentication."
+  "Swap ollama model, including remote and cloud models if available.
+With prefix ARG (\\[universal-argument]), select from online remote models only."
   (interactive "P")
   (let* ((models (if arg
-                     ollama-buddy-cloud-models
+                     ollama-buddy-remote-models
                    (ollama-buddy--get-models-with-others)))
-         (prompt (if arg "Cloud Model: " "Model: "))
+         (prompt (if arg "Online Model: " "Model: "))
          (new-model (completing-read prompt models nil t)))
     (setq ollama-buddy-default-model new-model)
     (setq ollama-buddy--current-model new-model)
-    (message "Switched to %smodel: %s" (if arg "cloud " "") new-model)
+    (message "Switched to %smodel: %s" (if arg "online " "") new-model)
     (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
     (ollama-buddy--prepare-prompt-area t t)
     (goto-char (point-max))
@@ -1852,7 +1851,17 @@ Cloud models run on ollama.com infrastructure and require authentication."
 Cloud models run on ollama.com infrastructure and require authentication
 via `ollama signin'."
   (interactive)
-  (ollama-buddy--swap-model t))
+  (let* ((cloud-models (mapcar (lambda (m)
+                                 (concat ollama-buddy-cloud-marker-prefix m))
+                               ollama-buddy-cloud-models))
+         (new-model (completing-read "Cloud Model: " cloud-models nil t)))
+    (setq ollama-buddy-default-model new-model)
+    (setq ollama-buddy--current-model new-model)
+    (message "Switched to cloud model: %s" new-model)
+    (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
+    (ollama-buddy--prepare-prompt-area t t)
+    (goto-char (point-max))
+    (ollama-buddy--update-status "Idle")))
 
 (defvar ollama-buddy--signin-url-opened nil
   "Flag to track whether we've already opened the signin URL.")
@@ -2213,6 +2222,7 @@ authentication via `ollama signin'."
   (let* ((model-info (ollama-buddy--get-valid-model specified-model))
          (model (car model-info))
          (original-model (cdr model-info))
+         (_ (ollama-buddy--ensure-cloud-model-available model))
          ;; Check if this model supports vision
          (supports-vision (and ollama-buddy-vision-enabled
                                (ollama-buddy--model-supports-vision model)))

@@ -11,6 +11,22 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-10 Mon> *1.3.3*
+
+Auto-Pull Cloud Model Manifests
+
+*** Overview
+
+When selecting an Ollama cloud model that hasn't been used before, its manifest now gets pulled automatically. Previously, users would see a confusing "model not found" error because cloud models require a small manifest pull (~400 bytes) before first use.
+
+*** Details
+
+- Added ~ollama-buddy--ensure-cloud-model-available~ pre-flight check
+- Automatically runs ~ollama pull~ for unpulled cloud models before sending requests
+- Works with both network-process and curl communication backends
+- Shows "Pulling cloud model manifest..." message during the brief download
+- Invalidates models cache after successful pull so the model appears immediately
+
 ** <2026-02-06 Thu> *1.3.2*
 
 New Role Presets: Tutor and Documenter

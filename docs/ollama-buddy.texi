@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 1.3
+@subtitle For Ollama Buddy version 1.3.3
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -2780,6 +2780,17 @@ Signs out from cloud services. Accessible from transient menu "Cloud Auth > Sign
 @item Check Status (@code{M-x ollama-buddy-cloud-status})
 Verifies your authentication status. Accessible from transient menu "Cloud Auth > Auth Status".
 @end table
+
+@section Automatic Manifest Pulling
+
+Cloud models require a small manifest to be pulled locally before they can be used.
+Ollama Buddy handles this automatically: when you select a cloud model for the first
+time, the manifest is fetched via @code{ollama pull} before your prompt is sent.
+You will see a brief ``Pulling cloud model manifest...'' message during this process.
+
+This works with both the network-process and curl communication backends.
+If the pull fails (e.g.@: due to authentication issues), an error is displayed
+and the request is not sent.
 
 @section Cloud Model Indicator
 

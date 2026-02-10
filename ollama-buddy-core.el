@@ -527,11 +527,18 @@ combined with session-specific prompts (personas, roles, etc.)."
   :type 'string
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-cloud-marker-prefix "cl:"
+  "Prefix used to identify Ollama cloud models in the ollama-buddy interface."
+  :type 'string
+  :group 'ollama-buddy)
+
 (defun ollama-buddy--should-use-marker-prefix ()
   "Determine if marker prefix should be used.
-Returns non-nil if any remote models are available."
-  (and (boundp 'ollama-buddy-remote-models)
-       ollama-buddy-remote-models))
+Returns non-nil if any remote or cloud models are available."
+  (or (and (boundp 'ollama-buddy-remote-models)
+           ollama-buddy-remote-models)
+      (and (boundp 'ollama-buddy-cloud-models)
+           ollama-buddy-cloud-models)))
 
 (defun ollama-buddy--get-full-model-name (model)
   "Get the full display name for MODEL with prefix if needed."
@@ -541,10 +548,13 @@ Returns non-nil if any remote models are available."
 
 (defun ollama-buddy--get-real-model-name (model)
   "Extract the actual model name from the prefixed MODEL string."
-  (if (and (string-prefix-p ollama-buddy-marker-prefix model)
-           (ollama-buddy--should-use-marker-prefix))
-      (substring model (length ollama-buddy-marker-prefix))
-    model))
+  (cond
+   ((and (string-prefix-p ollama-buddy-marker-prefix model)
+         (ollama-buddy--should-use-marker-prefix))
+    (substring model (length ollama-buddy-marker-prefix)))
+   ((string-prefix-p ollama-buddy-cloud-marker-prefix model)
+    (substring model (length ollama-buddy-cloud-marker-prefix)))
+   (t model)))
 
 (defcustom ollama-buddy-status-update-interval 1.0
   "Interval in seconds to update the status line with background operations."
@@ -1227,11 +1237,16 @@ Each element is a plist with :name, :authenticated, and :enabled."
          (auth-status (ollama-buddy--format-auth-status))
          (ollama-count (length (ollama-buddy--get-models)))
          (online-count (length ollama-buddy-remote-models))
-         ;; (cloud-count (length ollama-buddy-cloud-models))
-         (model-info (if (> online-count 0)
-                         (format " (%d ollama / %d online)" ollama-count online-count)
-                       (format " (%d ollama)" ollama-count)))
-         ;; (cloud-info (format " (%d cloud)" cloud-count))
+         (cloud-count (length ollama-buddy-cloud-models))
+         (model-info (concat " ("
+                             (format "%d ollama" ollama-count)
+                             (if (> online-count 0)
+                                 (format " / %d online" online-count)
+                               "")
+                             (if (> cloud-count 0)
+                                 (format " / %d cloud" cloud-count)
+                               "")
+                             ")"))
          (message-text
           (concat
            (when (= (buffer-size) 0)
@@ -1593,11 +1608,15 @@ When complete, CALLBACK is called with the status response and result."
     ollama-buddy--status-cache))
 
 (defun ollama-buddy--get-models-with-others ()
-  "Get all available models, including non ollama models."
+  "Get all available models, including remote and cloud models."
   (let ((models '()))
     (dolist (model (ollama-buddy--get-models))
       (push model models))
     (setq models (append models ollama-buddy-remote-models))
+    (setq models (append models
+                         (mapcar (lambda (m)
+                                   (concat ollama-buddy-cloud-marker-prefix m))
+                                 ollama-buddy-cloud-models)))
     models))
 
 (defun ollama-buddy--get-models ()
@@ -1673,11 +1692,32 @@ When complete, CALLBACK is called with the status response and result."
                        (alist-get 'models result))
                ollama-buddy--running-models-cache-timestamp (float-time)))))))
 
+(defun ollama-buddy--ensure-cloud-model-available (model)
+  "Ensure cloud MODEL has its manifest pulled locally.
+MODEL may have a `cl:' or `o:' prefix.  If MODEL is not a cloud model,
+return immediately.  Otherwise check the models cache for the raw name
+and, when absent, run `ollama pull' synchronously to fetch the manifest."
+  (when (ollama-buddy--cloud-model-p model)
+    (let* ((raw (ollama-buddy--get-real-model-name model))
+           (prefixed (ollama-buddy--get-full-model-name raw)))
+      (unless (member prefixed (ollama-buddy--get-models))
+        (message "Pulling cloud model manifest for %s..." raw)
+        (let ((exit-code (call-process ollama-buddy-ollama-executable
+                                       nil nil nil "pull" raw)))
+          (if (zerop exit-code)
+              (progn
+                (setq ollama-buddy--models-cache nil
+                      ollama-buddy--models-cache-timestamp nil)
+                (message "Pulling cloud model manifest for %s...done" raw))
+            (user-error "Failed to pull cloud model manifest for %s (exit code %d)"
+                        raw exit-code)))))))
+
 (defun ollama-buddy--cloud-model-p (model)
   "Return non-nil if MODEL is a cloud model.
-Cloud models have a `-cloud' suffix or are in `ollama-buddy-cloud-models'."
+Cloud models have a `-cloud' suffix, `cl:' prefix, or are in `ollama-buddy-cloud-models'."
   (when model
     (or (string-suffix-p "-cloud" model)
+        (string-prefix-p ollama-buddy-cloud-marker-prefix model)
         (member model ollama-buddy-cloud-models))))
 
 (defun ollama-buddy--validate-model (model)

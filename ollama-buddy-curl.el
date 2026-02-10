@@ -447,6 +447,7 @@ authentication via `ollama signin'."
   (let* ((model-info (ollama-buddy--get-valid-model specified-model))
          (model (car model-info))
          (original-model (cdr model-info))
+         (_ (ollama-buddy--ensure-cloud-model-available model))
          (supports-vision (and ollama-buddy-vision-enabled
                                (ollama-buddy--model-supports-vision model)))
          (image-files (when supports-vision
