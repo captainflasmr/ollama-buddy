@@ -1236,17 +1236,17 @@ Each element is a plist with :name, :authenticated, and :enabled."
   (let* ((external-providers (ollama-buddy--get-enabled-external-providers))
          (auth-status (ollama-buddy--format-auth-status))
          (ollama-count (length (ollama-buddy--get-models)))
-         (online-count (length ollama-buddy-remote-models))
          (cloud-count (length ollama-buddy-cloud-models))
-         (model-info (concat " ("
-                             (format "%d ollama" ollama-count)
-                             (if (> online-count 0)
-                                 (format " / %d online" online-count)
-                               "")
-                             (if (> cloud-count 0)
-                                 (format " / %d cloud" cloud-count)
-                               "")
-                             ")"))
+         (provider-summary
+          (let ((parts nil))
+            (when (> ollama-count 0)
+              (push (format "o: Ollama (%d)" ollama-count) parts))
+            (when external-providers
+              (setq parts (append (nreverse parts) external-providers)
+                    parts (nreverse parts)))
+            (when (> cloud-count 0)
+              (push (format "cl: Cloud (%d)" cloud-count) parts))
+            (nreverse parts)))
          (message-text
           (concat
            (when (= (buffer-size) 0)
@@ -1255,20 +1255,20 @@ Each element is a plist with :name, :authenticated, and :enabled."
            "#+begin_example\n"
            " ___ _ _      n _ n      ___       _   _ _ _\n"
            "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |\n"
-           "| | | | | .  |1.3.0| .  | . | | | . | . |__ |\n"
+           "| | | | | .  |1.3.3| .  | . | | | . | . |__ |\n"
            "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n"
            "#+end_example\n\n"
            (when (not (ollama-buddy--check-status))
              "** *THERE IS NO OLLAMA RUNNING*\n
 please run =ollama serve=\n\n")
-           (when external-providers
-             (concat (mapconcat #'identity external-providers " ") "\n\n"))
+           (when provider-summary
+             (concat (mapconcat #'identity provider-summary " ") "\n\n"))
            (when auth-status
              (concat "Auth: " auth-status "\n\n"))
            "- /Ask me anything!/       C-c C-c / C-c RET
 - /Main transient menu/    C-c O
 - /Manage models/          C-c W
-- /Select model/           C-c m" model-info)))
+- /Select model/           C-c m")))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
 
@@ -1653,12 +1653,18 @@ When complete, CALLBACK is called with the status response and result."
                ollama-buddy--models-cache-timestamp (float-time)))))))
 
 (defun ollama-buddy--get-models-with-colors-from-result (result)
-  "Get available Ollama models with their associated colors from RESULT."
+  "Get available Ollama models with their associated colors from RESULT.
+Cloud models (those with a `-cloud' suffix or in `ollama-buddy-cloud-models')
+are excluded since they appear under the `cl:' prefix instead."
   (when result
-    (mapcar (lambda (m)
-              (let ((name (ollama-buddy--get-full-model-name (alist-get 'name m))))
-                (cons name name)))
-            (alist-get 'models result))))
+    (cl-remove-if
+     (lambda (entry)
+       (ollama-buddy--cloud-model-p
+        (ollama-buddy--get-real-model-name (car entry))))
+     (mapcar (lambda (m)
+               (let ((name (ollama-buddy--get-full-model-name (alist-get 'name m))))
+                 (cons name name)))
+             (alist-get 'models result)))))
 
 (defun ollama-buddy--get-running-models ()
   "Get list of currently running Ollama models with caching."
@@ -1695,22 +1701,18 @@ When complete, CALLBACK is called with the status response and result."
 (defun ollama-buddy--ensure-cloud-model-available (model)
   "Ensure cloud MODEL has its manifest pulled locally.
 MODEL may have a `cl:' or `o:' prefix.  If MODEL is not a cloud model,
-return immediately.  Otherwise check the models cache for the raw name
-and, when absent, run `ollama pull' synchronously to fetch the manifest."
+return immediately.  Otherwise run `ollama pull' synchronously to fetch
+the manifest.  The pull is idempotent and returns instantly when the
+manifest is already present."
   (when (ollama-buddy--cloud-model-p model)
-    (let* ((raw (ollama-buddy--get-real-model-name model))
-           (prefixed (ollama-buddy--get-full-model-name raw)))
-      (unless (member prefixed (ollama-buddy--get-models))
-        (message "Pulling cloud model manifest for %s..." raw)
-        (let ((exit-code (call-process ollama-buddy-ollama-executable
-                                       nil nil nil "pull" raw)))
-          (if (zerop exit-code)
-              (progn
-                (setq ollama-buddy--models-cache nil
-                      ollama-buddy--models-cache-timestamp nil)
-                (message "Pulling cloud model manifest for %s...done" raw))
-            (user-error "Failed to pull cloud model manifest for %s (exit code %d)"
-                        raw exit-code)))))))
+    (let ((raw (ollama-buddy--get-real-model-name model)))
+      (message "Pulling cloud model manifest for %s..." raw)
+      (let ((exit-code (call-process ollama-buddy-ollama-executable
+                                     nil nil nil "pull" raw)))
+        (if (zerop exit-code)
+            (message "Pulling cloud model manifest for %s...done" raw)
+          (user-error "Failed to pull cloud model manifest for %s (exit code %d)"
+                      raw exit-code))))))
 
 (defun ollama-buddy--cloud-model-p (model)
   "Return non-nil if MODEL is a cloud model.

@@ -224,7 +224,7 @@
 ;; ============================================================================
 
 (ert-deftest ollama-buddy-test-ensure-cloud-non-cloud-skips ()
-  "Test that a non-cloud model skips the pull check entirely."
+  "Test that a non-cloud model skips the pull entirely."
   :tags '(core)
   (with-ollama-buddy-test-env
     (let ((pull-called nil))
@@ -233,42 +233,20 @@
         (ollama-buddy--ensure-cloud-model-available "llama3.2:1b")
         (should-not pull-called)))))
 
-(ert-deftest ollama-buddy-test-ensure-cloud-cached-skips ()
-  "Test that a cloud model already in cache does not trigger a pull."
+(ert-deftest ollama-buddy-test-ensure-cloud-always-pulls ()
+  "Test that a cloud model always triggers an idempotent ollama pull."
   :tags '(core)
   (with-ollama-buddy-test-env
     (let ((pull-called nil)
-          ;; Simulate the model already present in cache
-          (ollama-buddy--models-cache '("o:qwen3-coder:480b-cloud"))
-          (ollama-buddy--models-cache-timestamp (float-time)))
-      (cl-letf (((symbol-function 'call-process)
-                 (lambda (&rest _) (setq pull-called t) 0))
-                ((symbol-function 'ollama-buddy--ollama-running)
-                 (lambda () t)))
-        (ollama-buddy--ensure-cloud-model-available "cl:qwen3-coder:480b-cloud")
-        (should-not pull-called)))))
-
-(ert-deftest ollama-buddy-test-ensure-cloud-pulls-when-missing ()
-  "Test that a cloud model not in cache triggers an ollama pull."
-  :tags '(core)
-  (with-ollama-buddy-test-env
-    (let ((pull-called nil)
-          (pulled-model nil)
-          (ollama-buddy--models-cache '("o:llama3.2:1b"))
-          (ollama-buddy--models-cache-timestamp (float-time)))
+          (pulled-model nil))
       (cl-letf (((symbol-function 'call-process)
                  (lambda (_prog &rest args)
                    (setq pull-called t
                          pulled-model (nth 4 args))
-                   0))
-                ((symbol-function 'ollama-buddy--ollama-running)
-                 (lambda () t)))
+                   0)))
         (ollama-buddy--ensure-cloud-model-available "cl:deepseek-v3.1:671b-cloud")
         (should pull-called)
-        (should (equal "deepseek-v3.1:671b-cloud" pulled-model))
-        ;; Cache should be invalidated
-        (should-not ollama-buddy--models-cache)
-        (should-not ollama-buddy--models-cache-timestamp)))))
+        (should (equal "deepseek-v3.1:671b-cloud" pulled-model))))))
 
 (provide 'ollama-buddy-core-test)
 ;;; ollama-buddy-core-test.el ends here
