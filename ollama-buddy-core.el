@@ -595,7 +595,8 @@ Each element is a plist with :file, :content, :size, and :type.")
   "List of available remote models.")
 
 (defcustom ollama-buddy-cloud-models
-  '("qwen3-coder:480b-cloud"
+  '("qwen3-coder-next:cloud"
+    "qwen3-coder:480b-cloud"
     "kimi-k2.5:cloud"
     "deepseek-v3.1:671b-cloud"
     "gpt-oss:120b-cloud"
