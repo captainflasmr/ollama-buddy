@@ -334,8 +334,9 @@ allowing you to leverage powerful large language models (LLMs) directly within y
     <li><a id="toc-Available-Cloud-Models" href="#Available-Cloud-Models">18.2 Available Cloud Models</a></li>
     <li><a id="toc-Selecting-Cloud-Models" href="#Selecting-Cloud-Models">18.3 Selecting Cloud Models</a></li>
     <li><a id="toc-Cloud-Authentication" href="#Cloud-Authentication">18.4 Cloud Authentication</a></li>
-    <li><a id="toc-Cloud-Model-Indicator" href="#Cloud-Model-Indicator">18.5 Cloud Model Indicator</a></li>
-    <li><a id="toc-Configuration-2" href="#Configuration-3">18.6 Configuration</a></li>
+    <li><a id="toc-Automatic-Manifest-Pulling" href="#Automatic-Manifest-Pulling">18.5 Automatic Manifest Pulling</a></li>
+    <li><a id="toc-Cloud-Model-Indicator" href="#Cloud-Model-Indicator">18.6 Cloud Model Indicator</a></li>
+    <li><a id="toc-Configuration-2" href="#Configuration-3">18.7 Configuration</a></li>
   </ul></li>
   <li><a id="toc-Global-System-Prompt" href="#Global-System-Prompt">19 Global System Prompt</a>
   <ul class="toc-numbered-mark">
@@ -743,6 +744,14 @@ Next: <a href="#Quick-Start" accesskey="n" rel="next">Quick Start</a>, Previous:
 </p><div class="example">
 <pre class="example-preformatted">(setq ollama-buddy-pulse-response t)
 </pre></div>
+
+</dd>
+<dt><code class="code">ollama-buddy-full-welcome-enabled</code></dt>
+<dd><p>Whether to show the full welcome screen with all keybinding hints (default: t).
+When nil, only the essential keybindings are shown.
+</p><div class="example">
+<pre class="example-preformatted">(setq ollama-buddy-full-welcome-enabled nil)
+</pre></div>
 </dd>
 </dl>
 
@@ -831,7 +840,7 @@ Next: <a href="#Quick-Start" accesskey="n" rel="next">Quick Start</a>, Previous:
 
 </dd>
 <dt><code class="code">ollama-buddy-show-history-indicator</code></dt>
-<dd><p>Whether to show the history indicator in the header line (default: t).
+<dd><p>Whether to show the history indicator in the header line (default: nil).
 </p><div class="example">
 <pre class="example-preformatted">(setq ollama-buddy-show-history-indicator t)
 </pre></div>
@@ -1072,6 +1081,14 @@ Next: <a href="#Core-Features" accesskey="n" rel="next">Core Features</a>, Previ
 <dd><p>Press <code class="code">C-c V</code> to hide or show reasoning/thinking sections in responses.
 </p>
 </dd>
+<dt>Toggling Org/Markdown conversion</dt>
+<dd><p>Press <code class="code">C-c C-o</code> to switch between Org-mode and Markdown output. Also available from the transient menu under &quot;Diagnostics&quot;.
+</p>
+</dd>
+<dt>Toggling Global System Prompt</dt>
+<dd><p>Press <code class="code">C-c &lt;</code> to toggle the global system prompt on or off. The header line shows <code class="code">&lt;</code> when disabled.
+</p>
+</dd>
 <dt>Using Awesome ChatGPT Prompts</dt>
 <dd><p>Select text, press <code class="code">C-c o</code>, then <code class="code">a</code> for the Awesome prompts menu, then <code class="code">s</code> to send with a prompt.
 </p>
@@ -1284,15 +1301,16 @@ Next: <a href="#Working-with-Models" accesskey="n" rel="next">Working with Model
 </li><li>A header line with status information including:
   <ul class="itemize mark-minus">
 <li>Cloud model indicator (<code class="code">☁</code>)
-  </li><li>Loaded provider indicators (<code class="code">acgks</code>)
+  </li><li>Attachment indicators (<code class="code">📎N</code>)
+  </li><li>Web search indicators (<code class="code">🔍N</code>)
   </li><li>Context usage bar (when enabled)
-  </li><li>History count (<code class="code">H5/10</code>)
+  </li><li>Global system prompt disabled indicator (<code class="code">&lt;</code>)
+  </li><li>History count (<code class="code">H5/10</code>, off by default)
   </li><li>Current model name
   </li><li>System prompt indicator
   </li><li>Modified parameters
   </li></ul>
 </li><li>Context warnings and validation
-</li><li>Attachment indicators when files are attached
 </li></ul>
 
 </div>
@@ -1311,6 +1329,7 @@ Next: <a href="#Working-with-Models" accesskey="n" rel="next">Working with Model
 </p><ul class="itemize mark-bullet">
 <li>Use <code class="code">M-p</code> and <code class="code">M-n</code> to navigate through prompt history
 </li><li>Press <code class="code">C-c k</code> to cancel a request if it&rsquo;s taking too long
+</li><li>Press <code class="code">C-a</code> for smart beginning-of-line: first press jumps to the start of the prompt text (after &ldquo;&gt;&gt; PROMPT:&rdquo;), second press goes to column 0
 </li></ul>
 
 </div>
@@ -1372,7 +1391,7 @@ Provide concise, efficient solutions with explanations.
 <li>Toggle visibility with <code class="code">C-c V</code> or <code class="code">M-x ollama-buddy-toggle-reasoning-visibility</code>
 </li><li>Configure markers with the <code class="code">ollama-buddy-reasoning-markers</code> variable
 </li><li>When hidden, a status message shows the current reasoning section (e.g., &quot;Think...&quot;)
-</li><li>Header line indicates when reasoning is hidden with &quot;REASONING HIDDEN&quot; text
+</li><li>Header line shows <code class="code">V</code> indicator when reasoning is hidden
 </li></ul>
 
 <p>This feature helps focus on final answers while preserving the option to view the full reasoning process.
@@ -1444,15 +1463,16 @@ Next: <a href="#Context-Management" accesskey="n" rel="next">Context Management<
 </p><div class="example">
 <pre class="example-preformatted">M-x ollama-buddy-manage-models
 </pre></div>
-<p>or press <code class="code">C-c W</code> in the chat buffer.
+<p>or press <code class="code">C-c M</code> in the chat buffer.
 </p>
 <p>From this interface, you can:
 </p><ul class="itemize mark-bullet">
-<li>See which models are currently running
-</li><li>Pull new models from Ollama Hub
+<li>See which models are currently running (with option to unload all)
+</li><li>Pull new models from Ollama Hub or import GGUF files
 </li><li>Delete models you no longer need
 </li><li>View detailed model information
 </li><li>Select models for use
+</li><li>Browse and install recommended models from a curated list
 </li></ul>
 
 </div>
@@ -1462,12 +1482,14 @@ Next: <a href="#Context-Management" accesskey="n" rel="next">Context Management<
 <p>To pull a new model:
 </p>
 <ol class="enumerate">
-<li> Open the model management interface with <code class="code">C-c W</code>
-</li><li> Click &quot;[Pull Any Model]&quot; or press the appropriate key
+<li> Open the model management interface with <code class="code">C-c M</code>
+</li><li> Click &quot;[Custom Pull Model]&quot; at the top of the Actions section
 </li><li> Enter the model name (e.g., &quot;phi:latest&quot;, &quot;codellama:7b&quot;)
 </li><li> Wait for the model to download
 </li></ol>
 
+<p>You can also select from the &ldquo;Recommended Models&rdquo; list at the bottom, which shows curated popular models that can be pulled with a single click.
+</p>
 </div>
 <div class="section-level-extent" id="Importing-GGUF-Files">
 <h3 class="section"><span>7.6 Importing GGUF Files<a class="copiable-link" href="#Importing-GGUF-Files"> &para;</a></span></h3>
@@ -1475,8 +1497,8 @@ Next: <a href="#Context-Management" accesskey="n" rel="next">Context Management<
 <p>You can import custom GGUF model files:
 </p>
 <ol class="enumerate">
-<li> Press <code class="code">C-c W</code> to open the model management interface
-</li><li> Click &quot;[Import GGUF File]&quot; or press the appropriate key
+<li> Press <code class="code">C-c M</code> to open the model management interface
+</li><li> Click &quot;[Import GGUF File]&quot; in the Actions section at the top
 </li><li> Select the GGUF file from your file system
 </li><li> Enter a name for the model
 </li><li> Optionally provide model parameters
@@ -1547,7 +1569,7 @@ Next: <a href="#Context-Management" accesskey="n" rel="next">Context Management<
 </p>
 <ol class="enumerate">
 <li> Type your prompt in the chat buffer
-</li><li> Press <code class="code">C-c M</code>
+</li><li> Press <code class="code">C-c U</code>
 </li><li> Enter the sequence of model letters you want to use (e.g., &quot;a,b,c&quot; to use models a, b, and c)
 </li><li> Note that each item should be separated with a comma
 </li><li> Watch as Ollama Buddy processes your request with each model in sequence
@@ -2206,11 +2228,11 @@ Next: <a href="#Parameter-Control" accesskey="n" rel="next">Parameter Control</a
 (setq ollama-buddy-web-search-snippet-length 2000)  ; Max chars per result (default: 500)
 (setq ollama-buddy-web-search-include-urls nil)     ; Include URLs in context (default: nil)
 (setq ollama-buddy-web-search-content-source 'eww)  ; Content source: 'eww (default) or 'api
-
-;; Load the module
-(require 'ollama-buddy-web-search nil t)
 </pre></div>
 
+<p>Note: The web search module is now automatically loaded with Ollama Buddy.
+You no longer need to explicitly <code class="code">(require 'ollama-buddy-web-search)</code>.
+</p>
 </div>
 <div class="section-level-extent" id="Usage">
 <h3 class="section"><span>10.4 Usage<a class="copiable-link" href="#Usage"> &para;</a></span></h3>
@@ -2564,24 +2586,13 @@ Next: <a href="#User-System-Prompts" accesskey="n" rel="next">User System Prompt
 <div class="section-level-extent" id="Managing-Sessions">
 <h3 class="section"><span>12.5 Managing Sessions<a class="copiable-link" href="#Managing-Sessions"> &para;</a></span></h3>
 
-<p>To see a list of all saved sessions:
+<p>To open the sessions directory in Dired for direct file management:
 </p><div class="example">
-<pre class="example-preformatted">M-x ollama-buddy-sessions-list
-</pre></div>
-<p>or press <code class="code">C-c Q</code> in the chat buffer.
-</p>
-<p>From this view, you can see:
-</p><ul class="itemize mark-bullet">
-<li>Session names
-</li><li>Last modified times
-</li><li>Which models are used in each session
-</li></ul>
-
-<p>To delete a session:
-</p><div class="example">
-<pre class="example-preformatted">M-x ollama-buddy-sessions-delete
+<pre class="example-preformatted">M-x ollama-buddy-sessions-directory
 </pre></div>
 <p>or press <code class="code">C-c Z</code> in the chat buffer.
+</p>
+<p>From Dired, you can browse, rename, delete, or otherwise manage your session files using standard Emacs file operations.
 </p>
 </div>
 <div class="section-level-extent" id="Conversation-History">
@@ -3784,19 +3795,21 @@ Next: <a href="#Ollama-Cloud-Models" accesskey="n" rel="next">Ollama Cloud Model
 <div class="section-level-extent" id="Status-Line-Indicators">
 <h3 class="section"><span>17.2 Status Line Indicators<a class="copiable-link" href="#Status-Line-Indicators"> &para;</a></span></h3>
 
-<p>The header line shows compact indicators for loaded providers:
+<p>The header line shows compact status indicators:
 </p>
 <ul class="itemize mark-bullet">
-<li><code class="code">☁</code> - Currently using an Ollama cloud model
-</li><li><code class="code">a</code> - OpenAI provider loaded
-</li><li><code class="code">c</code> - Claude provider loaded
-</li><li><code class="code">g</code> - Gemini provider loaded
-</li><li><code class="code">k</code> - Grok provider loaded
-</li><li><code class="code">p</code> - GitHub Copilot provider loaded
-</li><li><code class="code">s</code> - Codestral provider loaded
+<li><code class="code">x</code> - Streaming disabled
+</li><li>Context usage bar (when enabled)
+</li><li><code class="code">&lt;</code> - Global system prompt disabled
+</li><li><code class="code">H5/10</code> - History count (when enabled via <code class="code">ollama-buddy-show-history-indicator</code>)
+</li><li><code class="code">☁</code> - Currently using an Ollama cloud model
+</li><li><code class="code">📎N</code> - Number of file attachments
+</li><li><code class="code">🔍N</code> - Number of web search results attached
+</li><li><code class="code">V</code> - Reasoning/thinking sections hidden
+</li><li><code class="code">T</code> - Token statistics display enabled
 </li></ul>
 
-<p>Example: <code class="code">☁acgkps</code> means cloud model with all six external providers loaded.
+<p>Example: <code class="code">☁📎2🔍1</code> means cloud model with 2 file attachments and 1 web search attached.
 </p>
 </div>
 <div class="section-level-extent" id="Setting-Up-API-Access">
@@ -3966,8 +3979,9 @@ Next: <a href="#Global-System-Prompt" accesskey="n" rel="next">Global System Pro
 <li><a href="#Available-Cloud-Models" accesskey="2">Available Cloud Models</a></li>
 <li><a href="#Selecting-Cloud-Models" accesskey="3">Selecting Cloud Models</a></li>
 <li><a href="#Cloud-Authentication" accesskey="4">Cloud Authentication</a></li>
-<li><a href="#Cloud-Model-Indicator" accesskey="5">Cloud Model Indicator</a></li>
-<li><a href="#Configuration-3" accesskey="6">Configuration</a></li>
+<li><a href="#Automatic-Manifest-Pulling" accesskey="5">Automatic Manifest Pulling</a></li>
+<li><a href="#Cloud-Model-Indicator" accesskey="6">Cloud Model Indicator</a></li>
+<li><a href="#Configuration-3" accesskey="7">Configuration</a></li>
 </ul>
 <div class="section-level-extent" id="Overview-4">
 <h3 class="section"><span>18.1 Overview<a class="copiable-link" href="#Overview-4"> &para;</a></span></h3>
@@ -4024,14 +4038,27 @@ Next: <a href="#Global-System-Prompt" accesskey="n" rel="next">Global System Pro
 </dl>
 
 </div>
+<div class="section-level-extent" id="Automatic-Manifest-Pulling">
+<h3 class="section"><span>18.5 Automatic Manifest Pulling<a class="copiable-link" href="#Automatic-Manifest-Pulling"> &para;</a></span></h3>
+
+<p>Cloud models require a small manifest to be pulled locally before they can be used.
+Ollama Buddy handles this automatically: when you select a cloud model for the first
+time, the manifest is fetched via <code class="code">ollama pull</code> before your prompt is sent.
+You will see a brief &ldquo;Pulling cloud model manifest...&rdquo; message during this process.
+</p>
+<p>This works with both the network-process and curl communication backends.
+If the pull fails (e.g. due to authentication issues), an error is displayed
+and the request is not sent.
+</p>
+</div>
 <div class="section-level-extent" id="Cloud-Model-Indicator">
-<h3 class="section"><span>18.5 Cloud Model Indicator<a class="copiable-link" href="#Cloud-Model-Indicator"> &para;</a></span></h3>
+<h3 class="section"><span>18.6 Cloud Model Indicator<a class="copiable-link" href="#Cloud-Model-Indicator"> &para;</a></span></h3>
 
 <p>When using a cloud model, the header line displays a <code class="code">☁</code> symbol to indicate cloud model usage.
 </p>
 </div>
 <div class="section-level-extent" id="Configuration-3">
-<h3 class="section"><span>18.6 Configuration<a class="copiable-link" href="#Configuration-3"> &para;</a></span></h3>
+<h3 class="section"><span>18.7 Configuration<a class="copiable-link" href="#Configuration-3"> &para;</a></span></h3>
 
 <dl class="table">
 <dt><code class="code">ollama-buddy-cloud-models</code></dt>
@@ -4095,7 +4122,7 @@ for structured information.&quot;)
 </p><div class="example">
 <pre class="example-preformatted">M-x ollama-buddy-toggle-global-system-prompt
 </pre></div>
-<p>or use the transient menu &quot;Settings &gt; Global Prompt&quot;.
+<p>or press <code class="code">C-c &lt;</code> in the chat buffer. Also available from the transient menu under &quot;Display Toggle&quot;.
 </p>
 </div>
 <div class="section-level-extent" id="How-It-Works-1">
@@ -4343,12 +4370,8 @@ Next: <a href="#FAQ" accesskey="n" rel="next">Frequently Asked Questions</a>, Pr
 <dd><p>Load a previously saved session.
 </p>
 </dd>
-<dt><code class="code">ollama-buddy-sessions-list</code></dt>
-<dd><p>Display a list of saved sessions.
-</p>
-</dd>
-<dt><code class="code">ollama-buddy-sessions-delete</code></dt>
-<dd><p>Delete a saved session.
+<dt><code class="code">ollama-buddy-sessions-directory</code></dt>
+<dd><p>Open the sessions directory in Dired for file management.
 </p>
 </dd>
 <dt><code class="code">ollama-buddy-sessions-new</code></dt>
@@ -4425,6 +4448,10 @@ Next: <a href="#FAQ" accesskey="n" rel="next">Frequently Asked Questions</a>, Pr
 </dd>
 <dt><code class="code">ollama-buddy-toggle-reasoning-visibility</code></dt>
 <dd><p>Toggle visibility of reasoning/thinking sections in responses.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-toggle-show-history-indicator</code></dt>
+<dd><p>Toggle display of history indicator in the header line.
 </p>
 </dd>
 <dt><code class="code">ollama-buddy-switch-communication-backend</code></dt>

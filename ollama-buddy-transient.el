@@ -41,6 +41,7 @@
 (declare-function ollama-buddy-roles-open-directory "ollama-buddy")
 (declare-function ollama-buddy-toggle-debug-mode "ollama-buddy")
 (declare-function ollama-buddy-toggle-token-display "ollama-buddy")
+(declare-function ollama-buddy-toggle-show-history-indicator "ollama-buddy")
 (declare-function ollama-buddy-display-token-stats "ollama-buddy")
 (declare-function ollama-buddy-toggle-markdown-conversion "ollama-buddy")
 (declare-function ollama-buddy-toggle-history "ollama-buddy")
@@ -49,8 +50,7 @@
 (declare-function ollama-buddy-sessions-new "ollama-buddy")
 (declare-function ollama-buddy-sessions-load "ollama-buddy")
 (declare-function ollama-buddy-sessions-save "ollama-buddy")
-(declare-function ollama-buddy-sessions-list "ollama-buddy")
-(declare-function ollama-buddy-sessions-delete "ollama-buddy")
+(declare-function ollama-buddy-sessions-directory "ollama-buddy")
 (declare-function ollama-buddy-params-display "ollama-buddy")
 (declare-function ollama-buddy-params-help "ollama-buddy")
 (declare-function ollama-buddy-params-reset "ollama-buddy")
@@ -99,11 +99,11 @@
     ]
 
    ["Model"
-    ("W" "Manage" ollama-buddy-manage-models)
+    ("M" "Manage" ollama-buddy-manage-models)
     ("m" "Switch" ollama-buddy--swap-model)
     ("c" "Cloud" ollama-buddy--swap-model-cloud)
     ("i" "Info" ollama-buddy-show-raw-model-info)
-    ("M" "Multishot" ollama-buddy--multishot-prompt)
+    ("U" "Multishot" ollama-buddy--multishot-prompt)
     ]
 
    ["Roles"
@@ -118,14 +118,16 @@
     ("B" "Toggle Debug" ollama-buddy-toggle-debug-mode)
     ("#" "Token Stats" ollama-buddy-display-token-stats)
     ("C" "Context Info" ollama-buddy-show-context-info)
+    ("C-o" "Toggle ORG/MD" ollama-buddy-toggle-markdown-conversion)
     ]
    
    ["Display Toggle"
     ("%" "Context Display" ollama-buddy-toggle-context-percentage)
-    ("8" "Context Type" ollama-buddy-toggle-context-display-type)
+    ("&" "Context Type" ollama-buddy-toggle-context-display-type)
+    (">" "History Display" ollama-buddy-toggle-show-history-indicator)
     ("T" "Token Display" ollama-buddy-toggle-token-display)
-    ("V" "Reasoning Vis" ollama-buddy-toggle-reasoning-visibility)
-    ("9" "Global Prompt" ollama-buddy-toggle-global-system-prompt)
+    ("V" "Reasoning" ollama-buddy-toggle-reasoning-visibility)
+    ("<" "Global Prompt" ollama-buddy-toggle-global-system-prompt)
     ]
    
    ["History"
@@ -140,8 +142,7 @@
     ("N" "New" ollama-buddy-sessions-new)
     ("L" "Load" ollama-buddy-sessions-load)
     ("S" "Save" ollama-buddy-sessions-save)
-    ("Q" "List" ollama-buddy-sessions-list)
-    ("Z" "Delete   " ollama-buddy-sessions-delete)
+    ("Z" "Directory" ollama-buddy-sessions-directory)
     ]
    
    ["Parameters"

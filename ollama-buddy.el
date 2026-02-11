@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 1.3.3
+;; Version: 1.3.4
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -86,6 +86,7 @@
 (require 'ollama-buddy-core)
 (require 'ollama-buddy-transient)
 (require 'ollama-buddy-user-prompts)
+(require 'ollama-buddy-web-search)
 
 (declare-function ollama-buddy-curl--validate-executable "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--test-connection "ollama-buddy-curl")
@@ -319,19 +320,28 @@ with an empty messages array and keep_alive set to 0."
     found-marker))
 
 (defun ollama-buddy-beginning-of-prompt ()
-  "Move point to the beginning of the current prompt."
+  "Move to the beginning of the prompt, or to the real beginning of line on repeat.
+Behaves like smart C-a: first go to prompt start (if it exists),
+second go to column 0."
   (interactive)
-  (if (eq major-mode 'org-mode)
-      (let ((prompt-start
-             (save-excursion
-               (beginning-of-line)
-               (when (re-search-forward ">> \\(?:PROMPT\\|SYSTEM PROMPT\\):" (line-end-position) t)
-                 (forward-char 1)
-                 (point)))))
-        (if prompt-start
-            (goto-char prompt-start)
-          (beginning-of-line)))
-    (beginning-of-line)))
+  (let* ((prompt-pos
+          (save-excursion
+            (beginning-of-line)
+            (when (re-search-forward ">> \\(?:PROMPT\\|SYSTEM PROMPT\\):" (line-end-position) t)
+              (forward-char 1)
+              (point)))))
+    (cond
+     ;; If point is already at prompt start → go to col 0
+     ((and prompt-pos (eq (point) prompt-pos))
+      (beginning-of-line))
+
+     ;; If prompt exists → go to the prompt
+     (prompt-pos
+      (goto-char prompt-pos))
+
+     ;; Otherwise fallback to regular C-a behavior
+     (t
+      (beginning-of-line)))))
 
 (defun ollama-buddy-history-search ()
   "Search through the prompt history using a `completing-read' interface."
@@ -1001,6 +1011,12 @@ Returns the full prompt text ready to be sent."
       (puthash (car pair) (cdr pair) hash-table))
     hash-table))
 
+(defun ollama-buddy-sessions-directory ()
+  "Jump to the session directory."
+  (interactive)
+  (ollama-buddy--ensure-sessions-directory)
+  (dired-other-window ollama-buddy-sessions-directory))
+
 (defun ollama-buddy-sessions-save ()
   "Save the current Ollama Buddy session including attachments."
   (interactive)
@@ -1142,78 +1158,6 @@ Returns the full prompt text ready to be sent."
                  "")
                (if ollama-buddy--current-system-prompt " [system prompt]" "")))))
 
-(defun ollama-buddy-sessions-list ()
-  "Display a list of saved sessions."
-  (interactive)
-  (ollama-buddy--ensure-sessions-directory)
-  
-  (let* ((session-files (directory-files ollama-buddy-sessions-directory t "\\.el$"))
-         (buf (get-buffer-create "*Ollama Buddy Sessions*")))
-    
-    (with-current-buffer buf
-      (let ((inhibit-read-only t))
-        (org-mode)
-        (setq-local org-hide-emphasis-markers t)
-        (setq-local org-hide-leading-stars t)
-        
-        (erase-buffer)
-
-        (insert "#+title: Ollama Buddy Saved Sessions\n\n")
-
-        (if (null session-files)
-            (insert "No saved sessions found.\n")
-          (dolist (file session-files)
-            (when (string-match "\\(.*\\)\\.el$" file)
-              (let* ((session-name (file-name-base (match-string 1 file)))
-                     (file-path (expand-file-name file ollama-buddy-sessions-directory))
-                     (attrs (file-attributes file-path))
-                     (mod-time (format-time-string
-                                "%Y-%m-%d %H:%M:%S"
-                                (file-attribute-modification-time attrs)))
-                     (size (file-attribute-size attrs))
-                     (models '()))
-                
-                ;; Attempt to extract model information by reading the file
-                (with-temp-buffer
-                  (insert-file-contents file-path)
-                  (goto-char (point-min))
-                  (while (re-search-forward "puthash\\s-+\"\\([^\"]+\\)\"" nil t)
-                    (push (match-string 1) models)))
-                
-                ;; Display session info
-                (insert (format "- *%s*%s\n"
-                                session-name
-                                (if (string= session-name ollama-buddy--current-session)
-                                    " (current)" "")))
-                (insert (format "  Modified: %s\n" mod-time))
-                (insert (format "  Size: %d bytes\n" size))
-                (when models
-                  (insert "  Models: ")
-                  (insert (mapconcat
-                           (lambda (model)
-                             model)
-                           (delete-dups models)
-                           ", "))
-                  (insert "\n"))
-                (insert "\n")))))
-        (goto-char (point-min))
-        (view-mode 1)))
-    (display-buffer buf)))
-
-(defun ollama-buddy-sessions-delete ()
-  "Delete an Ollama Buddy session."
-  (interactive)
-  (let* ((session-files (directory-files ollama-buddy-sessions-directory t "\\.el$"))
-         (session-names (mapcar #'file-name-base session-files))
-         (chosen-session (completing-read "Choose a session to delete: " session-names nil t))
-         (session-file (expand-file-name (concat chosen-session ".el") ollama-buddy-sessions-directory))
-         (org-file (expand-file-name (concat chosen-session ".org") ollama-buddy-sessions-directory)))
-    (when (yes-or-no-p (format "Really delete session %s? " chosen-session))
-      (delete-file session-file)
-      (when (file-exists-p org-file)
-        (delete-file org-file))
-      (message "Session %s deleted" chosen-session))))
-
 (defun ollama-buddy-sessions-new ()
   "Start a new session by clearing history and buffer."
   (interactive)
@@ -1302,6 +1246,14 @@ With prefix argument ALL-MODELS, clear history for all models."
   (ollama-buddy--update-status (concat "Stats in chat " (if ollama-buddy-display-token-stats "enabled" "disabled")))
   (message "Ollama token statistics display: %s"
            (if ollama-buddy-display-token-stats "enabled" "disabled")))
+
+(defun ollama-buddy-toggle-show-history-indicator ()
+  "Toggle display of token statistics after each response."
+  (interactive)
+  (setq ollama-buddy-show-history-indicator (not ollama-buddy-show-history-indicator))
+  (ollama-buddy--update-status (concat "History display " (if ollama-buddy-show-history-indicator "enabled" "disabled")))
+  (message "History display: %s"
+           (if ollama-buddy-show-history-indicator "enabled" "disabled")))
 
 (defun ollama-buddy-roles--get-available-roles ()
   "Scan the preset directory and extract role names from filenames."
@@ -1460,7 +1412,7 @@ Optional MENU-COLUMNS specifies the number of columns for the menu display."
             (make-directory ollama-buddy-roles-directory t)
             (dired ollama-buddy-roles-directory))
         (message "Directory not created."))
-    (dired ollama-buddy-roles-directory)))
+    (dired-other-window ollama-buddy-roles-directory)))
 
 (defun ollama-buddy--initialize-chat-buffer ()
   "Initialize the chat buffer and check Ollama status."
@@ -2753,27 +2705,39 @@ Modifies the variable in place."
         (setq-local org-hide-leading-stars t)
         (erase-buffer)
 
-        (insert "#+title: Models Management\n\n")
-        
-        ;; Display current model
-        (when ollama-buddy--current-model
-          (insert (format "* Current Model *%s*\n\n" ollama-buddy--current-model)))
-        
-        ;; Display default model
-        (when ollama-buddy-default-model
-          (insert (format "* Default Model *%s*\n\n" ollama-buddy-default-model)))
+        (insert "#+title: Model Management\n\n")
         
         ;; Show running models count with unload all button
         (when running-models
           (insert (format "* Running Models: %d  " (length running-models)))
           (insert-text-button
            "[Unload All]"
-           'action (lambda (_) (ollama-buddy-unload-all-models))
+           'action (lambda (_)
+                     (ollama-buddy-unload-all-models)
+                     (sleep-for 1)
+                     (ollama-buddy-manage-models))
            'help-echo "Unload all running models to free up resources")
           (insert "\n\n"))
+
+        ;; Actions at bottom
+        (insert "* Actions:\n\n")
+        (insert-text-button
+         "[Import GGUF File]"
+         'action (lambda (_) (call-interactively #'ollama-buddy-import-gguf-file))
+         'help-echo "Import a GGUF file to create a new model")
+        (insert "  ")
+        (insert-text-button
+         "[Refresh List]"
+         'action (lambda (_) (ollama-buddy-manage-models))
+         'help-echo "Refresh model list")
+        (insert "  ")
+        (insert-text-button
+         "[Custom Pull Model]"
+         'action (lambda (_) (call-interactively #'ollama-buddy-pull-model))
+         'help-echo "Pull a model from Ollama Hub")
         
         ;; List of models with status and actions
-        (insert "* Available Models\n\n")
+        (insert "\n\n* Available Models\n\n")
         
         (dolist (model available-models)
           (let* ((is-running (member model running-models)))
@@ -2840,7 +2804,7 @@ Modifies the variable in place."
 
         ;; Models available to pull section
         (when models-to-pull
-          (insert "\n* Recommended Models (Pull to Install)\n\n")
+          (insert "\n* Recommended Models (Select or Pull to Install)\n\n")
           (dolist (model models-to-pull)
             (let ((display-model (if (ollama-buddy--should-use-marker-prefix)
                                      model
@@ -2852,23 +2816,7 @@ Modifies the variable in place."
                           (ollama-buddy-pull-model ,model))
                'help-echo (format "Pull %s from Ollama Hub" display-model))
               (insert "\n"))))
-
-        ;; Actions at bottom
-        (insert "\n* Actions:\n\n")
-        (insert-text-button
-         "[Import GGUF File]"
-         'action (lambda (_) (call-interactively #'ollama-buddy-import-gguf-file))
-         'help-echo "Import a GGUF file to create a new model")
-        (insert "  ")
-        (insert-text-button
-         "[Refresh List]"
-         'action (lambda (_) (ollama-buddy-manage-models))
-         'help-echo "Refresh model list")
-        (insert "  ")
-        (insert-text-button
-         "[Pull Model from Hub]"
-         'action (lambda (_) (call-interactively #'ollama-buddy-pull-model))
-         'help-echo "Pull a model from Ollama Hub"))
+        )
       (goto-char (point-min))
       (view-mode 1))
     (display-buffer buf)))
@@ -3260,8 +3208,8 @@ When the operation completes, CALLBACK is called with no arguments if provided."
   (interactive)
   (let ((has-attachments ollama-buddy--current-attachments)
         (has-web-search (and (featurep 'ollama-buddy-web-search)
-                            (boundp 'ollama-buddy-web-search--current-results)
-                            ollama-buddy-web-search--current-results)))
+                             (boundp 'ollama-buddy-web-search--current-results)
+                             ollama-buddy-web-search--current-results)))
     (when (or (and (not has-attachments) (not has-web-search))
               (yes-or-no-p "Clear all attachments and web searches? "))
       (setq ollama-buddy--current-attachments nil)
@@ -3301,7 +3249,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c O") #'ollama-buddy-transient-menu)
     ;; Convenient access to transient menu from chat buffer
     (define-key map (kbd "C-c .") #'ollama-buddy-transient-menu)
-    (define-key map (kbd "C-c W") #'ollama-buddy-manage-models)
+    (define-key map (kbd "C-c M") #'ollama-buddy-manage-models)
     (define-key map (kbd "C-c ?") #'ollama-buddy-open-info)
     (define-key map (kbd "C-c C-u") #'ollama-buddy-unload-all-models)
     (define-key map (kbd "C-c a") #'ollama-buddy-transient-auth-menu)
@@ -3323,7 +3271,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     ;; Model section keybindings
     (define-key map (kbd "C-c m") #'ollama-buddy--swap-model)
     (define-key map (kbd "C-c i") #'ollama-buddy-show-raw-model-info)
-    (define-key map (kbd "C-c M") #'ollama-buddy--multishot-prompt)
+    (define-key map (kbd "C-c U") #'ollama-buddy--multishot-prompt)
     
     ;; Roles & Patterns keybindings
     (define-key map (kbd "C-c R") #'ollama-buddy-roles-switch-role)
@@ -3334,10 +3282,12 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     
     ;; Display Options keybindings
     (define-key map (kbd "C-c B") #'ollama-buddy-toggle-debug-mode)
+    (define-key map (kbd "C-c >") #'ollama-buddy-toggle-show-history-indicator)
     (define-key map (kbd "C-c T") #'ollama-buddy-toggle-token-display)
     (define-key map (kbd "C-c #") #'ollama-buddy-display-token-stats)
     (define-key map (kbd "C-c C-o") #'ollama-buddy-toggle-markdown-conversion)
     (define-key map (kbd "C-c V") #'ollama-buddy-toggle-reasoning-visibility)
+    (define-key map (kbd "C-c <") #'ollama-buddy-toggle-global-system-prompt)
     
     ;; History keybindings
     (define-key map (kbd "C-c H") #'ollama-buddy-toggle-history)
@@ -3352,8 +3302,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c N") #'ollama-buddy-sessions-new)
     (define-key map (kbd "C-c L") #'ollama-buddy-sessions-load)
     (define-key map (kbd "C-c S") #'ollama-buddy-sessions-save)
-    (define-key map (kbd "C-c Q") #'ollama-buddy-sessions-list)
-    (define-key map (kbd "C-c Z") #'ollama-buddy-sessions-delete)
+    (define-key map (kbd "C-c Z") #'ollama-buddy-sessions-directory)
     
     ;; Parameter keybindings
     (define-key map (kbd "C-c P") #'ollama-buddy-transient-parameter-menu)
@@ -3367,7 +3316,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c $") #'ollama-buddy-set-model-context-size)
     (define-key map (kbd "C-c %") #'ollama-buddy-toggle-context-percentage)
     (define-key map (kbd "C-c C") #'ollama-buddy-show-context-info)
-    (define-key map (kbd "C-c 8") #'ollama-buddy-toggle-context-display-type)
+    (define-key map (kbd "C-c &") #'ollama-buddy-toggle-context-display-type)
 
     ;; file attachments
     (define-key map (kbd "C-c A") #'ollama-buddy-transient-attachment-menu)

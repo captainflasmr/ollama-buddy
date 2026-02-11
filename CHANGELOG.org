@@ -11,6 +11,57 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-11 Tue> *1.3.4*
+
+Header Line and Interface Refinements
+
+*** Overview
+
+Streamlined the header line, transient menu, and session management for a cleaner, more focused interface.
+
+*** Header Line Changes
+
+- Removed ORG/MD format indicator from header line
+- Removed provider indicators (acgkps) from header line
+- History indicator now off by default (toggle with =C-c >=)
+- Added =<= indicator when global system prompt is disabled
+- Compact =V= indicator for hidden reasoning (was "REASONING HIDDEN")
+- Status feedback message when toggling global system prompt
+
+*** Transient Menu Changes
+
+- Removed numeric keys from transient menu bindings
+- Model management reassigned to =M= (was =W=)
+- Multishot reassigned to =U= (was =M=)
+- Added ORG/MD toggle (=C-o=) under Diagnostics section
+- Added History Display toggle (=>=) under Display Toggle section
+- Added Global Prompt toggle (=<=) under Display Toggle section
+- Context Type display reassigned to =&= (was =8=)
+
+*** Model Management
+
+- Tidied up model selection interface
+- Actions section (Import GGUF, Refresh, Custom Pull) moved to top
+- Unload All now refreshes the model list after completion
+- "Pull Model from Hub" renamed to "Custom Pull Model" for clarity
+- Recommended Models section relabelled "Select or Pull to Install"
+- Updated curated =ollama-buddy-available-models= list with categorised groupings
+
+*** Session Management
+
+- Simplified session management: replaced List and Delete commands with a single Directory command (=C-c Z=)
+- =ollama-buddy-sessions-directory= opens sessions folder in Dired for direct file management
+
+*** Other Changes
+
+- Web search module (=ollama-buddy-web-search=) now auto-loaded with the main package
+- =ollama-buddy-full-welcome-enabled= variable controls expanded welcome screen (default: t)
+- Smart =C-a= in chat buffer: first press goes to prompt start, second press goes to column 0
+- Improved =ollama-buddy--cloud-model-p= detection
+- Removed debug messages from =ollama-buddy--validate-model= and =ollama-buddy--get-valid-model=
+- Roles directory now opens in other window
+- Better global system prompt visibility with status bar feedback
+
 ** <2026-02-10 Mon> *1.3.3*
 
 Auto-Pull Cloud Model Manifests

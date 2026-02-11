@@ -256,6 +256,11 @@ When nil, point stays in its original position regardless of visibility."
   :type 'boolean
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-full-welcome-enabled t
+  "Showing the full welcome screen."
+  :type 'boolean
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-show-params-in-header t
   "Whether to show modified parameters in the header line."
   :type 'boolean
@@ -482,7 +487,7 @@ combined with session-specific prompts (personas, roles, etc.)."
   :type 'integer
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-show-history-indicator t
+(defcustom ollama-buddy-show-history-indicator nil
   "Whether to show the history indicator in the header line."
   :type 'boolean
   :group 'ollama-buddy)
@@ -500,25 +505,33 @@ combined with session-specific prompts (personas, roles, etc.)."
 
 (defcustom ollama-buddy-available-models
   '(
+    ;; General-purpose chat (tiny → mid)
     "llama3.2:1b"
-    "starcoder2:3b"
-    "codellama:7b"
-    "phi3:3.8b"
+    "llama3.2:3b"
+    "llama3.1:8b"
+
+    ;; Reasoning-first (DeepSeek R1 family)
+    "deepseek-r1:1.5b"
+    "deepseek-r1:7b"
+    "deepseek-r1:14b"
+
+    ;; Efficient & capable (Gemma 3)
     "gemma3:1b"
     "gemma3:4b"
+    "gemma3:12b"
+
+    ;; Coding assistants
+    "qwen2.5-coder:1.5b"
     "qwen2.5-coder:7b"
-    "qwen2.5-coder:3b"
+    "qwen3-coder:8b"
+    "starcoder2:3b"
+
+    ;; Popular general alternatives
     "mistral:7b"
-    "deepseek-r1:7b"
-    "deepseek-r1:1.5b"
-    "tinyllama:latest"
-    "llama3.2:3b"
-    "qwen3:0.6b"
-    "qwen3:1.7b"
     "qwen3:4b"
     "qwen3:8b"
-    )
-  "List of available models to pull from Ollama Hub."
+  )
+  "List of popular models to pull from the Ollama Hub (curated)."
   :type '(repeat (string :tag "Model name"))
   :group 'ollama-buddy)
 
@@ -987,6 +1000,8 @@ The prompts are separated by two newlines when combined."
   (interactive)
   (setq ollama-buddy-global-system-prompt-enabled
         (not ollama-buddy-global-system-prompt-enabled))
+  (ollama-buddy--update-status
+   (if ollama-buddy-global-system-prompt-enabled "Global System Prompt enabled" "Global System Prompt disabled"))
   (message "Global system prompt %s"
            (if ollama-buddy-global-system-prompt-enabled "enabled" "disabled")))
 
@@ -1266,9 +1281,15 @@ please run =ollama serve=\n\n")
            (when auth-status
              (concat "Auth: " auth-status "\n\n"))
            "- /Ask me anything!/       C-c C-c / C-c RET
+- /Cancel request/         C-c C-k
+- /Select model/           C-c m"
+           (when ollama-buddy-full-welcome-enabled
+             "
 - /Main transient menu/    C-c O
-- /Manage models/          C-c W
-- /Select model/           C-c m")))
+- /Browse prompt history/  M-p/n/r
+- /Manage models/          C-c M
+- /ollama-buddy Manual/    C-c ?"
+             ))))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
 
@@ -1728,12 +1749,10 @@ Cloud models are always considered valid if Ollama is running."
   (when (and model (ollama-buddy--ollama-running))
     (when (or (member model (ollama-buddy--get-models-with-others))
               (ollama-buddy--cloud-model-p model))
-      (message "#valmod %s" model)
       model)))
 
 (defun ollama-buddy--get-valid-model (specified-model)
   "Get valid model from SPECIFIED-MODEL with fallback handling."
-  (message "#1 ollama-buddy--get-valid-model : %s\n" specified-model)
   (let* ((valid-model (or (ollama-buddy--validate-model specified-model)
                           (ollama-buddy--validate-model ollama-buddy-default-model))))
     (if valid-model
@@ -1879,9 +1898,8 @@ Cloud models are always considered valid if Ollama is running."
                  (bar-text (concat
                             (make-string filled-chars filled-char)
                             (make-string empty-chars empty-char))))
-            (concat
-             bar-text
-             " " (format "%d" max-size))))))
+            bar-text
+            ))))
     ""))
 
 (defun ollama-buddy--update-status (status &optional original-model actual-model)
@@ -1896,15 +1914,16 @@ ACTUAL-MODEL is the model being used instead."
     (let* ((model (or ollama-buddy--current-model
                       ollama-buddy-default-model
                       "No Model"))
-           (history (when (and ollama-buddy-show-history-indicator
-                               ollama-buddy-history-enabled)
-                      (let ((history-count (/ (length
-                                               (gethash model
-                                                        ollama-buddy--conversation-history-by-model
-                                                        nil))
-                                              2)))
-                        (format "H%d/%d"
-                                history-count ollama-buddy-max-history-length))))
+           (history (if (and ollama-buddy-show-history-indicator
+                             ollama-buddy-history-enabled)
+                        (let ((history-count (/ (length
+                                                 (gethash model
+                                                          ollama-buddy--conversation-history-by-model
+                                                          nil))
+                                                2)))
+                          (format "H%d/%d"
+                                  history-count ollama-buddy-max-history-length))
+                      ""))
            (system-indicator (ollama-buddy--get-system-prompt-display))
            (params (when ollama-buddy-show-params-in-header
                      (let ((param-str
@@ -1923,7 +1942,7 @@ ACTUAL-MODEL is the model being used instead."
                          (format " [%s]" param-str)))))
            (cloud-indicator (if (ollama-buddy--cloud-model-p model) "☁" ""))
            (attachment-indicator (if ollama-buddy--current-attachments
-                                     (propertize (format "📎%d " (length ollama-buddy--current-attachments))
+                                     (propertize (format "📎%d" (length ollama-buddy--current-attachments))
                                                  'face '(:weight bold))
                                    ""))
            (web-search-indicator (if (and (featurep 'ollama-buddy-web-search)
@@ -1931,41 +1950,27 @@ ACTUAL-MODEL is the model being used instead."
                                           (> (ollama-buddy-web-search-count) 0))
                                      (propertize (format "🔍%d " (ollama-buddy-web-search-count))
                                                  'face '(:weight bold))
-                                   ""))
-           ;; (external-indicator (let ((ind (concat
-           ;;                                  (if (featurep 'ollama-buddy-openai) "a" "")
-           ;;                                  (if (featurep 'ollama-buddy-claude) "c" "")
-           ;;                                  (if (featurep 'ollama-buddy-gemini) "g" "")
-           ;;                                  (if (featurep 'ollama-buddy-grok) "k" "")
-           ;;                                  (if (featurep 'ollama-buddy-copilot) "p" "")
-           ;;                                  (if (featurep 'ollama-buddy-codestral) "s" ""))))
-           ;;                       (if (string-empty-p ind)
-           ;;                           ""
-           ;;                         (propertize ind 'face '(:weight bold)))))
-           )
+                                   "")))
       (setq header-line-format
             (concat
-             (format " %s%s%s%s %s%s%s%s %s%s%s %s %s %s%s"
+             (format "%s%s%s%s%s%s%s%s%s %s%s%s %s%s"
+                     (if ollama-buddy-streaming-enabled "" "x")
+                     (ollama-buddy--add-context-to-status-format)
+                     (if ollama-buddy-global-system-prompt-enabled "" "<")
+                     history
                      cloud-indicator
                      attachment-indicator
                      web-search-indicator
-                     ;; external-indicator
-
-                     (ollama-buddy--add-context-to-status-format)
-                     
-                     (if ollama-buddy-hide-reasoning "REASONING HIDDEN " "")
+                     (if ollama-buddy-hide-reasoning "V" "")
                      (if ollama-buddy-display-token-stats "T" "")
-                     (if ollama-buddy-streaming-enabled "" "X")
-                     (or history "")
                      
-                     (if ollama-buddy-convert-markdown-to-org "ORG" "MD")
                      (ollama-buddy--update-multishot-status)
                      (propertize (if (ollama-buddy--check-status) "" " OFFLINE")
                                  'face '(:weight bold))
                      
                      (if (ollama-buddy--check-status)
-                         (propertize model 'face `(:weight bold :box (:line-width 2 :style flat-button)))
-                       (propertize model 'face `(:weight bold :inherit shadow :box (:line-width 2 :style flat-button))))
+                         (propertize model 'face `(:weight bold :box (:line-width 1 :style flat-button)))
+                       (propertize model 'face `(:weight bold :inherit shadow :box (:line-width 1 :style flat-button))))
                      status
                      system-indicator
                      (or params "")

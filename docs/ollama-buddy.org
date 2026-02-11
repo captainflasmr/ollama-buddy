@@ -247,8 +247,9 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Available-Cloud-Models][18.2 Available Cloud Models]]
   - [[#Selecting-Cloud-Models][18.3 Selecting Cloud Models]]
   - [[#Cloud-Authentication][18.4 Cloud Authentication]]
-  - [[#Cloud-Model-Indicator][18.5 Cloud Model Indicator]]
-  - [[#Configuration-3][18.6 Configuration]]
+  - [[#Automatic-Manifest-Pulling][18.5 Automatic Manifest Pulling]]
+  - [[#Cloud-Model-Indicator][18.6 Cloud Model Indicator]]
+  - [[#Configuration-3][18.7 Configuration]]
 - [[#Global-System-Prompt][19 Global System Prompt]]
   - [[#Overview-5][19.1 Overview]]
   - [[#Configuration-4][19.2 Configuration]]
@@ -687,6 +688,14 @@ Customize the appearance and behavior of Ollama Buddy:
   (setq ollama-buddy-pulse-response t)
   #+end_src
 
+- =ollama-buddy-full-welcome-enabled= :: Whether to show the full
+  welcome screen with all keybinding hints (default: t). When nil, only
+  the essential keybindings are shown.
+
+  #+begin_src example-preformatted
+  (setq ollama-buddy-full-welcome-enabled nil)
+  #+end_src
+
 <<File-Attachment-Configuration>>
 *** 3.3 File Attachment Configuration [[#File-Attachment-Configuration][¶]]
 :PROPERTIES:
@@ -774,7 +783,7 @@ Configure how conversation history is managed:
   #+end_src
 
 - =ollama-buddy-show-history-indicator= :: Whether to show the history
-  indicator in the header line (default: t).
+  indicator in the header line (default: nil).
 
   #+begin_src example-preformatted
   (setq ollama-buddy-show-history-indicator t)
@@ -1013,6 +1022,13 @@ Next: [[#Core-Features][Core Features]], Previous:
 - Toggling reasoning visibility :: Press =C-c V= to hide or show
   reasoning/thinking sections in responses.
 
+- Toggling Org/Markdown conversion :: Press =C-c C-o= to switch between
+  Org-mode and Markdown output. Also available from the transient menu
+  under "Diagnostics".
+
+- Toggling Global System Prompt :: Press =C-c <= to toggle the global
+  system prompt on or off. The header line shows =<= when disabled.
+
 - Using Awesome ChatGPT Prompts :: Select text, press =C-c o=, then =a=
   for the Awesome prompts menu, then =s= to send with a prompt.
 
@@ -1216,14 +1232,15 @@ The chat interface consists of:
 - A prompt area for entering your queries
 - A header line with status information including:
   - Cloud model indicator (=☁=)
-  - Loaded provider indicators (=acgks=)
+  - Attachment indicators (=📎N=)
+  - Web search indicators (=🔍N=)
   - Context usage bar (when enabled)
-  - History count (=H5/10=)
+  - Global system prompt disabled indicator (=<=)
+  - History count (=H5/10=, off by default)
   - Current model name
   - System prompt indicator
   - Modified parameters
 - Context warnings and validation
-- Attachment indicators when files are attached
 
 <<Sending-Prompts>>
 *** 6.3 Sending Prompts [[#Sending-Prompts][¶]]
@@ -1241,6 +1258,9 @@ You can also:
 
 - Use =M-p= and =M-n= to navigate through prompt history
 - Press =C-c k= to cancel a request if it's taking too long
+- Press =C-a= for smart beginning-of-line: first press jumps to the
+  start of the prompt text (after “>> PROMPT:”), second press goes to
+  column 0
 
 <<System-Prompts>>
 *** 6.4 System Prompts [[#System-Prompts][¶]]
@@ -1302,8 +1322,7 @@ the output cleaner:
 - Configure markers with the =ollama-buddy-reasoning-markers= variable
 - When hidden, a status message shows the current reasoning section
   (e.g., "Think...")
-- Header line indicates when reasoning is hidden with "REASONING HIDDEN"
-  text
+- Header line shows =V= indicator when reasoning is hidden
 
 This feature helps focus on final answers while preserving the option to
 view the full reasoning process.
@@ -1389,15 +1408,16 @@ access it:
 M-x ollama-buddy-manage-models
 #+end_src
 
-or press =C-c W= in the chat buffer.
+or press =C-c M= in the chat buffer.
 
 From this interface, you can:
 
-- See which models are currently running
-- Pull new models from Ollama Hub
+- See which models are currently running (with option to unload all)
+- Pull new models from Ollama Hub or import GGUF files
 - Delete models you no longer need
 - View detailed model information
 - Select models for use
+- Browse and install recommended models from a curated list
 
 <<Pulling-New-Models>>
 *** 7.5 Pulling New Models [[#Pulling-New-Models][¶]]
@@ -1407,10 +1427,14 @@ From this interface, you can:
 :END:
 To pull a new model:
 
-1. Open the model management interface with =C-c W=
-2. Click "[Pull Any Model]" or press the appropriate key
+1. Open the model management interface with =C-c M=
+2. Click "[Custom Pull Model]" at the top of the Actions section
 3. Enter the model name (e.g., "phi:latest", "codellama:7b")
 4. Wait for the model to download
+
+You can also select from the “Recommended Models” list at the bottom,
+which shows curated popular models that can be pulled with a single
+click.
 
 <<Importing-GGUF-Files>>
 *** 7.6 Importing GGUF Files [[#Importing-GGUF-Files][¶]]
@@ -1420,8 +1444,8 @@ To pull a new model:
 :END:
 You can import custom GGUF model files:
 
-1. Press =C-c W= to open the model management interface
-2. Click "[Import GGUF File]" or press the appropriate key
+1. Press =C-c M= to open the model management interface
+2. Click "[Import GGUF File]" in the Actions section at the top
 3. Select the GGUF file from your file system
 4. Enter a name for the model
 5. Optionally provide model parameters
@@ -1494,7 +1518,7 @@ Multishot mode allows you to send the same prompt to multiple models
 simultaneously:
 
 1. Type your prompt in the chat buffer
-2. Press =C-c M=
+2. Press =C-c U=
 3. Enter the sequence of model letters you want to use (e.g., "a,b,c" to
    use models a, b, and c)
 4. Note that each item should be separated with a comma
@@ -2171,10 +2195,11 @@ To use web search, you need an API key from Ollama:
 (setq ollama-buddy-web-search-snippet-length 2000)  ; Max chars per result (default: 500)
 (setq ollama-buddy-web-search-include-urls nil)     ; Include URLs in context (default: nil)
 (setq ollama-buddy-web-search-content-source 'eww)  ; Content source: 'eww (default) or 'api
-
-;; Load the module
-(require 'ollama-buddy-web-search nil t)
 #+end_src
+
+Note: The web search module is now automatically loaded with Ollama
+Buddy. You no longer need to explicitly
+=(require 'ollama-buddy-web-search)=.
 
 <<Usage>>
 *** 10.4 Usage [[#Usage][¶]]
@@ -2553,27 +2578,16 @@ You'll be presented with a list of saved sessions to choose from.
 :CUSTOM_ID: managing-sessions
 :CLASS: section
 :END:
-To see a list of all saved sessions:
+To open the sessions directory in Dired for direct file management:
 
 #+begin_src example-preformatted
-M-x ollama-buddy-sessions-list
-#+end_src
-
-or press =C-c Q= in the chat buffer.
-
-From this view, you can see:
-
-- Session names
-- Last modified times
-- Which models are used in each session
-
-To delete a session:
-
-#+begin_src example-preformatted
-M-x ollama-buddy-sessions-delete
+M-x ollama-buddy-sessions-directory
 #+end_src
 
 or press =C-c Z= in the chat buffer.
+
+From Dired, you can browse, rename, delete, or otherwise manage your
+session files using standard Emacs file operations.
 
 <<Conversation-History>>
 *** 12.6 Conversation History [[#Conversation-History][¶]]
@@ -3898,18 +3912,21 @@ available, or no prefix when only local models are present.
 :CUSTOM_ID: status-line-indicators
 :CLASS: section
 :END:
-The header line shows compact indicators for loaded providers:
+The header line shows compact status indicators:
 
+- =x= - Streaming disabled
+- Context usage bar (when enabled)
+- =<= - Global system prompt disabled
+- =H5/10= - History count (when enabled via
+  =ollama-buddy-show-history-indicator=)
 - =☁= - Currently using an Ollama cloud model
-- =a= - OpenAI provider loaded
-- =c= - Claude provider loaded
-- =g= - Gemini provider loaded
-- =k= - Grok provider loaded
-- =p= - GitHub Copilot provider loaded
-- =s= - Codestral provider loaded
+- =📎N= - Number of file attachments
+- =🔍N= - Number of web search results attached
+- =V= - Reasoning/thinking sections hidden
+- =T= - Token statistics display enabled
 
-Example: =☁acgkps= means cloud model with all six external providers
-loaded.
+Example: =☁📎2🔍1= means cloud model with 2 file attachments and 1 web
+search attached.
 
 <<Setting-Up-API-Access>>
 *** 17.3 Setting Up API Access [[#Setting-Up-API-Access][¶]]
@@ -4075,6 +4092,7 @@ Next: [[#Global-System-Prompt][Global System Prompt]], Previous:
 - [[#Available-Cloud-Models][Available Cloud Models]]
 - [[#Selecting-Cloud-Models][Selecting Cloud Models]]
 - [[#Cloud-Authentication][Cloud Authentication]]
+- [[#Automatic-Manifest-Pulling][Automatic Manifest Pulling]]
 - [[#Cloud-Model-Indicator][Cloud Model Indicator]]
 - [[#Configuration-3][Configuration]]
 
@@ -4139,8 +4157,24 @@ Authentication is handled via the Ollama CLI:
   authentication status. Accessible from transient menu "Cloud Auth >
   Auth Status".
 
+<<Automatic-Manifest-Pulling>>
+*** 18.5 Automatic Manifest Pulling [[#Automatic-Manifest-Pulling][¶]]
+:PROPERTIES:
+:CUSTOM_ID: automatic-manifest-pulling
+:CLASS: section
+:END:
+Cloud models require a small manifest to be pulled locally before they
+can be used. Ollama Buddy handles this automatically: when you select a
+cloud model for the first time, the manifest is fetched via
+=ollama pull= before your prompt is sent. You will see a brief “Pulling
+cloud model manifest...” message during this process.
+
+This works with both the network-process and curl communication
+backends. If the pull fails (e.g. due to authentication issues), an
+error is displayed and the request is not sent.
+
 <<Cloud-Model-Indicator>>
-*** 18.5 Cloud Model Indicator [[#Cloud-Model-Indicator][¶]]
+*** 18.6 Cloud Model Indicator [[#Cloud-Model-Indicator][¶]]
 :PROPERTIES:
 :CUSTOM_ID: cloud-model-indicator
 :CLASS: section
@@ -4149,7 +4183,7 @@ When using a cloud model, the header line displays a =☁= symbol to
 indicate cloud model usage.
 
 <<Configuration-3>>
-*** 18.6 Configuration [[#Configuration-3][¶]]
+*** 18.7 Configuration [[#Configuration-3][¶]]
 :PROPERTIES:
 :CUSTOM_ID: configuration-1
 :CLASS: section
@@ -4223,7 +4257,8 @@ To toggle the global system prompt on or off:
 M-x ollama-buddy-toggle-global-system-prompt
 #+end_src
 
-or use the transient menu "Settings > Global Prompt".
+or press =C-c <= in the chat buffer. Also available from the transient
+menu under "Display Toggle".
 
 <<How-It-Works-1>>
 *** 19.4 How It Works [[#How-It-Works-1][¶]]
@@ -4484,9 +4519,8 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 
 - =ollama-buddy-sessions-load= :: Load a previously saved session.
 
-- =ollama-buddy-sessions-list= :: Display a list of saved sessions.
-
-- =ollama-buddy-sessions-delete= :: Delete a saved session.
+- =ollama-buddy-sessions-directory= :: Open the sessions directory in
+  Dired for file management.
 
 - =ollama-buddy-sessions-new= :: Start a new session.
 
@@ -4532,6 +4566,9 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 
 - =ollama-buddy-toggle-reasoning-visibility= :: Toggle visibility of
   reasoning/thinking sections in responses.
+
+- =ollama-buddy-toggle-show-history-indicator= :: Toggle display of
+  history indicator in the header line.
 
 - =ollama-buddy-switch-communication-backend= :: Interactively switch
   between network-process and curl backends.
