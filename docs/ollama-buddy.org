@@ -1412,12 +1412,21 @@ or press =C-c M= in the chat buffer.
 
 From this interface, you can:
 
-- See which models are currently running (with option to unload all)
+- See which local models are currently running (with option to unload
+  all)
 - Pull new models from Ollama Hub or import GGUF files
 - Delete models you no longer need
 - View detailed model information
 - Select models for use
-- Browse and install recommended models from a curated list
+- Browse cloud models (=cl:= prefix) with Select and Pull Manifest
+  actions
+- Browse and install recommended models organized by category (General
+  Chat, Reasoning, Efficient & Capable, Coding, General Alternatives)
+
+Each recommended model category includes a description to help new users
+choose the right type of model for their needs. Categories are displayed
+as foldable org subheadings so you can collapse sections you are not
+interested in.
 
 <<Pulling-New-Models>>
 *** 7.5 Pulling New Models [[#Pulling-New-Models][¶]]
@@ -4137,6 +4146,12 @@ To select a cloud model:
 
 - Use =C-u C-c m= (universal argument with model switch)
 - Use the transient menu: =C-c O= then "Model > Cloud"
+- Select from the =☁ Cloud Models= section in Model Management (=C-c M=)
+
+Cloud models are displayed with a =cl:= prefix (e.g.
+=cl:deepseek-v3.1:671b-cloud=) to distinguish them from local models.
+The Model Management page also shows the current cloud authentication
+status next to the section heading.
 
 <<Cloud-Authentication>>
 *** 18.4 Cloud Authentication [[#Cloud-Authentication][¶]]

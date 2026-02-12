@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 1.3.4
+@subtitle For Ollama Buddy version 1.3.5
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -851,13 +851,18 @@ or press @code{C-c M} in the chat buffer.
 
 From this interface, you can:
 @itemize @bullet
-@item See which models are currently running (with option to unload all)
+@item See which local models are currently running (with option to unload all)
 @item Pull new models from Ollama Hub or import GGUF files
 @item Delete models you no longer need
 @item View detailed model information
 @item Select models for use
-@item Browse and install recommended models from a curated list
+@item Browse cloud models (@code{cl:} prefix) with Select and Pull Manifest actions
+@item Browse and install recommended models organized by category (General Chat, Reasoning, Efficient & Capable, Coding, General Alternatives)
 @end itemize
+
+Each recommended model category includes a description to help new users choose
+the right type of model for their needs.  Categories are displayed as foldable
+org subheadings so you can collapse sections you are not interested in.
 
 @section Pulling New Models
 
@@ -2773,7 +2778,12 @@ To select a cloud model:
 @itemize @bullet
 @item Use @code{C-u C-c m} (universal argument with model switch)
 @item Use the transient menu: @code{C-c O} then "Model > Cloud"
+@item Select from the @code{☁ Cloud Models} section in Model Management (@code{C-c M})
 @end itemize
+
+Cloud models are displayed with a @code{cl:} prefix (e.g.@: @code{cl:deepseek-v3.1:671b-cloud})
+to distinguish them from local models.  The Model Management page also shows the
+current cloud authentication status next to the section heading.
 
 @section Cloud Authentication
 

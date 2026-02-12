@@ -11,6 +11,28 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-12 Wed> *1.3.5*
+
+Cloud Models in Model Management and Categorized Recommendations
+
+*** Overview
+
+Enhanced the Model Management page (=C-c M=) with a dedicated cloud models section and reorganized recommended models into categorized groups to help new users find the right model.
+
+*** Model Management Changes
+
+- Cloud models now displayed in their own =☁ Cloud Models= section with auth status indicator
+- Each cloud model has Select and Pull Manifest actions
+- Cloud models use =cl:= prefix for clear visual distinction
+- Local Ollama models no longer show the =o:= prefix unless external providers (OpenAI, Claude, etc.) are loaded
+
+*** Categorized Recommended Models
+
+- Recommended models reorganized into categories: General Chat, Reasoning, Efficient & Capable, Coding, and General Alternatives
+- Each category displayed as a foldable org subheading with a description
+- Categories with no uninstalled models are automatically hidden
+- =ollama-buddy-available-models= now uses a plist structure with =:name=, =:description= and =:models= keys
+
 ** <2026-02-11 Tue> *1.3.4*
 
 Header Line and Interface Refinements

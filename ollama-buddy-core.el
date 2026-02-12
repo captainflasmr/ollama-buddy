@@ -504,36 +504,33 @@ combined with session-specific prompts (personas, roles, etc.)."
   :group 'ollama-buddy)
 
 (defcustom ollama-buddy-available-models
-  '(
-    ;; General-purpose chat (tiny → mid)
-    "llama3.2:1b"
-    "llama3.2:3b"
-    "llama3.1:8b"
-
-    ;; Reasoning-first (DeepSeek R1 family)
-    "deepseek-r1:1.5b"
-    "deepseek-r1:7b"
-    "deepseek-r1:14b"
-
-    ;; Efficient & capable (Gemma 3)
-    "gemma3:1b"
-    "gemma3:4b"
-    "gemma3:12b"
-
-    ;; Coding assistants
-    "qwen2.5-coder:1.5b"
-    "qwen2.5-coder:7b"
-    "qwen3-coder:8b"
-    "starcoder2:3b"
-
-    ;; Popular general alternatives
-    "mistral:7b"
-    "qwen3:4b"
-    "qwen3:8b"
-  )
-  "List of popular models to pull from the Ollama Hub (curated)."
-  :type '(repeat (string :tag "Model name"))
+  '((:name "General Chat"
+     :description "Everyday conversation, Q&A and general tasks"
+     :models ("llama3.2:1b" "llama3.2:3b" "llama3.1:8b"))
+    (:name "Reasoning"
+     :description "Step-by-step problem solving and analysis"
+     :models ("deepseek-r1:1.5b" "deepseek-r1:7b" "deepseek-r1:14b"))
+    (:name "Efficient & Capable"
+     :description "Balanced speed and quality from Google Gemma"
+     :models ("gemma3:1b" "gemma3:4b" "gemma3:12b"))
+    (:name "Coding"
+     :description "Code generation, review and debugging"
+     :models ("qwen2.5-coder:1.5b" "qwen2.5-coder:7b" "qwen3-coder:8b" "starcoder2:3b"))
+    (:name "General Alternatives"
+     :description "Other popular and versatile models"
+     :models ("mistral:7b" "qwen3:4b" "qwen3:8b")))
+  "Categorized list of recommended models from the Ollama Hub.
+Each entry is a plist with :name, :description and :models keys."
+  :type '(repeat (plist :options
+                        ((:name (string :tag "Category name"))
+                         (:description (string :tag "Category description"))
+                         (:models (repeat (string :tag "Model name"))))))
   :group 'ollama-buddy)
+
+(defun ollama-buddy--available-models-flat ()
+  "Return a flat list of all model names from `ollama-buddy-available-models'."
+  (mapcan (lambda (cat) (copy-sequence (plist-get cat :models)))
+          ollama-buddy-available-models))
 
 (defcustom ollama-buddy-marker-prefix "o:"
   "Prefix used to identify Ollama models in the ollama-buddy interface."

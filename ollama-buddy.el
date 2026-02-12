@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 1.3.4
+;; Version: 1.3.5
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -2692,7 +2692,7 @@ Modifies the variable in place."
                              (if (ollama-buddy--should-use-marker-prefix)
                                  (concat ollama-buddy-marker-prefix model)
                                model))
-                           ollama-buddy-available-models)))
+                           (ollama-buddy--available-models-flat))))
               (cl-set-difference
                available-for-pull
                available-models
@@ -2836,20 +2836,37 @@ Modifies the variable in place."
                'help-echo (format "Pull manifest for %s (required before first use)" model))
               (insert "\n"))))
 
-        ;; Models available to pull section
+        ;; Categorized recommended models section
         (when models-to-pull
           (insert "\n* Recommended Models (Select or Pull to Install)\n\n")
-          (dolist (model models-to-pull)
-            (let ((display-model (if (ollama-buddy--should-use-marker-prefix)
-                                     model
-                                   (ollama-buddy--get-real-model-name model))))
-              (insert "- ")
-              (insert-text-button
-               display-model
-               'action `(lambda (_)
-                          (ollama-buddy-pull-model ,model))
-               'help-echo (format "Pull %s from Ollama Hub" display-model))
-              (insert "\n"))))
+          (dolist (category ollama-buddy-available-models)
+            (let* ((cat-name (plist-get category :name))
+                   (cat-desc (plist-get category :description))
+                   (cat-models (plist-get category :models))
+                   (pullable (cl-remove-if-not
+                              (lambda (m) (member m models-to-pull))
+                              (mapcar (lambda (model)
+                                        (if (ollama-buddy--should-use-marker-prefix)
+                                            (concat ollama-buddy-marker-prefix model)
+                                          model))
+                                      cat-models))))
+              (when pullable
+                (insert (format "** %s\n\n" cat-name))
+                (when cat-desc
+                  (insert (format "%s\n" cat-desc)))
+                (insert "\n")
+                (dolist (model pullable)
+                  (let ((display-model (if (ollama-buddy--should-use-marker-prefix)
+                                           model
+                                         (ollama-buddy--get-real-model-name model))))
+                    (insert "- ")
+                    (insert-text-button
+                     display-model
+                     'action `(lambda (_)
+                                (ollama-buddy-pull-model ,model))
+                     'help-echo (format "Pull %s from Ollama Hub" display-model))
+                    (insert "\n")))
+                (insert "\n")))))
         )
       (goto-char (point-min))
       (view-mode 1))
@@ -2872,13 +2889,12 @@ When the operation completes, CALLBACK is called with no arguments if provided."
    (let* ((available-models (ollama-buddy--get-models))
           (models-to-pull
            (when (ollama-buddy--ollama-running)
-             ;; Get models from ollama-buddy-available-models, potentially adding prefix
              (let ((available-for-pull
                     (mapcar (lambda (model)
                               (if (ollama-buddy--should-use-marker-prefix)
                                   (concat ollama-buddy-marker-prefix model)
                                 model))
-                            ollama-buddy-available-models)))
+                            (ollama-buddy--available-models-flat))))
                ;; Compare with models already available in the system
                (cl-set-difference
                 available-for-pull

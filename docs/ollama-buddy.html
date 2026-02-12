@@ -1467,14 +1467,19 @@ Next: <a href="#Context-Management" accesskey="n" rel="next">Context Management<
 </p>
 <p>From this interface, you can:
 </p><ul class="itemize mark-bullet">
-<li>See which models are currently running (with option to unload all)
+<li>See which local models are currently running (with option to unload all)
 </li><li>Pull new models from Ollama Hub or import GGUF files
 </li><li>Delete models you no longer need
 </li><li>View detailed model information
 </li><li>Select models for use
-</li><li>Browse and install recommended models from a curated list
+</li><li>Browse cloud models (<code class="code">cl:</code> prefix) with Select and Pull Manifest actions
+</li><li>Browse and install recommended models organized by category (General Chat, Reasoning, Efficient &amp; Capable, Coding, General Alternatives)
 </li></ul>
 
+<p>Each recommended model category includes a description to help new users choose
+the right type of model for their needs.  Categories are displayed as foldable
+org subheadings so you can collapse sections you are not interested in.
+</p>
 </div>
 <div class="section-level-extent" id="Pulling-New-Models">
 <h3 class="section"><span>7.5 Pulling New Models<a class="copiable-link" href="#Pulling-New-Models"> &para;</a></span></h3>
@@ -4015,8 +4020,13 @@ Next: <a href="#Global-System-Prompt" accesskey="n" rel="next">Global System Pro
 </p><ul class="itemize mark-bullet">
 <li>Use <code class="code">C-u C-c m</code> (universal argument with model switch)
 </li><li>Use the transient menu: <code class="code">C-c O</code> then &quot;Model &gt; Cloud&quot;
+</li><li>Select from the <code class="code">☁ Cloud Models</code> section in Model Management (<code class="code">C-c M</code>)
 </li></ul>
 
+<p>Cloud models are displayed with a <code class="code">cl:</code> prefix (e.g. <code class="code">cl:deepseek-v3.1:671b-cloud</code>)
+to distinguish them from local models.  The Model Management page also shows the
+current cloud authentication status next to the section heading.
+</p>
 </div>
 <div class="section-level-extent" id="Cloud-Authentication">
 <h3 class="section"><span>18.4 Cloud Authentication<a class="copiable-link" href="#Cloud-Authentication"> &para;</a></span></h3>

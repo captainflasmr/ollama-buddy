@@ -777,12 +777,22 @@ access it:
    or press ‘C-c M’ in the chat buffer.
 
    From this interface, you can:
-   • See which models are currently running (with option to unload all)
+   • See which local models are currently running (with option to unload
+     all)
    • Pull new models from Ollama Hub or import GGUF files
    • Delete models you no longer need
    • View detailed model information
    • Select models for use
-   • Browse and install recommended models from a curated list
+   • Browse cloud models (‘cl:’ prefix) with Select and Pull Manifest
+     actions
+   • Browse and install recommended models organized by category
+     (General Chat, Reasoning, Efficient & Capable, Coding, General
+     Alternatives)
+
+   Each recommended model category includes a description to help new
+users choose the right type of model for their needs.  Categories are
+displayed as foldable org subheadings so you can collapse sections you
+are not interested in.
 
 7.5 Pulling New Models
 ======================
@@ -2685,6 +2695,13 @@ Cloud models are configured via ‘ollama-buddy-cloud-models’:
 To select a cloud model:
    • Use ‘C-u C-c m’ (universal argument with model switch)
    • Use the transient menu: ‘C-c O’ then "Model > Cloud"
+   • Select from the ‘☁ Cloud Models’ section in Model Management (‘C-c
+     M’)
+
+   Cloud models are displayed with a ‘cl:’ prefix (e.g.
+‘cl:deepseek-v3.1:671b-cloud’) to distinguish them from local models.
+The Model Management page also shows the current cloud authentication
+status next to the section heading.
 
 18.4 Cloud Authentication
 =========================
@@ -3473,24 +3490,24 @@ Node: Quick Start15341
 Node: Core Features17562
 Node: Chat Interface20996
 Node: Working with Models24292
-Node: Context Management28265
-Node: File Attachments33874
-Node: Web Search39796
-Node: Parameter Control46743
-Node: Session Management49140
-Node: User System Prompts51077
-Node: Roles and Commands59567
-Node: Fabric Pattern Integration73640
-Node: Awesome ChatGPT Prompts75867
-Node: Remote Providers79717
-Node: Ollama Cloud Models84583
-Node: Global System Prompt87168
-Node: Advanced Usage88923
-Node: API Reference91489
-Node: FAQ97287
-Node: Troubleshooting104340
-Node: Contributing106845
-Node: Index109513
+Node: Context Management28689
+Node: File Attachments34298
+Node: Web Search40220
+Node: Parameter Control47167
+Node: Session Management49564
+Node: User System Prompts51501
+Node: Roles and Commands59991
+Node: Fabric Pattern Integration74064
+Node: Awesome ChatGPT Prompts76291
+Node: Remote Providers80141
+Node: Ollama Cloud Models85007
+Node: Global System Prompt87926
+Node: Advanced Usage89681
+Node: API Reference92247
+Node: FAQ98045
+Node: Troubleshooting105098
+Node: Contributing107603
+Node: Index110271
 
 End Tag Table
 
