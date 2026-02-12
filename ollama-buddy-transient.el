@@ -128,6 +128,7 @@
     ("T" "Token Display" ollama-buddy-toggle-token-display)
     ("V" "Reasoning" ollama-buddy-toggle-reasoning-visibility)
     ("<" "Global Prompt" ollama-buddy-toggle-global-system-prompt)
+    ("~" "Tone" ollama-buddy-set-tone)
     ]
    
    ["History"

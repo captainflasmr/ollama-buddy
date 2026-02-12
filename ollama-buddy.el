@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 1.3.5
+;; Version: 1.4.0
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -3329,7 +3329,8 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c C-o") #'ollama-buddy-toggle-markdown-conversion)
     (define-key map (kbd "C-c V") #'ollama-buddy-toggle-reasoning-visibility)
     (define-key map (kbd "C-c <") #'ollama-buddy-toggle-global-system-prompt)
-    
+    (define-key map (kbd "C-c ~") #'ollama-buddy-set-tone)
+
     ;; History keybindings
     (define-key map (kbd "C-c H") #'ollama-buddy-toggle-history)
     (define-key map (kbd "C-c X") #'ollama-buddy-clear-history)

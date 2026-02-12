@@ -450,6 +450,22 @@ combined with session-specific prompts (personas, roles, etc.)."
   :type 'boolean
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-tone-alist
+  '(("Normal" . "")
+    ("Concise" . "Be concise and direct. Give short, focused answers without unnecessary elaboration.")
+    ("Learning" . "Explain concepts thoroughly as if teaching. Include context, examples and analogies to aid understanding.")
+    ("Explanatory" . "Provide detailed explanations with reasoning. Break down complex topics step by step.")
+    ("Formal" . "Use a formal, professional tone. Be precise and structured in your responses."))
+  "Alist mapping tone names to system prompt modifier strings.
+Each entry is (NAME . PROMPT-TEXT).  The selected tone text is
+prepended to the global system prompt.  An empty string means no
+modification (the default \"Normal\" tone)."
+  :type '(alist :key-type string :value-type string)
+  :group 'ollama-buddy)
+
+(defvar ollama-buddy--current-tone "Normal"
+  "Currently active tone name from `ollama-buddy-tone-alist'.")
+
 (defcustom ollama-buddy-sessions-directory
   (expand-file-name "ollama-buddy-sessions" user-emacs-directory)
   "Directory containing ollama-buddy session files."
@@ -1020,22 +1036,27 @@ Returns a cons cell (TEXT . POINT) with the prompt text and point position."
   (ollama-buddy--update-status "System prompt set"))
 
 (defun ollama-buddy--effective-system-prompt ()
-  "Return the combined global and session system prompts.
-When `ollama-buddy-global-system-prompt-enabled' is non-nil and
-`ollama-buddy-global-system-prompt' is non-empty, it is prepended
-to the session-specific `ollama-buddy--current-system-prompt'.
-The prompts are separated by two newlines when combined."
-  (let ((global (and ollama-buddy-global-system-prompt-enabled
-                     (stringp ollama-buddy-global-system-prompt)
-                     (not (string-empty-p ollama-buddy-global-system-prompt))
-                     ollama-buddy-global-system-prompt))
-        (session ollama-buddy--current-system-prompt))
-    (cond
-     ((and global session (not (string-empty-p session)))
-      (concat global "\n\n" session))
-     (global global)
-     ((and session (not (string-empty-p session))) session)
-     (t nil))))
+  "Return the combined tone, global and session system prompts.
+The tone modifier from `ollama-buddy-tone-alist' is prepended when
+non-empty.  When `ollama-buddy-global-system-prompt-enabled' is
+non-nil and `ollama-buddy-global-system-prompt' is non-empty, it
+follows the tone.  The session-specific
+`ollama-buddy--current-system-prompt' comes last.  Parts are
+separated by two newlines when combined."
+  (let* ((tone-text (or (cdr (assoc ollama-buddy--current-tone
+                                    ollama-buddy-tone-alist))
+                        ""))
+         (tone (and (not (string-empty-p tone-text)) tone-text))
+         (global (and ollama-buddy-global-system-prompt-enabled
+                      (stringp ollama-buddy-global-system-prompt)
+                      (not (string-empty-p ollama-buddy-global-system-prompt))
+                      ollama-buddy-global-system-prompt))
+         (session (and ollama-buddy--current-system-prompt
+                       (not (string-empty-p ollama-buddy--current-system-prompt))
+                       ollama-buddy--current-system-prompt))
+         (parts (delq nil (list tone global session))))
+    (when parts
+      (mapconcat #'identity parts "\n\n"))))
 
 (defun ollama-buddy-toggle-global-system-prompt ()
   "Toggle the global system prompt on or off."
@@ -1046,6 +1067,14 @@ The prompts are separated by two newlines when combined."
    (if ollama-buddy-global-system-prompt-enabled "Global System Prompt enabled" "Global System Prompt disabled"))
   (message "Global system prompt %s"
            (if ollama-buddy-global-system-prompt-enabled "enabled" "disabled")))
+
+(defun ollama-buddy-set-tone ()
+  "Select a response tone from `ollama-buddy-tone-alist'."
+  (interactive)
+  (let ((tone (completing-read "Tone: " (mapcar #'car ollama-buddy-tone-alist) nil t)))
+    (setq ollama-buddy--current-tone tone)
+    (ollama-buddy--update-status (format "Tone: %s" tone))
+    (message "Tone set to %s" tone)))
 
 (defun ollama-buddy-show-system-prompt-info ()
   "Show detailed information about the current system prompt."
@@ -1953,10 +1982,15 @@ ACTUAL-MODEL is the model being used instead."
                                           (> (ollama-buddy-web-search-count) 0))
                                      (propertize (format "🔍%d " (ollama-buddy-web-search-count))
                                                  'face '(:weight bold))
-                                   "")))
+                                   ""))
+           (tone-indicator (let ((tone ollama-buddy--current-tone))
+                             (if (or (null tone) (string= tone "Normal"))
+                                 ""
+                               (propertize (format "~%c" (aref tone 0))
+                                           'face '(:weight bold))))))
       (setq header-line-format
             (concat
-             (format "%s%s%s%s%s%s%s%s%s %s%s%s %s%s"
+             (format "%s%s%s%s%s%s%s%s%s%s %s%s%s %s%s"
                      (if ollama-buddy-streaming-enabled "" "x")
                      (ollama-buddy--add-context-to-status-format)
                      (if ollama-buddy-global-system-prompt-enabled "" "<")
@@ -1966,7 +2000,8 @@ ACTUAL-MODEL is the model being used instead."
                      web-search-indicator
                      (if ollama-buddy-hide-reasoning "V" "")
                      (if ollama-buddy-display-token-stats "T" "")
-                     
+                     tone-indicator
+
                      (ollama-buddy--update-multishot-status)
                      (propertize (if (ollama-buddy--check-status) "" " OFFLINE")
                                  'face '(:weight bold))

@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 1.3.5
+@subtitle For Ollama Buddy version 1.4.0
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -63,6 +63,7 @@ allowing you to leverage powerful large language models (LLMs) directly within y
 * Remote Providers::            Using commercial LLM APIs (OpenAI, Claude, Gemini, Grok, Codestral)
 * Ollama Cloud Models::         Using Ollama's cloud-hosted models
 * Global System Prompt::        Configuring a persistent global system prompt
+* Tone Selector::               Quickly switch response style
 * Advanced Usage::              Tips and techniques for power users
 * API Reference::               Comprehensive function documentation
 * FAQ::                         Frequently asked questions
@@ -2871,6 +2872,56 @@ When enabled, the global system prompt is combined with any session-specific sys
 @end itemize
 
 This allows you to maintain consistent formatting while still using specialized prompts for specific tasks.
+
+@node Tone Selector
+@chapter Tone Selector
+
+@section Overview
+
+The tone selector lets you quickly switch response style without manually editing system prompts. It provides a set of predefined tones (Normal, Concise, Learning, Explanatory, Formal) that modify how the LLM responds.
+
+@section Usage
+
+To select a tone:
+@example
+M-x ollama-buddy-set-tone
+@end example
+or press @code{C-c ~} in the chat buffer. Also available from the transient menu under ``Display Toggle'' with the @code{~} key.
+
+@section Built-in Tones
+
+@table @strong
+@item Normal
+No modification (default). The LLM responds with its standard style.
+@item Concise
+Short, focused answers without unnecessary elaboration.
+@item Learning
+Thorough explanations with context, examples and analogies.
+@item Explanatory
+Detailed step-by-step reasoning for complex topics.
+@item Formal
+Professional, precise and structured responses.
+@end table
+
+@section Configuration
+
+@table @code
+@item ollama-buddy-tone-alist
+Alist mapping tone names to prompt modifier strings. Add custom tones:
+@example
+(add-to-list 'ollama-buddy-tone-alist
+  '("Creative" . "Be creative and imaginative in your responses."))
+@end example
+
+@item ollama-buddy--current-tone
+The currently active tone name (default: @code{"Normal"}).
+@end table
+
+@section How It Works
+
+The selected tone text is prepended to the effective system prompt. The combination order is: tone + global prompt + session prompt. When the tone is ``Normal'' (empty string), no tone text is added.
+
+The header line shows a @code{~X} indicator when a non-Normal tone is active, where @code{X} is the first letter of the tone name (e.g.@: @code{~C} for Concise, @code{~L} for Learning).
 
 @node Advanced Usage
 @chapter Advanced Usage
