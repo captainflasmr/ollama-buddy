@@ -716,9 +716,6 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
 (defvar ollama-buddy--saved-params-modified nil
   "Saved copy of params-modified before applying command-specific parameters.")
 
-(defvar ollama-buddy--current-suffix nil
-  "The current suffix if set.")
-
 (defvar ollama-buddy--current-system-prompt nil
   "The current system prompt if set.")
 
@@ -1527,12 +1524,11 @@ Controlled by `ollama-buddy-goto-prompt-on-visible-completion'."
     (set-window-point window (point-max))
     t))
 
-(defun ollama-buddy--prepare-prompt-area (&optional new-prompt keep-content system-prompt suffix-prompt)
+(defun ollama-buddy--prepare-prompt-area (&optional new-prompt keep-content system-prompt)
   "Prepare the prompt area in the buffer.
 When NEW-PROMPT is non-nil, replace the existing prompt area.
 When KEEP-CONTENT is non-nil, preserve the existing prompt content.
-When SYSTEM-PROMPT is non-nil, mark as a system prompt.
-When SUFFIX-PROMPT is non-nil, mark as a suffix."
+When SYSTEM-PROMPT is non-nil, mark as a system prompt."
   (let* ((model (or ollama-buddy--current-model
                     ollama-buddy-default-model
                     "Default:latest"))
@@ -1543,7 +1539,7 @@ When SUFFIX-PROMPT is non-nil, mark as a suffix."
         (let ((inhibit-read-only t))
           ;; Clean up existing prompt
           (goto-char (point-max))
-          (when (re-search-backward "\\* .*>> \\(?:PROMPT\\|SYSTEM PROMPT\\|SUFFIX\\):" nil t)
+          (when (re-search-backward "\\* .*>> \\(?:PROMPT\\|SYSTEM PROMPT\\):" nil t)
             (beginning-of-line)
             (if (or new-prompt
                     (not (string-match-p "[[:alnum:]]" (ollama-buddy--text-after-prompt))))
@@ -1554,15 +1550,12 @@ When SUFFIX-PROMPT is non-nil, mark as a suffix."
                   (goto-char (point-max)))
               ;; Keeping prompt with content
               (goto-char (point-max))))
-          
+
           ;; Insert new prompt header
           (insert (format "\n\n* *%s* %s"
                           model
-                          (cond
-                           (system-prompt ">> SYSTEM PROMPT: ")
-                           (suffix-prompt ">> SUFFIX: ")
-                           (t ">> PROMPT: "))))
-          
+                          (if system-prompt ">> SYSTEM PROMPT: " ">> PROMPT: ")))
+
           ;; Restore content if requested
           (when (and keep-content existing-content)
             (insert existing-content)))))))

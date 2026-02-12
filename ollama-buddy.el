@@ -816,10 +816,9 @@ PROPS should be a sequence of property-value pairs."
            (if ollama-buddy-show-params-in-header "enabled" "disabled")))
 
 (defun ollama-buddy-reset-all-prompts ()
-  "Reset both system prompt and suffix to default (none)."
+  "Reset the system prompt to default (none)."
   (interactive)
-  (setq ollama-buddy--current-system-prompt nil
-        ollama-buddy--current-suffix nil)
+  (setq ollama-buddy--current-system-prompt nil)
   
   ;; Update the UI to reflect the change
   (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
@@ -1039,7 +1038,6 @@ Returns the full prompt text ready to be sent."
                      :history ,history-alist
                      :attachments ,ollama-buddy--current-attachments
                      :system-prompt ,ollama-buddy--current-system-prompt
-                     :suffix ,ollama-buddy--current-suffix
                      :params-active ,ollama-buddy-params-active
                      :params-modified ,ollama-buddy-params-modified
                      :created-time ,(current-time)
@@ -1125,9 +1123,7 @@ Returns the full prompt text ready to be sent."
       ;; Restore prompts
       (setq ollama-buddy--current-system-prompt
             (plist-get session-data :system-prompt))
-      (setq ollama-buddy--current-suffix
-            (plist-get session-data :suffix))
-      
+
       ;; Restore parameters if available
       (when (plist-get session-data :params-active)
         (setq ollama-buddy-params-active (plist-get session-data :params-active)))
@@ -2236,14 +2232,10 @@ authentication via `ollama signin'."
          (with-system (if effective-system-prompt
                           (append base-payload `((system . ,effective-system-prompt)))
                         base-payload))
-         ;; Add suffix if present
-         (with-suffix (if ollama-buddy--current-suffix
-                          (append with-system `((suffix . ,ollama-buddy--current-suffix)))
-                        with-system))
          ;; Add modified parameters if present
          (final-payload (if modified-options
-                            (append with-suffix `((options . ,modified-options)))
-                          with-suffix))
+                            (append with-system `((options . ,modified-options)))
+                          with-system))
          (payload (json-encode final-payload)))
 
     (unless ollama-buddy--multishot-sequence
@@ -2540,7 +2532,7 @@ Modifies the variable in place."
   ollama-buddy-command-definitions)
 
 (defun ollama-buddy--send-prompt ()
-  "Send the current prompt to a LLM with support for system prompt and suffixes."
+  "Send the current prompt to a LLM with support for system prompt."
   (interactive)
   (let* ((current-prefix-arg-val (prefix-numeric-value current-prefix-arg))
          (prompt-data (ollama-buddy--get-prompt-content))
@@ -2570,7 +2562,7 @@ Modifies the variable in place."
       (setq ollama-buddy--multishot-sequence nil
             ollama-buddy--multishot-prompt nil)
       
-      ;; Send with system prompt and suffix support
+      ;; Send with system prompt support
       (ollama-buddy--send-backend prompt-text model)))))
 
 (defun ollama-buddy--cancel-request ()
