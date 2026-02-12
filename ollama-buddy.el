@@ -1450,7 +1450,7 @@ Optional MENU-COLUMNS specifies the number of columns for the menu display."
               (start-point (point)))
           (insert (format "\n=== MESSAGE %s ===\n"
                           (format-time-string "%H:%M:%S.%3N")))
-          (insert output "\n")
+          (insert (replace-regexp-in-string "\r" "" output) "\n")
           (save-excursion
             (save-match-data  ; Save match data for nested operations
               (goto-char start-point)
