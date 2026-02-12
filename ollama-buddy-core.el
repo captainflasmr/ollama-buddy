@@ -435,7 +435,7 @@ Each command is defined with:
   :group 'ollama-buddy)
 
 (defcustom ollama-buddy-global-system-prompt
-  "Format responses in plain prose. Avoid markdown tables unless specifically requested. Use clear paragraphs and bullet points for structured information."
+  "Format responses in plain prose. Never use markdown tables. Use clear paragraphs and bullet points for structured information."
   "Global system prompt prepended to all requests for consistent formatting.
 This prompt is combined with any session-specific system prompt to provide
 baseline formatting instructions across all models and providers.
