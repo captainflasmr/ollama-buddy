@@ -2670,7 +2670,7 @@ Modifies the variable in place."
                (cond
                 ((string-prefix-p "finished" status)
                  (insert "\nSuccessfully created model: " model-name)
-                 (ollama-buddy--assign-model-letters) ;; Update model list
+                 (ollama-buddy--assign-model-letters (ollama-buddy--get-models))
                  ;; Ask if user wants to use this model now
                  (when (y-or-n-p (format "Model '%s' created.  Use it now? " model-name))
                    (setq ollama-buddy--current-model model-name)
@@ -2684,6 +2684,7 @@ Modifies the variable in place."
   (interactive)
   (let* ((available-models (ollama-buddy--get-models))
          (running-models (ollama-buddy--get-running-models))
+         (_letters (ollama-buddy--assign-model-letters available-models))
          (models-to-pull
           (when (ollama-buddy--ollama-running)
             (let ((available-for-pull
@@ -2740,9 +2741,12 @@ Modifies the variable in place."
         (insert "\n\n* Available Models\n\n")
         
         (dolist (model available-models)
-          (let* ((is-running (member model running-models)))
-            
-            (insert (format "- [%s] " (if is-running "x" " ")))
+          (let* ((is-running (member model running-models))
+                 (letter (ollama-buddy--get-model-letter model)))
+
+            (insert (format "- (%s) [%s] "
+                            (or letter " ")
+                            (if is-running "x" " ")))
             
             ;; Select button
             (insert-text-button
@@ -2807,12 +2811,15 @@ Modifies the variable in place."
           (insert (format "\n* ☁ Cloud Models %s\n\n"
                           (ollama-buddy--cloud-auth-status-indicator)))
           (dolist (model ollama-buddy-cloud-models)
-            (let ((display-model (concat ollama-buddy-cloud-marker-prefix model))
-                  (is-current (and ollama-buddy--current-model
-                                   (or (string= (concat ollama-buddy-cloud-marker-prefix model)
-                                                ollama-buddy--current-model)
-                                       (string= model ollama-buddy--current-model)))))
-              (insert (format "- [%s] " (if is-current "x" " ")))
+            (let* ((display-model (concat ollama-buddy-cloud-marker-prefix model))
+                   (letter (ollama-buddy--get-model-letter display-model))
+                   (is-current (and ollama-buddy--current-model
+                                    (or (string= display-model
+                                                 ollama-buddy--current-model)
+                                        (string= model ollama-buddy--current-model)))))
+              (insert (format "- (%s) [%s] "
+                              (or letter " ")
+                              (if is-current "x" " ")))
               ;; Select button
               (insert-text-button
                display-model

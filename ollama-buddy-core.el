@@ -570,6 +570,53 @@ prefix for local models is only needed when external providers
     (substring model (length ollama-buddy-cloud-marker-prefix)))
    (t model)))
 
+(defvar ollama-buddy--model-letters nil
+  "Alist mapping letter keys to model names.
+Each entry is (KEY . MODEL-NAME) where KEY is a string like \"a\"
+or \"@a\" for models beyond the first 26, and MODEL-NAME is the
+full display name including any prefix.")
+
+(defun ollama-buddy--assign-model-letters (local-models)
+  "Assign letters to LOCAL-MODELS and cloud models.
+LOCAL-MODELS should be the list already obtained from
+`ollama-buddy--get-models'.  Cloud models from
+`ollama-buddy-cloud-models' are appended with the `cl:' prefix.
+Supports more than 26 models by using `@a', `@b', etc. for
+additional models beyond the first 26.
+Updates `ollama-buddy--model-letters'."
+  (let* ((cloud-models (mapcar (lambda (m)
+                                 (concat ollama-buddy-cloud-marker-prefix m))
+                               ollama-buddy-cloud-models))
+         (all-models (append local-models cloud-models))
+         (model-count (length all-models))
+         (alphabet "abcdefghijklmnopqrstuvwxyz")
+         (alphabet-length (length alphabet))
+         letter-alist)
+    ;; First 26 models get single letters a-z
+    (dotimes (i (min model-count alphabet-length))
+      (push (cons (char-to-string (aref alphabet i))
+                  (nth i all-models))
+            letter-alist))
+    ;; Models beyond 26 get prefixed combinations @a, @b, etc.
+    (when (> model-count alphabet-length)
+      (let ((remaining-models (nthcdr alphabet-length all-models))
+            (index 0))
+        (dolist (model remaining-models)
+          (when (< index alphabet-length)
+            (push (cons (concat "@" (char-to-string (aref alphabet index)))
+                        model)
+                  letter-alist)
+            (setq index (1+ index))))))
+    (setq ollama-buddy--model-letters (nreverse letter-alist))))
+
+(defun ollama-buddy--get-model-letter (model)
+  "Return the letter key assigned to MODEL, or nil if none."
+  (car (rassoc model ollama-buddy--model-letters)))
+
+(defun ollama-buddy--get-model-by-letter (letter)
+  "Return the model assigned to LETTER key, or nil if none."
+  (cdr (assoc letter ollama-buddy--model-letters)))
+
 (defcustom ollama-buddy-status-update-interval 1.0
   "Interval in seconds to update the status line with background operations."
   :type 'float
@@ -1124,40 +1171,6 @@ PROMPT and SPECIFIED-MODEL are passed to the handler or original function."
 ;; Apply the advice to ollama-buddy--send
 (advice-add 'ollama-buddy--send :around #'ollama-buddy--dispatch-to-handler)
 
-(defun ollama-buddy--assign-model-letters ()
-  "Assign letters to available models and update the intro message.
-This supports more than 26 models by using single letters for the first 26
-and prefixed combinations like '@a', '@b', etc. for additional models."
-  (let* ((models (ollama-buddy--get-models))
-         (model-count (length models))
-         (alphabet "abcdefghijklmnopqrstuvwxyz")
-         (alphabet-length (length alphabet))
-         letter-alist)
-    
-    ;; First assign single letters a-z for the first 26 models (or fewer)
-    (dotimes (i (min model-count alphabet-length))
-      (push (cons (char-to-string (aref alphabet i))
-                  (nth i models))
-            letter-alist))
-    
-    ;; For additional models beyond 26, use prefixed combinations like '@a', '@b', etc.
-    (when (> model-count alphabet-length)
-      (let ((remaining-models (nthcdr alphabet-length models))
-            (index 0))
-        
-        (dolist (model remaining-models)
-          (when (< index alphabet-length) ;; Limit to 26 more models for now (can be expanded)
-            ;; Create a prefixed letter
-            (let ((letter-combo (concat "@" (char-to-string (aref alphabet index)))))
-              (push (cons letter-combo model) letter-alist)
-              (setq index (1+ index)))))))
-    
-    ;; Store the letter assignments
-    (setq ollama-buddy--model-letters (nreverse letter-alist))))
-
-(defun ollama-buddy--get-model-letter (model-name)
-  "Return the letter assigned to MODEL-NAME from `ollama-buddy--model-letters`."
-  (car (rassoc model-name ollama-buddy--model-letters)))
 
 (defun ollama-buddy--count-models-with-prefix (prefix)
   "Count the number of models in `ollama-buddy-remote-models' with PREFIX."
