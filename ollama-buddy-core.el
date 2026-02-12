@@ -1655,7 +1655,7 @@ When complete, CALLBACK is called with the status response and result."
         (when-let ((response (ollama-buddy--make-request-backend "/api/tags" "GET")))
           (setq ollama-buddy--models-cache
                 (sort
-                 (mapcar #'car (ollama-buddy--get-models-with-colors-from-result response))
+                 (ollama-buddy--get-model-names-from-result response)
                  #'string<)
                 ollama-buddy--models-cache-timestamp current-time)
           ;; (ollama-buddy--refresh-models-cache)
@@ -1673,22 +1673,21 @@ When complete, CALLBACK is called with the status response and result."
        (when result
          (setq ollama-buddy--models-cache
                (sort
-                (mapcar #'car (ollama-buddy--get-models-with-colors-from-result result))
+                (ollama-buddy--get-model-names-from-result result)
                 #'string<)
                ollama-buddy--models-cache-timestamp (float-time)))))))
 
-(defun ollama-buddy--get-models-with-colors-from-result (result)
-  "Get available Ollama models with their associated colors from RESULT.
+(defun ollama-buddy--get-model-names-from-result (result)
+  "Extract model names from API RESULT, applying prefix if needed.
 Cloud models (those with a `-cloud' suffix or in `ollama-buddy-cloud-models')
 are excluded since they appear under the `cl:' prefix instead."
   (when result
     (cl-remove-if
-     (lambda (entry)
+     (lambda (name)
        (ollama-buddy--cloud-model-p
-        (ollama-buddy--get-real-model-name (car entry))))
+        (ollama-buddy--get-real-model-name name)))
      (mapcar (lambda (m)
-               (let ((name (ollama-buddy--get-full-model-name (alist-get 'name m))))
-                 (cons name name)))
+               (ollama-buddy--get-full-model-name (alist-get 'name m)))
              (alist-get 'models result)))))
 
 (defun ollama-buddy--get-running-models ()

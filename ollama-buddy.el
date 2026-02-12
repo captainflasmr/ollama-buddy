@@ -82,7 +82,6 @@
 (require 'dired)
 (require 'org)
 (require 'savehist)
-(require 'color)
 (require 'ollama-buddy-core)
 (require 'ollama-buddy-transient)
 (require 'ollama-buddy-user-prompts)
@@ -862,7 +861,7 @@ PROPS should be a sequence of property-value pairs."
            (pop-to-buffer (current-buffer))
            (goto-char (point-max))
            
-           ;; Insert model info header with color
+           ;; Insert model info header
            (insert (format "[MODEL INFO REQUEST]\n\n** [MODEL INFO: %s]\n\n" model))
 
            ;; Pretty print the JSON response
