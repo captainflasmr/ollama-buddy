@@ -2802,6 +2802,33 @@ Modifies the variable in place."
             
             (insert "\n")))
 
+        ;; Cloud models section
+        (when ollama-buddy-cloud-models
+          (insert (format "\n* ☁ Cloud Models %s\n\n"
+                          (ollama-buddy--cloud-auth-status-indicator)))
+          (dolist (model ollama-buddy-cloud-models)
+            (let ((display-model (concat ollama-buddy-cloud-marker-prefix model))
+                  (is-current (and ollama-buddy--current-model
+                                   (or (string= (concat ollama-buddy-cloud-marker-prefix model)
+                                                ollama-buddy--current-model)
+                                       (string= model ollama-buddy--current-model)))))
+              (insert (format "- [%s] " (if is-current "x" " ")))
+              ;; Select button
+              (insert-text-button
+               display-model
+               'action `(lambda (_)
+                          (ollama-buddy-select-model ,(concat ollama-buddy-cloud-marker-prefix model)))
+               'help-echo (format "Select cloud model %s" model))
+              (insert "  ")
+              ;; Pull manifest button
+              (insert-text-button
+               "Pull Manifest"
+               'action `(lambda (_)
+                          (ollama-buddy--ensure-cloud-model-available ,display-model)
+                          (ollama-buddy-manage-models))
+               'help-echo (format "Pull manifest for %s (required before first use)" model))
+              (insert "\n"))))
+
         ;; Models available to pull section
         (when models-to-pull
           (insert "\n* Recommended Models (Select or Pull to Install)\n\n")
