@@ -27,7 +27,7 @@ You can install with literally no config, but I would suggest binding to both me
   #+begin_src elisp
    (use-package ollama-buddy
      :bind
-     ("C-c o" . ollama-buddy-menu)
+     ("C-c o" . ollama-buddy-role-transient-menu)
      ("C-c O" . ollama-buddy-transient-menu-wrapper))
   #+end_src
 
@@ -98,6 +98,18 @@ See *Screenshots / Demos* section for more videos/demonstration.
 See full list in :
 
 [[file:CHANGELOG.org]]
+
+** <2026-02-12 Wed> *1.5.0*
+
+Dynamic Transient Role Menu with Grouped Commands
+
+- New =ollama-buddy-role-transient-menu= command displays role commands in a full transient popup instead of the minibuffer menu
+- New =:group= property on command definitions controls transient column grouping
+- Recommended binding is now =("C-c o" . ollama-buddy-role-transient-menu)=
+- The original =ollama-buddy-menu= remains available as a minibuffer fallback
+- Commands without =:group= fall into a single "Commands" column (backwards compatible)
+- Commands with =:model= show the model name in the transient description
+- All 10 built-in presets updated with =:group= properties for organized column layouts
 
 ** <2026-02-12 Wed> *1.4.0*
 
@@ -173,7 +185,7 @@ To use web search:
 #+begin_src elisp
 (use-package ollama-buddy
   :bind
-  ("C-c o" . ollama-buddy-menu)
+  ("C-c o" . ollama-buddy-role-transient-menu)
   ("C-c O" . ollama-buddy-transient-menu-wrapper)
   :config
   (setq ollama-buddy-web-search-api-key "your-api-key-here")
@@ -210,7 +222,7 @@ To use GitHub Copilot:
 #+begin_src elisp
 (use-package ollama-buddy
   :bind
-  ("C-c o" . ollama-buddy-menu)
+  ("C-c o" . ollama-buddy-role-transient-menu)
   ("C-c O" . ollama-buddy-transient-menu-wrapper)
   :config
   (require 'ollama-buddy-copilot nil t))
@@ -287,7 +299,7 @@ To use cloud models:
 ;; Just sign in once via the transient menu: Cloud Auth > Sign In
 (use-package ollama-buddy
   :bind
-  ("C-c o" . ollama-buddy-menu)
+  ("C-c o" . ollama-buddy-role-transient-menu)
   ("C-c O" . ollama-buddy-transient-menu-wrapper))
 #+end_src
 
@@ -304,7 +316,7 @@ Added Mistral Codestral support
 #+begin_src elisp
 (use-package ollama-buddy
   :bind
-  ("C-c o" . ollama-buddy-menu)
+  ("C-c o" . ollama-buddy-role-transient-menu)
   ("C-c O" . ollama-buddy-transient-menu-wrapper)
   :custom
   (ollama-buddy-codestral-api-key
@@ -325,18 +337,20 @@ If desired, the following will get you going! (of course, have =ollama= running 
    (use-package ollama-buddy
      :ensure t
      :bind
-     ("C-c o" . ollama-buddy-menu)
+     ("C-c o" . ollama-buddy-role-transient-menu)
      ("C-c O" . ollama-buddy-transient-menu-wrapper))
   #+end_src
 
 - *Interactive Command Menu*
-  
-  - Quick-access menu with single-key commands (=M-x ollama-buddy-menu=)
+
+  - Dynamic transient popup menu from role command definitions (=M-x ollama-buddy-role-transient-menu=)
+  - Commands grouped into columns using the =:group= property for organized layouts
   - Quickly define your own menu using =defcustom= with dynamic adaptable menu
   - Menu Presets easily definable in text files
   - Quickly switch between LLM models with no configuration required
   - Send text from any Emacs buffer
   - Comprehensive model management with =C-c M=
+  - Minibuffer fallback menu still available via =M-x ollama-buddy-menu=
 
 - *Role and Session Management*
 
@@ -405,7 +419,7 @@ This can give the user more options for configuration, they can use the chat in 
 
   #+begin_src elisp
   :bind
-  ("C-c o" . ollama-buddy-menu)
+  ("C-c o" . ollama-buddy-role-transient-menu)
   ("C-c O" . ollama-buddy-transient-menu)
   #+end_src
 
@@ -647,7 +661,7 @@ https://github.com/captainflasmr/ollama-buddy
 Demonstrating the Emacs package ollama-buddy, providing a convenient way to integrate Ollama's local LLM capabilities.
 
 - Starting with model : llama3.2:1b
-- Show menu activation C-c o =ollama-buddy-menu=
+- Show menu activation C-c o =ollama-buddy-role-transient-menu=
 - [o] Open chat buffer
 - PROMPT:: why is the sky blue?
 - C-c C-c to send from chat buffer
@@ -993,7 +1007,7 @@ https://github.com/captainflasmr/ollama-buddy
    (use-package ollama-buddy
      :ensure t
      :bind
-     ("C-c o" . ollama-buddy-menu)
+     ("C-c o" . ollama-buddy-role-transient-menu)
      ("C-c O" . ollama-buddy-transient-menu-wrapper))
 #+end_src
 
@@ -1007,12 +1021,12 @@ git clone https://github.com/captainflasmr/ollama-buddy.git
 
 *** init.el
 
-With the option to add your own user keybinding for the =ollama-buddy-menu=
+With the option to add your own user keybinding for the role menu:
 
 #+begin_src emacs-lisp
 (add-to-list 'load-path "path/to/ollama-buddy")
 (require 'ollama-buddy)
-(global-set-key (kbd "C-c o") #'ollama-buddy-menu)
+(global-set-key (kbd "C-c o") #'ollama-buddy-role-transient-menu)
 (global-set-key (kbd "C-c O") #'ollama-buddy-transient-menu-wrapper)
 #+end_src
 
@@ -1022,14 +1036,14 @@ OR
  (use-package ollama-buddy
    :load-path "path/to/ollama-buddy"
    :bind
-   ("C-c o" . ollama-buddy-menu)
+   ("C-c o" . ollama-buddy-role-transient-menu)
    ("C-c O" . ollama-buddy-transient-menu-wrapper))
 #+end_src
 
 - Usage
 
 1. Start your Ollama server locally with =ollama serve=
-2. In Emacs, =M-x ollama-buddy-menu= or a user defined keybinding =C-c o= to open up the ollama buddy menu
+2. In Emacs, =M-x ollama-buddy-role-transient-menu= or a user defined keybinding =C-c o= to open the role menu
 3. Select [o] to open and jump to the chat buffer
 4. Read the AI assistants greeting and off you go!
 
@@ -1130,7 +1144,7 @@ The first will add a menu item to the existing menu, and the second will define 
 #+begin_src elisp
 (use-package ollama-buddy
   :bind
-  ("C-c o" . ollama-buddy-menu)
+  ("C-c o" . ollama-buddy-role-transient-menu)
   ("C-c O" . ollama-buddy-transient-menu-wrapper)
   :config
   (setq ollama-buddy-default-model "o:tinyllama:latest")
@@ -1319,52 +1333,56 @@ For more advanced customization, create role files manually:
 
 (setq ollama-buddy-command-definitions
   '(
-    ;; Standard commands - always include these
+    ;; Standard commands
     (open-chat
      :key ?o
      :description "Open chat buffer"
+     :group "General"
      :action ollama-buddy--open-chat)
-    
+
     (switch-role
      :key ?R
      :description "Switch roles"
+     :group "General"
      :action ollama-buddy-roles-switch-role)
 
-    (create-role
-     :key ?E
-     :description "Create new role"
-     :action ollama-buddy-role-creator-create-new-role)
-    
-    (open-roles-directory
-     :key ?D
-     :description "Open roles directory"
-     :action ollama-buddy-roles-open-directory)
-    
     ;; Custom commands for this role
     (refactor-code
      :key ?r
      :description "Refactor code"
+     :group "Code"
      :model "codellama:7b"
      :prompt "Refactor this code to improve readability and efficiency:"
      :system "You are an expert software engineer who improves code quality while maintaining functionality."
      :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
-    
+
     (explain-code
      :key ?e
      :description "Explain code"
+     :group "Code"
      :model "deepseek-r1:7b"
      :prompt "Explain what this code does in detail:"
      :system "You are a programming teacher who explains code clearly and thoroughly."
      :action (lambda () (ollama-buddy--send-with-command 'explain-code)))
-    
+
     (git-commit
      :key ?g
      :description "Git commit message"
+     :group "Utility"
      :prompt "Write a concise git commit message for these changes:"
      :system "You are a version control expert who creates clear, concise commit messages."
      :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+
+    ;; System commands
+    (custom-prompt
+     :key ?e
+     :description "Custom prompt"
+     :group "System"
+     :action ollama-buddy--menu-custom-prompt)
     ))
 #+end_src
+
+The =:group= property is optional. Commands with the same =:group= value appear together in a named column in the transient role menu. Presets without any =:group= properties still work --- all commands appear in a single "Commands" column.
 
 ** Switching Between Roles
 
@@ -1663,12 +1681,15 @@ Each menu item is defined using a property list with these key attributes:
 (command-name
  :key ?k              ; Character for menu selection
  :description "desc"  ; Menu item description
+ :group "Group Name"  ; Transient menu column grouping (optional)
  :model "model-name"  ; Specific Ollama model (optional)
  :prompt "prompt"     ; System prompt (optional)
  :system "system"     ; System prompt (optional)
  :parameters ((param . value)) ; Command-specific parameters (optional)
  :action function)    ; Command implementation
 #+end_src
+
+The =:group= property controls how commands are organized into columns in the transient role menu. Commands sharing the same =:group= string appear together in a named column. Commands without =:group= are placed in a single "Commands" column.
 
 ** Examples
 
@@ -1690,7 +1711,7 @@ You can add new commands to =ollama-buddy-command-definitions= in your config:
 (use-package ollama-buddy
   :load-path "path/to/ollama-buddy"
   :bind
-  ("C-c o" . ollama-buddy-menu)
+  ("C-c o" . ollama-buddy-role-transient-menu)
   ("C-c O" . ollama-buddy-transient-menu-wrapper)
   (add-to-list 'ollama-buddy-command-definitions
                '(pirate
@@ -1831,7 +1852,7 @@ When a fallback occurs, Ollama Buddy provides clear feedback:
 #+begin_src elisp
 (use-package ollama-buddy
   :bind
-  ("C-c o" . ollama-buddy-menu)
+  ("C-c o" . ollama-buddy-role-transient-menu)
   ("C-c O" . ollama-buddy-transient-menu-wrapper)
   :custom
   ;; Set default model
@@ -1847,7 +1868,7 @@ When a fallback occurs, Ollama Buddy provides clear feedback:
 #+begin_src elisp
 (use-package ollama-buddy
   :bind
-  ("C-c o" . ollama-buddy-menu)
+  ("C-c o" . ollama-buddy-role-transient-menu)
   ("C-c O" . ollama-buddy-transient-menu-wrapper)
   :custom
   (ollama-buddy-host "http://<remote-server>")
@@ -1887,7 +1908,7 @@ You can customize the list via =ollama-buddy-cloud-models=.
 #+begin_src elisp
 (use-package ollama-buddy
   :bind
-  ("C-c o" . ollama-buddy-menu)
+  ("C-c o" . ollama-buddy-role-transient-menu)
   ("C-c O" . ollama-buddy-transient-menu-wrapper)
   :config
   (ollama-buddy-add-model-to-menu-entry 'dictionary-lookup "tinyllama:latest")
@@ -1899,7 +1920,7 @@ You can customize the list via =ollama-buddy-cloud-models=.
 #+begin_src elisp
 (use-package ollama-buddy
   :bind
-  ("C-c o" . ollama-buddy-menu)
+  ("C-c o" . ollama-buddy-role-transient-menu)
   ("C-c O" . ollama-buddy-transient-menu-wrapper)
   :config
   (ollama-buddy-update-menu-entry

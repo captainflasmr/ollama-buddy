@@ -310,79 +310,90 @@ These are the only parameters that will be sent to Ollama."
     (open-chat
      :key ?o
      :description "Open chat buffer"
+     :group "General"
      :action ollama-buddy--open-chat)
-    
+
     (send-region
      :key ?l
      :description "Send region"
+     :group "General"
      :action (lambda ()
                (let* ((selected-text (when (use-region-p)
                                        (buffer-substring-no-properties
                                         (region-beginning) (region-end)))))
                  (when (not selected-text)
                    (user-error "This command requires selected text"))
-                 
+
                  (ollama-buddy--open-chat)
                  (insert selected-text))))
-    
+
     (switch-role
      :key ?R
      :description "Switch roles"
+     :group "General"
      :action ollama-buddy-roles-switch-role)
-    
+
     ;; Custom commands
     (refactor-code
      :key ?r
      :description "Refactor code"
+     :group "Custom"
      :prompt "refactor the following code:"
      :system "You are an expert software engineer who improves code quality while maintaining functionality, focusing on readability, maintainability, and efficiency by applying clean code principles and design patterns with clear explanations for each change."
      :parameters ((temperature . 0.2) (top_p . 0.7) (repeat_penalty . 1.3))
      :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
-    
+
     (git-commit
      :key ?g
      :description "Git commit message"
+     :group "Custom"
      :prompt "write a concise git commit message for the following:"
      :system "You are a version control expert who creates clear commit messages using imperative mood, keeping summaries under 50 characters, explaining the what and why of changes, and referencing issue numbers where applicable."
      :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
-    
+
     (describe-code
      :key ?c
      :description "Describe code"
+     :group "Custom"
      :prompt "describe the following code:"
      :system "You are a technical documentation specialist who analyzes code to provide high-level summaries, explain main components and control flow, highlight notable patterns or optimizations, and clarify complex parts in accessible language."
      :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
-    
+
     (dictionary-lookup
      :key ?d
      :description "Dictionary Lookup"
+     :group "Custom"
      :prompt "For the following word provide a typical dictionary definition:"
      :system "You are a professional lexicographer who provides comprehensive word definitions including pronunciation, all relevant parts of speech, etymology, examples of usage, and related synonyms and antonyms in a clear dictionary-style format."
      :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup)))
-    
+
     (synonym
      :key ?s
      :description "Word synonym"
+     :group "Custom"
      :prompt "list synonyms for word:"
      :system "You are a linguistic expert who provides contextually grouped synonyms with notes on connotation, formality levels, and usage contexts to help find the most precise alternative word for specific situations."
      :action (lambda () (ollama-buddy--send-with-command 'synonym)))
-    
+
     (proofread
      :key ?p
      :description "Proofread text"
+     :group "Custom"
      :prompt "Proofread the following text and return only the corrected version, with no explanations or extra text:"
      :system "You are a professional editor. Only return the corrected text with all grammar, spelling, punctuation, and style errors corrected. Do not include explanations, lists, or any extra commentary."
      :action (lambda () (ollama-buddy--send-with-command 'proofread)))
-    
+
     ;; System Commands
     (custom-prompt
      :key ?e
      :description "Custom prompt"
+     :group "System"
      :action ollama-buddy--menu-custom-prompt)
-    
+
     (minibuffer-prompt
      :key ?i
      :description "Minibuffer Prompt"
+     :group "System"
      :action ollama-buddy--menu-minibuffer-prompt))
   "Comprehensive command definitions for Ollama Buddy.
 Each command is defined with:
@@ -392,7 +403,8 @@ Each command is defined with:
   :prompt - Optional user prompt prefix
   :system - Optional system prompt/message
   :parameters - Association list of Ollama API parameters
-  :action - Function to execute"
+  :action - Function to execute
+  :group - Optional group name for transient menu column layout"
   :type '(repeat
           (list :tag "Command Definition"
                 (symbol :tag "Command Name")
@@ -408,7 +420,8 @@ Each command is defined with:
                         (:parameters (alist :key-type symbol :value-type sexp))
                         (:action (choice :tag "Action"
                                          (function :tag "Existing Function")
-                                         (sexp :tag "Lambda Expression")))))))
+                                         (sexp :tag "Lambda Expression")))
+                       (:group (string :tag "Menu Group Name"))))))
   :group 'ollama-buddy)
 
 (defcustom ollama-buddy-params-active

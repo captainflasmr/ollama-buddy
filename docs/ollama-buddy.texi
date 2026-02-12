@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 1.4.0
+@subtitle For Ollama Buddy version 1.5.0
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -151,7 +151,7 @@ If you use @code{use-package}, add the following to your Emacs configuration:
 @example
 (use-package ollama-buddy
   :ensure t
-  :bind ("C-c o" . ollama-buddy-menu))
+  :bind ("C-c o" . ollama-buddy-role-transient-menu))
 @end example
 
 With a default model:
@@ -159,7 +159,7 @@ With a default model:
 @example
 (use-package ollama-buddy
   :ensure t
-  :bind ("C-c o" . ollama-buddy-menu)
+  :bind ("C-c o" . ollama-buddy-role-transient-menu)
   :custom (ollama-buddy-default-model "llama3:latest"))
 @end example
 
@@ -177,7 +177,7 @@ git clone https://github.com/captainflasmr/ollama-buddy.git
 @example
 (add-to-list 'load-path "/path/to/ollama-buddy")
 (require 'ollama-buddy)
-(global-set-key (kbd "C-c o") #'ollama-buddy-menu)
+(global-set-key (kbd "C-c o") #'ollama-buddy-role-transient-menu)
 @end example
 @end enumerate
 
@@ -529,7 +529,7 @@ Whether to categorize prompts based on common keywords.
 @enumerate
 @item Launch Ollama Buddy:
 @example
-M-x ollama-buddy-menu
+M-x ollama-buddy-role-transient-menu
 @end example
 or use your configured keybinding (e.g., @code{C-c o}).
 
@@ -647,6 +647,20 @@ Corrects grammar, style, and spelling
 @item Real-time parameter adjustment
 @end itemize
 
+@section Role Transient Menu
+
+The role menu (@code{ollama-buddy-role-transient-menu}) provides a dynamic transient popup built from the current role's @code{ollama-buddy-command-definitions}. It rebuilds each time it opens, so switching roles immediately changes the menu.
+
+@itemize @bullet
+@item Full transient UX with persistent display, help, and discoverability
+@item Commands grouped into named columns via the @code{:group} property
+@item Commands without @code{:group} appear in a single ``Commands'' column
+@item Commands with @code{:model} show the model name in the description
+@item Duplicate keys are deduplicated (first definition wins)
+@item @code{quit} entries are skipped (transient handles quit natively with @code{C-g})
+@item The original minibuffer menu is still available via @code{M-x ollama-buddy-menu}
+@end itemize
+
 @section Roles and Custom Commands
 
 @itemize @bullet
@@ -706,7 +720,7 @@ Corrects grammar, style, and spelling
 To open the chat interface:
 
 @enumerate
-@item Use @code{M-x ollama-buddy-menu} or your configured keybinding
+@item Use @code{M-x ollama-buddy-role-transient-menu} or your configured keybinding
 @item Press @code{o} to select "Open Chat"
 @item A new buffer will open with the Ollama Buddy chat interface
 @end enumerate
@@ -2094,57 +2108,79 @@ For more advanced customization, create role files manually:
 ;; ollama-buddy preset for role: programmer
 (require 'ollama-buddy)
 
-;; Menu display columns for this role (optional, default is 2)
-(setq ollama-buddy-menu-columns 3)
-
 (setq ollama-buddy-command-definitions
   '(
-    ;; Standard commands - always include these
+    ;; Standard commands
     (open-chat
      :key ?o
      :description "Open chat buffer"
+     :group "General"
      :action ollama-buddy--open-chat)
-
-    (show-models
-     :key ?v
-     :description "View model status"
-     :action ollama-buddy-show-model-status)
 
     (switch-role
      :key ?R
      :description "Switch roles"
+     :group "General"
      :action ollama-buddy-roles-switch-role)
-    
-    (open-roles-directory
-     :key ?D
-     :description "Open roles directory"
-     :action ollama-buddy-roles-open-directory)
-    
+
     ;; Custom commands for this role
     (refactor-code
      :key ?r
      :description "Refactor code"
+     :group "Code"
      :model "codellama:7b"
      :prompt "Refactor this code to improve readability and efficiency:"
      :system "You are an expert software engineer who improves code quality."
      :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
-    
+
     (explain-code
      :key ?e
      :description "Explain code"
+     :group "Code"
      :model "deepseek-r1:7b"
      :prompt "Explain what this code does in detail:"
      :system "You are a programming teacher who explains code clearly."
      :action (lambda () (ollama-buddy--send-with-command 'explain-code)))
-    
+
     (git-commit
      :key ?g
      :description "Git commit message"
+     :group "Utility"
      :prompt "Write a concise git commit message for these changes:"
      :system "You are a version control expert who creates clear commit messages."
      :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+
+    ;; System commands
+    (custom-prompt
+     :key ?e
+     :description "Custom prompt"
+     :group "System"
+     :action ollama-buddy--menu-custom-prompt)
     ))
 @end example
+
+The @code{:group} property is optional. Commands sharing the same @code{:group} value appear together in a named column in the transient role menu (@code{ollama-buddy-role-transient-menu}). Presets without any @code{:group} properties still work --- all commands appear in a single ``Commands'' column for full backwards compatibility.
+
+@section Command Grouping
+
+The @code{:group} property on command definitions controls how commands are organized into columns in the transient role menu. This provides a clean, discoverable layout:
+
+@example
+;; Commands with :group "Code" appear in a "Code" column
+(refactor-code
+ :key ?r
+ :description "Refactor code"
+ :group "Code"
+ :action ...)
+
+(explain-code
+ :key ?e
+ :description "Explain code"
+ :group "Code"
+ :action ...)
+@end example
+
+Built-in presets use groups like ``General'', ``Code Analysis'', ``Code Generation'', ``Custom'', ``System'', etc. You can use any group names you like in your own presets.
 
 @section Switching Roles
 
@@ -3023,11 +3059,14 @@ Or with a payload:
 @section Interactive Functions
 
 @table @code
+@item ollama-buddy-role-transient-menu
+Display the dynamic role-specific transient menu, built from @code{ollama-buddy-command-definitions}.
+
 @item ollama-buddy-menu
-Display the main Ollama Buddy menu.
+Display the minibuffer-based Ollama Buddy menu (legacy fallback).
 
 @item ollama-buddy-transient-menu
-Display the transient-based menu.
+Display the main transient-based menu.
 
 @item ollama-buddy--open-chat
 Open the chat buffer.

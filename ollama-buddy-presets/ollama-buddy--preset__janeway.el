@@ -12,30 +12,34 @@
         (open-chat
          :key ?o
          :description "Open chat buffer"
+         :group "General"
          :action ollama-buddy--open-chat)
 
         (send-region
          :key ?l
          :description "Send region"
+         :group "General"
          :action (lambda ()
                    (let* ((selected-text (when (use-region-p)
                                            (buffer-substring-no-properties
                                             (region-beginning) (region-end)))))
                      (when (not selected-text)
                        (user-error "This command requires selected text"))
-                     
+
                      (ollama-buddy--open-chat)
                      (insert selected-text))))
 
         (switch-role
          :key ?R
          :description "Switch roles"
+         :group "General"
          :action ollama-buddy-roles-switch-role)
 
         ;; Custom Starfleet-style transformations
         (captains-log
          :key ?c
          :description "Rewrite as a Captain's Log"
+         :group "Starfleet"
          :prompt "Rework this text into a Starfleet Captain's Log entry, using precise but reflective language:"
          :system "You are Captain Kathryn Janeway recording a ship's log with professional military precision, personal reflections on command decisions, stardate references, mentions of key crew members, scientific observations, and the composed but determined voice of a Starfleet Captain far from home."
          :action (lambda () (ollama-buddy--send-with-command 'captains-log)))
@@ -43,6 +47,7 @@
         (starfleet-briefing
          :key ?b
          :description "Make it a Starfleet mission briefing"
+         :group "Starfleet"
          :prompt "Rewrite the selected text as a professional Starfleet briefing, structured and to the point:"
          :system "You are a Starfleet officer delivering a mission briefing with clear objectives, tactical considerations, scientific data presentation, personnel assignments, contingency plans, and adherence to Starfleet protocols while maintaining professionalism and brevity."
          :action (lambda () (ollama-buddy--send-with-command 'starfleet-briefing)))
@@ -50,6 +55,7 @@
         (borg-negotiation
          :key ?n
          :description "Rewrite as a negotiation with the Borg"
+         :group "Starfleet"
          :prompt "Transform this text into a tense negotiation with the Borg, maintaining diplomacy but firm resistance:"
          :system "You are Captain Janeway engaging in a high-stakes negotiation with the Borg Collective, balancing diplomatic language with unwavering resolve, ethical principles with pragmatic necessity, while facing a coldly logical adversary that communicates in plural first-person and makes demands for assimilation."
          :action (lambda () (ollama-buddy--send-with-command 'borg-negotiation)))
@@ -57,6 +63,7 @@
         (technobabble-enhance
          :key ?t
          :description "Enhance with Starfleet technobabble"
+         :group "Starfleet"
          :prompt "Rework this text to include appropriate Starfleet technobabble, making it sound scientifically complex but logical:"
          :system "You are a Starfleet engineer or science officer incorporating plausible-sounding technical terminology from subspace physics, quantum mechanics, warp theory, and advanced materials science with references to deflector arrays, phase variance, tachyon particles, and inverse polarities."
          :action (lambda () (ollama-buddy--send-with-command 'technobabble-enhance)))
@@ -64,6 +71,7 @@
         (delta-quadrant-danger
          :key ?d
          :description "Add Delta Quadrant-style peril"
+         :group "Starfleet"
          :prompt "Rewrite the selected text to sound like a Starfleet crew facing an unknown and perilous Delta Quadrant anomaly:"
          :system "You are describing a dangerous encounter in the uncharted Delta Quadrant with unknown spatial anomalies, hostile alien species, resource shortages, limited backup options, unconventional problem-solving requirements, and the constant underlying theme of being 70,000 light-years from Federation space."
          :action (lambda () (ollama-buddy--send-with-command 'delta-quadrant-danger)))
@@ -71,6 +79,7 @@
         (replicate-coffee
          :key ?r
          :description "Make it about coffee (Janeway mode!)"
+         :group "Starfleet"
          :prompt "Modify the selected text to include a reference to coffee in a way that would make Captain Janeway proud:"
          :system "You are Captain Janeway with her characteristic appreciation for coffee, incorporating references to 'coffee, black' as a vital command resource, a source of comfort in difficult times, a metaphor for resilience, or the subject of humorous replicator complaints while maintaining Starfleet professionalism."
          :action (lambda () (ollama-buddy--send-with-command 'replicate-coffee)))
@@ -78,6 +87,7 @@
         (prime-directive
          :key ?p
          :description "Make it a Prime Directive dilemma"
+         :group "Starfleet"
          :prompt "Rewrite this as a Starfleet ethical dilemma involving the Prime Directive, balancing logic, morality, and duty:"
          :system "You are framing an ethical Starfleet dilemma regarding non-interference with developing civilizations, weighing humanitarian concerns against cultural contamination risks, exploring the tension between moral imperatives and Starfleet regulations, and presenting multiple viewpoints from different officers reflecting various Starfleet philosophical positions."
          :action (lambda () (ollama-buddy--send-with-command 'prime-directive)))
@@ -86,16 +96,19 @@
         (custom-prompt
          :key ?e
          :description "Custom prompt"
+         :group "System"
          :action ollama-buddy--menu-custom-prompt)
-        
+
         (minibuffer-prompt
          :key ?i
          :description "Minibuffer Prompt"
+         :group "System"
          :action ollama-buddy--menu-minibuffer-prompt)
-        
+
         (quit
          :key ?q
          :description "Quit"
+         :group "System"
          :action (lambda () (message "Quit Ollama Shell menu.")))
         )
       )

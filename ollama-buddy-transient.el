@@ -80,7 +80,7 @@
     ("A" "Attachments" ollama-buddy-transient-attachment-menu)
     ("/" "Web Search" ollama-buddy-transient-web-search-menu)
     ("a" "Authentication" ollama-buddy-transient-auth-menu)
-    ("b" "Custom Menu " ollama-buddy-menu)
+    ("b" "Role Menu" ollama-buddy-role-transient-menu)
     ]
 
    ["Actions"
@@ -353,6 +353,67 @@ This ensures all required functions are loaded before displaying the menu."
   (require 'ollama-buddy)
   ;; Now call the transient menu
   (call-interactively 'ollama-buddy-transient-menu))
+
+(defun ollama-buddy--role-menu-ensure-command (cmd-def)
+  "Create or update an interactive command for CMD-DEF.
+CMD-DEF is a single entry from `ollama-buddy-command-definitions':
+  (NAME :key ?x :description \"...\" :action FN ...)
+Returns the interned command symbol."
+  (let* ((name (car cmd-def))
+         (plist (cdr cmd-def))
+         (action (plist-get plist :action))
+         (sym (intern (format "ollama-buddy-role-cmd--%s" name))))
+    (defalias sym
+      (if (and (symbolp action) (commandp action))
+          action
+        (lambda ()
+          (interactive)
+          (funcall action))))
+    (put sym 'function-documentation
+         (or (plist-get plist :description) (symbol-name name)))
+    sym))
+
+(defun ollama-buddy--role-menu-build-groups ()
+  "Build transient group vectors from `ollama-buddy-command-definitions'."
+  (let ((groups (make-hash-table :test 'equal))
+        (group-order nil)
+        (seen-keys (make-hash-table :test 'equal)))
+    (dolist (cmd-def ollama-buddy-command-definitions)
+      (let* ((name (car cmd-def))
+             (plist (cdr cmd-def))
+             (key (plist-get plist :key))
+             (key-str (when key (char-to-string key))))
+        ;; Skip quit and entries without keys, deduplicate keys
+        (when (and key-str
+                   (not (eq name 'quit))
+                   (not (gethash key-str seen-keys)))
+          (puthash key-str t seen-keys)
+          (let* ((group-name (or (plist-get plist :group) "Commands"))
+                 (desc (or (plist-get plist :description) (symbol-name name)))
+                 (model (plist-get plist :model))
+                 (full-desc (if model (format "%s [%s]" desc model) desc))
+                 (sym (ollama-buddy--role-menu-ensure-command cmd-def))
+                 (spec (list key-str full-desc sym)))
+            (unless (gethash group-name groups)
+              (push group-name group-order))
+            (puthash group-name
+                     (append (gethash group-name groups) (list spec))
+                     groups)))))
+    (mapcar (lambda (gname)
+              (apply #'vector gname (gethash gname groups)))
+            (nreverse group-order))))
+
+(defun ollama-buddy-role-transient-menu ()
+  "Dynamic role-specific command menu.
+Rebuilds the transient prefix each invocation to reflect the
+current role's `ollama-buddy-command-definitions'."
+  (interactive)
+  (let ((group-vectors (ollama-buddy--role-menu-build-groups)))
+    (eval
+     `(transient-define-prefix ollama-buddy--role-transient-menu-impl ()
+        "Dynamic role-specific command menu."
+        [,@group-vectors]))
+    (transient-setup 'ollama-buddy--role-transient-menu-impl)))
 
 (provide 'ollama-buddy-transient)
 ;;; ollama-buddy-transient.el ends here

@@ -58,11 +58,12 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Pre_002dbuilt-Commands][5.2 Pre-built Commands]]
   - [[#Model-Management][5.3 Model Management]]
   - [[#Parameter-Control-1][5.4 Parameter Control]]
-  - [[#Roles-and-Custom-Commands][5.5 Roles and Custom Commands]]
-  - [[#Prompt-Template-Collections][5.6 Prompt Template Collections]]
-  - [[#External-API-Integration][5.7 External API Integration]]
-  - [[#Vision-Support][5.8 Vision Support]]
-  - [[#File-Attachments-1][5.9 File Attachments]]
+  - [[#Role-Transient-Menu][5.5 Role Transient Menu]]
+  - [[#Roles-and-Custom-Commands][5.6 Roles and Custom Commands]]
+  - [[#Prompt-Template-Collections][5.7 Prompt Template Collections]]
+  - [[#External-API-Integration][5.8 External API Integration]]
+  - [[#Vision-Support][5.9 Vision Support]]
+  - [[#File-Attachments-1][5.10 File Attachments]]
 - [[#Chat-Interface][6 Chat Interface]]
   - [[#Opening-the-Chat][6.1 Opening the Chat]]
   - [[#Interface-Overview][6.2 Interface Overview]]
@@ -192,20 +193,21 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Creating-Custom-Roles][14.4 Creating Custom Roles]]
     - [[#Interactive-Role-Creator][14.4.1 Interactive Role Creator]]
     - [[#Manual-Role-Creation][14.4.2 Manual Role Creation]]
-  - [[#Switching-Roles][14.5 Switching Roles]]
-  - [[#Managing-Role-Files][14.6 Managing Role Files]]
-  - [[#Advanced-Role-Customization][14.7 Advanced Role Customization]]
-    - [[#Per_002dRole-Menu-Columns][14.7.1 Per-Role Menu Columns]]
-    - [[#Command_002dSpecific-Models][14.7.2 Command-Specific Models]]
-    - [[#Command_002dSpecific-Parameters-1][14.7.3 Command-Specific
+  - [[#Command-Grouping][14.5 Command Grouping]]
+  - [[#Switching-Roles][14.6 Switching Roles]]
+  - [[#Managing-Role-Files][14.7 Managing Role Files]]
+  - [[#Advanced-Role-Customization][14.8 Advanced Role Customization]]
+    - [[#Per_002dRole-Menu-Columns][14.8.1 Per-Role Menu Columns]]
+    - [[#Command_002dSpecific-Models][14.8.2 Command-Specific Models]]
+    - [[#Command_002dSpecific-Parameters-1][14.8.3 Command-Specific
       Parameters]]
-    - [[#Creating-New-Commands][14.7.4 Creating New Commands]]
-  - [[#Role-Examples][14.8 Role Examples]]
-    - [[#Programming-Role][14.8.1 Programming Role]]
-    - [[#Writing-Role][14.8.2 Writing Role]]
-  - [[#Tips-for-Effective-Role-Usage][14.9 Tips for Effective Role
+    - [[#Creating-New-Commands][14.8.4 Creating New Commands]]
+  - [[#Role-Examples][14.9 Role Examples]]
+    - [[#Programming-Role][14.9.1 Programming Role]]
+    - [[#Writing-Role][14.9.2 Writing Role]]
+  - [[#Tips-for-Effective-Role-Usage][14.10 Tips for Effective Role
     Usage]]
-  - [[#Built_002din-Role-Presets][14.10 Built-in Role Presets]]
+  - [[#Built_002din-Role-Presets][14.11 Built-in Role Presets]]
 - [[#Fabric-Pattern-Integration][15 Fabric Pattern Integration]]
   - [[#What-are-Fabric-Patterns_003f][15.1 What are Fabric Patterns?]]
   - [[#Setting-Up-Fabric-Integration][15.2 Setting Up Fabric
@@ -493,7 +495,7 @@ If you use =use-package=, add the following to your Emacs configuration:
 #+begin_src example-preformatted
 (use-package ollama-buddy
   :ensure t
-  :bind ("C-c o" . ollama-buddy-menu))
+  :bind ("C-c o" . ollama-buddy-role-transient-menu))
 #+end_src
 
 With a default model:
@@ -501,7 +503,7 @@ With a default model:
 #+begin_src example-preformatted
 (use-package ollama-buddy
   :ensure t
-  :bind ("C-c o" . ollama-buddy-menu)
+  :bind ("C-c o" . ollama-buddy-role-transient-menu)
   :custom (ollama-buddy-default-model "llama3:latest"))
 #+end_src
 
@@ -524,7 +526,7 @@ To install manually:
    #+begin_src example-preformatted
    (add-to-list 'load-path "/path/to/ollama-buddy")
    (require 'ollama-buddy)
-   (global-set-key (kbd "C-c o") #'ollama-buddy-menu)
+   (global-set-key (kbd "C-c o") #'ollama-buddy-role-transient-menu)
    #+end_src
 
 <<Dependencies>>
@@ -987,7 +989,7 @@ Next: [[#Core-Features][Core Features]], Previous:
 1. Launch Ollama Buddy:
 
    #+begin_src example-preformatted
-   M-x ollama-buddy-menu
+   M-x ollama-buddy-role-transient-menu
    #+end_src
 
    or use your configured keybinding (e.g., =C-c o=).
@@ -1061,6 +1063,7 @@ Next: [[#Chat-Interface][Chat Interface]], Previous:
 - [[#Pre_002dbuilt-Commands][Pre-built Commands]]
 - [[#Model-Management][Model Management]]
 - [[#Parameter-Control-1][Parameter Control]]
+- [[#Role-Transient-Menu][Role Transient Menu]]
 - [[#Roles-and-Custom-Commands][Roles and Custom Commands]]
 - [[#Prompt-Template-Collections][Prompt Template Collections]]
 - [[#External-API-Integration][External API Integration]]
@@ -1132,8 +1135,29 @@ Ollama Buddy comes with several pre-built commands:
 - Command-specific parameter settings
 - Real-time parameter adjustment
 
+<<Role-Transient-Menu>>
+*** 5.5 Role Transient Menu [[#Role-Transient-Menu][¶]]
+:PROPERTIES:
+:CUSTOM_ID: role-transient-menu
+:CLASS: section
+:END:
+The role menu (=ollama-buddy-role-transient-menu=) provides a dynamic
+transient popup built from the current role's
+=ollama-buddy-command-definitions=. It rebuilds each time it opens, so
+switching roles immediately changes the menu.
+
+- Full transient UX with persistent display, help, and discoverability
+- Commands grouped into named columns via the =:group= property
+- Commands without =:group= appear in a single “Commands” column
+- Commands with =:model= show the model name in the description
+- Duplicate keys are deduplicated (first definition wins)
+- =quit= entries are skipped (transient handles quit natively with
+  =C-g=)
+- The original minibuffer menu is still available via
+  =M-x ollama-buddy-menu=
+
 <<Roles-and-Custom-Commands>>
-*** 5.5 Roles and Custom Commands [[#Roles-and-Custom-Commands][¶]]
+*** 5.6 Roles and Custom Commands [[#Roles-and-Custom-Commands][¶]]
 :PROPERTIES:
 :CUSTOM_ID: roles-and-custom-commands
 :CLASS: section
@@ -1144,7 +1168,7 @@ Ollama Buddy comes with several pre-built commands:
 - Share role configurations across your team
 
 <<Prompt-Template-Collections>>
-*** 5.6 Prompt Template Collections [[#Prompt-Template-Collections][¶]]
+*** 5.7 Prompt Template Collections [[#Prompt-Template-Collections][¶]]
 :PROPERTIES:
 :CUSTOM_ID: prompt-template-collections
 :CLASS: section
@@ -1155,7 +1179,7 @@ Ollama Buddy comes with several pre-built commands:
 - Browse prompts by category
 
 <<External-API-Integration>>
-*** 5.7 External API Integration [[#External-API-Integration][¶]]
+*** 5.8 External API Integration [[#External-API-Integration][¶]]
 :PROPERTIES:
 :CUSTOM_ID: external-api-integration
 :CLASS: section
@@ -1171,7 +1195,7 @@ Ollama Buddy comes with several pre-built commands:
 - Secure API key management via auth-source
 
 <<Vision-Support>>
-*** 5.8 Vision Support [[#Vision-Support][¶]]
+*** 5.9 Vision Support [[#Vision-Support][¶]]
 :PROPERTIES:
 :CUSTOM_ID: vision-support
 :CLASS: section
@@ -1182,7 +1206,7 @@ Ollama Buddy comes with several pre-built commands:
 - Configurable list of vision-capable models
 
 <<File-Attachments-1>>
-*** 5.9 File Attachments [[#File-Attachments-1][¶]]
+*** 5.10 File Attachments [[#File-Attachments-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: file-attachments
 :CLASS: section
@@ -1221,7 +1245,8 @@ Next: [[#Working-with-Models][Working with Models]], Previous:
 :END:
 To open the chat interface:
 
-1. Use =M-x ollama-buddy-menu= or your configured keybinding
+1. Use =M-x ollama-buddy-role-transient-menu= or your configured
+   keybinding
 2. Press =o= to select "Open Chat"
 3. A new buffer will open with the Ollama Buddy chat interface
 
@@ -3047,6 +3072,7 @@ Previous: [[#User-System-Prompts][User System Prompts]], Up:
 - [[#Role-File-Naming-Convention][Role File Naming Convention]]
 - [[#Built_002din-Commands][Built-in Commands]]
 - [[#Creating-Custom-Roles][Creating Custom Roles]]
+- [[#Command-Grouping][Command Grouping]]
 - [[#Switching-Roles][Switching Roles]]
 - [[#Managing-Role-Files][Managing Role Files]]
 - [[#Advanced-Role-Customization][Advanced Role Customization]]
@@ -3178,60 +3204,94 @@ For more advanced customization, create role files manually:
 ;; ollama-buddy preset for role: programmer
 (require 'ollama-buddy)
 
-;; Menu display columns for this role (optional, default is 2)
-(setq ollama-buddy-menu-columns 3)
-
 (setq ollama-buddy-command-definitions
   '(
-    ;; Standard commands - always include these
+    ;; Standard commands
     (open-chat
      :key ?o
      :description "Open chat buffer"
+     :group "General"
      :action ollama-buddy--open-chat)
-
-    (show-models
-     :key ?v
-     :description "View model status"
-     :action ollama-buddy-show-model-status)
 
     (switch-role
      :key ?R
      :description "Switch roles"
+     :group "General"
      :action ollama-buddy-roles-switch-role)
-    
-    (open-roles-directory
-     :key ?D
-     :description "Open roles directory"
-     :action ollama-buddy-roles-open-directory)
-    
+
     ;; Custom commands for this role
     (refactor-code
      :key ?r
      :description "Refactor code"
+     :group "Code"
      :model "codellama:7b"
      :prompt "Refactor this code to improve readability and efficiency:"
      :system "You are an expert software engineer who improves code quality."
      :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
-    
+
     (explain-code
      :key ?e
      :description "Explain code"
+     :group "Code"
      :model "deepseek-r1:7b"
      :prompt "Explain what this code does in detail:"
      :system "You are a programming teacher who explains code clearly."
      :action (lambda () (ollama-buddy--send-with-command 'explain-code)))
-    
+
     (git-commit
      :key ?g
      :description "Git commit message"
+     :group "Utility"
      :prompt "Write a concise git commit message for these changes:"
      :system "You are a version control expert who creates clear commit messages."
      :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+
+    ;; System commands
+    (custom-prompt
+     :key ?e
+     :description "Custom prompt"
+     :group "System"
+     :action ollama-buddy--menu-custom-prompt)
     ))
 #+end_src
 
+The =:group= property is optional. Commands sharing the same =:group=
+value appear together in a named column in the transient role menu
+(=ollama-buddy-role-transient-menu=). Presets without any =:group=
+properties still work --- all commands appear in a single “Commands”
+column for full backwards compatibility.
+
+<<Command-Grouping>>
+*** 14.5 Command Grouping [[#Command-Grouping][¶]]
+:PROPERTIES:
+:CUSTOM_ID: command-grouping
+:CLASS: section
+:END:
+The =:group= property on command definitions controls how commands are
+organized into columns in the transient role menu. This provides a
+clean, discoverable layout:
+
+#+begin_src example-preformatted
+;; Commands with :group "Code" appear in a "Code" column
+(refactor-code
+ :key ?r
+ :description "Refactor code"
+ :group "Code"
+ :action ...)
+
+(explain-code
+ :key ?e
+ :description "Explain code"
+ :group "Code"
+ :action ...)
+#+end_src
+
+Built-in presets use groups like “General”, “Code Analysis”, “Code
+Generation”, “Custom”, “System”, etc. You can use any group names you
+like in your own presets.
+
 <<Switching-Roles>>
-*** 14.5 Switching Roles [[#Switching-Roles][¶]]
+*** 14.6 Switching Roles [[#Switching-Roles][¶]]
 :PROPERTIES:
 :CUSTOM_ID: switching-roles
 :CLASS: section
@@ -3247,7 +3307,7 @@ or press =C-c R= in the chat buffer.
 You'll be presented with a list of available roles to choose from.
 
 <<Managing-Role-Files>>
-*** 14.6 Managing Role Files [[#Managing-Role-Files][¶]]
+*** 14.7 Managing Role Files [[#Managing-Role-Files][¶]]
 :PROPERTIES:
 :CUSTOM_ID: managing-role-files
 :CLASS: section
@@ -3277,7 +3337,7 @@ M-x ollama-buddy-roles-open-directory
 or press =C-c D= in the chat buffer.
 
 <<Advanced-Role-Customization>>
-*** 14.7 Advanced Role Customization [[#Advanced-Role-Customization][¶]]
+*** 14.8 Advanced Role Customization [[#Advanced-Role-Customization][¶]]
 :PROPERTIES:
 :CUSTOM_ID: advanced-role-customization
 :CLASS: section
@@ -3288,7 +3348,7 @@ or press =C-c D= in the chat buffer.
 - [[#Creating-New-Commands][Creating New Commands]]
 
 <<Per_002dRole-Menu-Columns>>
-**** 14.7.1 Per-Role Menu Columns [[#Per_002dRole-Menu-Columns][¶]]
+**** 14.8.1 Per-Role Menu Columns [[#Per_002dRole-Menu-Columns][¶]]
 :PROPERTIES:
 :CUSTOM_ID: per-role-menu-columns
 :CLASS: subsection
@@ -3307,7 +3367,7 @@ menu display automatically adjusts its height to ensure all items are
 visible, regardless of the number of rows.
 
 <<Command_002dSpecific-Models>>
-**** 14.7.2 Command-Specific Models [[#Command_002dSpecific-Models][¶]]
+**** 14.8.2 Command-Specific Models [[#Command_002dSpecific-Models][¶]]
 :PROPERTIES:
 :CUSTOM_ID: command-specific-models
 :CLASS: subsection
@@ -3319,7 +3379,7 @@ Assign specific models to commands for optimal performance:
 #+end_src
 
 <<Command_002dSpecific-Parameters-1>>
-**** 14.7.3 Command-Specific Parameters [[#Command_002dSpecific-Parameters-1][¶]]
+**** 14.8.3 Command-Specific Parameters [[#Command_002dSpecific-Parameters-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: command-specific-parameters-1
 :CLASS: subsection
@@ -3334,7 +3394,7 @@ Optimize parameters for specific commands:
 #+end_src
 
 <<Creating-New-Commands>>
-**** 14.7.4 Creating New Commands [[#Creating-New-Commands][¶]]
+**** 14.8.4 Creating New Commands [[#Creating-New-Commands][¶]]
 :PROPERTIES:
 :CUSTOM_ID: creating-new-commands
 :CLASS: subsection
@@ -3351,7 +3411,7 @@ Add entirely new commands to your menu:
 #+end_src
 
 <<Role-Examples>>
-*** 14.8 Role Examples [[#Role-Examples][¶]]
+*** 14.9 Role Examples [[#Role-Examples][¶]]
 :PROPERTIES:
 :CUSTOM_ID: role-examples
 :CLASS: section
@@ -3360,7 +3420,7 @@ Add entirely new commands to your menu:
 - [[#Writing-Role][Writing Role]]
 
 <<Programming-Role>>
-**** 14.8.1 Programming Role [[#Programming-Role][¶]]
+**** 14.9.1 Programming Role [[#Programming-Role][¶]]
 :PROPERTIES:
 :CUSTOM_ID: programming-role
 :CLASS: subsection
@@ -3412,7 +3472,7 @@ A complete example of a programming-focused role:
 #+end_src
 
 <<Writing-Role>>
-**** 14.8.2 Writing Role [[#Writing-Role][¶]]
+**** 14.9.2 Writing Role [[#Writing-Role][¶]]
 :PROPERTIES:
 :CUSTOM_ID: writing-role
 :CLASS: subsection
@@ -3464,7 +3524,7 @@ A complete example of a writing-focused role:
 #+end_src
 
 <<Tips-for-Effective-Role-Usage>>
-*** 14.9 Tips for Effective Role Usage [[#Tips-for-Effective-Role-Usage][¶]]
+*** 14.10 Tips for Effective Role Usage [[#Tips-for-Effective-Role-Usage][¶]]
 :PROPERTIES:
 :CUSTOM_ID: tips-for-effective-role-usage
 :CLASS: section
@@ -3481,7 +3541,7 @@ A complete example of a writing-focused role:
    translation, or domain-specific knowledge
 
 <<Built_002din-Role-Presets>>
-*** 14.10 Built-in Role Presets [[#Built_002din-Role-Presets][¶]]
+*** 14.11 Built-in Role Presets [[#Built_002din-Role-Presets][¶]]
 :PROPERTIES:
 :CUSTOM_ID: built-in-role-presets
 :CLASS: section
@@ -4587,9 +4647,15 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 :CUSTOM_ID: interactive-functions
 :CLASS: section
 :END:
-- =ollama-buddy-menu= :: Display the main Ollama Buddy menu.
+- =ollama-buddy-role-transient-menu= :: Display the dynamic
+  role-specific transient menu, built from
+  =ollama-buddy-command-definitions=.
 
-- =ollama-buddy-transient-menu= :: Display the transient-based menu.
+- =ollama-buddy-menu= :: Display the minibuffer-based Ollama Buddy menu
+  (legacy fallback).
+
+- =ollama-buddy-transient-menu= :: Display the main transient-based
+  menu.
 
 - =ollama-buddy--open-chat= :: Open the chat buffer.
 

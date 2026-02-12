@@ -144,13 +144,13 @@ If you use ‘use-package’, add the following to your Emacs configuration:
 
      (use-package ollama-buddy
        :ensure t
-       :bind ("C-c o" . ollama-buddy-menu))
+       :bind ("C-c o" . ollama-buddy-role-transient-menu))
 
    With a default model:
 
      (use-package ollama-buddy
        :ensure t
-       :bind ("C-c o" . ollama-buddy-menu)
+       :bind ("C-c o" . ollama-buddy-role-transient-menu)
        :custom (ollama-buddy-default-model "llama3:latest"))
 
 2.2.3 Manual Installation
@@ -164,7 +164,7 @@ To install manually:
   2. Add to your configuration:
           (add-to-list 'load-path "/path/to/ollama-buddy")
           (require 'ollama-buddy)
-          (global-set-key (kbd "C-c o") #'ollama-buddy-menu)
+          (global-set-key (kbd "C-c o") #'ollama-buddy-role-transient-menu)
 
 2.3 Dependencies
 ================
@@ -451,7 +451,7 @@ File: ollama-buddy.info,  Node: Quick Start,  Next: Core Features,  Prev: Config
 ===============
 
   1. Launch Ollama Buddy:
-          M-x ollama-buddy-menu
+          M-x ollama-buddy-role-transient-menu
      or use your configured keybinding (e.g., ‘C-c o’).
 
   2. The menu will show available options.  Press the corresponding key
@@ -579,7 +579,26 @@ Proofreading
    • Command-specific parameter settings
    • Real-time parameter adjustment
 
-5.5 Roles and Custom Commands
+5.5 Role Transient Menu
+=======================
+
+The role menu (‘ollama-buddy-role-transient-menu’) provides a dynamic
+transient popup built from the current role's
+‘ollama-buddy-command-definitions’.  It rebuilds each time it opens, so
+switching roles immediately changes the menu.
+
+   • Full transient UX with persistent display, help, and
+     discoverability
+   • Commands grouped into named columns via the ‘:group’ property
+   • Commands without ‘:group’ appear in a single "Commands" column
+   • Commands with ‘:model’ show the model name in the description
+   • Duplicate keys are deduplicated (first definition wins)
+   • ‘quit’ entries are skipped (transient handles quit natively with
+     ‘C-g’)
+   • The original minibuffer menu is still available via ‘M-x
+     ollama-buddy-menu’
+
+5.6 Roles and Custom Commands
 =============================
 
    • Create custom command sets for specific workflows
@@ -587,7 +606,7 @@ Proofreading
    • Save and switch between different roles
    • Share role configurations across your team
 
-5.6 Prompt Template Collections
+5.7 Prompt Template Collections
 ===============================
 
    • Use pre-built prompt patterns from Fabric project
@@ -595,7 +614,7 @@ Proofreading
    • Apply specialized prompts to your content with one command
    • Browse prompts by category
 
-5.7 External API Integration
+5.8 External API Integration
 ============================
 
    • Connect to OpenAI's ChatGPT API (prefix: ‘a:’)
@@ -608,7 +627,7 @@ Proofreading
    • Seamlessly switch between local and cloud models
    • Secure API key management via auth-source
 
-5.8 Vision Support
+5.9 Vision Support
 ==================
 
    • Analyze images with vision-capable models
@@ -616,8 +635,8 @@ Proofreading
    • Support for PNG, JPG, JPEG, WebP, and GIF formats
    • Configurable list of vision-capable models
 
-5.9 File Attachments
-====================
+5.10 File Attachments
+=====================
 
    • Attach text files, code, and documentation to conversations
    • Automatic context inclusion with proper token counting
@@ -636,7 +655,8 @@ File: ollama-buddy.info,  Node: Chat Interface,  Next: Working with Models,  Pre
 
 To open the chat interface:
 
-  1. Use ‘M-x ollama-buddy-menu’ or your configured keybinding
+  1. Use ‘M-x ollama-buddy-role-transient-menu’ or your configured
+     keybinding
   2. Press ‘o’ to select "Open Chat"
   3. A new buffer will open with the Ollama Buddy chat interface
 
@@ -2012,36 +2032,26 @@ For more advanced customization, create role files manually:
      ;; ollama-buddy preset for role: programmer
      (require 'ollama-buddy)
 
-     ;; Menu display columns for this role (optional, default is 2)
-     (setq ollama-buddy-menu-columns 3)
-
      (setq ollama-buddy-command-definitions
        '(
-         ;; Standard commands - always include these
+         ;; Standard commands
          (open-chat
           :key ?o
           :description "Open chat buffer"
+          :group "General"
           :action ollama-buddy--open-chat)
-
-         (show-models
-          :key ?v
-          :description "View model status"
-          :action ollama-buddy-show-model-status)
 
          (switch-role
           :key ?R
           :description "Switch roles"
+          :group "General"
           :action ollama-buddy-roles-switch-role)
-
-         (open-roles-directory
-          :key ?D
-          :description "Open roles directory"
-          :action ollama-buddy-roles-open-directory)
 
          ;; Custom commands for this role
          (refactor-code
           :key ?r
           :description "Refactor code"
+          :group "Code"
           :model "codellama:7b"
           :prompt "Refactor this code to improve readability and efficiency:"
           :system "You are an expert software engineer who improves code quality."
@@ -2050,6 +2060,7 @@ For more advanced customization, create role files manually:
          (explain-code
           :key ?e
           :description "Explain code"
+          :group "Code"
           :model "deepseek-r1:7b"
           :prompt "Explain what this code does in detail:"
           :system "You are a programming teacher who explains code clearly."
@@ -2058,12 +2069,50 @@ For more advanced customization, create role files manually:
          (git-commit
           :key ?g
           :description "Git commit message"
+          :group "Utility"
           :prompt "Write a concise git commit message for these changes:"
           :system "You are a version control expert who creates clear commit messages."
           :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+
+         ;; System commands
+         (custom-prompt
+          :key ?e
+          :description "Custom prompt"
+          :group "System"
+          :action ollama-buddy--menu-custom-prompt)
          ))
 
-14.5 Switching Roles
+   The ‘:group’ property is optional.  Commands sharing the same
+‘:group’ value appear together in a named column in the transient role
+menu (‘ollama-buddy-role-transient-menu’).  Presets without any ‘:group’
+properties still work -- all commands appear in a single "Commands"
+column for full backwards compatibility.
+
+14.5 Command Grouping
+=====================
+
+The ‘:group’ property on command definitions controls how commands are
+organized into columns in the transient role menu.  This provides a
+clean, discoverable layout:
+
+     ;; Commands with :group "Code" appear in a "Code" column
+     (refactor-code
+      :key ?r
+      :description "Refactor code"
+      :group "Code"
+      :action ...)
+
+     (explain-code
+      :key ?e
+      :description "Explain code"
+      :group "Code"
+      :action ...)
+
+   Built-in presets use groups like "General", "Code Analysis", "Code
+Generation", "Custom", "System", etc.  You can use any group names you
+like in your own presets.
+
+14.6 Switching Roles
 ====================
 
 To switch between roles:
@@ -2072,7 +2121,7 @@ To switch between roles:
 
    You'll be presented with a list of available roles to choose from.
 
-14.6 Managing Role Files
+14.7 Managing Role Files
 ========================
 
 Roles are stored as Elisp files in the ‘ollama-buddy-roles-directory’.
@@ -2089,10 +2138,10 @@ you can customize it:
      M-x ollama-buddy-roles-open-directory
    or press ‘C-c D’ in the chat buffer.
 
-14.7 Advanced Role Customization
+14.8 Advanced Role Customization
 ================================
 
-14.7.1 Per-Role Menu Columns
+14.8.1 Per-Role Menu Columns
 ----------------------------
 
 Each role can define its own menu column layout by setting
@@ -2106,14 +2155,14 @@ many commands to use more columns, while simpler roles can use fewer:
 The menu display automatically adjusts its height to ensure all items
 are visible, regardless of the number of rows.
 
-14.7.2 Command-Specific Models
+14.8.2 Command-Specific Models
 ------------------------------
 
 Assign specific models to commands for optimal performance:
 
      (ollama-buddy-add-model-to-menu-entry 'refactor-code "codellama:7b")
 
-14.7.3 Command-Specific Parameters
+14.8.3 Command-Specific Parameters
 ----------------------------------
 
 Optimize parameters for specific commands:
@@ -2123,7 +2172,7 @@ Optimize parameters for specific commands:
        'top_p 0.7
        'repeat_penalty 1.3)
 
-14.7.4 Creating New Commands
+14.8.4 Creating New Commands
 ----------------------------
 
 Add entirely new commands to your menu:
@@ -2135,10 +2184,10 @@ Add entirely new commands to your menu:
        :system "You are an expert system specialized in this task."
        :action (lambda () (ollama-buddy--send-with-command 'my-new-command)))
 
-14.8 Role Examples
+14.9 Role Examples
 ==================
 
-14.8.1 Programming Role
+14.9.1 Programming Role
 -----------------------
 
 A complete example of a programming-focused role:
@@ -2185,7 +2234,7 @@ A complete example of a programming-focused role:
           :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
          ))
 
-14.8.2 Writing Role
+14.9.2 Writing Role
 -------------------
 
 A complete example of a writing-focused role:
@@ -2232,8 +2281,8 @@ A complete example of a writing-focused role:
           :action (lambda () (ollama-buddy--send-with-command 'brainstorm)))
          ))
 
-14.9 Tips for Effective Role Usage
-==================================
+14.10 Tips for Effective Role Usage
+===================================
 
   1. Group related commands: Create roles around specific workflows or
      tasks
@@ -2246,7 +2295,7 @@ A complete example of a writing-focused role:
   5. Create specialized roles: Consider roles for programming, writing,
      translation, or domain-specific knowledge
 
-14.10 Built-in Role Presets
+14.11 Built-in Role Presets
 ===========================
 
 Ollama Buddy comes with several pre-configured role presets that you can
@@ -2960,11 +3009,15 @@ File: ollama-buddy.info,  Node: API Reference,  Next: FAQ,  Prev: Advanced Usage
 22.1 Interactive Functions
 ==========================
 
+‘ollama-buddy-role-transient-menu’
+     Display the dynamic role-specific transient menu, built from
+     ‘ollama-buddy-command-definitions’.
+
 ‘ollama-buddy-menu’
-     Display the main Ollama Buddy menu.
+     Display the minibuffer-based Ollama Buddy menu (legacy fallback).
 
 ‘ollama-buddy-transient-menu’
-     Display the transient-based menu.
+     Display the main transient-based menu.
 
 ‘ollama-buddy--open-chat’
      Open the chat buffer.
@@ -3546,30 +3599,30 @@ Tag Table:
 Node: Top555
 Node: Introduction2558
 Node: Installation4651
-Node: Configuration7563
-Node: Quick Start15403
-Node: Core Features17624
-Node: Chat Interface21058
-Node: Working with Models24354
-Node: Context Management28751
-Node: File Attachments34360
-Node: Web Search40282
-Node: Parameter Control47229
-Node: Session Management49626
-Node: User System Prompts51563
-Node: Roles and Commands60053
-Node: Fabric Pattern Integration74126
-Node: Awesome ChatGPT Prompts76353
-Node: Remote Providers80203
-Node: Ollama Cloud Models85069
-Node: Global System Prompt87988
-Node: Tone Selector89742
-Node: Advanced Usage91548
-Node: API Reference94107
-Node: FAQ99905
-Node: Troubleshooting106958
-Node: Contributing109463
-Node: Index112131
+Node: Configuration7608
+Node: Quick Start15448
+Node: Core Features17684
+Node: Chat Interface21961
+Node: Working with Models25277
+Node: Context Management29674
+Node: File Attachments35283
+Node: Web Search41205
+Node: Parameter Control48152
+Node: Session Management50549
+Node: User System Prompts52486
+Node: Roles and Commands60976
+Node: Fabric Pattern Integration75951
+Node: Awesome ChatGPT Prompts78178
+Node: Remote Providers82028
+Node: Ollama Cloud Models86894
+Node: Global System Prompt89813
+Node: Tone Selector91567
+Node: Advanced Usage93373
+Node: API Reference95932
+Node: FAQ101916
+Node: Troubleshooting108969
+Node: Contributing111474
+Node: Index114142
 
 End Tag Table
 

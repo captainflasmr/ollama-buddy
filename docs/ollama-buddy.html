@@ -108,11 +108,12 @@ allowing you to leverage powerful large language models (LLMs) directly within y
     <li><a id="toc-Pre_002dbuilt-Commands" href="#Pre_002dbuilt-Commands">5.2 Pre-built Commands</a></li>
     <li><a id="toc-Model-Management" href="#Model-Management">5.3 Model Management</a></li>
     <li><a id="toc-Parameter-Control" href="#Parameter-Control-1">5.4 Parameter Control</a></li>
-    <li><a id="toc-Roles-and-Custom-Commands" href="#Roles-and-Custom-Commands">5.5 Roles and Custom Commands</a></li>
-    <li><a id="toc-Prompt-Template-Collections" href="#Prompt-Template-Collections">5.6 Prompt Template Collections</a></li>
-    <li><a id="toc-External-API-Integration" href="#External-API-Integration">5.7 External API Integration</a></li>
-    <li><a id="toc-Vision-Support" href="#Vision-Support">5.8 Vision Support</a></li>
-    <li><a id="toc-File-Attachments" href="#File-Attachments-1">5.9 File Attachments</a></li>
+    <li><a id="toc-Role-Transient-Menu" href="#Role-Transient-Menu">5.5 Role Transient Menu</a></li>
+    <li><a id="toc-Roles-and-Custom-Commands" href="#Roles-and-Custom-Commands">5.6 Roles and Custom Commands</a></li>
+    <li><a id="toc-Prompt-Template-Collections" href="#Prompt-Template-Collections">5.7 Prompt Template Collections</a></li>
+    <li><a id="toc-External-API-Integration" href="#External-API-Integration">5.8 External API Integration</a></li>
+    <li><a id="toc-Vision-Support" href="#Vision-Support">5.9 Vision Support</a></li>
+    <li><a id="toc-File-Attachments" href="#File-Attachments-1">5.10 File Attachments</a></li>
   </ul></li>
   <li><a id="toc-Chat-Interface-1" href="#Chat-Interface">6 Chat Interface</a>
   <ul class="toc-numbered-mark">
@@ -272,22 +273,23 @@ allowing you to leverage powerful large language models (LLMs) directly within y
       <li><a id="toc-Interactive-Role-Creator" href="#Interactive-Role-Creator">14.4.1 Interactive Role Creator</a></li>
       <li><a id="toc-Manual-Role-Creation" href="#Manual-Role-Creation">14.4.2 Manual Role Creation</a></li>
     </ul></li>
-    <li><a id="toc-Switching-Roles" href="#Switching-Roles">14.5 Switching Roles</a></li>
-    <li><a id="toc-Managing-Role-Files" href="#Managing-Role-Files">14.6 Managing Role Files</a></li>
-    <li><a id="toc-Advanced-Role-Customization" href="#Advanced-Role-Customization">14.7 Advanced Role Customization</a>
+    <li><a id="toc-Command-Grouping" href="#Command-Grouping">14.5 Command Grouping</a></li>
+    <li><a id="toc-Switching-Roles" href="#Switching-Roles">14.6 Switching Roles</a></li>
+    <li><a id="toc-Managing-Role-Files" href="#Managing-Role-Files">14.7 Managing Role Files</a></li>
+    <li><a id="toc-Advanced-Role-Customization" href="#Advanced-Role-Customization">14.8 Advanced Role Customization</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Per_002dRole-Menu-Columns" href="#Per_002dRole-Menu-Columns">14.7.1 Per-Role Menu Columns</a></li>
-      <li><a id="toc-Command_002dSpecific-Models" href="#Command_002dSpecific-Models">14.7.2 Command-Specific Models</a></li>
-      <li><a id="toc-Command_002dSpecific-Parameters-1" href="#Command_002dSpecific-Parameters-1">14.7.3 Command-Specific Parameters</a></li>
-      <li><a id="toc-Creating-New-Commands" href="#Creating-New-Commands">14.7.4 Creating New Commands</a></li>
+      <li><a id="toc-Per_002dRole-Menu-Columns" href="#Per_002dRole-Menu-Columns">14.8.1 Per-Role Menu Columns</a></li>
+      <li><a id="toc-Command_002dSpecific-Models" href="#Command_002dSpecific-Models">14.8.2 Command-Specific Models</a></li>
+      <li><a id="toc-Command_002dSpecific-Parameters-1" href="#Command_002dSpecific-Parameters-1">14.8.3 Command-Specific Parameters</a></li>
+      <li><a id="toc-Creating-New-Commands" href="#Creating-New-Commands">14.8.4 Creating New Commands</a></li>
     </ul></li>
-    <li><a id="toc-Role-Examples" href="#Role-Examples">14.8 Role Examples</a>
+    <li><a id="toc-Role-Examples" href="#Role-Examples">14.9 Role Examples</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Programming-Role" href="#Programming-Role">14.8.1 Programming Role</a></li>
-      <li><a id="toc-Writing-Role" href="#Writing-Role">14.8.2 Writing Role</a></li>
+      <li><a id="toc-Programming-Role" href="#Programming-Role">14.9.1 Programming Role</a></li>
+      <li><a id="toc-Writing-Role" href="#Writing-Role">14.9.2 Writing Role</a></li>
     </ul></li>
-    <li><a id="toc-Tips-for-Effective-Role-Usage" href="#Tips-for-Effective-Role-Usage">14.9 Tips for Effective Role Usage</a></li>
-    <li><a id="toc-Built_002din-Role-Presets" href="#Built_002din-Role-Presets">14.10 Built-in Role Presets</a></li>
+    <li><a id="toc-Tips-for-Effective-Role-Usage" href="#Tips-for-Effective-Role-Usage">14.10 Tips for Effective Role Usage</a></li>
+    <li><a id="toc-Built_002din-Role-Presets" href="#Built_002din-Role-Presets">14.11 Built-in Role Presets</a></li>
   </ul></li>
   <li><a id="toc-Fabric-Pattern-Integration" href="#Fabric-Pattern-Integration">15 Fabric Pattern Integration</a>
   <ul class="toc-numbered-mark">
@@ -565,7 +567,7 @@ Next: <a href="#Configuration" accesskey="n" rel="next">Configuration</a>, Previ
 <div class="example">
 <pre class="example-preformatted">(use-package ollama-buddy
   :ensure t
-  :bind (&quot;C-c o&quot; . ollama-buddy-menu))
+  :bind (&quot;C-c o&quot; . ollama-buddy-role-transient-menu))
 </pre></div>
 
 <p>With a default model:
@@ -573,7 +575,7 @@ Next: <a href="#Configuration" accesskey="n" rel="next">Configuration</a>, Previ
 <div class="example">
 <pre class="example-preformatted">(use-package ollama-buddy
   :ensure t
-  :bind (&quot;C-c o&quot; . ollama-buddy-menu)
+  :bind (&quot;C-c o&quot; . ollama-buddy-role-transient-menu)
   :custom (ollama-buddy-default-model &quot;llama3:latest&quot;))
 </pre></div>
 
@@ -593,7 +595,7 @@ Next: <a href="#Configuration" accesskey="n" rel="next">Configuration</a>, Previ
 <div class="example">
 <pre class="example-preformatted">(add-to-list 'load-path &quot;/path/to/ollama-buddy&quot;)
 (require 'ollama-buddy)
-(global-set-key (kbd &quot;C-c o&quot;) #'ollama-buddy-menu)
+(global-set-key (kbd &quot;C-c o&quot;) #'ollama-buddy-role-transient-menu)
 </pre></div>
 </li></ol>
 
@@ -1043,7 +1045,7 @@ Next: <a href="#Core-Features" accesskey="n" rel="next">Core Features</a>, Previ
 <ol class="enumerate">
 <li> Launch Ollama Buddy:
 <div class="example">
-<pre class="example-preformatted">M-x ollama-buddy-menu
+<pre class="example-preformatted">M-x ollama-buddy-role-transient-menu
 </pre></div>
 <p>or use your configured keybinding (e.g., <code class="code">C-c o</code>).
 </p>
@@ -1125,11 +1127,12 @@ Next: <a href="#Chat-Interface" accesskey="n" rel="next">Chat Interface</a>, Pre
 <li><a href="#Pre_002dbuilt-Commands" accesskey="2">Pre-built Commands</a></li>
 <li><a href="#Model-Management" accesskey="3">Model Management</a></li>
 <li><a href="#Parameter-Control-1" accesskey="4">Parameter Control</a></li>
-<li><a href="#Roles-and-Custom-Commands" accesskey="5">Roles and Custom Commands</a></li>
-<li><a href="#Prompt-Template-Collections" accesskey="6">Prompt Template Collections</a></li>
-<li><a href="#External-API-Integration" accesskey="7">External API Integration</a></li>
-<li><a href="#Vision-Support" accesskey="8">Vision Support</a></li>
-<li><a href="#File-Attachments-1" accesskey="9">File Attachments</a></li>
+<li><a href="#Role-Transient-Menu" accesskey="5">Role Transient Menu</a></li>
+<li><a href="#Roles-and-Custom-Commands" accesskey="6">Roles and Custom Commands</a></li>
+<li><a href="#Prompt-Template-Collections" accesskey="7">Prompt Template Collections</a></li>
+<li><a href="#External-API-Integration" accesskey="8">External API Integration</a></li>
+<li><a href="#Vision-Support" accesskey="9">Vision Support</a></li>
+<li><a href="#File-Attachments-1">File Attachments</a></li>
 </ul>
 <div class="section-level-extent" id="Chat-Interface-1">
 <h3 class="section"><span>5.1 Chat Interface<a class="copiable-link" href="#Chat-Interface-1"> &para;</a></span></h3>
@@ -1207,8 +1210,24 @@ Next: <a href="#Chat-Interface" accesskey="n" rel="next">Chat Interface</a>, Pre
 </li></ul>
 
 </div>
+<div class="section-level-extent" id="Role-Transient-Menu">
+<h3 class="section"><span>5.5 Role Transient Menu<a class="copiable-link" href="#Role-Transient-Menu"> &para;</a></span></h3>
+
+<p>The role menu (<code class="code">ollama-buddy-role-transient-menu</code>) provides a dynamic transient popup built from the current role&rsquo;s <code class="code">ollama-buddy-command-definitions</code>. It rebuilds each time it opens, so switching roles immediately changes the menu.
+</p>
+<ul class="itemize mark-bullet">
+<li>Full transient UX with persistent display, help, and discoverability
+</li><li>Commands grouped into named columns via the <code class="code">:group</code> property
+</li><li>Commands without <code class="code">:group</code> appear in a single &ldquo;Commands&rdquo; column
+</li><li>Commands with <code class="code">:model</code> show the model name in the description
+</li><li>Duplicate keys are deduplicated (first definition wins)
+</li><li><code class="code">quit</code> entries are skipped (transient handles quit natively with <code class="code">C-g</code>)
+</li><li>The original minibuffer menu is still available via <code class="code">M-x ollama-buddy-menu</code>
+</li></ul>
+
+</div>
 <div class="section-level-extent" id="Roles-and-Custom-Commands">
-<h3 class="section"><span>5.5 Roles and Custom Commands<a class="copiable-link" href="#Roles-and-Custom-Commands"> &para;</a></span></h3>
+<h3 class="section"><span>5.6 Roles and Custom Commands<a class="copiable-link" href="#Roles-and-Custom-Commands"> &para;</a></span></h3>
 
 <ul class="itemize mark-bullet">
 <li>Create custom command sets for specific workflows
@@ -1219,7 +1238,7 @@ Next: <a href="#Chat-Interface" accesskey="n" rel="next">Chat Interface</a>, Pre
 
 </div>
 <div class="section-level-extent" id="Prompt-Template-Collections">
-<h3 class="section"><span>5.6 Prompt Template Collections<a class="copiable-link" href="#Prompt-Template-Collections"> &para;</a></span></h3>
+<h3 class="section"><span>5.7 Prompt Template Collections<a class="copiable-link" href="#Prompt-Template-Collections"> &para;</a></span></h3>
 
 <ul class="itemize mark-bullet">
 <li>Use pre-built prompt patterns from Fabric project
@@ -1230,7 +1249,7 @@ Next: <a href="#Chat-Interface" accesskey="n" rel="next">Chat Interface</a>, Pre
 
 </div>
 <div class="section-level-extent" id="External-API-Integration">
-<h3 class="section"><span>5.7 External API Integration<a class="copiable-link" href="#External-API-Integration"> &para;</a></span></h3>
+<h3 class="section"><span>5.8 External API Integration<a class="copiable-link" href="#External-API-Integration"> &para;</a></span></h3>
 
 <ul class="itemize mark-bullet">
 <li>Connect to OpenAI&rsquo;s ChatGPT API (prefix: <code class="code">a:</code>)
@@ -1246,7 +1265,7 @@ Next: <a href="#Chat-Interface" accesskey="n" rel="next">Chat Interface</a>, Pre
 
 </div>
 <div class="section-level-extent" id="Vision-Support">
-<h3 class="section"><span>5.8 Vision Support<a class="copiable-link" href="#Vision-Support"> &para;</a></span></h3>
+<h3 class="section"><span>5.9 Vision Support<a class="copiable-link" href="#Vision-Support"> &para;</a></span></h3>
 
 <ul class="itemize mark-bullet">
 <li>Analyze images with vision-capable models
@@ -1257,7 +1276,7 @@ Next: <a href="#Chat-Interface" accesskey="n" rel="next">Chat Interface</a>, Pre
 
 </div>
 <div class="section-level-extent" id="File-Attachments-1">
-<h3 class="section"><span>5.9 File Attachments<a class="copiable-link" href="#File-Attachments-1"> &para;</a></span></h3>
+<h3 class="section"><span>5.10 File Attachments<a class="copiable-link" href="#File-Attachments-1"> &para;</a></span></h3>
 
 <ul class="itemize mark-bullet">
 <li>Attach text files, code, and documentation to conversations
@@ -1291,7 +1310,7 @@ Next: <a href="#Working-with-Models" accesskey="n" rel="next">Working with Model
 <p>To open the chat interface:
 </p>
 <ol class="enumerate">
-<li> Use <code class="code">M-x ollama-buddy-menu</code> or your configured keybinding
+<li> Use <code class="code">M-x ollama-buddy-role-transient-menu</code> or your configured keybinding
 </li><li> Press <code class="code">o</code> to select &quot;Open Chat&quot;
 </li><li> A new buffer will open with the Ollama Buddy chat interface
 </li></ol>
@@ -3012,11 +3031,12 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 <li><a href="#Role-File-Naming-Convention" accesskey="2">Role File Naming Convention</a></li>
 <li><a href="#Built_002din-Commands" accesskey="3">Built-in Commands</a></li>
 <li><a href="#Creating-Custom-Roles" accesskey="4">Creating Custom Roles</a></li>
-<li><a href="#Switching-Roles" accesskey="5">Switching Roles</a></li>
-<li><a href="#Managing-Role-Files" accesskey="6">Managing Role Files</a></li>
-<li><a href="#Advanced-Role-Customization" accesskey="7">Advanced Role Customization</a></li>
-<li><a href="#Role-Examples" accesskey="8">Role Examples</a></li>
-<li><a href="#Tips-for-Effective-Role-Usage" accesskey="9">Tips for Effective Role Usage</a></li>
+<li><a href="#Command-Grouping" accesskey="5">Command Grouping</a></li>
+<li><a href="#Switching-Roles" accesskey="6">Switching Roles</a></li>
+<li><a href="#Managing-Role-Files" accesskey="7">Managing Role Files</a></li>
+<li><a href="#Advanced-Role-Customization" accesskey="8">Advanced Role Customization</a></li>
+<li><a href="#Role-Examples" accesskey="9">Role Examples</a></li>
+<li><a href="#Tips-for-Effective-Role-Usage">Tips for Effective Role Usage</a></li>
 <li><a href="#Built_002din-Role-Presets">Built-in Role Presets</a></li>
 </ul>
 <div class="section-level-extent" id="Understanding-Roles">
@@ -3144,62 +3164,86 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 <pre class="example-preformatted">;; ollama-buddy preset for role: programmer
 (require 'ollama-buddy)
 
-;; Menu display columns for this role (optional, default is 2)
-(setq ollama-buddy-menu-columns 3)
-
 (setq ollama-buddy-command-definitions
   '(
-    ;; Standard commands - always include these
+    ;; Standard commands
     (open-chat
      :key ?o
      :description &quot;Open chat buffer&quot;
+     :group &quot;General&quot;
      :action ollama-buddy--open-chat)
-
-    (show-models
-     :key ?v
-     :description &quot;View model status&quot;
-     :action ollama-buddy-show-model-status)
 
     (switch-role
      :key ?R
      :description &quot;Switch roles&quot;
+     :group &quot;General&quot;
      :action ollama-buddy-roles-switch-role)
-    
-    (open-roles-directory
-     :key ?D
-     :description &quot;Open roles directory&quot;
-     :action ollama-buddy-roles-open-directory)
-    
+
     ;; Custom commands for this role
     (refactor-code
      :key ?r
      :description &quot;Refactor code&quot;
+     :group &quot;Code&quot;
      :model &quot;codellama:7b&quot;
      :prompt &quot;Refactor this code to improve readability and efficiency:&quot;
      :system &quot;You are an expert software engineer who improves code quality.&quot;
      :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
-    
+
     (explain-code
      :key ?e
      :description &quot;Explain code&quot;
+     :group &quot;Code&quot;
      :model &quot;deepseek-r1:7b&quot;
      :prompt &quot;Explain what this code does in detail:&quot;
      :system &quot;You are a programming teacher who explains code clearly.&quot;
      :action (lambda () (ollama-buddy--send-with-command 'explain-code)))
-    
+
     (git-commit
      :key ?g
      :description &quot;Git commit message&quot;
+     :group &quot;Utility&quot;
      :prompt &quot;Write a concise git commit message for these changes:&quot;
      :system &quot;You are a version control expert who creates clear commit messages.&quot;
      :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+
+    ;; System commands
+    (custom-prompt
+     :key ?e
+     :description &quot;Custom prompt&quot;
+     :group &quot;System&quot;
+     :action ollama-buddy--menu-custom-prompt)
     ))
 </pre></div>
 
+<p>The <code class="code">:group</code> property is optional. Commands sharing the same <code class="code">:group</code> value appear together in a named column in the transient role menu (<code class="code">ollama-buddy-role-transient-menu</code>). Presets without any <code class="code">:group</code> properties still work &mdash; all commands appear in a single &ldquo;Commands&rdquo; column for full backwards compatibility.
+</p>
 </div>
+</div>
+<div class="section-level-extent" id="Command-Grouping">
+<h3 class="section"><span>14.5 Command Grouping<a class="copiable-link" href="#Command-Grouping"> &para;</a></span></h3>
+
+<p>The <code class="code">:group</code> property on command definitions controls how commands are organized into columns in the transient role menu. This provides a clean, discoverable layout:
+</p>
+<div class="example">
+<pre class="example-preformatted">;; Commands with :group &quot;Code&quot; appear in a &quot;Code&quot; column
+(refactor-code
+ :key ?r
+ :description &quot;Refactor code&quot;
+ :group &quot;Code&quot;
+ :action ...)
+
+(explain-code
+ :key ?e
+ :description &quot;Explain code&quot;
+ :group &quot;Code&quot;
+ :action ...)
+</pre></div>
+
+<p>Built-in presets use groups like &ldquo;General&rdquo;, &ldquo;Code Analysis&rdquo;, &ldquo;Code Generation&rdquo;, &ldquo;Custom&rdquo;, &ldquo;System&rdquo;, etc. You can use any group names you like in your own presets.
+</p>
 </div>
 <div class="section-level-extent" id="Switching-Roles">
-<h3 class="section"><span>14.5 Switching Roles<a class="copiable-link" href="#Switching-Roles"> &para;</a></span></h3>
+<h3 class="section"><span>14.6 Switching Roles<a class="copiable-link" href="#Switching-Roles"> &para;</a></span></h3>
 
 <p>To switch between roles:
 </p><div class="example">
@@ -3211,7 +3255,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 </p>
 </div>
 <div class="section-level-extent" id="Managing-Role-Files">
-<h3 class="section"><span>14.6 Managing Role Files<a class="copiable-link" href="#Managing-Role-Files"> &para;</a></span></h3>
+<h3 class="section"><span>14.7 Managing Role Files<a class="copiable-link" href="#Managing-Role-Files"> &para;</a></span></h3>
 
 <p>Roles are stored as Elisp files in the <code class="code">ollama-buddy-roles-directory</code>.
 </p>
@@ -3234,7 +3278,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 </p>
 </div>
 <div class="section-level-extent" id="Advanced-Role-Customization">
-<h3 class="section"><span>14.7 Advanced Role Customization<a class="copiable-link" href="#Advanced-Role-Customization"> &para;</a></span></h3>
+<h3 class="section"><span>14.8 Advanced Role Customization<a class="copiable-link" href="#Advanced-Role-Customization"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#Per_002dRole-Menu-Columns" accesskey="1">Per-Role Menu Columns</a></li>
@@ -3243,7 +3287,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 <li><a href="#Creating-New-Commands" accesskey="4">Creating New Commands</a></li>
 </ul>
 <div class="subsection-level-extent" id="Per_002dRole-Menu-Columns">
-<h4 class="subsection"><span>14.7.1 Per-Role Menu Columns<a class="copiable-link" href="#Per_002dRole-Menu-Columns"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.8.1 Per-Role Menu Columns<a class="copiable-link" href="#Per_002dRole-Menu-Columns"> &para;</a></span></h4>
 
 <p>Each role can define its own menu column layout by setting <code class="code">ollama-buddy-menu-columns</code> in the role file. This allows roles with many commands to use more columns, while simpler roles can use fewer:
 </p>
@@ -3256,7 +3300,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 </p>
 </div>
 <div class="subsection-level-extent" id="Command_002dSpecific-Models">
-<h4 class="subsection"><span>14.7.2 Command-Specific Models<a class="copiable-link" href="#Command_002dSpecific-Models"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.8.2 Command-Specific Models<a class="copiable-link" href="#Command_002dSpecific-Models"> &para;</a></span></h4>
 
 <p>Assign specific models to commands for optimal performance:
 </p>
@@ -3266,7 +3310,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 
 </div>
 <div class="subsection-level-extent" id="Command_002dSpecific-Parameters-1">
-<h4 class="subsection"><span>14.7.3 Command-Specific Parameters<a class="copiable-link" href="#Command_002dSpecific-Parameters-1"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.8.3 Command-Specific Parameters<a class="copiable-link" href="#Command_002dSpecific-Parameters-1"> &para;</a></span></h4>
 
 <p>Optimize parameters for specific commands:
 </p>
@@ -3279,7 +3323,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 
 </div>
 <div class="subsection-level-extent" id="Creating-New-Commands">
-<h4 class="subsection"><span>14.7.4 Creating New Commands<a class="copiable-link" href="#Creating-New-Commands"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.8.4 Creating New Commands<a class="copiable-link" href="#Creating-New-Commands"> &para;</a></span></h4>
 
 <p>Add entirely new commands to your menu:
 </p>
@@ -3295,14 +3339,14 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 </div>
 </div>
 <div class="section-level-extent" id="Role-Examples">
-<h3 class="section"><span>14.8 Role Examples<a class="copiable-link" href="#Role-Examples"> &para;</a></span></h3>
+<h3 class="section"><span>14.9 Role Examples<a class="copiable-link" href="#Role-Examples"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#Programming-Role" accesskey="1">Programming Role</a></li>
 <li><a href="#Writing-Role" accesskey="2">Writing Role</a></li>
 </ul>
 <div class="subsection-level-extent" id="Programming-Role">
-<h4 class="subsection"><span>14.8.1 Programming Role<a class="copiable-link" href="#Programming-Role"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.9.1 Programming Role<a class="copiable-link" href="#Programming-Role"> &para;</a></span></h4>
 
 <p>A complete example of a programming-focused role:
 </p>
@@ -3352,7 +3396,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 
 </div>
 <div class="subsection-level-extent" id="Writing-Role">
-<h4 class="subsection"><span>14.8.2 Writing Role<a class="copiable-link" href="#Writing-Role"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.9.2 Writing Role<a class="copiable-link" href="#Writing-Role"> &para;</a></span></h4>
 
 <p>A complete example of a writing-focused role:
 </p>
@@ -3403,7 +3447,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 </div>
 </div>
 <div class="section-level-extent" id="Tips-for-Effective-Role-Usage">
-<h3 class="section"><span>14.9 Tips for Effective Role Usage<a class="copiable-link" href="#Tips-for-Effective-Role-Usage"> &para;</a></span></h3>
+<h3 class="section"><span>14.10 Tips for Effective Role Usage<a class="copiable-link" href="#Tips-for-Effective-Role-Usage"> &para;</a></span></h3>
 
 <ol class="enumerate">
 <li> Group related commands: Create roles around specific workflows or tasks
@@ -3415,7 +3459,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 
 </div>
 <div class="section-level-extent" id="Built_002din-Role-Presets">
-<h3 class="section"><span>14.10 Built-in Role Presets<a class="copiable-link" href="#Built_002din-Role-Presets"> &para;</a></span></h3>
+<h3 class="section"><span>14.11 Built-in Role Presets<a class="copiable-link" href="#Built_002din-Role-Presets"> &para;</a></span></h3>
 
 <p>Ollama Buddy comes with several pre-configured role presets that you can use immediately or customize:
 </p>
@@ -4392,12 +4436,16 @@ Next: <a href="#FAQ" accesskey="n" rel="next">Frequently Asked Questions</a>, Pr
 <h3 class="section"><span>22.1 Interactive Functions<a class="copiable-link" href="#Interactive-Functions"> &para;</a></span></h3>
 
 <dl class="table">
+<dt><code class="code">ollama-buddy-role-transient-menu</code></dt>
+<dd><p>Display the dynamic role-specific transient menu, built from <code class="code">ollama-buddy-command-definitions</code>.
+</p>
+</dd>
 <dt><code class="code">ollama-buddy-menu</code></dt>
-<dd><p>Display the main Ollama Buddy menu.
+<dd><p>Display the minibuffer-based Ollama Buddy menu (legacy fallback).
 </p>
 </dd>
 <dt><code class="code">ollama-buddy-transient-menu</code></dt>
-<dd><p>Display the transient-based menu.
+<dd><p>Display the main transient-based menu.
 </p>
 </dd>
 <dt><code class="code">ollama-buddy--open-chat</code></dt>

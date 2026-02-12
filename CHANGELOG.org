@@ -11,6 +11,53 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-12 Wed> *1.5.0*
+
+Dynamic Transient Role Menu with Grouped Commands
+
+*** Overview
+
+Role-specific commands now display in a full transient popup menu instead of the minibuffer =read-key= menu, giving you persistent display, help, and discoverability. The menu rebuilds dynamically each time it opens, reflecting the current role's =ollama-buddy-command-definitions=. A new =:group= property on command definitions controls column layout in the transient menu.
+
+*** Binding Update
+
+The recommended binding for the role menu is now =ollama-buddy-role-transient-menu=:
+
+#+begin_src elisp
+(use-package ollama-buddy
+  :bind
+  ("C-c o" . ollama-buddy-role-transient-menu)
+  ("C-c O" . ollama-buddy-transient-menu-wrapper))
+#+end_src
+
+The original =ollama-buddy-menu= minibuffer menu remains available via =M-x ollama-buddy-menu= as a fallback.
+
+*** Changes
+
+- New =ollama-buddy-role-transient-menu= interactive command generates a transient popup from =ollama-buddy-command-definitions=
+- New =:group= property on command definitions controls transient column grouping
+- Commands without =:group= fall into a single "Commands" column (full backwards compatibility)
+- Commands with =:model= show the model name in the transient description
+- Duplicate keys are deduplicated (first definition wins)
+- =quit= entries are skipped (transient handles quit natively with =C-g=)
+- Main transient menu =b= key now opens the role transient menu
+- =C-c b= in chat buffer remapped to =ollama-buddy-role-transient-menu=
+- All built-in presets updated with =:group= properties:
+  - *default*: General, Custom, System
+  - *developer*: General, Code Analysis, Code Generation, Custom, System
+  - *bard*: General, Text Transformation, System
+  - *buffy*: General, Characters, Supernatural, System
+  - *emacs*: General, Emacs Enthusiasm, System
+  - *janeway*: General, Starfleet, System
+  - *translator*: General, Languages, Tools, System
+  - *writer*: General, Writing, Editorial, Creative, Analysis, Research, Utility, System
+  - *documenter*: General, Overview, Code Docs, Release, Support, Improve, System
+  - *tutor*: General, Info Docs, Explanation, Assessment, Context, System
+
+*** Backwards Compatibility
+
+Existing role presets without =:group= properties continue to work. All commands appear in a single "Commands" column, matching the previous flat menu layout.
+
 ** <2026-02-12 Wed> *1.4.0*
 
 Tone Selector for Response Style
