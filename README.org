@@ -652,8 +652,12 @@ https://github.com/captainflasmr/ollama-buddy
 
 *** Display setup
 
- (setq font-general "Source Code Pro 15")
-
+#+begin_src elisp
+(set-face-attribute 'default nil 
+                    :family "Monospace" 
+                    :height 140)
+#+end_src
+                     
  theme : doom-oceanic-next
 
 ** 001 Ollama Buddy - First Steps #emacs #ollama
@@ -993,6 +997,173 @@ https://github.com/captainflasmr/ollama-buddy
 #+attr_org: :width 300px
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_023.gif]]
+
+** 024 Web Search Integration - @search() inline syntax #emacs #ollama
+
+Demonstrating the Emacs package ollama-buddy's web search integration.
+
+Select cl:minimax-m2.1:cloud
+
+- Open chat and type: =What is the next fixture for Manchester United=
+  Check that the LLM knows nothing about emacs 31
+- Open chat and type: =What is the @search(next fixture for Manchester United)=
+- Show the 🔍N indicator appearing in the header line
+- Use =C-c C-w= to show the attached web search results
+- Ask a follow-up question using the attached context
+  "and what about liverpools" - to prove that we only have Manchester United context
+- type: =and what about @search(liverpools next fixture?)=
+- Use =C-c C-w= to show the attached web search results
+- Use =C-c 0= to clear all attachments
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
+** 025 Web Search - Manual Search and Attach #emacs #ollama
+
+Demonstrating manual web search commands in ollama-buddy.
+
+- Use =C-c / s= to search and display results in a buffer
+- Show the org-mode formatted results with collapsible headings
+- Use =C-c / a= to search and attach results to context
+- Ask the LLM to analyze the attached search results
+- Open the transient menu with =C-c O /= to show web search options
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
+** 026 Tone Selector - Switching Response Styles #emacs #ollama
+
+Demonstrating the tone selector feature for controlling response style.
+
+- Open chat and ask: =Explain how recursion works=
+- Use =C-c ~= to open the tone selector
+- Select "Concise" tone - show the =~C= indicator in header line
+- Ask the same question - note the shorter response
+- Switch to "Learning" tone
+- Ask again - note the educational style with examples
+- Switch to "Formal" tone for professional responses
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
+** 027 Dynamic Transient Role Menu #emacs #ollama
+
+Demonstrating the new transient-based role menu with grouped commands.
+
+- Press =C-c o= to show the new =ollama-buddy-role-transient-menu=
+- Show how commands are organized into columns by =:group=
+- Switch to "developer" role - show the Code Analysis, Code Generation groups
+- Switch to "writer" role - show Writing, Editorial, Creative groups
+- Demonstrate that commands with =:model= show the model name in description
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
+** 028 Model Management with Cloud Models #emacs #ollama
+
+Demonstrating the enhanced model management interface.
+
+- Press =C-c M= to open Model Management
+- Show the ☁ Cloud Models section with auth status
+- Show the categorized Recommended Models (General Chat, Reasoning, Coding, etc.)
+- Expand a category to see model descriptions
+- Select a cloud model and show the automatic manifest pull
+- Show the local models section with Select/Info/Pull/Delete actions
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
+** 029 Tutor Role - Learning with Emacs Info Integration #emacs #ollama
+
+Demonstrating the Tutor preset for educational assistance.
+
+- Switch to "tutor" role with =C-c o R=
+- Press =I= to fetch info nodes - select "elisp" manual
+- Browse to "(elisp)Hooks" and insert the content
+- Select text about hooks and press =s= for "explain simply"
+- Use =z= to quiz yourself on the topic
+- Use =a= to get an analogy for the concept
+- Use =5= for step-by-step breakdown
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
+** 030 Documenter Role - Technical Documentation Assistant #emacs #ollama
+
+Demonstrating the Documenter preset for writing documentation.
+
+- Switch to "documenter" role
+- Open a source file and select a function
+- Use the docstring command to generate documentation
+- Select a module and generate API documentation
+- Use changelog-entry to create release notes
+- Generate a quick-start guide for a project
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
+** 031 GitHub Copilot Integration #emacs #ollama
+
+Demonstrating GitHub Copilot Chat through ollama-buddy.
+
+- Run =M-x ollama-buddy-copilot-login=
+- Complete the device authentication flow
+- Show the "p" indicator in header when Copilot is loaded
+- Use =C-c m= to select a Copilot model (e.g., =p:gpt-4o=, =p:claude-sonnet-4=)
+- Send a coding prompt and receive response
+- Compare responses between Copilot models and local Ollama models
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
+** 032 Global System Prompt and Toggle #emacs #ollama
+
+Demonstrating the global system prompt for consistent formatting.
+
+- Show default global prompt with =C-c C-s=
+- Ask a question that might normally produce markdown tables
+- Note the plain prose formatting
+- Toggle off global prompt with =C-c <=
+- Show the =<= indicator in header line
+- Ask similar question - note different formatting
+- Toggle back on and show consistent behavior
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
+** 033 File Attachment Indicator and Workflow #emacs #ollama
+
+Demonstrating the enhanced file attachment workflow.
+
+- Attach multiple files with =C-c a=
+- Show the 📎N indicator updating (e.g., 📎3 for 3 files)
+- Use =C-c C-w= to view all attachments
+- Ask a question about the attached files
+- Clear attachments with =C-c 0=
+- Show the indicator disappearing
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
 
 * Installation
 
