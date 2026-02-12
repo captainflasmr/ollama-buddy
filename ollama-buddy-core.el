@@ -547,11 +547,12 @@ combined with session-specific prompts (personas, roles, etc.)."
 
 (defun ollama-buddy--should-use-marker-prefix ()
   "Determine if marker prefix should be used.
-Returns non-nil if any remote or cloud models are available."
-  (or (and (boundp 'ollama-buddy-remote-models)
-           ollama-buddy-remote-models)
-      (and (boundp 'ollama-buddy-cloud-models)
-           ollama-buddy-cloud-models)))
+Returns non-nil if any remote provider models are available.
+Cloud models use the `cl:' prefix unconditionally, so the `o:'
+prefix for local models is only needed when external providers
+\(OpenAI, Claude, Gemini, etc.) are loaded to disambiguate."
+  (and (boundp 'ollama-buddy-remote-models)
+       ollama-buddy-remote-models))
 
 (defun ollama-buddy--get-full-model-name (model)
   "Get the full display name for MODEL with prefix if needed."
