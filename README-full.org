@@ -2338,41 +2338,57 @@ All interactive functions available in ollama-buddy are listed in the original R
 
 * ollama API Support Tables
 
-** Core API
+** Core API Endpoints
 
-| API Endpoint    | Method | Purpose                            | Supported? | will ollama-buddy support?        |
-|-----------------+--------+------------------------------------+------------+-----------------------------------|
-| =/api/chat=     | POST   | Send chat messages to a model      | Yes        |                                   |
-| =/api/generate= | POST   | Generate text without chat context | No         | Probably not, as chat covers      |
-| =/api/delete=   | DELETE | Deletes available models           | Yes        |                                   |
-| =/api/tags=     | GET    | List available models              | Yes        |                                   |
-| =/api/pull=     | POST   | Pull a model from Ollama library   | Yes        |                                   |
-| =/api/push=     | POST   | Push a model to the Ollama library | No         | No                                |
-| =/api/create=   | POST   | Create a model from a Modelfile    | Yes        |                                   |
-| =/api/show=     | POST   | Show model information             | Yes        |                                   |
-| =/api/ps=       | GET    | List running models                | Yes        |                                   |
-| =/api/copy=     | POST   | Copy a model                       | Yes        |                                   |
-| =/api/embed=    | POST   | Generate embeddings from text      | No         | Probably when I can figure it out |
-| =/api/version=  | GET    | Get Ollama version                 | Yes        |                                   |
-| Cancel requests | Custom | Terminate ongoing request          | Yes        |                                   |
+| API Endpoint              | Method | Purpose                            | Supported | Notes                                      |
+|---------------------------+--------+------------------------------------+-----------+--------------------------------------------|
+| =/api/chat=               | POST   | Send chat messages to a model      | Yes       | Core feature with streaming, tools, vision |
+| =/api/generate=           | POST   | Generate text without chat context | No        | Not planned - chat covers all use cases    |
+| =/api/tags=               | GET    | List available local models        | Yes       | Used for model management                  |
+| =/api/show=               | POST   | Show model information             | Yes       | Model info display                         |
+| =/api/pull=               | POST   | Pull a model from Ollama library   | Yes       | Async pull with progress                   |
+| =/api/push=               | POST   | Push a model to the Ollama library | No        | Not planned                                |
+| =/api/delete=             | DELETE | Delete a model                     | Yes       | Model management                           |
+| =/api/copy=               | POST   | Copy a model                       | Yes       | Model management                           |
+| =/api/create=             | POST   | Create a model from Modelfile/GGUF | Yes       | GGUF import supported                      |
+| =/api/ps=                 | GET    | List running models                | Yes       | Shows loaded models in management buffer   |
+| =/api/embed=              | POST   | Generate embeddings from text      | No        | Future consideration                       |
+| =/api/version=            | GET    | Get Ollama version                 | No        | Not currently needed                       |
+| =HEAD /api/blobs/:digest= | HEAD   | Check if blob exists               | No        | Not needed for current functionality       |
+| =POST /api/blobs/:digest= | POST   | Push a blob                        | No        | Not needed for current functionality       |
+| Cancel requests           | Custom | Terminate ongoing request          | Yes       | =C-c C-k= in chat buffer                   |
 
-** Core Params
+** Chat API Parameters (=/api/chat=)
 
-| Parameter    | Supported | Notes                                            | will ollama-buddy support? |
-|--------------+-----------+--------------------------------------------------+----------------------------|
-| =model=      | Yes       | Can be specified per command or globally         |                            |
-| =prompt=     | Yes       | Core feature with extensive prompt handling      |                            |
-| =suffix=     | Yes/No    | Can be set with =ollama-buddy-set-suffix=        |                            |
-| =images=     | No        |                                                  | Unlikely, this is Emacs!   |
-| =format=     | No        |                                                  | Maybe                      |
-| =options=    | Yes       | Full implementation of all model parameters      |                            |
-| =system=     | Yes       | Can be set with =ollama-buddy-set-system-prompt= |                            |
-| =template=   | No        |                                                  | Maybe                      |
-| =stream=     | Yes       | Toggleable with =ollama-buddy-toggle-streaming=  |                            |
-| =raw=        | No        |                                                  | Might as well              |
-| =keep_alive= | No        | Uses default Ollama behavior                     | Yes                        |
+| Parameter    | Supported | Notes                                                    |
+|--------------+-----------+----------------------------------------------------------|
+| =model=      | Yes       | Per-command or global via =ollama-buddy-default-model=   |
+| =messages=   | Yes       | Full conversation history support                        |
+| =tools=      | Yes       | Tool calling via =ollama-buddy-tools.el= (v2.0.0+)       |
+| =think=      | Yes       | Reasoning model support with visibility toggle           |
+| =format=     | Partial   | JSON mode not yet exposed                                |
+| =options=    | Yes       | Full implementation of all model parameters              |
+| =stream=     | Yes       | Toggleable with =ollama-buddy-toggle-streaming=          |
+| =keep_alive= | No        | Uses Ollama default (5m)                                 |
 
-** Model Options Parameters 
+** Generate API Parameters (=/api/generate=)
+
+| Parameter    | Supported | Notes                                                    |
+|--------------+-----------+----------------------------------------------------------|
+| =model=      | N/A       | Generate endpoint not used                               |
+| =prompt=     | N/A       | Chat endpoint used instead                               |
+| =suffix=     | N/A       | Could be added via =ollama-buddy-set-suffix=             |
+| =images=     | Yes*      | Vision supported via chat endpoint                       |
+| =format=     | No        | Not currently exposed                                    |
+| =options=    | Yes       | Full parameter support                                   |
+| =system=     | Yes       | =ollama-buddy-set-system-prompt=                         |
+| =template=   | No        | Uses model defaults                                      |
+| =stream=     | Yes       | Streaming enabled by default                             |
+| =raw=        | No        | Not currently needed                                     |
+| =keep_alive= | No        | Uses Ollama default                                      |
+| =context=    | N/A       | Deprecated - using messages array instead                |
+
+** Model Options Parameters
 
 | Parameter Group         | Parameters                                                                                     | Supported |
 |-------------------------+------------------------------------------------------------------------------------------------+-----------|
@@ -2381,6 +2397,19 @@ All interactive functions available in ollama-buddy are listed in the original R
 | *Advanced Sampling*     | =mirostat=, =mirostat_tau=, =mirostat_eta=, =penalize_newline=, =stop=                         | Yes       |
 | *Resource Management*   | =num_keep=, =seed=, =num_predict=, =num_ctx=, =num_batch=                                      | Yes       |
 | *Hardware Optimization* | =numa=, =num_gpu=, =main_gpu=, =low_vram=, =vocab_only=, =use_mmap=, =use_mlock=, =num_thread= | Yes       |
+
+** Additional API Features
+
+| Feature                      | Supported | Notes                                                  |
+|------------------------------+-----------+--------------------------------------------------------|
+| Streaming responses          | Yes       | Default mode, toggleable                               |
+| Tool calling                 | Yes       | Built-in tools + custom tool registration (v2.0.0+)    |
+| Vision/Images                | Yes       | Base64 image encoding for multimodal models            |
+| Structured outputs (JSON)    | No        | Not yet exposed                                        |
+| Reproducible outputs (seed)  | Yes       | Via parameters                                         |
+| Load/Unload models           | Yes       | Via model management buffer                            |
+| Cloud models                 | Yes       | Via =ollama-buddy-cloud-models= (v1.1+)                |
+| Thinking/Reasoning models    | Yes       | =think= parameter with visibility toggle               |
 
 * Bugs                                                                 :bugs:
 
@@ -2434,67 +2463,93 @@ All interactive functions available in ollama-buddy are listed in the original R
 
 * Roadmap                                                           :roadmap:
 
-** Ollama API Improvements (Jan 2026)
+** Completed Features (v2.0.0)
 
-Recent Ollama releases (v0.12-v0.15) have introduced significant new features. The following roadmap items represent opportunities to integrate these capabilities into ollama-buddy.
+*** DONE Cloud Models Support
 
-*** DOING Cloud Models Support
-
-Ollama v0.12+ supports cloud-hosted models via =ollama.com= infrastructure, enabling access to larger models (e.g., =deepseek-v3.1:671b-cloud=, =qwen3-coder:480b-cloud=) without local hardware requirements.
-
-*Implemented:*
+Ollama v0.12+ cloud-hosted models are fully supported:
 - =ollama-buddy-cloud-models= customization for available cloud models
 - =C-u C-c m= to select from cloud models (prefix argument to swap-model)
 - Transient menu "Model > Cloud" option (=c= key)
 - Cloud indicator (☁) in status line when using cloud model
-- =ollama-buddy--cloud-model-p= function to detect cloud models
-- Validation accepts cloud models without requiring local availability
-- =ollama-buddy-cloud-signin= - runs =ollama signin= to authenticate (opens browser)
-- =ollama-buddy-cloud-signout= - runs =ollama signout= to sign out
-- =ollama-buddy-cloud-status= - checks cloud authentication status
-- Transient menu "Cloud Auth" section with Sign In (=2=), Sign Out (=3=), Auth Status (=4=)
-- =ollama-buddy-ollama-executable= customization for ollama CLI path
-
-*Still TODO:*
-- Handle potential network latency differences
-- Auto-fetch available cloud models from API (if endpoint exists)
+- =ollama-buddy-cloud-signin= / =ollama-buddy-cloud-signout= / =ollama-buddy-cloud-status=
+- Auto-pull manifest for new cloud models
+- Model management buffer shows cloud models with auth status
 
 *References:* [[https://ollama.com/blog/cloud-models][Ollama Cloud Models Blog]]
 
-*** TODO Tool Calling / Function Calling
+*** DONE Tool Calling / Function Calling
 
-Ollama now supports tool calling through the =/api/chat= endpoint with a =tools= parameter. Models like Llama 3.1, Mistral Nemo, and Command-R+ can invoke external functions.
-
-*Implementation considerations:*
-- Define tool schema format in elisp
-- Parse =tool_calls= response field
-- Execute tool functions and return results via =tool= role messages
-- Potential integration with Emacs functions (file operations, shell commands, org-mode)
+Full tool calling support via =ollama-buddy-tools.el= (v2.0.0):
+- Built-in tools: =read_file=, =list_directory=, =get_buffer_content=, =list_buffers=, =calculate=, =search_buffer=, =write_file=, =execute_shell=
+- =ollama-buddy-tools-register= API for custom tool registration with JSON schema parameters
+- Safe mode (default: on) restricts to read-only tools
+- =ollama-buddy-tools-toggle-safe-mode= to enable write/execute tools
+- ⚒ indicator in header line for tool-capable models
+- =ollama-buddy-tools-models= customization for tool-capable model list
+- Automatic multi-turn tool execution with configurable iteration limit
 
 *References:* [[https://ollama.com/blog/tool-support][Ollama Tool Support Blog]]
 
-*** DOING Web Search API Integration
+*** DONE Web Search API Integration
 
-Ollama provides a web search API at =https://ollama.com/api/web_search= requiring an API key. Could enable grounded responses with current information.
-
-*Implemented in =ollama-buddy-web-search.el=:*
+Full implementation in =ollama-buddy-web-search.el=:
 - =ollama-buddy-web-search-api-key= customization
-- =ollama-buddy-web-search= - interactive search with results display
-- =ollama-buddy-web-search-attach= - search and attach results to context
-- =ollama-buddy-web-search-detach= / =ollama-buddy-web-search-clear= - manage attached searches
+- Inline search syntax: =@search(query)= in prompts
+- =C-c / s= search and display, =C-c / a= search and attach
 - Status line shows =♁N= indicator for attached web searches
-- Token estimation for context budget awareness
-- Keybindings: =C-c / s/a/d/l/c=
-- =ollama-buddy-web-search-content-source= - choose between ='eww= (default, fetches URLs via eww/shr) or ='api= (uses Ollama API content directly)
+- Content fetching via eww/shr for clean text extraction
+- Works with all providers (local and remote)
 
 *References:* [[https://ollama.com/blog/web-search][Ollama Web Search Blog]]
 
+*** DONE Enhanced Token Metrics
+
+Token metrics from API responses are fully parsed and displayed:
+- =prompt_eval_count= and =eval_count= tracked per request
+- Token rate (tokens/sec) calculated and displayed
+- =C-c #= shows comprehensive token statistics with graphs
+- Real-time token display during streaming (toggle with =C-c T=)
+- Historical token usage tracking per model
+
+*** DONE Think Parameter for Reasoning Models
+
+Reasoning/thinking model support:
+- =ollama-buddy-hide-reasoning= toggle (=C-c V=) to show/hide thinking blocks
+- =ollama-buddy-reasoning-markers= customization for different model formats
+- Header line shows =V= indicator when reasoning is hidden
+- Works with DeepSeek-R1, QwQ, and other reasoning models
+
+*** DONE Vision/Image Support
+
+Full multimodal support:
+- Base64 image encoding for vision-capable models
+- Auto-detection of image files in prompts (file paths, URLs)
+- ⊙ indicator for vision-capable models
+- =ollama-buddy-vision-models= customization
+- Works with llava, gemma3, and other multimodal models
+
+** In Progress
+
+*** DOING GitHub Copilot Integration Improvements
+
+=ollama-buddy-copilot.el= provides Copilot Chat support:
+- OAuth device flow authentication (no API key)
+- Supports multiple backend models (GPT-4o, Claude, Gemini via Copilot)
+- =p:= prefix for Copilot models
+
+*Still TODO:*
+- Better token refresh handling
+- Copilot-specific features (code suggestions, etc.)
+
+** Future Considerations
+
 *** TODO Image Generation Support
 
-Ollama v0.14+ supports local image generation with models like Z-Image Turbo (6B) and FLUX.2 Klein. Currently macOS only, Windows/Linux planned.
+Ollama v0.14+ supports local image generation with models like Z-Image Turbo (6B) and FLUX.2 Klein.
 
 *Implementation considerations:*
-- Detect image generation models (=x/= prefix)
+- Detect image generation models
 - Handle image output (save to file, display in buffer)
 - Support generation parameters (width, height, steps, seed)
 - Integration with org-mode inline images
@@ -2503,67 +2558,41 @@ Ollama v0.14+ supports local image generation with models like Z-Image Turbo (6B
 
 *** TODO Anthropic Messages API Compatibility
 
-Ollama v0.14+ implements =/v1/messages= endpoint compatible with Anthropic's API format. This could simplify the existing =ollama-buddy-claude.el= module or enable new workflows.
+Ollama v0.14+ implements =/v1/messages= endpoint compatible with Anthropic's API format.
 
 *Implementation considerations:*
 - Option to route Claude-format requests through local Ollama
+- Could simplify =ollama-buddy-claude.el= or provide fallback
 - Support for tool_use and tool_result content blocks
-- Extended thinking parameter support
-- Token counting endpoint (=/v1/messages/count_tokens=)
 
 *References:* [[https://docs.ollama.com/api/anthropic-compatibility][Ollama Anthropic Compatibility Docs]]
 
-*** TODO Enhanced Token Metrics from API Response
+*** TODO Embeddings API
 
-The API now returns detailed timing and token metrics in responses:
-- =prompt_eval_count= - input token count
-- =eval_count= - output token count
-- =prompt_eval_duration= - prompt processing time (nanoseconds)
-- =eval_duration= - generation time (nanoseconds)
-- =total_duration= - total execution time
-- =load_duration= - model loading time
+The =/api/embed= endpoint could enable semantic search and RAG workflows.
 
 *Implementation considerations:*
-- Parse and display all timing metrics
-- Calculate and show tokens/second rate
-- Track model load times separately
-- Historical performance comparison per model
-
-*** TODO Think Parameter for Reasoning Models
-
-The API now supports a =think= parameter to enable thinking/reasoning mode for compatible models.
-
-*Implementation considerations:*
-- Add =ollama-buddy-param-think= customization
-- Toggle thinking mode from transient menu
-- Distinguish thinking output from final response in display
-
-*** TODO Improved Context Window Tracking
-
-Verify current implementation uses the returned context information correctly. The API provides =context= field for continuation and models report their context window size.
-
-*Implementation considerations:*
-- Validate context percentage calculation against actual API values
-- Warn when approaching context limits
-- Option to automatically truncate/summarize conversation
+- Vector storage and similarity search
+- Integration with org-mode notes
+- Potential for semantic file search
 
 *** TODO Keep-Alive Parameter
 
-The API supports =keep_alive= parameter (default 5m) to control how long models stay loaded in memory.
+Control how long models stay loaded in memory.
 
 *Implementation considerations:*
-- Add =ollama-buddy-param-keep-alive= customization
-- Presets for different usage patterns (quick queries vs long sessions)
-- Display currently loaded models and their timeout status
+- =ollama-buddy-param-keep-alive= customization
+- Presets for different usage patterns
+- Display loaded models and their timeout status in model management
 
-*** TODO Model Scheduling Improvements
+*** TODO Structured Outputs (JSON Schema)
 
-Ollama v0.11+ introduced improved model scheduling that reduces OOM crashes and maximizes GPU utilization when running multiple models.
+The =format= parameter supports JSON schema for structured responses.
 
 *Implementation considerations:*
-- Leverage for multishot mode improvements
-- Better handling of concurrent model requests
-- Status display for GPU memory utilization
+- Define output schemas per command
+- Integration with org-mode tables
+- Structured data extraction workflows
 
 * Alternative LLM based packages
 
