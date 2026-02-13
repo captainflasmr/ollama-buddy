@@ -1849,8 +1849,10 @@ Optional MENU-COLUMNS specifies the number of columns for the menu display."
 
 (defun ollama-buddy--model-annotation (model)
   "Return annotation string for MODEL in completing-read.
-Shows capability indicators like ⚒ for tool support."
+Shows capability indicators like ☁ for cloud, ⚒ for tool support, ⊙ for vision."
   (let ((indicators ""))
+    (when (ollama-buddy--cloud-model-p model)
+      (setq indicators (concat indicators " ☁")))
     (when (ollama-buddy--model-supports-tools model)
       (setq indicators (concat indicators " ⚒")))
     (when (ollama-buddy--model-supports-vision model)
@@ -2950,10 +2952,11 @@ Modifies the variable in place."
                'action `(lambda (_)
                           (ollama-buddy-select-model ,(concat ollama-buddy-cloud-marker-prefix model)))
                'help-echo (format "Select cloud model %s" model))
+              (insert " ☁")
               (when (ollama-buddy--model-supports-tools display-model)
-                (insert " ⚒"))
+                (insert "⚒"))
               (when (ollama-buddy--model-supports-vision display-model)
-                (insert " ⊙"))
+                (insert "⊙"))
               (insert "  ")
               ;; Pull manifest button
               (insert-text-button
@@ -3461,6 +3464,10 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c D") #'ollama-buddy-roles-open-directory)
     (define-key map (kbd "C-c f") #'ollama-buddy-transient-fabric-menu)
     (define-key map (kbd "C-c w") #'ollama-buddy-transient-awesome-menu)
+    
+    ;; Tools keybindings
+    (define-key map (kbd "C-c W") #'ollama-buddy-tools-toggle)
+    (define-key map (kbd "C-c Q") #'ollama-buddy-tools-info)
     
     ;; Display Options keybindings
     (define-key map (kbd "C-c B") #'ollama-buddy-toggle-debug-mode)

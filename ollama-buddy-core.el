@@ -1655,7 +1655,10 @@ When SYSTEM-PROMPT is non-nil, mark as a system prompt."
   (let* ((model (or ollama-buddy--current-model
                     ollama-buddy-default-model
                     "Default:latest"))
-         (existing-content (when keep-content (ollama-buddy--text-after-prompt))))
+         (existing-content (when keep-content (ollama-buddy--text-after-prompt)))
+         (cloud-indicator (if (ollama-buddy--cloud-model-p model) "☁" ""))
+         (tools-indicator (if (ollama-buddy--model-supports-tools model) "⚒" ""))
+         (indicators (string-trim (concat cloud-indicator tools-indicator))))
 
     (let ((buf (get-buffer-create ollama-buddy--chat-buffer)))
       (with-current-buffer buf
@@ -1675,8 +1678,9 @@ When SYSTEM-PROMPT is non-nil, mark as a system prompt."
               (goto-char (point-max))))
 
           ;; Insert new prompt header
-          (insert (format "\n\n* *%s* %s"
+          (insert (format "\n\n* *%s* %s%s"
                           model
+                          (if (string-empty-p indicators) "" (concat indicators " "))
                           (if system-prompt ">> SYSTEM PROMPT: " ">> PROMPT: ")))
 
           ;; Restore content if requested
@@ -2087,7 +2091,10 @@ ACTUAL-MODEL is the model being used instead."
                            ""
                          (format " [%s]" param-str)))))
            (cloud-indicator (if (ollama-buddy--cloud-model-p model) "☁" ""))
-           (tools-indicator (if (ollama-buddy--model-supports-tools model) "⚒" ""))
+           (tools-indicator (if (and (boundp 'ollama-buddy-tools-enabled)
+                                     ollama-buddy-tools-enabled
+                                     (ollama-buddy--model-supports-tools model))
+                                "⚒" ""))
            (vision-indicator (if (ollama-buddy--model-supports-vision model) "⊙" ""))
            (attachment-indicator (if ollama-buddy--current-attachments
                                      (propertize (format "≡%d" (length ollama-buddy--current-attachments))

@@ -107,7 +107,11 @@ Tool Calling Support and Tool-Capable Model Indicators
 - Built-in tools: =read_file=, =list_directory=, =get_buffer_content=, =list_buffers=, =calculate=, =search_buffer=, =write_file=, =execute_shell=
 - Registration API (=ollama-buddy-tools-register=) for adding custom tools with JSON schema parameters
 - Safe mode (default: on) restricts to read-only tools; toggle with =ollama-buddy-tools-toggle-safe-mode=
-- ⚒ indicator shown next to tool-capable models in header line, =C-c m= completing-read, and model management buffer (=C-c M=)
+- Toggle tool calling on/off with =C-c W= (=ollama-buddy-tools-toggle=)
+- List registered tools with =C-c Q= (=ollama-buddy-tools-info=) in an org-mode formatted buffer
+- Both commands available in transient menu under Actions (=W= and =Q=)
+- ⚒ indicator in header line shows when tools are *enabled* (toggled on)
+- ⚒ indicator in prompt line shows when model *supports* tool calling
 - ⊙ indicator also shown for vision-capable models in completing-read
 - New =ollama-buddy-tools-models= customization for configuring which models support tool calling
 
@@ -1280,6 +1284,8 @@ OR
 | C-c <           | Toggle global system prompt             |
 | C-c >           | Toggle history indicator display        |
 | C-c C-o         | Toggle Markdown/Org format              |
+| C-c W           | Toggle tool calling                     |
+| C-c Q           | List registered tools                   |
 
 ** Default Menu Items
 

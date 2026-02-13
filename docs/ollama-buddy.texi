@@ -3115,14 +3115,14 @@ The tool function receives an alist of arguments parsed from the model's JSON re
 @section Interactive Commands
 
 @table @code
-@item ollama-buddy-tools-toggle
-Toggle tool calling on or off.
+@item ollama-buddy-tools-toggle (@kbd{C-c W})
+Toggle tool calling on or off. When toggled, the header line updates to show/hide the @code{⚒} indicator.
 
 @item ollama-buddy-tools-toggle-safe-mode
 Toggle safe mode for tool execution.
 
-@item ollama-buddy-tools-info
-Display information about all registered tools in a dedicated buffer, showing status, safe mode, and each tool's description.
+@item ollama-buddy-tools-info (@kbd{C-c Q})
+Display information about all registered tools in a dedicated org-mode buffer, showing status table, safe mode settings, and each tool's description with parameters.
 
 @item ollama-buddy-tools-clear
 Remove all registered tools.
@@ -3131,12 +3131,32 @@ Remove all registered tools.
 Re-initialize built-in tools.
 @end table
 
-@section Tool-Capable Model Indicator
-
-Models known to support tool calling show a @code{⚒} indicator in:
-
+These commands are also available from the transient menu (@kbd{C-c O}) under the ``Actions'' section:
 @itemize @bullet
-@item The header line when the current model supports tools
+@item @kbd{W} - Toggle Tools
+@item @kbd{Q} - List Tools
+@end itemize
+
+@section Tool Indicators
+
+The @code{⚒} (hammer and wrench) indicator appears in two places with different meanings:
+
+@table @asis
+@item Header line
+Shows @code{⚒} when tool calling is currently @emph{enabled} (toggled on with @kbd{C-c W}). This indicates that tool calls will be sent to the model.
+
+@item Prompt line
+Shows @code{⚒} when the current model @emph{supports} tool calling. This appears regardless of whether tools are enabled, helping you identify which models can use tools.
+@end table
+
+For example, with a tool-capable model like @code{qwen3:8b}:
+@itemize @bullet
+@item The prompt always shows: @code{* *qwen3:8b* ⚒ >> PROMPT:}
+@item The header line shows @code{⚒} only when you've enabled tools with @kbd{C-c W}
+@end itemize
+
+Additional places showing tool capability:
+@itemize @bullet
 @item The @code{C-c m} completing-read model selector (alongside @code{⊙} for vision models)
 @item The model management buffer (@code{C-c M}) next to model names
 @end itemize

@@ -68,6 +68,8 @@
 (declare-function ollama-buddy-web-search "ollama-buddy-web-search")
 (declare-function ollama-buddy-web-search-attach "ollama-buddy-web-search")
 (declare-function ollama-buddy-web-search-count "ollama-buddy-web-search")
+(declare-function ollama-buddy-tools-toggle "ollama-buddy-tools")
+(declare-function ollama-buddy-tools-info "ollama-buddy-tools")
 
 (transient-define-prefix ollama-buddy-transient-menu ()
   "Ollama Buddy main menu."
@@ -88,6 +90,8 @@
     ("l" "Send Region" (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))
     ("k" "Cancel" ollama-buddy--cancel-request)
     ("x" "Toggle Stream  " ollama-buddy-toggle-streaming)
+    ("W" "Toggle Tools" ollama-buddy-tools-toggle)
+    ("Q" "List Tools" ollama-buddy-tools-info)
     ]
 
    ["System Prompts"
