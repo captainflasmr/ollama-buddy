@@ -1177,6 +1177,23 @@ https://github.com/captainflasmr/ollama-buddy
 
 #emacs #ollama
 
+** 034 Simple Tool Calling #emacs #ollama
+
+Demonstrating the first draft of ollama tool calling
+
+- open the chat with a model that allows tool calling : gpt-oss:20b-cloud
+- "can you create a file in /home/jdyer called tmp.txt with the contents of : hello world"
+- check that a new text file has been created in /home/jdyer
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_034.gif]]
+
 * Installation
 
 ** Prerequisites
