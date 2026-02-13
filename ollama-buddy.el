@@ -2173,34 +2173,47 @@ Shows cached status. Use signin/signout to update or try a cloud model request."
           
           ;; Display context sizes for each model in model-context-sizes
           (maphash (lambda (model size)
-                     (insert (format "- *%s*" model))
-                     (insert (format ": %d tokens\n" size)))
+                     (let* ((source (ollama-buddy--get-model-context-source model))
+                            (source-indicator
+                             (pcase source
+                               ('api " [API]")
+                               ('fallback " [fallback]")
+                               ('manual " [manual]")
+                               (_ ""))))
+                       (insert (format "- *%s*: %d tokens%s\n" model size source-indicator))))
                    ollama-buddy--model-context-sizes))
         
         ;; Show current context info if available
         (when ollama-buddy--current-context-percentage
-          (insert "\n* Current context usage:\n\n")
-          (insert (format "  Model            : *%s*\n" 
-                          (or ollama-buddy--current-model "unknown")))
-          (insert (format "  Context max size : %d tokens\n" 
-                          (or ollama-buddy--current-context-max-size 4096)))
-          (insert (format "  Current usage    : %d tokens (%.1f%%)\n"
-                          (or ollama-buddy--current-context-tokens 0)
-                          (* 100 (or ollama-buddy--current-context-percentage 0))))
+          (let* ((current-model (or ollama-buddy--current-model "unknown"))
+                 (source (ollama-buddy--get-model-context-source current-model))
+                 (source-desc (pcase source
+                                ('api "from Ollama API (accurate)")
+                                ('fallback "from fallback mappings (estimate)")
+                                ('manual "manually set")
+                                (_ "unknown"))))
+            (insert "\n* Current context usage:\n\n")
+            (insert (format "  Model            : *%s*\n" current-model))
+            (insert (format "  Context max size : %d tokens (%s)\n" 
+                            (or ollama-buddy--current-context-max-size 4096)
+                            source-desc))
+            (insert (format "  Current usage    : %d tokens (%.1f%%)\n"
+                            (or ollama-buddy--current-context-tokens 0)
+                            (* 100 (or ollama-buddy--current-context-percentage 0))))
           
-          ;; Show breakdown if available
-          (when ollama-buddy--current-context-breakdown
-            (let ((breakdown ollama-buddy--current-context-breakdown))
-              (insert (format "  History          : %d tokens\n"
-                              (plist-get breakdown :history-tokens)))
-              (insert (format "  System prompt    : %d tokens\n"
-                              (plist-get breakdown :system-tokens)))
-              (insert (format "  Attachments      : %d tokens\n"
-                              (plist-get breakdown :attachment-tokens)))
-              (insert (format "  Web search       : %d tokens\n"
-                              (or (plist-get breakdown :web-search-tokens) 0)))
-              (insert (format "  Current prompt   : %d tokens\n"
-                              (plist-get breakdown :prompt-tokens))))))
+            ;; Show breakdown if available
+            (when ollama-buddy--current-context-breakdown
+              (let ((breakdown ollama-buddy--current-context-breakdown))
+                (insert (format "  History          : %d tokens\n"
+                                (plist-get breakdown :history-tokens)))
+                (insert (format "  System prompt    : %d tokens\n"
+                                (plist-get breakdown :system-tokens)))
+                (insert (format "  Attachments      : %d tokens\n"
+                                (plist-get breakdown :attachment-tokens)))
+                (insert (format "  Web search       : %d tokens\n"
+                                (or (plist-get breakdown :web-search-tokens) 0)))
+                (insert (format "  Current prompt   : %d tokens\n"
+                                (plist-get breakdown :prompt-tokens)))))))
 
         (goto-char (point-min))
         (view-mode 1)))

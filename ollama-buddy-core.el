@@ -701,6 +701,10 @@ Each element is a plist with :file, :content, :size, and :type.")
 (defvar ollama-buddy--model-context-sizes (make-hash-table :test 'equal)
   "Hash table mapping model names to their maximum context window sizes.")
 
+(defvar ollama-buddy--model-context-sources (make-hash-table :test 'equal)
+  "Hash table mapping model names to their context size source.
+Values are `api' (from Ollama API), `fallback' (static), or `manual'.")
+
 (defvar ollama-buddy--current-context-percentage nil
   "The current context window percentage used.")
 
@@ -1152,32 +1156,74 @@ separated by two newlines when combined."
         (display-buffer buf))
     (message "No system prompt is currently set")))
 
+(defun ollama-buddy--extract-context-length-from-model-info (model-info)
+  "Extract context length from MODEL-INFO returned by /api/show.
+MODEL-INFO is the parsed JSON response containing model metadata.
+The context length is stored in keys like `llama.context_length' or
+`qwen3.context_length' depending on the model architecture."
+  (when model-info
+    (let ((context-length nil))
+      ;; model_info contains architecture-specific keys like llama.context_length
+      (dolist (key (mapcar #'car model-info))
+        (when (and (not context-length)
+                   (symbolp key)
+                   (string-match-p "\\.context_length$" (symbol-name key)))
+          (setq context-length (alist-get key model-info))))
+      context-length)))
+
+(defun ollama-buddy--fetch-model-context-size-sync (model)
+  "Synchronously fetch context size for MODEL from Ollama API.
+Returns the context size or nil if the API call fails."
+  (condition-case nil
+      (let* ((real-model (ollama-buddy--get-real-model-name model))
+             (endpoint "/api/show")
+             (payload (json-encode `((model . ,real-model))))
+             (response (ollama-buddy--make-request endpoint "POST" payload)))
+        (when response
+          (let ((model-info (alist-get 'model_info response)))
+            (ollama-buddy--extract-context-length-from-model-info model-info))))
+    (error nil)))
+
+(defun ollama-buddy--get-fallback-context-size (model)
+  "Get fallback context size for MODEL from static mappings.
+Returns the size from `ollama-buddy-fallback-context-sizes' or 4096 as default."
+  (let ((fallback-size nil))
+    ;; First try exact match
+    (setq fallback-size (cdr (assoc model ollama-buddy-fallback-context-sizes)))
+    
+    ;; Then try substring matches
+    (unless fallback-size
+      (dolist (entry ollama-buddy-fallback-context-sizes)
+        (when (and (not fallback-size)
+                   (string-match-p (car entry) model))
+          (setq fallback-size (cdr entry)))))
+    
+    ;; Finally use a reasonable default
+    (or fallback-size 4096)))
+
 (defun ollama-buddy--get-model-context-size (model)
-  "Get the context window size for MODEL."
-  (let* (;; Get base context size from cache or compute it
+  "Get the context window size for MODEL.
+Checks cache first, then Ollama API, then static fallback mappings.
+Source is recorded in `ollama-buddy--model-context-sources'."
+  (let* (;; Get base context size from cache, API, or fallback
          (base-size
           (or
            ;; First check if we have it cached
            (gethash model ollama-buddy--model-context-sizes)
            
-           ;; If not cached, compute from fallback mappings
-           (let ((fallback-size nil))
-             ;; First try exact match
-             (setq fallback-size (cdr (assoc model ollama-buddy-fallback-context-sizes)))
-             
-             ;; Then try substring matches
-             (unless fallback-size
-               (dolist (entry ollama-buddy-fallback-context-sizes)
-                 (when (and (not fallback-size)
-                            (string-match-p (car entry) model))
-                   (setq fallback-size (cdr entry)))))
-             
-             ;; Finally use a reasonable default
-             (unless fallback-size
-               (setq fallback-size 4096))
-             
-             ;; Cache the computed size
+           ;; If not cached, try to fetch from Ollama API
+           (let ((api-size (ollama-buddy--fetch-model-context-size-sync model)))
+             (when api-size
+               ;; Cache the API result and record source
+               (puthash model api-size ollama-buddy--model-context-sizes)
+               (puthash model 'api ollama-buddy--model-context-sources)
+               api-size))
+           
+           ;; Fall back to static mappings
+           (let ((fallback-size (ollama-buddy--get-fallback-context-size model)))
+             ;; Cache the fallback size and record source
              (puthash model fallback-size ollama-buddy--model-context-sizes)
+             (puthash model 'fallback ollama-buddy--model-context-sources)
              fallback-size)))
          
          ;; Check if num_ctx parameter is set and modified
@@ -1200,7 +1246,14 @@ separated by two newlines when combined."
      (list model size)))
   
   (puthash model size ollama-buddy--model-context-sizes)
+  (puthash model 'manual ollama-buddy--model-context-sources)
   (message "Context size for %s set to %d" model size))
+
+(defun ollama-buddy--get-model-context-source (model)
+  "Get the source of the context size for MODEL.
+Returns `api' if retrieved from Ollama API, `fallback' if from static mappings,
+`manual' if set manually, or nil if not yet determined."
+  (gethash model ollama-buddy--model-context-sources))
 
 (defun ollama-buddy--estimate-token-count (text)
   "Estimate the number of tokens in TEXT.
