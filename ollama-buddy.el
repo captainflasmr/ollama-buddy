@@ -95,6 +95,8 @@
 
 (declare-function ollama-buddy-tools--generate-schema "ollama-buddy-tools")
 (declare-function ollama-buddy-tools--process-tool-calls "ollama-buddy-tools")
+(declare-function ollama-buddy-tools-toggle "ollama-buddy-tools")
+(declare-function ollama-buddy-tools-info "ollama-buddy-tools")
 (declare-function ollama-buddy-curl--process-filter "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--process-json-line "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--handle-content "ollama-buddy-curl")
