@@ -3042,6 +3042,22 @@ Run df -h and tell me how much disk space I have.
 Create a file at /tmp/hello.txt with Hello World.
 @end example
 
+@section How It Works
+
+When tool calling is enabled and a tool-capable model is selected, the conversation flow works as follows:
+
+@enumerate
+@item You send a prompt (e.g., ``What files are in my home directory?'').
+@item Ollama Buddy sends the prompt along with the tool schemas to the model.
+@item The model decides whether to call a tool. If so, it returns a tool call request instead of text.
+@item Ollama Buddy executes the requested tool (e.g., @code{list_directory} with path @code{~}).
+@item The tool result is sent back to the model as a @code{tool} role message.
+@item The model generates a natural language response incorporating the tool output.
+@item Steps 3--6 may repeat if the model needs multiple tools, up to @code{ollama-buddy-tools-max-iterations}.
+@end enumerate
+
+This loop is transparent to the user --- you see the final response in the chat buffer.
+
 @section Configuration
 
 @table @code
@@ -3053,12 +3069,22 @@ When non-nil, only safe (read-only) tools can execute (default: @code{t}).
 
 @item ollama-buddy-tools-auto-execute
 When non-nil, tools execute without confirmation prompts (default: @code{t}).
+When nil, each tool invocation shows a @code{yes-or-no-p} prompt before executing.
 
 @item ollama-buddy-tools-max-iterations
-Maximum tool-call round-trips per user prompt to prevent loops (default: @code{10}).
+Maximum tool-call round-trips per user prompt to prevent infinite loops (default: @code{10}).
+
+@item ollama-buddy-tools-builtin-enabled
+Whether to load the 8 built-in tools on startup (default: @code{t}).
+When nil, only custom user-registered tools are available.
 
 @item ollama-buddy-tools-models
 List of model names known to support tool calling. Used for the @code{⚒} indicator.
+@example
+(setq ollama-buddy-tools-models
+  '("qwen3" "qwen3-coder" "llama3.1" "llama3.3"
+    "mistral" "gpt-oss" "command-r"))
+@end example
 @end table
 
 @section Registering Custom Tools
@@ -3067,17 +3093,24 @@ Use @code{ollama-buddy-tools-register} to add your own tools:
 
 @example
 (ollama-buddy-tools-register
- 'my-tool
- "Description of what the tool does"
- '((type . "object")
+ 'my-tool                          ; NAME (symbol or string)
+ "Description of what the tool does" ; DESCRIPTION
+ '((type . "object")               ; PARAMETERS (JSON schema)
    (required . ["param1"])
    (properties . ((param1 . ((type . "string")
                               (description . "Parameter description"))))))
- (lambda (args)
+ (lambda (args)                    ; FUNCTION (receives alist, returns string)
    (let ((param1 (alist-get 'param1 args)))
      (format "Result: %s" param1)))
- t)  ; t = safe, nil = unsafe
+ t)  ; SAFE flag: t = safe (read-only), nil = unsafe
 @end example
+
+To remove a tool:
+@example
+(ollama-buddy-tools-unregister 'my-tool)
+@end example
+
+The tool function receives an alist of arguments parsed from the model's JSON response and must return a string result. If the function returns a non-string value, it is formatted with @code{%S}.
 
 @section Interactive Commands
 
@@ -3089,7 +3122,7 @@ Toggle tool calling on or off.
 Toggle safe mode for tool execution.
 
 @item ollama-buddy-tools-info
-Display information about all registered tools.
+Display information about all registered tools in a dedicated buffer, showing status, safe mode, and each tool's description.
 
 @item ollama-buddy-tools-clear
 Remove all registered tools.
