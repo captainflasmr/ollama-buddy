@@ -110,7 +110,7 @@ Use nil for API default behavior (adaptive)."
     t))
 
 (defun ollama-buddy-codestral--send (prompt &optional model)
-  "Send PROMPT to Mistral Codestral's API using MODEL or default model asynchronously."
+  "Send PROMPT to Codestral API using MODEL asynchronously."
   (when (ollama-buddy-codestral--verify-api-key)
     ;; Process inline web search delimiters if web-search module is loaded
     (when (and (featurep 'ollama-buddy-web-search)
@@ -309,7 +309,7 @@ Use nil for API default behavior (adaptive)."
 
 
 (defun ollama-buddy-codestral--fetch-models ()
-  "Fetch available models from Mistral Codestral API and register them with ollama-buddy."
+  "Fetch available Codestral models and register them."
   (let ((chat-models '("codestral-latest")))
     (let ((prefixed-models (mapcar (lambda (model-name)
                                      (concat ollama-buddy-codestral-marker-prefix model-name))

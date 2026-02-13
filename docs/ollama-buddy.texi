@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 1.5.0
+@subtitle For Ollama Buddy version 2.0.0
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -64,6 +64,7 @@ allowing you to leverage powerful large language models (LLMs) directly within y
 * Ollama Cloud Models::         Using Ollama's cloud-hosted models
 * Global System Prompt::        Configuring a persistent global system prompt
 * Tone Selector::               Quickly switch response style
+* Tool Calling::                Enabling LLMs to invoke Emacs functions
 * Advanced Usage::              Tips and techniques for power users
 * API Reference::               Comprehensive function documentation
 * FAQ::                         Frequently asked questions
@@ -94,6 +95,7 @@ interact with AI models directly from within Emacs for various tasks such as:
 @item Using Ollama cloud models
 @item Including files as context in conversations
 @item Real-time web search to provide current information to LLMs
+@item Tool calling --- enabling LLMs to read files, run commands, search buffers and more
 @end itemize
 
 Instead of context-switching to web interfaces or terminal applications, Ollama Buddy brings 
@@ -736,8 +738,9 @@ The chat interface consists of:
 @item A header line with status information including:
   @itemize @minus
   @item Cloud model indicator (@code{☁})
-  @item Attachment indicators (@code{📎N})
-  @item Web search indicators (@code{🔍N})
+  @item Tool-capable model indicator (@code{⚒})
+  @item Attachment indicators (@code{≡N})
+  @item Web search indicators (@code{♁N})
   @item Context usage bar (when enabled)
   @item Global system prompt disabled indicator (@code{<})
   @item History count (@code{H5/10}, off by default)
@@ -1516,7 +1519,7 @@ The org-mode structure allows you to collapse/expand individual results.
 Web searches are treated as attachments:
 
 @itemize @bullet
-@item Status line shows @code{🔍N} when N web searches are attached
+@item Status line shows @code{♁N} when N web searches are attached
 @item @code{C-c 0} clears all attachments including web searches
 @item Web search context is automatically included in prompts to all LLM providers
 @end itemize
@@ -2669,13 +2672,14 @@ The header line shows compact status indicators:
 @item @code{<} - Global system prompt disabled
 @item @code{H5/10} - History count (when enabled via @code{ollama-buddy-show-history-indicator})
 @item @code{☁} - Currently using an Ollama cloud model
-@item @code{📎N} - Number of file attachments
-@item @code{🔍N} - Number of web search results attached
+@item @code{⚒} - Current model supports tool calling
+@item @code{≡N} - Number of file attachments
+@item @code{♁N} - Number of web search results attached
 @item @code{V} - Reasoning/thinking sections hidden
 @item @code{T} - Token statistics display enabled
 @end itemize
 
-Example: @code{☁📎2🔍1} means cloud model with 2 file attachments and 1 web search attached.
+Example: @code{☁⚒≡2♁1} means cloud model with tool support, 2 file attachments and 1 web search attached.
 
 @section Setting Up API Access
 
@@ -2958,6 +2962,153 @@ The currently active tone name (default: @code{"Normal"}).
 The selected tone text is prepended to the effective system prompt. The combination order is: tone + global prompt + session prompt. When the tone is ``Normal'' (empty string), no tone text is added.
 
 The header line shows a @code{~X} indicator when a non-Normal tone is active, where @code{X} is the first letter of the tone name (e.g.@: @code{~C} for Concise, @code{~L} for Learning).
+
+@node Tool Calling
+@chapter Tool Calling
+
+@section Overview
+
+Tool calling (also known as function calling) enables LLMs to invoke Emacs functions during conversations. Instead of just generating text, a tool-capable model can read files, list directories, search buffers, perform calculations, and execute shell commands --- all orchestrated automatically within the conversation flow.
+
+The tool calling framework is provided by @code{ollama-buddy-tools.el}.
+
+@section Setup
+
+@example
+;; Load the tools module
+(require 'ollama-buddy-tools)
+
+;; Enable tool calling
+(setq ollama-buddy-tools-enabled t)
+@end example
+
+You must use a model that supports tool calling. Tool-capable models are indicated with a @code{⚒} symbol in the header line, model selection, and model management buffer.
+
+@section Built-in Tools
+
+@subsection Safe Tools (available in safe mode)
+
+@table @code
+@item read_file
+Read the contents of a file from the filesystem.
+
+@item list_directory
+List the contents of a directory.
+
+@item get_buffer_content
+Get the content of an Emacs buffer by name.
+
+@item list_buffers
+List all open Emacs buffers, with optional regex filtering.
+
+@item calculate
+Evaluate a mathematical expression using Emacs @code{calc-eval}.
+
+@item search_buffer
+Search for a regex pattern in a buffer and return matching lines.
+@end table
+
+@subsection Unsafe Tools (require safe mode off)
+
+@table @code
+@item write_file
+Write content to a file on the filesystem.
+
+@item execute_shell
+Execute a shell command and return its output.
+@end table
+
+@section Example Prompts
+
+With a tool-capable model selected and tools enabled, try prompts like:
+
+@example
+What files are in my ~/Documents directory?
+
+Read the file ~/.emacs.d/init.el and summarize what packages I'm using.
+
+What is 2^64 - 1?
+
+What buffers do I have open?
+
+Search for all defun definitions in the buffer ollama-buddy-tools.el
+@end example
+
+For unsafe tools (with safe mode disabled):
+
+@example
+Run df -h and tell me how much disk space I have.
+
+Create a file at /tmp/hello.txt with Hello World.
+@end example
+
+@section Configuration
+
+@table @code
+@item ollama-buddy-tools-enabled
+Whether tool calling is active (default: @code{nil}).
+
+@item ollama-buddy-tools-safe-mode
+When non-nil, only safe (read-only) tools can execute (default: @code{t}).
+
+@item ollama-buddy-tools-auto-execute
+When non-nil, tools execute without confirmation prompts (default: @code{t}).
+
+@item ollama-buddy-tools-max-iterations
+Maximum tool-call round-trips per user prompt to prevent loops (default: @code{10}).
+
+@item ollama-buddy-tools-models
+List of model names known to support tool calling. Used for the @code{⚒} indicator.
+@end table
+
+@section Registering Custom Tools
+
+Use @code{ollama-buddy-tools-register} to add your own tools:
+
+@example
+(ollama-buddy-tools-register
+ 'my-tool
+ "Description of what the tool does"
+ '((type . "object")
+   (required . ["param1"])
+   (properties . ((param1 . ((type . "string")
+                              (description . "Parameter description"))))))
+ (lambda (args)
+   (let ((param1 (alist-get 'param1 args)))
+     (format "Result: %s" param1)))
+ t)  ; t = safe, nil = unsafe
+@end example
+
+@section Interactive Commands
+
+@table @code
+@item ollama-buddy-tools-toggle
+Toggle tool calling on or off.
+
+@item ollama-buddy-tools-toggle-safe-mode
+Toggle safe mode for tool execution.
+
+@item ollama-buddy-tools-info
+Display information about all registered tools.
+
+@item ollama-buddy-tools-clear
+Remove all registered tools.
+
+@item ollama-buddy-tools-setup
+Re-initialize built-in tools.
+@end table
+
+@section Tool-Capable Model Indicator
+
+Models known to support tool calling show a @code{⚒} indicator in:
+
+@itemize @bullet
+@item The header line when the current model supports tools
+@item The @code{C-c m} completing-read model selector (alongside @code{⊙} for vision models)
+@item The model management buffer (@code{C-c M}) next to model names
+@end itemize
+
+The list of tool-capable models is configured via @code{ollama-buddy-tools-models}. Cloud model variants (e.g.@: @code{cl:qwen3-coder:480b-cloud}) are automatically matched against their base names.
 
 @node Advanced Usage
 @chapter Advanced Usage

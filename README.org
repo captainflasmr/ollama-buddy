@@ -41,7 +41,7 @@ A simple text information screen will be presented on the first opening of the c
 ,#+begin_example
  ___ _ _      n _ n      ___       _   _ _ _
 |   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |
-| | | | | .  |1.4.0| .  | . | | | . | . |__ |
+| | | | | .  |2.0.0| .  | . | | | . | . |__ |
 |___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|
 ,#+end_example
 
@@ -98,6 +98,18 @@ See *Screenshots / Demos* section for more videos/demonstration.
 See full list in :
 
 [[file:CHANGELOG.org]]
+
+** <2026-02-12 Wed> *2.0.0*
+
+Tool Calling Support and Tool-Capable Model Indicators
+
+- New =ollama-buddy-tools.el= module enabling LLMs to invoke Emacs functions during conversations
+- Built-in tools: =read_file=, =list_directory=, =get_buffer_content=, =list_buffers=, =calculate=, =search_buffer=, =write_file=, =execute_shell=
+- Registration API (=ollama-buddy-tools-register=) for adding custom tools with JSON schema parameters
+- Safe mode (default: on) restricts to read-only tools; toggle with =ollama-buddy-tools-toggle-safe-mode=
+- ⚒ indicator shown next to tool-capable models in header line, =C-c m= completing-read, and model management buffer (=C-c M=)
+- ⊙ indicator also shown for vision-capable models in completing-read
+- New =ollama-buddy-tools-models= customization for configuring which models support tool calling
 
 ** <2026-02-12 Wed> *1.5.0*
 
@@ -174,7 +186,7 @@ Added Web Search Integration with Ollama's Web Search API
 - Manual search commands: =C-c / s= (search & display), =C-c / a= (search & attach)
 - New transient menu accessible via =C-c O /= for web search operations
 - Web searches are treated as attachments - cleared together with =C-c 0=
-- Status line shows 🔍N indicator when web searches are attached
+- Status line shows ♁N indicator when web searches are attached
 - Works with all providers: Ollama, OpenAI, Claude, Gemini, Grok, Copilot, and Codestral
 
 To use web search:
@@ -200,7 +212,7 @@ Content source options:
 
 ** <2026-02-02 Sun> *1.2.1*
 
-Added attachment count indicator to header-line - displays 📎N when files are attached for constant visual reminder.
+Added attachment count indicator to header-line - displays ≡N when files are attached for constant visual reminder.
 
 ** <2026-02-01 Sat> *1.2*
 
@@ -1007,7 +1019,7 @@ Select cl:minimax-m2.1:cloud
 - Open chat and type: =What is the next fixture for Manchester United=
   Check that the LLM knows nothing about emacs 31
 - Open chat and type: =What is the @search(next fixture for Manchester United)=
-- Show the 🔍N indicator appearing in the header line
+- Show the ♁N indicator appearing in the header line
 - Use =C-c C-w= to show the attached web search results
 - Ask a follow-up question using the attached context
   "and what about liverpools" - to prove that we only have Manchester United context
@@ -1154,7 +1166,7 @@ https://github.com/captainflasmr/ollama-buddy
 Demonstrating the enhanced file attachment workflow.
 
 - Attach multiple files with =C-c a=
-- Show the 📎N indicator updating (e.g., 📎3 for 3 files)
+- Show the ≡N indicator updating (e.g., ≡3 for 3 files)
 - Use =C-c C-w= to view all attachments
 - Ask a question about the attached files
 - Clear attachments with =C-c 0=
@@ -2453,7 +2465,7 @@ Ollama provides a web search API at =https://ollama.com/api/web_search= requirin
 - =ollama-buddy-web-search= - interactive search with results display
 - =ollama-buddy-web-search-attach= - search and attach results to context
 - =ollama-buddy-web-search-detach= / =ollama-buddy-web-search-clear= - manage attached searches
-- Status line shows =🔍N= indicator for attached web searches
+- Status line shows =♁N= indicator for attached web searches
 - Token estimation for context budget awareness
 - Keybindings: =C-c / s/a/d/l/c=
 - =ollama-buddy-web-search-content-source= - choose between ='eww= (default, fetches URLs via eww/shr) or ='api= (uses Ollama API content directly)

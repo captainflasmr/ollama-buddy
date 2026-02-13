@@ -196,14 +196,14 @@
 
 (ert-deftest ollama-buddy-test-get-real-model-name-no-remote ()
   "Test model name when no remote models configured but cloud models exist.
-The `o:' prefix is only used when external remote providers are loaded,
-so with only cloud models the prefix is not recognized and passes through."
+The `o:' prefix is always stripped regardless of whether remote providers
+are loaded, so the real model name is returned without the prefix."
   :tags '(core)
   (with-ollama-buddy-test-env
-    ;; With only cloud models (no remote providers), o: prefix is not
-    ;; added or stripped - local models use plain names
+    ;; With only cloud models (no remote providers), o: prefix is still
+    ;; stripped - get-real-model-name always removes known prefixes
     (let ((ollama-buddy-remote-models nil))
-      (should (equal "o:llama3.2:1b"
+      (should (equal "llama3.2:1b"
                      (ollama-buddy--get-real-model-name "o:llama3.2:1b"))))))
 
 (ert-deftest ollama-buddy-test-get-real-model-name-cloud-prefix ()

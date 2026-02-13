@@ -11,6 +11,40 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-12 Wed> *2.0.0*
+
+Tool Calling Support and Tool-Capable Model Indicators
+
+*** Overview
+
+Ollama Buddy now supports tool calling (function calling), enabling LLMs to invoke Emacs functions during conversations. Models can read files, list directories, search buffers, perform calculations, execute shell commands and more. A new =ollama-buddy-tools.el= module provides the tool framework with built-in tools, a registration API for custom tools, and safety controls.
+
+A ⚒ indicator is shown alongside tool-capable models across all model display surfaces (header line, model management buffer, and completing-read), following the same pattern as the existing vision (⊙) indicator.
+
+*** Tool Calling Features
+
+- New =ollama-buddy-tools.el= module with extensible tool calling framework
+- Built-in safe tools: =read_file=, =list_directory=, =get_buffer_content=, =list_buffers=, =calculate=, =search_buffer=
+- Built-in unsafe tools (require safe mode off): =write_file=, =execute_shell=
+- =ollama-buddy-tools-register= API for adding custom tools with JSON schema parameters
+- =ollama-buddy-tools-safe-mode= (default: t) restricts execution to read-only tools
+- =ollama-buddy-tools-auto-execute= (default: t) controls confirmation prompts
+- =ollama-buddy-tools-max-iterations= (default: 10) prevents infinite tool-call loops
+- =ollama-buddy-tools-toggle= to enable/disable tool calling
+- =ollama-buddy-tools-info= to view all registered tools and their status
+
+*** Tool-Capable Model Indicator
+
+- New =ollama-buddy-tools-models= customization listing models known to support tool calling
+- New =ollama-buddy--model-supports-tools= predicate function (strips prefixes and cloud suffixes for matching)
+- Header line shows ⚒ when the current model supports tools
+- =C-c m= completing-read shows ⚒ (and ⊙ for vision) annotations next to capable models
+- Model management buffer (=C-c M=) shows ⚒ next to tool-capable models in both Available Models and Cloud Models sections
+
+*** Supported Tool-Capable Models
+
+qwen3, qwen3:32b, qwen3:14b, qwen3:8b, qwen3-coder-next, qwen3-coder:480b, deepseek-v3.1:671b, gpt-oss:120b, gpt-oss:20b, glm-4.7, glm-4.7-flash, llama3.1, llama3.3, mistral, mistral-nemo, command-r+, granite4
+
 ** <2026-02-12 Wed> *1.5.0*
 
 Dynamic Transient Role Menu with Grouped Commands
@@ -249,7 +283,7 @@ The web search feature implements a multi-stage pipeline:
 - Keybindings: =C-c / s= (search), =C-c / a= (attach)
 - Transient menu: =C-c O /= for web search operations
 - Async URL fetching for better performance
-- Status line shows 🔍N indicator when web searches are attached
+- Status line shows ♁N indicator when web searches are attached
 - Web searches integrated into attachment system:
   - =C-c C-w= shows both file attachments and web searches
   - =C-c 0= clears all attachments including web searches
@@ -304,7 +338,7 @@ Compare @search(rust async) with @search(go concurrency)
 
 Added attachment count indicator to header-line
 
-- Header-line now displays 📎N (paperclip + count) when files are attached
+- Header-line now displays ≡N (paperclip + count) when files are attached
 - Provides constant visual reminder of attachment context before sending
 - Indicator appears in bold near the beginning of the status line
 - Empty when no attachments are present

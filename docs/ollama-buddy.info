@@ -670,8 +670,8 @@ The chat interface consists of:
    • A prompt area for entering your queries
    • A header line with status information including:
         − Cloud model indicator (‘☁’)
-        − Attachment indicators (‘📎N’)
-        − Web search indicators (‘🔍N’)
+        − Attachment indicators (‘≡N’)
+        − Web search indicators (‘♁N’)
         − Context usage bar (when enabled)
         − Global system prompt disabled indicator (‘<’)
         − History count (‘H5/10’, off by default)
@@ -1438,7 +1438,7 @@ results.
 
 Web searches are treated as attachments:
 
-   • Status line shows ‘🔍N’ when N web searches are attached
+   • Status line shows ‘♁N’ when N web searches are attached
    • ‘C-c 0’ clears all attachments including web searches
    • Web search context is automatically included in prompts to all LLM
      providers
@@ -2592,12 +2592,12 @@ The header line shows compact status indicators:
    • ‘H5/10’ - History count (when enabled via
      ‘ollama-buddy-show-history-indicator’)
    • ‘☁’ - Currently using an Ollama cloud model
-   • ‘📎N’ - Number of file attachments
-   • ‘🔍N’ - Number of web search results attached
+   • ‘≡N’ - Number of file attachments
+   • ‘♁N’ - Number of web search results attached
    • ‘V’ - Reasoning/thinking sections hidden
    • ‘T’ - Token statistics display enabled
 
-   Example: ‘☁📎2🔍1’ means cloud model with 2 file attachments and 1
+   Example: ‘☁≡2♁1’ means cloud model with 2 file attachments and 1
 web search attached.
 
 17.3 Setting Up API Access

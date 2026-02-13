@@ -310,7 +310,7 @@
            (fboundp 'ollama-buddy-web-search-count))
       (let ((count (ollama-buddy-web-search-count)))
         (if (> count 0)
-            (format "🔍 %d attached" count)
+            (format "♁ %d attached" count)
           "No searches attached"))
     "Module not loaded"))
 

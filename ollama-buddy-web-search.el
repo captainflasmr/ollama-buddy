@@ -17,7 +17,7 @@
 ;;   Use @search(query) inline in prompts  - Automatic search and attach
 ;;
 ;; Web searches are cleared with M-x ollama-buddy-clear-attachments.
-;; The search results appear in the status line as 🔍N (N = number of searches).
+;; The search results appear in the status line as ♁N (N = number of searches).
 ;;
 ;; Content Source:
 ;;   Set `ollama-buddy-web-search-content-source' to control how content is retrieved:
@@ -438,7 +438,7 @@ CONTENT-MAP is used when `ollama-buddy-web-search-content-source' is `eww'."
     (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
       (let ((inhibit-read-only t))
         (goto-char (point-max))
-        (insert (format "\n\n- 🔍 Web search attached: \"%s\" (%d results%s)\n"
+        (insert (format "\n\n- ♁ Web search attached: \"%s\" (%d results%s)\n"
                         query
                         (length results)
                         (if ollama-buddy-web-search-show-token-estimate
@@ -490,6 +490,12 @@ Returns nil if no searches are attached."
                (plist-get search :content))
              ollama-buddy-web-search--current-results
              "\n\n---\n\n"))))
+
+(defun ollama-buddy-web-search-detach (query)
+  "Remove the attached web search result for QUERY."
+  (setq ollama-buddy-web-search--current-results
+        (cl-remove-if (lambda (r) (string= query (plist-get r :query)))
+                      ollama-buddy-web-search--current-results)))
 
 (defun ollama-buddy-web-search-count ()
   "Return the number of attached web search results."

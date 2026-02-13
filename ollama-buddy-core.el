@@ -34,6 +34,7 @@
 (declare-function ollama-buddy--create-vision-message "ollama-buddy")
 (declare-function ollama-buddy--detect-image-files "ollama-buddy")
 (declare-function ollama-buddy--model-supports-vision "ollama-buddy")
+(declare-function ollama-buddy--model-supports-tools "ollama-buddy")
 (declare-function ollama-buddy--check-context-before-send "ollama-buddy")
 (declare-function ollama-buddy-curl--validate-executable "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--test-connection "ollama-buddy-curl")
@@ -151,6 +152,12 @@ Used as a fallback when context size can't be determined from the API."
   :type 'boolean
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-header-line-height 1.2
+  "Relative height of the header line text.
+A value of 1.0 is normal size, 1.2 is 20% larger, etc."
+  :type 'float
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-context-size-thresholds '(0.85 1.0)
   "Thresholds for context usage warnings.
 First value (0.85) is the amber threshold (approaching limit).
@@ -166,6 +173,17 @@ Second value (1.0) is the red threshold (at or exceeding limit)."
 
 (defcustom ollama-buddy-vision-models '("gemma3:4b" "llama3.2:3b" "llama3.2:8b")
   "List of models known to support vision capabilities."
+  :type '(repeat string)
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-tools-models
+  '("qwen3" "qwen3:32b" "qwen3:14b" "qwen3:8b"
+    "qwen3-coder-next" "qwen3-coder:480b"
+    "deepseek-v3.1:671b" "gpt-oss:120b" "gpt-oss:20b"
+    "glm-4.7" "glm-4.7-flash"
+    "llama3.1" "llama3.3" "mistral" "mistral-nemo"
+    "command-r+" "granite4")
+  "List of models known to support tool calling."
   :type '(repeat string)
   :group 'ollama-buddy)
 
@@ -589,8 +607,7 @@ prefix for local models is only needed when external providers
 (defun ollama-buddy--get-real-model-name (model)
   "Extract the actual model name from the prefixed MODEL string."
   (cond
-   ((and (string-prefix-p ollama-buddy-marker-prefix model)
-         (ollama-buddy--should-use-marker-prefix))
+   ((string-prefix-p ollama-buddy-marker-prefix model)
     (substring model (length ollama-buddy-marker-prefix)))
    ((string-prefix-p ollama-buddy-cloud-marker-prefix model)
     (substring model (length ollama-buddy-cloud-marker-prefix)))
@@ -601,6 +618,8 @@ prefix for local models is only needed when external providers
 Each entry is (KEY . MODEL-NAME) where KEY is a string like \"a\"
 or \"@a\" for models beyond the first 26, and MODEL-NAME is the
 full display name including any prefix.")
+
+(defvar ollama-buddy-cloud-models)
 
 (defun ollama-buddy--assign-model-letters (local-models)
   "Assign letters to LOCAL-MODELS and cloud models.
@@ -653,6 +672,12 @@ Updates `ollama-buddy--model-letters'."
 
 (defvar ollama-buddy--current-response nil
   "The current response text being accumulated.")
+
+(defvar ollama-buddy--current-tool-calls nil
+  "Accumulated tool calls during streaming.")
+
+(defvar ollama-buddy--tool-call-iteration 0
+  "Current iteration count for tool-call loops.")
 
 (defvar ollama-buddy--response-start-marker nil
   "Marker for the start of the current response, used for pulsing.")
@@ -810,6 +835,9 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
 
 (defvar ollama-buddy--status "Idle"
   "Current status of the Ollama request.")
+
+(defvar-local ollama-buddy--header-line-remapped nil
+  "Non-nil if the header-line face has been remapped in this buffer.")
 
 (defvar ollama-buddy--model-letters nil
   "Alist mapping letters to model names.")
@@ -1185,10 +1213,10 @@ This is a rough approximation based on word count."
 The handler function should accept the same arguments as `ollama-buddy--send`."
   (puthash prefix handler-function ollama-buddy--model-handlers))
 
-(defun ollama-buddy--dispatch-to-handler (orig-fun prompt &optional specified-model)
+(defun ollama-buddy--dispatch-to-handler (orig-fun prompt &optional specified-model tool-continuation-p)
   "Dispatch to appropriate handler based on model prefix.
 ORIG-FUN is the original function being advised.
-PROMPT and SPECIFIED-MODEL are passed to the handler or original function."
+PROMPT, SPECIFIED-MODEL and TOOL-CONTINUATION-P are passed through."
   (let* ((model (or specified-model
                     ollama-buddy--current-model
                     ollama-buddy-default-model))
@@ -1202,7 +1230,7 @@ PROMPT and SPECIFIED-MODEL are passed to the handler or original function."
     ;; Call the handler or original function
     (if handler
         (funcall handler prompt model)
-      (funcall orig-fun prompt specified-model))))
+      (funcall orig-fun prompt specified-model tool-continuation-p))))
 
 ;; Apply the advice to ollama-buddy--send
 (advice-add 'ollama-buddy--send :around #'ollama-buddy--dispatch-to-handler)
@@ -1782,7 +1810,8 @@ manifest is already present."
 
 (defun ollama-buddy--cloud-model-p (model)
   "Return non-nil if MODEL is a cloud model.
-Cloud models have a `-cloud' suffix, `cl:' prefix, or are in `ollama-buddy-cloud-models'."
+Cloud models have a `-cloud' suffix, `cl:' prefix,
+or are in `ollama-buddy-cloud-models'."
   (when model
     (or (string-suffix-p "-cloud" model)
         (string-prefix-p ollama-buddy-cloud-marker-prefix model)
@@ -1866,30 +1895,46 @@ Cloud models are always considered valid if Ollama is running."
 
 ;; History-related functions
 
-(defun ollama-buddy--add-to-history (role content)
-  "Add message with ROLE and CONTENT to conversation history for current model."
+(defun ollama-buddy--add-to-history (role content &optional tool-calls)
+  "Add message with ROLE and CONTENT to conversation history for current model.
+Optional TOOL-CALLS includes tool call objects in the message."
   (when ollama-buddy-history-enabled
     (let* ((model ollama-buddy--current-model)
            (history (gethash model ollama-buddy--conversation-history-by-model nil)))
-      
+
       ;; Create new history entry for this model if it doesn't exist
       (unless history
         (setq history nil))
-      
+
       ;; Add the new message to this model's history
       ;; and put it at the end
-      (setq history
-            (append history
-                    (list `((role . ,role)
-                            (content . ,content)))))
-      
+      (let ((message (if tool-calls
+                         `((role . ,role)
+                           (content . ,content)
+                           (tool_calls . ,(vconcat tool-calls)))
+                       `((role . ,role)
+                         (content . ,content)))))
+        (setq history (append history (list message))))
+
       ;; Truncate history if needed - keep the MOST RECENT items
       ;; Calculate how many items to drop from the beginning
       (let ((max-items (* 2 ollama-buddy-max-history-length)))
         (when (> (length history) max-items)
           (setq history (seq-drop history (- (length history) max-items)))))
-      
+
       ;; Update the hash table with the modified history
+      (puthash model history ollama-buddy--conversation-history-by-model))))
+
+(defun ollama-buddy--add-to-history-raw (message)
+  "Add MESSAGE directly to conversation history without role/content wrapping.
+Used for tool result messages which already have the correct structure."
+  (when ollama-buddy-history-enabled
+    (let* ((model ollama-buddy--current-model)
+           (history (gethash model ollama-buddy--conversation-history-by-model nil)))
+      (setq history (append history (list message)))
+      (let ((max-items (* 2 ollama-buddy-max-history-length)))
+        (when (> (length history) max-items)
+          (setq history (seq-drop history (- (length history) max-items)))))
       (puthash model history ollama-buddy--conversation-history-by-model))))
 
 (defun ollama-buddy--get-history-for-request ()
@@ -1956,6 +2001,9 @@ ACTUAL-MODEL is the model being used instead."
   (when ollama-buddy-show-context-percentage
     (ollama-buddy--calculate-prompt-context-percentage))
   (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+    (unless ollama-buddy--header-line-remapped
+      (face-remap-add-relative 'header-line :height ollama-buddy-header-line-height)
+      (setq ollama-buddy--header-line-remapped t))
     (let* ((model (or ollama-buddy--current-model
                       ollama-buddy-default-model
                       "No Model"))
@@ -1986,14 +2034,16 @@ ACTUAL-MODEL is the model being used instead."
                            ""
                          (format " [%s]" param-str)))))
            (cloud-indicator (if (ollama-buddy--cloud-model-p model) "☁" ""))
+           (tools-indicator (if (ollama-buddy--model-supports-tools model) "⚒" ""))
+           (vision-indicator (if (ollama-buddy--model-supports-vision model) "⊙" ""))
            (attachment-indicator (if ollama-buddy--current-attachments
-                                     (propertize (format "📎%d" (length ollama-buddy--current-attachments))
+                                     (propertize (format "≡%d" (length ollama-buddy--current-attachments))
                                                  'face '(:weight bold))
                                    ""))
            (web-search-indicator (if (and (featurep 'ollama-buddy-web-search)
                                           (fboundp 'ollama-buddy-web-search-count)
                                           (> (ollama-buddy-web-search-count) 0))
-                                     (propertize (format "🔍%d " (ollama-buddy-web-search-count))
+                                     (propertize (format "♁%d " (ollama-buddy-web-search-count))
                                                  'face '(:weight bold))
                                    ""))
            (tone-indicator (let ((tone ollama-buddy--current-tone))
@@ -2003,12 +2053,14 @@ ACTUAL-MODEL is the model being used instead."
                                            'face '(:weight bold))))))
       (setq header-line-format
             (concat
-             (format "%s%s%s%s%s%s%s%s%s%s %s%s%s %s%s"
+             (format "%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s %s%s%s"
                      (if ollama-buddy-streaming-enabled "" "x")
                      (ollama-buddy--add-context-to-status-format)
                      (if ollama-buddy-global-system-prompt-enabled "" "<")
                      history
                      cloud-indicator
+                     tools-indicator
+                     vision-indicator
                      attachment-indicator
                      web-search-indicator
                      (if ollama-buddy-hide-reasoning "V" "")

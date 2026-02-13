@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 1.5.0
+;; Version: 2.0.0
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -92,6 +92,9 @@
 (declare-function ollama-buddy-curl--make-request-direct "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--make-request "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--make-request-async "ollama-buddy-curl")
+
+(declare-function ollama-buddy-tools--generate-schema "ollama-buddy-tools")
+(declare-function ollama-buddy-tools--process-tool-calls "ollama-buddy-tools")
 (declare-function ollama-buddy-curl--process-filter "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--process-json-line "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--handle-content "ollama-buddy-curl")
@@ -249,8 +252,24 @@
 (defun ollama-buddy--model-supports-vision (model)
   "Check if MODEL supports vision capabilities."
   (when model
-    (let ((real-model (ollama-buddy--get-real-model-name model)))
-      (member real-model ollama-buddy-vision-models))))
+    (let* ((real-model (ollama-buddy--get-real-model-name model))
+           ;; Strip cloud suffixes for matching
+           (base-model (replace-regexp-in-string "[-:]cloud$" "" real-model))
+           ;; Also get name without tag (e.g. "gemma3:4b" -> "gemma3")
+           (name-only (car (split-string base-model ":"))))
+      (or (member base-model ollama-buddy-vision-models)
+          (member name-only ollama-buddy-vision-models)))))
+
+(defun ollama-buddy--model-supports-tools (model)
+  "Check if MODEL supports tool calling capabilities."
+  (when model
+    (let* ((real-model (ollama-buddy--get-real-model-name model))
+           ;; Strip cloud suffixes for matching
+           (base-model (replace-regexp-in-string "[-:]cloud$" "" real-model))
+           ;; Also get name without tag (e.g. "qwen3:32b" -> "qwen3")
+           (name-only (car (split-string base-model ":"))))
+      (or (member base-model ollama-buddy-tools-models)
+          (member name-only ollama-buddy-tools-models)))))
 
 ;; Function to unload a single model
 (defun ollama-buddy-unload-model (model)
@@ -1464,8 +1483,9 @@ Optional MENU-COLUMNS specifies the number of columns for the menu display."
                         (ignore-errors
                           (json-read-from-string json-str))))
            (error-msg (when json-data (alist-get 'error json-data)))
-           (text (when json-data
-                   (alist-get 'content (alist-get 'message json-data)))))
+           (message-data (when json-data (alist-get 'message json-data)))
+           (text (when message-data (alist-get 'content message-data)))
+           (tool-calls (when message-data (alist-get 'tool_calls message-data))))
 
       ;; Check for authentication errors (cloud models)
       (when error-msg
@@ -1560,10 +1580,16 @@ Optional MENU-COLUMNS specifies the number of columns for the menu display."
               (when (boundp 'ollama-buddy--current-response)
                 (setq ollama-buddy--current-response
                       (concat (or ollama-buddy--current-response "") text)))
-              
+
               (unless (boundp 'ollama-buddy--current-response)
                 (setq ollama-buddy--current-response text))
-              
+
+              ;; Accumulate tool calls from streaming chunks
+              (when tool-calls
+                (setq ollama-buddy--current-tool-calls
+                      (append ollama-buddy--current-tool-calls
+                              (append tool-calls nil))))
+
               ;; Check if this response is complete
               (when (eq (alist-get 'done json-data) t)
 
@@ -1618,85 +1644,130 @@ Optional MENU-COLUMNS specifies the number of columns for the menu display."
                 ;; Add the user message to history
                 (ollama-buddy--add-to-history "user" ollama-buddy--current-prompt)
                 ;; Add the complete response to history
-                (ollama-buddy--add-to-history "assistant" ollama-buddy--current-response)
-                (makunbound 'ollama-buddy--current-response)
-                
-                ;; Cancel the update timer
-                (when ollama-buddy--token-update-timer
-                  (cancel-timer ollama-buddy--token-update-timer)
-                  (setq ollama-buddy--token-update-timer nil))
-                
-                ;; Calculate final statistics
-                (let* ((elapsed-time (- (float-time) ollama-buddy--current-token-start-time))
-                       (token-rate (if (> elapsed-time 0)
-                                       (/ ollama-buddy--current-token-count elapsed-time)
-                                     0))
-                       (token-info (list :model ollama-buddy--current-model
-                                         :tokens ollama-buddy--current-token-count
-                                         :elapsed elapsed-time
-                                         :rate token-rate
-                                         :timestamp (current-time))))
-                  
-                  ;; Add to history
-                  (push token-info ollama-buddy--token-usage-history)
-                  
-                  ;; Display token info if enabled
-                  (when ollama-buddy-display-token-stats
-                    (insert (format "\n\n*** Token Stats\n[%d tokens in %.1fs, %.1f tokens/sec]"
-                                    ollama-buddy--current-token-count
-                                    elapsed-time
-                                    token-rate))
-                    ;; Add modified parameters to the display
-                    (when ollama-buddy-params-modified
-                      (insert "\n\n*** Modified Parameters: ")
-                      (let ((param-strings
-                             (mapcar
-                              (lambda (param)
-                                (let ((value (alist-get param ollama-buddy-params-active)))
-                                  (format "%s=%s"
-                                          param
-                                          (cond
-                                           ((floatp value) (format "%.2f" value))
-                                           ((vectorp value) (format "[%s]" (mapconcat #'identity value ", ")))
-                                           (t value)))))
-                              ollama-buddy-params-modified)))
-                        (insert (mapconcat #'identity param-strings ", ")))))
-                  
-                  ;; Reset tracking variables
-                  (setq ollama-buddy--current-token-count 0
-                        ollama-buddy--current-token-start-time nil
-                        ollama-buddy--last-token-count 0
-                        ollama-buddy--last-update-time nil
-                        ;; Reset reasoning variables
-                        ollama-buddy--in-reasoning-section nil
-                        ollama-buddy--reasoning-status-message nil
-                        ollama-buddy--reasoning-skip-newlines nil))
+                (ollama-buddy--add-to-history
+                 "assistant"
+                 (or ollama-buddy--current-response "")
+                 ollama-buddy--current-tool-calls)
 
-                ;; reset the current model if from external
-                (when ollama-buddy--current-request-temporary-model
-                  (setq ollama-buddy--current-model ollama-buddy--current-request-temporary-model)
-                  (setq ollama-buddy--current-request-temporary-model nil))
-
-                (insert "\n\n*** FINISHED")
-                
-                ;; Handle multishot progression here
-                (if ollama-buddy--multishot-sequence
+                ;; Handle tool calls if present
+                (if (and (featurep 'ollama-buddy-tools)
+                         (bound-and-true-p ollama-buddy-tools-enabled)
+                         ollama-buddy--current-tool-calls
+                         (< ollama-buddy--tool-call-iteration
+                            (if (boundp 'ollama-buddy-tools-max-iterations)
+                                ollama-buddy-tools-max-iterations 10)))
                     (progn
-                      ;; Increment progress
-                      (if (< ollama-buddy--multishot-progress
-                             (length ollama-buddy--multishot-sequence))
+                      (setq ollama-buddy--tool-call-iteration
+                            (1+ ollama-buddy--tool-call-iteration))
+
+                      ;; Display tool calls in chat buffer
+                      (insert "\n\n*** Tool Calls:\n\n")
+                      (dolist (call ollama-buddy--current-tool-calls)
+                        (let* ((func (alist-get 'function call))
+                               (name (alist-get 'name func))
+                               (args (alist-get 'arguments func)))
+                          (insert (format "- %s(%s)\n" name (json-encode args)))))
+
+                      ;; Execute tools and get results
+                      (let ((tool-results
+                             (ollama-buddy-tools--process-tool-calls
+                              ollama-buddy--current-tool-calls)))
+
+                        ;; Display results in chat buffer
+                        (insert "\n*** Tool Results:\n\n")
+                        (dolist (result tool-results)
+                          (insert (format "- %s: %s\n"
+                                          (alist-get 'tool_name result)
+                                          (alist-get 'content result))))
+
+                        ;; Add tool results to history
+                        (dolist (result tool-results)
+                          (ollama-buddy--add-to-history-raw result))
+
+                        ;; Reset and re-send for model to process tool results
+                        (setq ollama-buddy--current-tool-calls nil)
+                        (makunbound 'ollama-buddy--current-response)
+                        (ollama-buddy--send nil ollama-buddy--current-model t)))
+
+                  ;; No tool calls (or limit reached) - normal completion
+                  (makunbound 'ollama-buddy--current-response)
+
+                  ;; Cancel the update timer
+                  (when ollama-buddy--token-update-timer
+                    (cancel-timer ollama-buddy--token-update-timer)
+                    (setq ollama-buddy--token-update-timer nil))
+
+                  ;; Calculate final statistics
+                  (let* ((elapsed-time (- (float-time) ollama-buddy--current-token-start-time))
+                         (token-rate (if (> elapsed-time 0)
+                                         (/ ollama-buddy--current-token-count elapsed-time)
+                                       0))
+                         (token-info (list :model ollama-buddy--current-model
+                                           :tokens ollama-buddy--current-token-count
+                                           :elapsed elapsed-time
+                                           :rate token-rate
+                                           :timestamp (current-time))))
+
+                    ;; Add to history
+                    (push token-info ollama-buddy--token-usage-history)
+
+                    ;; Display token info if enabled
+                    (when ollama-buddy-display-token-stats
+                      (insert (format "\n\n*** Token Stats\n[%d tokens in %.1fs, %.1f tokens/sec]"
+                                      ollama-buddy--current-token-count
+                                      elapsed-time
+                                      token-rate))
+                      ;; Add modified parameters to the display
+                      (when ollama-buddy-params-modified
+                        (insert "\n\n*** Modified Parameters: ")
+                        (let ((param-strings
+                               (mapcar
+                                (lambda (param)
+                                  (let ((value (alist-get param ollama-buddy-params-active)))
+                                    (format "%s=%s"
+                                            param
+                                            (cond
+                                             ((floatp value) (format "%.2f" value))
+                                             ((vectorp value) (format "[%s]" (mapconcat #'identity value ", ")))
+                                             (t value)))))
+                                ollama-buddy-params-modified)))
+                          (insert (mapconcat #'identity param-strings ", ")))))
+
+                    ;; Reset tracking variables
+                    (setq ollama-buddy--current-token-count 0
+                          ollama-buddy--current-token-start-time nil
+                          ollama-buddy--last-token-count 0
+                          ollama-buddy--last-update-time nil
+                          ;; Reset reasoning variables
+                          ollama-buddy--in-reasoning-section nil
+                          ollama-buddy--reasoning-status-message nil
+                          ollama-buddy--reasoning-skip-newlines nil))
+
+                  ;; reset the current model if from external
+                  (when ollama-buddy--current-request-temporary-model
+                    (setq ollama-buddy--current-model ollama-buddy--current-request-temporary-model)
+                    (setq ollama-buddy--current-request-temporary-model nil))
+
+                  (insert "\n\n*** FINISHED")
+
+                  ;; Handle multishot progression here
+                  (if ollama-buddy--multishot-sequence
+                      (progn
+                        ;; Increment progress
+                        (if (< ollama-buddy--multishot-progress
+                               (length ollama-buddy--multishot-sequence))
+                            (progn
+                              ;; Process next model after a short delay
+                              (run-with-timer 0.5 nil #'ollama-buddy--send-next-in-sequence))
                           (progn
-                            ;; Process next model after a short delay
-                            (run-with-timer 0.5 nil #'ollama-buddy--send-next-in-sequence))
-                        (progn
-                          (ollama-buddy--update-status "Multi Finished")
-                          (ollama-buddy--prepare-prompt-area))))
-                  ;; Not in multishot mode, just show the prompt
-                  (progn
-                    (ollama-buddy--prepare-prompt-area)
-                    (ollama-buddy--update-status (format "Finished [%d %.1f t/s]"
-                                                         (plist-get (car ollama-buddy--token-usage-history) :tokens)
-                                                         (plist-get (car ollama-buddy--token-usage-history) :rate)))))
+                            (ollama-buddy--update-status "Multi Finished")
+                            (ollama-buddy--prepare-prompt-area))))
+                    ;; Not in multishot mode, just show the prompt
+                    (progn
+                      (ollama-buddy--prepare-prompt-area)
+                      (ollama-buddy--update-status (format "Finished [%d %.1f t/s]"
+                                                           (plist-get (car ollama-buddy--token-usage-history) :tokens)
+                                                           (plist-get (car ollama-buddy--token-usage-history) :rate))))))
                 (setq completed t))) ; closes when-done AND save-excursion
             ;; Window state management (must be outside save-excursion)
             (when window
@@ -1776,6 +1847,16 @@ Optional MENU-COLUMNS specifies the number of columns for the menu display."
                  (point) end)))))
         (ollama-buddy--update-status (concat "Stream " status))))))
 
+(defun ollama-buddy--model-annotation (model)
+  "Return annotation string for MODEL in completing-read.
+Shows capability indicators like ⚒ for tool support."
+  (let ((indicators ""))
+    (when (ollama-buddy--model-supports-tools model)
+      (setq indicators (concat indicators " ⚒")))
+    (when (ollama-buddy--model-supports-vision model)
+      (setq indicators (concat indicators " ⊙")))
+    indicators))
+
 (defun ollama-buddy--swap-model (&optional arg)
   "Swap ollama model, including remote and cloud models if available.
 With prefix ARG (\\[universal-argument]), select from online remote models only."
@@ -1784,7 +1865,12 @@ With prefix ARG (\\[universal-argument]), select from online remote models only.
                      ollama-buddy-remote-models
                    (ollama-buddy--get-models-with-others)))
          (prompt (if arg "Online Model: " "Model: "))
-         (new-model (completing-read prompt models nil t)))
+         (new-model (completing-read prompt
+                      (lambda (string pred action)
+                        (if (eq action 'metadata)
+                            '(metadata (annotation-function . ollama-buddy--model-annotation))
+                          (complete-with-action action models string pred)))
+                      nil t)))
     (setq ollama-buddy-default-model new-model)
     (setq ollama-buddy--current-model new-model)
     (message "Switched to %smodel: %s" (if arg "online " "") new-model)
@@ -1801,7 +1887,12 @@ via `ollama signin'."
   (let* ((cloud-models (mapcar (lambda (m)
                                  (concat ollama-buddy-cloud-marker-prefix m))
                                ollama-buddy-cloud-models))
-         (new-model (completing-read "Cloud Model: " cloud-models nil t)))
+         (new-model (completing-read "Cloud Model: "
+                      (lambda (string pred action)
+                        (if (eq action 'metadata)
+                            '(metadata (annotation-function . ollama-buddy--model-annotation))
+                          (complete-with-action action cloud-models string pred)))
+                      nil t)))
     (setq ollama-buddy-default-model new-model)
     (setq ollama-buddy--current-model new-model)
     (message "Switched to cloud model: %s" new-model)
@@ -2141,19 +2232,25 @@ Returns nil if user cancels, t otherwise."
       ;; Context is within limits
       t)))
 
-(defun ollama-buddy--send (&optional prompt specified-model)
+(defun ollama-buddy--send (&optional prompt specified-model tool-continuation-p)
   "Send PROMPT with optional SPECIFIED-MODEL.
 When PROMPT contains image file paths and the model supports vision,
 those images will be included in the request.
 Cloud models are proxied through the local Ollama server which handles
-authentication via `ollama signin'."
+authentication via `ollama signin'.
+When TOOL-CONTINUATION-P is non-nil, this is a follow-up after tool execution
+and no new user message is added."
+
+  ;; Default prompt to empty string for tool continuations
+  (when (and tool-continuation-p (not prompt))
+    (setq prompt ""))
 
   ;; Check status and update UI if offline
   (unless (ollama-buddy--check-status)
     (ollama-buddy--update-status "OFFLINE")
     (user-error "Ensure Ollama is running"))
 
-  (unless (> (length prompt) 0)
+  (unless (or tool-continuation-p (> (length prompt) 0))
     (user-error "Ensure prompt is defined"))
 
   (when ollama-buddy-show-context-percentage
@@ -2219,18 +2316,27 @@ authentication via `ollama signin'."
                               (content . ,(if combined-context
                                               (concat prompt combined-context)
                                             prompt)))))
-         ;; Add the current message to the messages
-         (messages-all (append messages-with-system (list current-message)))
+         ;; Add the current message to the messages (skip for tool continuations)
+         (messages-all (if tool-continuation-p
+                           messages-with-system
+                         (append messages-with-system (list current-message))))
          ;; Get only the modified parameters
          (modified-options (ollama-buddy-params-get-for-request))
          ;; Build the base payload
          (base-payload `((model . ,(ollama-buddy--get-real-model-name model))
                          (messages . ,(vconcat [] messages-all))
                          (stream . ,(if ollama-buddy-streaming-enabled t :json-false))))
+         ;; Add tools schema if enabled
+         (with-tools (let ((schema (when (and (featurep 'ollama-buddy-tools)
+                                              (bound-and-true-p ollama-buddy-tools-enabled))
+                                     (ollama-buddy-tools--generate-schema))))
+                       (if schema
+                           (append base-payload `((tools . ,schema)))
+                         base-payload)))
          ;; Add system prompt if present
          (with-system (if effective-system-prompt
-                          (append base-payload `((system . ,effective-system-prompt)))
-                        base-payload))
+                          (append with-tools `((system . ,effective-system-prompt)))
+                        with-tools))
          ;; Add modified parameters if present
          (final-payload (if modified-options
                             (append with-system `((options . ,modified-options)))
@@ -2241,8 +2347,11 @@ authentication via `ollama signin'."
       (set-register ollama-buddy-default-register ""))
     
     (setq ollama-buddy--current-model model)
-    (setq ollama-buddy--current-prompt prompt)
-    
+    (setq ollama-buddy--current-prompt (or prompt ""))
+    (setq ollama-buddy--current-tool-calls nil)
+    (unless tool-continuation-p
+      (setq ollama-buddy--tool-call-iteration 0))
+
     (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
       (pop-to-buffer (current-buffer))
       (goto-char (point-max))
@@ -2250,30 +2359,37 @@ authentication via `ollama signin'."
       (unless (> (buffer-size) 0)
         (insert (ollama-buddy--create-intro-message)))
 
-      ;; Show any attached files
-      (when ollama-buddy--current-attachments
-        (insert (format "\n\n[Including %d attached file(s) in context]"
-                        (length ollama-buddy--current-attachments))))
-      
-      ;; Show whether we're using vision if applicable
-      (if has-images
-          (insert (format "\n\n** [%s: RESPONSE with %d image(s)]"
-                          model (length image-files)))
-        (insert (format "\n\n** [%s: RESPONSE]" model)))
+      (if tool-continuation-p
+          ;; Tool continuation - minimal header
+          (progn
+            (insert "\n\n** [Tool Continuation]")
+            (setq ollama-buddy--response-start-position (point))
+            (insert "\n\n"))
+        ;; Normal send - full header
+        ;; Show any attached files
+        (when ollama-buddy--current-attachments
+          (insert (format "\n\n[Including %d attached file(s) in context]"
+                          (length ollama-buddy--current-attachments))))
 
-      (setq ollama-buddy--response-start-position (point))
+        ;; Show whether we're using vision if applicable
+        (if has-images
+            (insert (format "\n\n** [%s: RESPONSE with %d image(s)]"
+                            model (length image-files)))
+          (insert (format "\n\n** [%s: RESPONSE]" model)))
 
-      (insert "\n\n")
+        (setq ollama-buddy--response-start-position (point))
 
-      (when (and original-model model (not (string= original-model model)))
-        (insert (format "*[Using %s instead of %s]*" model original-model)  "\n\n"))
+        (insert "\n\n")
 
-      ;; Display detected images if any
-      (when has-images
-        (insert "Detected images:\n")
-        (dolist (img image-files)
-          (insert (format "- %s\n" img)))
-        (insert "\n"))
+        (when (and original-model model (not (string= original-model model)))
+          (insert (format "*[Using %s instead of %s]*" model original-model)  "\n\n"))
+
+        ;; Display detected images if any
+        (when has-images
+          (insert "Detected images:\n")
+          (dolist (img image-files)
+            (insert (format "- %s\n" img)))
+          (insert "\n")))
 
       ;; Enable visual-line-mode for better text wrapping
       (visual-line-mode 1))
@@ -2745,9 +2861,13 @@ Modifies the variable in place."
              'action `(lambda (_)
                         (ollama-buddy-select-model ,model))
              'help-echo "Select this model")
-            
+            (when (ollama-buddy--model-supports-tools model)
+              (insert " ⚒"))
+            (when (ollama-buddy--model-supports-vision model)
+              (insert " ⊙"))
+
             (insert "  ")
-            
+
             ;; Info button
             (insert-text-button
              "Info"
@@ -2817,6 +2937,10 @@ Modifies the variable in place."
                'action `(lambda (_)
                           (ollama-buddy-select-model ,(concat ollama-buddy-cloud-marker-prefix model)))
                'help-echo (format "Select cloud model %s" model))
+              (when (ollama-buddy--model-supports-tools display-model)
+                (insert " ⚒"))
+              (when (ollama-buddy--model-supports-vision display-model)
+                (insert " ⊙"))
               (insert "  ")
               ;; Pull manifest button
               (insert-text-button
@@ -2856,6 +2980,10 @@ Modifies the variable in place."
                      'action `(lambda (_)
                                 (ollama-buddy-pull-model ,model))
                      'help-echo (format "Pull %s from Ollama Hub" display-model))
+                    (when (ollama-buddy--model-supports-tools display-model)
+                      (insert " ⚒"))
+                    (when (ollama-buddy--model-supports-vision display-model)
+                      (insert " ⊙"))
                     (insert "\n")))
                 (insert "\n")))))
         )
