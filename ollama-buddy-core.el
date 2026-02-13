@@ -592,16 +592,29 @@ Each entry is a plist with :name, :description and :models keys."
 (defun ollama-buddy--should-use-marker-prefix ()
   "Determine if marker prefix should be used.
 Returns non-nil if any remote provider models are available.
-Cloud models use the `cl:' prefix unconditionally, so the `o:'
-prefix for local models is only needed when external providers
-\(OpenAI, Claude, Gemini, etc.) are loaded to disambiguate."
+The `o:' prefix for local models and `cl:' prefix for cloud models
+are only needed when external providers (OpenAI, Claude, Gemini, etc.)
+are loaded to disambiguate."
   (and (boundp 'ollama-buddy-remote-models)
        ollama-buddy-remote-models))
+
+(defun ollama-buddy--should-use-cloud-prefix ()
+  "Determine if cloud marker prefix should be used.
+Returns non-nil if any external provider models are available.
+When only Ollama local and cloud models are used, no prefix is needed
+since the cloud symbol (☁) in the UI provides sufficient indication."
+  (ollama-buddy--should-use-marker-prefix))
 
 (defun ollama-buddy--get-full-model-name (model)
   "Get the full display name for MODEL with prefix if needed."
   (if (ollama-buddy--should-use-marker-prefix)
       (concat ollama-buddy-marker-prefix model)
+    model))
+
+(defun ollama-buddy--get-full-cloud-model-name (model)
+  "Get the full display name for cloud MODEL with prefix if needed."
+  (if (ollama-buddy--should-use-cloud-prefix)
+      (concat ollama-buddy-cloud-marker-prefix model)
     model))
 
 (defun ollama-buddy--get-real-model-name (model)
@@ -625,12 +638,12 @@ full display name including any prefix.")
   "Assign letters to LOCAL-MODELS and cloud models.
 LOCAL-MODELS should be the list already obtained from
 `ollama-buddy--get-models'.  Cloud models from
-`ollama-buddy-cloud-models' are appended with the `cl:' prefix.
+`ollama-buddy-cloud-models' are appended with the `cl:' prefix
+only when external providers are loaded.
 Supports more than 26 models by using `@a', `@b', etc. for
 additional models beyond the first 26.
 Updates `ollama-buddy--model-letters'."
-  (let* ((cloud-models (mapcar (lambda (m)
-                                 (concat ollama-buddy-cloud-marker-prefix m))
+  (let* ((cloud-models (mapcar #'ollama-buddy--get-full-cloud-model-name
                                ollama-buddy-cloud-models))
          (all-models (append local-models cloud-models))
          (model-count (length all-models))
@@ -1383,14 +1396,17 @@ Each element is a plist with :name, :authenticated, and :enabled."
          (auth-status (ollama-buddy--format-auth-status))
          (ollama-count (length (ollama-buddy--get-models)))
          (cloud-count (length ollama-buddy-cloud-models))
+         (use-prefixes (ollama-buddy--should-use-marker-prefix))
          (provider-summary
           (let ((parts nil))
-            (when (> ollama-count 0)
+            ;; Only show "o: Ollama" with prefix when external providers are loaded
+            (when (and (> ollama-count 0) use-prefixes)
               (push (format "o: Ollama (%d)" ollama-count) parts))
             (when external-providers
               (setq parts (append (nreverse parts) external-providers)
                     parts (nreverse parts)))
-            (when (> cloud-count 0)
+            ;; Only show "cl: Cloud" with prefix when external providers are loaded
+            (when (and (> cloud-count 0) use-prefixes)
               (push (format "cl: Cloud (%d)" cloud-count) parts))
             (nreverse parts)))
          (message-text
@@ -1766,8 +1782,7 @@ When complete, CALLBACK is called with the status response and result."
       (push model models))
     (setq models (append models ollama-buddy-remote-models))
     (setq models (append models
-                         (mapcar (lambda (m)
-                                   (concat ollama-buddy-cloud-marker-prefix m))
+                         (mapcar #'ollama-buddy--get-full-cloud-model-name
                                  ollama-buddy-cloud-models)))
     models))
 

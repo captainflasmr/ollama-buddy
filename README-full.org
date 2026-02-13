@@ -101,7 +101,7 @@ See full list in :
 
 ** <2026-02-12 Wed> *2.0.0*
 
-Tool Calling Support and Tool-Capable Model Indicators
+Tool Calling Support and Refined Model Indicators
 
 - New =ollama-buddy-tools.el= module enabling LLMs to invoke Emacs functions during conversations
 - Built-in tools: =read_file=, =list_directory=, =get_buffer_content=, =list_buffers=, =calculate=, =search_buffer=, =write_file=, =execute_shell=
@@ -110,9 +110,13 @@ Tool Calling Support and Tool-Capable Model Indicators
 - Toggle tool calling on/off with =C-c W= (=ollama-buddy-tools-toggle=)
 - List registered tools with =C-c Q= (=ollama-buddy-tools-info=) in an org-mode formatted buffer
 - Both commands available in transient menu under Actions (=W= and =Q=)
-- ⚒ indicator in header line shows when tools are *enabled* (toggled on)
+- Tools are only sent to models that support them (no error if model doesn't support tools)
+- ⚒ indicator in header line shows when tools are *enabled* AND model supports tools
 - ⚒ indicator in prompt line shows when model *supports* tool calling
-- ⊙ indicator also shown for vision-capable models in completing-read
+- ☁ indicator shown consistently in header, prompt, completing-read, and model management
+- ☁ and ⚒ indicators combined in prompt line for cloud models with tool support
+- Model prefixes (=o:=, =cl:=) only used when external providers are loaded
+- Welcome screen omits provider summary when only Ollama (local + cloud) is used
 - New =ollama-buddy-tools-models= customization for configuring which models support tool calling
 
 ** <2026-02-12 Wed> *1.5.0*

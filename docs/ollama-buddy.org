@@ -273,11 +273,11 @@ language models (LLMs) directly within your Emacs workflow.
       Tools (require safe mode off)]]
   - [[#Example-Prompts][21.4 Example Prompts]]
   - [[#How-It-Works-3][21.5 How It Works]]
+    - [[#Model-Compatibility][21.5.1 Model Compatibility]]
   - [[#Configuration-6][21.6 Configuration]]
   - [[#Registering-Custom-Tools][21.7 Registering Custom Tools]]
   - [[#Interactive-Commands][21.8 Interactive Commands]]
-  - [[#Tool_002dCapable-Model-Indicator][21.9 Tool-Capable Model
-    Indicator]]
+  - [[#Tool-Indicators][21.9 Tool Indicators]]
 - [[#Advanced-Usage][22 Advanced Usage]]
   - [[#Managing-Token-Usage][22.1 Managing Token Usage]]
   - [[#Customizing-the-Interface][22.2 Customizing the Interface]]
@@ -879,15 +879,25 @@ Then in your Emacs config:
 :CUSTOM_ID: provider-prefixes
 :CLASS: subsection
 :END:
-Each provider uses a prefix to identify its models:
+Prefixes are only used when external providers (OpenAI, Claude, etc.)
+are loaded:
 
-- =a:= - OpenAI (e.g., =a:gpt-4=)
-- =c:= - Claude (e.g., =c:claude-3-opus=)
-- =g:= - Gemini (e.g., =g:gemini-pro=)
-- =k:= - Grok (e.g., =k:grok-1=)
-- =p:= - GitHub Copilot (e.g., =p:gpt-4o=)
-- =s:= - Codestral (e.g., =s:codestral-latest=)
-- =o:= - Ollama local (when remote providers are loaded)
+- When only Ollama is used :: Models appear without prefix: =llama3:8b=,
+  =qwen3-coder:480b-cloud=
+
+- When external providers are loaded :: Prefixes disambiguate providers:
+
+  - =o:= - Ollama local (e.g., =o:llama3:8b=)
+  - =cl:= - Ollama cloud (e.g., =cl:qwen3-coder:480b-cloud=)
+  - =a:= - OpenAI (e.g., =a:gpt-4=)
+  - =c:= - Claude (e.g., =c:claude-3-opus=)
+  - =g:= - Gemini (e.g., =g:gemini-pro=)
+  - =k:= - Grok (e.g., =k:grok-1=)
+  - =p:= - GitHub Copilot (e.g., =p:gpt-4o=)
+  - =s:= - Codestral (e.g., =s:codestral-latest=)
+
+The =☁= cloud symbol provides visual indication for cloud models
+regardless of whether prefixes are used.
 
 <<Global-System-Prompt-Configuration>>
 *** 3.8 Global System Prompt Configuration [[#Global-System-Prompt-Configuration][¶]]
@@ -1277,10 +1287,13 @@ The chat interface consists of:
 
 - A welcome message with available models and providers
 - Conversation history (previous prompts and responses)
-- A prompt area for entering your queries
+- A prompt area for entering your queries with model capability
+  indicators
 - A header line with status information including:
-  - Cloud model indicator (=☁=)
-  - Tool-capable model indicator (=⚒=)
+  - Cloud model indicator (=☁=) - using an Ollama cloud model
+  - Tool calling enabled indicator (=⚒=) - tools enabled AND model
+    supports them
+  - Vision indicator (=⊙=) - model supports vision
   - Attachment indicators (=≡N=)
   - Web search indicators (=♁N=)
   - Context usage bar (when enabled)
@@ -1289,6 +1302,9 @@ The chat interface consists of:
   - Current model name
   - System prompt indicator
   - Modified parameters
+- A prompt line showing model capabilities:
+  - =☁= when using a cloud model
+  - =⚒= when model supports tool calling (regardless of enabled state)
 - Context warnings and validation
 
 <<Sending-Prompts>>
@@ -4493,7 +4509,7 @@ Next: [[#Advanced-Usage][Advanced Usage]], Previous:
 - [[#Configuration-6][Configuration]]
 - [[#Registering-Custom-Tools][Registering Custom Tools]]
 - [[#Interactive-Commands][Interactive Commands]]
-- [[#Tool_002dCapable-Model-Indicator][Tool-Capable Model Indicator]]
+- [[#Tool-Indicators][Tool Indicators]]
 
 <<Overview-7>>
 *** 21.1 Overview [[#Overview-7][¶]]
@@ -4623,6 +4639,28 @@ conversation flow works as follows:
 This loop is transparent to the user --- you see the final response in
 the chat buffer.
 
+- [[#Model-Compatibility][Model Compatibility]]
+
+<<Model-Compatibility>>
+**** 21.5.1 Model Compatibility [[#Model-Compatibility][¶]]
+:PROPERTIES:
+:CUSTOM_ID: model-compatibility
+:CLASS: subsection
+:END:
+Tools are only sent to models that support them. If you have tools
+enabled but switch to a model that doesn't support tool calling:
+
+- The request proceeds normally without tools (no error)
+- The header line =⚒= indicator disappears (tools enabled but not
+  applicable)
+- The prompt line =⚒= indicator also disappears (model doesn't support
+  tools)
+- When you switch back to a tool-capable model, tools become active
+  again
+
+This allows you to leave tools enabled globally while freely switching
+between models.
+
 <<Configuration-6>>
 *** 21.6 Configuration [[#Configuration-6][¶]]
 :PROPERTIES:
@@ -4693,28 +4731,51 @@ non-string value, it is formatted with =%S=.
 :CUSTOM_ID: interactive-commands
 :CLASS: section
 :END:
-- =ollama-buddy-tools-toggle= :: Toggle tool calling on or off.
+- =ollama-buddy-tools-toggle (==C-c W==)= :: Toggle tool calling on or
+  off. When toggled, the header line updates to show/hide the =⚒=
+  indicator.
 
 - =ollama-buddy-tools-toggle-safe-mode= :: Toggle safe mode for tool
   execution.
 
-- =ollama-buddy-tools-info= :: Display information about all registered
-  tools in a dedicated buffer, showing status, safe mode, and each
-  tool's description.
+- =ollama-buddy-tools-info (==C-c Q==)= :: Display information about all
+  registered tools in a dedicated org-mode buffer, showing status table,
+  safe mode settings, and each tool's description with parameters.
 
 - =ollama-buddy-tools-clear= :: Remove all registered tools.
 
 - =ollama-buddy-tools-setup= :: Re-initialize built-in tools.
 
-<<Tool_002dCapable-Model-Indicator>>
-*** 21.9 Tool-Capable Model Indicator [[#Tool_002dCapable-Model-Indicator][¶]]
+These commands are also available from the transient menu (C-c O) under
+the “Actions” section:
+
+- W - Toggle Tools
+- Q - List Tools
+
+<<Tool-Indicators>>
+*** 21.9 Tool Indicators [[#Tool-Indicators][¶]]
 :PROPERTIES:
-:CUSTOM_ID: tool-capable-model-indicator
+:CUSTOM_ID: tool-indicators
 :CLASS: section
 :END:
-Models known to support tool calling show a =⚒= indicator in:
+The =⚒= (hammer and wrench) indicator appears in two places with
+different meanings:
 
-- The header line when the current model supports tools
+- Header line :: Shows =⚒= when tool calling is currently /enabled/
+  (toggled on with C-c W). This indicates that tool calls will be sent
+  to the model.
+
+- Prompt line :: Shows =⚒= when the current model /supports/ tool
+  calling. This appears regardless of whether tools are enabled, helping
+  you identify which models can use tools.
+
+For example, with a tool-capable model like =qwen3:8b=:
+
+- The prompt always shows: =* *qwen3:8b* ⚒ >> PROMPT:=
+- The header line shows =⚒= only when you've enabled tools with C-c W
+
+Additional places showing tool capability:
+
 - The =C-c m= completing-read model selector (alongside =⊙= for vision
   models)
 - The model management buffer (=C-c M=) next to model names

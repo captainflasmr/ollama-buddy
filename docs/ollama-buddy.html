@@ -365,11 +365,14 @@ allowing you to leverage powerful large language models (LLMs) directly within y
       <li><a id="toc-Unsafe-Tools-_0028require-safe-mode-off_0029" href="#Unsafe-Tools-_0028require-safe-mode-off_0029">21.3.2 Unsafe Tools (require safe mode off)</a></li>
     </ul></li>
     <li><a id="toc-Example-Prompts" href="#Example-Prompts">21.4 Example Prompts</a></li>
-    <li><a id="toc-How-It-Works-3" href="#How-It-Works-3">21.5 How It Works</a></li>
+    <li><a id="toc-How-It-Works-3" href="#How-It-Works-3">21.5 How It Works</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Model-Compatibility" href="#Model-Compatibility">21.5.1 Model Compatibility</a></li>
+    </ul></li>
     <li><a id="toc-Configuration-5" href="#Configuration-6">21.6 Configuration</a></li>
     <li><a id="toc-Registering-Custom-Tools" href="#Registering-Custom-Tools">21.7 Registering Custom Tools</a></li>
     <li><a id="toc-Interactive-Commands" href="#Interactive-Commands">21.8 Interactive Commands</a></li>
-    <li><a id="toc-Tool_002dCapable-Model-Indicator" href="#Tool_002dCapable-Model-Indicator">21.9 Tool-Capable Model Indicator</a></li>
+    <li><a id="toc-Tool-Indicators" href="#Tool-Indicators">21.9 Tool Indicators</a></li>
   </ul></li>
   <li><a id="toc-Advanced-Usage" href="#Advanced-Usage">22 Advanced Usage</a>
   <ul class="toc-numbered-mark">
@@ -933,17 +936,30 @@ machine ollama-buddy-codestral login apikey password YOUR_KEY
 <div class="subsection-level-extent" id="Provider-Prefixes">
 <h4 class="subsection"><span>3.7.1 Provider Prefixes<a class="copiable-link" href="#Provider-Prefixes"> &para;</a></span></h4>
 
-<p>Each provider uses a prefix to identify its models:
+<p>Prefixes are only used when external providers (OpenAI, Claude, etc.) are loaded:
+</p>
+<dl class="table">
+<dt>When only Ollama is used</dt>
+<dd><p>Models appear without prefix: <code class="code">llama3:8b</code>, <code class="code">qwen3-coder:480b-cloud</code>
+</p>
+</dd>
+<dt>When external providers are loaded</dt>
+<dd><p>Prefixes disambiguate providers:
 </p><ul class="itemize mark-bullet">
-<li><code class="code">a:</code> - OpenAI (e.g., <code class="code">a:gpt-4</code>)
+<li><code class="code">o:</code> - Ollama local (e.g., <code class="code">o:llama3:8b</code>)
+</li><li><code class="code">cl:</code> - Ollama cloud (e.g., <code class="code">cl:qwen3-coder:480b-cloud</code>)
+</li><li><code class="code">a:</code> - OpenAI (e.g., <code class="code">a:gpt-4</code>)
 </li><li><code class="code">c:</code> - Claude (e.g., <code class="code">c:claude-3-opus</code>)
 </li><li><code class="code">g:</code> - Gemini (e.g., <code class="code">g:gemini-pro</code>)
 </li><li><code class="code">k:</code> - Grok (e.g., <code class="code">k:grok-1</code>)
 </li><li><code class="code">p:</code> - GitHub Copilot (e.g., <code class="code">p:gpt-4o</code>)
 </li><li><code class="code">s:</code> - Codestral (e.g., <code class="code">s:codestral-latest</code>)
-</li><li><code class="code">o:</code> - Ollama local (when remote providers are loaded)
 </li></ul>
+</dd>
+</dl>
 
+<p>The <code class="code">☁</code> cloud symbol provides visual indication for cloud models regardless of whether prefixes are used.
+</p>
 </div>
 </div>
 <div class="section-level-extent" id="Global-System-Prompt-Configuration">
@@ -1341,11 +1357,12 @@ Next: <a href="#Working-with-Models" accesskey="n" rel="next">Working with Model
 <ul class="itemize mark-bullet">
 <li>A welcome message with available models and providers
 </li><li>Conversation history (previous prompts and responses)
-</li><li>A prompt area for entering your queries
+</li><li>A prompt area for entering your queries with model capability indicators
 </li><li>A header line with status information including:
   <ul class="itemize mark-minus">
-<li>Cloud model indicator (<code class="code">☁</code>)
-  </li><li>Tool-capable model indicator (<code class="code">⚒</code>)
+<li>Cloud model indicator (<code class="code">☁</code>) - using an Ollama cloud model
+  </li><li>Tool calling enabled indicator (<code class="code">⚒</code>) - tools enabled AND model supports them
+  </li><li>Vision indicator (<code class="code">⊙</code>) - model supports vision
   </li><li>Attachment indicators (<code class="code">≡N</code>)
   </li><li>Web search indicators (<code class="code">♁N</code>)
   </li><li>Context usage bar (when enabled)
@@ -1354,6 +1371,11 @@ Next: <a href="#Working-with-Models" accesskey="n" rel="next">Working with Model
   </li><li>Current model name
   </li><li>System prompt indicator
   </li><li>Modified parameters
+  </li></ul>
+</li><li>A prompt line showing model capabilities:
+  <ul class="itemize mark-minus">
+<li><code class="code">☁</code> when using a cloud model
+  </li><li><code class="code">⚒</code> when model supports tool calling (regardless of enabled state)
   </li></ul>
 </li><li>Context warnings and validation
 </li></ul>
@@ -4319,7 +4341,7 @@ Next: <a href="#Advanced-Usage" accesskey="n" rel="next">Advanced Usage</a>, Pre
 <li><a href="#Configuration-6" accesskey="6">Configuration</a></li>
 <li><a href="#Registering-Custom-Tools" accesskey="7">Registering Custom Tools</a></li>
 <li><a href="#Interactive-Commands" accesskey="8">Interactive Commands</a></li>
-<li><a href="#Tool_002dCapable-Model-Indicator" accesskey="9">Tool-Capable Model Indicator</a></li>
+<li><a href="#Tool-Indicators" accesskey="9">Tool Indicators</a></li>
 </ul>
 <div class="section-level-extent" id="Overview-7">
 <h3 class="section"><span>21.1 Overview<a class="copiable-link" href="#Overview-7"> &para;</a></span></h3>
@@ -4438,6 +4460,24 @@ Create a file at /tmp/hello.txt with Hello World.
 
 <p>This loop is transparent to the user &mdash; you see the final response in the chat buffer.
 </p>
+<ul class="mini-toc">
+<li><a href="#Model-Compatibility" accesskey="1">Model Compatibility</a></li>
+</ul>
+<div class="subsection-level-extent" id="Model-Compatibility">
+<h4 class="subsection"><span>21.5.1 Model Compatibility<a class="copiable-link" href="#Model-Compatibility"> &para;</a></span></h4>
+
+<p>Tools are only sent to models that support them. If you have tools enabled but switch to a model that doesn&rsquo;t support tool calling:
+</p>
+<ul class="itemize mark-bullet">
+<li>The request proceeds normally without tools (no error)
+</li><li>The header line <code class="code">⚒</code> indicator disappears (tools enabled but not applicable)
+</li><li>The prompt line <code class="code">⚒</code> indicator also disappears (model doesn&rsquo;t support tools)
+</li><li>When you switch back to a tool-capable model, tools become active again
+</li></ul>
+
+<p>This allows you to leave tools enabled globally while freely switching between models.
+</p>
+</div>
 </div>
 <div class="section-level-extent" id="Configuration-6">
 <h3 class="section"><span>21.6 Configuration<a class="copiable-link" href="#Configuration-6"> &para;</a></span></h3>
@@ -4507,16 +4547,16 @@ When nil, only custom user-registered tools are available.
 <h3 class="section"><span>21.8 Interactive Commands<a class="copiable-link" href="#Interactive-Commands"> &para;</a></span></h3>
 
 <dl class="table">
-<dt><code class="code">ollama-buddy-tools-toggle</code></dt>
-<dd><p>Toggle tool calling on or off.
+<dt><code class="code">ollama-buddy-tools-toggle (<kbd class="kbd">C-c W</kbd>)</code></dt>
+<dd><p>Toggle tool calling on or off. When toggled, the header line updates to show/hide the <code class="code">⚒</code> indicator.
 </p>
 </dd>
 <dt><code class="code">ollama-buddy-tools-toggle-safe-mode</code></dt>
 <dd><p>Toggle safe mode for tool execution.
 </p>
 </dd>
-<dt><code class="code">ollama-buddy-tools-info</code></dt>
-<dd><p>Display information about all registered tools in a dedicated buffer, showing status, safe mode, and each tool&rsquo;s description.
+<dt><code class="code">ollama-buddy-tools-info (<kbd class="kbd">C-c Q</kbd>)</code></dt>
+<dd><p>Display information about all registered tools in a dedicated org-mode buffer, showing status table, safe mode settings, and each tool&rsquo;s description with parameters.
 </p>
 </dd>
 <dt><code class="code">ollama-buddy-tools-clear</code></dt>
@@ -4528,15 +4568,37 @@ When nil, only custom user-registered tools are available.
 </p></dd>
 </dl>
 
-</div>
-<div class="section-level-extent" id="Tool_002dCapable-Model-Indicator">
-<h3 class="section"><span>21.9 Tool-Capable Model Indicator<a class="copiable-link" href="#Tool_002dCapable-Model-Indicator"> &para;</a></span></h3>
+<p>These commands are also available from the transient menu (<kbd class="kbd">C-c O</kbd>) under the &ldquo;Actions&rdquo; section:
+</p><ul class="itemize mark-bullet">
+<li><kbd class="kbd">W</kbd> - Toggle Tools
+</li><li><kbd class="kbd">Q</kbd> - List Tools
+</li></ul>
 
-<p>Models known to support tool calling show a <code class="code">⚒</code> indicator in:
+</div>
+<div class="section-level-extent" id="Tool-Indicators">
+<h3 class="section"><span>21.9 Tool Indicators<a class="copiable-link" href="#Tool-Indicators"> &para;</a></span></h3>
+
+<p>The <code class="code">⚒</code> (hammer and wrench) indicator appears in two places with different meanings:
 </p>
-<ul class="itemize mark-bullet">
-<li>The header line when the current model supports tools
-</li><li>The <code class="code">C-c m</code> completing-read model selector (alongside <code class="code">⊙</code> for vision models)
+<dl class="table">
+<dt>Header line</dt>
+<dd><p>Shows <code class="code">⚒</code> when tool calling is currently <em class="emph">enabled</em> (toggled on with <kbd class="kbd">C-c W</kbd>). This indicates that tool calls will be sent to the model.
+</p>
+</dd>
+<dt>Prompt line</dt>
+<dd><p>Shows <code class="code">⚒</code> when the current model <em class="emph">supports</em> tool calling. This appears regardless of whether tools are enabled, helping you identify which models can use tools.
+</p></dd>
+</dl>
+
+<p>For example, with a tool-capable model like <code class="code">qwen3:8b</code>:
+</p><ul class="itemize mark-bullet">
+<li>The prompt always shows: <code class="code">* *qwen3:8b* ⚒ &gt;&gt; PROMPT:</code>
+</li><li>The header line shows <code class="code">⚒</code> only when you&rsquo;ve enabled tools with <kbd class="kbd">C-c W</kbd>
+</li></ul>
+
+<p>Additional places showing tool capability:
+</p><ul class="itemize mark-bullet">
+<li>The <code class="code">C-c m</code> completing-read model selector (alongside <code class="code">⊙</code> for vision models)
 </li><li>The model management buffer (<code class="code">C-c M</code>) next to model names
 </li></ul>
 

@@ -433,16 +433,27 @@ Then in your Emacs config:
 
 @subsection Provider Prefixes
 
-Each provider uses a prefix to identify its models:
+Prefixes are only used when external providers (OpenAI, Claude, etc.) are loaded:
+
+@table @asis
+@item When only Ollama is used
+Models appear without prefix: @code{llama3:8b}, @code{qwen3-coder:480b-cloud}
+
+@item When external providers are loaded
+Prefixes disambiguate providers:
 @itemize @bullet
+@item @code{o:} - Ollama local (e.g., @code{o:llama3:8b})
+@item @code{cl:} - Ollama cloud (e.g., @code{cl:qwen3-coder:480b-cloud})
 @item @code{a:} - OpenAI (e.g., @code{a:gpt-4})
 @item @code{c:} - Claude (e.g., @code{c:claude-3-opus})
 @item @code{g:} - Gemini (e.g., @code{g:gemini-pro})
 @item @code{k:} - Grok (e.g., @code{k:grok-1})
 @item @code{p:} - GitHub Copilot (e.g., @code{p:gpt-4o})
 @item @code{s:} - Codestral (e.g., @code{s:codestral-latest})
-@item @code{o:} - Ollama local (when remote providers are loaded)
 @end itemize
+@end table
+
+The @code{☁} cloud symbol provides visual indication for cloud models regardless of whether prefixes are used.
 
 @section Global System Prompt Configuration
 
@@ -734,11 +745,12 @@ The chat interface consists of:
 @itemize @bullet
 @item A welcome message with available models and providers
 @item Conversation history (previous prompts and responses)
-@item A prompt area for entering your queries
+@item A prompt area for entering your queries with model capability indicators
 @item A header line with status information including:
   @itemize @minus
-  @item Cloud model indicator (@code{☁})
-  @item Tool-capable model indicator (@code{⚒})
+  @item Cloud model indicator (@code{☁}) - using an Ollama cloud model
+  @item Tool calling enabled indicator (@code{⚒}) - tools enabled AND model supports them
+  @item Vision indicator (@code{⊙}) - model supports vision
   @item Attachment indicators (@code{≡N})
   @item Web search indicators (@code{♁N})
   @item Context usage bar (when enabled)
@@ -747,6 +759,11 @@ The chat interface consists of:
   @item Current model name
   @item System prompt indicator
   @item Modified parameters
+  @end itemize
+@item A prompt line showing model capabilities:
+  @itemize @minus
+  @item @code{☁} when using a cloud model
+  @item @code{⚒} when model supports tool calling (regardless of enabled state)
   @end itemize
 @item Context warnings and validation
 @end itemize
@@ -3057,6 +3074,19 @@ When tool calling is enabled and a tool-capable model is selected, the conversat
 @end enumerate
 
 This loop is transparent to the user --- you see the final response in the chat buffer.
+
+@subsection Model Compatibility
+
+Tools are only sent to models that support them. If you have tools enabled but switch to a model that doesn't support tool calling:
+
+@itemize @bullet
+@item The request proceeds normally without tools (no error)
+@item The header line @code{⚒} indicator disappears (tools enabled but not applicable)
+@item The prompt line @code{⚒} indicator also disappears (model doesn't support tools)
+@item When you switch back to a tool-capable model, tools become active again
+@end itemize
+
+This allows you to leave tools enabled globally while freely switching between models.
 
 @section Configuration
 

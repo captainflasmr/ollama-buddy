@@ -1886,8 +1886,7 @@ With prefix ARG (\\[universal-argument]), select from online remote models only.
 Cloud models run on ollama.com infrastructure and require authentication
 via `ollama signin'."
   (interactive)
-  (let* ((cloud-models (mapcar (lambda (m)
-                                 (concat ollama-buddy-cloud-marker-prefix m))
+  (let* ((cloud-models (mapcar #'ollama-buddy--get-full-cloud-model-name
                                ollama-buddy-cloud-models))
          (new-model (completing-read "Cloud Model: "
                       (lambda (string pred action)
@@ -2341,9 +2340,10 @@ and no new user message is added."
          (base-payload `((model . ,(ollama-buddy--get-real-model-name model))
                          (messages . ,(vconcat [] messages-all))
                          (stream . ,(if ollama-buddy-streaming-enabled t :json-false))))
-         ;; Add tools schema if enabled
+         ;; Add tools schema if enabled and model supports tools
          (with-tools (let ((schema (when (and (featurep 'ollama-buddy-tools)
-                                              (bound-and-true-p ollama-buddy-tools-enabled))
+                                              (bound-and-true-p ollama-buddy-tools-enabled)
+                                              (ollama-buddy--model-supports-tools model))
                                      (ollama-buddy-tools--generate-schema))))
                        (if schema
                            (append base-payload `((tools . ,schema)))
@@ -2937,7 +2937,7 @@ Modifies the variable in place."
           (insert (format "\n* ☁ Cloud Models %s\n\n"
                           (ollama-buddy--cloud-auth-status-indicator)))
           (dolist (model ollama-buddy-cloud-models)
-            (let* ((display-model (concat ollama-buddy-cloud-marker-prefix model))
+            (let* ((display-model (ollama-buddy--get-full-cloud-model-name model))
                    (letter (ollama-buddy--get-model-letter display-model))
                    (is-current (and ollama-buddy--current-model
                                     (or (string= display-model
@@ -2950,7 +2950,7 @@ Modifies the variable in place."
               (insert-text-button
                display-model
                'action `(lambda (_)
-                          (ollama-buddy-select-model ,(concat ollama-buddy-cloud-marker-prefix model)))
+                          (ollama-buddy-select-model ,(ollama-buddy--get-full-cloud-model-name model)))
                'help-echo (format "Select cloud model %s" model))
               (insert " ☁")
               (when (ollama-buddy--model-supports-tools display-model)
