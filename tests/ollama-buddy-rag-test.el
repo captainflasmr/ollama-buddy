@@ -671,5 +671,50 @@ Binds `test-dir' to the directory containing the files."
           (should (equal "code.el"
                          (plist-get (car results) :file))))))))
 
+;;; Inline @rag() Processing Tests
+;; ============================================================================
+
+(ert-deftest ollama-buddy-rag-test-inline-extract-single ()
+  "Test extracting a single inline @rag() query."
+  :tags '(rag)
+  (let ((queries (ollama-buddy-rag-extract-inline-queries
+                  "Tell me about @rag(giant squid attack) from the book.")))
+    (should (= 1 (length queries)))
+    (should (equal "giant squid attack" (car queries)))))
+
+(ert-deftest ollama-buddy-rag-test-inline-extract-multiple ()
+  "Test extracting multiple inline @rag() queries."
+  :tags '(rag)
+  (let ((queries (ollama-buddy-rag-extract-inline-queries
+                  "Compare @rag(captain nemo) with @rag(ned land)")))
+    (should (= 2 (length queries)))
+    (should (equal "captain nemo" (car queries)))
+    (should (equal "ned land" (cadr queries)))))
+
+(ert-deftest ollama-buddy-rag-test-inline-extract-none ()
+  "Test that text without @rag() returns empty list."
+  :tags '(rag)
+  (should (null (ollama-buddy-rag-extract-inline-queries "no rag here"))))
+
+(ert-deftest ollama-buddy-rag-test-inline-remove-delimiters ()
+  "Test removing @rag() delimiters preserving query text."
+  :tags '(rag)
+  (should (equal "Tell me about giant squid attack from the book."
+                 (ollama-buddy-rag-remove-inline-delimiters
+                  "Tell me about @rag(giant squid attack) from the book."))))
+
+(ert-deftest ollama-buddy-rag-test-inline-remove-multiple ()
+  "Test removing multiple @rag() delimiters."
+  :tags '(rag)
+  (should (equal "Compare captain nemo with ned land"
+                 (ollama-buddy-rag-remove-inline-delimiters
+                  "Compare @rag(captain nemo) with @rag(ned land)"))))
+
+(ert-deftest ollama-buddy-rag-test-inline-process-no-queries ()
+  "Test that process-inline returns text unchanged when no @rag() patterns."
+  :tags '(rag)
+  (should (equal "just a normal prompt"
+                 (ollama-buddy-rag-process-inline "just a normal prompt"))))
+
 (provide 'ollama-buddy-rag-test)
 ;;; ollama-buddy-rag-test.el ends here

@@ -3304,6 +3304,35 @@ List all saved RAG indices with their chunk counts and file counts.
 Delete a saved RAG index.
 @end table
 
+@section Inline @@rag() Syntax
+
+You can use @code{@@rag(query)} directly in prompts to automatically search your
+RAG index and attach results as context --- no separate attach step needed.
+This mirrors the @code{@@search(query)} syntax for web search.
+
+@example
+Tell me about @@rag(giant squid attack) from the book.
+@end example
+
+Multiple queries are supported:
+
+@example
+Compare @@rag(captain nemo) with @@rag(ned land) in terms of character development.
+@end example
+
+How it works:
+
+@enumerate
+@item The @code{@@rag()} patterns are extracted from the prompt.
+@item Each query is embedded synchronously and searched against the index.
+@item Matching chunks are attached as RAG context.
+@item The @code{@@rag()} wrappers are removed, preserving the query text in the
+prompt sent to the model.
+@end enumerate
+
+If you have multiple indexes, you will be prompted to select one.  If only one
+index exists, it is used automatically.
+
 @section Example Workflow
 
 Suppose you have the text of ``Twenty Thousand Leagues Under the Sea'' in
@@ -3313,8 +3342,11 @@ Suppose you have the text of ``Twenty Thousand Leagues Under the Sea'' in
 ;; 1. Index the book
 C-c O r i  ->  ~/books/
 
-;; 2. Attach relevant context about the giant squid
+;; 2a. Attach via transient menu
 C-c O r a  ->  "giant squid attack"
+
+;; 2b. Or use inline syntax -- no separate step needed
+"Describe the @@rag(giant squid encounter) in detail, referencing the text."
 
 ;; 3. Ask a question in chat -- the LLM now has relevant passages
 "Describe the giant squid encounter in detail, referencing the text."

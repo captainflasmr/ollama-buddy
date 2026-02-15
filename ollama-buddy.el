@@ -2286,6 +2286,11 @@ and no new user message is added."
              (fboundp 'ollama-buddy-web-search-process-inline))
     (setq prompt (ollama-buddy-web-search-process-inline prompt)))
 
+  ;; Process inline @rag() queries if RAG module is loaded
+  (when (and (featurep 'ollama-buddy-rag)
+             (fboundp 'ollama-buddy-rag-process-inline))
+    (setq prompt (ollama-buddy-rag-process-inline prompt)))
+
   ;; Original Ollama send code with vision additions
   (let* ((model-info (ollama-buddy--get-valid-model specified-model))
          (model (car model-info))

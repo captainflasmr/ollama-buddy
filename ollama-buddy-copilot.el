@@ -34,6 +34,8 @@
 ;; Web search forward declarations
 (declare-function ollama-buddy-web-search-process-inline "ollama-buddy-web-search")
 (declare-function ollama-buddy-web-search-get-context "ollama-buddy-web-search")
+;; RAG forward declarations
+(declare-function ollama-buddy-rag-process-inline "ollama-buddy-rag")
 
 (defgroup ollama-buddy-copilot nil
   "GitHub Copilot Chat integration for Ollama Buddy."
@@ -436,6 +438,11 @@ The token is cached until expiry."
   (when (and (featurep 'ollama-buddy-web-search)
              (fboundp 'ollama-buddy-web-search-process-inline))
     (setq prompt (ollama-buddy-web-search-process-inline prompt)))
+
+  ;; Process inline @rag() queries if RAG module is loaded
+  (when (and (featurep 'ollama-buddy-rag)
+             (fboundp 'ollama-buddy-rag-process-inline))
+    (setq prompt (ollama-buddy-rag-process-inline prompt)))
 
   ;; Set up the current model
   (setq ollama-buddy--current-model

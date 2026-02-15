@@ -55,7 +55,7 @@ Submit queries, swap models, view token usage and statistics:
 - *Parameters* -- Full control over temperature, top_k, top_p, and all Ollama API options
 - *Fabric Patterns* -- Integration with [[https://github.com/danielmiessler/fabric][Fabric]] prompt patterns
 - *Token Tracking* -- Real-time token usage statistics with graphs
-- *RAG* -- Index local documents and source code, retrieve relevant context for conversations via semantic search
+- *RAG* -- Index local documents and source code, retrieve relevant context for conversations via semantic search. Inline =@rag(query)= syntax for automatic context attachment.
 - *Lightweight* -- No external dependencies; a minified 200-line version (=ollama-buddy-mini=) is also available
 
 * What's New (2.5.0)
@@ -64,7 +64,8 @@ Submit queries, swap models, view token usage and statistics:
 - *Async Embedding* -- RAG indexing runs asynchronously with progress in the status line
 - *Embedding Models* -- =nomic-embed-text=, =mxbai-embed-large=, =all-minilm= in recommended models
 - *RAG Transient Menu* -- =C-c O= → =r= for index, search, attach, and management
-- *49 RAG Tests* -- Full test coverage: chunking, vector math, index management, search roundtrip
+- *Inline @rag()* -- Use =@rag(query)= in prompts to automatically search and attach RAG context, like =@search()= for web search
+- *55 RAG Tests* -- Full test coverage: chunking, vector math, index management, search roundtrip, inline processing
 
 See [[file:CHANGELOG.org]] for full history.
 

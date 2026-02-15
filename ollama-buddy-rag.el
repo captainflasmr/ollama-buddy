@@ -770,5 +770,99 @@ Returns nil if no RAG results are attached."
   "Return non-nil if RAG context is attached."
   (not (null ollama-buddy-rag--current-results)))
 
+;;; Inline @rag() Processing
+
+(defun ollama-buddy-rag--get-embedding-sync (text)
+  "Get embedding vector for TEXT synchronously.
+Returns the embedding vector or nil on error."
+  (let* ((url-request-method "POST")
+         (url-request-extra-headers '(("Content-Type" . "application/json")))
+         (payload (json-encode `((model . ,ollama-buddy-rag-embedding-model)
+                                 (input . ,text))))
+         (url-request-data (encode-coding-string payload 'utf-8))
+         (url (format "http://%s:%d/api/embed" ollama-buddy-host ollama-buddy-port)))
+    (condition-case err
+        (with-current-buffer (url-retrieve-synchronously url t)
+          (goto-char (point-min))
+          (re-search-forward "\n\n")
+          (let* ((json-object-type 'alist)
+                 (json-array-type 'list)
+                 (response (json-read)))
+            (car (alist-get 'embeddings response))))
+      (error
+       (message "Embedding sync error: %s" (error-message-string err))
+       nil))))
+
+(defconst ollama-buddy-rag--inline-regexp
+  "@rag(\\([^)]+\\))"
+  "Regexp to match inline RAG delimiters: @rag(query).")
+
+(defun ollama-buddy-rag-extract-inline-queries (text)
+  "Extract all inline RAG queries from TEXT.
+Returns list of query strings found in @rag(query) delimiters."
+  (let ((queries nil)
+        (start 0))
+    (while (string-match ollama-buddy-rag--inline-regexp text start)
+      (push (string-trim (match-string 1 text)) queries)
+      (setq start (match-end 0)))
+    (nreverse queries)))
+
+(defun ollama-buddy-rag-remove-inline-delimiters (text)
+  "Replace inline RAG delimiters with just the query text.
+@rag(query) becomes query, preserving the search text in the prompt."
+  (replace-regexp-in-string ollama-buddy-rag--inline-regexp "\\1" text))
+
+(defun ollama-buddy-rag-process-inline (text)
+  "Process TEXT for inline @rag(query) patterns.
+Extracts queries, performs synchronous RAG search, attaches results.
+Returns the text with @rag() delimiters removed."
+  (let ((queries (ollama-buddy-rag-extract-inline-queries text)))
+    (when queries
+      (ollama-buddy-rag--ensure-embedding-model)
+      (let* ((index-names (ollama-buddy-rag--list-index-names)))
+        (unless index-names
+          (user-error "No RAG indexes found.  Index a directory first with M-x ollama-buddy-rag-index-directory"))
+        (let ((index-name (if (= 1 (length index-names))
+                              (car index-names)
+                            (completing-read "RAG index for inline search: "
+                                             index-names nil t)))
+              (index nil))
+          (setq index (ollama-buddy-rag--load-index index-name))
+          (unless index
+            (user-error "Index '%s' not found or could not be loaded" index-name))
+          (dolist (query queries)
+            (message "Inline RAG search: %s" query)
+            (let ((query-embedding (ollama-buddy-rag--get-embedding-sync query)))
+              (if (null query-embedding)
+                  (message "RAG embedding failed for: %s" query)
+                (let* ((chunks (plist-get index :chunks))
+                       (results (ollama-buddy-rag--search-chunks
+                                 query-embedding chunks
+                                 ollama-buddy-rag-top-k
+                                 ollama-buddy-rag-similarity-threshold)))
+                  (if (null results)
+                      (message "No RAG results for: %s" query)
+                    (let* ((formatted-content
+                            (ollama-buddy-rag--format-results-for-context
+                             results query index-name))
+                           (token-estimate
+                            (ollama-buddy-rag--estimate-tokens formatted-content))
+                           (attachment (list :query query
+                                             :index-name index-name
+                                             :results results
+                                             :content formatted-content
+                                             :tokens token-estimate
+                                             :timestamp (current-time))))
+                      ;; Remove existing attachment for same query
+                      (setq ollama-buddy-rag--current-results
+                            (cl-remove-if
+                             (lambda (r) (string= query (plist-get r :query)))
+                             ollama-buddy-rag--current-results))
+                      (push attachment ollama-buddy-rag--current-results)
+                      (message "RAG attached: \"%s\" (%d chunks, ~%d tokens)"
+                               query (length results) token-estimate)))))))))))
+  ;; Return text with delimiters removed
+  (ollama-buddy-rag-remove-inline-delimiters text))
+
 (provide 'ollama-buddy-rag)
 ;;; ollama-buddy-rag.el ends here

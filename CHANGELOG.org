@@ -34,6 +34,7 @@ RAG uses Ollama's =/api/embed= endpoint with embedding models (e.g. =nomic-embed
 - Embedding models added to recommended models in Model Management
 - RAG context shown in Show Attachments buffer (=⊕N= indicator)
 - Org heading escaping (=,*=) in all attachment display buffers
+- Inline =@rag(query)= syntax in prompts --- automatic search and attach, mirroring =@search()=
 
 *** RAG Commands & Keybindings
 

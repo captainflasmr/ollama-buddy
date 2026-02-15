@@ -3283,7 +3283,32 @@ These commands are available from the RAG transient menu (‘C-c O’ then
 ‘ollama-buddy-rag-delete-index (d)’
      Delete a saved RAG index.
 
-22.7 Example Workflow
+22.7 Inline @rag() Syntax
+=========================
+
+You can use ‘@rag(query)’ directly in prompts to automatically search
+your RAG index and attach results as context -- no separate attach step
+needed.  This mirrors the ‘@search(query)’ syntax for web search.
+
+     Tell me about @rag(giant squid attack) from the book.
+
+   Multiple queries are supported:
+
+     Compare @rag(captain nemo) with @rag(ned land) in terms of character development.
+
+   How it works:
+
+  1. The ‘@rag()’ patterns are extracted from the prompt.
+  2. Each query is embedded synchronously and searched against the
+     index.
+  3. Matching chunks are attached as RAG context.
+  4. The ‘@rag()’ wrappers are removed, preserving the query text in the
+     prompt sent to the model.
+
+   If you have multiple indexes, you will be prompted to select one.  If
+only one index exists, it is used automatically.
+
+22.8 Example Workflow
 =====================
 
 Suppose you have the text of "Twenty Thousand Leagues Under the Sea" in
@@ -3292,8 +3317,11 @@ Suppose you have the text of "Twenty Thousand Leagues Under the Sea" in
      ;; 1. Index the book
      C-c O r i  ->  ~/books/
 
-     ;; 2. Attach relevant context about the giant squid
+     ;; 2a. Attach via transient menu
      C-c O r a  ->  "giant squid attack"
+
+     ;; 2b. Or use inline syntax -- no separate step needed
+     "Describe the @rag(giant squid encounter) in detail, referencing the text."
 
      ;; 3. Ask a question in chat -- the LLM now has relevant passages
      "Describe the giant squid encounter in detail, referencing the text."
@@ -4011,12 +4039,12 @@ Node: Global System Prompt90988
 Node: Tone Selector92742
 Node: Tool Calling94546
 Node: RAG102325
-Node: Advanced Usage107006
-Node: API Reference109555
-Node: FAQ115539
-Node: Troubleshooting122592
-Node: Contributing125097
-Node: Index127765
+Node: Advanced Usage108024
+Node: API Reference110573
+Node: FAQ116557
+Node: Troubleshooting123610
+Node: Contributing126115
+Node: Index128783
 
 End Tag Table
 

@@ -382,7 +382,8 @@ allowing you to leverage powerful large language models (LLMs) directly within y
     <li><a id="toc-How-It-Works-4" href="#How-It-Works-4">22.4 How It Works</a></li>
     <li><a id="toc-Configuration-6" href="#Configuration-7">22.5 Configuration</a></li>
     <li><a id="toc-Interactive-Commands-1" href="#Interactive-Commands-1">22.6 Interactive Commands</a></li>
-    <li><a id="toc-Example-Workflow" href="#Example-Workflow">22.7 Example Workflow</a></li>
+    <li><a id="toc-Inline-_0040rag_0028_0029-Syntax" href="#Inline-_0040rag_0028_0029-Syntax">22.7 Inline @rag() Syntax</a></li>
+    <li><a id="toc-Example-Workflow" href="#Example-Workflow">22.8 Example Workflow</a></li>
   </ul></li>
   <li><a id="toc-Advanced-Usage" href="#Advanced-Usage">23 Advanced Usage</a>
   <ul class="toc-numbered-mark">
@@ -4631,7 +4632,8 @@ Next: <a href="#Advanced-Usage" accesskey="n" rel="next">Advanced Usage</a>, Pre
 <li><a href="#How-It-Works-4" accesskey="4">How It Works</a></li>
 <li><a href="#Configuration-7" accesskey="5">Configuration</a></li>
 <li><a href="#Interactive-Commands-1" accesskey="6">Interactive Commands</a></li>
-<li><a href="#Example-Workflow" accesskey="7">Example Workflow</a></li>
+<li><a href="#Inline-_0040rag_0028_0029-Syntax" accesskey="7">Inline @rag() Syntax</a></li>
+<li><a href="#Example-Workflow" accesskey="8">Example Workflow</a></li>
 </ul>
 <div class="section-level-extent" id="Overview-8">
 <h3 class="section"><span>22.1 Overview<a class="copiable-link" href="#Overview-8"> &para;</a></span></h3>
@@ -4766,8 +4768,39 @@ Attached RAG context appears when you use Show Attachments.
 </dl>
 
 </div>
+<div class="section-level-extent" id="Inline-_0040rag_0028_0029-Syntax">
+<h3 class="section"><span>22.7 Inline @rag() Syntax<a class="copiable-link" href="#Inline-_0040rag_0028_0029-Syntax"> &para;</a></span></h3>
+
+<p>You can use <code class="code">@rag(query)</code> directly in prompts to automatically search your
+RAG index and attach results as context &mdash; no separate attach step needed.
+This mirrors the <code class="code">@search(query)</code> syntax for web search.
+</p>
+<div class="example">
+<pre class="example-preformatted">Tell me about @rag(giant squid attack) from the book.
+</pre></div>
+
+<p>Multiple queries are supported:
+</p>
+<div class="example">
+<pre class="example-preformatted">Compare @rag(captain nemo) with @rag(ned land) in terms of character development.
+</pre></div>
+
+<p>How it works:
+</p>
+<ol class="enumerate">
+<li> The <code class="code">@rag()</code> patterns are extracted from the prompt.
+</li><li> Each query is embedded synchronously and searched against the index.
+</li><li> Matching chunks are attached as RAG context.
+</li><li> The <code class="code">@rag()</code> wrappers are removed, preserving the query text in the
+prompt sent to the model.
+</li></ol>
+
+<p>If you have multiple indexes, you will be prompted to select one.  If only one
+index exists, it is used automatically.
+</p>
+</div>
 <div class="section-level-extent" id="Example-Workflow">
-<h3 class="section"><span>22.7 Example Workflow<a class="copiable-link" href="#Example-Workflow"> &para;</a></span></h3>
+<h3 class="section"><span>22.8 Example Workflow<a class="copiable-link" href="#Example-Workflow"> &para;</a></span></h3>
 
 <p>Suppose you have the text of &ldquo;Twenty Thousand Leagues Under the Sea&rdquo; in
 <samp class="file">~/books/leagues.txt</samp>:
@@ -4776,8 +4809,11 @@ Attached RAG context appears when you use Show Attachments.
 <pre class="example-preformatted">;; 1. Index the book
 C-c O r i  -&gt;  ~/books/
 
-;; 2. Attach relevant context about the giant squid
+;; 2a. Attach via transient menu
 C-c O r a  -&gt;  &quot;giant squid attack&quot;
+
+;; 2b. Or use inline syntax -- no separate step needed
+&quot;Describe the @rag(giant squid encounter) in detail, referencing the text.&quot;
 
 ;; 3. Ask a question in chat -- the LLM now has relevant passages
 &quot;Describe the giant squid encounter in detail, referencing the text.&quot;

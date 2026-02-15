@@ -285,7 +285,8 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#How-It-Works-4][22.4 How It Works]]
   - [[#Configuration-7][22.5 Configuration]]
   - [[#Interactive-Commands-1][22.6 Interactive Commands]]
-  - [[#Example-Workflow][22.7 Example Workflow]]
+  - [[#Inline-_0040rag_0028_0029-Syntax][22.7 Inline @rag() Syntax]]
+  - [[#Example-Workflow][22.8 Example Workflow]]
 - [[#Advanced-Usage][23 Advanced Usage]]
   - [[#Managing-Token-Usage][23.1 Managing Token Usage]]
   - [[#Customizing-the-Interface][23.2 Customizing the Interface]]
@@ -4812,6 +4813,7 @@ Next: [[#Advanced-Usage][Advanced Usage]], Previous:
 - [[#How-It-Works-4][How It Works]]
 - [[#Configuration-7][Configuration]]
 - [[#Interactive-Commands-1][Interactive Commands]]
+- [[#Inline-_0040rag_0028_0029-Syntax][Inline @rag() Syntax]]
 - [[#Example-Workflow][Example Workflow]]
 
 <<Overview-8>>
@@ -4936,8 +4938,39 @@ These commands are available from the RAG transient menu (C-c O then r):
 
 - =ollama-buddy-rag-delete-index (==d==)= :: Delete a saved RAG index.
 
+<<Inline-_0040rag_0028_0029-Syntax>>
+*** 22.7 Inline @rag() Syntax [[#Inline-_0040rag_0028_0029-Syntax][¶]]
+:PROPERTIES:
+:CUSTOM_ID: inline-rag-syntax
+:CLASS: section
+:END:
+You can use =@rag(query)= directly in prompts to automatically search
+your RAG index and attach results as context --- no separate attach step
+needed. This mirrors the =@search(query)= syntax for web search.
+
+#+begin_src example-preformatted
+Tell me about @rag(giant squid attack) from the book.
+#+end_src
+
+Multiple queries are supported:
+
+#+begin_src example-preformatted
+Compare @rag(captain nemo) with @rag(ned land) in terms of character development.
+#+end_src
+
+How it works:
+
+1. The =@rag()= patterns are extracted from the prompt.
+2. Each query is embedded synchronously and searched against the index.
+3. Matching chunks are attached as RAG context.
+4. The =@rag()= wrappers are removed, preserving the query text in the
+   prompt sent to the model.
+
+If you have multiple indexes, you will be prompted to select one. If
+only one index exists, it is used automatically.
+
 <<Example-Workflow>>
-*** 22.7 Example Workflow [[#Example-Workflow][¶]]
+*** 22.8 Example Workflow [[#Example-Workflow][¶]]
 :PROPERTIES:
 :CUSTOM_ID: example-workflow
 :CLASS: section
@@ -4949,8 +4982,11 @@ Suppose you have the text of “Twenty Thousand Leagues Under the Sea” in
 ;; 1. Index the book
 C-c O r i  ->  ~/books/
 
-;; 2. Attach relevant context about the giant squid
+;; 2a. Attach via transient menu
 C-c O r a  ->  "giant squid attack"
+
+;; 2b. Or use inline syntax -- no separate step needed
+"Describe the @rag(giant squid encounter) in detail, referencing the text."
 
 ;; 3. Ask a question in chat -- the LLM now has relevant passages
 "Describe the giant squid encounter in detail, referencing the text."
