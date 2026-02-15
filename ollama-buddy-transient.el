@@ -70,6 +70,13 @@
 (declare-function ollama-buddy-web-search-count "ollama-buddy-web-search")
 (declare-function ollama-buddy-tools-toggle "ollama-buddy-tools")
 (declare-function ollama-buddy-tools-info "ollama-buddy-tools")
+(declare-function ollama-buddy-rag-index-directory "ollama-buddy-rag")
+(declare-function ollama-buddy-rag-search "ollama-buddy-rag")
+(declare-function ollama-buddy-rag-attach "ollama-buddy-rag")
+(declare-function ollama-buddy-rag-list-indexes "ollama-buddy-rag")
+(declare-function ollama-buddy-rag-delete-index "ollama-buddy-rag")
+(declare-function ollama-buddy-rag-clear-attached "ollama-buddy-rag")
+(declare-function ollama-buddy-rag-count "ollama-buddy-rag")
 
 (transient-define-prefix ollama-buddy-transient-menu ()
   "Ollama Buddy main menu."
@@ -81,6 +88,7 @@
     ("o" "Open Chat" ollama-buddy--open-chat)
     ("A" "Attachments" ollama-buddy-transient-attachment-menu)
     ("/" "Web Search" ollama-buddy-transient-web-search-menu)
+    ("r" "RAG" ollama-buddy-transient-rag-menu)
     ("a" "Authentication" ollama-buddy-transient-auth-menu)
     ("b" "Role Menu" ollama-buddy-role-transient-menu)
     ]
@@ -99,7 +107,6 @@
     ("f" "Fabric" ollama-buddy-transient-fabric-menu)
     ("w" "Awesome" ollama-buddy-transient-awesome-menu)
     ("C-s" "Show" ollama-buddy-show-system-prompt-info)
-    ("r" "Reset" ollama-buddy-reset-system-prompt)
     ]
 
    ["Model"
@@ -332,6 +339,34 @@
     :description
     (lambda ()
       "Use @search(query) inline in prompts for automatic search")]
+   ["Navigation"
+    ("q" "Quit" transient-quit-one)]])
+
+(defun ollama-buddy--rag-status ()
+  "Return RAG status string for transient menu."
+  (if (featurep 'ollama-buddy-rag)
+      (let ((count (if (fboundp 'ollama-buddy-rag-count)
+                       (ollama-buddy-rag-count)
+                     0)))
+        (if (> count 0)
+            (format "%d attached" count)
+          "No context attached"))
+    "Module not loaded"))
+
+(transient-define-prefix ollama-buddy-transient-rag-menu ()
+  "RAG (Retrieval-Augmented Generation) menu for Ollama Buddy."
+  [:description
+   (lambda () (concat "RAG - " (ollama-buddy--rag-status)))
+   ["Index"
+    ("i" "Index Directory" ollama-buddy-rag-index-directory)
+    ("l" "List Indexes" ollama-buddy-rag-list-indexes)
+    ("d" "Delete Index" ollama-buddy-rag-delete-index)]
+   ["Search"
+    ("s" "Search & Display" ollama-buddy-rag-search)
+    ("a" "Search & Attach" ollama-buddy-rag-attach)]
+   ["Manage"
+    ("w" "Show Attachments" ollama-buddy-show-attachments)
+    ("0" "Clear RAG Context" ollama-buddy-rag-clear-attached)]
    ["Navigation"
     ("q" "Quit" transient-quit-one)]])
 

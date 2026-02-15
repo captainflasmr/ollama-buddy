@@ -11,6 +11,60 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-15 Sat> *2.5.0*
+
+RAG (Retrieval-Augmented Generation) Support
+
+*** Overview
+
+Ollama Buddy now includes a local RAG system via =ollama-buddy-rag.el=, enabling semantic search over your documents and source code. Index any directory, then search and attach relevant context to conversations --- all without sending entire files to the LLM.
+
+RAG uses Ollama's =/api/embed= endpoint with embedding models (e.g. =nomic-embed-text=) to generate vector representations of document chunks, then performs cosine similarity search at query time to find the most relevant passages.
+
+*** RAG Features
+
+- New =ollama-buddy-rag.el= module with complete RAG pipeline
+- Configurable chunking: chunk size (default 400 words), overlap (50 words), batch size
+- Embedding via Ollama's =/api/embed= endpoint with batch support
+- Cosine similarity vector search with configurable threshold and top-k
+- Persistent index storage in =~/.emacs.d/ollama-buddy/rag-indexes/=
+- Fully asynchronous embedding --- Emacs stays responsive during indexing
+- Background operation progress shown in header line status (=RAG indexing 3/12...=)
+- Embedding model validation with clear error message if model not pulled
+- Embedding models added to recommended models in Model Management
+- RAG context shown in Show Attachments buffer (=⊕N= indicator)
+- Org heading escaping (=,*=) in all attachment display buffers
+
+*** RAG Commands & Keybindings
+
+| Key     | Command                              | Description               |
+|---------+--------------------------------------+---------------------------|
+| C-c r i | =ollama-buddy-rag-index-directory=   | Index a directory         |
+| C-c r s | =ollama-buddy-rag-search=            | Search and display        |
+| C-c r a | =ollama-buddy-rag-attach=            | Search and attach context |
+| C-c r l | =ollama-buddy-rag-list-indexes=      | List available indexes    |
+| C-c r d | =ollama-buddy-rag-delete-index=      | Delete an index           |
+| C-c r 0 | =ollama-buddy-rag-clear-attached=    | Clear RAG context         |
+
+*** Transient Menu
+
+RAG is accessible from the main transient menu: =C-c O= → =r= (RAG submenu) with index, search, and management options.
+
+*** Configuration
+
+| Variable                                |              Default | Description                   |
+|-----------------------------------------+----------------------+-------------------------------|
+| =ollama-buddy-rag-embedding-model=      | ="nomic-embed-text"= | Ollama model for embeddings   |
+| =ollama-buddy-rag-chunk-size=           |                  400 | Words per chunk               |
+| =ollama-buddy-rag-chunk-overlap=        |                   50 | Overlap between chunks        |
+| =ollama-buddy-rag-top-k=                |                    5 | Results to return             |
+| =ollama-buddy-rag-similarity-threshold= |                  0.3 | Minimum similarity score      |
+| =ollama-buddy-rag-batch-size=           |                   10 | Chunks per embedding API call |
+
+*** Test Suite
+
+49 new tests covering chunking, vector math, index management, formatting, search, and end-to-end roundtrip. Run with =make test-rag=.
+
 ** <2026-02-12 Wed> *2.0.0*
 
 Tool Calling Support and Tool-Capable Model Indicators

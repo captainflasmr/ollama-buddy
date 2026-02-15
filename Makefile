@@ -17,13 +17,14 @@ ELISP_FILES = ollama-buddy.el \
               ollama-buddy-gemini.el \
               ollama-buddy-grok.el \
               ollama-buddy-copilot.el \
-              ollama-buddy-codestral.el
+              ollama-buddy-codestral.el \
+              ollama-buddy-rag.el
 
 # Test files
 TEST_DIR = tests
 TEST_FILES = $(wildcard $(TEST_DIR)/*-test.el)
 
-.PHONY: all test test-core lint checkdoc byte-compile clean ci help
+.PHONY: all test test-core test-rag lint checkdoc byte-compile clean ci help
 
 all: ci
 
@@ -35,6 +36,15 @@ test:
 		-l $(TEST_DIR)/test-helper.el \
 		$(foreach file,$(TEST_FILES),-l $(file)) \
 		-f ert-run-tests-batch-and-exit
+
+## Run only RAG tests (tagged :rag)
+test-rag:
+	$(BATCH) \
+		-L . \
+		-L $(TEST_DIR) \
+		-l $(TEST_DIR)/test-helper.el \
+		-l $(TEST_DIR)/ollama-buddy-rag-test.el \
+		--eval "(ert-run-tests-batch-and-exit '(tag rag))"
 
 ## Run only core tests (tagged :core)
 test-core:

@@ -55,17 +55,16 @@ Submit queries, swap models, view token usage and statistics:
 - *Parameters* -- Full control over temperature, top_k, top_p, and all Ollama API options
 - *Fabric Patterns* -- Integration with [[https://github.com/danielmiessler/fabric][Fabric]] prompt patterns
 - *Token Tracking* -- Real-time token usage statistics with graphs
+- *RAG* -- Index local documents and source code, retrieve relevant context for conversations via semantic search
 - *Lightweight* -- No external dependencies; a minified 200-line version (=ollama-buddy-mini=) is also available
 
-* What's New (2.0.0)
+* What's New (2.5.0)
 
-- *Tool Calling* -- New =ollama-buddy-tools.el= module with 8 built-in tools and a registration API for custom tools
-- *⚒/⊙ Indicators* -- Tool-capable and vision-capable models marked in header line and model management
-- *Dynamic Role Menus* -- Transient popup with grouped commands per role
-- *Tone Selector* -- Switch response style (Concise, Learning, Formal, etc.)
-- *Web Search* -- =@search()= inline syntax and manual search commands
-- *Cloud Models* -- Ollama cloud model support with browser-based auth
-- *GitHub Copilot* -- OAuth device flow, no API key needed
+- *RAG Support* -- New =ollama-buddy-rag.el= module: index directories, search with embeddings, attach relevant context to conversations
+- *Async Embedding* -- RAG indexing runs asynchronously with progress in the status line
+- *Embedding Models* -- =nomic-embed-text=, =mxbai-embed-large=, =all-minilm= in recommended models
+- *RAG Transient Menu* -- =C-c O= → =r= for index, search, attach, and management
+- *49 RAG Tests* -- Full test coverage: chunking, vector math, index management, search roundtrip
 
 See [[file:CHANGELOG.org]] for full history.
 
@@ -148,7 +147,7 @@ See the [[file:README-full.org][full README]] for all 30+ demos with description
 | =/api/copy=               | POST   | Copy a model                       | Yes       | Model management                           |
 | =/api/create=             | POST   | Create a model from Modelfile/GGUF | Yes       | GGUF import supported                      |
 | =/api/ps=                 | GET    | List running models                | Yes       | Shows loaded models in management buffer   |
-| =/api/embed=              | POST   | Generate embeddings from text      | No        | Future consideration                       |
+| =/api/embed=              | POST   | Generate embeddings from text      | Yes       | RAG module via =ollama-buddy-rag.el= (v2.5.0+) |
 | =/api/version=            | GET    | Get Ollama version                 | No        | Not currently needed                       |
 | =HEAD /api/blobs/:digest= | HEAD   | Check if blob exists               | No        | Not needed for current functionality       |
 | =POST /api/blobs/:digest= | POST   | Push a blob                        | No        | Not needed for current functionality       |
@@ -243,14 +242,9 @@ Ollama v0.14+ implements =/v1/messages= endpoint compatible with Anthropic's API
 - Could simplify =ollama-buddy-claude.el= or provide fallback
 - Support for tool_use and tool_result content blocks
 
-*** Embeddings API
+*** @@html:<s>@@Embeddings API@@html:</s>@@ (Done -- v2.5.0)
 
-The =/api/embed= endpoint could enable semantic search and RAG workflows.
-
-*Implementation considerations:*
-- Vector storage and similarity search
-- Integration with org-mode notes
-- Potential for semantic file search
+Implemented in =ollama-buddy-rag.el=. See the RAG feature above.
 
 *** Keep-Alive Parameter
 

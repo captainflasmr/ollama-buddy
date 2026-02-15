@@ -55,6 +55,11 @@
 (declare-function ollama-buddy-web-search-get-context "ollama-buddy-web-search")
 (declare-function ollama-buddy-web-search-total-tokens "ollama-buddy-web-search")
 
+;; RAG forward declarations
+(declare-function ollama-buddy-rag-count "ollama-buddy-rag")
+(declare-function ollama-buddy-rag-get-context "ollama-buddy-rag")
+(declare-function ollama-buddy-rag-clear-attached "ollama-buddy-rag")
+
 (defgroup ollama-buddy-params nil
   "Customization group for Ollama API parameters."
   :group 'ollama-buddy
@@ -565,7 +570,10 @@ modification (the default \"Normal\" tone)."
      :models ("qwen2.5-coder:1.5b" "qwen2.5-coder:7b" "qwen3-coder:8b" "starcoder2:3b"))
     (:name "General Alternatives"
      :description "Other popular and versatile models"
-     :models ("mistral:7b" "qwen3:4b" "qwen3:8b")))
+     :models ("mistral:7b" "qwen3:4b" "qwen3:8b"))
+    (:name "Embedding (RAG)"
+     :description "Models for generating embeddings used by RAG search"
+     :models ("nomic-embed-text" "mxbai-embed-large" "all-minilm")))
   "Categorized list of recommended models from the Ollama Hub.
 Each entry is a plist with :name, :description and :models keys."
   :type '(repeat (plist :options
@@ -1471,6 +1479,13 @@ please run =ollama serve=\n\n")
   ;; Immediately update the status
   (ollama-buddy--update-status-with-operations))
 
+(defun ollama-buddy--update-background-operation (operation-id new-description)
+  "Update OPERATION-ID with NEW-DESCRIPTION."
+  (let ((entry (assq operation-id ollama-buddy--background-operations)))
+    (when entry
+      (setcdr entry new-description)
+      (ollama-buddy--update-status-with-operations))))
+
 (defun ollama-buddy--complete-background-operation (operation-id &optional completion-status)
   "Mark OPERATION-ID as completed with optional COMPLETION-STATUS."
   ;; Remove the operation from the list
@@ -2121,6 +2136,12 @@ ACTUAL-MODEL is the model being used instead."
                                      (propertize (format "♁%d " (ollama-buddy-web-search-count))
                                                  'face '(:weight bold))
                                    ""))
+           (rag-indicator (if (and (featurep 'ollama-buddy-rag)
+                                   (fboundp 'ollama-buddy-rag-count)
+                                   (> (ollama-buddy-rag-count) 0))
+                              (propertize (format "⊕%d " (ollama-buddy-rag-count))
+                                          'face '(:weight bold))
+                            ""))
            (tone-indicator (let ((tone ollama-buddy--current-tone))
                              (if (or (null tone) (string= tone "Normal"))
                                  ""
@@ -2128,7 +2149,7 @@ ACTUAL-MODEL is the model being used instead."
                                            'face '(:weight bold))))))
       (setq header-line-format
             (concat
-             (format "%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s %s%s%s"
+             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s %s%s%s"
                      (if ollama-buddy-streaming-enabled "" "x")
                      (ollama-buddy--add-context-to-status-format)
                      (if ollama-buddy-global-system-prompt-enabled "" "<")
@@ -2138,6 +2159,7 @@ ACTUAL-MODEL is the model being used instead."
                      vision-indicator
                      attachment-indicator
                      web-search-indicator
+                     rag-indicator
                      (if ollama-buddy-hide-reasoning "V" "")
                      (if ollama-buddy-display-token-stats "T" "")
                      tone-indicator

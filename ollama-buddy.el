@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 2.0.0
+;; Version: 2.5.0
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -97,6 +97,14 @@
 (declare-function ollama-buddy-tools--process-tool-calls "ollama-buddy-tools")
 (declare-function ollama-buddy-tools-toggle "ollama-buddy-tools")
 (declare-function ollama-buddy-tools-info "ollama-buddy-tools")
+(declare-function ollama-buddy-rag-get-context "ollama-buddy-rag")
+(declare-function ollama-buddy-rag-count "ollama-buddy-rag")
+(declare-function ollama-buddy-rag-clear-attached "ollama-buddy-rag")
+(declare-function ollama-buddy-rag-index-directory "ollama-buddy-rag")
+(declare-function ollama-buddy-rag-search "ollama-buddy-rag")
+(declare-function ollama-buddy-rag-attach "ollama-buddy-rag")
+(declare-function ollama-buddy-rag-list-indexes "ollama-buddy-rag")
+(declare-function ollama-buddy-rag-delete-index "ollama-buddy-rag")
 (declare-function ollama-buddy-curl--process-filter "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--process-json-line "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--handle-content "ollama-buddy-curl")
@@ -2320,9 +2328,14 @@ and no new user message is added."
           (when (and (featurep 'ollama-buddy-web-search)
                      (fboundp 'ollama-buddy-web-search-get-context))
             (ollama-buddy-web-search-get-context)))
+         ;; Get RAG context if available
+         (rag-context
+          (when (and (featurep 'ollama-buddy-rag)
+                     (fboundp 'ollama-buddy-rag-get-context))
+            (ollama-buddy-rag-get-context)))
          ;; Combine all context
          (combined-context
-          (let ((contexts (delq nil (list attachment-context web-search-context))))
+          (let ((contexts (delq nil (list attachment-context web-search-context rag-context))))
             (when contexts
               (concat "\n\n" (mapconcat #'identity contexts "\n\n")))))
          ;; Create the current message, handling vision content if needed
@@ -3308,9 +3321,12 @@ When the operation completes, CALLBACK is called with no arguments if provided."
   (let ((has-files ollama-buddy--current-attachments)
         (has-searches (and (featurep 'ollama-buddy-web-search)
                            (boundp 'ollama-buddy-web-search--current-results)
-                           ollama-buddy-web-search--current-results)))
-    (if (and (null has-files) (null has-searches))
-        (message "No files or web searches attached to current conversation")
+                           ollama-buddy-web-search--current-results))
+        (has-rag (and (featurep 'ollama-buddy-rag)
+                      (fboundp 'ollama-buddy-rag-attached-p)
+                      (ollama-buddy-rag-attached-p))))
+    (if (and (null has-files) (null has-searches) (null has-rag))
+        (message "No files, web searches, or RAG context attached to current conversation")
       (let ((buf (get-buffer-create "*Ollama Attachments*")))
         (with-current-buffer buf
           (let ((inhibit-read-only t))
@@ -3332,7 +3348,9 @@ When the operation completes, CALLBACK is called with no arguments if provided."
                   (insert (format ":PROPERTIES:\n:PATH: %s\n:SIZE: %d bytes\n:TYPE: %s\n:END:\n"
                                   file size (or type "unknown")))
                   (insert "#+begin_example\n")
-                  (insert (plist-get attachment :content))
+                  (insert (replace-regexp-in-string
+                           "^\\*" ",*"
+                           (plist-get attachment :content)))
                   (insert "\n#+end_example\n"))))
 
             ;; Web search attachments section
@@ -3369,6 +3387,40 @@ When the operation completes, CALLBACK is called with no arguments if provided."
                                     content))
                           (insert "\n#+end_example\n"))))))))
 
+            ;; RAG attachments section
+            (when has-rag
+              (let ((rag-results (symbol-value 'ollama-buddy-rag--current-results)))
+                (insert (format "\n* RAG Context (%d searches, ~%d tokens)\n"
+                                (length rag-results)
+                                (if (fboundp 'ollama-buddy-rag-total-tokens)
+                                    (ollama-buddy-rag-total-tokens)
+                                  0)))
+                (dolist (result rag-results)
+                  (let ((query (plist-get result :query))
+                        (index-name (plist-get result :index-name))
+                        (matches (plist-get result :results))
+                        (tokens (plist-get result :tokens))
+                        (timestamp (plist-get result :timestamp)))
+                    (insert (format "\n** \"%s\" (from %s)\n" query index-name))
+                    (insert (format ":PROPERTIES:\n:RESULTS: %d\n:TOKENS: ~%d\n:TIME: %s\n:END:\n"
+                                    (length matches) (or tokens 0)
+                                    (format-time-string "%Y-%m-%d %H:%M:%S" timestamp)))
+                    (dolist (match matches)
+                      (let ((file (plist-get match :file))
+                            (score (plist-get match :score))
+                            (line-start (plist-get match :line-start))
+                            (line-end (plist-get match :line-end))
+                            (content (plist-get match :content)))
+                        (insert (format "\n*** %s:%d-%d (%.2f)\n"
+                                        (file-name-nondirectory (or file "unknown"))
+                                        (or line-start 0) (or line-end 0)
+                                        (or score 0.0)))
+                        (insert "#+begin_example\n")
+                        (insert (replace-regexp-in-string
+                                 "^\\*" ",*"
+                                 (truncate-string-to-width (or content "") 1000 nil nil "...")))
+                        (insert "\n#+end_example\n")))))))
+
             (goto-char (point-min))
             (view-mode 1)
             (org-content)))
@@ -3391,18 +3443,24 @@ When the operation completes, CALLBACK is called with no arguments if provided."
   (message "File detached: %s" file))
 
 (defun ollama-buddy-clear-attachments ()
-  "Clear all current attachments including file attachments and web searches."
+  "Clear all current attachments including file attachments, web searches, and RAG."
   (interactive)
   (let ((has-attachments ollama-buddy--current-attachments)
         (has-web-search (and (featurep 'ollama-buddy-web-search)
                              (boundp 'ollama-buddy-web-search--current-results)
-                             ollama-buddy-web-search--current-results)))
-    (when (or (and (not has-attachments) (not has-web-search))
-              (yes-or-no-p "Clear all attachments and web searches? "))
+                             ollama-buddy-web-search--current-results))
+        (has-rag (and (featurep 'ollama-buddy-rag)
+                      (fboundp 'ollama-buddy-rag-count)
+                      (> (ollama-buddy-rag-count) 0))))
+    (when (or (and (not has-attachments) (not has-web-search) (not has-rag))
+              (yes-or-no-p "Clear all attachments, web searches, and RAG context? "))
       (setq ollama-buddy--current-attachments nil)
       (when (featurep 'ollama-buddy-web-search)
         (when (boundp 'ollama-buddy-web-search--current-results)
           (setq ollama-buddy-web-search--current-results nil)))
+      (when (featurep 'ollama-buddy-rag)
+        (when (fboundp 'ollama-buddy-rag-clear-attached)
+          (ollama-buddy-rag-clear-attached)))
       (ollama-buddy--update-status "All attachments cleared")
       (message "All attachments cleared"))))
 
@@ -3452,7 +3510,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c l") (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))
     (define-key map (kbd "C-c s") #'ollama-buddy-transient-user-prompts-menu)
     (define-key map (kbd "C-c C-s") #'ollama-buddy-show-system-prompt-info)
-    (define-key map (kbd "C-c r") #'ollama-buddy-reset-system-prompt)
+
     (define-key map (kbd "C-c b") #'ollama-buddy-role-transient-menu)
     
     ;; Model section keybindings
@@ -3470,6 +3528,14 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     ;; Tools keybindings
     (define-key map (kbd "C-c W") #'ollama-buddy-tools-toggle)
     (define-key map (kbd "C-c Q") #'ollama-buddy-tools-info)
+    
+    ;; RAG keybindings
+    (define-key map (kbd "C-c r i") #'ollama-buddy-rag-index-directory)
+    (define-key map (kbd "C-c r s") #'ollama-buddy-rag-search)
+    (define-key map (kbd "C-c r a") #'ollama-buddy-rag-attach)
+    (define-key map (kbd "C-c r l") #'ollama-buddy-rag-list-indexes)
+    (define-key map (kbd "C-c r d") #'ollama-buddy-rag-delete-index)
+    (define-key map (kbd "C-c r 0") #'ollama-buddy-rag-clear-attached)
     
     ;; Display Options keybindings
     (define-key map (kbd "C-c B") #'ollama-buddy-toggle-debug-mode)

@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 2.0.0
+@subtitle For Ollama Buddy version 2.5.0
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -65,6 +65,7 @@ allowing you to leverage powerful large language models (LLMs) directly within y
 * Global System Prompt::        Configuring a persistent global system prompt
 * Tone Selector::               Quickly switch response style
 * Tool Calling::                Enabling LLMs to invoke Emacs functions
+* RAG::                         Retrieval-Augmented Generation with local documents
 * Advanced Usage::              Tips and techniques for power users
 * API Reference::               Comprehensive function documentation
 * FAQ::                         Frequently asked questions
@@ -3192,6 +3193,135 @@ Additional places showing tool capability:
 @end itemize
 
 The list of tool-capable models is configured via @code{ollama-buddy-tools-models}. Cloud model variants (e.g.@: @code{cl:qwen3-coder:480b-cloud}) are automatically matched against their base names.
+
+@node RAG
+@chapter RAG (Retrieval-Augmented Generation)
+
+@section Overview
+
+RAG allows you to index local documents and source code, then retrieve relevant
+context for conversations via semantic search.  Instead of pasting entire files
+into prompts, RAG automatically finds the most relevant chunks and attaches them
+as context, keeping token usage efficient and responses grounded in your actual
+documents.
+
+The RAG module is provided by @code{ollama-buddy-rag.el}.
+
+@section Requirements
+
+RAG requires an embedding model pulled into Ollama:
+
+@example
+ollama pull nomic-embed-text
+@end example
+
+Other supported embedding models include @code{mxbai-embed-large} and
+@code{all-minilm}.  You can pull these from Model Management (@kbd{C-c M})
+under the ``Embedding (RAG)'' category.
+
+@section Quick Start
+
+@enumerate
+@item Pull an embedding model: @code{ollama pull nomic-embed-text}
+@item Open the RAG menu: @kbd{C-c O} then @kbd{r}
+@item Index a directory: select @kbd{i} and choose a directory
+@item Wait for indexing to complete (progress shown in status line)
+@item Search your index: select @kbd{s} and enter a query
+@item Or attach context to a conversation: select @kbd{a}, enter a query, then chat normally
+@end enumerate
+
+@section How It Works
+
+@enumerate
+@item @strong{Indexing}: Files in a directory are read, split into chunks (by
+paragraph/section), and each chunk is sent to the embedding model to produce a
+vector representation.  The resulting index is saved to disk.
+@item @strong{Searching}: Your query is embedded using the same model, then
+compared against all chunk vectors using cosine similarity.  The most relevant
+chunks are returned.
+@item @strong{Attaching}: Retrieved chunks are injected into the conversation
+context as a system-level prefix, so the LLM can reference them when
+generating a response.
+@end enumerate
+
+@section Configuration
+
+@table @code
+@item ollama-buddy-rag-embedding-model
+The embedding model to use (default: @code{"nomic-embed-text"}).
+
+@item ollama-buddy-rag-chunk-size
+Target number of tokens per chunk (default: @code{300}).
+
+@item ollama-buddy-rag-chunk-overlap
+Number of overlapping tokens between consecutive chunks (default: @code{50}).
+
+@item ollama-buddy-rag-top-k
+Number of top results to return from a search (default: @code{5}).
+
+@item ollama-buddy-rag-similarity-threshold
+Minimum cosine similarity score for a chunk to be included in results
+(default: @code{0.3}).
+
+@item ollama-buddy-rag-index-directory
+Directory where RAG index files are stored
+(default: @code{~/.emacs.d/ollama-buddy-rag/}).
+
+@item ollama-buddy-rag-file-extensions
+List of file extensions to include when indexing a directory
+(default: common text and code extensions).
+
+@item ollama-buddy-rag-exclude-patterns
+List of glob patterns to exclude from indexing
+(default: @code{("node_modules" ".git" "__pycache__" ".elc")}).
+
+@item ollama-buddy-rag-batch-size
+Number of chunks to embed per API call (default: @code{20}).
+@end table
+
+@section Interactive Commands
+
+These commands are available from the RAG transient menu (@kbd{C-c O} then @kbd{r}):
+
+@table @code
+@item ollama-buddy-rag-index-directory-interactive (@kbd{i})
+Index a directory.  Prompts for the directory path, reads and chunks all
+matching files, then asynchronously generates embeddings.  Progress is shown in
+the status line.
+
+@item ollama-buddy-rag-search-interactive (@kbd{s})
+Search the index with a text query.  Results are displayed in an org-mode
+buffer showing similarity scores, file paths, and content excerpts.
+
+@item ollama-buddy-rag-attach-context (@kbd{a})
+Search and attach the top results as context for the next conversation.
+Attached RAG context appears when you use Show Attachments.
+
+@item ollama-buddy-rag-list-indices (@kbd{l})
+List all saved RAG indices with their chunk counts and file counts.
+
+@item ollama-buddy-rag-delete-index (@kbd{d})
+Delete a saved RAG index.
+@end table
+
+@section Example Workflow
+
+Suppose you have the text of ``Twenty Thousand Leagues Under the Sea'' in
+@file{~/books/leagues.txt}:
+
+@example
+;; 1. Index the book
+C-c O r i  ->  ~/books/
+
+;; 2. Attach relevant context about the giant squid
+C-c O r a  ->  "giant squid attack"
+
+;; 3. Ask a question in chat -- the LLM now has relevant passages
+"Describe the giant squid encounter in detail, referencing the text."
+@end example
+
+Without RAG, the model would give a generic answer from training data.  With
+RAG, it references specific passages from your indexed document.
 
 @node Advanced Usage
 @chapter Advanced Usage
