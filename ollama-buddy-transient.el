@@ -443,16 +443,29 @@ Returns the interned command symbol."
               (apply #'vector gname (gethash gname groups)))
             (nreverse group-order))))
 
+(defun ollama-buddy--selection-status ()
+  "Return a string describing the current selection status."
+  (if (use-region-p)
+      (let* ((beg (region-beginning))
+             (end (region-end))
+             (chars (- end beg))
+             (lines (count-lines beg end)))
+        (format "Selection: %d chars, %d lines" chars lines))
+    "No selection"))
+
 (defun ollama-buddy-role-transient-menu ()
   "Dynamic role-specific command menu.
 Rebuilds the transient prefix each invocation to reflect the
 current role's `ollama-buddy-command-definitions'."
   (interactive)
-  (let ((group-vectors (ollama-buddy--role-menu-build-groups)))
+  (let ((group-vectors (ollama-buddy--role-menu-build-groups))
+        (selection-status (ollama-buddy--selection-status)))
     (eval
      `(transient-define-prefix ollama-buddy--role-transient-menu-impl ()
         "Dynamic role-specific command menu."
-        [,@group-vectors]))
+        [:description
+         (lambda () ,selection-status)
+         ,@group-vectors]))
     (transient-setup 'ollama-buddy--role-transient-menu-impl)))
 
 (provide 'ollama-buddy-transient)
