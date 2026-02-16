@@ -11,6 +11,15 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-16 Sun> *2.5.3*
+
+Autocomplete for inline =@= commands in chat prompt.
+
+*** New Features
+
+- *=@= Autocomplete* -- Typing =@= in the prompt area triggers =completing-read= with available inline commands (=search=, =rag=, etc.). Inserts the chosen syntax template (e.g., =@search()=) with cursor positioned inside the parentheses. Commands are filtered based on loaded modules. Outside the prompt area, =@= inserts literally. Press =C-g= to cancel and insert a literal =@=.
+- *=ollama-buddy-at-commands=* -- New customizable alist for defining available =@= commands and their templates, making it easy to add new inline commands.
+
 ** <2026-02-16 Sun> *2.5.2*
 
 PDF support for RAG indexing.

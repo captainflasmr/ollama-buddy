@@ -1425,7 +1425,7 @@ Each element is a plist with :name, :authenticated, and :enabled."
            "#+begin_example\n"
            " ___ _ _      n _ n      ___       _   _ _ _\n"
            "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |\n"
-           "| | | | | .  |2.5.2| .  | . | | | . | . |__ |\n"
+           "| | | | | .  |2.5.3| .  | . | | | . | . |__ |\n"
            "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n"
            "#+end_example\n\n"
            (when (not (ollama-buddy--check-status))

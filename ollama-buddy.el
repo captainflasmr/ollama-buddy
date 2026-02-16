@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 2.5.2
+;; Version: 2.5.3
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -370,6 +370,46 @@ second go to column 0."
      ;; Otherwise fallback to regular C-a behavior
      (t
       (beginning-of-line)))))
+
+(defcustom ollama-buddy-at-commands
+  '(("search" . "@search(%s)")
+    ("rag" . "@rag(%s)"))
+  "Alist of available inline `@' commands and their syntax templates.
+Each entry is (NAME . TEMPLATE) where TEMPLATE contains `%s' for cursor placement."
+  :type '(alist :key-type string :value-type string)
+  :group 'ollama-buddy)
+
+(defun ollama-buddy--at-complete ()
+  "Complete an inline `@' command in the prompt area.
+When point is in the prompt area, offer `completing-read' with
+available `@' commands and insert the chosen syntax template.
+Outside the prompt area, insert a literal `@'."
+  (interactive)
+  (let ((in-prompt
+         (save-excursion
+           (beginning-of-line)
+           (re-search-forward ">> \\(?:PROMPT\\|SYSTEM PROMPT\\):" (line-end-position) t))))
+    (if (not in-prompt)
+        (self-insert-command 1)
+      (let* ((candidates
+              (cl-remove-if-not
+               (lambda (entry)
+                 (pcase (car entry)
+                   ("search" (featurep 'ollama-buddy-web-search))
+                   ("rag" (featurep 'ollama-buddy-rag))
+                   (_ t)))
+               ollama-buddy-at-commands))
+             (names (mapcar #'car candidates))
+             (choice (condition-case nil
+                         (completing-read "@ command: " names nil t)
+                       (quit nil))))
+        (if (not choice)
+            (insert "@")
+          (let* ((template (cdr (assoc choice candidates)))
+                 (parts (split-string template "%s")))
+            (insert (car parts))
+            (save-excursion
+              (insert (cadr parts)))))))))
 
 (defun ollama-buddy-history-search ()
   "Search through the prompt history using a `completing-read' interface."
@@ -3627,6 +3667,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c e") #'ollama-buddy-switch-communication-backend)
     
     (define-key map [remap move-beginning-of-line] #'ollama-buddy-beginning-of-prompt)
+    (define-key map "@" #'ollama-buddy--at-complete)
     map)
   "Keymap for ollama-buddy mode.")
 
