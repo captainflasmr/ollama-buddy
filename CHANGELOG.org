@@ -25,7 +25,7 @@ Autocomplete for inline =@= commands and =/= slash commands in chat prompt.
 - *=ollama-buddy-copy-last-response=* -- Copy the last assistant response to the kill ring (available as =/copy= slash command).
 - *=ollama-buddy-retry-last-prompt=* -- Resend the last user prompt to the current model (available as =/retry= slash command).
 
-** <2026-02-16 Sun> *2.5.2*
+** <2026-02-16 Mon> *2.5.2*
 
 PDF support for RAG indexing.
 
@@ -33,7 +33,7 @@ PDF support for RAG indexing.
 
 - *PDF Indexing* -- RAG can now index PDF files using =pdftotext= (from =poppler-utils=). PDF text extraction is auto-detected at runtime; if =pdftotext= is not installed, PDF files are silently skipped during indexing. PDFs bypass the file size limit since binary size does not reflect extracted text size.
 
-** <2026-02-16 Sun> *2.5.1*
+** <2026-02-16 Mon> *2.5.1*
 
 Usability improvements and inline RAG syntax.
 
@@ -50,7 +50,7 @@ Usability improvements and inline RAG syntax.
 - =C-c C-r= resets system prompt in chat buffer
 - =C-r= in main transient menu (=C-c O=) resets system prompt
 
-** <2026-02-15 Sat> *2.5.0*
+** <2026-02-15 Sun> *2.5.0*
 
 RAG (Retrieval-Augmented Generation) Support
 
@@ -123,7 +123,7 @@ Reset system prompt is accessible via =C-c O= → =C-r= in the System Prompts se
 
 49 new tests covering chunking, vector math, index management, formatting, search, and end-to-end roundtrip. Run with =make test-rag=.
 
-** <2026-02-12 Wed> *2.0.0*
+** <2026-02-12 Thu> *2.0.0*
 
 Tool Calling Support and Tool-Capable Model Indicators
 
@@ -157,7 +157,7 @@ A ⚒ indicator is shown alongside tool-capable models across all model display 
 
 qwen3, qwen3:32b, qwen3:14b, qwen3:8b, qwen3-coder-next, qwen3-coder:480b, deepseek-v3.1:671b, gpt-oss:120b, gpt-oss:20b, glm-4.7, glm-4.7-flash, llama3.1, llama3.3, mistral, mistral-nemo, command-r+, granite4
 
-** <2026-02-12 Wed> *1.5.0*
+** <2026-02-12 Thu> *1.5.0*
 
 Dynamic Transient Role Menu with Grouped Commands
 
@@ -204,7 +204,7 @@ The original =ollama-buddy-menu= minibuffer menu remains available via =M-x olla
 
 Existing role presets without =:group= properties continue to work. All commands appear in a single "Commands" column, matching the previous flat menu layout.
 
-** <2026-02-12 Wed> *1.4.0*
+** <2026-02-12 Thu> *1.4.0*
 
 Tone Selector for Response Style
 
@@ -221,7 +221,7 @@ Added a tone selector that lets users quickly switch between response styles (No
 - Keybinding =C-c ~= in chat buffer
 - Transient menu entry =~= under Display Toggle section
 
-** <2026-02-12 Wed> *1.3.5*
+** <2026-02-12 Thu> *1.3.5*
 
 Cloud Models in Model Management and Categorized Recommendations
 
@@ -243,7 +243,7 @@ Enhanced the Model Management page (=C-c M=) with a dedicated cloud models secti
 - Categories with no uninstalled models are automatically hidden
 - =ollama-buddy-available-models= now uses a plist structure with =:name=, =:description= and =:models= keys
 
-** <2026-02-11 Tue> *1.3.4*
+** <2026-02-11 Wed> *1.3.4*
 
 Header Line and Interface Refinements
 
@@ -294,7 +294,7 @@ Streamlined the header line, transient menu, and session management for a cleane
 - Roles directory now opens in other window
 - Better global system prompt visibility with status bar feedback
 
-** <2026-02-10 Mon> *1.3.3*
+** <2026-02-10 Tue> *1.3.3*
 
 Auto-Pull Cloud Model Manifests
 
@@ -310,7 +310,7 @@ When selecting an Ollama cloud model that hasn't been used before, its manifest 
 - Shows "Pulling cloud model manifest..." message during the brief download
 - Invalidates models cache after successful pull so the model appears immediately
 
-** <2026-02-06 Thu> *1.3.2*
+** <2026-02-06 Fri> *1.3.2*
 
 New Role Presets: Tutor and Documenter
 
@@ -342,7 +342,7 @@ A technical documentation assistant role. Features include:
 - *Support Docs*: =troubleshooting=, =faq=
 - *Improvement*: =improve-docs=, =simplify-docs=
 
-** <2026-02-06 Thu> *1.3.1*
+** <2026-02-06 Fri> *1.3.1*
 
 Role Menu Improvements
 
@@ -365,7 +365,7 @@ Streamlined built-in role presets by removing less commonly used commands:
 - Removed: =kill-request=, =create-role=, =open-roles-directory=, =token-stats=, =show-history=, =delete-sessions=
 - All presets now include =ollama-buddy-menu-columns= setting (default: 3)
 
-** <2026-02-05 Wed> *1.3*
+** <2026-02-05 Thu> *1.3*
 
 Added Web Search Integration
 
@@ -446,7 +446,7 @@ What are the key points from @search(emacs 30 new features)?
 Compare @search(rust async) with @search(go concurrency)
 #+end_src
 
-** <2026-02-02 Sun> *1.2.1*
+** <2026-02-02 Mon> *1.2.1*
 
 Added attachment count indicator to header-line
 
@@ -455,7 +455,7 @@ Added attachment count indicator to header-line
 - Indicator appears in bold near the beginning of the status line
 - Empty when no attachments are present
 
-** <2026-02-01 Sat> *1.2*
+** <2026-02-01 Sun> *1.2*
 
 Added GitHub Copilot integration
 
@@ -485,7 +485,7 @@ To use GitHub Copilot:
   (require 'ollama-buddy-copilot nil t))
 #+end_src
 
-** <2026-01-31 Fri> *1.1.6*
+** <2026-01-31 Sat> *1.1.6*
 
 Removed model status buffer
 
@@ -493,7 +493,7 @@ Removed model status buffer
 - Removed =C-c v= keybinding and transient menu entry
 - Model information is available in the model management buffer (=C-c W=)
 
-** <2026-01-31 Fri> *1.1.5*
+** <2026-01-31 Sat> *1.1.5*
 
 Added global system prompt for consistent response formatting
 
@@ -512,7 +512,7 @@ Consolidated model management
 - Removed =C-c A= (Detailed Info) keybinding and =ollama-buddy-show-interface-info= function
 - Updated welcome screen to reference =C-c W= for model management
 
-** <2026-01-31 Fri> *1.1.4*
+** <2026-01-31 Sat> *1.1.4*
 
 Header-line and keybinding improvements
 
@@ -521,7 +521,7 @@ Header-line and keybinding improvements
 - Changed header-line "Markdown" indicator to "MD" for compactness
 - Fixed markdown to org heading conversion: MD headings now offset by 2 levels so H1 becomes org level 3, properly nesting under the =** [MODEL] RESPONSE= heading
 
-** <2026-01-31 Fri> *1.1.3*
+** <2026-01-31 Sat> *1.1.3*
 
 Improved chat UX and simplified codebase
 
@@ -533,7 +533,7 @@ Improved chat UX and simplified codebase
 - Removed =ollama-buddy-highlight-models-enabled=, =ollama-buddy-toggle-model-highlighting=
 - Simplifies codebase and may improve org-mode buffer performance
 
-** <2026-01-30 Thu> *1.1.2*
+** <2026-01-30 Fri> *1.1.2*
 
 Simplified chat interface
 
@@ -543,7 +543,7 @@ Simplified chat interface
 - Header line displays bold prefix characters for loaded external providers: =acgks=
 - Welcome screen lists enabled online LLM providers (e.g., "Online: a: OpenAI | c: Claude")
 
-** <2026-01-28 Tue> *1.1*
+** <2026-01-28 Wed> *1.1*
 
 Added Ollama Cloud Models support
 
@@ -578,11 +578,11 @@ Added Mistral Codestral integration
 - Follows the same integration pattern as other remote AI providers (OpenAI, Claude, Gemini, Grok)
 - Uses "s:" prefix to identify Codestral models in the model list
 
-** <2025-06-21> *0.13.1*
+** <2025-06-21 Sat> *0.13.1*
 
 Refactored content register processing to be more efficient and added a new Emacs package brainstorming prompt file.
 
-** <2025-06-15> *0.13.0*
+** <2025-06-15 Sun> *0.13.0*
 
 Added curl communication backend with fallback support
 
@@ -592,7 +592,7 @@ Added curl communication backend with fallback support
 - Added curl backend validation and testing functions
 - Maintained full compatibility with existing network process backend
 
-** <2025-05-31> *0.12.1*
+** <2025-05-31 Sat> *0.12.1*
 
 Optimized Unicode escape function to fix blocking with large file attachments
 
@@ -600,7 +600,7 @@ Optimized Unicode escape function to fix blocking with large file attachments
 - Used temp buffer with delete-char/insert instead of repeated concat calls
 - Reduced processing time from minutes to milliseconds for large payloads
 
-** <2025-05-22> *0.12.0*
+** <2025-05-22 Thu> *0.12.0*
 
 Full system prompt in the status bar replaced with a more meaningful simple role title
 
@@ -611,7 +611,7 @@ Full system prompt in the status bar replaced with a more meaningful simple role
 - Added system prompt history display and better error handling for empty files
 - Transient menu has been simplified and reorganised
 
-** <2025-05-21> *0.11.1*
+** <2025-05-21 Wed> *0.11.1*
 
 Quite a bit of refactoring to generally make this project more maintainable and I have added a starter kit of user prompts.
 
@@ -644,7 +644,7 @@ Quite a bit of refactoring to generally make this project more maintainable and 
     - technical (3 prompts)
     - writing (3 prompts)
 
-** <2025-05-19> *0.11.0*
+** <2025-05-19 Mon> *0.11.0*
 
 Added user system prompts management
 
@@ -655,7 +655,7 @@ Added user system prompts management
 - Updated key bindings to integrate with existing functionality
 - Added prompts directory customization with defaults
   
-** <2025-05-14> *0.10.0*
+** <2025-05-14 Wed> *0.10.0*
 
 Added file attachment system for including documents in conversations
 
@@ -672,7 +672,7 @@ Added file attachment system for including documents in conversations
 - Updated help text to document new attachment keybindings
 - Enhanced context calculation to include attachment token usage
 
-** <2025-05-12> *0.9.50*
+** <2025-05-12 Mon> *0.9.50*
 
 Added context size management and monitoring
 
@@ -689,18 +689,18 @@ Added context size management and monitoring
 - Added keybindings: C-c $ (set context), C-c % (toggle display), C-c C (show info)
 - Updated status bar to show current/max context with fontification
 
-** <2025-05-05> *0.9.44*
+** <2025-05-05 Mon> *0.9.44*
 
 - Sorted model names alphabetically in intro message
 - Removed multishot writing to register name letters
 
-** <2025-05-05> *0.9.43*
+** <2025-05-05 Mon> *0.9.43*
 
 Fix model reference error exceeding 26 models #15
 
 Update =ollama-buddy= to handle more than 26 models by using prefixed combinations for model references beyond 'z'. This prevents errors in =create-intro-message= when the local server hosts a large number of models.
 
-** <2025-05-03> *0.9.42*
+** <2025-05-03 Sat> *0.9.42*
 
 Added the following to recommended models:
 
@@ -711,7 +711,7 @@ Added the following to recommended models:
 
 and fixed pull model
 
-** <2025-05-02> *0.9.41*
+** <2025-05-02 Fri> *0.9.41*
 
 Refactored model prefixing again so that when using only ollama models no prefix is applied and is only applied when online LLMs are selected (for example claude, chatGPT e.t.c)
 
@@ -719,11 +719,11 @@ I think this makes more sense and is cleaner for I suspect the majority who may 
 
 This could be a bit of a breaking change once again I'm afraid for those ollama users that have switched and are now familiar with prefixing "o:", sorry!
 
-** <2025-05-02> *0.9.40*
+** <2025-05-02 Fri> *0.9.40*
 
 Added vision support for those ollama models that can support it!
 
-** <2025-04-29> *0.9.38*
+** <2025-04-29 Tue> *0.9.38*
 
 Added model unloading functionality to free system resources
 
@@ -731,27 +731,27 @@ Added model unloading functionality to free system resources
 - Create keyboard shortcut (C-c C-u) for quick unloading of all models
 - Display running model count and unload buttons in model management buffer
   
-** <2025-04-25> *0.9.37*
+** <2025-04-25 Fri> *0.9.37*
 
 - Display modified parameters in token stats
 
-** <2025-04-25> *0.9.36*
+** <2025-04-25 Fri> *0.9.36*
 
 Added Reasoning/Thinking section visibility toggle functionality
 
-** <2025-04-21> *0.9.35*
+** <2025-04-21 Mon> *0.9.35*
 
 Added Grok support
 
-** <2025-04-20> *0.9.33*
+** <2025-04-20 Sun> *0.9.33*
 
 Fixed utf-8 encoding stream response issues from remote LLMs.
 
-** <2025-04-19> *0.9.32*
+** <2025-03-20 Thu> *0.9.32*
 
 Finished the remote LLM decoupling process, meaning that the core =ollama-buddy= logic is now not dependent on any remote LLM, and each remote LLM package is self-contained and functions as a unique extension.
 
-** <2025-04-18> *0.9.31*
+** <2025-03-19 Wed> *0.9.31*
 
 Refactored model prefixing logic and cleaned up
 
@@ -761,7 +761,7 @@ Refactored model prefixing logic and cleaned up
 
 Note that there may be some breaking changes here especially regarding session recall as all models will now have a prefix to uniquely identify their type.  For =ollama= recall, just edit the session files to prepend the ollama prefix of "o:"
 
-** <2025-04-17> *0.9.30*
+** <2025-04-17 Thu> *0.9.30*
 
 Added Gemini integration!
 
@@ -787,14 +787,14 @@ As with the Claude and ChatGPT integration, you will need to add something simil
 
 Also with the previous update all the latest model names will be pulled, so there should be a full comprehensive list for each of the main remote AI LLMs!
 
-** <2025-04-17> *0.9.23*
+** <2025-04-17 Thu> *0.9.23*
 
 Refactored history and model management for remote LLMs
 
 - Now pulling in latest model list for remote LLMs (so now ChatGPT 4.1 is available!)
 - Removed redundant history and model management functions from =ollama-buddy-claude.el= and =ollama-buddy-openai.el=. Replaced them with shared implementations to streamline code and reduce duplication
 
-** <2025-04-15> *0.9.22*
+** <2025-04-15 Tue> *0.9.22*
 
 Enhanced session management
 
@@ -802,25 +802,25 @@ Enhanced session management
 - Improved session saving/loading by integrating org file handling.
 - Updated mode line to display current session name dynamically.
 
-** <2025-04-11> *0.9.21*
+** <2025-04-10 Thu> *0.9.21*
 
 Add history edit/view toggle features, so effectively merging the former history display into the history edit functionality.
 
-** <2025-04-04> *0.9.20*
+** <2025-04-04 Fri> *0.9.20*
 
 - Added =ollama-buddy-awesome.el= to integrate Awesome ChatGPT Prompts.
   
-** <2025-04-01> *0.9.17*
+** <2025-04-01 Tue> *0.9.17*
 
 - Added link to =ollama-buddy= info manual from the chat buffer and transient menu as MELPA has now picked it up and installed it!
 
-** <2025-03-28> *0.9.16*
+** <2025-03-28 Fri> *0.9.16*
 
 - Added =ollama-buddy-fix-encoding-issues= to handle text encoding problems.
 - Refactored and streamline fabric pattern description handling.
 - Removed unused fabric pattern categories to enhance maintainability.
 
-** <2025-03-28> *0.9.15*
+** <2025-03-28 Fri> *0.9.15*
 
 - Implement asynchronous operations for model management
   - Introduce non-blocking API requests for fetching, copying, and deleting models
@@ -830,17 +830,17 @@ Add history edit/view toggle features, so effectively merging the former history
 - Update status line to reflect ongoing background operations
 - Ensure smooth user interaction by minimizing wait times and enhancing performance
 
-** <2025-03-26> *0.9.13*
+** <2025-03-26 Wed> *0.9.13*
 
 - Added automatic writing of last response to a register
 - Added M-r to search through prompt history
 
-** <2025-03-25> *0.9.12*
+** <2025-03-26 Wed> *0.9.12*
 
 - Added experimental Claude AI support!
 - removed curl and replaced with url.el for online AI integration
 
-** <2025-03-24> *0.9.11*
+** <2025-03-24 Mon> *0.9.11*
 
 Added the ability to toggle streaming on and off
 
@@ -848,39 +848,39 @@ Added the ability to toggle streaming on and off
 - Implemented toggle function with keybindings (C-c x) and transient menu option
 - Added streaming status indicator in the modeline
 
-** <2025-03-22> *0.9.10*
+** <2025-03-22 Sat> *0.9.10*
 
 Added experimental OpenAI support!
 
-** <2025-03-22> *0.9.9.5*
+** <2025-03-22 Sat> *0.9.9.5*
 
 Added texinfo documentation for future automatic installation through MELPA and created an Emacs manual.
 
-** <2025-03-20> *0.9.9*
+** <2025-03-20 Thu> *0.9.9*
 
 Intro message with model management options (select, pull, delete) and option for recommended models to pull
 
 - Enhance model management and selection features
 - Display models available for download but not yet pulled
 
-** <2025-03-19> *0.9.8*
+** <2025-03-19 Wed> *0.9.8*
 
 Added model management interface to pull and delete models
 
 - Introduced `ollama-buddy-manage-models` to list and manage models.
 - Added actions for selecting, pulling, stopping, and deleting models.
 
-** <2025-03-19> *0.9.7*
+** <2025-03-19 Wed> *0.9.7*
 
 - Added GGUF file import and Dired integration
 
-** <2025-03-18> *0.9.6*
+** <2025-03-18 Tue> *0.9.6*
 
 - Added a transient menu containing all commands currently presented in the chat buffer
 - Added fabric prompting support, see https://github.com/danielmiessler/fabric
 - Moved the presets to the top level so they will be present in the package folder
   
-** <2025-03-17> *0.9.5*
+** <2025-03-17 Mon> *0.9.5*
 
 Added conversation history editing
 
@@ -888,7 +888,7 @@ Added conversation history editing
 - Updated =ollama-buddy-display-history= to support history editing.
 - Added keybinding =C-c E= for history editing.
 
-** <2025-03-17> *0.9.1*
+** <2025-03-17 Mon> *0.9.1*
 
 New simple basic interface is available.
 
