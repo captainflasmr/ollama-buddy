@@ -373,7 +373,8 @@ second go to column 0."
 
 (defcustom ollama-buddy-at-commands
   '(("search" . "@search(%s)")
-    ("rag" . "@rag(%s)"))
+    ("rag" . "@rag(%s)")
+    ("file" . "@file(%s)"))
   "Alist of available inline `@' commands and their syntax templates.
 Each entry is (NAME . TEMPLATE) where TEMPLATE contains `%s' for cursor placement."
   :type '(alist :key-type string :value-type string)
@@ -2367,6 +2368,9 @@ and no new user message is added."
              (fboundp 'ollama-buddy-rag-process-inline))
     (setq prompt (ollama-buddy-rag-process-inline prompt)))
 
+  ;; Process inline @file() paths
+  (setq prompt (ollama-buddy--file-process-inline prompt))
+
   ;; Original Ollama send code with vision additions
   (let* ((model-info (ollama-buddy--get-valid-model specified-model))
          (model (car model-info))
@@ -3395,6 +3399,58 @@ When the operation completes, CALLBACK is called with no arguments if provided."
             (replace-match "\n\n")))))
     
     (message "File attached: %s" file)))
+
+;; Inline @file() support
+
+(defconst ollama-buddy--file-inline-regexp
+  "@file(\\([^)]+\\))"
+  "Regexp to match inline file attachment delimiters: @file(path).")
+
+(defun ollama-buddy--file-extract-inline-paths (text)
+  "Extract all inline file paths from TEXT.
+Returns list of path strings found in @file(path) delimiters."
+  (let ((paths nil)
+        (start 0))
+    (while (string-match ollama-buddy--file-inline-regexp text start)
+      (push (string-trim (match-string 1 text)) paths)
+      (setq start (match-end 0)))
+    (nreverse paths)))
+
+(defun ollama-buddy--file-remove-inline-delimiters (text)
+  "Replace inline file delimiters with just the path text.
+@file(path) becomes path, preserving the path in the prompt."
+  (replace-regexp-in-string ollama-buddy--file-inline-regexp "\\1" text))
+
+(defun ollama-buddy--file-process-inline (text)
+  "Process TEXT for inline @file(path) patterns.
+Extracts paths, attaches files to the conversation context.
+Returns the text with @file() delimiters removed."
+  (let ((paths (ollama-buddy--file-extract-inline-paths text)))
+    (when paths
+      (dolist (path paths)
+        (let ((expanded (expand-file-name path)))
+          (cond
+           ((not (file-exists-p expanded))
+            (message "Inline @file: file not found: %s" expanded))
+           ((cl-find expanded ollama-buddy--current-attachments
+                     :test #'string= :key (lambda (a) (plist-get a :file)))
+            (message "Inline @file: already attached: %s" (file-name-nondirectory expanded)))
+           (t
+            (message "Inline @file: attaching %s" (file-name-nondirectory expanded))
+            (let* ((file-info (ollama-buddy--read-file-safely expanded))
+                   (attachment (list :file expanded
+                                     :content (plist-get file-info :content)
+                                     :size (plist-get file-info :size)
+                                     :type (plist-get file-info :type)
+                                     :attachment-time (current-time))))
+              (push attachment ollama-buddy--current-attachments)
+              (push attachment ollama-buddy--attachment-history)
+              (message "Attached: %s (%d bytes, %d files total)"
+                       (file-name-nondirectory expanded)
+                       (plist-get file-info :size)
+                       (length ollama-buddy--current-attachments)))))))))
+  ;; Return text with delimiters removed
+  (ollama-buddy--file-remove-inline-delimiters text))
 
 (defun ollama-buddy-show-attachments ()
   "Display currently attached files and web searches."
