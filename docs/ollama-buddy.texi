@@ -786,6 +786,90 @@ You can also:
 @item Press @code{C-a} for smart beginning-of-line: first press jumps to the start of the prompt text (after ``>> PROMPT:''), second press goes to column 0
 @end itemize
 
+@section Inline @@ Commands
+
+When typing in the prompt area, pressing @code{@@} triggers a @code{completing-read}
+menu of available inline commands.  These insert syntax templates into the prompt.
+
+Available @code{@@} commands (filtered by loaded modules):
+
+@table @code
+@item @@search(query)
+Search the web and attach results (requires @code{ollama-buddy-web-search}).
+
+@item @@rag(query)
+Search a RAG index and attach results (requires @code{ollama-buddy-rag}).
+
+@item @@file(path)
+Attach a file to the conversation context.
+@end table
+
+@itemize @bullet
+@item Outside the prompt area, @code{@@} inserts a literal @samp{@@}.
+@item Press @code{C-g} to cancel and insert a literal @samp{@@}.
+@item Customize available commands via @code{ollama-buddy-at-commands}.
+@end itemize
+
+@subsection Inline @@file(path) Syntax
+
+Use @code{@@file(path)} in prompts to attach files directly:
+
+@example
+Review this code: @@file(/home/user/project/main.py)
+@end example
+
+Multiple files can be attached:
+
+@example
+Compare @@file(/path/to/old.py) with @@file(/path/to/new.py)
+@end example
+
+Paths are expanded when the prompt is sent.  Already-attached and non-existent
+files are skipped with a message.  Works well with @code{dired-copy-filename-as-kill}
+for pasting file paths.
+
+@section Slash Commands
+
+When typing in the prompt area, pressing @code{/} triggers a @code{completing-read}
+menu of action commands.  Unlike @code{@@} commands which insert text, slash commands
+execute immediately without sending anything to the LLM.
+
+Available @code{/} commands (filtered by loaded modules):
+
+@table @code
+@item model
+Swap the current model (@code{ollama-buddy--swap-model}).
+
+@item system
+Load a user prompt (@code{ollama-buddy-user-prompts-load}).
+Requires @code{ollama-buddy-user-prompts}.
+
+@item clear
+Start a new session (@code{ollama-buddy-sessions-new}).
+
+@item save
+Save the current session (@code{ollama-buddy-sessions-save}).
+
+@item load
+Load a saved session (@code{ollama-buddy-sessions-load}).
+
+@item tools
+Toggle tool calling (@code{ollama-buddy-tools-toggle}).
+Requires @code{ollama-buddy-tools}.
+
+@item context
+Show current attachments (@code{ollama-buddy-show-attachments}).
+
+@item help
+Open the help assistant (@code{ollama-buddy--menu-help-assistant}).
+@end table
+
+@itemize @bullet
+@item Outside the prompt area, @code{/} inserts a literal @samp{/}.
+@item Press @code{C-g} to cancel and insert a literal @samp{/}.
+@item Customize available commands via @code{ollama-buddy-slash-commands}.
+@end itemize
+
 @section System Prompts
 
 System prompts allow you to define the AI's behavior:

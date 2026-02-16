@@ -68,9 +68,13 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Opening-the-Chat][6.1 Opening the Chat]]
   - [[#Interface-Overview][6.2 Interface Overview]]
   - [[#Sending-Prompts][6.3 Sending Prompts]]
-  - [[#System-Prompts][6.4 System Prompts]]
-  - [[#Markdown-to-Org-Conversion][6.5 Markdown to Org Conversion]]
-  - [[#Reasoning-Visibility-Control][6.6 Reasoning Visibility Control]]
+  - [[#Inline-_0040-Commands][6.4 Inline @ Commands]]
+    - [[#Inline-_0040file_0028path_0029-Syntax][6.4.1 Inline @file(path)
+      Syntax]]
+  - [[#Slash-Commands][6.5 Slash Commands]]
+  - [[#System-Prompts][6.6 System Prompts]]
+  - [[#Markdown-to-Org-Conversion][6.7 Markdown to Org Conversion]]
+  - [[#Reasoning-Visibility-Control][6.8 Reasoning Visibility Control]]
 - [[#Working-with-Models][7 Working with Models]]
   - [[#Available-Models][7.1 Available Models]]
   - [[#Switching-Models][7.2 Switching Models]]
@@ -1272,6 +1276,8 @@ Next: [[#Working-with-Models][Working with Models]], Previous:
 - [[#Opening-the-Chat][Opening the Chat]]
 - [[#Interface-Overview][Interface Overview]]
 - [[#Sending-Prompts][Sending Prompts]]
+- [[#Inline-_0040-Commands][Inline @ Commands]]
+- [[#Slash-Commands][Slash Commands]]
 - [[#System-Prompts][System Prompts]]
 - [[#Markdown-to-Org-Conversion][Markdown to Org Conversion]]
 - [[#Reasoning-Visibility-Control][Reasoning Visibility Control]]
@@ -1339,8 +1345,93 @@ You can also:
   start of the prompt text (after “>> PROMPT:”), second press goes to
   column 0
 
+<<Inline-_0040-Commands>>
+*** 6.4 Inline @ Commands [[#Inline-_0040-Commands][¶]]
+:PROPERTIES:
+:CUSTOM_ID: inline-commands
+:CLASS: section
+:END:
+When typing in the prompt area, pressing =@= triggers a
+=completing-read= menu of available inline commands. These insert syntax
+templates into the prompt.
+
+Available =@= commands (filtered by loaded modules):
+
+- =@search(query)= :: Search the web and attach results (requires
+  =ollama-buddy-web-search=).
+
+- =@rag(query)= :: Search a RAG index and attach results (requires
+  =ollama-buddy-rag=).
+
+- =@file(path)= :: Attach a file to the conversation context.
+
+- Outside the prompt area, =@= inserts a literal ‘=@='.
+- Press =C-g= to cancel and insert a literal ‘=@='.
+- Customize available commands via =ollama-buddy-at-commands=.
+
+- [[#Inline-_0040file_0028path_0029-Syntax][Inline @file(path) Syntax]]
+
+<<Inline-_0040file_0028path_0029-Syntax>>
+**** 6.4.1 Inline @file(path) Syntax [[#Inline-_0040file_0028path_0029-Syntax][¶]]
+:PROPERTIES:
+:CUSTOM_ID: inline-filepath-syntax
+:CLASS: subsection
+:END:
+Use =@file(path)= in prompts to attach files directly:
+
+#+begin_src example-preformatted
+Review this code: @file(/home/user/project/main.py)
+#+end_src
+
+Multiple files can be attached:
+
+#+begin_src example-preformatted
+Compare @file(/path/to/old.py) with @file(/path/to/new.py)
+#+end_src
+
+Paths are expanded when the prompt is sent. Already-attached and
+non-existent files are skipped with a message. Works well with
+=dired-copy-filename-as-kill= for pasting file paths.
+
+<<Slash-Commands>>
+*** 6.5 Slash Commands [[#Slash-Commands][¶]]
+:PROPERTIES:
+:CUSTOM_ID: slash-commands
+:CLASS: section
+:END:
+When typing in the prompt area, pressing =/= triggers a
+=completing-read= menu of action commands. Unlike =@= commands which
+insert text, slash commands execute immediately without sending anything
+to the LLM.
+
+Available =/= commands (filtered by loaded modules):
+
+- =model= :: Swap the current model (=ollama-buddy--swap-model=).
+
+- =system= :: Load a user prompt (=ollama-buddy-user-prompts-load=).
+  Requires =ollama-buddy-user-prompts=.
+
+- =clear= :: Start a new session (=ollama-buddy-sessions-new=).
+
+- =save= :: Save the current session (=ollama-buddy-sessions-save=).
+
+- =load= :: Load a saved session (=ollama-buddy-sessions-load=).
+
+- =tools= :: Toggle tool calling (=ollama-buddy-tools-toggle=). Requires
+  =ollama-buddy-tools=.
+
+- =context= :: Show current attachments
+  (=ollama-buddy-show-attachments=).
+
+- =help= :: Open the help assistant
+  (=ollama-buddy--menu-help-assistant=).
+
+- Outside the prompt area, =/= inserts a literal ‘=/='.
+- Press =C-g= to cancel and insert a literal ‘=/='.
+- Customize available commands via =ollama-buddy-slash-commands=.
+
 <<System-Prompts>>
-*** 6.4 System Prompts [[#System-Prompts][¶]]
+*** 6.6 System Prompts [[#System-Prompts][¶]]
 :PROPERTIES:
 :CUSTOM_ID: system-prompts
 :CLASS: section
@@ -1365,7 +1456,7 @@ Provide concise, efficient solutions with explanations.
 #+end_src
 
 <<Markdown-to-Org-Conversion>>
-*** 6.5 Markdown to Org Conversion [[#Markdown-to-Org-Conversion][¶]]
+*** 6.7 Markdown to Org Conversion [[#Markdown-to-Org-Conversion][¶]]
 :PROPERTIES:
 :CUSTOM_ID: markdown-to-org-conversion
 :CLASS: section
@@ -1387,7 +1478,7 @@ M-x ollama-buddy-toggle-markdown-conversion
 or press =C-c C-o= in the chat buffer.
 
 <<Reasoning-Visibility-Control>>
-*** 6.6 Reasoning Visibility Control [[#Reasoning-Visibility-Control][¶]]
+*** 6.8 Reasoning Visibility Control [[#Reasoning-Visibility-Control][¶]]
 :PROPERTIES:
 :CUSTOM_ID: reasoning-visibility-control
 :CLASS: section

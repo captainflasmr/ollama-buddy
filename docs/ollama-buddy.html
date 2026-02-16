@@ -120,9 +120,14 @@ allowing you to leverage powerful large language models (LLMs) directly within y
     <li><a id="toc-Opening-the-Chat" href="#Opening-the-Chat">6.1 Opening the Chat</a></li>
     <li><a id="toc-Interface-Overview" href="#Interface-Overview">6.2 Interface Overview</a></li>
     <li><a id="toc-Sending-Prompts" href="#Sending-Prompts">6.3 Sending Prompts</a></li>
-    <li><a id="toc-System-Prompts" href="#System-Prompts">6.4 System Prompts</a></li>
-    <li><a id="toc-Markdown-to-Org-Conversion" href="#Markdown-to-Org-Conversion">6.5 Markdown to Org Conversion</a></li>
-    <li><a id="toc-Reasoning-Visibility-Control" href="#Reasoning-Visibility-Control">6.6 Reasoning Visibility Control</a></li>
+    <li><a id="toc-Inline-_0040-Commands" href="#Inline-_0040-Commands">6.4 Inline @ Commands</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Inline-_0040file_0028path_0029-Syntax" href="#Inline-_0040file_0028path_0029-Syntax">6.4.1 Inline @file(path) Syntax</a></li>
+    </ul></li>
+    <li><a id="toc-Slash-Commands" href="#Slash-Commands">6.5 Slash Commands</a></li>
+    <li><a id="toc-System-Prompts" href="#System-Prompts">6.6 System Prompts</a></li>
+    <li><a id="toc-Markdown-to-Org-Conversion" href="#Markdown-to-Org-Conversion">6.7 Markdown to Org Conversion</a></li>
+    <li><a id="toc-Reasoning-Visibility-Control" href="#Reasoning-Visibility-Control">6.8 Reasoning Visibility Control</a></li>
   </ul></li>
   <li><a id="toc-Working-with-Models" href="#Working-with-Models">7 Working with Models</a>
   <ul class="toc-numbered-mark">
@@ -1347,9 +1352,11 @@ Next: <a href="#Working-with-Models" accesskey="n" rel="next">Working with Model
 <li><a href="#Opening-the-Chat" accesskey="1">Opening the Chat</a></li>
 <li><a href="#Interface-Overview" accesskey="2">Interface Overview</a></li>
 <li><a href="#Sending-Prompts" accesskey="3">Sending Prompts</a></li>
-<li><a href="#System-Prompts" accesskey="4">System Prompts</a></li>
-<li><a href="#Markdown-to-Org-Conversion" accesskey="5">Markdown to Org Conversion</a></li>
-<li><a href="#Reasoning-Visibility-Control" accesskey="6">Reasoning Visibility Control</a></li>
+<li><a href="#Inline-_0040-Commands" accesskey="4">Inline @ Commands</a></li>
+<li><a href="#Slash-Commands" accesskey="5">Slash Commands</a></li>
+<li><a href="#System-Prompts" accesskey="6">System Prompts</a></li>
+<li><a href="#Markdown-to-Org-Conversion" accesskey="7">Markdown to Org Conversion</a></li>
+<li><a href="#Reasoning-Visibility-Control" accesskey="8">Reasoning Visibility Control</a></li>
 </ul>
 <div class="section-level-extent" id="Opening-the-Chat">
 <h3 class="section"><span>6.1 Opening the Chat<a class="copiable-link" href="#Opening-the-Chat"> &para;</a></span></h3>
@@ -1414,8 +1421,112 @@ Next: <a href="#Working-with-Models" accesskey="n" rel="next">Working with Model
 </li></ul>
 
 </div>
+<div class="section-level-extent" id="Inline-_0040-Commands">
+<h3 class="section"><span>6.4 Inline @ Commands<a class="copiable-link" href="#Inline-_0040-Commands"> &para;</a></span></h3>
+
+<p>When typing in the prompt area, pressing <code class="code">@</code> triggers a <code class="code">completing-read</code>
+menu of available inline commands.  These insert syntax templates into the prompt.
+</p>
+<p>Available <code class="code">@</code> commands (filtered by loaded modules):
+</p>
+<dl class="table">
+<dt><code class="code">@search(query)</code></dt>
+<dd><p>Search the web and attach results (requires <code class="code">ollama-buddy-web-search</code>).
+</p>
+</dd>
+<dt><code class="code">@rag(query)</code></dt>
+<dd><p>Search a RAG index and attach results (requires <code class="code">ollama-buddy-rag</code>).
+</p>
+</dd>
+<dt><code class="code">@file(path)</code></dt>
+<dd><p>Attach a file to the conversation context.
+</p></dd>
+</dl>
+
+<ul class="itemize mark-bullet">
+<li>Outside the prompt area, <code class="code">@</code> inserts a literal &lsquo;<samp class="samp">@</samp>&rsquo;.
+</li><li>Press <code class="code">C-g</code> to cancel and insert a literal &lsquo;<samp class="samp">@</samp>&rsquo;.
+</li><li>Customize available commands via <code class="code">ollama-buddy-at-commands</code>.
+</li></ul>
+
+<ul class="mini-toc">
+<li><a href="#Inline-_0040file_0028path_0029-Syntax" accesskey="1">Inline @file(path) Syntax</a></li>
+</ul>
+<div class="subsection-level-extent" id="Inline-_0040file_0028path_0029-Syntax">
+<h4 class="subsection"><span>6.4.1 Inline @file(path) Syntax<a class="copiable-link" href="#Inline-_0040file_0028path_0029-Syntax"> &para;</a></span></h4>
+
+<p>Use <code class="code">@file(path)</code> in prompts to attach files directly:
+</p>
+<div class="example">
+<pre class="example-preformatted">Review this code: @file(/home/user/project/main.py)
+</pre></div>
+
+<p>Multiple files can be attached:
+</p>
+<div class="example">
+<pre class="example-preformatted">Compare @file(/path/to/old.py) with @file(/path/to/new.py)
+</pre></div>
+
+<p>Paths are expanded when the prompt is sent.  Already-attached and non-existent
+files are skipped with a message.  Works well with <code class="code">dired-copy-filename-as-kill</code>
+for pasting file paths.
+</p>
+</div>
+</div>
+<div class="section-level-extent" id="Slash-Commands">
+<h3 class="section"><span>6.5 Slash Commands<a class="copiable-link" href="#Slash-Commands"> &para;</a></span></h3>
+
+<p>When typing in the prompt area, pressing <code class="code">/</code> triggers a <code class="code">completing-read</code>
+menu of action commands.  Unlike <code class="code">@</code> commands which insert text, slash commands
+execute immediately without sending anything to the LLM.
+</p>
+<p>Available <code class="code">/</code> commands (filtered by loaded modules):
+</p>
+<dl class="table">
+<dt><code class="code">model</code></dt>
+<dd><p>Swap the current model (<code class="code">ollama-buddy--swap-model</code>).
+</p>
+</dd>
+<dt><code class="code">system</code></dt>
+<dd><p>Load a user prompt (<code class="code">ollama-buddy-user-prompts-load</code>).
+Requires <code class="code">ollama-buddy-user-prompts</code>.
+</p>
+</dd>
+<dt><code class="code">clear</code></dt>
+<dd><p>Start a new session (<code class="code">ollama-buddy-sessions-new</code>).
+</p>
+</dd>
+<dt><code class="code">save</code></dt>
+<dd><p>Save the current session (<code class="code">ollama-buddy-sessions-save</code>).
+</p>
+</dd>
+<dt><code class="code">load</code></dt>
+<dd><p>Load a saved session (<code class="code">ollama-buddy-sessions-load</code>).
+</p>
+</dd>
+<dt><code class="code">tools</code></dt>
+<dd><p>Toggle tool calling (<code class="code">ollama-buddy-tools-toggle</code>).
+Requires <code class="code">ollama-buddy-tools</code>.
+</p>
+</dd>
+<dt><code class="code">context</code></dt>
+<dd><p>Show current attachments (<code class="code">ollama-buddy-show-attachments</code>).
+</p>
+</dd>
+<dt><code class="code">help</code></dt>
+<dd><p>Open the help assistant (<code class="code">ollama-buddy--menu-help-assistant</code>).
+</p></dd>
+</dl>
+
+<ul class="itemize mark-bullet">
+<li>Outside the prompt area, <code class="code">/</code> inserts a literal &lsquo;<samp class="samp">/</samp>&rsquo;.
+</li><li>Press <code class="code">C-g</code> to cancel and insert a literal &lsquo;<samp class="samp">/</samp>&rsquo;.
+</li><li>Customize available commands via <code class="code">ollama-buddy-slash-commands</code>.
+</li></ul>
+
+</div>
 <div class="section-level-extent" id="System-Prompts">
-<h3 class="section"><span>6.4 System Prompts<a class="copiable-link" href="#System-Prompts"> &para;</a></span></h3>
+<h3 class="section"><span>6.6 System Prompts<a class="copiable-link" href="#System-Prompts"> &para;</a></span></h3>
 
 <p>System prompts allow you to define the AI&rsquo;s behavior:
 </p>
@@ -1445,7 +1556,7 @@ Provide concise, efficient solutions with explanations.
 
 </div>
 <div class="section-level-extent" id="Markdown-to-Org-Conversion">
-<h3 class="section"><span>6.5 Markdown to Org Conversion<a class="copiable-link" href="#Markdown-to-Org-Conversion"> &para;</a></span></h3>
+<h3 class="section"><span>6.7 Markdown to Org Conversion<a class="copiable-link" href="#Markdown-to-Org-Conversion"> &para;</a></span></h3>
 
 <p>By default, Ollama Buddy converts markdown in responses to Org-mode syntax:
 </p>
@@ -1464,7 +1575,7 @@ Provide concise, efficient solutions with explanations.
 </p>
 </div>
 <div class="section-level-extent" id="Reasoning-Visibility-Control">
-<h3 class="section"><span>6.6 Reasoning Visibility Control<a class="copiable-link" href="#Reasoning-Visibility-Control"> &para;</a></span></h3>
+<h3 class="section"><span>6.8 Reasoning Visibility Control<a class="copiable-link" href="#Reasoning-Visibility-Control"> &para;</a></span></h3>
 
 <p>Ollama Buddy can hide reasoning/thinking sections in responses, making the output cleaner:
 </p>

@@ -719,7 +719,86 @@ To send a prompt to the AI:
      start of the prompt text (after ">> PROMPT:"), second press goes to
      column 0
 
-6.4 System Prompts
+6.4 Inline @ Commands
+=====================
+
+When typing in the prompt area, pressing ‘@’ triggers a
+‘completing-read’ menu of available inline commands.  These insert
+syntax templates into the prompt.
+
+   Available ‘@’ commands (filtered by loaded modules):
+
+‘@search(query)’
+     Search the web and attach results (requires
+     ‘ollama-buddy-web-search’).
+
+‘@rag(query)’
+     Search a RAG index and attach results (requires
+     ‘ollama-buddy-rag’).
+
+‘@file(path)’
+     Attach a file to the conversation context.
+
+   • Outside the prompt area, ‘@’ inserts a literal ‘@’.
+   • Press ‘C-g’ to cancel and insert a literal ‘@’.
+   • Customize available commands via ‘ollama-buddy-at-commands’.
+
+6.4.1 Inline @file(path) Syntax
+-------------------------------
+
+Use ‘@file(path)’ in prompts to attach files directly:
+
+     Review this code: @file(/home/user/project/main.py)
+
+   Multiple files can be attached:
+
+     Compare @file(/path/to/old.py) with @file(/path/to/new.py)
+
+   Paths are expanded when the prompt is sent.  Already-attached and
+non-existent files are skipped with a message.  Works well with
+‘dired-copy-filename-as-kill’ for pasting file paths.
+
+6.5 Slash Commands
+==================
+
+When typing in the prompt area, pressing ‘/’ triggers a
+‘completing-read’ menu of action commands.  Unlike ‘@’ commands which
+insert text, slash commands execute immediately without sending anything
+to the LLM.
+
+   Available ‘/’ commands (filtered by loaded modules):
+
+‘model’
+     Swap the current model (‘ollama-buddy--swap-model’).
+
+‘system’
+     Load a user prompt (‘ollama-buddy-user-prompts-load’).  Requires
+     ‘ollama-buddy-user-prompts’.
+
+‘clear’
+     Start a new session (‘ollama-buddy-sessions-new’).
+
+‘save’
+     Save the current session (‘ollama-buddy-sessions-save’).
+
+‘load’
+     Load a saved session (‘ollama-buddy-sessions-load’).
+
+‘tools’
+     Toggle tool calling (‘ollama-buddy-tools-toggle’).  Requires
+     ‘ollama-buddy-tools’.
+
+‘context’
+     Show current attachments (‘ollama-buddy-show-attachments’).
+
+‘help’
+     Open the help assistant (‘ollama-buddy--menu-help-assistant’).
+
+   • Outside the prompt area, ‘/’ inserts a literal ‘/’.
+   • Press ‘C-g’ to cancel and insert a literal ‘/’.
+   • Customize available commands via ‘ollama-buddy-slash-commands’.
+
+6.6 System Prompts
 ==================
 
 System prompts allow you to define the AI's behavior:
@@ -742,7 +821,7 @@ Using a pre-built prompt
      You are a programming expert who specializes in Python.
      Provide concise, efficient solutions with explanations.
 
-6.5 Markdown to Org Conversion
+6.7 Markdown to Org Conversion
 ==============================
 
 By default, Ollama Buddy converts markdown in responses to Org-mode
@@ -757,7 +836,7 @@ syntax:
      M-x ollama-buddy-toggle-markdown-conversion
    or press ‘C-c C-o’ in the chat buffer.
 
-6.6 Reasoning Visibility Control
+6.8 Reasoning Visibility Control
 ================================
 
 Ollama Buddy can hide reasoning/thinking sections in responses, making
@@ -4072,28 +4151,28 @@ Node: Configuration7859
 Node: Quick Start16129
 Node: Core Features18365
 Node: Chat Interface22642
-Node: Working with Models26469
-Node: Context Management30866
-Node: File Attachments36475
-Node: Web Search42397
-Node: Parameter Control49343
-Node: Session Management51740
-Node: User System Prompts54649
-Node: Roles and Commands63139
-Node: Fabric Pattern Integration78114
-Node: Awesome ChatGPT Prompts80341
-Node: Remote Providers84191
-Node: Ollama Cloud Models89125
-Node: Global System Prompt92044
-Node: Tone Selector93798
-Node: Tool Calling95602
-Node: RAG103381
-Node: Advanced Usage109756
-Node: API Reference112305
-Node: FAQ118289
-Node: Troubleshooting125342
-Node: Contributing127847
-Node: Index130515
+Node: Working with Models28935
+Node: Context Management33332
+Node: File Attachments38941
+Node: Web Search44863
+Node: Parameter Control51809
+Node: Session Management54206
+Node: User System Prompts57115
+Node: Roles and Commands65605
+Node: Fabric Pattern Integration80580
+Node: Awesome ChatGPT Prompts82807
+Node: Remote Providers86657
+Node: Ollama Cloud Models91591
+Node: Global System Prompt94510
+Node: Tone Selector96264
+Node: Tool Calling98068
+Node: RAG105847
+Node: Advanced Usage112222
+Node: API Reference114771
+Node: FAQ120755
+Node: Troubleshooting127808
+Node: Contributing130313
+Node: Index132981
 
 End Tag Table
 
