@@ -38,18 +38,36 @@ RAG uses Ollama's =/api/embed= endpoint with embedding models (e.g. =nomic-embed
 
 *** RAG Commands & Keybindings
 
-| Key     | Command                              | Description               |
-|---------+--------------------------------------+---------------------------|
-| C-c r i | =ollama-buddy-rag-index-directory=   | Index a directory         |
-| C-c r s | =ollama-buddy-rag-search=            | Search and display        |
-| C-c r a | =ollama-buddy-rag-attach=            | Search and attach context |
-| C-c r l | =ollama-buddy-rag-list-indexes=      | List available indexes    |
-| C-c r d | =ollama-buddy-rag-delete-index=      | Delete an index           |
-| C-c r 0 | =ollama-buddy-rag-clear-attached=    | Clear RAG context         |
+| Key     | Command                                | Description               |
+|---------+----------------------------------------+---------------------------|
+| C-c r   | =ollama-buddy-transient-rag-menu=      | Open RAG transient menu   |
+| C-c C-r | =ollama-buddy-reset-system-prompt=     | Reset system prompt       |
+
+RAG transient menu options (via =C-c r= or =C-c O= → =r=):
+
+| Key | Command                              | Description               |
+|-----+--------------------------------------+---------------------------|
+| i   | =ollama-buddy-rag-index-directory=   | Index a directory         |
+| s   | =ollama-buddy-rag-search=            | Search and display        |
+| a   | =ollama-buddy-rag-attach=            | Search and attach context |
+| l   | =ollama-buddy-rag-list-indexes=      | List available indexes    |
+| d   | =ollama-buddy-rag-delete-index=      | Delete an index           |
+| 0   | =ollama-buddy-rag-clear-attached=    | Clear RAG context         |
+
+*** Inline =@rag(query)= Syntax
+
+Use =@rag(query)= directly in prompts to automatically search and attach RAG context:
+
+#+begin_example
+Tell me about @rag(giant squid attack) from the book.
+Compare @rag(captain nemo) with @rag(ned land) in terms of character development.
+#+end_example
 
 *** Transient Menu
 
 RAG is accessible from the main transient menu: =C-c O= → =r= (RAG submenu) with index, search, and management options.
+
+Reset system prompt is accessible via =C-c O= → =C-r= in the System Prompts section.
 
 *** Configuration
 

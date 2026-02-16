@@ -798,7 +798,7 @@ Type your system prompt, then press @code{C-c s}
 Press @code{C-c C-s}
 
 @item Resetting the system prompt
-Press @code{C-c r}
+Press @code{C-c C-r}, or use the main transient menu (@kbd{C-c O}) under System Prompts @code{C-r}
 
 @item Using a pre-built prompt
 Use Fabric patterns (@code{C-c f p}) or Awesome ChatGPT prompts (@code{C-c w p})

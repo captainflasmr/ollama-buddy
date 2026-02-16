@@ -3515,6 +3515,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c l") (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))
     (define-key map (kbd "C-c s") #'ollama-buddy-transient-user-prompts-menu)
     (define-key map (kbd "C-c C-s") #'ollama-buddy-show-system-prompt-info)
+    (define-key map (kbd "C-c C-r") #'ollama-buddy-reset-system-prompt)
 
     (define-key map (kbd "C-c b") #'ollama-buddy-role-transient-menu)
     
@@ -3535,12 +3536,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
     (define-key map (kbd "C-c Q") #'ollama-buddy-tools-info)
     
     ;; RAG keybindings
-    (define-key map (kbd "C-c r i") #'ollama-buddy-rag-index-directory)
-    (define-key map (kbd "C-c r s") #'ollama-buddy-rag-search)
-    (define-key map (kbd "C-c r a") #'ollama-buddy-rag-attach)
-    (define-key map (kbd "C-c r l") #'ollama-buddy-rag-list-indexes)
-    (define-key map (kbd "C-c r d") #'ollama-buddy-rag-delete-index)
-    (define-key map (kbd "C-c r 0") #'ollama-buddy-rag-clear-attached)
+    (define-key map (kbd "C-c r") #'ollama-buddy-transient-rag-menu)
     
     ;; Display Options keybindings
     (define-key map (kbd "C-c B") #'ollama-buddy-toggle-debug-mode)

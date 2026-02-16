@@ -63,8 +63,9 @@ Submit queries, swap models, view token usage and statistics:
 - *RAG Support* -- New =ollama-buddy-rag.el= module: index directories, search with embeddings, attach relevant context to conversations
 - *Async Embedding* -- RAG indexing runs asynchronously with progress in the status line
 - *Embedding Models* -- =nomic-embed-text=, =mxbai-embed-large=, =all-minilm= in recommended models
-- *RAG Transient Menu* -- =C-c O= → =r= for index, search, attach, and management
+- *RAG Transient Menu* -- =C-c r= opens RAG transient menu; also via =C-c O= → =r=
 - *Inline @rag()* -- Use =@rag(query)= in prompts to automatically search and attach RAG context, like =@search()= for web search
+- *System Prompt Reset* -- =C-c C-r= to reset system prompt; also via =C-c O= → =C-r=
 - *55 RAG Tests* -- Full test coverage: chunking, vector math, index management, search roundtrip, inline processing
 
 See [[file:CHANGELOG.org]] for full history.
@@ -126,6 +127,9 @@ git clone https://github.com/captainflasmr/ollama-buddy.git
 | M-p / M-n | Browse prompt history         |
 | C-c a     | Attach file                   |
 | C-c 0     | Clear attachments             |
+| C-c r     | RAG transient menu            |
+| C-c C-s   | Show system prompt            |
+| C-c C-r   | Reset system prompt           |
 | C-c ~     | Select response tone          |
 | C-c e     | Switch backend (network/curl) |
 

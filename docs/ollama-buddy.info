@@ -731,7 +731,8 @@ Viewing the current system prompt
      Press ‘C-c C-s’
 
 Resetting the system prompt
-     Press ‘C-c r’
+     Press ‘C-c C-r’, or use the main transient menu (‘C-c O’) under
+     System Prompts ‘C-r’
 
 Using a pre-built prompt
      Use Fabric patterns (‘C-c f p’) or Awesome ChatGPT prompts (‘C-c w
@@ -4023,28 +4024,28 @@ Node: Configuration7859
 Node: Quick Start16129
 Node: Core Features18365
 Node: Chat Interface22642
-Node: Working with Models26385
-Node: Context Management30782
-Node: File Attachments36391
-Node: Web Search42313
-Node: Parameter Control49259
-Node: Session Management51656
-Node: User System Prompts53593
-Node: Roles and Commands62083
-Node: Fabric Pattern Integration77058
-Node: Awesome ChatGPT Prompts79285
-Node: Remote Providers83135
-Node: Ollama Cloud Models88069
-Node: Global System Prompt90988
-Node: Tone Selector92742
-Node: Tool Calling94546
-Node: RAG102325
-Node: Advanced Usage108024
-Node: API Reference110573
-Node: FAQ116557
-Node: Troubleshooting123610
-Node: Contributing126115
-Node: Index128783
+Node: Working with Models26469
+Node: Context Management30866
+Node: File Attachments36475
+Node: Web Search42397
+Node: Parameter Control49343
+Node: Session Management51740
+Node: User System Prompts53677
+Node: Roles and Commands62167
+Node: Fabric Pattern Integration77142
+Node: Awesome ChatGPT Prompts79369
+Node: Remote Providers83219
+Node: Ollama Cloud Models88153
+Node: Global System Prompt91072
+Node: Tone Selector92826
+Node: Tool Calling94630
+Node: RAG102409
+Node: Advanced Usage108108
+Node: API Reference110657
+Node: FAQ116641
+Node: Troubleshooting123694
+Node: Contributing126199
+Node: Index128867
 
 End Tag Table
 

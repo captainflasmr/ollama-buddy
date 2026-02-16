@@ -107,6 +107,7 @@
     ("f" "Fabric" ollama-buddy-transient-fabric-menu)
     ("w" "Awesome" ollama-buddy-transient-awesome-menu)
     ("C-s" "Show" ollama-buddy-show-system-prompt-info)
+    ("C-r" "Reset" ollama-buddy-reset-system-prompt)
     ]
 
    ["Model"

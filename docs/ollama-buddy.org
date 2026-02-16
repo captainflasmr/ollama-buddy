@@ -1348,7 +1348,8 @@ System prompts allow you to define the AI's behavior:
 
 - Viewing the current system prompt :: Press =C-c C-s=
 
-- Resetting the system prompt :: Press =C-c r=
+- Resetting the system prompt :: Press =C-c C-r=, or use the main
+  transient menu (C-c O) under System Prompts =C-r=
 
 - Using a pre-built prompt :: Use Fabric patterns (=C-c f p=) or Awesome
   ChatGPT prompts (=C-c w p=)
