@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 2.5.0
+@subtitle For Ollama Buddy version 2.5.1
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -1724,6 +1724,20 @@ M-x ollama-buddy-sessions-directory
 or press @code{C-c Z} in the chat buffer.
 
 From Dired, you can browse, rename, delete, or otherwise manage your session files using standard Emacs file operations.
+
+@section Session Naming
+
+When saving a session, Ollama Buddy generates a default name from the first user message. The name is created by filtering out common English stop words (``the'', ``a'', ``is'', etc.) and short words (less than 3 characters), then joining up to 5 remaining key terms with hyphens.
+
+For example, a conversation starting with ``Tell me about the history of space exploration'' would generate the session name @code{tell-history-space-exploration}.
+
+@section Autosave Transcript
+
+Ollama Buddy automatically saves the chat buffer to a recovery file after each completed response. The file is saved as @file{~autosave.org} in the sessions directory (@code{ollama-buddy-sessions-directory}).
+
+This provides crash protection --- if Emacs exits unexpectedly, you can recover the conversation from the autosave file.
+
+The autosave file is automatically deleted when you perform a proper session save with @code{C-c S}.
 
 @section Conversation History
 

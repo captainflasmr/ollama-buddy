@@ -58,15 +58,14 @@ Submit queries, swap models, view token usage and statistics:
 - *RAG* -- Index local documents and source code, retrieve relevant context for conversations via semantic search. Inline =@rag(query)= syntax for automatic context attachment.
 - *Lightweight* -- No external dependencies; a minified 200-line version (=ollama-buddy-mini=) is also available
 
-* What's New (2.5.0)
+* What's New (2.5.1)
 
-- *RAG Support* -- New =ollama-buddy-rag.el= module: index directories, search with embeddings, attach relevant context to conversations
-- *Async Embedding* -- RAG indexing runs asynchronously with progress in the status line
-- *Embedding Models* -- =nomic-embed-text=, =mxbai-embed-large=, =all-minilm= in recommended models
-- *RAG Transient Menu* -- =C-c r= opens RAG transient menu; also via =C-c O= → =r=
+- *Selection Status* -- Role transient menu shows current selection info (chars, lines) to confirm text is selected before commands
+- *Session Naming* -- Improved session names via stop-word filtering: removes common words, keeps up to 5 key terms
+- *Autosave Transcript* -- Chat buffer auto-saved to =~autosave.org= after each response; deleted on proper session save
+- *RAG Transient Menu* -- =C-c r= opens RAG transient menu directly (replaces individual =C-c r i/s/a/l/d/0= bindings)
+- *System Prompt Reset* -- =C-c C-r= to reset system prompt in chat; =C-r= in main transient System Prompts section
 - *Inline @rag()* -- Use =@rag(query)= in prompts to automatically search and attach RAG context, like =@search()= for web search
-- *System Prompt Reset* -- =C-c C-r= to reset system prompt; also via =C-c O= → =C-r=
-- *55 RAG Tests* -- Full test coverage: chunking, vector math, index management, search roundtrip, inline processing
 
 See [[file:CHANGELOG.org]] for full history.
 

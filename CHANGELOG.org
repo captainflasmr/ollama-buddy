@@ -11,6 +11,23 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-16 Sun> *2.5.1*
+
+Usability improvements and inline RAG syntax.
+
+*** New Features
+
+- *Inline =@rag(query)= Syntax* -- Use =@rag(query)= in prompts to automatically search and attach RAG context, mirroring =@search()= for web search. Multiple queries supported per prompt. Works across all providers (Ollama, OpenAI, Claude, Gemini, Grok, Copilot, Codestral).
+- *Selection Status in Role Menu* -- Role transient menu header now shows current selection info (character count and line count) so you can confirm text is selected before running commands.
+- *Session Name Improvements* -- Session names generated via stop-word filtering: removes ~60 common English words and short words, keeps up to 5 key terms joined by hyphens.
+- *Autosave Transcript* -- Chat buffer automatically saved to =~autosave.org= after each completed response. File is deleted when a proper session save is performed. Works with both network-process and curl backends.
+
+*** Keybinding Changes
+
+- =C-c r= now opens RAG transient menu directly (replaces individual =C-c r i/s/a/l/d/0= bindings)
+- =C-c C-r= resets system prompt in chat buffer
+- =C-r= in main transient menu (=C-c O=) resets system prompt
+
 ** <2026-02-15 Sat> *2.5.0*
 
 RAG (Retrieval-Augmented Generation) Support

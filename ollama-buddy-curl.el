@@ -22,6 +22,7 @@
 (declare-function ollama-buddy--find-reasoning-marker "ollama-buddy")
 (declare-function ollama-buddy--update-token-rate-display "ollama-buddy")
 (declare-function ollama-buddy--send-next-in-sequence "ollama-buddy")
+(declare-function ollama-buddy--autosave-transcript "ollama-buddy")
 
 ;; Curl-specific variables
 (defvar ollama-buddy-curl--headers-processed nil
@@ -394,7 +395,10 @@ When complete, CALLBACK is called with the status response and result."
                  (format "Curl Finished [%d %.1f t/s]"
                          (plist-get last-info :tokens)
                          (plist-get last-info :rate)))
-              (ollama-buddy--update-status "Curl Finished")))))
+              (ollama-buddy--update-status "Curl Finished"))))
+
+        ;; Auto-save transcript after every response
+        (ollama-buddy--autosave-transcript))
     (error
      (message "Error in curl completion: %s" (error-message-string err)))))
 

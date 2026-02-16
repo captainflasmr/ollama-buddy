@@ -1655,7 +1655,32 @@ To open the sessions directory in Dired for direct file management:
    From Dired, you can browse, rename, delete, or otherwise manage your
 session files using standard Emacs file operations.
 
-12.6 Conversation History
+12.6 Session Naming
+===================
+
+When saving a session, Ollama Buddy generates a default name from the
+first user message.  The name is created by filtering out common English
+stop words ("the", "a", "is", etc.)  and short words (less than 3
+characters), then joining up to 5 remaining key terms with hyphens.
+
+   For example, a conversation starting with "Tell me about the history
+of space exploration" would generate the session name
+‘tell-history-space-exploration’.
+
+12.7 Autosave Transcript
+========================
+
+Ollama Buddy automatically saves the chat buffer to a recovery file
+after each completed response.  The file is saved as ‘~autosave.org’ in
+the sessions directory (‘ollama-buddy-sessions-directory’).
+
+   This provides crash protection -- if Emacs exits unexpectedly, you
+can recover the conversation from the autosave file.
+
+   The autosave file is automatically deleted when you perform a proper
+session save with ‘C-c S’.
+
+12.8 Conversation History
 =========================
 
 Sessions save the conversation history for each model separately.
@@ -4030,22 +4055,22 @@ Node: File Attachments36475
 Node: Web Search42397
 Node: Parameter Control49343
 Node: Session Management51740
-Node: User System Prompts53677
-Node: Roles and Commands62167
-Node: Fabric Pattern Integration77142
-Node: Awesome ChatGPT Prompts79369
-Node: Remote Providers83219
-Node: Ollama Cloud Models88153
-Node: Global System Prompt91072
-Node: Tone Selector92826
-Node: Tool Calling94630
-Node: RAG102409
-Node: Advanced Usage108108
-Node: API Reference110657
-Node: FAQ116641
-Node: Troubleshooting123694
-Node: Contributing126199
-Node: Index128867
+Node: User System Prompts54649
+Node: Roles and Commands63139
+Node: Fabric Pattern Integration78114
+Node: Awesome ChatGPT Prompts80341
+Node: Remote Providers84191
+Node: Ollama Cloud Models89125
+Node: Global System Prompt92044
+Node: Tone Selector93798
+Node: Tool Calling95602
+Node: RAG103381
+Node: Advanced Usage109080
+Node: API Reference111629
+Node: FAQ117613
+Node: Troubleshooting124666
+Node: Contributing127171
+Node: Index129839
 
 End Tag Table
 

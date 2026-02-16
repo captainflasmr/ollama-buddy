@@ -159,7 +159,9 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Saving-a-Session][12.3 Saving a Session]]
   - [[#Loading-a-Session][12.4 Loading a Session]]
   - [[#Managing-Sessions][12.5 Managing Sessions]]
-  - [[#Conversation-History][12.6 Conversation History]]
+  - [[#Session-Naming][12.6 Session Naming]]
+  - [[#Autosave-Transcript][12.7 Autosave Transcript]]
+  - [[#Conversation-History][12.8 Conversation History]]
 - [[#User-System-Prompts][13 User System Prompts]]
   - [[#Overview-2][13.1 Overview]]
   - [[#Accessing-the-System-Prompts-Menu][13.2 Accessing the System
@@ -2592,6 +2594,8 @@ Next: [[#User-System-Prompts][User System Prompts]], Previous:
 - [[#Saving-a-Session][Saving a Session]]
 - [[#Loading-a-Session][Loading a Session]]
 - [[#Managing-Sessions][Managing Sessions]]
+- [[#Session-Naming][Session Naming]]
+- [[#Autosave-Transcript][Autosave Transcript]]
 - [[#Conversation-History][Conversation History]]
 
 <<Understanding-Sessions>>
@@ -2673,8 +2677,39 @@ or press =C-c Z= in the chat buffer.
 From Dired, you can browse, rename, delete, or otherwise manage your
 session files using standard Emacs file operations.
 
+<<Session-Naming>>
+*** 12.6 Session Naming [[#Session-Naming][¶]]
+:PROPERTIES:
+:CUSTOM_ID: session-naming
+:CLASS: section
+:END:
+When saving a session, Ollama Buddy generates a default name from the
+first user message. The name is created by filtering out common English
+stop words (“the”, “a”, “is”, etc.) and short words (less than 3
+characters), then joining up to 5 remaining key terms with hyphens.
+
+For example, a conversation starting with “Tell me about the history of
+space exploration” would generate the session name
+=tell-history-space-exploration=.
+
+<<Autosave-Transcript>>
+*** 12.7 Autosave Transcript [[#Autosave-Transcript][¶]]
+:PROPERTIES:
+:CUSTOM_ID: autosave-transcript
+:CLASS: section
+:END:
+Ollama Buddy automatically saves the chat buffer to a recovery file
+after each completed response. The file is saved as =~autosave.org= in
+the sessions directory (=ollama-buddy-sessions-directory=).
+
+This provides crash protection --- if Emacs exits unexpectedly, you can
+recover the conversation from the autosave file.
+
+The autosave file is automatically deleted when you perform a proper
+session save with =C-c S=.
+
 <<Conversation-History>>
-*** 12.6 Conversation History [[#Conversation-History][¶]]
+*** 12.8 Conversation History [[#Conversation-History][¶]]
 :PROPERTIES:
 :CUSTOM_ID: conversation-history
 :CLASS: section

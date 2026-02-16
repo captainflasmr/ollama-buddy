@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 2.5.0
+;; Version: 2.5.1
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -1012,6 +1012,18 @@ Returns the full prompt text ready to be sent."
   (unless (file-directory-p ollama-buddy-sessions-directory)
     (make-directory ollama-buddy-sessions-directory t)))
 
+(defun ollama-buddy--autosave-transcript ()
+  "Auto-save the chat buffer to a recovery file.
+Called after each completed response to protect against data loss."
+  (condition-case nil
+      (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
+        (ollama-buddy--ensure-sessions-directory)
+        (let ((recovery-file (expand-file-name "~autosave.org"
+                                               ollama-buddy-sessions-directory)))
+          (with-current-buffer ollama-buddy--chat-buffer
+            (write-region (point-min) (point-max) recovery-file nil 'quiet))))
+    (error nil)))
+
 (defun ollama-buddy--generate-session-name ()
   "Generate a session name from the first user message.
 Filters stop words and returns up to 5 key words joined by hyphens."
@@ -1100,6 +1112,12 @@ Filters stop words and returns up to 5 key words joined by hyphens."
     (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
       (write-region (point-min) (point-max) org-file))
     
+    ;; Remove autosave file since we have a proper save now
+    (let ((recovery-file (expand-file-name "~autosave.org"
+                                           ollama-buddy-sessions-directory)))
+      (when (file-exists-p recovery-file)
+        (delete-file recovery-file)))
+
     (setq ollama-buddy-current-session-name session-name)
     (ollama-buddy-update-mode-line)
     (message "Session saved as %s" session-name)))
@@ -1791,7 +1809,9 @@ Optional MENU-COLUMNS specifies the number of columns for the menu display."
                       (ollama-buddy--prepare-prompt-area)
                       (ollama-buddy--update-status (format "Finished [%d %.1f t/s]"
                                                            (plist-get (car ollama-buddy--token-usage-history) :tokens)
-                                                           (plist-get (car ollama-buddy--token-usage-history) :rate))))))
+                                                           (plist-get (car ollama-buddy--token-usage-history) :rate)))
+                      ;; Auto-save transcript
+                      (ollama-buddy--autosave-transcript))))
                 (setq completed t))) ; closes when-done AND save-excursion
             ;; Window state management (must be outside save-excursion)
             (when window
@@ -1868,7 +1888,10 @@ Optional MENU-COLUMNS specifies the number of columns for the menu display."
                 (search-forward "]")
                 (ollama-buddy--md-to-org-convert-region
                  (point) end)))))
-        (ollama-buddy--update-status (concat "Stream " status))))))
+        (ollama-buddy--update-status (concat "Stream " status))))
+
+    ;; Auto-save transcript (for sentinel-based completions)
+    (ollama-buddy--autosave-transcript)))
 
 (defun ollama-buddy--model-annotation (model)
   "Return annotation string for MODEL in completing-read.

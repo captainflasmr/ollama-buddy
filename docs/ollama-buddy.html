@@ -229,7 +229,9 @@ allowing you to leverage powerful large language models (LLMs) directly within y
     <li><a id="toc-Saving-a-Session" href="#Saving-a-Session">12.3 Saving a Session</a></li>
     <li><a id="toc-Loading-a-Session" href="#Loading-a-Session">12.4 Loading a Session</a></li>
     <li><a id="toc-Managing-Sessions" href="#Managing-Sessions">12.5 Managing Sessions</a></li>
-    <li><a id="toc-Conversation-History" href="#Conversation-History">12.6 Conversation History</a></li>
+    <li><a id="toc-Session-Naming" href="#Session-Naming">12.6 Session Naming</a></li>
+    <li><a id="toc-Autosave-Transcript" href="#Autosave-Transcript">12.7 Autosave Transcript</a></li>
+    <li><a id="toc-Conversation-History" href="#Conversation-History">12.8 Conversation History</a></li>
   </ul></li>
   <li><a id="toc-User-System-Prompts" href="#User-System-Prompts">13 User System Prompts</a>
   <ul class="toc-numbered-mark">
@@ -2616,7 +2618,9 @@ Next: <a href="#User-System-Prompts" accesskey="n" rel="next">User System Prompt
 <li><a href="#Saving-a-Session" accesskey="3">Saving a Session</a></li>
 <li><a href="#Loading-a-Session" accesskey="4">Loading a Session</a></li>
 <li><a href="#Managing-Sessions" accesskey="5">Managing Sessions</a></li>
-<li><a href="#Conversation-History" accesskey="6">Conversation History</a></li>
+<li><a href="#Session-Naming" accesskey="6">Session Naming</a></li>
+<li><a href="#Autosave-Transcript" accesskey="7">Autosave Transcript</a></li>
+<li><a href="#Conversation-History" accesskey="8">Conversation History</a></li>
 </ul>
 <div class="section-level-extent" id="Understanding-Sessions">
 <h3 class="section"><span>12.1 Understanding Sessions<a class="copiable-link" href="#Understanding-Sessions"> &para;</a></span></h3>
@@ -2678,8 +2682,26 @@ Next: <a href="#User-System-Prompts" accesskey="n" rel="next">User System Prompt
 <p>From Dired, you can browse, rename, delete, or otherwise manage your session files using standard Emacs file operations.
 </p>
 </div>
+<div class="section-level-extent" id="Session-Naming">
+<h3 class="section"><span>12.6 Session Naming<a class="copiable-link" href="#Session-Naming"> &para;</a></span></h3>
+
+<p>When saving a session, Ollama Buddy generates a default name from the first user message. The name is created by filtering out common English stop words (&ldquo;the&rdquo;, &ldquo;a&rdquo;, &ldquo;is&rdquo;, etc.) and short words (less than 3 characters), then joining up to 5 remaining key terms with hyphens.
+</p>
+<p>For example, a conversation starting with &ldquo;Tell me about the history of space exploration&rdquo; would generate the session name <code class="code">tell-history-space-exploration</code>.
+</p>
+</div>
+<div class="section-level-extent" id="Autosave-Transcript">
+<h3 class="section"><span>12.7 Autosave Transcript<a class="copiable-link" href="#Autosave-Transcript"> &para;</a></span></h3>
+
+<p>Ollama Buddy automatically saves the chat buffer to a recovery file after each completed response. The file is saved as <samp class="file">~autosave.org</samp> in the sessions directory (<code class="code">ollama-buddy-sessions-directory</code>).
+</p>
+<p>This provides crash protection &mdash; if Emacs exits unexpectedly, you can recover the conversation from the autosave file.
+</p>
+<p>The autosave file is automatically deleted when you perform a proper session save with <code class="code">C-c S</code>.
+</p>
+</div>
 <div class="section-level-extent" id="Conversation-History">
-<h3 class="section"><span>12.6 Conversation History<a class="copiable-link" href="#Conversation-History"> &para;</a></span></h3>
+<h3 class="section"><span>12.8 Conversation History<a class="copiable-link" href="#Conversation-History"> &para;</a></span></h3>
 
 <p>Sessions save the conversation history for each model separately.
 </p>
