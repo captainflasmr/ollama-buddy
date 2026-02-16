@@ -1012,16 +1012,30 @@ Returns the full prompt text ready to be sent."
   (unless (file-directory-p ollama-buddy-sessions-directory)
     (make-directory ollama-buddy-sessions-directory t)))
 
-(defun ollama-buddy--get-first-words-of-first-user-content ()
-  "Extract first few words from user message."
-  (if (gethash ollama-buddy--current-model ollama-buddy--conversation-history-by-model nil)
-      (progn
-        (let* ((content
-                (cdr (assoc 'content
-                            (car (gethash ollama-buddy--current-model ollama-buddy--conversation-history-by-model nil)))))
-               (words (split-string content)))
-          (concat "-" (string-join (seq-take words 10) "-"))))
-    ""))
+(defun ollama-buddy--generate-session-name ()
+  "Generate a session name from the first user message.
+Filters stop words and returns up to 5 key words joined by hyphens."
+  (when-let* ((history (gethash ollama-buddy--current-model
+                                ollama-buddy--conversation-history-by-model nil))
+              (first-msg (car history))
+              (content (cdr (assoc 'content first-msg))))
+    (let* ((stop-words '("the" "a" "an" "is" "are" "was" "were" "be" "been"
+                          "being" "have" "has" "had" "do" "does" "did" "will"
+                          "would" "could" "should" "may" "might" "can" "shall"
+                          "to" "of" "in" "for" "on" "with" "at" "by" "from"
+                          "as" "into" "about" "that" "this" "it" "i" "me" "my"
+                          "we" "our" "you" "your" "he" "she" "they" "them"
+                          "what" "which" "who" "how" "when" "where" "why"
+                          "not" "no" "so" "if" "or" "and" "but" "just" "also"
+                          "please" "help" "want" "need" "like" "think" "know"))
+           (words (split-string (downcase content) "[^a-z0-9]+" t))
+           (filtered (seq-remove (lambda (w) (or (member w stop-words)
+                                                 (< (length w) 3)))
+                                 words))
+           (key-words (seq-take filtered 5)))
+      (if key-words
+          (string-join key-words "-")
+        (string-join (seq-take (split-string content) 5) "-")))))
 
 (defun ollama-buddy--hash-table-to-alist (hash-table)
   "Convert HASH-TABLE to an alist for serialization."
@@ -1047,11 +1061,11 @@ Returns the full prompt text ready to be sent."
 (defun ollama-buddy-sessions-save ()
   "Save the current Ollama Buddy session including attachments."
   (interactive)
-  (let* ((default-name (concat (format-time-string "%F-%H%M%S")
-                               (let ((first-words (ollama-buddy--get-first-words-of-first-user-content)))
-                                 (if (and first-words (not (string-empty-p first-words)))
-                                     (concat "-" (replace-regexp-in-string " " "-" first-words))
-                                   ""))))
+  (let* ((generated (ollama-buddy--generate-session-name))
+         (default-name (concat (format-time-string "%F-%H%M%S")
+                               (if (and generated (not (string-empty-p generated)))
+                                   (concat "-" generated)
+                                 "")))
          (session-name (read-string "Session name/description: " default-name))
          (session-file (expand-file-name (concat session-name ".el") 
                                          ollama-buddy-sessions-directory))
@@ -1834,7 +1848,6 @@ Optional MENU-COLUMNS specifies the number of columns for the menu display."
             (when (not ollama-buddy-auto-scroll)
               (set-window-point window old-point)
               (set-window-start window old-window-start t))))))
-    
     ;; Only show token stats in status if we completed successfully
     (if (string= status "Completed")
         (let ((last-info (car ollama-buddy--token-usage-history)))
