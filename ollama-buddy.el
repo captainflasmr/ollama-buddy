@@ -412,6 +412,49 @@ Outside the prompt area, insert a literal `@'."
             (save-excursion
               (insert (cadr parts)))))))))
 
+(defcustom ollama-buddy-slash-commands
+  '(("model"   . ollama-buddy--swap-model)
+    ("system"  . ollama-buddy-user-prompts-load)
+    ("clear"   . ollama-buddy-sessions-new)
+    ("save"    . ollama-buddy-sessions-save)
+    ("load"    . ollama-buddy-sessions-load)
+    ("tools"   . ollama-buddy-tools-toggle)
+    ("context" . ollama-buddy-show-attachments)
+    ("help"    . ollama-buddy--menu-help-assistant))
+  "Alist of available `/' slash commands.
+Each entry is (NAME . FUNCTION) where FUNCTION is called interactively."
+  :type '(alist :key-type string :value-type function)
+  :group 'ollama-buddy)
+
+(defun ollama-buddy--slash-complete ()
+  "Complete a `/' slash command in the prompt area.
+When point is in the prompt area, offer `completing-read' with
+available slash commands and execute the chosen action.
+Outside the prompt area, insert a literal `/'."
+  (interactive)
+  (let ((in-prompt
+         (save-excursion
+           (beginning-of-line)
+           (re-search-forward ">> \\(?:PROMPT\\|SYSTEM PROMPT\\):" (line-end-position) t))))
+    (if (not in-prompt)
+        (self-insert-command 1)
+      (let* ((candidates
+              (cl-remove-if-not
+               (lambda (entry)
+                 (pcase (car entry)
+                   ("system" (featurep 'ollama-buddy-user-prompts))
+                   ("tools" (featurep 'ollama-buddy-tools))
+                   (_ t)))
+               ollama-buddy-slash-commands))
+             (names (mapcar #'car candidates))
+             (choice (condition-case nil
+                         (completing-read "/ command: " names nil t)
+                       (quit nil))))
+        (if (not choice)
+            (insert "/")
+          (let ((fn (cdr (assoc choice candidates))))
+            (call-interactively fn)))))))
+
 (defun ollama-buddy-history-search ()
   "Search through the prompt history using a `completing-read' interface."
   (interactive)
@@ -3724,6 +3767,7 @@ Returns the text with @file() delimiters removed."
     
     (define-key map [remap move-beginning-of-line] #'ollama-buddy-beginning-of-prompt)
     (define-key map "@" #'ollama-buddy--at-complete)
+    (define-key map "/" #'ollama-buddy--slash-complete)
     map)
   "Keymap for ollama-buddy mode.")
 
