@@ -862,6 +862,29 @@ Show current attachments (@code{ollama-buddy-show-attachments}).
 
 @item help
 Open the help assistant (@code{ollama-buddy--menu-help-assistant}).
+
+@item copy
+Copy the last assistant response to the kill ring (@code{ollama-buddy-copy-last-response}).
+
+@item retry
+Resend the last user prompt to the current model (@code{ollama-buddy-retry-last-prompt}).
+
+@item tone
+Set the response tone/style (@code{ollama-buddy-set-tone}).
+
+@item fabric
+Load a Fabric pattern as system prompt (@code{ollama-buddy-fabric-set-system-prompt}).
+Requires @code{ollama-buddy-fabric}.
+
+@item awesome
+Load an Awesome ChatGPT prompt as system prompt (@code{ollama-buddy-awesome-set-system-prompt}).
+Requires @code{ollama-buddy-awesome}.
+
+@item streaming
+Toggle streaming mode on/off (@code{ollama-buddy-toggle-streaming}).
+
+@item reset
+Reset system prompt to default (@code{ollama-buddy-reset-system-prompt}).
 @end table
 
 @itemize @bullet

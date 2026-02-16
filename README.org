@@ -63,7 +63,7 @@ Submit queries, swap models, view token usage and statistics:
 - *=@= Autocomplete* -- Typing =@= in the prompt area triggers =completing-read= with available inline commands (=search=, =rag=, =file=). Inserts syntax template with cursor inside parens. Filtered by loaded modules; =C-g= inserts literal =@=.
 - *=ollama-buddy-at-commands=* -- Customizable alist for defining =@= command templates, extensible for future inline commands
 - *Inline =@file(path)=* -- Attach files to context inline: =@file(/path/to/file)=. Paths expanded on send; works with =dired-copy-filename-as-kill=.
-- *=/= Slash Commands* -- Typing =/= in the prompt area triggers =completing-read= with action commands (=model=, =clear=, =save=, =load=, =tools=, =context=, =help=). Execute immediately; =C-g= inserts literal =/=.
+- *=/= Slash Commands* -- Typing =/= in the prompt area triggers =completing-read= with action commands (=model=, =copy=, =retry=, =tone=, =fabric=, =awesome=, =streaming=, =reset=, and more). Execute immediately; =C-g= inserts literal =/=.
 - *=ollama-buddy-slash-commands=* -- Customizable alist for defining =/= slash command actions
 
 See [[file:CHANGELOG.org]] for full history.

@@ -794,6 +794,34 @@ to the LLM.
 ‘help’
      Open the help assistant (‘ollama-buddy--menu-help-assistant’).
 
+‘copy’
+     Copy the last assistant response to the kill ring
+     (‘ollama-buddy-copy-last-response’).
+
+‘retry’
+     Resend the last user prompt to the current model
+     (‘ollama-buddy-retry-last-prompt’).
+
+‘tone’
+     Set the response tone/style (‘ollama-buddy-set-tone’).
+
+‘fabric’
+     Load a Fabric pattern as system prompt
+     (‘ollama-buddy-fabric-set-system-prompt’).  Requires
+     ‘ollama-buddy-fabric’.
+
+‘awesome’
+     Load an Awesome ChatGPT prompt as system prompt
+     (‘ollama-buddy-awesome-set-system-prompt’).  Requires
+     ‘ollama-buddy-awesome’.
+
+‘streaming’
+     Toggle streaming mode on/off (‘ollama-buddy-toggle-streaming’).
+
+‘reset’
+     Reset system prompt to default
+     (‘ollama-buddy-reset-system-prompt’).
+
    • Outside the prompt area, ‘/’ inserts a literal ‘/’.
    • Press ‘C-g’ to cancel and insert a literal ‘/’.
    • Customize available commands via ‘ollama-buddy-slash-commands’.
@@ -4151,28 +4179,28 @@ Node: Configuration7859
 Node: Quick Start16129
 Node: Core Features18365
 Node: Chat Interface22642
-Node: Working with Models28935
-Node: Context Management33332
-Node: File Attachments38941
-Node: Web Search44863
-Node: Parameter Control51809
-Node: Session Management54206
-Node: User System Prompts57115
-Node: Roles and Commands65605
-Node: Fabric Pattern Integration80580
-Node: Awesome ChatGPT Prompts82807
-Node: Remote Providers86657
-Node: Ollama Cloud Models91591
-Node: Global System Prompt94510
-Node: Tone Selector96264
-Node: Tool Calling98068
-Node: RAG105847
-Node: Advanced Usage112222
-Node: API Reference114771
-Node: FAQ120755
-Node: Troubleshooting127808
-Node: Contributing130313
-Node: Index132981
+Node: Working with Models29738
+Node: Context Management34135
+Node: File Attachments39744
+Node: Web Search45666
+Node: Parameter Control52612
+Node: Session Management55009
+Node: User System Prompts57918
+Node: Roles and Commands66408
+Node: Fabric Pattern Integration81383
+Node: Awesome ChatGPT Prompts83610
+Node: Remote Providers87460
+Node: Ollama Cloud Models92394
+Node: Global System Prompt95313
+Node: Tone Selector97067
+Node: Tool Calling98871
+Node: RAG106650
+Node: Advanced Usage113025
+Node: API Reference115574
+Node: FAQ121558
+Node: Troubleshooting128611
+Node: Contributing131116
+Node: Index133784
 
 End Tag Table
 

@@ -11,7 +11,7 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
-** <2026-02-16 Sun> *2.5.3*
+** <2026-02-16 Mon> *2.5.3*
 
 Autocomplete for inline =@= commands and =/= slash commands in chat prompt.
 
@@ -20,8 +20,10 @@ Autocomplete for inline =@= commands and =/= slash commands in chat prompt.
 - *=@= Autocomplete* -- Typing =@= in the prompt area triggers =completing-read= with available inline commands (=search=, =rag=, =file=). Inserts the chosen syntax template (e.g., =@search()=) with cursor positioned inside the parentheses. Commands are filtered based on loaded modules. Outside the prompt area, =@= inserts literally. Press =C-g= to cancel and insert a literal =@=.
 - *=ollama-buddy-at-commands=* -- New customizable alist for defining available =@= commands and their templates, making it easy to add new inline commands.
 - *Inline =@file(path)= Syntax* -- Use =@file(/path/to/file)= in prompts to attach files to the conversation context inline. Paths are expanded and the file content is attached on send. Skips already-attached and non-existent files with a message. Works well with =dired-copy-filename-as-kill= for pasting paths.
-- *=/= Slash Commands* -- Typing =/= in the prompt area triggers =completing-read= with action commands (=model=, =system=, =clear=, =save=, =load=, =tools=, =context=, =help=). Commands execute immediately without sending text to the LLM. Filtered by loaded modules (=system= requires =ollama-buddy-user-prompts=, =tools= requires =ollama-buddy-tools=). Outside the prompt area, =/= inserts literally. Press =C-g= to cancel and insert a literal =/=.
+- *=/= Slash Commands* -- Typing =/= in the prompt area triggers =completing-read= with action commands that execute immediately without sending text to the LLM. Available commands: =model=, =system=, =clear=, =save=, =load=, =tools=, =context=, =help=, =copy=, =retry=, =tone=, =fabric=, =awesome=, =streaming=, =reset=. Filtered by loaded modules (=system= requires =ollama-buddy-user-prompts=, =tools= requires =ollama-buddy-tools=, =fabric= requires =ollama-buddy-fabric=, =awesome= requires =ollama-buddy-awesome=). Outside the prompt area, =/= inserts literally. Press =C-g= to cancel and insert a literal =/=.
 - *=ollama-buddy-slash-commands=* -- New customizable alist for defining available =/= slash commands and their action functions.
+- *=ollama-buddy-copy-last-response=* -- Copy the last assistant response to the kill ring (available as =/copy= slash command).
+- *=ollama-buddy-retry-last-prompt=* -- Resend the last user prompt to the current model (available as =/retry= slash command).
 
 ** <2026-02-16 Sun> *2.5.2*
 

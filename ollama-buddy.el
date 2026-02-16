@@ -412,15 +412,47 @@ Outside the prompt area, insert a literal `@'."
             (save-excursion
               (insert (cadr parts)))))))))
 
+(defun ollama-buddy-copy-last-response ()
+  "Copy the last assistant response to the kill ring."
+  (interactive)
+  (let* ((model ollama-buddy--current-model)
+         (history (gethash model ollama-buddy--conversation-history-by-model nil))
+         (last-assistant
+          (cl-find-if (lambda (msg) (equal (alist-get 'role msg) "assistant"))
+                      (reverse history))))
+    (if last-assistant
+        (let ((content (alist-get 'content last-assistant)))
+          (kill-new content)
+          (message "Last response copied to kill ring (%d chars)" (length content)))
+      (message "No assistant response found in history"))))
+
+(defun ollama-buddy-retry-last-prompt ()
+  "Resend the last user prompt to the current model."
+  (interactive)
+  (if ollama-buddy--prompt-history
+      (let ((last-prompt (car ollama-buddy--prompt-history))
+            (model (or ollama-buddy--current-model
+                       ollama-buddy-default-model
+                       "Default:latest")))
+        (ollama-buddy--send-backend last-prompt model))
+    (message "No prompt history to retry")))
+
 (defcustom ollama-buddy-slash-commands
-  '(("model"   . ollama-buddy--swap-model)
-    ("system"  . ollama-buddy-user-prompts-load)
-    ("clear"   . ollama-buddy-sessions-new)
-    ("save"    . ollama-buddy-sessions-save)
-    ("load"    . ollama-buddy-sessions-load)
-    ("tools"   . ollama-buddy-tools-toggle)
-    ("context" . ollama-buddy-show-attachments)
-    ("help"    . ollama-buddy--menu-help-assistant))
+  '(("model"     . ollama-buddy--swap-model)
+    ("system"    . ollama-buddy-user-prompts-load)
+    ("clear"     . ollama-buddy-sessions-new)
+    ("save"      . ollama-buddy-sessions-save)
+    ("load"      . ollama-buddy-sessions-load)
+    ("tools"     . ollama-buddy-tools-toggle)
+    ("context"   . ollama-buddy-show-attachments)
+    ("help"      . ollama-buddy--menu-help-assistant)
+    ("copy"      . ollama-buddy-copy-last-response)
+    ("retry"     . ollama-buddy-retry-last-prompt)
+    ("tone"      . ollama-buddy-set-tone)
+    ("fabric"    . ollama-buddy-fabric-set-system-prompt)
+    ("awesome"   . ollama-buddy-awesome-set-system-prompt)
+    ("streaming" . ollama-buddy-toggle-streaming)
+    ("reset"     . ollama-buddy-reset-system-prompt))
   "Alist of available `/' slash commands.
 Each entry is (NAME . FUNCTION) where FUNCTION is called interactively."
   :type '(alist :key-type string :value-type function)
@@ -444,6 +476,8 @@ Outside the prompt area, insert a literal `/'."
                  (pcase (car entry)
                    ("system" (featurep 'ollama-buddy-user-prompts))
                    ("tools" (featurep 'ollama-buddy-tools))
+                   ("fabric" (featurep 'ollama-buddy-fabric))
+                   ("awesome" (featurep 'ollama-buddy-awesome))
                    (_ t)))
                ollama-buddy-slash-commands))
              (names (mapcar #'car candidates))

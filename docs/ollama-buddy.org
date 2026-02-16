@@ -1426,6 +1426,28 @@ Available =/= commands (filtered by loaded modules):
 - =help= :: Open the help assistant
   (=ollama-buddy--menu-help-assistant=).
 
+- =copy= :: Copy the last assistant response to the kill ring
+  (=ollama-buddy-copy-last-response=).
+
+- =retry= :: Resend the last user prompt to the current model
+  (=ollama-buddy-retry-last-prompt=).
+
+- =tone= :: Set the response tone/style (=ollama-buddy-set-tone=).
+
+- =fabric= :: Load a Fabric pattern as system prompt
+  (=ollama-buddy-fabric-set-system-prompt=). Requires
+  =ollama-buddy-fabric=.
+
+- =awesome= :: Load an Awesome ChatGPT prompt as system prompt
+  (=ollama-buddy-awesome-set-system-prompt=). Requires
+  =ollama-buddy-awesome=.
+
+- =streaming= :: Toggle streaming mode on/off
+  (=ollama-buddy-toggle-streaming=).
+
+- =reset= :: Reset system prompt to default
+  (=ollama-buddy-reset-system-prompt=).
+
 - Outside the prompt area, =/= inserts a literal ‘=/='.
 - Press =C-g= to cancel and insert a literal ‘=/='.
 - Customize available commands via =ollama-buddy-slash-commands=.
