@@ -515,6 +515,29 @@ Binds `test-dir' to the directory containing the files."
   (should-not (ollama-buddy-rag--file-extension-p "Makefile"))
   (should-not (ollama-buddy-rag--file-extension-p "script")))
 
+;;; PDF Support Tests
+;; ============================================================================
+
+(ert-deftest ollama-buddy-rag-test-pdf-file-p ()
+  "Test PDF file detection."
+  :tags '(rag)
+  (should (ollama-buddy-rag--pdf-file-p "document.pdf"))
+  (should (ollama-buddy-rag--pdf-file-p "path/to/file.PDF"))
+  (should-not (ollama-buddy-rag--pdf-file-p "readme.md"))
+  (should-not (ollama-buddy-rag--pdf-file-p "Makefile")))
+
+(ert-deftest ollama-buddy-rag-test-pdf-extension-with-pdftotext ()
+  "Test that PDF extension is accepted when pdftotext is available."
+  :tags '(rag)
+  (let ((ollama-buddy-rag--pdftotext-available t))
+    (should (ollama-buddy-rag--file-extension-p "document.pdf"))))
+
+(ert-deftest ollama-buddy-rag-test-pdf-extension-without-pdftotext ()
+  "Test that PDF extension is rejected when pdftotext is unavailable."
+  :tags '(rag)
+  (let ((ollama-buddy-rag--pdftotext-available nil))
+    (should-not (ollama-buddy-rag--file-extension-p "document.pdf"))))
+
 ;;; Exclude Pattern Tests
 ;; ============================================================================
 

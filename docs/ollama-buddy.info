@@ -3282,7 +3282,30 @@ the "Embedding (RAG)" category.
 ‘ollama-buddy-rag-batch-size’
      Number of chunks to embed per API call (default: ‘20’).
 
-22.6 Interactive Commands
+22.6 PDF Support
+================
+
+RAG can index PDF files if ‘pdftotext’ (from ‘poppler-utils’) is
+installed on your system.  PDF support is auto-detected at runtime:
+
+   • If ‘pdftotext’ is available, ‘.pdf’ files are included when
+     indexing directories.
+   • If ‘pdftotext’ is not installed, PDF files are silently skipped.
+   • PDFs bypass the file size limit (‘ollama-buddy-rag-max-file-size’)
+     since binary PDF size does not reflect extracted text size.
+
+   To install ‘pdftotext’:
+
+     # Debian/Ubuntu
+     sudo apt install poppler-utils
+
+     # Arch Linux
+     sudo pacman -S poppler
+
+     # macOS
+     brew install poppler
+
+22.7 Interactive Commands
 =========================
 
 These commands are available from the RAG transient menu (‘C-c O’ then
@@ -3309,7 +3332,7 @@ These commands are available from the RAG transient menu (‘C-c O’ then
 ‘ollama-buddy-rag-delete-index (d)’
      Delete a saved RAG index.
 
-22.7 Inline @rag() Syntax
+22.8 Inline @rag() Syntax
 =========================
 
 You can use ‘@rag(query)’ directly in prompts to automatically search
@@ -3334,7 +3357,7 @@ needed.  This mirrors the ‘@search(query)’ syntax for web search.
    If you have multiple indexes, you will be prompted to select one.  If
 only one index exists, it is used automatically.
 
-22.8 Example Workflow
+22.9 Example Workflow
 =====================
 
 Suppose you have the text of "Twenty Thousand Leagues Under the Sea" in
@@ -4065,12 +4088,12 @@ Node: Global System Prompt92044
 Node: Tone Selector93798
 Node: Tool Calling95602
 Node: RAG103381
-Node: Advanced Usage109080
-Node: API Reference111629
-Node: FAQ117613
-Node: Troubleshooting124666
-Node: Contributing127171
-Node: Index129839
+Node: Advanced Usage109756
+Node: API Reference112305
+Node: FAQ118289
+Node: Troubleshooting125342
+Node: Contributing127847
+Node: Index130515
 
 End Tag Table
 

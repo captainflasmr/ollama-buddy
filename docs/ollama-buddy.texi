@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 2.5.1
+@subtitle For Ollama Buddy version 2.5.2
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -3292,6 +3292,32 @@ List of glob patterns to exclude from indexing
 @item ollama-buddy-rag-batch-size
 Number of chunks to embed per API call (default: @code{20}).
 @end table
+
+@section PDF Support
+
+RAG can index PDF files if @code{pdftotext} (from @code{poppler-utils}) is
+installed on your system.  PDF support is auto-detected at runtime:
+
+@itemize @bullet
+@item If @code{pdftotext} is available, @code{.pdf} files are included when
+indexing directories.
+@item If @code{pdftotext} is not installed, PDF files are silently skipped.
+@item PDFs bypass the file size limit (@code{ollama-buddy-rag-max-file-size})
+since binary PDF size does not reflect extracted text size.
+@end itemize
+
+To install @code{pdftotext}:
+
+@example
+# Debian/Ubuntu
+sudo apt install poppler-utils
+
+# Arch Linux
+sudo pacman -S poppler
+
+# macOS
+brew install poppler
+@end example
 
 @section Interactive Commands
 

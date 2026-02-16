@@ -286,9 +286,10 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Quick-Start-2][22.3 Quick Start]]
   - [[#How-It-Works-4][22.4 How It Works]]
   - [[#Configuration-7][22.5 Configuration]]
-  - [[#Interactive-Commands-1][22.6 Interactive Commands]]
-  - [[#Inline-_0040rag_0028_0029-Syntax][22.7 Inline @rag() Syntax]]
-  - [[#Example-Workflow][22.8 Example Workflow]]
+  - [[#PDF-Support][22.6 PDF Support]]
+  - [[#Interactive-Commands-1][22.7 Interactive Commands]]
+  - [[#Inline-_0040rag_0028_0029-Syntax][22.8 Inline @rag() Syntax]]
+  - [[#Example-Workflow][22.9 Example Workflow]]
 - [[#Advanced-Usage][23 Advanced Usage]]
   - [[#Managing-Token-Usage][23.1 Managing Token Usage]]
   - [[#Customizing-the-Interface][23.2 Customizing the Interface]]
@@ -4848,6 +4849,7 @@ Next: [[#Advanced-Usage][Advanced Usage]], Previous:
 - [[#Quick-Start-2][Quick Start]]
 - [[#How-It-Works-4][How It Works]]
 - [[#Configuration-7][Configuration]]
+- [[#PDF-Support][PDF Support]]
 - [[#Interactive-Commands-1][Interactive Commands]]
 - [[#Inline-_0040rag_0028_0029-Syntax][Inline @rag() Syntax]]
 - [[#Example-Workflow][Example Workflow]]
@@ -4948,8 +4950,36 @@ Other supported embedding models include =mxbai-embed-large= and
 - =ollama-buddy-rag-batch-size= :: Number of chunks to embed per API
   call (default: =20=).
 
+<<PDF-Support>>
+*** 22.6 PDF Support [[#PDF-Support][¶]]
+:PROPERTIES:
+:CUSTOM_ID: pdf-support
+:CLASS: section
+:END:
+RAG can index PDF files if =pdftotext= (from =poppler-utils=) is
+installed on your system. PDF support is auto-detected at runtime:
+
+- If =pdftotext= is available, =.pdf= files are included when indexing
+  directories.
+- If =pdftotext= is not installed, PDF files are silently skipped.
+- PDFs bypass the file size limit (=ollama-buddy-rag-max-file-size=)
+  since binary PDF size does not reflect extracted text size.
+
+To install =pdftotext=:
+
+#+begin_src example-preformatted
+# Debian/Ubuntu
+sudo apt install poppler-utils
+
+# Arch Linux
+sudo pacman -S poppler
+
+# macOS
+brew install poppler
+#+end_src
+
 <<Interactive-Commands-1>>
-*** 22.6 Interactive Commands [[#Interactive-Commands-1][¶]]
+*** 22.7 Interactive Commands [[#Interactive-Commands-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: interactive-commands-1
 :CLASS: section
@@ -4975,7 +5005,7 @@ These commands are available from the RAG transient menu (C-c O then r):
 - =ollama-buddy-rag-delete-index (==d==)= :: Delete a saved RAG index.
 
 <<Inline-_0040rag_0028_0029-Syntax>>
-*** 22.7 Inline @rag() Syntax [[#Inline-_0040rag_0028_0029-Syntax][¶]]
+*** 22.8 Inline @rag() Syntax [[#Inline-_0040rag_0028_0029-Syntax][¶]]
 :PROPERTIES:
 :CUSTOM_ID: inline-rag-syntax
 :CLASS: section
@@ -5006,7 +5036,7 @@ If you have multiple indexes, you will be prompted to select one. If
 only one index exists, it is used automatically.
 
 <<Example-Workflow>>
-*** 22.8 Example Workflow [[#Example-Workflow][¶]]
+*** 22.9 Example Workflow [[#Example-Workflow][¶]]
 :PROPERTIES:
 :CUSTOM_ID: example-workflow
 :CLASS: section

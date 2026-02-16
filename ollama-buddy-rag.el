@@ -88,9 +88,11 @@ Results below this threshold are filtered out."
 (defcustom ollama-buddy-rag-file-extensions
   '("el" "py" "js" "ts" "tsx" "jsx" "org" "md" "txt" "rs" "go" "c" "cpp" "h"
     "hpp" "java" "rb" "php" "swift" "kt" "scala" "clj" "hs" "ml" "r" "sql"
-    "sh" "bash" "zsh" "yaml" "yml" "toml" "json" "xml" "html" "css" "scss")
+    "sh" "bash" "zsh" "yaml" "yml" "toml" "json" "xml" "html" "css" "scss"
+    "pdf")
   "File extensions to include when indexing directories.
-Files with other extensions are skipped."
+Files with other extensions are skipped.
+PDF files require `pdftotext' (from poppler-utils) to be installed."
   :type '(repeat string)
   :group 'ollama-buddy-rag)
 
@@ -180,9 +182,48 @@ Uses roughly 1.3 tokens per word as approximation."
              ollama-buddy-rag-exclude-patterns)))
 
 (defun ollama-buddy-rag--file-extension-p (file)
-  "Check if FILE has an indexable extension."
+  "Check if FILE has an indexable extension.
+PDF files are only indexable when `pdftotext' is available."
   (let ((ext (file-name-extension file)))
-    (and ext (member (downcase ext) ollama-buddy-rag-file-extensions))))
+    (and ext
+         (member (downcase ext) ollama-buddy-rag-file-extensions)
+         ;; Skip PDFs if pdftotext is not available
+         (or (not (string= (downcase ext) "pdf"))
+             (ollama-buddy-rag--pdftotext-available-p)))))
+
+;;; PDF Text Extraction
+
+(defvar ollama-buddy-rag--pdftotext-available 'unknown
+  "Cache for pdftotext availability check.
+Values: `unknown', t, or nil.")
+
+(defun ollama-buddy-rag--pdftotext-available-p ()
+  "Check if pdftotext is available on the system.
+Caches the result after first check."
+  (when (eq ollama-buddy-rag--pdftotext-available 'unknown)
+    (setq ollama-buddy-rag--pdftotext-available
+          (and (executable-find "pdftotext") t)))
+  ollama-buddy-rag--pdftotext-available)
+
+(defun ollama-buddy-rag--extract-pdf-text (filepath)
+  "Extract plain text from PDF at FILEPATH using pdftotext.
+Returns the extracted text string, or nil if extraction fails."
+  (when (ollama-buddy-rag--pdftotext-available-p)
+    (condition-case err
+        (with-temp-buffer
+          (if (zerop (call-process "pdftotext" nil t nil
+                                   "-layout" filepath "-"))
+              (buffer-string)
+            (message "pdftotext failed for %s" filepath)
+            nil))
+      (error
+       (message "PDF extraction error for %s: %s" filepath (error-message-string err))
+       nil))))
+
+(defun ollama-buddy-rag--pdf-file-p (filepath)
+  "Return non-nil if FILEPATH is a PDF file."
+  (let ((ext (file-name-extension filepath)))
+    (and ext (string= (downcase ext) "pdf"))))
 
 ;;; Embedding Model Validation
 
@@ -321,15 +362,22 @@ Returns list of plists with :content :start-pos :end-pos."
 
 (defun ollama-buddy-rag--chunk-file (filepath)
   "Read and chunk FILEPATH.
-Returns list of chunk plists with file metadata, or nil on error."
+Returns list of chunk plists with file metadata, or nil on error.
+PDF files are extracted via `pdftotext' if available."
   (condition-case err
-      (when (and (file-readable-p filepath)
-                 (< (file-attribute-size (file-attributes filepath))
-                    ollama-buddy-rag-max-file-size))
-        (let* ((content (with-temp-buffer
-                          (insert-file-contents filepath)
-                          (buffer-string)))
-               (chunks (ollama-buddy-rag--chunk-text content)))
+      (when (file-readable-p filepath)
+        (let* ((is-pdf (ollama-buddy-rag--pdf-file-p filepath))
+               (content
+                (cond
+                 (is-pdf
+                  (ollama-buddy-rag--extract-pdf-text filepath))
+                 ((< (file-attribute-size (file-attributes filepath))
+                     ollama-buddy-rag-max-file-size)
+                  (with-temp-buffer
+                    (insert-file-contents filepath)
+                    (buffer-string)))))
+               (chunks (when (and content (not (string-empty-p content)))
+                         (ollama-buddy-rag--chunk-text content))))
           (mapcar (lambda (chunk)
                     (let ((start-pos (plist-get chunk :start-pos))
                           (end-pos (plist-get chunk :end-pos)))

@@ -58,13 +58,12 @@ Submit queries, swap models, view token usage and statistics:
 - *RAG* -- Index local documents and source code, retrieve relevant context for conversations via semantic search. Inline =@rag(query)= syntax for automatic context attachment.
 - *Lightweight* -- No external dependencies; a minified 200-line version (=ollama-buddy-mini=) is also available
 
-* What's New (2.5.1)
+* What's New (2.5.2)
 
+- *PDF Indexing* -- RAG can now index PDF files via =pdftotext= (from =poppler-utils=). Automatically detected; gracefully skipped if not installed.
 - *Selection Status* -- Role transient menu shows current selection info (chars, lines) to confirm text is selected before commands
 - *Session Naming* -- Improved session names via stop-word filtering: removes common words, keeps up to 5 key terms
 - *Autosave Transcript* -- Chat buffer auto-saved to =~autosave.org= after each response; deleted on proper session save
-- *RAG Transient Menu* -- =C-c r= opens RAG transient menu directly (replaces individual =C-c r i/s/a/l/d/0= bindings)
-- *System Prompt Reset* -- =C-c C-r= to reset system prompt in chat; =C-r= in main transient System Prompts section
 - *Inline @rag()* -- Use =@rag(query)= in prompts to automatically search and attach RAG context, like =@search()= for web search
 
 See [[file:CHANGELOG.org]] for full history.
