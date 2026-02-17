@@ -384,7 +384,8 @@ Each entry is (NAME . TEMPLATE) where TEMPLATE contains `%s' for cursor placemen
   "Complete an inline `@' command in the prompt area.
 When point is in the prompt area, offer `completing-read' with
 available `@' commands and insert the chosen syntax template.
-Outside the prompt area, insert a literal `@'."
+Outside the prompt area, insert a literal `@'.
+Cancelling with \\[keyboard-quit] does nothing; use \\[quoted-insert] @ for a literal `@' in the prompt."
   (interactive)
   (let ((in-prompt
          (save-excursion
@@ -404,8 +405,7 @@ Outside the prompt area, insert a literal `@'."
              (choice (condition-case nil
                          (completing-read "@ command: " names nil t)
                        (quit nil))))
-        (if (not choice)
-            (insert "@")
+        (when choice
           (let* ((template (cdr (assoc choice candidates)))
                  (parts (split-string template "%s")))
             (insert (car parts))
@@ -462,7 +462,8 @@ Each entry is (NAME . FUNCTION) where FUNCTION is called interactively."
   "Complete a `/' slash command in the prompt area.
 When point is in the prompt area, offer `completing-read' with
 available slash commands and execute the chosen action.
-Outside the prompt area, insert a literal `/'."
+Outside the prompt area, insert a literal `/'.
+Cancelling with \\[keyboard-quit] does nothing; use \\[quoted-insert] / for a literal `/' in the prompt."
   (interactive)
   (let ((in-prompt
          (save-excursion
@@ -484,8 +485,7 @@ Outside the prompt area, insert a literal `/'."
              (choice (condition-case nil
                          (completing-read "/ command: " names nil t)
                        (quit nil))))
-        (if (not choice)
-            (insert "/")
+        (when choice
           (let ((fn (cdr (assoc choice candidates))))
             (call-interactively fn)))))))
 
