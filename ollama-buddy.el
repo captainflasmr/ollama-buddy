@@ -614,6 +614,8 @@ Cancelling with \\[keyboard-quit] does nothing; use \\[quoted-insert] / for a li
                   (insert (format "  *%s*: %d tokens (%.2f t/s) at %s\n"
                                   model tokens rate time))))))))
       (goto-char (point-min))
+      (visual-line-mode -1)
+      (setq truncate-lines t)
       (view-mode 1))
     (display-buffer buf)))
 

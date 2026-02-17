@@ -2216,7 +2216,8 @@ Works with the list-based multishot sequence without using array operations."
               (when remaining
                 (concat (if completed "," "")
                         (propertize (mapconcat 'identity remaining ",")
-                                    'face '(:weight normal))))))))
+                                    'face '(:weight normal))))
+              " "))))
 
 ;; Command handling functions
 (defun ollama-buddy--display-system-prompt (system-prompt &optional timeout)
