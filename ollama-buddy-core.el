@@ -152,12 +152,12 @@ Used as a fallback when context size can't be determined from the API."
   :type '(alist :key-type string :value-type integer)
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-show-context-percentage nil
+(defcustom ollama-buddy-show-context-percentage t
   "Whether to show context percentage in the status bar."
   :type 'boolean
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-header-line-height 1.2
+(defcustom ollama-buddy-header-line-height 1.0
   "Relative height of the header line text.
 A value of 1.0 is normal size, 1.2 is 20% larger, etc."
   :type 'float
