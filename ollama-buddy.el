@@ -1612,7 +1612,10 @@ Optional MENU-COLUMNS specifies the number of columns for the menu display."
     (ollama-buddy--update-status "Idle")))
 
 (defun ollama-buddy--stream-filter (_proc output)
-  "Process stream OUTPUT while preserving cursor position."
+  "Process stream OUTPUT while preserving cursor position.
+Accumulates partial data in `ollama-buddy--stream-pending' and processes
+complete newline-delimited JSON lines.  This ensures no data is lost when
+TCP packets split a JSON object across multiple filter calls."
 
   ;; Save match data at the start to prevent clobbering
   (save-match-data
@@ -1635,15 +1638,34 @@ Optional MENU-COLUMNS specifies the number of columns for the menu display."
                     (let ((json-end (point)))
                       (json-pretty-print json-start json-end))))))))))
 
-    ;; Parse JSON safely
-    (let* ((json-str (save-match-data
-                       (replace-regexp-in-string "^[^\{]*" "" output)))
-           (json-data (when (and (stringp json-str)
-                                 (> (length json-str) 0))
-                        (ignore-errors
-                          (json-read-from-string json-str))))
-           (error-msg (when json-data (alist-get 'error json-data)))
-           (message-data (when json-data (alist-get 'message json-data)))
+    ;; Accumulate output into pending buffer and process complete lines
+    (setq ollama-buddy--stream-pending
+          (concat ollama-buddy--stream-pending output))
+
+    ;; Strip HTTP headers if still present (first chunk contains them)
+    (when (string-match "^HTTP/.*?\r?\n\r?\n" ollama-buddy--stream-pending)
+      (setq ollama-buddy--stream-pending
+            (substring ollama-buddy--stream-pending (match-end 0))))
+
+    ;; Process all complete newline-delimited JSON lines
+    (while (string-match "\\([^\n]*\\)\n" ollama-buddy--stream-pending)
+      (let* ((line (match-string 1 ollama-buddy--stream-pending)))
+        (setq ollama-buddy--stream-pending
+              (substring ollama-buddy--stream-pending (match-end 0)))
+        ;; Strip any non-JSON prefix (e.g. chunk encoding) and parse
+        (let* ((json-str (replace-regexp-in-string "^[^{]*" "" line))
+               (json-data (when (and (stringp json-str)
+                                     (> (length json-str) 0))
+                            (ignore-errors
+                              (json-read-from-string json-str)))))
+          (when json-data
+            (ollama-buddy--stream-process-json json-data)))))))
+
+(defun ollama-buddy--stream-process-json (json-data)
+  "Process a single parsed JSON-DATA object from the Ollama stream."
+  (save-match-data
+    (let* ((error-msg (alist-get 'error json-data))
+           (message-data (alist-get 'message json-data))
            (text (when message-data (alist-get 'content message-data)))
            (tool-calls (when message-data (alist-get 'tool_calls message-data))))
 
@@ -1964,6 +1986,9 @@ Optional MENU-COLUMNS specifies the number of columns for the menu display."
     (when ollama-buddy--token-update-timer
       (cancel-timer ollama-buddy--token-update-timer)
       (setq ollama-buddy--token-update-timer nil))
+
+    ;; Reset stream buffer
+    (setq ollama-buddy--stream-pending "")
 
     ;; Reset the current model if from external
     (when ollama-buddy--current-request-temporary-model
@@ -2600,7 +2625,10 @@ and no new user message is added."
       (set-process-sentinel ollama-buddy--active-process nil)
       (delete-process ollama-buddy--active-process)
       (setq ollama-buddy--active-process nil))
-    
+
+    ;; Reset stream buffer for new request
+    (setq ollama-buddy--stream-pending "")
+
     ;; Add error handling for network process creation
     (condition-case err
         (setq ollama-buddy--active-process
@@ -2890,7 +2918,10 @@ Modifies the variable in place."
               ollama-buddy--current-token-start-time nil
               ollama-buddy--last-token-count 0
               ollama-buddy--last-update-time nil)
-        
+
+        ;; Reset stream buffer
+        (setq ollama-buddy--stream-pending "")
+
         ;; Safely reset multishot variables
         (setq ollama-buddy--multishot-prompt nil)
         ;; Only reset sequence if we were using it

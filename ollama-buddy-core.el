@@ -858,6 +858,9 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
 (defvar ollama-buddy--active-process nil
   "Active Ollama process.")
 
+(defvar ollama-buddy--stream-pending ""
+  "Pending partial data from the stream not yet forming a complete JSON line.")
+
 (defvar ollama-buddy--status "Idle"
   "Current status of the Ollama request.")
 
