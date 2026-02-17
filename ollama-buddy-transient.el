@@ -12,6 +12,7 @@
 (require 'ollama-buddy-fabric)
 (require 'ollama-buddy-awesome)
 (require 'ollama-buddy-user-prompts)
+(require 'ollama-buddy-rag)
 
 ;; Forward declarations for functions defined in ollama-buddy.el
 (declare-function ollama-buddy-history-edit-model "ollama-buddy")
@@ -345,14 +346,10 @@
 
 (defun ollama-buddy--rag-status ()
   "Return RAG status string for transient menu."
-  (if (featurep 'ollama-buddy-rag)
-      (let ((count (if (fboundp 'ollama-buddy-rag-count)
-                       (ollama-buddy-rag-count)
-                     0)))
-        (if (> count 0)
-            (format "%d attached" count)
-          "No context attached"))
-    "Module not loaded"))
+  (let ((count (ollama-buddy-rag-count)))
+    (if (> count 0)
+        (format "%d attached" count)
+      "No context attached")))
 
 (transient-define-prefix ollama-buddy-transient-rag-menu ()
   "RAG (Retrieval-Augmented Generation) menu for Ollama Buddy."

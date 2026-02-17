@@ -24,6 +24,7 @@ Autocomplete for inline =@= commands and =/= slash commands in chat prompt.
 - *=ollama-buddy-slash-commands=* -- New customizable alist for defining available =/= slash commands and their action functions.
 - *=ollama-buddy-copy-last-response=* -- Copy the last assistant response to the kill ring (available as =/copy= slash command).
 - *=ollama-buddy-retry-last-prompt=* -- Resend the last user prompt to the current model (available as =/retry= slash command).
+- *RAG loaded by default* -- =ollama-buddy-rag= is now required by default (no longer needs manual =(require 'ollama-buddy-rag)=). All =@rag()= inline commands and RAG context features are always available.
 
 ** <2026-02-16 Mon> *2.5.2*
 

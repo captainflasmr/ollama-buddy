@@ -86,6 +86,7 @@
 (require 'ollama-buddy-transient)
 (require 'ollama-buddy-user-prompts)
 (require 'ollama-buddy-web-search)
+(require 'ollama-buddy-rag)
 
 (declare-function ollama-buddy-curl--validate-executable "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--test-connection "ollama-buddy-curl")
@@ -97,14 +98,6 @@
 (declare-function ollama-buddy-tools--process-tool-calls "ollama-buddy-tools")
 (declare-function ollama-buddy-tools-toggle "ollama-buddy-tools")
 (declare-function ollama-buddy-tools-info "ollama-buddy-tools")
-(declare-function ollama-buddy-rag-get-context "ollama-buddy-rag")
-(declare-function ollama-buddy-rag-count "ollama-buddy-rag")
-(declare-function ollama-buddy-rag-clear-attached "ollama-buddy-rag")
-(declare-function ollama-buddy-rag-index-directory "ollama-buddy-rag")
-(declare-function ollama-buddy-rag-search "ollama-buddy-rag")
-(declare-function ollama-buddy-rag-attach "ollama-buddy-rag")
-(declare-function ollama-buddy-rag-list-indexes "ollama-buddy-rag")
-(declare-function ollama-buddy-rag-delete-index "ollama-buddy-rag")
 (declare-function ollama-buddy-curl--process-filter "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--process-json-line "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--handle-content "ollama-buddy-curl")
@@ -394,13 +387,7 @@ Cancelling with \\[keyboard-quit] does nothing; use \\[quoted-insert] @ for a li
     (if (not in-prompt)
         (self-insert-command 1)
       (let* ((candidates
-              (cl-remove-if-not
-               (lambda (entry)
-                 (pcase (car entry)
-                   ("search" (featurep 'ollama-buddy-web-search))
-                   ("rag" (featurep 'ollama-buddy-rag))
-                   (_ t)))
-               ollama-buddy-at-commands))
+              ollama-buddy-at-commands)
              (names (mapcar #'car candidates))
              (choice (condition-case nil
                          (completing-read "@ command: " names nil t)
@@ -2465,10 +2452,8 @@ and no new user message is added."
              (fboundp 'ollama-buddy-web-search-process-inline))
     (setq prompt (ollama-buddy-web-search-process-inline prompt)))
 
-  ;; Process inline @rag() queries if RAG module is loaded
-  (when (and (featurep 'ollama-buddy-rag)
-             (fboundp 'ollama-buddy-rag-process-inline))
-    (setq prompt (ollama-buddy-rag-process-inline prompt)))
+  ;; Process inline @rag() queries
+  (setq prompt (ollama-buddy-rag-process-inline prompt))
 
   ;; Process inline @file() paths
   (setq prompt (ollama-buddy--file-process-inline prompt))
@@ -2516,10 +2501,7 @@ and no new user message is added."
                      (fboundp 'ollama-buddy-web-search-get-context))
             (ollama-buddy-web-search-get-context)))
          ;; Get RAG context if available
-         (rag-context
-          (when (and (featurep 'ollama-buddy-rag)
-                     (fboundp 'ollama-buddy-rag-get-context))
-            (ollama-buddy-rag-get-context)))
+         (rag-context (ollama-buddy-rag-get-context))
          ;; Combine all context
          (combined-context
           (let ((contexts (delq nil (list attachment-context web-search-context rag-context))))
@@ -3567,9 +3549,7 @@ Returns the text with @file() delimiters removed."
         (has-searches (and (featurep 'ollama-buddy-web-search)
                            (boundp 'ollama-buddy-web-search--current-results)
                            ollama-buddy-web-search--current-results))
-        (has-rag (and (featurep 'ollama-buddy-rag)
-                      (fboundp 'ollama-buddy-rag-attached-p)
-                      (ollama-buddy-rag-attached-p))))
+        (has-rag (ollama-buddy-rag-attached-p)))
     (if (and (null has-files) (null has-searches) (null has-rag))
         (message "No files, web searches, or RAG context attached to current conversation")
       (let ((buf (get-buffer-create "*Ollama Attachments*")))
@@ -3637,9 +3617,7 @@ Returns the text with @file() delimiters removed."
               (let ((rag-results (symbol-value 'ollama-buddy-rag--current-results)))
                 (insert (format "\n* RAG Context (%d searches, ~%d tokens)\n"
                                 (length rag-results)
-                                (if (fboundp 'ollama-buddy-rag-total-tokens)
-                                    (ollama-buddy-rag-total-tokens)
-                                  0)))
+                                (ollama-buddy-rag-total-tokens)))
                 (dolist (result rag-results)
                   (let ((query (plist-get result :query))
                         (index-name (plist-get result :index-name))
@@ -3694,18 +3672,13 @@ Returns the text with @file() delimiters removed."
         (has-web-search (and (featurep 'ollama-buddy-web-search)
                              (boundp 'ollama-buddy-web-search--current-results)
                              ollama-buddy-web-search--current-results))
-        (has-rag (and (featurep 'ollama-buddy-rag)
-                      (fboundp 'ollama-buddy-rag-count)
-                      (> (ollama-buddy-rag-count) 0))))
+        (has-rag (> (ollama-buddy-rag-count) 0)))
     (when (or (and (not has-attachments) (not has-web-search) (not has-rag))
               (yes-or-no-p "Clear all attachments, web searches, and RAG context? "))
       (setq ollama-buddy--current-attachments nil)
-      (when (featurep 'ollama-buddy-web-search)
-        (when (boundp 'ollama-buddy-web-search--current-results)
-          (setq ollama-buddy-web-search--current-results nil)))
-      (when (featurep 'ollama-buddy-rag)
-        (when (fboundp 'ollama-buddy-rag-clear-attached)
-          (ollama-buddy-rag-clear-attached)))
+      (when (boundp 'ollama-buddy-web-search--current-results)
+        (setq ollama-buddy-web-search--current-results nil))
+      (ollama-buddy-rag-clear-attached)
       (ollama-buddy--update-status "All attachments cleared")
       (message "All attachments cleared"))))
 

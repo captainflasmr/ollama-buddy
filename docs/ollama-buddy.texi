@@ -791,14 +791,14 @@ You can also:
 When typing in the prompt area, pressing @code{@@} triggers a @code{completing-read}
 menu of available inline commands.  These insert syntax templates into the prompt.
 
-Available @code{@@} commands (filtered by loaded modules):
+Available @code{@@} commands:
 
 @table @code
 @item @@search(query)
-Search the web and attach results (requires @code{ollama-buddy-web-search}).
+Search the web and attach results.
 
 @item @@rag(query)
-Search a RAG index and attach results (requires @code{ollama-buddy-rag}).
+Search a RAG index and attach results.
 
 @item @@file(path)
 Attach a file to the conversation context.
@@ -806,7 +806,7 @@ Attach a file to the conversation context.
 
 @itemize @bullet
 @item Outside the prompt area, @code{@@} inserts a literal @samp{@@}.
-@item Press @code{C-g} to cancel and insert a literal @samp{@@}.
+@item Press @code{C-g} to cancel (nothing inserted); use @code{C-q @@} for a literal @samp{@@} in the prompt.
 @item Customize available commands via @code{ollama-buddy-at-commands}.
 @end itemize
 
@@ -889,7 +889,7 @@ Reset system prompt to default (@code{ollama-buddy-reset-system-prompt}).
 
 @itemize @bullet
 @item Outside the prompt area, @code{/} inserts a literal @samp{/}.
-@item Press @code{C-g} to cancel and insert a literal @samp{/}.
+@item Press @code{C-g} to cancel (nothing inserted); use @code{C-q /} for a literal @samp{/} in the prompt.
 @item Customize available commands via @code{ollama-buddy-slash-commands}.
 @end itemize
 
@@ -3326,7 +3326,7 @@ into prompts, RAG automatically finds the most relevant chunks and attaches them
 as context, keeping token usage efficient and responses grounded in your actual
 documents.
 
-The RAG module is provided by @code{ollama-buddy-rag.el}.
+The RAG module (@code{ollama-buddy-rag.el}) is loaded by default.
 
 @section Requirements
 
