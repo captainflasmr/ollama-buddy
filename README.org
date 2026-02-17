@@ -290,20 +290,33 @@ See the [[file:README-full.org][full README]] for all 30+ demos with description
 
 * Roadmap
 
-** In Progress
-
-*** GitHub Copilot Integration Improvements
-
-=ollama-buddy-copilot.el= provides Copilot Chat support:
-- OAuth device flow authentication (no API key)
-- Supports multiple backend models (GPT-4o, Claude, Gemini via Copilot)
-- =p:= prefix for Copilot models
-
-*Still TODO:*
-- Better token refresh handling
-- Copilot-specific features (code suggestions, etc.)
-
 ** Future Considerations
+
+*** Refactor external LLMs to eliminate duplicate code
+
+*** Pull the Ollama version for more API compatibility
+
+api/version
+
+*** Structured Outputs (JSON Schema)
+
+The =format= parameter supports JSON schema for structured responses.
+
+*Implementation considerations:*
+- Define output schemas per command
+- Integration with org-mode tables
+- Structured data extraction workflows
+
+*** External LLMs to use tooling
+
+*** Anthropic Messages API Compatibility
+
+Ollama v0.14+ implements =/v1/messages= endpoint compatible with Anthropic's API format.
+
+*Implementation considerations:*
+- Option to route Claude-format requests through local Ollama
+- Could simplify =ollama-buddy-claude.el= or provide fallback
+- Support for tool_use and tool_result content blocks
 
 *** Image Generation Support
 
@@ -315,19 +328,6 @@ Ollama v0.14+ supports local image generation with models like Z-Image Turbo (6B
 - Support generation parameters (width, height, steps, seed)
 - Integration with org-mode inline images
 
-*** Anthropic Messages API Compatibility
-
-Ollama v0.14+ implements =/v1/messages= endpoint compatible with Anthropic's API format.
-
-*Implementation considerations:*
-- Option to route Claude-format requests through local Ollama
-- Could simplify =ollama-buddy-claude.el= or provide fallback
-- Support for tool_use and tool_result content blocks
-
-*** @@html:<s>@@Embeddings API@@html:</s>@@ (Done -- v2.5.0)
-
-Implemented in =ollama-buddy-rag.el=. See the RAG feature above.
-
 *** Keep-Alive Parameter
 
 Control how long models stay loaded in memory.
@@ -336,15 +336,6 @@ Control how long models stay loaded in memory.
 - =ollama-buddy-param-keep-alive= customization
 - Presets for different usage patterns
 - Display loaded models and their timeout status in model management
-
-*** Structured Outputs (JSON Schema)
-
-The =format= parameter supports JSON schema for structured responses.
-
-*Implementation considerations:*
-- Define output schemas per command
-- Integration with org-mode tables
-- Structured data extraction workflows
 
 * Documentation
 
