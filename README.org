@@ -70,7 +70,7 @@ See [[file:CHANGELOG.org]] for full history.
 
 * Installation
 
-** MELPA
+** MELPA Simple
 
 #+begin_src elisp
 (use-package ollama-buddy
@@ -91,11 +91,10 @@ See [[file:CHANGELOG.org]] for full history.
   :custom
   (ollama-buddy-openai-api-key
    (auth-source-pick-first-password :host "ollama-buddy-openai" :user "apikey"))
+  ;; e.t.c
   :config
   (require 'ollama-buddy-openai nil t)
-  (require 'ollama-buddy-claude nil t)
-  (require 'ollama-buddy-gemini nil t)
-  (require 'ollama-buddy-copilot nil t))
+  ;; e.t.c)
 #+end_src
 
 ** Manual
@@ -109,6 +108,28 @@ git clone https://github.com/captainflasmr/ollama-buddy.git
 (require 'ollama-buddy)
 (global-set-key (kbd "C-c o") #'ollama-buddy-role-transient-menu)
 (global-set-key (kbd "C-c O") #'ollama-buddy-transient-menu-wrapper)
+#+end_src
+
+** Manual Setup with Presets and User Prompts
+
+To fully utilize role-based presets and custom system prompts, you’ll need to copy two important directories into your local Emacs configuration:
+
+1. *=ollama-buddy-presets=* – Contains pre-defined role presets (e.g., developer, writer, tutor) as =.el= files.
+2. *=ollama-buddy-user-prompts=* – Where your *saved* system prompts are stored (created automatically when using =M-x ollama-buddy-user-prompts-save=).
+
+*** Step-by-Step Setup
+
+Run the following shell commands in your terminal:
+
+#+begin_src bash
+cd ~/.emacs.d
+
+# extract out the ollama-buddy-presets and ollama-buddy-user-prompts
+curl -sL https://api.github.com/repos/captainflasmr/ollama-buddy/tarball/main | \
+  tar -xzf - --transform='s|[^/]*/||' \
+  --wildcards \
+  '*/ollama-buddy-presets/*' \
+  '*/ollama-buddy-user-prompts/*'
 #+end_src
 
 * Key Bindings (Chat Buffer)
