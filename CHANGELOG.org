@@ -11,6 +11,16 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-17 Mon> *2.6.0*
+
+Refactor remote provider infrastructure into shared module.
+
+*** Internal
+
+- *=ollama-buddy-remote.el=* -- New shared infrastructure module for all remote LLM providers. Extracts common helper functions (prefix handling, API key verification, context building, message formatting, chat buffer preparation, response finalization, error handling, model registration) and a generic OpenAI-compatible send function.
+- *Provider modules refactored* -- OpenAI, Grok, Codestral, Copilot, Claude, and Gemini modules now use shared functions from =ollama-buddy-remote.el=, eliminating ~1400 lines of duplicated code. Each OpenAI-compatible provider (OpenAI, Grok, Codestral) is now a thin configuration wrapper (~100-140 lines). Claude and Gemini retain their unique API formats but share all common infrastructure.
+- *Duplicate =ollama-buddy-remote-models= declarations removed* -- Variable is now declared only in =ollama-buddy-core.el=.
+
 ** <2026-02-16 Mon> *2.5.3*
 
 Autocomplete for inline =@= commands and =/= slash commands in chat prompt.

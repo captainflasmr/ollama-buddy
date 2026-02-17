@@ -12,6 +12,7 @@ ELISP_FILES = ollama-buddy.el \
               ollama-buddy-awesome.el \
               ollama-buddy-fabric.el \
               ollama-buddy-user-prompts.el \
+              ollama-buddy-remote.el \
               ollama-buddy-openai.el \
               ollama-buddy-claude.el \
               ollama-buddy-gemini.el \

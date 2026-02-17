@@ -30,12 +30,7 @@
 (require 'url)
 (require 'cl-lib)
 (require 'ollama-buddy-core)
-
-;; Web search forward declarations
-(declare-function ollama-buddy-web-search-process-inline "ollama-buddy-web-search")
-(declare-function ollama-buddy-web-search-get-context "ollama-buddy-web-search")
-;; RAG forward declarations
-(declare-function ollama-buddy-rag-process-inline "ollama-buddy-rag")
+(require 'ollama-buddy-remote)
 
 (defgroup ollama-buddy-copilot nil
   "GitHub Copilot Chat integration for Ollama Buddy."
@@ -123,24 +118,8 @@ Use nil for API default behavior (adaptive)."
 (defvar ollama-buddy-copilot--poll-timer nil
   "Timer for polling during device flow authentication.")
 
-;; Helper functions
-
-(defun ollama-buddy-copilot--is-copilot-model (model)
-  "Check if MODEL is a GitHub Copilot model based on prefix."
-  (and model
-       (string-prefix-p ollama-buddy-copilot-marker-prefix model)))
-
-(defun ollama-buddy-copilot--get-full-model-name (model)
-  "Get the full model name with prefix for MODEL."
-  (concat ollama-buddy-copilot-marker-prefix model))
-
-(defun ollama-buddy-copilot--get-real-model-name (model)
-  "Extract the actual model name from the prefixed MODEL string."
-  (if (ollama-buddy-copilot--is-copilot-model model)
-      (string-trim (substring model (length ollama-buddy-copilot-marker-prefix)))
-    model))
-
-;; Token persistence functions
+;;; Token persistence functions
+;; ============================================================================
 
 (defun ollama-buddy-copilot--save-oauth-token (token)
   "Save OAuth TOKEN to file for persistence."
@@ -168,7 +147,8 @@ Use nil for API default behavior (adaptive)."
           (ollama-buddy-copilot--load-oauth-token)))
   ollama-buddy-copilot--oauth-token)
 
-;; Device flow authentication
+;;; Device flow authentication
+;; ============================================================================
 
 (defun ollama-buddy-copilot-login ()
   "Start GitHub device flow authentication for Copilot."
@@ -376,7 +356,8 @@ STATUS is the URL retrieval status."
       (message "Copilot: Authenticated")
     (message "Copilot: Not authenticated. Run M-x ollama-buddy-copilot-login")))
 
-;; API interaction functions
+;;; API interaction functions
+;; ============================================================================
 
 (defun ollama-buddy-copilot--show-auth-error (message)
   "Display auth error MESSAGE in the chat buffer with login instructions."
@@ -434,21 +415,15 @@ The token is cached until expiry."
 
 (defun ollama-buddy-copilot--send (prompt &optional model)
   "Send PROMPT to GitHub Copilot API using MODEL or default model asynchronously."
-  ;; Process inline web search delimiters if web-search module is loaded
-  (when (and (featurep 'ollama-buddy-web-search)
-             (fboundp 'ollama-buddy-web-search-process-inline))
-    (setq prompt (ollama-buddy-web-search-process-inline prompt)))
-
-  ;; Process inline @rag() queries if RAG module is loaded
-  (when (and (featurep 'ollama-buddy-rag)
-             (fboundp 'ollama-buddy-rag-process-inline))
-    (setq prompt (ollama-buddy-rag-process-inline prompt)))
+  ;; Process inline features before async token fetch
+  (setq prompt (ollama-buddy-remote--process-inline-features prompt))
 
   ;; Set up the current model
   (setq ollama-buddy--current-model
         (or model
             ollama-buddy--current-model
-            (ollama-buddy-copilot--get-full-model-name
+            (ollama-buddy-remote--get-full-model-name
+             ollama-buddy-copilot-marker-prefix
              ollama-buddy-copilot-default-model)))
 
   ;; Initialize token counter
@@ -466,89 +441,41 @@ The token is cached until expiry."
                              ollama-buddy--conversation-history-by-model
                              nil)))
          (system-prompt (ollama-buddy--effective-system-prompt))
-         (attachment-context
-          (when ollama-buddy--current-attachments
-            (concat "\n\n## Attached Files Context:\n\n"
-                    (mapconcat
-                     (lambda (attachment)
-                       (let ((file (plist-get attachment :file))
-                             (content (plist-get attachment :content)))
-                         (format "### File: %s\n\n```%s\n%s\n```\n\n"
-                                 (file-name-nondirectory file)
-                                 (or (plist-get attachment :type) "")
-                                 content)))
-                     ollama-buddy--current-attachments
-                     ""))))
-         (web-search-context
-          (when (and (featurep 'ollama-buddy-web-search)
-                     (fboundp 'ollama-buddy-web-search-get-context))
-            (ollama-buddy-web-search-get-context)))
-         (full-context
-          (let ((contexts (delq nil (list attachment-context web-search-context))))
-            (when contexts (mapconcat #'identity contexts "\n\n"))))
-         (messages (vconcat []
-                            (append
-                             (when (and system-prompt (not (string-empty-p system-prompt)))
-                               `(((role . "system") (content . ,system-prompt))))
-                             history
-                             `(((role . "user")
-                                (content . ,(if full-context
-                                                (concat prompt "\n\n" full-context)
-                                              prompt)))))))
+         (full-context (ollama-buddy-remote--build-context))
+         (messages (ollama-buddy-remote--build-openai-messages
+                    system-prompt history prompt full-context))
          (max-tokens (or ollama-buddy-copilot-max-tokens 4096))
          (json-payload
-          `((model . ,(ollama-buddy-copilot--get-real-model-name
+          `((model . ,(ollama-buddy-remote--get-real-model-name
+                       ollama-buddy-copilot-marker-prefix
                        ollama-buddy--current-model))
             (messages . ,messages)
             (temperature . ,ollama-buddy-copilot-temperature)
             (max_tokens . ,max-tokens)))
          (json-str (let ((json-encoding-pretty-print nil))
-                     (ollama-buddy-escape-unicode (json-encode json-payload)))))
+                     (ollama-buddy-escape-unicode (json-encode json-payload))))
+         (start-point (ollama-buddy-remote--prepare-chat-buffer "GitHub Copilot")))
 
-    ;; Prepare chat buffer
-    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-      (pop-to-buffer (current-buffer))
-      (goto-char (point-max))
+    ;; Make the HTTP request
+    (let* ((url-request-method "POST")
+           (url-request-extra-headers
+            `(("Content-Type" . "application/json")
+              ("Authorization" . ,(concat "Bearer " access-token))
+              ("Editor-Version" . "vscode/1.85.0")
+              ("Editor-Plugin-Version" . "copilot-chat/0.12.0")
+              ("Openai-Organization" . "github-copilot")
+              ("Openai-Intent" . "conversation-panel")
+              ("User-Agent" . "GitHubCopilotChat/0.12.0")))
+           (url-request-data json-str)
+           (url-mime-charset-string "utf-8")
+           (url-mime-language-string nil)
+           (url-mime-encoding-string nil)
+           (url-mime-accept-string "application/json"))
 
-      (unless (> (buffer-size) 0)
-        (insert (ollama-buddy--create-intro-message)))
-
-      ;; Show any attached files
-      (when ollama-buddy--current-attachments
-        (insert (format "\n\n[Including %d attached file(s) in context]"
-                        (length ollama-buddy--current-attachments))))
-
-      (let ((start-point nil)
-            (inhibit-read-only t))
-
-        (insert (format "\n\n** [%s: RESPONSE]\n\n" ollama-buddy--current-model))
-
-        (setq start-point (point))
-
-        (insert "Loading response...")
-        (ollama-buddy--update-status "Sending request to GitHub Copilot...")
-
-        (set-register ollama-buddy-default-register "")
-
-        (let* ((url-request-method "POST")
-               (url-request-extra-headers
-                `(("Content-Type" . "application/json")
-                  ("Authorization" . ,(concat "Bearer " access-token))
-                  ("Editor-Version" . "vscode/1.85.0")
-                  ("Editor-Plugin-Version" . "copilot-chat/0.12.0")
-                  ("Openai-Organization" . "github-copilot")
-                  ("Openai-Intent" . "conversation-panel")
-                  ("User-Agent" . "GitHubCopilotChat/0.12.0")))
-               (url-request-data json-str)
-               (url-mime-charset-string "utf-8")
-               (url-mime-language-string nil)
-               (url-mime-encoding-string nil)
-               (url-mime-accept-string "application/json"))
-
-          (url-retrieve
-           ollama-buddy-copilot-api-endpoint
-           (lambda (status)
-             (ollama-buddy-copilot--handle-response status start-point prompt))))))))
+      (url-retrieve
+       ollama-buddy-copilot-api-endpoint
+       (lambda (status)
+         (ollama-buddy-copilot--handle-response status start-point prompt))))))
 
 (defun ollama-buddy-copilot--handle-response (status start-point prompt)
   "Handle the Copilot API response.
@@ -607,73 +534,22 @@ PROMPT is the original prompt for history."
                 (when choices
                   (setq content (alist-get 'content (alist-get 'message (aref choices 0))))))
 
-              ;; Update the chat buffer
-              (with-current-buffer ollama-buddy--chat-buffer
-                (let* ((inhibit-read-only t)
-                       (window (get-buffer-window ollama-buddy--chat-buffer t)))
-                  (save-excursion
-                    (goto-char start-point)
-                    (delete-region start-point (point-max))
-
-                    ;; Insert the content
-                    (insert content)
-
-                    ;; Convert markdown to org if enabled
-                    (when ollama-buddy-convert-markdown-to-org
-                      (ollama-buddy--md-to-org-convert-region start-point (point-max)))
-
-                    ;; Write to register
-                    (let* ((reg-char ollama-buddy-default-register)
-                           (current (get-register reg-char))
-                           (new-content (concat (if (stringp current) current "") content)))
-                      (set-register reg-char new-content))
-
-                    ;; Add to history
-                    (when ollama-buddy-history-enabled
-                      (ollama-buddy--add-to-history "user" prompt)
-                      (ollama-buddy--add-to-history "assistant" content))
-
-                    ;; Calculate token count
-                    (setq ollama-buddy-copilot--current-token-count
-                          (length (split-string content "\\b" t)))
-
-                    ;; Show token stats if enabled
-                    (when ollama-buddy-display-token-stats
-                      (insert (format "\n\n*** Token Stats\n[%d tokens]"
-                                      ollama-buddy-copilot--current-token-count)))
-
-                    (insert "\n\n*** FINISHED")
-                    (ollama-buddy--prepare-prompt-area))
-                  ;; Move to prompt only if response fits in window
-                  (ollama-buddy--maybe-goto-prompt window start-point)
-                  (ollama-buddy--update-status
-                   (format "Finished [%d tokens]"
-                           ollama-buddy-copilot--current-token-count)))))
+              ;; Finalize the response
+              (ollama-buddy-remote--finalize-response
+               start-point content prompt
+               'ollama-buddy-copilot--current-token-count))
           (error
-           (with-current-buffer ollama-buddy--chat-buffer
-             (let ((inhibit-read-only t))
-               (goto-char start-point)
-               (delete-region start-point (point-max))
-               (insert "Error: Failed to parse Copilot response\n")
-               (insert "Details: " (error-message-string err) "\n")
-               (insert "\n\n*** FAILED")
-               (ollama-buddy--prepare-prompt-area)
-               (ollama-buddy--update-status "Failed - JSON parse error")))))))))
+           (ollama-buddy-remote--handle-error
+            start-point "Copilot"
+            (error-message-string err))))))))
 
 (defun ollama-buddy-copilot--register-models ()
   "Register Copilot models with ollama-buddy."
-  (let ((prefixed-models (mapcar (lambda (model-name)
-                                   (concat ollama-buddy-copilot-marker-prefix model-name))
-                                 ollama-buddy-copilot-available-models)))
-    ;; Register the handler
-    (when (fboundp 'ollama-buddy-register-model-handler)
-      (ollama-buddy-register-model-handler
-       ollama-buddy-copilot-marker-prefix
-       #'ollama-buddy-copilot--send))
-    ;; Add to remote models list
-    (setq ollama-buddy-remote-models
-          (append ollama-buddy-remote-models prefixed-models))
-    (ollama-buddy--update-status "Copilot models registered")))
+  (ollama-buddy-remote--register-models
+   ollama-buddy-copilot-marker-prefix
+   ollama-buddy-copilot-available-models
+   #'ollama-buddy-copilot--send)
+  (ollama-buddy--update-status "Copilot models registered"))
 
 ;; Register models when loaded
 (ollama-buddy-copilot--register-models)

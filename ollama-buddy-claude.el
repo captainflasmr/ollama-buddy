@@ -17,12 +17,7 @@
 (require 'url)
 (require 'cl-lib)
 (require 'ollama-buddy-core)
-
-;; Web search forward declarations
-(declare-function ollama-buddy-web-search-process-inline "ollama-buddy-web-search")
-(declare-function ollama-buddy-web-search-get-context "ollama-buddy-web-search")
-;; RAG forward declarations
-(declare-function ollama-buddy-rag-process-inline "ollama-buddy-rag")
+(require 'ollama-buddy-remote)
 
 (defgroup ollama-buddy-claude nil
   "Anthropic Claude integration for Ollama Buddy."
@@ -67,53 +62,51 @@ Use nil for API default behavior (adaptive)."
 (defvar ollama-buddy-claude--current-token-count 0
   "Counter for tokens in the current Claude response.")
 
-(defvar ollama-buddy-remote-models nil
-  "List of available remote models.")
-
-;; Helper functions
-
-(defun ollama-buddy-claude--is-claude-model (model)
-  "Check if MODEL is a Claude model by checking for the prefix."
-  (and model (string-prefix-p ollama-buddy-claude-marker-prefix model)))
-
-(defun ollama-buddy-claude--get-full-model-name (model)
-  "Get the full model name with prefix for MODEL."
-  (concat ollama-buddy-claude-marker-prefix model))
-
-(defun ollama-buddy-claude--get-real-model-name (model)
-  "Extract the actual model name from the prefixed MODEL string."
-  (if (ollama-buddy-claude--is-claude-model model)
-      (string-trim (substring model (length ollama-buddy-claude-marker-prefix)))
-    model))
-
 ;; API interaction functions
 
-(defun ollama-buddy-claude--verify-api-key ()
-  "Verify that the API key is set."
-  (if (string-empty-p ollama-buddy-claude-api-key)
-      (progn
-        (customize-variable 'ollama-buddy-claude-api-key)
-        (error "Please set your Anthropic Claude API key"))
-    t))
+(defun ollama-buddy-claude--extract-content (response)
+  "Extract text content from a Claude API RESPONSE."
+  (let ((extracted-text ""))
+    (let ((content-obj (alist-get 'content response)))
+      (if (listp content-obj)
+          ;; Handle new API format where content is an object containing an array
+          (let ((content-array (alist-get 'content content-obj)))
+            (if (vectorp content-array)
+                ;; Process each content item in the array
+                (dotimes (i (length content-array))
+                  (let* ((item (aref content-array i))
+                         (item-type (alist-get 'type item))
+                         (item-text (alist-get 'text item)))
+                    (when (and (string= item-type "text") item-text)
+                      (setq extracted-text (concat extracted-text item-text)))))
+              ;; Handle case where content.content is not a vector
+              (message "Unexpected content format: %S" content-array)))
+        ;; Handle case where content is already the array
+        (if (vectorp content-obj)
+            (dotimes (i (length content-obj))
+              (let* ((item (aref content-obj i))
+                     (item-type (alist-get 'type item))
+                     (item-text (alist-get 'text item)))
+                (when (and (string= item-type "text") item-text)
+                  (setq extracted-text (concat extracted-text item-text)))))
+          (message "Unexpected response format: %S" content-obj))))
+    extracted-text))
 
 (defun ollama-buddy-claude--send (prompt &optional model)
   "Send PROMPT to Claude's API using MODEL."
-  (when (ollama-buddy-claude--verify-api-key)
-    ;; Process inline web search delimiters if web-search module is loaded
-    (when (and (featurep 'ollama-buddy-web-search)
-               (fboundp 'ollama-buddy-web-search-process-inline))
-      (setq prompt (ollama-buddy-web-search-process-inline prompt)))
-
-    ;; Process inline @rag() queries if RAG module is loaded
-    (when (and (featurep 'ollama-buddy-rag)
-               (fboundp 'ollama-buddy-rag-process-inline))
-      (setq prompt (ollama-buddy-rag-process-inline prompt)))
+  (when (ollama-buddy-remote--verify-api-key
+         ollama-buddy-claude-api-key
+         'ollama-buddy-claude-api-key
+         "Anthropic Claude")
+    ;; Process inline features
+    (setq prompt (ollama-buddy-remote--process-inline-features prompt))
 
     ;; Set up the current model
     (setq ollama-buddy--current-model
           (or model
               ollama-buddy--current-model
-              (ollama-buddy-claude--get-full-model-name
+              (ollama-buddy-remote--get-full-model-name
+               ollama-buddy-claude-marker-prefix
                ollama-buddy-claude-default-model)))
 
     ;; Initialize token counter
@@ -125,29 +118,10 @@ Use nil for API default behavior (adaptive)."
                                ollama-buddy--conversation-history-by-model
                                nil)))
            (system-prompt (ollama-buddy--effective-system-prompt))
-           (attachment-context
-            (when ollama-buddy--current-attachments
-              (concat "\n\n## Attached Files Context:\n\n"
-                      (mapconcat
-                       (lambda (attachment)
-                         (let ((file (plist-get attachment :file))
-                               (content (plist-get attachment :content)))
-                           (format "### File: %s\n\n#+end_src%s\n%s\n#+begin_src \n\n"
-                                   (file-name-nondirectory file)
-                                   (or (plist-get attachment :type) "")
-                                   content)))
-                       ollama-buddy--current-attachments
-                       ""))))
-           (web-search-context
-            (when (and (featurep 'ollama-buddy-web-search)
-                       (fboundp 'ollama-buddy-web-search-get-context))
-              (ollama-buddy-web-search-get-context)))
-           (full-context
-            (let ((contexts (delq nil (list attachment-context web-search-context))))
-              (when contexts (mapconcat #'identity contexts "\n\n"))))
+           (full-context (ollama-buddy-remote--build-context))
+           ;; Claude: system prompt is NOT in messages array, it's a top-level key
            (messages (vconcat []
                               (append
-                               ;; Don't include system prompt in messages array
                                history
                                `(((role . "user")
                                   (content . ,(if full-context
@@ -155,7 +129,8 @@ Use nil for API default behavior (adaptive)."
                                                 prompt)))))))
            (max-tokens (or ollama-buddy-claude-max-tokens 4096))
            (json-payload
-            `((model . ,(ollama-buddy-claude--get-real-model-name
+            `((model . ,(ollama-buddy-remote--get-real-model-name
+                         ollama-buddy-claude-marker-prefix
                          ollama-buddy--current-model))
               (messages . ,messages)
               (temperature . ,ollama-buddy-claude-temperature)
@@ -165,170 +140,68 @@ Use nil for API default behavior (adaptive)."
                            json-payload))
            (json-str (let ((json-encoding-pretty-print nil))
                        (ollama-buddy-escape-unicode (json-encode json-payload))))
-           (endpoint ollama-buddy-claude-api-endpoint))
+           (start-point (ollama-buddy-remote--prepare-chat-buffer "Claude")))
 
-      ;; Prepare chat buffer
-      (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-        (pop-to-buffer (current-buffer))
-        (goto-char (point-max))
+      ;; Make the HTTP request
+      (let* ((url-request-method "POST")
+             (url-request-extra-headers
+              `(("Content-Type" . "application/json")
+                ("Authorization" . ,(concat "Bearer " ollama-buddy-claude-api-key))
+                ("X-API-Key" . ,ollama-buddy-claude-api-key)
+                ("anthropic-version" . "2023-06-01")))
+             (url-request-data json-str)
+             (url-mime-charset-string "utf-8")
+             (url-mime-language-string nil)
+             (url-mime-encoding-string nil)
+             (url-mime-accept-string "application/json"))
 
-        (unless (> (buffer-size) 0)
-          (insert (ollama-buddy--create-intro-message)))
+        (url-retrieve
+         ollama-buddy-claude-api-endpoint
+         (lambda (status)
+           (if (plist-get status :error)
+               (ollama-buddy-remote--handle-http-error
+                start-point (plist-get status :error))
+             ;; Success - process the response
+             (progn
+               (goto-char (point-min))
+             (when (re-search-forward "\n\n" nil t)
+               (let* ((json-response-raw (buffer-substring (point) (point-max)))
+                      (json-response-decoded (decode-coding-string json-response-raw 'utf-8))
+                      (json-object-type 'alist)
+                      (json-array-type 'vector)
+                      (json-key-type 'symbol))
 
-        ;; Show any attached files
-        (when ollama-buddy--current-attachments
-          (insert (format "\n\n[Including %d attached file(s) in context]"
-                          (length ollama-buddy--current-attachments))))
-        
-        (let (start-point
-              (inhibit-read-only t))
+                 (condition-case err
+                     (let* ((response (json-read-from-string json-response-decoded))
+                            (error-message (alist-get 'error response))
+                            (content ""))
 
-          (insert (format "\n\n** [%s: RESPONSE]\n\n" ollama-buddy--current-model))
-          
-          (setq start-point (point))
-          
-          (insert "Loading response...")
-          (ollama-buddy--update-status "Sending request to Claude...")
+                       ;; Extract the message content (Claude-specific format)
+                       (if error-message
+                           (setq content (format "Error: %s" (alist-get 'message error-message)))
+                         (setq content (ollama-buddy-claude--extract-content response)))
 
-          (set-register ollama-buddy-default-register "")
-          
-          (let* ((url-request-method "POST")
-                 (url-request-extra-headers
-                  `(("Content-Type" . "application/json")
-                    ("Authorization" . ,(concat "Bearer " ollama-buddy-claude-api-key))
-                    ("X-API-Key" . ,ollama-buddy-claude-api-key)
-                    ("anthropic-version" . "2023-06-01")))
-                 (url-request-data json-str))
-            
-            ;; Setting this makes url.el use binary for the request
-            (let ((url-mime-charset-string "utf-8")
-                  (url-mime-language-string nil)
-                  (url-mime-encoding-string nil)
-                  (url-mime-accept-string "application/json"))
-              
-              (url-retrieve
-               endpoint
-               (lambda (status)
-                 (if (plist-get status :error)
-                     (progn
-                       (with-current-buffer ollama-buddy--chat-buffer
-                         (let ((inhibit-read-only t))
-                           (goto-char start-point)
-                           (delete-region start-point (point-max))
-                           (insert "Error: URL retrieval failed\n")
-                           (insert "Details: " (prin1-to-string (plist-get status :error)) "\n")
-                           (insert "\n\n*** FAILED")
-                           (ollama-buddy--prepare-prompt-area)
-                           (ollama-buddy--update-status "Failed - URL retrieval error"))))
-                   
-                   ;; Success - process the response
-                   (progn
-                     (goto-char (point-min))
-                     (when (re-search-forward "\n\n" nil t)
-                       (let* ((json-response-raw (buffer-substring (point) (point-max)))
-                              (json-response-decoded (decode-coding-string json-response-raw 'utf-8))
-                              (json-object-type 'alist)
-                              (json-array-type 'vector)
-                              (json-key-type 'symbol))
-                         
-                         (condition-case err
-                             (let* ((response (json-read-from-string json-response-decoded))
-                                    (error-message (alist-get 'error response))
-                                    (content ""))
-
-                               ;; Extract the message
-                               (if error-message
-                                   (setq content (format "Error: %s" (alist-get 'message error-message)))
-                                 ;; Extract the message
-                                 (let ((extracted-text ""))
-                                   ;; Get the content array from the response
-                                   (let ((content-obj (alist-get 'content response)))
-                                     (if (listp content-obj)
-                                         ;; Handle new API format where content is an object containing an array
-                                         (let ((content-array (alist-get 'content content-obj)))
-                                           (if (vectorp content-array)
-                                               ;; Process each content item in the array
-                                               (dotimes (i (length content-array))
-                                                 (let* ((item (aref content-array i))
-                                                        (item-type (alist-get 'type item))
-                                                        (item-text (alist-get 'text item)))
-                                                   (when (and (string= item-type "text") item-text)
-                                                     (setq extracted-text (concat extracted-text item-text)))))
-                                             ;; Handle case where content.content is not a vector
-                                             (message "Unexpected content format: %S" content-array)))
-                                       ;; Handle case where content is already the array
-                                       (if (vectorp content-obj)
-                                           (dotimes (i (length content-obj))
-                                             (let* ((item (aref content-obj i))
-                                                    (item-type (alist-get 'type item))
-                                                    (item-text (alist-get 'text item)))
-                                               (when (and (string= item-type "text") item-text)
-                                                 (setq extracted-text (concat extracted-text item-text)))))
-                                         (message "Unexpected response format: %S" content-obj))))
-                                   (setq content extracted-text)))
-                               
-                               ;; Update the chat buffer
-                               (with-current-buffer ollama-buddy--chat-buffer
-                                 (let* ((inhibit-read-only t)
-                                        (window (get-buffer-window ollama-buddy--chat-buffer t)))
-                                   (save-excursion
-                                     (goto-char start-point)
-                                     (delete-region start-point (point-max))
-
-                                     ;; Insert the content
-                                     (insert content)
-
-                                     ;; Convert markdown to org if enabled
-                                     (when ollama-buddy-convert-markdown-to-org
-                                       (ollama-buddy--md-to-org-convert-region start-point (point-max)))
-
-                                     ;; Write to register
-                                     (let* ((reg-char ollama-buddy-default-register)
-                                            (current (get-register reg-char))
-                                            (new-content (concat (if (stringp current) current "") content)))
-                                       (set-register reg-char new-content))
-
-                                     ;; Add to history
-                                     (when ollama-buddy-history-enabled
-                                       (ollama-buddy--add-to-history "user" prompt)
-                                       (ollama-buddy--add-to-history "assistant" content))
-
-                                     ;; Calculate token count
-                                     (setq ollama-buddy-claude--current-token-count
-                                           (length (split-string content "\\b" t)))
-
-                                     ;; Show token stats if enabled
-                                     (when ollama-buddy-display-token-stats
-                                       (insert (format "\n\n*** Token Stats\n[%d tokens]"
-                                                       ollama-buddy-claude--current-token-count)))
-
-                                     (insert "\n\n*** FINISHED")
-                                     (ollama-buddy--prepare-prompt-area))
-                                   ;; Move to prompt only if response fits in window
-                                   (ollama-buddy--maybe-goto-prompt window start-point)
-                                   (ollama-buddy--update-status
-                                    (format "Finished [%d tokens]"
-                                            ollama-buddy-claude--current-token-count)))))
-                           (error
-                            (with-current-buffer ollama-buddy--chat-buffer
-                              (let ((inhibit-read-only t))
-                                (goto-char start-point)
-                                (delete-region start-point (point-max))
-                                (insert "Error: Failed to parse Claude response\n")
-                                (insert "Details: " (error-message-string err) "\n")
-                                (insert "\n\n*** FAILED")
-                                (ollama-buddy--prepare-prompt-area)
-                                (ollama-buddy--update-status "Failed - JSON parse error"))))))))))))))))))
+                       ;; Finalize the response
+                       (ollama-buddy-remote--finalize-response
+                        start-point content prompt
+                        'ollama-buddy-claude--current-token-count))
+                   (error
+                    (ollama-buddy-remote--handle-error
+                     start-point "Claude"
+                     (error-message-string err))))))))))))))
 
 (defun ollama-buddy-claude--fetch-models ()
   "Fetch available models from Anthropic's Claude API."
-  (when (ollama-buddy-claude--verify-api-key)
+  (when (ollama-buddy-remote--verify-api-key
+         ollama-buddy-claude-api-key
+         'ollama-buddy-claude-api-key
+         "Anthropic Claude")
     (ollama-buddy--update-status "Fetching Claude models...")
     (let* ((url-request-method "GET")
            (url-request-extra-headers
             `(("x-api-key" . ,ollama-buddy-claude-api-key)
               ("anthropic-version" . "2023-06-01"))))
-      
+
       (url-retrieve
        "https://api.anthropic.com/v1/models"
        (lambda (status)
@@ -336,7 +209,7 @@ Use nil for API default behavior (adaptive)."
              (progn
                (message "Error fetching Claude models: %s" (prin1-to-string (plist-get status :error)))
                (ollama-buddy--update-status "Failed to fetch Claude models"))
-           
+
            ;; Success - process the response
            (progn
              (goto-char (point-min))
@@ -345,29 +218,21 @@ Use nil for API default behavior (adaptive)."
                       (json-object-type 'alist)
                       (json-array-type 'vector)
                       (json-key-type 'symbol))
-                 
+
                  (condition-case err
                      (let* ((json-response (json-read-from-string json-response-raw))
                             (models-data (alist-get 'data json-response))
                             (models (mapcar (lambda (model-info)
                                               (alist-get 'id model-info))
                                             (append models-data nil)))
-                            ;; Filter to only include Claude models (should be all of them)
                             (chat-models (cl-remove-if-not
                                           (lambda (model)
                                             (string-match-p "claude" model))
-                                          models))
-                            ;; Prepend the marker prefix to each model name
-                            (prefixed-models (mapcar (lambda (model-name)
-                                                       (concat ollama-buddy-claude-marker-prefix model-name))
-                                                     chat-models)))
-                       ;; Register the Claude handler with ollama-buddy
-                       (when (fboundp 'ollama-buddy-register-model-handler)
-                         (ollama-buddy-register-model-handler 
-                          ollama-buddy-claude-marker-prefix 
-                          #'ollama-buddy-claude--send))
-                       ;; Store models and update status
-                       (setq ollama-buddy-remote-models (append ollama-buddy-remote-models prefixed-models)))
+                                          models)))
+                       (ollama-buddy-remote--register-models
+                        ollama-buddy-claude-marker-prefix
+                        chat-models
+                        #'ollama-buddy-claude--send))
                    (error
                     (message "Error parsing Claude models response: %s" (error-message-string err))
                     (ollama-buddy--update-status "Failed to parse Claude models response"))))))))))))

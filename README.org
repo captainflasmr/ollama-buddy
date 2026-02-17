@@ -58,13 +58,9 @@ Submit queries, swap models, view token usage and statistics:
 - *RAG* -- Index local documents and source code, retrieve relevant context for conversations via semantic search. Inline =@rag(query)= syntax for automatic context attachment.
 - *Lightweight* -- No external dependencies; a minified 200-line version (=ollama-buddy-mini=) is also available
 
-* What's New (2.5.3)
+* What's New (2.6.0)
 
-- *=@= Autocomplete* -- Typing =@= in the prompt area triggers =completing-read= with available inline commands (=search=, =rag=, =file=). Inserts syntax template with cursor inside parens. =C-g= cancels.
-- *=ollama-buddy-at-commands=* -- Customizable alist for defining =@= command templates, extensible for future inline commands
-- *Inline =@file(path)=* -- Attach files to context inline: =@file(/path/to/file)=. Paths expanded on send; works with =dired-copy-filename-as-kill=.
-- *=/= Slash Commands* -- Typing =/= in the prompt area triggers =completing-read= with action commands (=model=, =copy=, =retry=, =tone=, =fabric=, =awesome=, =streaming=, =reset=, and more). Execute immediately; =C-g= inserts literal =/=.
-- *=ollama-buddy-slash-commands=* -- Customizable alist for defining =/= slash command actions
+- *Remote provider refactor* -- All 6 remote provider modules now share common infrastructure via =ollama-buddy-remote.el=, eliminating ~1400 lines of duplicated code. No user-facing changes; all providers work exactly as before. Adding a new OpenAI-compatible provider now requires ~100 lines instead of ~350.
 
 See [[file:CHANGELOG.org]] for full history.
 
