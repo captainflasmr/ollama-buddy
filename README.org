@@ -230,7 +230,7 @@ See the [[file:README-full.org][full README]] for all 30+ demos with description
 | =/api/create=             | POST   | Create a model from Modelfile/GGUF | Yes       | GGUF import supported                      |
 | =/api/ps=                 | GET    | List running models                | Yes       | Shows loaded models in management buffer   |
 | =/api/embed=              | POST   | Generate embeddings from text      | Yes       | RAG module via =ollama-buddy-rag.el= (v2.5.0+) |
-| =/api/version=            | GET    | Get Ollama version                 | No        | Not currently needed                       |
+| =/api/version=            | GET    | Get Ollama version                 | Yes       | Displayed on Model Management page         |
 | =HEAD /api/blobs/:digest= | HEAD   | Check if blob exists               | No        | Not needed for current functionality       |
 | =POST /api/blobs/:digest= | POST   | Push a blob                        | No        | Not needed for current functionality       |
 | Cancel requests           | Custom | Terminate ongoing request          | Yes       | =C-c C-k= in chat buffer                   |
@@ -293,10 +293,6 @@ See the [[file:README-full.org][full README]] for all 30+ demos with description
 ** Future Considerations
 
 *** Refactor external LLMs to eliminate duplicate code
-
-*** Pull the Ollama version for more API compatibility
-
-api/version
 
 *** Structured Outputs (JSON Schema)
 

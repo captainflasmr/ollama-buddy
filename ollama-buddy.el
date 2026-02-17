@@ -3018,8 +3018,11 @@ Modifies the variable in place."
         (setq-local org-hide-leading-stars t)
         (erase-buffer)
 
-        (insert "#+title: Model Management\n\n")
-        
+        (insert "#+title: Model Management")
+        (when-let ((version (ollama-buddy--get-version)))
+          (insert (format " (Ollama %s)" version)))
+        (insert "\n\n")
+
         ;; Show running models count with unload all button
         (when running-models
           (insert (format "* Running Models: %d  " (length running-models)))

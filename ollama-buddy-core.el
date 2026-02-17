@@ -1723,6 +1723,14 @@ When SYSTEM-PROMPT is non-nil, mark as a system prompt."
 
 ;; API Interaction
 
+(defun ollama-buddy--get-version ()
+  "Return the Ollama server version string, or nil if unavailable."
+  (condition-case nil
+      (let ((response (ollama-buddy--make-request "/api/version" "GET")))
+        (when response
+          (alist-get 'version response)))
+    (error nil)))
+
 (defun ollama-buddy--make-request (endpoint method &optional payload)
   "Generic request function for ENDPOINT with METHOD and optional PAYLOAD."
   (when (ollama-buddy--ollama-running)
