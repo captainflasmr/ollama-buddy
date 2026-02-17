@@ -126,10 +126,68 @@ cd ~/.emacs.d
 
 # extract out the ollama-buddy-presets and ollama-buddy-user-prompts
 curl -sL https://api.github.com/repos/captainflasmr/ollama-buddy/tarball/main | \
-  tar -xzf - --transform='s|[^/]*/||' \
-  --wildcards \
-  '*/ollama-buddy-presets/*' \
-  '*/ollama-buddy-user-prompts/*'
+    tar -xzf - --transform='s|[^/]*/||' \
+        --wildcards \
+        '*/ollama-buddy-presets/*' \
+        '*/ollama-buddy-user-prompts/*'
+#+end_src
+
+* My current configuration
+
+#+begin_src elisp
+(use-package ollama-buddy
+  :demand t
+  :bind
+  ;; ("C-c o" . ollama-buddy-menu)
+  ("C-c o" . ollama-buddy-role-transient-menu)
+  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  :config
+  ;; overall default model
+  (setq ollama-buddy-default-model "kimi-k2.5:cloud")
+  ;; key setup
+  (setq ollama-buddy-openai-api-key
+        (auth-source-pick-first-password :host "ollama-buddy-openai" :user "apikey"))
+  (setq ollama-buddy-claude-api-key
+        (auth-source-pick-first-password :host "ollama-buddy-claude" :user "apikey"))
+  (setq ollama-buddy-gemini-api-key
+        (auth-source-pick-first-password :host "ollama-buddy-gemini" :user "apikey"))
+  (setq ollama-buddy-grok-api-key
+        (auth-source-pick-first-password :host "ollama-buddy-grok" :user "apikey"))
+  (setq ollama-buddy-codestral-api-key
+        (auth-source-pick-first-password :host "ollama-buddy-codestral" :user "apikey"))
+  (setq ollama-buddy-cloud-api-key
+        (auth-source-pick-first-password :host "ollama-buddy-cloud" :user "apikey"))
+  (setq ollama-buddy-web-search-api-key
+        (auth-source-pick-first-password :host "ollama-buddy-web-search" :user "apikey"))
+
+  ;; not currently including remote LLMs
+  ;; (require 'ollama-buddy-openai nil t)
+  ;; (require 'ollama-buddy-claude nil t)
+  ;; (require 'ollama-buddy-gemini nil t)
+  ;; (require 'ollama-buddy-grok nil t)
+  ;; (require 'ollama-buddy-codestral nil t)
+  ;; (require 'ollama-buddy-copilot nil t)
+
+  ;; enable tooling
+  (require 'ollama-buddy-tools)
+  (setq ollama-buddy-tools-enabled t)
+  (setq ollama-buddy-tools-auto-execute nil)
+  (setq ollama-buddy-tools-safe-mode nil)
+
+  ;; setup default custom menu for preferred models
+  (ollama-buddy-update-menu-entry 'refactor-code     :model "qwen3-coder:480b-cloud")
+  (ollama-buddy-update-menu-entry 'git-commit        :model "glm-4.7:cloud")
+  (ollama-buddy-update-menu-entry 'describe-code     :model "kimi-k2.5:cloud")
+  (ollama-buddy-update-menu-entry 'dictionary-lookup :model "kimi-k2.5:cloud")
+  (ollama-buddy-update-menu-entry 'synonym           :model "kimi-k2.5:cloud")
+  ;; (ollama-buddy-update-menu-entry 'describe-code     :model "minimax-m2.1:cloud")
+  ;; (ollama-buddy-update-menu-entry 'dictionary-lookup :model "minimax-m2.1:cloud")
+  ;; (ollama-buddy-update-menu-entry 'synonym           :model "minimax-m2.1:cloud")
+  (ollama-buddy-update-menu-entry 'proofread         :model "deepseek-v3.1:671b-cloud")
+
+  ;; dired integration for attaching files
+  (with-eval-after-load 'dired
+    (define-key dired-mode-map (kbd "C-c C-a") #'ollama-buddy-dired-attach-marked-files)))
 #+end_src
 
 * Key Bindings (Chat Buffer)
