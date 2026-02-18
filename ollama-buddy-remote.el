@@ -25,6 +25,9 @@
 ;; RAG forward declarations
 (declare-function ollama-buddy-rag-process-inline "ollama-buddy-rag")
 
+(defvar ollama-buddy-remote--request-start-time nil
+  "Timestamp when the current remote request was sent.")
+
 ;;; Prefix helper functions
 ;; ============================================================================
 
@@ -140,6 +143,7 @@ This must be called within a `let' that binds `inhibit-read-only' to t."
       (insert (format "\n\n** [%s: RESPONSE]\n\n" ollama-buddy--current-model))
       (setq start-point (point))
       (insert "Loading response...")
+      (setq ollama-buddy-remote--request-start-time (float-time))
       (ollama-buddy--update-status (format "Sending request to %s..." provider-name))
       (set-register ollama-buddy-default-register "")
       start-point)))
@@ -156,7 +160,12 @@ TOKEN-COUNT-SYMBOL is the symbol to set with the token count."
   (with-current-buffer ollama-buddy--chat-buffer
     (let* ((inhibit-read-only t)
            (window (get-buffer-window ollama-buddy--chat-buffer t))
-           (token-count 0))
+           (token-count 0)
+           (elapsed-time (if ollama-buddy-remote--request-start-time
+                             (- (float-time)
+                                ollama-buddy-remote--request-start-time)
+                           0))
+           (token-rate 0))
       (save-excursion
         (goto-char start-point)
         (delete-region start-point (point-max))
@@ -179,20 +188,38 @@ TOKEN-COUNT-SYMBOL is the symbol to set with the token count."
           (ollama-buddy--add-to-history "user" prompt)
           (ollama-buddy--add-to-history "assistant" content))
 
-        ;; Calculate token count
+        ;; Calculate token count and rate
         (setq token-count (length (split-string content "\\b" t)))
         (set token-count-symbol token-count)
+        (setq token-rate (if (> elapsed-time 0)
+                             (/ token-count elapsed-time)
+                           0))
+
+        ;; Record to token usage history
+        (push (list :model ollama-buddy--current-model
+                    :tokens token-count
+                    :elapsed elapsed-time
+                    :rate token-rate
+                    :timestamp (current-time))
+              ollama-buddy--token-usage-history)
 
         ;; Show token stats if enabled
         (when ollama-buddy-display-token-stats
-          (insert (format "\n\n*** Token Stats\n[%d tokens]" token-count)))
+          (insert (format "\n\n*** Token Stats\n[%d tokens in %.1fs, %.1f tokens/sec]"
+                          token-count elapsed-time token-rate)))
 
         (insert "\n\n*** FINISHED")
         (ollama-buddy--prepare-prompt-area))
+
+      ;; Reset start time
+      (setq ollama-buddy-remote--request-start-time nil)
+
       ;; Move to prompt only if response fits in window
       (ollama-buddy--maybe-goto-prompt window start-point)
       (ollama-buddy--update-status
-       (format "Finished [%d tokens]" (symbol-value token-count-symbol))))))
+       (format "Finished [%d tokens in %.1fs, %.1f t/s]"
+               (symbol-value token-count-symbol)
+               elapsed-time token-rate)))))
 
 ;;; Error handling
 ;; ============================================================================
