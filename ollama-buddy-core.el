@@ -744,11 +744,13 @@ Values are `api' (from Ollama API), `fallback' (static), or `manual'.")
 (defcustom ollama-buddy-cloud-models
   '("qwen3-coder-next:cloud"
     "qwen3-coder:480b-cloud"
+    "qwen3.5:cloud"
     "kimi-k2.5:cloud"
     "deepseek-v3.1:671b-cloud"
     "gpt-oss:120b-cloud"
     "gpt-oss:20b-cloud"
     "glm-4.7:cloud"
+    "glm-5:cloud"
     "minimax-m2.1:cloud")
   "List of available Ollama cloud models.
 These models run on ollama.com infrastructure and require authentication
