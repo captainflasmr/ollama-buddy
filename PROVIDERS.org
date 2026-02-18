@@ -1,0 +1,390 @@
+#+title: Ollama Buddy: External LLM Provider Guide
+#+author: James Dyer
+#+email: captainflasmr@gmail.com
+#+language: en
+#+options: ':t toc:t author:nil email:nil num:nil title:nil
+#+startup: showall
+
+* External LLM Provider Guide
+
+Overview of all external LLM providers supported by Ollama Buddy, including pricing, free tiers, and recommendations.
+
+** Quick Comparison
+
+| Provider       | Prefix | Cheapest Input/1M | Free Tier                    | Best For                  |
+|----------------+--------+--------------------+------------------------------+---------------------------|
+| OpenAI         | =a:=   | $0.15 (GPT-4o Mini) | $5 one-time credits          | Broadest ecosystem        |
+| Claude         | =c:=   | $1.00 (Haiku 4.5)  | $5-10 one-time credits       | Long context, coding      |
+| Gemini         | =g:=   | $0.10 (Flash-Lite) | 1K req/day ongoing free      | Free experimentation      |
+| Grok           | =k:=   | $0.20 (4.1 Fast)   | $25 credits + $150/mo*       | 2M context, live search   |
+| Copilot        | =p:=   | $0/mo (Free plan)  | 50 premium req/mo            | IDE coding, multi-model   |
+| Codestral      | =s:=   | $0.30 (Codestral)  | Free experiment (1B tok/mo)  | Code-specific tasks       |
+| DeepSeek       | =d:=   | $0.07 (V3 off-peak) | 5M free tokens               | Cheapest capable model    |
+| OpenRouter     | =r:=   | Free (many models) | Free models available        | Access 400+ models        |
+
+** OpenAI (=a:=)
+
+*** Setup
+
+#+begin_src elisp
+(require 'ollama-buddy-openai)
+(setq ollama-buddy-openai-api-key
+      (auth-source-pick-first-password :host "ollama-buddy-openai" :user "apikey"))
+#+end_src
+
+*** Models
+
+- GPT-5.2, GPT-5.1, GPT-5 (flagship)
+- GPT-4.1 (general purpose)
+- GPT-4o, GPT-4o Mini (multimodal with vision)
+- O-series (o1, o3 -- reasoning/STEM)
+
+*** Pricing (per 1M tokens)
+
+| Model       | Input  | Output  |
+|-------------+--------+---------|
+| GPT-4o Mini | $0.15  | $0.60   |
+| GPT-5       | $1.25  | $10.00  |
+| o1          | $15.00 | $60.00  |
+
+*** Free Tier
+
+- $5 free credits for new accounts (expires after 3 months)
+- No credit card required
+- Students via GitHub Student Developer Pack: $50-100 credits
+
+*** Notable Features
+
+- Vision support, tool/function calling, JSON mode
+- Fine-tuning, embeddings, image generation (DALL-E)
+- Batch API (50% discount, 24hr turnaround)
+- Prompt caching saves 50-90% on repeated content
+
+** Anthropic Claude (=c:=)
+
+*** Setup
+
+#+begin_src elisp
+(require 'ollama-buddy-claude)
+(setq ollama-buddy-claude-api-key
+      (auth-source-pick-first-password :host "ollama-buddy-claude" :user "apikey"))
+#+end_src
+
+*** Models
+
+- Claude Opus 4.6 (most capable, 1M context)
+- Claude Opus 4.5, Sonnet 4.5, Haiku 4.5
+
+*** Pricing (per 1M tokens)
+
+| Model             | Input | Output |
+|-------------------+-------+--------|
+| Haiku 4.5         | $1.00 | $5.00  |
+| Sonnet 4.5        | $3.00 | $15.00 |
+| Opus 4.5 / 4.6    | $5.00 | $25.00 |
+
+*** Free Tier
+
+- $5-10 free credits for new API accounts (one-time)
+- claude.ai web interface has a permanent free tier
+
+*** Notable Features
+
+- 1M token context window (Opus 4.6)
+- Extended thinking, agent teams
+- Prompt caching (90% savings on repeated context)
+- Batch API (50% discount)
+- Vision support, tool use
+
+** Google Gemini (=g:=)
+
+*** Setup
+
+#+begin_src elisp
+(require 'ollama-buddy-gemini)
+(setq ollama-buddy-gemini-api-key
+      (auth-source-pick-first-password :host "ollama-buddy-gemini" :user "apikey"))
+#+end_src
+
+*** Models
+
+- Gemini 3 Pro Preview (paid only, flagship)
+- Gemini 3 Flash Preview (free tier available)
+- Gemini 2.5 Pro, 2.5 Flash, 2.5 Flash-Lite
+- Gemini 2.0 Flash, 2.0 Flash-Lite
+
+*** Pricing (per 1M tokens)
+
+| Model              | Input | Output |
+|--------------------+-------+--------|
+| 2.5 Flash-Lite     | $0.10 | $0.40  |
+| 2.0 Flash          | $0.10 | $0.40  |
+| 2.5 Flash          | $0.15 | $0.60  |
+| 2.5 Pro            | $1.25 | $10.00 |
+| 3 Pro Preview      | $2.00 | $12.00 |
+
+*** Free Tier
+
+*Most generous free tier of any provider:*
+
+- No credit card required
+- 5-15 RPM depending on model
+- 250K tokens per minute
+- Up to 1,000 requests per day
+
+*** Notable Features
+
+- Up to 2M token context windows
+- Multimodal: text, image, audio, video
+- Grounding with Google Search
+- Code execution, structured output
+
+*** Restrictions
+
+- Free tier data may be used for model improvement
+
+** xAI Grok (=k:=)
+
+*** Setup
+
+#+begin_src elisp
+(require 'ollama-buddy-grok)
+(setq ollama-buddy-grok-api-key
+      (auth-source-pick-first-password :host "ollama-buddy-grok" :user "apikey"))
+#+end_src
+
+*** Models
+
+- Grok 4 (flagship)
+- Grok 4.1 Fast (budget)
+- Grok 3, Grok 3 Mini
+- Grok 2 (including vision and image generation)
+
+*** Pricing (per 1M tokens)
+
+| Model          | Input | Output |
+|----------------+-------+--------|
+| Grok 4.1 Fast  | $0.20 | $0.50  |
+| Grok 4         | $3.00 | $15.00 |
+
+Tool invocations (web search, code execution) cost an additional $2.50-$5.00 per 1,000 calls.
+
+*** Free Tier
+
+- $25 free credits on signup
+- *$150/month via data sharing program (xAI uses your prompts for training)
+
+*** Notable Features
+
+- 2M token context window (industry-largest)
+- Native tool use, real-time web search
+- Image generation (grok-2-image)
+- Grok 4.1 Fast offers exceptional value at $0.20/1M input
+
+** GitHub Copilot (=p:=)
+
+*** Setup
+
+#+begin_src elisp
+(require 'ollama-buddy-copilot)
+;; No API key needed -- uses OAuth device flow
+;; Run M-x ollama-buddy-copilot-login to authenticate
+#+end_src
+
+*** How It Works
+
+GitHub Copilot is *not a traditional API*. It is a subscription service providing access to multiple LLM providers through GitHub's infrastructure. Ollama Buddy uses the chat API via OAuth authentication.
+
+*** Available Models (via Copilot Chat)
+
+- GPT-5-Codex, GPT-5.1-Codex
+- Claude Opus 4
+- Various other frontier models
+
+*** Pricing
+
+| Plan       | Cost       | Premium Requests/mo |
+|------------+------------+---------------------|
+| Free       | $0         |                  50 |
+| Pro        | $10/mo     |                 300 |
+| Pro+       | $39/mo     |               1,500 |
+| Business   | $19/user/mo | varies              |
+| Enterprise | $39/user/mo | varies              |
+
+Extra premium requests cost $0.04 each.
+
+*** Free Tier
+
+- 50 premium requests/month at no cost
+- Also free for verified students, teachers, and popular OSS maintainers
+
+*** Notable Features
+
+- Multi-model access through a single subscription
+- Monthly cap on premium requests (not token-based)
+- Pro+ gives access to all frontier models
+
+*** Restrictions
+
+- Rate limited by premium request quotas, not tokens
+- Requires GitHub account
+
+** Mistral Codestral (=s:=)
+
+*** Setup
+
+#+begin_src elisp
+(require 'ollama-buddy-codestral)
+(setq ollama-buddy-codestral-api-key
+      (auth-source-pick-first-password :host "ollama-buddy-codestral" :user "apikey"))
+#+end_src
+
+*** Models
+
+- Codestral 2508 (code-specialised, 256K context)
+- Mistral Large, Mistral Small 3.2
+- Pixtral (multimodal/vision)
+- Devstral (coding)
+
+*** Pricing (per 1M tokens)
+
+| Model           | Input | Output |
+|-----------------+-------+--------|
+| Small 3.2       | $0.10 | $0.30  |
+| Codestral 2508  | $0.30 | $0.90  |
+| Mistral Large   | $2.00 | $6.00  |
+
+*** Free Tier
+
+*Experiment plan* -- free API access, no credit card required:
+
+- ~1 RPS rate limit
+- 500K tokens per minute
+- Up to 1 billion tokens per month on select models
+
+*** Notable Features
+
+- 256K context window on Codestral
+- Strong multilingual code support
+- Open-weight models available for self-hosting
+
+** DeepSeek (=d:=)
+
+*** Setup
+
+#+begin_src elisp
+(require 'ollama-buddy-deepseek)
+(setq ollama-buddy-deepseek-api-key
+      (auth-source-pick-first-password :host "ollama-buddy-deepseek" :user "apikey"))
+#+end_src
+
+*** Models
+
+- =deepseek-chat= (DeepSeek-V3, general purpose)
+- =deepseek-reasoner= (DeepSeek-R1, reasoning)
+
+*** Pricing (per 1M tokens)
+
+| Model            | Input | Output |
+|------------------+-------+--------|
+| DeepSeek-V3      | $0.14 | $0.28  |
+| DeepSeek-R1      | $0.55 | $2.19  |
+
+*** Off-Peak Discounts
+
+During 16:30-00:30 GMT:
+
+- V3: up to 50% discount ($0.07/1M input)
+- R1: up to 75% discount
+
+*** Free Tier
+
+- 5M free tokens for new accounts (valid 30 days)
+- Free chat at chat.deepseek.com (unlimited messages)
+
+*** Notable Features
+
+- One of the cheapest capable models available
+- Strong reasoning with R1
+- Open-source models available for self-hosting
+
+*** Restrictions
+
+- Based in China (data residency implications)
+- Service can be intermittent during high demand
+
+** OpenRouter (=r:=)
+
+*** Setup
+
+#+begin_src elisp
+(require 'ollama-buddy-openrouter)
+(setq ollama-buddy-openrouter-api-key
+      (auth-source-pick-first-password :host "ollama-buddy-openrouter" :user "apikey"))
+
+;; Optional: filter the 400+ models to specific providers
+(setq ollama-buddy-openrouter-model-filter
+      "openai\\|anthropic\\|google\\|deepseek")
+#+end_src
+
+*** How It Works
+
+OpenRouter is an *aggregator/proxy* providing a single unified API to access 400+ models from all major providers. It passes through provider pricing with a 5.5% fee on credit purchases but no per-token markup.
+
+*** Available Models
+
+400+ models from OpenAI, Anthropic, Google, xAI, Mistral, DeepSeek, Meta (Llama), Cohere, and many others.
+
+*** Pricing
+
+- Pay-as-you-go, no minimums, no monthly fees
+- You pay the underlying provider's price
+- 5.5% fee when purchasing credits (only markup)
+
+*** Free Tier
+
+Dozens of models available for free:
+
+- Without purchased credits: 50 requests/day
+- With $10+ in purchased credits: 1,000 requests/day
+- Free models: 20 RPM
+
+*** Notable Features
+
+- Single API for all providers -- ideal for testing
+- Automatic fallback between providers
+- Model comparison
+- No commitment or lock-in
+- OpenAI-compatible API format
+
+*** Restrictions
+
+- Free models have low rate limits
+- Dependent on OpenRouter uptime in addition to underlying provider
+
+* Recommendations
+
+** For Free Usage
+
+1. *Google Gemini* -- most generous ongoing free tier (1K req/day)
+2. *Mistral Codestral* -- experiment plan with 1B tokens/month
+3. *OpenRouter* -- many free models available
+4. *GitHub Copilot Free* -- 50 premium requests/month across frontier models
+
+** For Cheapest Per-Token
+
+1. *DeepSeek V3* -- $0.14/1M input (as low as $0.07 off-peak)
+2. *Gemini Flash-Lite* -- $0.10/1M input
+3. *Grok 4.1 Fast* -- $0.20/1M input (strong performance for the price)
+
+** For Best Quality
+
+1. *Claude Opus 4.6* -- $5/1M input, 1M context
+2. *GPT-5* -- $1.25/1M input, broad capabilities
+3. *Grok 4* -- $3/1M input, 2M context with live search
+
+** For Coding Tasks
+
+1. *Codestral* -- purpose-built for code, 256K context, free experiment plan
+2. *DeepSeek V3/R1* -- excellent code capabilities at lowest cost
+3. *GitHub Copilot* -- IDE-integrated, multi-model access
