@@ -444,7 +444,7 @@ Each command is defined with:
                         (:action (choice :tag "Action"
                                          (function :tag "Existing Function")
                                          (sexp :tag "Lambda Expression")))
-                       (:group (string :tag "Menu Group Name"))))))
+                        (:group (string :tag "Menu Group Name"))))))
   :group 'ollama-buddy)
 
 (defcustom ollama-buddy-params-active
@@ -557,23 +557,23 @@ modification (the default \"Normal\" tone)."
 
 (defcustom ollama-buddy-available-models
   '((:name "General Chat"
-     :description "Everyday conversation, Q&A and general tasks"
-     :models ("llama3.2:1b" "llama3.2:3b" "llama3.1:8b"))
+           :description "Everyday conversation, Q&A and general tasks"
+           :models ("llama3.2:1b" "llama3.2:3b" "llama3.1:8b"))
     (:name "Reasoning"
-     :description "Step-by-step problem solving and analysis"
-     :models ("deepseek-r1:1.5b" "deepseek-r1:7b" "deepseek-r1:14b"))
+           :description "Step-by-step problem solving and analysis"
+           :models ("deepseek-r1:1.5b" "deepseek-r1:7b" "deepseek-r1:14b"))
     (:name "Efficient & Capable"
-     :description "Balanced speed and quality from Google Gemma"
-     :models ("gemma3:1b" "gemma3:4b" "gemma3:12b"))
+           :description "Balanced speed and quality from Google Gemma"
+           :models ("gemma3:1b" "gemma3:4b" "gemma3:12b"))
     (:name "Coding"
-     :description "Code generation, review and debugging"
-     :models ("qwen2.5-coder:1.5b" "qwen2.5-coder:7b" "qwen3-coder:8b" "starcoder2:3b"))
+           :description "Code generation, review and debugging"
+           :models ("qwen2.5-coder:1.5b" "qwen2.5-coder:7b" "qwen3-coder:8b" "starcoder2:3b"))
     (:name "General Alternatives"
-     :description "Other popular and versatile models"
-     :models ("mistral:7b" "qwen3:4b" "qwen3:8b"))
+           :description "Other popular and versatile models"
+           :models ("mistral:7b" "qwen3:4b" "qwen3:8b"))
     (:name "Embedding (RAG)"
-     :description "Models for generating embeddings used by RAG search"
-     :models ("nomic-embed-text" "mxbai-embed-large" "all-minilm")))
+           :description "Models for generating embeddings used by RAG search"
+           :models ("nomic-embed-text" "mxbai-embed-large" "all-minilm")))
   "Categorized list of recommended models from the Ollama Hub.
 Each entry is a plist with :name, :description and :models keys."
   :type '(repeat (plist :options
@@ -1432,10 +1432,20 @@ Each element is a plist with :name, :authenticated, and :enabled."
              (concat "#+TITLE: Ollama Buddy Chat"))
            "\n\n* Welcome to _OLLAMA BUDDY_\n\n"
            "#+begin_example\n"
-           " ___ _ _      n _ n      ___       _   _ _ _\n"
-           "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |\n"
-           "| | | | | .  |2.6.0| .  | . | | | . | . |__ |\n"
-           "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n"
+           "┌───────────────────────────────────┐\n"
+           "│  O L L A M A B U D D Y  [v2.6.0]  │\n"
+           "└───────────────────────────────────┘\n"
+           ;; "╔════════════════════════════════════════════════════════════╗\n"
+           ;; "║  ▄▀▀▀▄ █   █   ▄▀▀▀▄ █▀▄▀█ ▄▀▀▀▄ █▀▀▄ █  █ █▀▀▄ █▀▀▄ █  █  ║\n"
+           ;; "║  █   █ █   █   █▀▀▀█ █ █ █ █▀▀▀█ █▀▀▄ █  █ █  █ █  █ ▀█▀   ║\n"
+           ;; "║   ▀▀▀  ▀▀▀ ▀▀▀ ▀   ▀ ▀   ▀ ▀   ▀ ▀▀▀  ▀▀▀▀ ▀▀▀  ▀▀▀   ▀    ║\n"
+           ;; "╠════════════════════════════════════════════════════════════╣\n"
+           ;; "║ > Model: Llama-3-8B                                        ║\n"
+           ;; "╚════════════════════════════════════════════════════════════╝\n"
+           ;; " ___ _ _      n _ n      ___       _   _ _ _\n"
+           ;; "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |\n"
+           ;; "| | | | | .  |2.6.0| .  | . | | | . | . |__ |\n"
+           ;; "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n"
            "#+end_example\n\n"
            (when (not (ollama-buddy--check-status))
              "** *THERE IS NO OLLAMA RUNNING*\n

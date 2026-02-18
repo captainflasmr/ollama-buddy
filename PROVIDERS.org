@@ -11,16 +11,16 @@ Overview of all external LLM providers supported by Ollama Buddy, including pric
 
 ** Quick Comparison
 
-| Provider       | Prefix | Cheapest Input/1M | Free Tier                    | Best For                  |
-|----------------+--------+--------------------+------------------------------+---------------------------|
-| OpenAI         | =a:=   | $0.15 (GPT-4o Mini) | $5 one-time credits          | Broadest ecosystem        |
-| Claude         | =c:=   | $1.00 (Haiku 4.5)  | $5-10 one-time credits       | Long context, coding      |
-| Gemini         | =g:=   | $0.10 (Flash-Lite) | 1K req/day ongoing free      | Free experimentation      |
-| Grok           | =k:=   | $0.20 (4.1 Fast)   | $25 credits + $150/mo*       | 2M context, live search   |
-| Copilot        | =p:=   | $0/mo (Free plan)  | 50 premium req/mo            | IDE coding, multi-model   |
-| Codestral      | =s:=   | $0.30 (Codestral)  | Free experiment (1B tok/mo)  | Code-specific tasks       |
-| DeepSeek       | =d:=   | $0.07 (V3 off-peak) | 5M free tokens               | Cheapest capable model    |
-| OpenRouter     | =r:=   | Free (many models) | Free models available        | Access 400+ models        |
+| Provider   | Prefix | Cheapest Input/1M   | Free Tier                   | Best For                |
+|------------+--------+---------------------+-----------------------------+-------------------------|
+| OpenAI     | =a:=   | $0.15 (GPT-4o Mini) | $5 one-time credits         | Broadest ecosystem      |
+| Claude     | =c:=   | $1.00 (Haiku 4.5)   | $5-10 one-time credits      | Long context, coding    |
+| Gemini     | =g:=   | $0.10 (Flash-Lite)  | 1K req/day ongoing free     | Free experimentation    |
+| Grok       | =k:=   | $0.20 (4.1 Fast)    | $25 credits + $150/mo*      | 2M context, live search |
+| Copilot    | =p:=   | $0/mo (Free plan)   | 50 premium req/mo           | IDE coding, multi-model |
+| Codestral  | =s:=   | $0.30 (Codestral)   | Free experiment (1B tok/mo) | Code-specific tasks     |
+| DeepSeek   | =d:=   | $0.07 (V3 off-peak) | 5M free tokens              | Cheapest capable model  |
+| OpenRouter | =r:=   | Free (many models)  | Free models available       | Access 400+ models      |
 
 ** OpenAI (=a:=)
 
@@ -41,11 +41,11 @@ Overview of all external LLM providers supported by Ollama Buddy, including pric
 
 *** Pricing (per 1M tokens)
 
-| Model       | Input  | Output  |
-|-------------+--------+---------|
-| GPT-4o Mini | $0.15  | $0.60   |
-| GPT-5       | $1.25  | $10.00  |
-| o1          | $15.00 | $60.00  |
+| Model       | Input  | Output |
+|-------------+--------+--------|
+| GPT-4o Mini | $0.15  | $0.60  |
+| GPT-5       | $1.25  | $10.00 |
+| o1          | $15.00 | $60.00 |
 
 *** Free Tier
 
@@ -77,11 +77,11 @@ Overview of all external LLM providers supported by Ollama Buddy, including pric
 
 *** Pricing (per 1M tokens)
 
-| Model             | Input | Output |
-|-------------------+-------+--------|
-| Haiku 4.5         | $1.00 | $5.00  |
-| Sonnet 4.5        | $3.00 | $15.00 |
-| Opus 4.5 / 4.6    | $5.00 | $25.00 |
+| Model          | Input | Output |
+|----------------+-------+--------|
+| Haiku 4.5      | $1.00 | $5.00  |
+| Sonnet 4.5     | $3.00 | $15.00 |
+| Opus 4.5 / 4.6 | $5.00 | $25.00 |
 
 *** Free Tier
 
@@ -115,13 +115,13 @@ Overview of all external LLM providers supported by Ollama Buddy, including pric
 
 *** Pricing (per 1M tokens)
 
-| Model              | Input | Output |
-|--------------------+-------+--------|
-| 2.5 Flash-Lite     | $0.10 | $0.40  |
-| 2.0 Flash          | $0.10 | $0.40  |
-| 2.5 Flash          | $0.15 | $0.60  |
-| 2.5 Pro            | $1.25 | $10.00 |
-| 3 Pro Preview      | $2.00 | $12.00 |
+| Model          | Input | Output |
+|----------------+-------+--------|
+| 2.5 Flash-Lite | $0.10 | $0.40  |
+| 2.0 Flash      | $0.10 | $0.40  |
+| 2.5 Flash      | $0.15 | $0.60  |
+| 2.5 Pro        | $1.25 | $10.00 |
+| 3 Pro Preview  | $2.00 | $12.00 |
 
 *** Free Tier
 
@@ -162,10 +162,10 @@ Overview of all external LLM providers supported by Ollama Buddy, including pric
 
 *** Pricing (per 1M tokens)
 
-| Model          | Input | Output |
-|----------------+-------+--------|
-| Grok 4.1 Fast  | $0.20 | $0.50  |
-| Grok 4         | $3.00 | $15.00 |
+| Model         | Input | Output |
+|---------------+-------+--------|
+| Grok 4.1 Fast | $0.20 | $0.50  |
+| Grok 4        | $3.00 | $15.00 |
 
 Tool invocations (web search, code execution) cost an additional $2.50-$5.00 per 1,000 calls.
 
@@ -203,11 +203,11 @@ GitHub Copilot is *not a traditional API*. It is a subscription service providin
 
 *** Pricing
 
-| Plan       | Cost       | Premium Requests/mo |
-|------------+------------+---------------------|
-| Free       | $0         |                  50 |
-| Pro        | $10/mo     |                 300 |
-| Pro+       | $39/mo     |               1,500 |
+| Plan       | Cost        | Premium Requests/mo |
+|------------+-------------+---------------------|
+| Free       | $0          | 50                  |
+| Pro        | $10/mo      | 300                 |
+| Pro+       | $39/mo      | 1,500               |
 | Business   | $19/user/mo | varies              |
 | Enterprise | $39/user/mo | varies              |
 
@@ -248,11 +248,11 @@ Extra premium requests cost $0.04 each.
 
 *** Pricing (per 1M tokens)
 
-| Model           | Input | Output |
-|-----------------+-------+--------|
-| Small 3.2       | $0.10 | $0.30  |
-| Codestral 2508  | $0.30 | $0.90  |
-| Mistral Large   | $2.00 | $6.00  |
+| Model          | Input | Output |
+|----------------+-------+--------|
+| Small 3.2      | $0.10 | $0.30  |
+| Codestral 2508 | $0.30 | $0.90  |
+| Mistral Large  | $2.00 | $6.00  |
 
 *** Free Tier
 
@@ -285,10 +285,10 @@ Extra premium requests cost $0.04 each.
 
 *** Pricing (per 1M tokens)
 
-| Model            | Input | Output |
-|------------------+-------+--------|
-| DeepSeek-V3      | $0.14 | $0.28  |
-| DeepSeek-R1      | $0.55 | $2.19  |
+| Model       | Input | Output |
+|-------------+-------+--------|
+| DeepSeek-V3 | $0.14 | $0.28  |
+| DeepSeek-R1 | $0.55 | $2.19  |
 
 *** Off-Peak Discounts
 
