@@ -499,11 +499,26 @@ PROMPT is the original prompt for history."
                   (progn
                     (insert "*Authentication Error:* Copilot API request failed\n\n")
                     (insert "Please login using =C-c a= or =M-x ollama-buddy-copilot-login=\n"))
-                (progn
-                  (insert "Error: URL retrieval failed\n")
-                  (insert "Details: " error-details "\n")
-                  (when (> (length error-body) 0)
-                    (insert "Response: " error-body "\n"))))
+                (let* ((http-code
+                        (let ((err (plist-get status :error)))
+                          (and (listp err)
+                               (eq (car err) 'error)
+                               (eq (cadr err) 'http)
+                               (caddr err))))
+                       (status-msg
+                        (when http-code
+                          (ollama-buddy-remote--http-status-message http-code))))
+                  (if http-code
+                      (progn
+                        (insert (format "Error: HTTP %s\n\n" http-code))
+                        (insert status-msg "\n")
+                        (when (> (length error-body) 0)
+                          (insert "\nProvider message: " error-body "\n"))
+                        (insert "\nRaw: " error-details "\n"))
+                    (insert "Error: URL retrieval failed\n")
+                    (insert "Details: " error-details "\n")
+                    (when (> (length error-body) 0)
+                      (insert "Response: " error-body "\n")))))
               (insert "\n\n*** FAILED")
               (ollama-buddy--prepare-prompt-area)
               (ollama-buddy--update-status (if is-auth-error "Auth Required" "Failed - URL retrieval error"))))))
@@ -530,7 +545,9 @@ PROMPT is the original prompt for history."
                                                  (string-match-p "401\\|403" err-msg)))))
                     (if is-auth-error
                         (setq content (format "*Authentication Error:* %s\n\nPlease login using =C-c a= or =M-x ollama-buddy-copilot-login=" err-msg))
-                      (setq content (format "Error: %s" err-msg))))
+                      (setq content (format "Error: %s"
+                                            (ollama-buddy-remote--format-api-error
+                                             error-message)))))
                 (when choices
                   (setq content (alist-get 'content (alist-get 'message (aref choices 0))))))
 

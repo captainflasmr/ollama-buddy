@@ -1335,6 +1335,10 @@ PROMPT, SPECIFIED-MODEL and TOOL-CONTINUATION-P are passed through."
       (push (format "p: Copilot (%d)" (ollama-buddy--count-models-with-prefix "p:")) providers))
     (when (featurep 'ollama-buddy-codestral)
       (push (format "s: Codestral (%d)" (ollama-buddy--count-models-with-prefix "s:")) providers))
+    (when (featurep 'ollama-buddy-deepseek)
+      (push (format "d: DeepSeek (%d)" (ollama-buddy--count-models-with-prefix "d:")) providers))
+    (when (featurep 'ollama-buddy-openrouter)
+      (push (format "r: OpenRouter (%d)" (ollama-buddy--count-models-with-prefix "r:")) providers))
     (nreverse providers)))
 
 (defvar ollama-buddy--cloud-auth-status 'unknown
@@ -1428,14 +1432,26 @@ Each element is a plist with :name, :authenticated, and :enabled."
            "#+begin_example\n"
            " ___ _ _      n _ n      ___       _   _ _ _\n"
            "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |\n"
-           "| | | | | .  |2.5.3| .  | . | | | . | . |__ |\n"
+           "| | | | | .  |2.6.0| .  | . | | | . | . |__ |\n"
            "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n"
            "#+end_example\n\n"
            (when (not (ollama-buddy--check-status))
              "** *THERE IS NO OLLAMA RUNNING*\n
 please run =ollama serve=\n\n")
            (when provider-summary
-             (concat (mapconcat #'identity provider-summary " ") "\n\n"))
+             (concat
+              (let* ((items provider-summary)
+                     (col-width 28)
+                     (lines nil))
+                (while items
+                  (let ((left (pop items))
+                        (right (pop items)))
+                    (push (if right
+                              (format (format "%%-%ds %%s" col-width) left right)
+                            left)
+                          lines)))
+                (mapconcat #'identity (nreverse lines) "\n"))
+              "\n\n"))
            (when auth-status
              (concat "Auth: " auth-status "\n\n"))
            "- /Ask me anything!/       C-c C-c / C-c RET

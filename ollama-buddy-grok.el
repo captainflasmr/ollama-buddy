@@ -97,9 +97,7 @@ Use nil for API default behavior (adaptive)."
        "https://api.x.ai/v1/models"
        (lambda (status)
          (if (plist-get status :error)
-             (progn
-               (message "Error fetching Grok models: %s" (prin1-to-string (plist-get status :error)))
-               (ollama-buddy--update-status "Failed to fetch Grok models"))
+             (ollama-buddy-remote--friendly-fetch-error status "Grok")
 
            ;; Success - process the response
            (progn

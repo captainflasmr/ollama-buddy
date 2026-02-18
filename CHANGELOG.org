@@ -21,6 +21,11 @@ Refactor remote provider infrastructure into shared module.
 - *Provider modules refactored* -- OpenAI, Grok, Codestral, Copilot, Claude, and Gemini modules now use shared functions from =ollama-buddy-remote.el=, eliminating ~1400 lines of duplicated code. Each OpenAI-compatible provider (OpenAI, Grok, Codestral) is now a thin configuration wrapper (~100-140 lines). Claude and Gemini retain their unique API formats but share all common infrastructure.
 - *Duplicate =ollama-buddy-remote-models= declarations removed* -- Variable is now declared only in =ollama-buddy-core.el=.
 
+*** New Providers
+
+- *=ollama-buddy-deepseek.el=* -- DeepSeek integration (prefix: =d:=). Supports =deepseek-chat= and =deepseek-reasoner= models via the DeepSeek API.
+- *=ollama-buddy-openrouter.el=* -- OpenRouter integration (prefix: =r:=). Access 400+ models from all major providers through a single API. Supports dynamic model fetching with optional regex filtering via =ollama-buddy-openrouter-model-filter=.
+
 ** <2026-02-16 Mon> *2.5.3*
 
 Autocomplete for inline =@= commands and =/= slash commands in chat prompt.

@@ -117,12 +117,7 @@ Use nil to show all models."
        "https://openrouter.ai/api/v1/models"
        (lambda (status)
          (if (plist-get status :error)
-             (progn
-               (message "Error fetching OpenRouter models: %s"
-                        (prin1-to-string
-                         (plist-get status :error)))
-               (ollama-buddy--update-status
-                "Failed to fetch OpenRouter models"))
+             (ollama-buddy-remote--friendly-fetch-error status "OpenRouter")
            (goto-char (point-min))
            (when (re-search-forward "\n\n" nil t)
              (let* ((json-response-raw

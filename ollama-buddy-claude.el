@@ -178,7 +178,9 @@ Use nil for API default behavior (adaptive)."
 
                        ;; Extract the message content (Claude-specific format)
                        (if error-message
-                           (setq content (format "Error: %s" (alist-get 'message error-message)))
+                           (setq content (format "Error: %s"
+                                                 (ollama-buddy-remote--format-api-error
+                                                  error-message)))
                          (setq content (ollama-buddy-claude--extract-content response)))
 
                        ;; Finalize the response
@@ -206,9 +208,7 @@ Use nil for API default behavior (adaptive)."
        "https://api.anthropic.com/v1/models"
        (lambda (status)
          (if (plist-get status :error)
-             (progn
-               (message "Error fetching Claude models: %s" (prin1-to-string (plist-get status :error)))
-               (ollama-buddy--update-status "Failed to fetch Claude models"))
+             (ollama-buddy-remote--friendly-fetch-error status "Claude")
 
            ;; Success - process the response
            (progn

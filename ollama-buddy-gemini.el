@@ -188,7 +188,9 @@ Use nil for API default behavior (adaptive)."
 
                        ;; Extract the message content (Gemini-specific format)
                        (if error-message
-                           (setq content (format "Error: %s" (alist-get 'message error-message)))
+                           (setq content (format "Error: %s"
+                                                 (ollama-buddy-remote--format-api-error
+                                                  error-message)))
                          ;; Parse the Gemini response structure
                          (let* ((candidates (alist-get 'candidates json-response))
                                 (first-candidate (when (and candidates (> (length candidates) 0))
@@ -225,9 +227,7 @@ Use nil for API default behavior (adaptive)."
        "https://generativelanguage.googleapis.com/v1/models"
        (lambda (status)
          (if (plist-get status :error)
-             (progn
-               (message "Error fetching Gemini models: %s" (prin1-to-string (plist-get status :error)))
-               (ollama-buddy--update-status "Failed to fetch Gemini models"))
+             (ollama-buddy-remote--friendly-fetch-error status "Gemini")
 
            ;; Success - process the response
            (progn

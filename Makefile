@@ -19,6 +19,8 @@ ELISP_FILES = ollama-buddy.el \
               ollama-buddy-grok.el \
               ollama-buddy-copilot.el \
               ollama-buddy-codestral.el \
+              ollama-buddy-deepseek.el \
+              ollama-buddy-openrouter.el \
               ollama-buddy-rag.el
 
 # Test files

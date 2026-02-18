@@ -212,19 +212,139 @@ ERROR-INFO is a string with error details."
       (ollama-buddy--prepare-prompt-area)
       (ollama-buddy--update-status "Failed - JSON parse error"))))
 
+(defun ollama-buddy-remote--http-status-message (code)
+  "Return a human-readable message for HTTP status CODE."
+  (pcase code
+    (400 "Bad Request -- The request was malformed or missing required fields.")
+    (401 "Unauthorized -- Invalid or missing API key. Check your API key configuration.")
+    (402 "Payment Required -- Your account has insufficient credits or requires a billing plan.")
+    (403 "Forbidden -- Your API key does not have permission for this resource or model.")
+    (404 "Not Found -- The model or endpoint does not exist. Check the model name.")
+    (405 "Method Not Allowed -- The HTTP method is not supported for this endpoint.")
+    (408 "Request Timeout -- The request took too long. Try a shorter prompt or simpler query.")
+    (413 "Payload Too Large -- The request body is too large. Reduce prompt length or attachments.")
+    (422 "Unprocessable Entity -- The request format is valid but the content cannot be processed.")
+    (429 "Rate Limited -- Too many requests. You may need to wait, reduce request frequency, or upgrade to a paid tier.")
+    (500 "Internal Server Error -- The provider is experiencing issues. Try again later.")
+    (502 "Bad Gateway -- The provider's server is temporarily unavailable.")
+    (503 "Service Unavailable -- The provider is overloaded or under maintenance.")
+    (504 "Gateway Timeout -- The provider took too long to respond. Try again later.")
+    (529 "Overloaded -- The provider is temporarily overloaded. Try again in a few moments.")
+    (_ (format "HTTP error %s." code))))
+
+(defun ollama-buddy-remote--extract-error-body ()
+  "Try to extract an error message from the current HTTP response buffer.
+Returns the provider's error message string, or nil if none found."
+  (save-excursion
+    (goto-char (point-min))
+    (when (re-search-forward "\n\n" nil t)
+      (condition-case nil
+          (let* ((json-object-type 'alist)
+                 (json-array-type 'vector)
+                 (json-key-type 'symbol)
+                 (body (buffer-substring-no-properties (point) (point-max)))
+                 (json-response (json-read-from-string body))
+                 (error-obj (alist-get 'error json-response)))
+            (cond
+             ;; OpenAI/Grok/DeepSeek/OpenRouter: {"error": {"message": "...", "type": "..."}}
+             ((and (listp error-obj) (alist-get 'message error-obj))
+              (let ((msg (alist-get 'message error-obj))
+                    (type (alist-get 'type error-obj)))
+                (if type (format "%s (%s)" msg type) msg)))
+             ;; Claude: {"error": {"message": "..."}} or {"type": "error", "error": {"type": "...", "message": "..."}}
+             ((and (listp error-obj) (alist-get 'type error-obj))
+              (format "%s (%s)"
+                      (or (alist-get 'message error-obj) "Unknown error")
+                      (alist-get 'type error-obj)))
+             ;; Gemini: {"error": {"message": "...", "status": "..."}}
+             ((and (listp error-obj) (alist-get 'status error-obj))
+              (format "%s (%s)"
+                      (or (alist-get 'message error-obj) "Unknown error")
+                      (alist-get 'status error-obj)))
+             ;; Simple string error
+             ((stringp error-obj) error-obj)
+             ;; Fallback: try top-level message
+             ((alist-get 'message json-response)
+              (alist-get 'message json-response))))
+        (error nil)))))
+
 (defun ollama-buddy-remote--handle-http-error (start-point error-details)
   "Handle an HTTP-level error in the chat buffer.
 START-POINT is where the response content starts.
 ERROR-DETAILS is the error plist from url-retrieve."
-  (with-current-buffer ollama-buddy--chat-buffer
-    (let ((inhibit-read-only t))
-      (goto-char start-point)
-      (delete-region start-point (point-max))
-      (insert "Error: URL retrieval failed\n")
-      (insert "Details: " (prin1-to-string error-details) "\n")
-      (insert "\n\n*** FAILED")
-      (ollama-buddy--prepare-prompt-area)
-      (ollama-buddy--update-status "Failed - URL retrieval error"))))
+  (let* ((http-code (and (listp error-details)
+                         (eq (car error-details) 'error)
+                         (eq (cadr error-details) 'http)
+                         (caddr error-details)))
+         (status-msg (when http-code
+                       (ollama-buddy-remote--http-status-message http-code)))
+         (body-msg (ollama-buddy-remote--extract-error-body)))
+    (with-current-buffer ollama-buddy--chat-buffer
+      (let ((inhibit-read-only t))
+        (goto-char start-point)
+        (delete-region start-point (point-max))
+        (if http-code
+            (progn
+              (insert (format "Error: HTTP %s\n\n" http-code))
+              (insert status-msg "\n")
+              (when body-msg
+                (insert "\nProvider message: " body-msg "\n"))
+              (insert "\nRaw: " (prin1-to-string error-details) "\n"))
+          (insert "Error: URL retrieval failed\n\n")
+          (when body-msg
+            (insert "Provider message: " body-msg "\n"))
+          (insert "Details: " (prin1-to-string error-details) "\n"))
+        (insert "\n\n*** FAILED")
+        (ollama-buddy--prepare-prompt-area)
+        (ollama-buddy--update-status
+         (if http-code
+             (format "Failed - HTTP %s" http-code)
+           "Failed - URL retrieval error"))))))
+
+(defun ollama-buddy-remote--friendly-fetch-error (status provider-name)
+  "Format a friendly error message for a failed model fetch.
+STATUS is the url-retrieve status plist.  PROVIDER-NAME is the provider."
+  (let* ((err (plist-get status :error))
+         (http-code (and (listp err)
+                         (eq (car err) 'error)
+                         (eq (cadr err) 'http)
+                         (caddr err)))
+         (status-msg (when http-code
+                       (ollama-buddy-remote--http-status-message http-code)))
+         (body-msg (ollama-buddy-remote--extract-error-body))
+         (friendly (or body-msg
+                       status-msg
+                       (prin1-to-string err))))
+    (message "Error fetching %s models: %s" provider-name friendly)
+    (ollama-buddy--update-status
+     (format "Failed to fetch %s models%s"
+             provider-name
+             (if http-code (format " (HTTP %s)" http-code) "")))))
+
+(defun ollama-buddy-remote--format-api-error (error-obj)
+  "Format an API error object ERROR-OBJ into a readable string.
+ERROR-OBJ is the value of the `error' key from a JSON API response.
+Handles OpenAI, Claude, Gemini, and generic error formats."
+  (cond
+   ;; Object with message and optional type/code/status
+   ((listp error-obj)
+    (let ((msg (or (alist-get 'message error-obj) "Unknown error"))
+          (type (alist-get 'type error-obj))
+          (code (alist-get 'code error-obj))
+          (status (alist-get 'status error-obj)))
+      (concat msg
+              (when (or type code status)
+                (format " [%s]"
+                        (string-join
+                         (delq nil (list
+                                    (when type (format "type: %s" type))
+                                    (when code (format "code: %s" code))
+                                    (when status (format "status: %s" status))))
+                         ", "))))))
+   ;; Simple string
+   ((stringp error-obj) error-obj)
+   ;; Fallback
+   (t (prin1-to-string error-obj))))
 
 ;;; Model registration
 ;; ============================================================================
@@ -330,7 +450,9 @@ CONFIG is a plist with the following keys:
                               (choices (alist-get 'choices json-response)))
                          ;; Extract the message content
                          (if error-message
-                             (setq content (format "Error: %s" (alist-get 'message error-message)))
+                             (setq content (format "Error: %s"
+                                                   (ollama-buddy-remote--format-api-error
+                                                    error-message)))
                            (when choices
                              (setq content (alist-get 'content
                                                       (alist-get 'message (aref choices 0))))))

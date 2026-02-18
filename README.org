@@ -11,7 +11,7 @@
 
 * Ollama Buddy
 
-An Emacs package for interacting with local LLMs via [[https://ollama.ai/][Ollama]], with support for remote providers (OpenAI, Claude, Gemini, Grok, Copilot, Codestral) and Ollama Cloud models. Requires Emacs 28.1+.
+An Emacs package for interacting with local LLMs via [[https://ollama.ai/][Ollama]], with support for remote providers (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter) and Ollama Cloud models. Requires Emacs 28.1+.
 
 #+begin_src elisp
 (use-package ollama-buddy
@@ -44,7 +44,7 @@ Submit queries, swap models, view token usage and statistics:
 * Features
 
 - *Tool Calling* -- LLMs can invoke registered Emacs functions (file ops, shell commands, buffer search, calculations). Safe mode restricts to read-only tools.
-- *Multiple Providers* -- Local Ollama, Ollama Cloud, OpenAI, Claude, Gemini, Grok, GitHub Copilot, Codestral
+- *Multiple Providers* -- Local Ollama, Ollama Cloud, OpenAI, Claude, Gemini, Grok, GitHub Copilot, Codestral, DeepSeek, OpenRouter
 - *Web Search* -- Inline =@search(query)= syntax for real-time web search via Ollama's API
 - *Interactive Menus* -- Transient popup menus with role-based command grouping
 - *Roles & Presets* -- Switchable command configurations (developer, writer, tutor, documenter, custom)
@@ -60,7 +60,9 @@ Submit queries, swap models, view token usage and statistics:
 
 * What's New (2.6.0)
 
-- *Remote provider refactor* -- All 6 remote provider modules now share common infrastructure via =ollama-buddy-remote.el=, eliminating ~1400 lines of duplicated code. No user-facing changes; all providers work exactly as before. Adding a new OpenAI-compatible provider now requires ~100 lines instead of ~350.
+- *Remote provider refactor* -- All remote provider modules now share common infrastructure via =ollama-buddy-remote.el=, eliminating ~1400 lines of duplicated code. Adding a new OpenAI-compatible provider now requires ~100 lines instead of ~350.
+- *DeepSeek provider* -- New =ollama-buddy-deepseek.el= module (prefix: =d:=) with support for =deepseek-chat= and =deepseek-reasoner= models.
+- *OpenRouter provider* -- New =ollama-buddy-openrouter.el= module (prefix: =r:=) providing access to 400+ models from all major providers through a single API, with optional model filtering.
 
 See [[file:CHANGELOG.org]] for full history.
 
