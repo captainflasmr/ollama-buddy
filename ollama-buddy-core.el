@@ -1211,19 +1211,19 @@ Returns the context size or nil if the API call fails."
 (defun ollama-buddy--get-fallback-context-size (model)
   "Get fallback context size for MODEL from static mappings.
 Returns the size from `ollama-buddy-fallback-context-sizes' or 4096 as default."
-  (let ((fallback-size nil))
-    ;; First try exact match
-    (setq fallback-size (cdr (assoc model ollama-buddy-fallback-context-sizes)))
-    
-    ;; Then try substring matches
-    (unless fallback-size
-      (dolist (entry ollama-buddy-fallback-context-sizes)
-        (when (and (not fallback-size)
-                   (string-match-p (car entry) model))
-          (setq fallback-size (cdr entry)))))
-    
-    ;; Finally use a reasonable default
-    (or fallback-size 4096)))
+  (if (null model)
+      4096
+    (let ((fallback-size nil))
+      ;; First try exact match
+      (setq fallback-size (cdr (assoc model ollama-buddy-fallback-context-sizes)))
+      ;; Then try substring matches
+      (unless fallback-size
+        (dolist (entry ollama-buddy-fallback-context-sizes)
+          (when (and (not fallback-size)
+                     (string-match-p (car entry) model))
+            (setq fallback-size (cdr entry)))))
+      ;; Finally use a reasonable default
+      (or fallback-size 4096))))
 
 (defun ollama-buddy--get-model-context-size (model)
   "Get the context window size for MODEL.
