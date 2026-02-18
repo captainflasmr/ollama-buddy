@@ -71,6 +71,21 @@
 (declare-function ollama-buddy-web-search-count "ollama-buddy-web-search")
 (declare-function ollama-buddy-tools-toggle "ollama-buddy-tools")
 (declare-function ollama-buddy-tools-info "ollama-buddy-tools")
+
+(defun ollama-buddy-transient--tools-toggle ()
+  "Toggle tool calling if ollama-buddy-tools is loaded, else prompt to load it."
+  (interactive)
+  (if (fboundp 'ollama-buddy-tools-toggle)
+      (ollama-buddy-tools-toggle)
+    (message "Tool calling requires ollama-buddy-tools: (require 'ollama-buddy-tools)")))
+
+(defun ollama-buddy-transient--tools-info ()
+  "Show tool info if ollama-buddy-tools is loaded, else prompt to load it."
+  (interactive)
+  (if (fboundp 'ollama-buddy-tools-info)
+      (ollama-buddy-tools-info)
+    (message "Tool calling requires ollama-buddy-tools: (require 'ollama-buddy-tools)")))
+
 (declare-function ollama-buddy-rag-index-directory "ollama-buddy-rag")
 (declare-function ollama-buddy-rag-search "ollama-buddy-rag")
 (declare-function ollama-buddy-rag-attach "ollama-buddy-rag")
@@ -99,8 +114,8 @@
     ("l" "Send Region" (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))
     ("k" "Cancel" ollama-buddy--cancel-request)
     ("x" "Toggle Stream  " ollama-buddy-toggle-streaming)
-    ("W" "Toggle Tools" ollama-buddy-tools-toggle)
-    ("Q" "List Tools" ollama-buddy-tools-info)
+    ("W" "Toggle Tools" ollama-buddy-transient--tools-toggle)
+    ("Q" "List Tools" ollama-buddy-transient--tools-info)
     ]
 
    ["System Prompts"

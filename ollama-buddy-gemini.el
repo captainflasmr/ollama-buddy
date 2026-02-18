@@ -133,8 +133,13 @@ Use nil for API default behavior (adaptive)."
                                                   prompt))))))
            ;; Build the API endpoint with the model name
            (api-endpoint (format ollama-buddy-gemini-api-endpoint model-name))
-           ;; Add API key to the endpoint
+           ;; Add API key to the endpoint (non-streaming uses generateContent)
            (api-endpoint-with-key (concat api-endpoint "?key=" ollama-buddy-gemini-api-key))
+           ;; Streaming endpoint uses streamGenerateContent with alt=sse
+           (stream-api-endpoint
+            (concat (replace-regexp-in-string
+                     ":generateContent$" ":streamGenerateContent" api-endpoint)
+                    "?alt=sse&key=" ollama-buddy-gemini-api-key))
            ;; Format messages for Gemini API
            (formatted-contents (ollama-buddy-gemini--format-messages messages-all))
            ;; Build the payload for Gemini
@@ -153,64 +158,74 @@ Use nil for API default behavior (adaptive)."
            ;; Convert to JSON string
            (json-str (let ((json-encoding-pretty-print nil))
                        (ollama-buddy-escape-unicode (json-encode json-payload-with-max-tokens))))
-           (start-point (ollama-buddy-remote--prepare-chat-buffer "Google Gemini")))
+           (start-point (ollama-buddy-remote--prepare-chat-buffer "Google Gemini"))
+           (gemini-headers `(("Content-Type" . "application/json"))))
 
-      ;; Make the HTTP request
-      (let* ((url-request-method "POST")
-             (url-request-extra-headers
-              `(("Content-Type" . "application/json")))
-             (url-request-data json-str)
-             (url-mime-charset-string "utf-8")
-             (url-mime-language-string nil)
-             (url-mime-encoding-string nil)
-             (url-mime-accept-string "application/json"))
+      (if ollama-buddy-streaming-enabled
+          ;; Streaming path: use curl with SSE via streamGenerateContent
+          (ollama-buddy-remote--start-streaming-request
+           stream-api-endpoint
+           gemini-headers
+           json-str
+           #'ollama-buddy-remote--gemini-extract-content
+           "Google Gemini"
+           prompt
+           start-point)
+        ;; Non-streaming path: use url-retrieve
+        (let* ((url-request-method "POST")
+               (url-request-extra-headers gemini-headers)
+               (url-request-data json-str)
+               (url-mime-charset-string "utf-8")
+               (url-mime-language-string nil)
+               (url-mime-encoding-string nil)
+               (url-mime-accept-string "application/json"))
 
-        (url-retrieve
-         api-endpoint-with-key
-         (lambda (status)
-           (if (plist-get status :error)
-               (ollama-buddy-remote--handle-http-error
-                start-point (plist-get status :error))
-             ;; Success - process the response
-             (progn
-               (goto-char (point-min))
-             (when (re-search-forward "\n\n" nil t)
-               (let* ((json-response-raw (buffer-substring (point) (point-max)))
-                      (json-response-decoded (decode-coding-string json-response-raw 'utf-8))
-                      (json-object-type 'alist)
-                      (json-array-type 'vector)
-                      (json-key-type 'symbol))
+          (url-retrieve
+           api-endpoint-with-key
+           (lambda (status)
+             (if (plist-get status :error)
+                 (ollama-buddy-remote--handle-http-error
+                  start-point (plist-get status :error))
+               ;; Success - process the response
+               (progn
+                 (goto-char (point-min))
+                 (when (re-search-forward "\n\n" nil t)
+                   (let* ((json-response-raw (buffer-substring (point) (point-max)))
+                          (json-response-decoded (decode-coding-string json-response-raw 'utf-8))
+                          (json-object-type 'alist)
+                          (json-array-type 'vector)
+                          (json-key-type 'symbol))
 
-                 (condition-case err
-                     (let* ((json-response (json-read-from-string json-response-decoded))
-                            (error-message (alist-get 'error json-response))
-                            (content ""))
+                     (condition-case err
+                         (let* ((json-response (json-read-from-string json-response-decoded))
+                                (error-message (alist-get 'error json-response))
+                                (content ""))
 
-                       ;; Extract the message content (Gemini-specific format)
-                       (if error-message
-                           (setq content (format "Error: %s"
-                                                 (ollama-buddy-remote--format-api-error
-                                                  error-message)))
-                         ;; Parse the Gemini response structure
-                         (let* ((candidates (alist-get 'candidates json-response))
-                                (first-candidate (when (and candidates (> (length candidates) 0))
-                                                   (aref candidates 0)))
-                                (content-obj (when first-candidate
-                                               (alist-get 'content first-candidate)))
-                                (parts (when content-obj
-                                         (alist-get 'parts content-obj))))
-                           (when (and parts (> (length parts) 0))
-                             (let ((part (aref parts 0)))
-                               (setq content (alist-get 'text part))))))
+                           ;; Extract the message content (Gemini-specific format)
+                           (if error-message
+                               (setq content (format "Error: %s"
+                                                     (ollama-buddy-remote--format-api-error
+                                                      error-message)))
+                             ;; Parse the Gemini response structure
+                             (let* ((candidates (alist-get 'candidates json-response))
+                                    (first-candidate (when (and candidates (> (length candidates) 0))
+                                                       (aref candidates 0)))
+                                    (content-obj (when first-candidate
+                                                   (alist-get 'content first-candidate)))
+                                    (parts (when content-obj
+                                             (alist-get 'parts content-obj))))
+                               (when (and parts (> (length parts) 0))
+                                 (let ((part (aref parts 0)))
+                                   (setq content (alist-get 'text part))))))
 
-                       ;; Finalize the response
-                       (ollama-buddy-remote--finalize-response
-                        start-point content prompt
-                        'ollama-buddy-gemini--current-token-count))
-                   (error
-                    (ollama-buddy-remote--handle-error
-                     start-point "Gemini"
-                     (error-message-string err))))))))))))))
+                           ;; Finalize the response
+                           (ollama-buddy-remote--finalize-response
+                            start-point content prompt
+                            'ollama-buddy-gemini--current-token-count))
+                       (error
+                        (ollama-buddy-remote--handle-error
+                         start-point "Gemini"
+                         (error-message-string err)))))))))))))))
 
 (defun ollama-buddy-gemini--fetch-models ()
   "Fetch available models from Google Gemini API."

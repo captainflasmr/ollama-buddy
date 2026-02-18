@@ -387,6 +387,316 @@ Appends prefixed model names to `ollama-buddy-remote-models'."
     (setq ollama-buddy-remote-models
           (append ollama-buddy-remote-models prefixed-models))))
 
+;;; SSE Streaming infrastructure
+;; ============================================================================
+
+;; Forward declarations
+(declare-function ollama-buddy--autosave-transcript "ollama-buddy")
+
+;; Per-request streaming state (reset before each request)
+(defvar ollama-buddy-remote--streaming-buffer ""
+  "Accumulates partial SSE data from the curl process output.")
+
+(defvar ollama-buddy-remote--streaming-start-point nil
+  "Buffer position marker where streaming content is being inserted.")
+
+(defvar ollama-buddy-remote--streaming-token-count 0
+  "Number of content tokens received in the current streaming request.")
+
+(defvar ollama-buddy-remote--streaming-response ""
+  "Accumulated full response text for the current streaming request.")
+
+(defvar ollama-buddy-remote--streaming-prompt nil
+  "The original user prompt for the current streaming request.")
+
+(defvar ollama-buddy-remote--streaming-headers-done nil
+  "Non-nil once HTTP headers have been stripped from the curl output.")
+
+(defvar ollama-buddy-remote--streaming-content-extractor nil
+  "Function called with a `data:' SSE line to extract the token string.
+Returns nil to skip the line (e.g. [DONE] or non-content events).")
+
+(defvar ollama-buddy-remote--streaming-provider-name nil
+  "Display name of the provider for the current streaming request.")
+
+(defun ollama-buddy-remote--streaming-insert-content (content)
+  "Insert CONTENT token into the chat buffer during streaming."
+  (when (and content (not (string-empty-p content)))
+    (setq ollama-buddy-remote--streaming-token-count
+          (1+ ollama-buddy-remote--streaming-token-count))
+    (setq ollama-buddy-remote--streaming-response
+          (concat ollama-buddy-remote--streaming-response content))
+    (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
+      (with-current-buffer ollama-buddy--chat-buffer
+        (let* ((inhibit-read-only t)
+               (window (get-buffer-window ollama-buddy--chat-buffer t))
+               (old-point (and window (window-point window)))
+               (was-at-end (and window (>= old-point (point-max))))
+               (old-window-start (and window (window-start window))))
+          (save-excursion
+            (goto-char (point-max))
+            (insert content))
+          (when window
+            (cond
+             ((and was-at-end ollama-buddy-auto-scroll)
+              (set-window-point window (point-max)))
+             (t
+              (set-window-point window old-point)
+              (set-window-start window old-window-start t)))))))))
+
+(defun ollama-buddy-remote--streaming-finalize ()
+  "Finalize a completed SSE streaming response in the chat buffer."
+  (let* ((content ollama-buddy-remote--streaming-response)
+         (start-point ollama-buddy-remote--streaming-start-point)
+         (prompt ollama-buddy-remote--streaming-prompt)
+         (token-count ollama-buddy-remote--streaming-token-count)
+         (elapsed-time (if ollama-buddy-remote--request-start-time
+                           (- (float-time) ollama-buddy-remote--request-start-time)
+                         0))
+         (token-rate (if (> elapsed-time 0) (/ token-count elapsed-time) 0)))
+    (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
+      (with-current-buffer ollama-buddy--chat-buffer
+        (let* ((inhibit-read-only t)
+               (window (get-buffer-window ollama-buddy--chat-buffer t)))
+          ;; Convert markdown to org in-place if enabled
+          (when (and ollama-buddy-convert-markdown-to-org start-point)
+            (ollama-buddy--md-to-org-convert-region start-point (point-max)))
+          ;; Write to register
+          (let* ((reg-char ollama-buddy-default-register)
+                 (current (get-register reg-char))
+                 (new-content (concat (if (stringp current) current "") content)))
+            (set-register reg-char new-content))
+          ;; Add to history
+          (when ollama-buddy-history-enabled
+            (ollama-buddy--add-to-history "user" prompt)
+            (ollama-buddy--add-to-history "assistant" content))
+          ;; Record token usage
+          (push (list :model ollama-buddy--current-model
+                      :tokens token-count
+                      :elapsed elapsed-time
+                      :rate token-rate
+                      :timestamp (current-time))
+                ollama-buddy--token-usage-history)
+          ;; Show token stats if enabled
+          (when ollama-buddy-display-token-stats
+            (goto-char (point-max))
+            (insert (format "\n\n*** Token Stats\n[%d tokens in %.1fs, %.1f tokens/sec]"
+                            token-count elapsed-time token-rate)))
+          (goto-char (point-max))
+          (insert "\n\n*** FINISHED")
+          (ollama-buddy--prepare-prompt-area)
+          (setq ollama-buddy-remote--request-start-time nil)
+          (ollama-buddy--maybe-goto-prompt window start-point)
+          (ollama-buddy--update-status
+           (format "Finished [%d tokens in %.1fs, %.1f t/s]"
+                   token-count elapsed-time token-rate)))))
+    ;; Auto-save transcript
+    (when (fboundp 'ollama-buddy--autosave-transcript)
+      (ollama-buddy--autosave-transcript))))
+
+(defun ollama-buddy-remote--streaming-process-filter (proc output)
+  "Process filter for SSE streaming curl processes.
+PROC is the curl process, OUTPUT is the new chunk of text."
+  (let ((proc-buffer (process-buffer proc)))
+    (when (and proc-buffer (buffer-live-p proc-buffer))
+      (condition-case err
+          (with-current-buffer proc-buffer
+            ;; Append new output
+            (goto-char (point-max))
+            (insert output)
+            ;; Strip HTTP headers on first call
+            (unless ollama-buddy-remote--streaming-headers-done
+              (goto-char (point-min))
+              (when (re-search-forward "\r?\n\r?\n" nil t)
+                (delete-region (point-min) (point))
+                (setq ollama-buddy-remote--streaming-headers-done t)))
+            ;; Process complete SSE lines
+            (when ollama-buddy-remote--streaming-headers-done
+              (goto-char (point-min))
+              (while (re-search-forward "^\\(.*\\)\n" nil t)
+                (let ((line (match-string 1)))
+                  (delete-region (match-beginning 0) (match-end 0))
+                  (when (string-prefix-p "data: " line)
+                    (let* ((data-str (substring line 6))
+                           (content (condition-case nil
+                                        (funcall ollama-buddy-remote--streaming-content-extractor
+                                                 data-str)
+                                      (error nil))))
+                      (when content
+                        (ollama-buddy-remote--streaming-insert-content content))))))))
+        (error
+         (message "Error in remote streaming filter: %s" (error-message-string err)))))))
+
+(defun ollama-buddy-remote--streaming-sentinel (proc event)
+  "Sentinel for SSE streaming curl processes.
+PROC is the curl process, EVENT is the status event string."
+  (condition-case err
+      (let ((proc-buffer (process-buffer proc)))
+        ;; Clean up process buffer
+        (when (and proc-buffer (buffer-live-p proc-buffer))
+          (kill-buffer proc-buffer))
+        (cond
+         ((string-match-p "finished" event)
+          ;; Process complete - finalize the response
+          (ollama-buddy-remote--streaming-finalize))
+         ((string-match-p "\\(?:killed\\|terminated\\)" event)
+          (ollama-buddy--update-status "Request cancelled")
+          (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
+            (with-current-buffer ollama-buddy--chat-buffer
+              (let ((inhibit-read-only t))
+                (goto-char (point-max))
+                (insert "\n\n*** CANCELLED")
+                (ollama-buddy--prepare-prompt-area)))))
+         (t
+          (ollama-buddy--update-status
+           (format "Remote streaming failed: %s" event))
+          (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
+            (with-current-buffer ollama-buddy--chat-buffer
+              (let ((inhibit-read-only t))
+                (goto-char (point-max))
+                (insert (format "\n\nError: streaming failed: %s" event))
+                (insert "\n\n*** FAILED")
+                (ollama-buddy--prepare-prompt-area)))))))
+    (error
+     (message "Error in remote streaming sentinel: %s" (error-message-string err)))))
+
+(defun ollama-buddy-remote--start-streaming-request
+    (endpoint headers json-str content-extractor provider-name prompt start-point)
+  "Start an SSE streaming curl request.
+ENDPOINT is the API URL string.
+HEADERS is an alist of HTTP header pairs.
+JSON-STR is the JSON request body.
+CONTENT-EXTRACTOR is the function to call on each `data:' SSE line.
+PROVIDER-NAME is the display name for status messages.
+PROMPT is the user prompt string (for history).
+START-POINT is the buffer position where content should be inserted."
+  ;; Reset streaming state
+  (setq ollama-buddy-remote--streaming-buffer ""
+        ollama-buddy-remote--streaming-headers-done nil
+        ollama-buddy-remote--streaming-token-count 0
+        ollama-buddy-remote--streaming-response ""
+        ollama-buddy-remote--streaming-prompt prompt
+        ollama-buddy-remote--streaming-start-point start-point
+        ollama-buddy-remote--streaming-content-extractor content-extractor
+        ollama-buddy-remote--streaming-provider-name provider-name)
+  ;; Kill any existing active process
+  (when (and ollama-buddy--active-process
+             (process-live-p ollama-buddy--active-process))
+    (delete-process ollama-buddy--active-process)
+    (setq ollama-buddy--active-process nil))
+  ;; Write payload to temp file
+  (let* ((temp-file (make-temp-file "ollama-buddy-remote-payload"))
+         (process-name (format "ollama-remote-stream-%s" provider-name))
+         (process-buffer (generate-new-buffer
+                          (format " *%s*" process-name)))
+         ;; Build header args list
+         (header-args (apply #'append
+                             (mapcar (lambda (h)
+                                       (list "--header"
+                                             (format "%s: %s" (car h) (cdr h))))
+                                     headers)))
+         (curl-args (append
+                     (list "--silent"
+                           "--no-buffer"
+                           "--include"
+                           "--max-time" (number-to-string ollama-buddy-curl-timeout)
+                           "--request" "POST")
+                     header-args
+                     (list "--data-binary" (concat "@" temp-file)
+                           endpoint))))
+    (with-temp-file temp-file
+      (insert json-str))
+    ;; Schedule temp file cleanup
+    (run-with-timer 2.0 nil (lambda ()
+                              (when (file-exists-p temp-file)
+                                (delete-file temp-file))))
+    ;; Remove "Loading response..." placeholder
+    (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
+      (with-current-buffer ollama-buddy--chat-buffer
+        (let ((inhibit-read-only t))
+          (save-excursion
+            (goto-char start-point)
+            (when (looking-at "Loading response\\.\\.\\.")
+              (delete-region start-point (+ start-point (length "Loading response..."))))))))
+    ;; Start the process
+    (condition-case err
+        (let ((proc (apply #'start-process process-name process-buffer
+                           ollama-buddy-curl-executable curl-args)))
+          (set-process-filter proc #'ollama-buddy-remote--streaming-process-filter)
+          (set-process-sentinel proc #'ollama-buddy-remote--streaming-sentinel)
+          (setq ollama-buddy--active-process proc)
+          (ollama-buddy--update-status
+           (format "Streaming from %s..." provider-name)))
+      (error
+       (when (file-exists-p temp-file)
+         (delete-file temp-file))
+       (when (buffer-live-p process-buffer)
+         (kill-buffer process-buffer))
+       (ollama-buddy--update-status
+        (format "Failed to start %s stream" provider-name))
+       (error "Failed to start streaming curl: %s" (error-message-string err))))))
+
+;;; SSE content extractors
+;; ============================================================================
+
+(defun ollama-buddy-remote--openai-extract-content (data-str)
+  "Extract content token from an OpenAI-compatible SSE DATA-STR.
+Returns the token string, or nil if the line should be skipped."
+  (when (and data-str
+             (not (string= data-str "[DONE]"))
+             (not (string-empty-p (string-trim data-str))))
+    (condition-case nil
+        (let* ((json-object-type 'alist)
+               (json-array-type 'vector)
+               (json-key-type 'symbol)
+               (json-data (json-read-from-string data-str))
+               (choices (alist-get 'choices json-data))
+               (delta (when (and choices (> (length choices) 0))
+                        (alist-get 'delta (aref choices 0))))
+               (content (when delta (alist-get 'content delta))))
+          (when (and content (not (eq content :null)))
+            content))
+      (error nil))))
+
+(defun ollama-buddy-remote--claude-extract-content (data-str)
+  "Extract content token from a Claude SSE DATA-STR.
+Returns the token string, or nil if the line should be skipped."
+  (when (and data-str
+             (not (string-empty-p (string-trim data-str))))
+    (condition-case nil
+        (let* ((json-object-type 'alist)
+               (json-array-type 'vector)
+               (json-key-type 'symbol)
+               (json-data (json-read-from-string data-str))
+               (type (alist-get 'type json-data))
+               (delta (alist-get 'delta json-data))
+               (text (when delta (alist-get 'text delta))))
+          (when (and (string= type "content_block_delta") text
+                     (not (eq text :null)))
+            text))
+      (error nil))))
+
+(defun ollama-buddy-remote--gemini-extract-content (data-str)
+  "Extract content token from a Gemini SSE DATA-STR.
+Returns the token string, or nil if the line should be skipped."
+  (when (and data-str
+             (not (string-empty-p (string-trim data-str))))
+    (condition-case nil
+        (let* ((json-object-type 'alist)
+               (json-array-type 'vector)
+               (json-key-type 'symbol)
+               (json-data (json-read-from-string data-str))
+               (candidates (alist-get 'candidates json-data))
+               (first (when (and candidates (> (length candidates) 0))
+                        (aref candidates 0)))
+               (content (when first (alist-get 'content first)))
+               (parts (when content (alist-get 'parts content)))
+               (text (when (and parts (> (length parts) 0))
+                       (alist-get 'text (aref parts 0)))))
+          (when (and text (not (eq text :null)))
+            text))
+      (error nil))))
+
 ;;; OpenAI-compatible send function
 ;; ============================================================================
 
@@ -439,57 +749,71 @@ CONFIG is a plist with the following keys:
               (messages . ,messages)
               (temperature . ,temperature)
               (max_tokens . ,max-tokens)))
+           (stream-json-payload
+            (if ollama-buddy-streaming-enabled
+                (append json-payload '((stream . t)))
+              json-payload))
            (json-str (let ((json-encoding-pretty-print nil))
-                       (ollama-buddy-escape-unicode (json-encode json-payload))))
-           (start-point (ollama-buddy-remote--prepare-chat-buffer provider-name)))
+                       (ollama-buddy-escape-unicode (json-encode stream-json-payload))))
+           (start-point (ollama-buddy-remote--prepare-chat-buffer provider-name))
+           (all-headers (append `(("Content-Type" . "application/json")
+                                  ("Authorization" . ,(concat "Bearer " api-key)))
+                                extra-headers)))
 
-      ;; Make the HTTP request
-      (let* ((url-request-method "POST")
-             (url-request-extra-headers
-              (append `(("Content-Type" . "application/json")
-                        ("Authorization" . ,(concat "Bearer " api-key)))
-                      extra-headers))
-             (url-request-data json-str)
-             (url-mime-charset-string "utf-8")
-             (url-mime-language-string nil)
-             (url-mime-encoding-string nil)
-             (url-mime-accept-string "application/json"))
+      (if ollama-buddy-streaming-enabled
+          ;; Streaming path: use curl with SSE
+          (ollama-buddy-remote--start-streaming-request
+           endpoint
+           all-headers
+           json-str
+           #'ollama-buddy-remote--openai-extract-content
+           provider-name
+           prompt
+           start-point)
+        ;; Non-streaming path: use url-retrieve
+        (let* ((url-request-method "POST")
+               (url-request-extra-headers all-headers)
+               (url-request-data json-str)
+               (url-mime-charset-string "utf-8")
+               (url-mime-language-string nil)
+               (url-mime-encoding-string nil)
+               (url-mime-accept-string "application/json"))
 
-        (url-retrieve
-         endpoint
-         (lambda (status)
-           (if (plist-get status :error)
-               (ollama-buddy-remote--handle-http-error
-                start-point (plist-get status :error))
-             (progn
-               ;; Success - process the response
-               (goto-char (point-min))
-               (when (re-search-forward "\n\n" nil t)
-                 (let* ((json-response-raw (buffer-substring (point) (point-max)))
-                        (json-response-decoded (decode-coding-string json-response-raw 'utf-8))
-                        (json-object-type 'alist)
-                        (json-array-type 'vector)
-                        (json-key-type 'symbol))
-                   (condition-case err
-                       (let* ((json-response (json-read-from-string json-response-decoded))
-                              (error-message (alist-get 'error json-response))
-                              (content "")
-                              (choices (alist-get 'choices json-response)))
-                         ;; Extract the message content
-                         (if error-message
-                             (setq content (format "Error: %s"
-                                                   (ollama-buddy-remote--format-api-error
-                                                    error-message)))
-                           (when choices
-                             (setq content (alist-get 'content
-                                                      (alist-get 'message (aref choices 0))))))
-                         ;; Finalize the response
-                         (ollama-buddy-remote--finalize-response
-                          start-point content prompt token-count-var))
-                     (error
-                      (ollama-buddy-remote--handle-error
-                       start-point provider-name
-                       (error-message-string err))))))))))))))
+          (url-retrieve
+           endpoint
+           (lambda (status)
+             (if (plist-get status :error)
+                 (ollama-buddy-remote--handle-http-error
+                  start-point (plist-get status :error))
+               (progn
+                 ;; Success - process the response
+                 (goto-char (point-min))
+                 (when (re-search-forward "\n\n" nil t)
+                   (let* ((json-response-raw (buffer-substring (point) (point-max)))
+                          (json-response-decoded (decode-coding-string json-response-raw 'utf-8))
+                          (json-object-type 'alist)
+                          (json-array-type 'vector)
+                          (json-key-type 'symbol))
+                     (condition-case err
+                         (let* ((json-response (json-read-from-string json-response-decoded))
+                                (error-message (alist-get 'error json-response))
+                                (content "")
+                                (choices (alist-get 'choices json-response)))
+                           ;; Extract the message content
+                           (if error-message
+                               (setq content (format "Error: %s"
+                                                     (ollama-buddy-remote--format-api-error
+                                                      error-message)))
+                             (when choices
+                               (setq content (alist-get 'content
+                                                        (alist-get 'message (aref choices 0))))))
+                           ;; Finalize the response
+                           (ollama-buddy-remote--finalize-response
+                            start-point content prompt token-count-var))
+                       (error
+                        (ollama-buddy-remote--handle-error
+                         start-point provider-name
+                         (error-message-string err)))))))))))))))
 
 (provide 'ollama-buddy-remote)
 ;;; ollama-buddy-remote.el ends here

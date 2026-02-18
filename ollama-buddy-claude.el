@@ -138,59 +138,73 @@ Use nil for API default behavior (adaptive)."
            (json-payload (if (and system-prompt (not (string-empty-p system-prompt)))
                              (append json-payload `((system . ,system-prompt)))
                            json-payload))
+           (stream-json-payload
+            (if ollama-buddy-streaming-enabled
+                (append json-payload '((stream . t)))
+              json-payload))
            (json-str (let ((json-encoding-pretty-print nil))
-                       (ollama-buddy-escape-unicode (json-encode json-payload))))
-           (start-point (ollama-buddy-remote--prepare-chat-buffer "Claude")))
+                       (ollama-buddy-escape-unicode (json-encode stream-json-payload))))
+           (start-point (ollama-buddy-remote--prepare-chat-buffer "Claude"))
+           (claude-headers `(("Content-Type" . "application/json")
+                             ("Authorization" . ,(concat "Bearer " ollama-buddy-claude-api-key))
+                             ("X-API-Key" . ,ollama-buddy-claude-api-key)
+                             ("anthropic-version" . "2023-06-01"))))
 
-      ;; Make the HTTP request
-      (let* ((url-request-method "POST")
-             (url-request-extra-headers
-              `(("Content-Type" . "application/json")
-                ("Authorization" . ,(concat "Bearer " ollama-buddy-claude-api-key))
-                ("X-API-Key" . ,ollama-buddy-claude-api-key)
-                ("anthropic-version" . "2023-06-01")))
-             (url-request-data json-str)
-             (url-mime-charset-string "utf-8")
-             (url-mime-language-string nil)
-             (url-mime-encoding-string nil)
-             (url-mime-accept-string "application/json"))
+      (if ollama-buddy-streaming-enabled
+          ;; Streaming path: use curl with SSE
+          (ollama-buddy-remote--start-streaming-request
+           ollama-buddy-claude-api-endpoint
+           claude-headers
+           json-str
+           #'ollama-buddy-remote--claude-extract-content
+           "Claude"
+           prompt
+           start-point)
+        ;; Non-streaming path: use url-retrieve
+        (let* ((url-request-method "POST")
+               (url-request-extra-headers claude-headers)
+               (url-request-data json-str)
+               (url-mime-charset-string "utf-8")
+               (url-mime-language-string nil)
+               (url-mime-encoding-string nil)
+               (url-mime-accept-string "application/json"))
 
-        (url-retrieve
-         ollama-buddy-claude-api-endpoint
-         (lambda (status)
-           (if (plist-get status :error)
-               (ollama-buddy-remote--handle-http-error
-                start-point (plist-get status :error))
-             ;; Success - process the response
-             (progn
-               (goto-char (point-min))
-             (when (re-search-forward "\n\n" nil t)
-               (let* ((json-response-raw (buffer-substring (point) (point-max)))
-                      (json-response-decoded (decode-coding-string json-response-raw 'utf-8))
-                      (json-object-type 'alist)
-                      (json-array-type 'vector)
-                      (json-key-type 'symbol))
+          (url-retrieve
+           ollama-buddy-claude-api-endpoint
+           (lambda (status)
+             (if (plist-get status :error)
+                 (ollama-buddy-remote--handle-http-error
+                  start-point (plist-get status :error))
+               ;; Success - process the response
+               (progn
+                 (goto-char (point-min))
+                 (when (re-search-forward "\n\n" nil t)
+                   (let* ((json-response-raw (buffer-substring (point) (point-max)))
+                          (json-response-decoded (decode-coding-string json-response-raw 'utf-8))
+                          (json-object-type 'alist)
+                          (json-array-type 'vector)
+                          (json-key-type 'symbol))
 
-                 (condition-case err
-                     (let* ((response (json-read-from-string json-response-decoded))
-                            (error-message (alist-get 'error response))
-                            (content ""))
+                     (condition-case err
+                         (let* ((response (json-read-from-string json-response-decoded))
+                                (error-message (alist-get 'error response))
+                                (content ""))
 
-                       ;; Extract the message content (Claude-specific format)
-                       (if error-message
-                           (setq content (format "Error: %s"
-                                                 (ollama-buddy-remote--format-api-error
-                                                  error-message)))
-                         (setq content (ollama-buddy-claude--extract-content response)))
+                           ;; Extract the message content (Claude-specific format)
+                           (if error-message
+                               (setq content (format "Error: %s"
+                                                     (ollama-buddy-remote--format-api-error
+                                                      error-message)))
+                             (setq content (ollama-buddy-claude--extract-content response)))
 
-                       ;; Finalize the response
-                       (ollama-buddy-remote--finalize-response
-                        start-point content prompt
-                        'ollama-buddy-claude--current-token-count))
-                   (error
-                    (ollama-buddy-remote--handle-error
-                     start-point "Claude"
-                     (error-message-string err))))))))))))))
+                           ;; Finalize the response
+                           (ollama-buddy-remote--finalize-response
+                            start-point content prompt
+                            'ollama-buddy-claude--current-token-count))
+                       (error
+                        (ollama-buddy-remote--handle-error
+                         start-point "Claude"
+                         (error-message-string err)))))))))))))))
 
 (defun ollama-buddy-claude--fetch-models ()
   "Fetch available models from Anthropic's Claude API."
