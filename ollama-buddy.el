@@ -2513,9 +2513,12 @@ and no new user message is added."
          ;; Get only the modified parameters
          (modified-options (ollama-buddy-params-get-for-request))
          ;; Build the base payload
-         (base-payload `((model . ,(ollama-buddy--get-real-model-name model))
-                         (messages . ,(vconcat [] messages-all))
-                         (stream . ,(if ollama-buddy-streaming-enabled t :json-false))))
+         (base-payload (append
+                        `((model . ,(ollama-buddy--get-real-model-name model))
+                          (messages . ,(vconcat [] messages-all))
+                          (stream . ,(if ollama-buddy-streaming-enabled t :json-false)))
+                        (when ollama-buddy-keepalive
+                          `((keep_alive . ,ollama-buddy-keepalive)))))
          ;; Add tools schema if enabled and model supports tools
          (with-tools (let ((schema (when (and (featurep 'ollama-buddy-tools)
                                               (bound-and-true-p ollama-buddy-tools-enabled)
@@ -3718,7 +3721,8 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c h") #'ollama-buddy--menu-help-assistant)
     (define-key map (kbd "C-c C-k") #'ollama-buddy--cancel-request)
     (define-key map (kbd "C-c x") #'ollama-buddy-toggle-streaming)
-    
+    (define-key map (kbd "C-c v") #'ollama-buddy-set-keepalive)
+
     ;; Prompts section keybindings
     (define-key map (kbd "C-c l") (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))
     (define-key map (kbd "C-c s") #'ollama-buddy-transient-user-prompts-menu)

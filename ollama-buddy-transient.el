@@ -69,6 +69,7 @@
 (declare-function ollama-buddy-web-search "ollama-buddy-web-search")
 (declare-function ollama-buddy-web-search-attach "ollama-buddy-web-search")
 (declare-function ollama-buddy-web-search-count "ollama-buddy-web-search")
+(declare-function ollama-buddy-set-keepalive "ollama-buddy-core")
 (declare-function ollama-buddy-tools-toggle "ollama-buddy-tools")
 (declare-function ollama-buddy-tools-info "ollama-buddy-tools")
 
@@ -114,6 +115,7 @@
     ("l" "Send Region" (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))
     ("k" "Cancel" ollama-buddy--cancel-request)
     ("x" "Toggle Stream  " ollama-buddy-toggle-streaming)
+    ("v" "Keep Alive" ollama-buddy-set-keepalive)
     ("W" "Toggle Tools" ollama-buddy-transient--tools-toggle)
     ("Q" "List Tools" ollama-buddy-transient--tools-info)
     ]

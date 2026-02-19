@@ -398,13 +398,22 @@ Returns a list of tool result messages to append to the conversation."
 ;;; Interactive Commands
 
 (defun ollama-buddy-tools-toggle ()
-  "Toggle tool calling on/off."
+  "Toggle tool calling on/off.
+When enabling, warns if the current model does not support tool calling."
   (interactive)
-  (setq ollama-buddy-tools-enabled (not ollama-buddy-tools-enabled))
-  ;; Refresh header line to update tool indicator
-  (when (fboundp 'ollama-buddy--update-status)
-    (ollama-buddy--update-status (or (bound-and-true-p ollama-buddy--status) "")))
-  (message "Tool calling %s" (if ollama-buddy-tools-enabled "enabled" "disabled")))
+  (let ((enabling (not ollama-buddy-tools-enabled))
+        (current-model (bound-and-true-p ollama-buddy--current-model)))
+    (if (and enabling
+             current-model
+             (fboundp 'ollama-buddy--model-supports-tools)
+             (not (ollama-buddy--model-supports-tools current-model)))
+        (message "Model '%s' does not support tool calling - tools not enabled. Switch to a tool-capable model first."
+                 current-model)
+      (setq ollama-buddy-tools-enabled enabling)
+      ;; Refresh header line to update tool indicator
+      (when (fboundp 'ollama-buddy--update-status)
+        (ollama-buddy--update-status (or (bound-and-true-p ollama-buddy--status) "")))
+      (message "Tool calling %s" (if ollama-buddy-tools-enabled "enabled" "disabled")))))
 
 (defun ollama-buddy-tools-toggle-safe-mode ()
   "Toggle safe mode for tool execution."

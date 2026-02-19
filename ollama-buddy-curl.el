@@ -484,9 +484,12 @@ authentication via `ollama signin'."
                                             prompt)))))
          (messages-all (append messages-with-system (list current-message)))
          (modified-options (ollama-buddy-params-get-for-request))
-         (base-payload `((model . ,(ollama-buddy--get-real-model-name model))
-                         (messages . ,(vconcat [] messages-all))
-                         (stream . ,(if ollama-buddy-streaming-enabled t :json-false))))
+         (base-payload (append
+                        `((model . ,(ollama-buddy--get-real-model-name model))
+                          (messages . ,(vconcat [] messages-all))
+                          (stream . ,(if ollama-buddy-streaming-enabled t :json-false)))
+                        (when ollama-buddy-keepalive
+                          `((keep_alive . ,ollama-buddy-keepalive)))))
          (final-payload (if modified-options
                             (append base-payload `((options . ,modified-options)))
                           base-payload))

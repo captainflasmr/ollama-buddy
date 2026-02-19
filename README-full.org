@@ -1038,6 +1038,7 @@ OR
 | C-c C-o         | Toggle Markdown/Org format              |
 | C-c W           | Toggle tool calling                     |
 | C-c Q           | List registered tools                   |
+| C-c v           | Set keep-alive duration                 |
 
 ** Default Menu Items
 

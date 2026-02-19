@@ -245,6 +245,16 @@ When disabled, responses only appear after completion."
   :type 'boolean
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-keepalive nil
+  "How long Ollama keeps the model loaded in memory after a request.
+Accepts a duration string such as \"5m\", \"10m\", \"1h\", \"0\" (unload
+immediately after the response), or \"-1\" (keep loaded indefinitely).
+When nil (the default) the parameter is omitted and Ollama uses its
+own default of five minutes."
+  :type '(choice (const :tag "Use Ollama default (5m)" nil)
+                 (string :tag "Duration (e.g. \"5m\", \"1h\", \"0\", \"-1\")"))
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-auto-scroll nil
   "Whether to auto-scroll the chat buffer during streaming output.
 When non-nil, the buffer scrolls to follow new output if the
@@ -573,7 +583,10 @@ modification (the default \"Normal\" tone)."
            :models ("mistral:7b" "qwen3:4b" "qwen3:8b"))
     (:name "Embedding (RAG)"
            :description "Models for generating embeddings used by RAG search"
-           :models ("nomic-embed-text" "mxbai-embed-large" "all-minilm")))
+           :models ("nomic-embed-text" "mxbai-embed-large" "all-minilm"))
+    (:name "Testing"
+           :description "Tiny models for fast local testing - speed over accuracy"
+           :models ("tinyllama:1.1b" "tinydolphin:1.1b" "qwen2.5:0.5b" "llama3.2:1b")))
   "Categorized list of recommended models from the Ollama Hub.
 Each entry is a plist with :name, :description and :models keys."
   :type '(repeat (plist :options
@@ -1562,6 +1575,27 @@ When disabled, responses only appear after completion."
    (if ollama-buddy-streaming-enabled "Streaming enabled" "Streaming disabled"))
   (message "Ollama Buddy streaming mode: %s"
            (if ollama-buddy-streaming-enabled "enabled" "disabled")))
+
+(defun ollama-buddy-set-keepalive ()
+  "Set how long Ollama keeps the model loaded after a request.
+Choose a preset or enter a custom duration string accepted by Ollama:
+  \"5m\"  – five minutes (Ollama default)
+  \"0\"   – unload immediately after each response
+  \"-1\"  – keep loaded indefinitely
+  \"default\" – omit the parameter (revert to Ollama default)"
+  (interactive)
+  (let* ((presets '("default" "0" "5m" "10m" "30m" "1h" "-1"))
+         (choice (completing-read
+                  (format "Keep-alive [current: %s]: "
+                          (or ollama-buddy-keepalive "default"))
+                  presets nil nil nil nil
+                  (or ollama-buddy-keepalive "default")))
+         (value (if (string= choice "default") nil choice)))
+    (setq ollama-buddy-keepalive value)
+    (ollama-buddy--update-status
+     (format "Keep-alive: %s" (or value "default")))
+    (message "Ollama keep-alive set to: %s"
+             (or value "default (5m)"))))
 
 (defun ollama-buddy--md-to-org-convert-region (start end)
   "Convert the region from START to END from Markdown to Org-mode format."
