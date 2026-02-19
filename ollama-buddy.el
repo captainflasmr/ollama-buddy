@@ -1822,6 +1822,11 @@ TCP packets split a JSON object across multiple filter calls."
                             (1+ ollama-buddy--tool-call-iteration))
 
                       ;; Display tool calls in chat buffer
+                      ;; Trim any trailing whitespace the model streamed before the tool calls
+                      (delete-region (save-excursion (goto-char (point-max))
+                                                     (skip-chars-backward " \t\n")
+                                                     (point))
+                                     (point-max))
                       (insert "\n\n*** Tool Calls:\n\n")
                       (dolist (call ollama-buddy--current-tool-calls)
                         (let* ((func (alist-get 'function call))
@@ -2556,6 +2561,11 @@ and no new user message is added."
       (if tool-continuation-p
           ;; Tool continuation - minimal header
           (progn
+            ;; Trim trailing whitespace from tool results before the heading
+            (delete-region (save-excursion (goto-char (point-max))
+                                           (skip-chars-backward " \t\n")
+                                           (point))
+                           (point-max))
             (insert "\n\n** [Tool Continuation]")
             (setq ollama-buddy--response-start-position (point))
             (insert "\n\n"))

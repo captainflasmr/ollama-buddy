@@ -335,19 +335,54 @@ Returns a list of tool result messages to append to the conversation."
     ;; list_buffers - List open buffers
     (ollama-buddy-tools-register
      'list_buffers
-     "List all open Emacs buffers"
+     "List open Emacs buffers in a structured format showing modified/read-only flags, name, size, mode and filename. Internal buffers (names starting with a space) are hidden by default unless a pattern is given."
      '((type . "object")
        (properties . ((pattern . ((type . "string")
-                                  (description . "Optional regex pattern to filter buffer names"))))))
+                                  (description . "Optional regex pattern to filter buffer names. When given, internal buffers are also included."))))))
      (lambda (args)
-       (let ((pattern (alist-get 'pattern args))
-             (buffers (mapcar #'buffer-name (buffer-list))))
-         (if pattern
-             (mapconcat #'identity
-                       (seq-filter (lambda (buf) (string-match-p pattern buf))
-                                 buffers)
-                       "\n")
-           (mapconcat #'identity buffers "\n"))))
+       (let* ((pattern (alist-get 'pattern args))
+              (buffers (seq-filter
+                        (lambda (b)
+                          (let ((name (buffer-name b)))
+                            (if pattern
+                                (string-match-p pattern name)
+                              ;; By default hide internal buffers (space-prefixed)
+                              (not (string-prefix-p " " name)))))
+                        (buffer-list)))
+              (header (format " %-2s  %-24s  %6s  %-18s %s\n %s  %s  %s  %s  %s\n"
+                              "MR" "Name" "Size" "Mode" "Filename/Process"
+                              "--" (make-string 24 ?-) "------"
+                              (make-string 18 ?-) (make-string 16 ?-)))
+              (rows (mapcar
+                     (lambda (buf)
+                       (let* ((name (buffer-name buf))
+                              (display-name (if (> (length name) 24)
+                                               (concat (substring name 0 21) "...")
+                                             name))
+                              (size (buffer-size buf))
+                              (mode-str (let ((m (format-mode-line
+                                                  (buffer-local-value 'mode-name buf)
+                                                  nil nil buf)))
+                                          (if (> (length m) 18)
+                                              (concat (substring m 0 15) "...")
+                                            m)))
+                              (modified (if (buffer-modified-p buf) "*" " "))
+                              (read-only (if (buffer-local-value 'buffer-read-only buf) "%" " "))
+                              (filename (let ((f (or (buffer-file-name buf)
+                                                     (and (local-variable-p
+                                                           'list-buffers-directory buf)
+                                                          (buffer-local-value
+                                                           'list-buffers-directory buf)))))
+                                          (if f (abbreviate-file-name f) ""))))
+                         (format " %s%s  %-24s  %6d  %-18s %s"
+                                 modified read-only display-name size mode-str filename)))
+                     buffers))
+              (total (length buffers))
+              (file-count (length (seq-filter #'buffer-file-name buffers)))
+              (footer (format "\n %d buffer%s  %d file%s"
+                              total (if (= total 1) "" "s")
+                              file-count (if (= file-count 1) "" "s"))))
+         (concat header (mapconcat #'identity rows "\n") footer)))
      t) ; safe
     
     ;; calculate - Perform calculation
