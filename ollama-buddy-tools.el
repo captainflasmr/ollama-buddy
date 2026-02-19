@@ -116,6 +116,17 @@ Keys are tool names (strings), values are plists with:
 (defvar ollama-buddy-tools--pending-calls nil
   "List of pending tool calls waiting to be executed.")
 
+(defvar ollama-buddy-tools--pause-continuation nil
+  "When non-nil, suppress automatic tool-continuation after the current tool batch.
+Tools that open interactive UI sessions (e.g. ediff) set this so the LLM does
+not keep calling tools while the user is busy in that session.  The user can
+send a new message to resume the conversation normally.")
+
+(defvar ollama-buddy-tools--session-paused nil
+  "When non-nil, the chat session is paused waiting for the user to finish an
+interactive tool UI (e.g. ediff).  Shown as ⏸ in the status line.
+Cleared automatically when the user sends a new message.")
+
 ;;; Tool Registration
 
 (defun ollama-buddy-tools-register (name description parameters function &optional safe)
@@ -445,6 +456,86 @@ Returns a list of tool result messages to append to the conversation."
            "No matches found")))
      t) ; safe
     
+    ;; propose_file_changes - Provide full new file content and review via Emacs ediff
+    (ollama-buddy-tools-register
+     'propose_file_changes
+     "Propose changes to a file by providing the COMPLETE new file content with all modifications applied. Opens Emacs ediff so the user can review every change interactively and selectively copy hunks across. Use this whenever you want to suggest edits to an existing file — provide the full updated file, not a diff or patch."
+     '((type . "object")
+       (required . ["file_path" "new_content"])
+       (properties . ((file_path . ((type . "string")
+                                    (description . "Absolute path to the existing file to modify.")))
+                      (new_content . ((type . "string")
+                                      (description . "The complete new content for the file, with all proposed changes already applied. Must be the entire file, not just a fragment or diff."))))))
+     (lambda (args)
+       (let* ((file-path (alist-get 'file_path args))
+              (new-content (alist-get 'new_content args)))
+         (cond
+          ((not file-path)
+           "Error: file_path is required.")
+          ((not new-content)
+           "Error: new_content is required.")
+          ((not (file-exists-p file-path))
+           (format "Error: file not found: %s" file-path))
+          (t
+           (let* ((ext (file-name-extension file-path t))
+                  (proposed-tmp (make-temp-file "ob-proposed-" nil ext)))
+             (with-temp-file proposed-tmp
+               (insert new-content))
+             (require 'ediff)
+             (let* ((proposed-buf (find-file-noselect proposed-tmp))
+                    (original-buf (find-file-noselect file-path)))
+               ;; Pause tool continuation and mark session as paused.
+               ;; ollama-buddy.el will insert *** PAUSED and refresh the header.
+               (setq ollama-buddy-tools--pause-continuation t)
+               (setq ollama-buddy-tools--session-paused t)
+               ;; Use the startup hook to: (a) attach the quit notification,
+               ;; (b) schedule ediff-next-difference via an idle timer so
+               ;; ediff properly repositions both windows (direct window
+               ;; manipulation fights ediff's own recenter calls).
+               (let ((ediff-startup-hook
+                      (cons (lambda ()
+                              (let ((ctrl-buf (current-buffer)))
+                                ;; Clear paused state on quit
+                                (add-hook 'ediff-quit-hook
+                                          (lambda ()
+                                            (setq ollama-buddy-tools--session-paused nil)
+                                            ;; Trigger tool continuation so the LLM can
+                                            ;; respond to the tool results (summary, more
+                                            ;; tool calls, etc.) exactly as in the normal
+                                            ;; tool flow.  Use an idle timer so ediff has
+                                            ;; fully cleaned up before we start a request.
+                                            (run-with-idle-timer
+                                             0 nil
+                                             (lambda ()
+                                               (let ((model (bound-and-true-p ollama-buddy--current-model))
+                                                     (chat-buf (and (boundp 'ollama-buddy--chat-buffer)
+                                                                    (get-buffer ollama-buddy--chat-buffer))))
+                                                 (when (and model chat-buf (fboundp 'ollama-buddy--send))
+                                                   (with-current-buffer chat-buf
+                                                     (ollama-buddy--update-status "Resuming...")
+                                                     (ollama-buddy--send nil model t)))))))
+                                          nil t)
+                                ;; Navigate to first difference — this is what
+                                ;; properly repositions both windows in ediff.
+                                (run-with-idle-timer
+                                 0 nil
+                                 (lambda ()
+                                   (when (buffer-live-p ctrl-buf)
+                                     (let ((ctrl-win (get-buffer-window ctrl-buf t)))
+                                       (when ctrl-win
+                                         ;; Inject a synthetic "n" keypress into
+                                         ;; the command loop so ediff-next-difference
+                                         ;; runs with full redisplay, matching what
+                                         ;; happens when the user presses n manually.
+                                         (select-window ctrl-win)
+                                         (setq unread-command-events
+                                               (listify-key-sequence (kbd "n"))))))))))
+                            ediff-startup-hook)))
+                 (ediff-buffers proposed-buf original-buf)))
+             (format "Opened ediff for %s\nLeft: proposed changes  Right: original\nUse 'n'/'p' to navigate hunks, 'b' to apply a hunk (left to right), then save the original file when done.\nTool calling is paused until you send a new chat message."
+                     file-path))))))
+     nil) ; not safe — launches ediff UI
+
     (message "Initialized %d built-in tools" (hash-table-count ollama-buddy-tools--registry))))
 
 ;;; Interactive Commands

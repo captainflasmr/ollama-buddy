@@ -1829,45 +1829,65 @@ TCP packets split a JSON object across multiple filter calls."
                                      (point-max))
                       (progn
                         (insert "\n\n*** Tools\n\n")
-                        (insert "**** Tool Calls:\n\n")
-                        (dolist (call ollama-buddy--current-tool-calls)
-                          (let* ((func (alist-get 'function call))
-                                 (name (alist-get 'name func))
-                                 (args (alist-get 'arguments func))
-                                 (heading-start (point)))
-                            (insert (format "***** %s\n\n#+begin_src json\n%s\n#+end_src\n" name (json-encode args)))
-                            ;; Fold each tool call subtree — name visible, args hidden
-                            (save-excursion
-                              (goto-char heading-start)
-                              (outline-hide-subtree))))
-
-                        ;; Execute tools and get results
+                        ;; Execute tools first so call+results can be grouped by tool name
                         (let ((tool-results
                                (ollama-buddy-tools--process-tool-calls
                                 ollama-buddy--current-tool-calls)))
 
-                          ;; Display results in chat buffer
-                          (insert "\n**** Tool Results:\n\n")
-                          (dolist (result tool-results)
-                            (let* ((name (alist-get 'tool_name result))
-                                   (content (alist-get 'content result))
-                                   (heading-start (point)))
-                              (insert (format "***** %s\n\n#+begin_example\n%s\n#+end_example\n"
-                                              name
-                                              (replace-regexp-in-string "^\\([*#]\\)" ",\\1" content)))
-                              ;; Fold each tool result subtree — name visible, content hidden
-                              (save-excursion
-                                (goto-char heading-start)
-                                (outline-hide-subtree))))
+                          ;; Display each tool as **** name with ***** call and ***** results folded
+                          (cl-mapcar
+                           (lambda (call result)
+                             (let* ((func (alist-get 'function call))
+                                    (name (alist-get 'name func))
+                                    (args (alist-get 'arguments func))
+                                    (content (alist-get 'content result))
+                                    (tool-heading-start (point)))
+                               (insert (format "**** %s\n***** call\n\n#+begin_src json\n%s\n#+end_src\n***** results\n\n#+begin_example\n%s\n#+end_example\n"
+                                               name
+                                               (json-encode args)
+                                               (replace-regexp-in-string "^\\([*#]\\)" ",\\1" content)))
+                               ;; Fold the **** heading — hides both ***** subtrees
+                               (save-excursion
+                                 (goto-char tool-heading-start)
+                                 (outline-hide-subtree))
+                               ;; Separator inserted outside the fold overlay so it stays visible
+                               (insert "\n")))
+                           ollama-buddy--current-tool-calls
+                           tool-results)
 
                           ;; Add tool results to history
                           (dolist (result tool-results)
                             (ollama-buddy--add-to-history-raw result))
 
-                          ;; Reset and re-send for model to process tool results
+                          ;; Reset tool call state
                           (setq ollama-buddy--current-tool-calls nil)
                           (makunbound 'ollama-buddy--current-response)
-                          (ollama-buddy--send nil ollama-buddy--current-model t))))
+                          ;; A tool may request a pause (e.g. propose_file_changes
+                          ;; opens ediff).  In that case don't auto-continue so
+                          ;; the LLM doesn't disrupt the interactive session.
+                          (if (and (boundp 'ollama-buddy-tools--pause-continuation)
+                                   ollama-buddy-tools--pause-continuation)
+                              (progn
+                                (setq ollama-buddy-tools--pause-continuation nil)
+                                ;; Mirror the normal completion cleanup so the
+                                ;; session is fully ready for the next user message.
+                                (when ollama-buddy--token-update-timer
+                                  (cancel-timer ollama-buddy--token-update-timer)
+                                  (setq ollama-buddy--token-update-timer nil))
+                                (setq ollama-buddy--current-token-count 0
+                                      ollama-buddy--current-token-start-time nil
+                                      ollama-buddy--last-token-count 0
+                                      ollama-buddy--last-update-time nil
+                                      ollama-buddy--in-reasoning-section nil
+                                      ollama-buddy--reasoning-status-message nil
+                                      ollama-buddy--reasoning-skip-newlines nil)
+                                (insert "\n*** PAUSED")
+                                (ollama-buddy--update-status " PAUSED")
+                                ;; Don't call --prepare-prompt-area here; the
+                                ;; ediff-quit-hook will fire a tool continuation
+                                ;; which will call it when the LLM finishes.
+                                (message "Ediff opened — tool continuation resumes on quit."))
+                            (ollama-buddy--send nil ollama-buddy--current-model t)))))
 
                   ;; No tool calls (or limit reached) - normal completion
                   (makunbound 'ollama-buddy--current-response)
@@ -2453,6 +2473,13 @@ and no new user message is added."
   (when (and tool-continuation-p (not prompt))
     (setq prompt ""))
 
+  ;; If the user is sending a new (non-continuation) message, clear any
+  ;; paused-session state left by an interactive tool (e.g. ediff).
+  (unless tool-continuation-p
+    (when (and (boundp 'ollama-buddy-tools--session-paused)
+               ollama-buddy-tools--session-paused)
+      (setq ollama-buddy-tools--session-paused nil)))
+
   ;; Check status and update UI if offline
   (unless (ollama-buddy--check-status)
     (ollama-buddy--update-status "OFFLINE")
@@ -2507,8 +2534,9 @@ and no new user message is added."
                      (lambda (attachment)
                        (let ((file (plist-get attachment :file))
                              (content (plist-get attachment :content)))
-                         (format "### File: %s\n\n#+end_src%s\n%s\n#+begin_src \n\n"
+                         (format "### File: %s\n### Path: %s\n\n#+end_src%s\n%s\n#+begin_src \n\n"
                                  (file-name-nondirectory file)
+                                 file
                                  (or (plist-get attachment :type) "")
                                  content)))
                      ollama-buddy--current-attachments
@@ -2573,7 +2601,10 @@ and no new user message is added."
       (setq ollama-buddy--tool-call-iteration 0))
 
     (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-      (pop-to-buffer (current-buffer))
+      ;; Only pop to chat buffer for normal sends — tool continuations run in
+      ;; the background so tool-launched UIs (e.g. ediff) keep focus.
+      (unless tool-continuation-p
+        (pop-to-buffer (current-buffer)))
       (goto-char (point-max))
       
       (unless (> (buffer-size) 0)
