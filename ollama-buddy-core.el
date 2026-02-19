@@ -192,6 +192,13 @@ Second value (1.0) is the red threshold (at or exceeding limit)."
   :type '(repeat string)
   :group 'ollama-buddy)
 
+(defvar ollama-buddy-airplane-mode nil
+  "When non-nil, restrict ollama-buddy to local Ollama models only.
+All cloud models, external providers (OpenAI, Claude, Gemini, etc.) and
+web search are blocked to prevent unintended internet access and token usage.
+Use `ollama-buddy-toggle-airplane-mode' to toggle.")
+
+
 (defcustom ollama-buddy-image-formats '("\\.png$" "\\.jpg$" "\\.jpeg$" "\\.webp$" "\\.gif$")
   "List of regular expressions matching supported image file formats."
   :type '(repeat string)
@@ -941,12 +948,18 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
 
 (defun ollama-buddy--send-backend (prompt &optional specified-model)
   "Send prompt using the configured backend."
-  (let ((backend (ollama-buddy--get-effective-backend)))
-    (cond
-     ((eq backend 'curl)
-      (ollama-buddy-curl--send prompt specified-model))
-     (t
-      (ollama-buddy--send prompt specified-model)))))
+  (let* ((model (or specified-model
+                    (bound-and-true-p ollama-buddy--current-model)
+                    (bound-and-true-p ollama-buddy-default-model)))
+         (backend (ollama-buddy--get-effective-backend)))
+    (if (and ollama-buddy-airplane-mode
+             (ollama-buddy--internet-model-p model))
+        (message "✈ Airplane mode is active — %s requires internet access" model)
+      (cond
+       ((eq backend 'curl)
+        (ollama-buddy-curl--send prompt specified-model))
+       (t
+        (ollama-buddy--send prompt specified-model))))))
 
 ;; Function to test communication backend
 (defun ollama-buddy-test-communication-backend ()
@@ -1977,6 +1990,26 @@ or are in `ollama-buddy-cloud-models'."
         (string-prefix-p ollama-buddy-cloud-marker-prefix model)
         (member model ollama-buddy-cloud-models))))
 
+(defun ollama-buddy--internet-model-p (model)
+  "Return non-nil if MODEL requires internet access.
+This includes Ollama cloud models and all external provider models
+\(OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter)."
+  (when model
+    (or (ollama-buddy--cloud-model-p model)
+        (seq-some (lambda (prefix) (string-prefix-p prefix model))
+                  '("a:" "c:" "g:" "k:" "p:" "s:" "d:" "r:")))))
+
+(defun ollama-buddy-toggle-airplane-mode ()
+  "Toggle airplane mode on/off.
+When enabled, only local Ollama models are accessible and web search
+is disabled, preventing any internet access from this package."
+  (interactive)
+  (setq ollama-buddy-airplane-mode (not ollama-buddy-airplane-mode))
+  (when (fboundp 'ollama-buddy--update-status)
+    (ollama-buddy--update-status (or (bound-and-true-p ollama-buddy--status) "")))
+  (message "Airplane mode %s"
+           (if ollama-buddy-airplane-mode "enabled ✈ — local Ollama only" "disabled")))
+
 (defun ollama-buddy--validate-model (model)
   "Validate MODEL availability.
 Cloud models are always considered valid if Ollama is running."
@@ -2193,6 +2226,9 @@ ACTUAL-MODEL is the model being used instead."
                        (if (string-empty-p param-str)
                            ""
                          (format " [%s]" param-str)))))
+           (airplane-indicator (if ollama-buddy-airplane-mode
+                                   (propertize "✈" 'face '(:weight bold))
+                                 ""))
            (cloud-indicator (if (ollama-buddy--cloud-model-p model) "☁" ""))
            (tools-indicator (if (and (boundp 'ollama-buddy-tools-enabled)
                                      ollama-buddy-tools-enabled
@@ -2221,7 +2257,8 @@ ACTUAL-MODEL is the model being used instead."
                                            'face '(:weight bold))))))
       (setq header-line-format
             (concat
-             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s %s%s%s"
+             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s %s%s%s"
+                     airplane-indicator
                      (if ollama-buddy-streaming-enabled "" "x")
                      (ollama-buddy--add-context-to-status-format)
                      (if ollama-buddy-global-system-prompt-enabled "" "<")

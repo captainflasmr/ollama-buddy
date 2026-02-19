@@ -11,6 +11,20 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-19 Wed> *2.7.0*
+
+Airplane mode for complete internet isolation.
+
+*** New Features
+
+- *Airplane Mode* -- New =ollama-buddy-toggle-airplane-mode= command (=C-c != / transient Actions =!=) completely isolates the package from the internet. When active:
+  - All external LLM providers (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter) are blocked
+  - Ollama cloud models are blocked and hidden from the Model Management buffer
+  - Web search (=C-c / s= and =C-c / a=) is disabled
+  - Only local Ollama models are available for model selection
+  - Attempting to send a prompt to an internet-requiring model shows a minibuffer message
+  - The =✈= indicator is shown in the chat buffer header line when active
+
 ** <2026-02-17 Mon> *2.6.0*
 
 Refactor remote provider infrastructure into shared module.

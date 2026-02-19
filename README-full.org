@@ -148,6 +148,15 @@ If desired, the following will get you going! (of course, have =ollama= running 
   - Command-specific system prompts for tailored interactions
   - Visual indicators for active system prompts
 
+- *Airplane Mode*
+
+  - Toggle with =C-c != or transient menu Actions =!= to completely isolate from the internet
+  - Blocks all external providers (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter)
+  - Blocks Ollama cloud models and hides them from the Model Management buffer
+  - Disables web search (=C-c / s= and =C-c / a=)
+  - Only local Ollama models are available while active
+  - =✈= indicator shown in the chat buffer header line when active
+
 - *Web Search Integration*
 
   - Real-time web search via Ollama's Web Search API
@@ -1039,6 +1048,7 @@ OR
 | C-c W           | Toggle tool calling                     |
 | C-c Q           | List registered tools                   |
 | C-c v           | Set keep-alive duration                 |
+| C-c !           | Toggle airplane mode                    |
 
 ** Default Menu Items
 

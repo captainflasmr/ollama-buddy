@@ -278,7 +278,9 @@ and content is taken directly from the API results."
 (defun ollama-buddy-web-search--fetch (query callback)
   "Fetch web search results for QUERY asynchronously.
 CALLBACK is called with (success results-or-error)."
-  (when (ollama-buddy-web-search--verify-api-key)
+  (if (bound-and-true-p ollama-buddy-airplane-mode)
+      (message "✈ Airplane mode is active — web search is disabled")
+    (when (ollama-buddy-web-search--verify-api-key)
     (let* ((url-request-method "POST")
            (url-request-extra-headers
             `(("Content-Type" . "application/json")
@@ -314,37 +316,39 @@ CALLBACK is called with (success results-or-error)."
                   (funcall callback nil (format "Parse error: %s"
                                                (error-message-string err)))))
              (funcall callback nil "Invalid response format"))))
-       nil t t))))
+       nil t t)))))
 
 (defun ollama-buddy-web-search--fetch-sync (query)
   "Fetch web search results for QUERY synchronously.
 Returns (success . results-or-error)."
-  (when (ollama-buddy-web-search--verify-api-key)
-    (let* ((url-request-method "POST")
-           (url-request-extra-headers
-            `(("Content-Type" . "application/json")
-              ("Authorization" . ,(concat "Bearer " ollama-buddy-web-search-api-key))))
-           (payload (json-encode `((query . ,query)
-                                  (max_results . ,ollama-buddy-web-search-max-results))))
-           (url-request-data (encode-coding-string payload 'utf-8)))
-      (condition-case err
-          (with-temp-buffer
-            (url-insert-file-contents ollama-buddy-web-search-api-endpoint)
-            (goto-char (point-min))
-            (let* ((json-object-type 'alist)
-                   (json-array-type 'list)
-                   (json-key-type 'symbol)
-                   (response (json-read))
-                   (results (or (alist-get 'results response)
-                               (alist-get 'data response)
-                               (and (listp response) response))))
-              ;; Store raw results for debugging
-              (setq ollama-buddy-web-search--last-raw-results results)
-              (if results
-                  (cons t results)
-                (cons nil "No results found"))))
-        (error
-         (cons nil (format "Request failed: %s" (error-message-string err))))))))
+  (if (bound-and-true-p ollama-buddy-airplane-mode)
+      (message "✈ Airplane mode is active — web search is disabled")
+    (when (ollama-buddy-web-search--verify-api-key)
+      (let* ((url-request-method "POST")
+             (url-request-extra-headers
+              `(("Content-Type" . "application/json")
+                ("Authorization" . ,(concat "Bearer " ollama-buddy-web-search-api-key))))
+             (payload (json-encode `((query . ,query)
+                                    (max_results . ,ollama-buddy-web-search-max-results))))
+             (url-request-data (encode-coding-string payload 'utf-8)))
+        (condition-case err
+            (with-temp-buffer
+              (url-insert-file-contents ollama-buddy-web-search-api-endpoint)
+              (goto-char (point-min))
+              (let* ((json-object-type 'alist)
+                     (json-array-type 'list)
+                     (json-key-type 'symbol)
+                     (response (json-read))
+                     (results (or (alist-get 'results response)
+                                 (alist-get 'data response)
+                                 (and (listp response) response))))
+                ;; Store raw results for debugging
+                (setq ollama-buddy-web-search--last-raw-results results)
+                (if results
+                    (cons t results)
+                  (cons nil "No results found"))))
+          (error
+           (cons nil (format "Request failed: %s" (error-message-string err)))))))))
 
 ;; Public functions
 

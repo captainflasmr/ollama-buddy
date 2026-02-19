@@ -70,6 +70,7 @@
 (declare-function ollama-buddy-web-search-attach "ollama-buddy-web-search")
 (declare-function ollama-buddy-web-search-count "ollama-buddy-web-search")
 (declare-function ollama-buddy-set-keepalive "ollama-buddy-core")
+(declare-function ollama-buddy-toggle-airplane-mode "ollama-buddy-core")
 (declare-function ollama-buddy-tools-toggle "ollama-buddy-tools")
 (declare-function ollama-buddy-tools-info "ollama-buddy-tools")
 
@@ -116,6 +117,7 @@
     ("k" "Cancel" ollama-buddy--cancel-request)
     ("x" "Toggle Stream  " ollama-buddy-toggle-streaming)
     ("v" "Keep Alive" ollama-buddy-set-keepalive)
+    ("!" "Airplane Mode" ollama-buddy-toggle-airplane-mode)
     ("W" "Toggle Tools" ollama-buddy-transient--tools-toggle)
     ("Q" "List Tools" ollama-buddy-transient--tools-info)
     ]

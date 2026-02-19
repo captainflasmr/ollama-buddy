@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 2.6.0
+;; Version: 2.7.0
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -2034,11 +2034,16 @@ Shows capability indicators like ☁ for cloud, ⚒ for tool support, ⊙ for vi
 
 (defun ollama-buddy--swap-model (&optional arg)
   "Swap ollama model, including remote and cloud models if available.
-With prefix ARG (\\[universal-argument]), select from online remote models only."
+With prefix ARG (\\[universal-argument]), select from online remote models only.
+When airplane mode is active, only local Ollama models are offered."
   (interactive "P")
+  (if (and arg (bound-and-true-p ollama-buddy-airplane-mode))
+      (message "✈ Airplane mode is active — remote models are not available")
   (let* ((models (if arg
                      ollama-buddy-remote-models
-                   (ollama-buddy--get-models-with-others)))
+                   (if (bound-and-true-p ollama-buddy-airplane-mode)
+                       (ollama-buddy--get-models)
+                     (ollama-buddy--get-models-with-others))))
          (prompt (if arg "Online Model: " "Model: "))
          (new-model (completing-read prompt
                       (lambda (string pred action)
@@ -2052,13 +2057,15 @@ With prefix ARG (\\[universal-argument]), select from online remote models only.
     (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
     (ollama-buddy--prepare-prompt-area t t)
     (goto-char (point-max))
-    (ollama-buddy--update-status "Idle")))
+    (ollama-buddy--update-status "Idle"))))
 
 (defun ollama-buddy--swap-model-cloud ()
   "Switch to an Ollama cloud model.
 Cloud models run on ollama.com infrastructure and require authentication
 via `ollama signin'."
   (interactive)
+  (if (bound-and-true-p ollama-buddy-airplane-mode)
+      (message "✈ Airplane mode is active — cloud models are not available")
   (let* ((cloud-models (mapcar #'ollama-buddy--get-full-cloud-model-name
                                ollama-buddy-cloud-models))
          (new-model (completing-read "Cloud Model: "
@@ -2073,7 +2080,7 @@ via `ollama signin'."
     (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
     (ollama-buddy--prepare-prompt-area t t)
     (goto-char (point-max))
-    (ollama-buddy--update-status "Idle")))
+    (ollama-buddy--update-status "Idle"))))
 
 (defvar ollama-buddy--signin-url-opened nil
   "Flag to track whether we've already opened the signin URL.")
@@ -2856,36 +2863,39 @@ Modifies the variable in place."
 (defun ollama-buddy--send-prompt ()
   "Send the current prompt to a LLM with support for system prompt."
   (interactive)
-  (let* ((current-prefix-arg-val (prefix-numeric-value current-prefix-arg))
-         (prompt-data (ollama-buddy--get-prompt-content))
-         (prompt-text (car prompt-data))
-         (model (or ollama-buddy--current-model
-                    ollama-buddy-default-model
-                    "Default:latest")))
-    
-    ;; Handle prefix arguments
-    (cond
-     ;; C-u (4) - Set system prompt
-     ((= current-prefix-arg-val 4)
-      (ollama-buddy-set-system-prompt))
+  (let ((model (or ollama-buddy--current-model
+                   ollama-buddy-default-model
+                   "Default:latest")))
+    (if (and ollama-buddy-airplane-mode
+             (ollama-buddy--internet-model-p model))
+        (run-with-timer 0 nil (lambda (m) (message "✈ Airplane mode: %s requires internet" m)) model)
+      (let* ((current-prefix-arg-val (prefix-numeric-value current-prefix-arg))
+             (prompt-data (ollama-buddy--get-prompt-content))
+             (prompt-text (car prompt-data)))
 
-     ;; C-u C-u (16) - Reset both system prompt
-     ((= current-prefix-arg-val 16)
-      (ollama-buddy-reset-all-prompts))
-     
-     ;; No prefix - Regular prompt
-     (t
-      ;; Add to history if non-empty
-      (when (and prompt-text (not (string-empty-p prompt-text)))
-        (put 'ollama-buddy--cycle-prompt-history 'history-position -1)
-        (add-to-history 'ollama-buddy--prompt-history prompt-text))
-      
-      ;; Reset multishot variables
-      (setq ollama-buddy--multishot-sequence nil
-            ollama-buddy--multishot-prompt nil)
-      
-      ;; Send with system prompt support
-      (ollama-buddy--send-backend prompt-text model)))))
+        ;; Handle prefix arguments
+        (cond
+         ;; C-u (4) - Set system prompt
+         ((= current-prefix-arg-val 4)
+          (ollama-buddy-set-system-prompt))
+
+         ;; C-u C-u (16) - Reset both system prompt
+         ((= current-prefix-arg-val 16)
+          (ollama-buddy-reset-all-prompts))
+
+         ;; No prefix - Regular prompt
+         (t
+          ;; Add to history if non-empty
+          (when (and prompt-text (not (string-empty-p prompt-text)))
+            (put 'ollama-buddy--cycle-prompt-history 'history-position -1)
+            (add-to-history 'ollama-buddy--prompt-history prompt-text))
+
+          ;; Reset multishot variables
+          (setq ollama-buddy--multishot-sequence nil
+                ollama-buddy--multishot-prompt nil)
+
+          ;; Send with system prompt support
+          (ollama-buddy--send-backend prompt-text model)))))))
 
 (defun ollama-buddy--cancel-request ()
   "Cancel the current request and clean up resources."
@@ -3130,8 +3140,9 @@ Modifies the variable in place."
             
             (insert "\n")))
 
-        ;; Cloud models section
-        (when ollama-buddy-cloud-models
+        ;; Cloud models section (hidden in airplane mode)
+        (when (and ollama-buddy-cloud-models
+                   (not ollama-buddy-airplane-mode))
           (insert (format "\n* ☁ Cloud Models %s\n\n"
                           (ollama-buddy--cloud-auth-status-indicator)))
           (dolist (model ollama-buddy-cloud-models)
@@ -3732,6 +3743,7 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c C-k") #'ollama-buddy--cancel-request)
     (define-key map (kbd "C-c x") #'ollama-buddy-toggle-streaming)
     (define-key map (kbd "C-c v") #'ollama-buddy-set-keepalive)
+    (define-key map (kbd "C-c !") #'ollama-buddy-toggle-airplane-mode)
 
     ;; Prompts section keybindings
     (define-key map (kbd "C-c l") (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))

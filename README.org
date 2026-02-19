@@ -58,6 +58,10 @@ Submit queries, swap models, view token usage and statistics:
 - *RAG* -- Index local documents and source code, retrieve relevant context for conversations via semantic search. Inline =@rag(query)= syntax for automatic context attachment.
 - *Lightweight* -- No external dependencies; a minified 200-line version (=ollama-buddy-mini=) is also available
 
+* What's New (2.7.0)
+
+- *Airplane Mode* -- Toggle =C-c != to completely isolate the package from the internet. While active, all external LLM providers (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter) and Ollama cloud models are blocked. Only local Ollama models are available. Web search is also disabled. The =✈= indicator appears in the header line, and attempting to send to an internet-requiring model shows a minibuffer message. Toggle via =C-c !=, the transient menu Actions section, or =M-x ollama-buddy-toggle-airplane-mode=.
+
 * What's New (2.6.0)
 
 - *Remote provider refactor* -- All remote provider modules now share common infrastructure via =ollama-buddy-remote.el=, eliminating ~1400 lines of duplicated code. Adding a new OpenAI-compatible provider now requires ~100 lines instead of ~350.
@@ -207,6 +211,7 @@ curl -sL https://api.github.com/repos/captainflasmr/ollama-buddy/tarball/main | 
 | C-c C-r   | Reset system prompt           |
 | C-c ~     | Select response tone          |
 | C-c v     | Set keep-alive duration       |
+| C-c !     | Toggle airplane mode          |
 | C-c e     | Switch backend (network/curl) |
 
 * Screenshots & Demos
