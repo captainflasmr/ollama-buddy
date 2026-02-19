@@ -1827,33 +1827,47 @@ TCP packets split a JSON object across multiple filter calls."
                                                      (skip-chars-backward " \t\n")
                                                      (point))
                                      (point-max))
-                      (insert "\n\n*** Tool Calls:\n\n")
-                      (dolist (call ollama-buddy--current-tool-calls)
-                        (let* ((func (alist-get 'function call))
-                               (name (alist-get 'name func))
-                               (args (alist-get 'arguments func)))
-                          (insert (format "- %s(%s)\n" name (json-encode args)))))
+                      (progn
+                        (insert "\n\n*** Tools\n\n")
+                        (insert "**** Tool Calls:\n\n")
+                        (dolist (call ollama-buddy--current-tool-calls)
+                          (let* ((func (alist-get 'function call))
+                                 (name (alist-get 'name func))
+                                 (args (alist-get 'arguments func))
+                                 (heading-start (point)))
+                            (insert (format "***** %s\n\n#+begin_src json\n%s\n#+end_src\n" name (json-encode args)))
+                            ;; Fold each tool call subtree — name visible, args hidden
+                            (save-excursion
+                              (goto-char heading-start)
+                              (outline-hide-subtree))))
 
-                      ;; Execute tools and get results
-                      (let ((tool-results
-                             (ollama-buddy-tools--process-tool-calls
-                              ollama-buddy--current-tool-calls)))
+                        ;; Execute tools and get results
+                        (let ((tool-results
+                               (ollama-buddy-tools--process-tool-calls
+                                ollama-buddy--current-tool-calls)))
 
-                        ;; Display results in chat buffer
-                        (insert "\n*** Tool Results:\n\n")
-                        (dolist (result tool-results)
-                          (insert (format "- %s: %s\n"
-                                          (alist-get 'tool_name result)
-                                          (alist-get 'content result))))
+                          ;; Display results in chat buffer
+                          (insert "\n**** Tool Results:\n\n")
+                          (dolist (result tool-results)
+                            (let* ((name (alist-get 'tool_name result))
+                                   (content (alist-get 'content result))
+                                   (heading-start (point)))
+                              (insert (format "***** %s\n\n#+begin_example\n%s\n#+end_example\n"
+                                              name
+                                              (replace-regexp-in-string "^\\([*#]\\)" ",\\1" content)))
+                              ;; Fold each tool result subtree — name visible, content hidden
+                              (save-excursion
+                                (goto-char heading-start)
+                                (outline-hide-subtree))))
 
-                        ;; Add tool results to history
-                        (dolist (result tool-results)
-                          (ollama-buddy--add-to-history-raw result))
+                          ;; Add tool results to history
+                          (dolist (result tool-results)
+                            (ollama-buddy--add-to-history-raw result))
 
-                        ;; Reset and re-send for model to process tool results
-                        (setq ollama-buddy--current-tool-calls nil)
-                        (makunbound 'ollama-buddy--current-response)
-                        (ollama-buddy--send nil ollama-buddy--current-model t)))
+                          ;; Reset and re-send for model to process tool results
+                          (setq ollama-buddy--current-tool-calls nil)
+                          (makunbound 'ollama-buddy--current-response)
+                          (ollama-buddy--send nil ollama-buddy--current-model t))))
 
                   ;; No tool calls (or limit reached) - normal completion
                   (makunbound 'ollama-buddy--current-response)
@@ -2573,7 +2587,7 @@ and no new user message is added."
                                            (skip-chars-backward " \t\n")
                                            (point))
                            (point-max))
-            (insert "\n\n** [Tool Continuation]")
+            (insert "\n\n*** [Tool Continuation]")
             (setq ollama-buddy--response-start-position (point))
             (insert "\n\n"))
         ;; Normal send - full header

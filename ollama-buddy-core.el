@@ -1250,8 +1250,10 @@ Returns the size from `ollama-buddy-fallback-context-sizes' or 4096 as default."
           (when (and (not fallback-size)
                      (string-match-p (car entry) model))
             (setq fallback-size (cdr entry)))))
-      ;; Finally use a reasonable default
-      (or fallback-size 4096))))
+      ;; Cloud/internet models have large context windows — use 128K as default.
+      ;; Local models fall back to the conservative 4096.
+      (or fallback-size
+          (if (ollama-buddy--internet-model-p model) 131072 4096)))))
 
 (defun ollama-buddy--get-model-context-size (model)
   "Get the context window size for MODEL.
@@ -1983,10 +1985,11 @@ manifest is already present."
 
 (defun ollama-buddy--cloud-model-p (model)
   "Return non-nil if MODEL is a cloud model.
-Cloud models have a `-cloud' suffix, `cl:' prefix,
+Cloud models have a `-cloud' or `:cloud' suffix, `cl:' prefix,
 or are in `ollama-buddy-cloud-models'."
   (when model
     (or (string-suffix-p "-cloud" model)
+        (string-suffix-p ":cloud" model)
         (string-prefix-p ollama-buddy-cloud-marker-prefix model)
         (member model ollama-buddy-cloud-models))))
 

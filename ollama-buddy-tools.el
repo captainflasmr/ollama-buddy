@@ -197,6 +197,22 @@ Returns a vector of tool definitions in the format expected by Ollama."
 
 ;;; Tool Execution
 
+(defun ollama-buddy-tools--format-args-for-display (arguments)
+  "Format ARGUMENTS alist for display, truncating long string values."
+  (mapconcat
+   (lambda (pair)
+     (let* ((key (car pair))
+            (val (cdr pair))
+            (val-str (if (stringp val)
+                         (if (> (length val) 60)
+                             (format "\"%s\"… (%d chars)"
+                                     (substring val 0 60) (length val))
+                           (format "%S" val))
+                       (format "%S" val))))
+       (format "%s: %s" key val-str)))
+   arguments
+   ", "))
+
 (defun ollama-buddy-tools--execute (name arguments)
   "Execute tool NAME with ARGUMENTS.
 Returns the result as a string, or an error message if execution fails."
@@ -214,8 +230,9 @@ Returns the result as a string, or an error message if execution fails."
           (error "Tool %s is not safe for execution in safe mode" name-str))
         ;; Confirmation check
         (when (and (not ollama-buddy-tools-auto-execute)
-                   (not (yes-or-no-p (format "Execute tool %s with args %S? "
-                                           name-str arguments))))
+                   (not (yes-or-no-p (format "Execute tool %s(%s)? "
+                                             name-str
+                                             (ollama-buddy-tools--format-args-for-display arguments)))))
           (error "Tool execution cancelled by user"))
         ;; Execute the function
         (let ((result (funcall func arguments)))
