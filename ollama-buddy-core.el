@@ -157,7 +157,7 @@ Used as a fallback when context size can't be determined from the API."
   :type 'boolean
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-header-line-height 1.0
+(defcustom ollama-buddy-header-line-height 1.1
   "Relative height of the header line text.
 A value of 1.0 is normal size, 1.2 is 20% larger, etc."
   :type 'float
