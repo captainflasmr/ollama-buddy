@@ -583,3 +583,33 @@ https://github.com/captainflasmr/ollama-buddy
 #+attr_org: :width 300px
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_035.gif]]
+
+** 036 Git Repository Operations with Tool Calling #emacs #ollama
+
+Demonstrating git repository operations through ollama-buddy tool calling.
+
+- Open chat with a model that supports tool calling: glm-4.7:cloud
+- Turn on tooling
+- "Can you check the git status of the ollama-buddy repository?"
+- Watch execute_shell tool calling git status
+- "Now create a dummy test file in the repository for stash demonstration"
+- Watch write_file tool create a test file
+- "Stage the file and create a stash with a descriptive message"
+- Watch execute_shell run git add and git stash push
+- "List all stashes in the repository"
+- Watch execute_shell show the stash list
+- "Now delete the most recent stash"
+- Watch execute_shell run git stash drop
+- "Verify the stash was deleted by listing stashes again"
+- Watch execute_shell confirm the deletion
+
+This demonstrates how ollama-buddy can interact with git repositories using tool calling to perform version control operations like checking status, creating stashes, listing stashes, and deleting them - all through natural language commands.
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_036.gif]]
