@@ -1315,8 +1315,8 @@ You can customize supported file types by modifying @code{ollama-buddy-supported
 To attach a single file:
 
 @enumerate
-@item Press @code{C-c A} to open the attachment menu
-@item Press @code{a} for "Attach file"
+@item Press @code{C-c a} to open the attachment menu
+@item Press @code{j} for "Attach file"
 @item Select the file from the file browser
 @item The file will be attached and its contents included in future prompts
 @end enumerate
@@ -1940,7 +1940,7 @@ To load a previously saved prompt:
 
 @enumerate
 @item Press @code{C-c s} to open the system prompts menu
-@item Press @code{L} to list available prompts
+@item Press @code{j} to set as system prompt
 @item Select a prompt from the completion interface
 @item The prompt will be loaded and set as your current system prompt
 @end enumerate

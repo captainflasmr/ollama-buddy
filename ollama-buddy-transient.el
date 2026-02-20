@@ -101,24 +101,24 @@
   :info-manual "(ollama-buddy)Top"
   [
    "|o(Y)o| Ollama Buddy"
-     
+   
    ["Chat"
     ("o" "Open Chat" ollama-buddy--open-chat)
-    ("A" "Attachments" ollama-buddy-transient-attachment-menu)
+    ("a" "Attachments" ollama-buddy-transient-attachment-menu)
     ("/" "Web Search" ollama-buddy-transient-web-search-menu)
     ("r" "RAG" ollama-buddy-transient-rag-menu)
-    ("a" "Authentication" ollama-buddy-transient-auth-menu)
+    ("A" "Authentication" ollama-buddy-transient-auth-menu)
     ("b" "Role Menu" ollama-buddy-role-transient-menu)
     ]
 
    ["Actions"
     ("h" "Help/Menu" ollama-buddy--menu-help-assistant)
+    ("SPC" "Toggle Tools" ollama-buddy-transient--tools-toggle)
     ("l" "Send Region" (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))
     ("k" "Cancel" ollama-buddy--cancel-request)
     ("x" "Toggle Stream  " ollama-buddy-toggle-streaming)
     ("v" "Keep Alive" ollama-buddy-set-keepalive)
     ("!" "Airplane Mode" ollama-buddy-toggle-airplane-mode)
-    ("W" "Toggle Tools" ollama-buddy-transient--tools-toggle)
     ("Q" "List Tools" ollama-buddy-transient--tools-info)
     ]
 
@@ -192,12 +192,12 @@
   "Fabric patterns menu for Ollama Buddy."
   [["Fabric Prompts"
     ("s" "Send with Prompt" ollama-buddy-fabric-send)
-    ("L" "Set as System Prompt" ollama-buddy-fabric-set-system-prompt)
+    ("j" "Set as System Prompt" ollama-buddy-fabric-set-system-prompt)
     ("l" "List All Prompts" ollama-buddy-fabric-list-patterns)
     ("v" "View Prompt Details" ollama-buddy-fabric-show-pattern)
     ("S" "Sync Latest Prompts" ollama-buddy-fabric-sync-patterns)
     ("q" "Quit" ollama-buddy-transient-menu)]]
-    (interactive)
+  (interactive)
   (unless ollama-buddy-fabric--patterns
     (message "Loading Fabric patterns...")
     (ollama-buddy-fabric-populate-patterns))
@@ -296,7 +296,7 @@
   :man-page "ollama-buddy-awesome"
   [["Awesome Prompts"
     ("s" "Send with Prompt" ollama-buddy-awesome-send)
-    ("L" "Set as System Prompt" ollama-buddy-awesome-set-system-prompt)
+    ("j" "Set as System Prompt" ollama-buddy-awesome-set-system-prompt)
     ("l" "List All Prompts" ollama-buddy-awesome-list-prompts)
     ("S" "Sync Latest Prompts" ollama-buddy-awesome-sync-prompts)
     ("q" "Quit" transient-quit-one)]])
@@ -320,18 +320,18 @@
     ("x" "Sign Out" ollama-buddy-cloud-signout)
     ("s" "Status" ollama-buddy-cloud-status)]
    [:if (lambda () (featurep 'ollama-buddy-copilot))
-    "GitHub Copilot"
-    ("p" "Login" ollama-buddy-copilot-login)
-    ("l" "Logout" ollama-buddy-copilot-logout)
-    ("t" "Status" ollama-buddy-copilot-status)]
+        "GitHub Copilot"
+        ("p" "Login" ollama-buddy-copilot-login)
+        ("l" "Logout" ollama-buddy-copilot-logout)
+        ("t" "Status" ollama-buddy-copilot-status)]
    ["Navigation"
     ("q" "Quit" transient-quit-one)]])
 
 (transient-define-prefix ollama-buddy-transient-attachment-menu ()
   "File attachment menu."
   ["File Attachments"
-   ("a" "Attach file" ollama-buddy-attach-file)
-   ("w" "Show attachments" ollama-buddy-show-attachments)
+   ("j" "Attach file" ollama-buddy-attach-file)
+   ("l" "Show attachments" ollama-buddy-show-attachments)
    ("d" "Detach file" ollama-buddy-detach-file)
    ("0" "Clear all attachments" ollama-buddy-clear-attachments)
    ("q" "Quit" transient-quit-one)])
@@ -352,9 +352,9 @@
    (lambda () (concat "Web Search - " (ollama-buddy--web-search-status)))
    ["Search"
     ("s" "Search & Display" ollama-buddy-web-search)
-    ("a" "Search & Attach" ollama-buddy-web-search-attach)]
+    ("j" "Search & Attach" ollama-buddy-web-search-attach)]
    ["Manage"
-    ("w" "Show Attachments" ollama-buddy-show-attachments)
+    ("l" "Show Attachments" ollama-buddy-show-attachments)
     ("0" "Clear All" ollama-buddy-clear-attachments)]
    ["Info"
     :description
@@ -391,7 +391,7 @@
   "Transient menu for user system prompts."
   ["User System Prompts"
    [("S" "Save Current" ollama-buddy-user-prompts-save)
-    ("L" "Set as System Prompt" ollama-buddy-user-prompts-load)
+    ("j" "Set as System Prompt" ollama-buddy-user-prompts-load)
     ("N" "Create New" ollama-buddy-user-prompts-create-new)
     ("l" "List All Prompts" ollama-buddy-user-prompts-list)]
    [("e" "Edit Prompt" ollama-buddy-user-prompts-edit)

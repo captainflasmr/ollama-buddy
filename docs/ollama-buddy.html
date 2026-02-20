@@ -1427,15 +1427,15 @@ Next: <a href="#Working-with-Models" accesskey="n" rel="next">Working with Model
 <p>When typing in the prompt area, pressing <code class="code">@</code> triggers a <code class="code">completing-read</code>
 menu of available inline commands.  These insert syntax templates into the prompt.
 </p>
-<p>Available <code class="code">@</code> commands (filtered by loaded modules):
+<p>Available <code class="code">@</code> commands:
 </p>
 <dl class="table">
 <dt><code class="code">@search(query)</code></dt>
-<dd><p>Search the web and attach results (requires <code class="code">ollama-buddy-web-search</code>).
+<dd><p>Search the web and attach results.
 </p>
 </dd>
 <dt><code class="code">@rag(query)</code></dt>
-<dd><p>Search a RAG index and attach results (requires <code class="code">ollama-buddy-rag</code>).
+<dd><p>Search a RAG index and attach results.
 </p>
 </dd>
 <dt><code class="code">@file(path)</code></dt>
@@ -1445,7 +1445,7 @@ menu of available inline commands.  These insert syntax templates into the promp
 
 <ul class="itemize mark-bullet">
 <li>Outside the prompt area, <code class="code">@</code> inserts a literal &lsquo;<samp class="samp">@</samp>&rsquo;.
-</li><li>Press <code class="code">C-g</code> to cancel and insert a literal &lsquo;<samp class="samp">@</samp>&rsquo;.
+</li><li>Press <code class="code">C-g</code> to cancel (nothing inserted); use <code class="code">C-q @</code> for a literal &lsquo;<samp class="samp">@</samp>&rsquo; in the prompt.
 </li><li>Customize available commands via <code class="code">ollama-buddy-at-commands</code>.
 </li></ul>
 
@@ -1550,7 +1550,7 @@ Requires <code class="code">ollama-buddy-awesome</code>.
 
 <ul class="itemize mark-bullet">
 <li>Outside the prompt area, <code class="code">/</code> inserts a literal &lsquo;<samp class="samp">/</samp>&rsquo;.
-</li><li>Press <code class="code">C-g</code> to cancel and insert a literal &lsquo;<samp class="samp">/</samp>&rsquo;.
+</li><li>Press <code class="code">C-g</code> to cancel (nothing inserted); use <code class="code">C-q /</code> for a literal &lsquo;<samp class="samp">/</samp>&rsquo; in the prompt.
 </li><li>Customize available commands via <code class="code">ollama-buddy-slash-commands</code>.
 </li></ul>
 
@@ -2129,8 +2129,8 @@ Next: <a href="#Web-Search" accesskey="n" rel="next">Web Search</a>, Previous: <
 <p>To attach a single file:
 </p>
 <ol class="enumerate">
-<li> Press <code class="code">C-c A</code> to open the attachment menu
-</li><li> Press <code class="code">a</code> for &quot;Attach file&quot;
+<li> Press <code class="code">C-c a</code> to open the attachment menu
+</li><li> Press <code class="code">j</code> for &quot;Attach file&quot;
 </li><li> Select the file from the file browser
 </li><li> The file will be attached and its contents included in future prompts
 </li></ol>
@@ -2972,7 +2972,7 @@ Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands<
 </p>
 <ol class="enumerate">
 <li> Press <code class="code">C-c s</code> to open the system prompts menu
-</li><li> Press <code class="code">L</code> to list available prompts
+</li><li> Press <code class="code">j</code> to set as system prompt
 </li><li> Select a prompt from the completion interface
 </li><li> The prompt will be loaded and set as your current system prompt
 </li></ol>
@@ -4809,7 +4809,7 @@ into prompts, RAG automatically finds the most relevant chunks and attaches them
 as context, keeping token usage efficient and responses grounded in your actual
 documents.
 </p>
-<p>The RAG module is provided by <code class="code">ollama-buddy-rag.el</code>.
+<p>The RAG module (<code class="code">ollama-buddy-rag.el</code>) is loaded by default.
 </p>
 </div>
 <div class="section-level-extent" id="Requirements">

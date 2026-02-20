@@ -1355,18 +1355,17 @@ When typing in the prompt area, pressing =@= triggers a
 =completing-read= menu of available inline commands. These insert syntax
 templates into the prompt.
 
-Available =@= commands (filtered by loaded modules):
+Available =@= commands:
 
-- =@search(query)= :: Search the web and attach results (requires
-  =ollama-buddy-web-search=).
+- =@search(query)= :: Search the web and attach results.
 
-- =@rag(query)= :: Search a RAG index and attach results (requires
-  =ollama-buddy-rag=).
+- =@rag(query)= :: Search a RAG index and attach results.
 
 - =@file(path)= :: Attach a file to the conversation context.
 
 - Outside the prompt area, =@= inserts a literal ‘=@='.
-- Press =C-g= to cancel and insert a literal ‘=@='.
+- Press =C-g= to cancel (nothing inserted); use =C-q @= for a literal
+  ‘=@=' in the prompt.
 - Customize available commands via =ollama-buddy-at-commands=.
 
 - [[#Inline-_0040file_0028path_0029-Syntax][Inline @file(path) Syntax]]
@@ -1449,7 +1448,8 @@ Available =/= commands (filtered by loaded modules):
   (=ollama-buddy-reset-system-prompt=).
 
 - Outside the prompt area, =/= inserts a literal ‘=/='.
-- Press =C-g= to cancel and insert a literal ‘=/='.
+- Press =C-g= to cancel (nothing inserted); use =C-q /= for a literal
+  ‘=/=' in the prompt.
 - Customize available commands via =ollama-buddy-slash-commands=.
 
 <<System-Prompts>>
@@ -2050,8 +2050,8 @@ You can customize supported file types by modifying
 :END:
 To attach a single file:
 
-1. Press =C-c A= to open the attachment menu
-2. Press =a= for "Attach file"
+1. Press =C-c a= to open the attachment menu
+2. Press =j= for "Attach file"
 3. Select the file from the file browser
 4. The file will be attached and its contents included in future prompts
 
@@ -2957,7 +2957,7 @@ To save a system prompt:
 To load a previously saved prompt:
 
 1. Press =C-c s= to open the system prompts menu
-2. Press =L= to list available prompts
+2. Press =j= to set as system prompt
 3. Select a prompt from the completion interface
 4. The prompt will be loaded and set as your current system prompt
 
@@ -4979,7 +4979,7 @@ pasting entire files into prompts, RAG automatically finds the most
 relevant chunks and attaches them as context, keeping token usage
 efficient and responses grounded in your actual documents.
 
-The RAG module is provided by =ollama-buddy-rag.el=.
+The RAG module (=ollama-buddy-rag.el=) is loaded by default.
 
 <<Requirements>>
 *** 22.2 Requirements [[#Requirements][¶]]

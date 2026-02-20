@@ -76,7 +76,7 @@ When non-nil, the LLM can invoke registered tools during conversations."
   :type 'boolean
   :group 'ollama-buddy-tools)
 
-(defcustom ollama-buddy-tools-auto-execute t
+(defcustom ollama-buddy-tools-auto-execute nil
   "Whether to automatically execute tool calls without confirmation.
 When nil, prompt the user before executing each tool call."
   :type 'boolean
@@ -88,7 +88,7 @@ This prevents infinite loops if the LLM keeps calling tools."
   :type 'integer
   :group 'ollama-buddy-tools)
 
-(defcustom ollama-buddy-tools-safe-mode t
+(defcustom ollama-buddy-tools-safe-mode nil
   "When non-nil, restrict tools to safe read-only operations.
 Disables tools that can modify files or execute arbitrary commands."
   :type 'boolean

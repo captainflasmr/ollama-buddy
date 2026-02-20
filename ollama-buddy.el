@@ -77,6 +77,7 @@
 (require 'ollama-buddy-user-prompts)
 (require 'ollama-buddy-web-search)
 (require 'ollama-buddy-rag)
+(require 'ollama-buddy-tools)
 
 (declare-function ollama-buddy-curl--validate-executable "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--test-connection "ollama-buddy-curl")
@@ -1129,14 +1130,14 @@ Filters stop words and returns up to 5 key words joined by hyphens."
               (first-msg (car history))
               (content (cdr (assoc 'content first-msg))))
     (let* ((stop-words '("the" "a" "an" "is" "are" "was" "were" "be" "been"
-                          "being" "have" "has" "had" "do" "does" "did" "will"
-                          "would" "could" "should" "may" "might" "can" "shall"
-                          "to" "of" "in" "for" "on" "with" "at" "by" "from"
-                          "as" "into" "about" "that" "this" "it" "i" "me" "my"
-                          "we" "our" "you" "your" "he" "she" "they" "them"
-                          "what" "which" "who" "how" "when" "where" "why"
-                          "not" "no" "so" "if" "or" "and" "but" "just" "also"
-                          "please" "help" "want" "need" "like" "think" "know"))
+                         "being" "have" "has" "had" "do" "does" "did" "will"
+                         "would" "could" "should" "may" "might" "can" "shall"
+                         "to" "of" "in" "for" "on" "with" "at" "by" "from"
+                         "as" "into" "about" "that" "this" "it" "i" "me" "my"
+                         "we" "our" "you" "your" "he" "she" "they" "them"
+                         "what" "which" "who" "how" "when" "where" "why"
+                         "not" "no" "so" "if" "or" "and" "but" "just" "also"
+                         "please" "help" "want" "need" "like" "think" "know"))
            (words (split-string (downcase content) "[^a-z0-9]+" t))
            (filtered (seq-remove (lambda (w) (or (member w stop-words)
                                                  (< (length w) 3)))
@@ -1659,7 +1660,7 @@ TCP packets split a JSON object across multiple filter calls."
             (let ((inhibit-read-only t))
               (goto-char (point-max))
               (if is-auth-error
-                  (insert (format "\n\n*Authentication Error:* %s\n\nPlease sign in using =C-c a= or =M-x ollama-buddy-cloud-signin=" error-msg))
+                  (insert (format "\n\n*Authentication Error:* %s\n\nPlease sign in using =C-c A= or =M-x ollama-buddy-cloud-signin=" error-msg))
                 (insert (format "\n\n*Error:* %s" error-msg)))))
           (ollama-buddy--update-status (if is-auth-error "Auth Required" "Error"))))
 
@@ -2058,25 +2059,25 @@ When airplane mode is active, only local Ollama models are offered."
   (interactive "P")
   (if (and arg (bound-and-true-p ollama-buddy-airplane-mode))
       (message "✈ Airplane mode is active — remote models are not available")
-  (let* ((models (if arg
-                     ollama-buddy-remote-models
-                   (if (bound-and-true-p ollama-buddy-airplane-mode)
-                       (ollama-buddy--get-models)
-                     (ollama-buddy--get-models-with-others))))
-         (prompt (if arg "Online Model: " "Model: "))
-         (new-model (completing-read prompt
-                      (lambda (string pred action)
-                        (if (eq action 'metadata)
-                            '(metadata (annotation-function . ollama-buddy--model-annotation))
-                          (complete-with-action action models string pred)))
-                      nil t)))
-    (setq ollama-buddy-default-model new-model)
-    (setq ollama-buddy--current-model new-model)
-    (message "Switched to %smodel: %s" (if arg "online " "") new-model)
-    (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
-    (ollama-buddy--prepare-prompt-area t t)
-    (goto-char (point-max))
-    (ollama-buddy--update-status "Idle"))))
+    (let* ((models (if arg
+                       ollama-buddy-remote-models
+                     (if (bound-and-true-p ollama-buddy-airplane-mode)
+                         (ollama-buddy--get-models)
+                       (ollama-buddy--get-models-with-others))))
+           (prompt (if arg "Online Model: " "Model: "))
+           (new-model (completing-read prompt
+                                       (lambda (string pred action)
+                                         (if (eq action 'metadata)
+                                             '(metadata (annotation-function . ollama-buddy--model-annotation))
+                                           (complete-with-action action models string pred)))
+                                       nil t)))
+      (setq ollama-buddy-default-model new-model)
+      (setq ollama-buddy--current-model new-model)
+      (message "Switched to %smodel: %s" (if arg "online " "") new-model)
+      (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
+      (ollama-buddy--prepare-prompt-area t t)
+      (goto-char (point-max))
+      (ollama-buddy--update-status "Idle"))))
 
 (defun ollama-buddy--swap-model-cloud ()
   "Switch to an Ollama cloud model.
@@ -2085,21 +2086,21 @@ via `ollama signin'."
   (interactive)
   (if (bound-and-true-p ollama-buddy-airplane-mode)
       (message "✈ Airplane mode is active — cloud models are not available")
-  (let* ((cloud-models (mapcar #'ollama-buddy--get-full-cloud-model-name
-                               ollama-buddy-cloud-models))
-         (new-model (completing-read "Cloud Model: "
-                      (lambda (string pred action)
-                        (if (eq action 'metadata)
-                            '(metadata (annotation-function . ollama-buddy--model-annotation))
-                          (complete-with-action action cloud-models string pred)))
-                      nil t)))
-    (setq ollama-buddy-default-model new-model)
-    (setq ollama-buddy--current-model new-model)
-    (message "Switched to cloud model: %s" new-model)
-    (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
-    (ollama-buddy--prepare-prompt-area t t)
-    (goto-char (point-max))
-    (ollama-buddy--update-status "Idle"))))
+    (let* ((cloud-models (mapcar #'ollama-buddy--get-full-cloud-model-name
+                                 ollama-buddy-cloud-models))
+           (new-model (completing-read "Cloud Model: "
+                                       (lambda (string pred action)
+                                         (if (eq action 'metadata)
+                                             '(metadata (annotation-function . ollama-buddy--model-annotation))
+                                           (complete-with-action action cloud-models string pred)))
+                                       nil t)))
+      (setq ollama-buddy-default-model new-model)
+      (setq ollama-buddy--current-model new-model)
+      (message "Switched to cloud model: %s" new-model)
+      (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
+      (ollama-buddy--prepare-prompt-area t t)
+      (goto-char (point-max))
+      (ollama-buddy--update-status "Idle"))))
 
 (defvar ollama-buddy--signin-url-opened nil
   "Flag to track whether we've already opened the signin URL.")
@@ -2173,7 +2174,7 @@ Shows cached status. Use signin/signout to update or try a cloud model request."
     (message "Ollama cloud: %s"
              (pcase status
                ('authenticated "Signed in")
-               ('not-authenticated "Not signed in (use C-c a to sign in)")
+               ('not-authenticated "Not signed in (use C-c A to sign in)")
                ('unknown "Unknown (try using a cloud model to verify)")))))
 
 ;; Update buffer initialization to check status
@@ -2400,7 +2401,7 @@ Shows cached status. Use signin/signout to update or try a cloud model request."
             (insert (format "  Current usage    : %d tokens (%.1f%%)\n"
                             (or ollama-buddy--current-context-tokens 0)
                             (* 100 (or ollama-buddy--current-context-percentage 0))))
-          
+            
             ;; Show breakdown if available
             (when ollama-buddy--current-context-breakdown
               (let ((breakdown ollama-buddy--current-context-breakdown))
@@ -2564,9 +2565,9 @@ and no new user message is added."
                             (_ (when suppress
                                  (setq ollama-buddy--suppress-tools-once nil)))
                             (schema (when (and (not suppress)
-                                              (featurep 'ollama-buddy-tools)
-                                              (bound-and-true-p ollama-buddy-tools-enabled)
-                                              (ollama-buddy--model-supports-tools model))
+                                               (featurep 'ollama-buddy-tools)
+                                               (bound-and-true-p ollama-buddy-tools-enabled)
+                                               (ollama-buddy--model-supports-tools model))
                                       (ollama-buddy-tools--generate-schema))))
                        (if schema
                            (append base-payload `((tools . ,schema)))
@@ -3769,7 +3770,8 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c M") #'ollama-buddy-manage-models)
     (define-key map (kbd "C-c ?") #'ollama-buddy-open-info)
     (define-key map (kbd "C-c C-u") #'ollama-buddy-unload-all-models)
-    (define-key map (kbd "C-c a") #'ollama-buddy-transient-auth-menu)
+    (define-key map (kbd "C-c a") #'ollama-buddy-transient-attachment-menu)
+    (define-key map (kbd "C-c A") #'ollama-buddy-transient-auth-menu)
     
     ;; Chat section keybindings from transient
     (define-key map (kbd "C-c C-c") #'ollama-buddy--send-prompt)
@@ -3801,7 +3803,7 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c w") #'ollama-buddy-transient-awesome-menu)
     
     ;; Tools keybindings
-    (define-key map (kbd "C-c W") #'ollama-buddy-tools-toggle)
+    (define-key map (kbd "C-c SPC") #'ollama-buddy-tools-toggle)
     (define-key map (kbd "C-c Q") #'ollama-buddy-tools-info)
     
     ;; RAG keybindings
@@ -3847,15 +3849,13 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c &") #'ollama-buddy-toggle-context-display-type)
 
     ;; file attachments
-    (define-key map (kbd "C-c A") #'ollama-buddy-transient-attachment-menu)
     (define-key map (kbd "C-c C-a") #'ollama-buddy-attach-file)
     (define-key map (kbd "C-c C-w") #'ollama-buddy-show-attachments)
     (define-key map (kbd "C-c C-d") #'ollama-buddy-detach-file)
     (define-key map (kbd "C-c 0") #'ollama-buddy-clear-attachments)
 
-    ;; web search (requires ollama-buddy-web-search)
-    (define-key map (kbd "C-c / s") #'ollama-buddy-web-search)
-    (define-key map (kbd "C-c / a") #'ollama-buddy-web-search-attach)
+    ;; web search
+    (define-key map (kbd "C-c /") #'ollama-buddy-transient-web-search-menu)
 
     (define-key map (kbd "C-c e") #'ollama-buddy-switch-communication-backend)
     
