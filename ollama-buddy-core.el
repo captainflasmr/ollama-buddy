@@ -886,6 +886,10 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
 (defvar ollama-buddy--status "Idle"
   "Current status of the Ollama request.")
 
+(defvar ollama-buddy--suppress-tools-once nil
+  "When non-nil, omit the tools schema from the very next send request.
+Cleared automatically after it has been consumed.")
+
 (defvar-local ollama-buddy--header-line-remapped nil
   "Non-nil if the header-line face has been remapped in this buffer.")
 
@@ -2279,14 +2283,13 @@ ACTUAL-MODEL is the model being used instead."
                      (ollama-buddy--update-multishot-status)
                      (propertize (if (ollama-buddy--check-status) "" " OFFLINE")
                                  'face '(:weight bold))
-                     
+
                      (if (ollama-buddy--check-status)
                          (propertize model 'face `(:weight bold :box (:line-width 1 :style flat-button)))
                        (propertize model 'face `(:weight bold :inherit shadow :box (:line-width 1 :style flat-button))))
                      status
                      system-indicator
-                     (or params "")
-                     )
+                     (or params ""))
              (when (and original-model actual-model (not (string= original-model actual-model)))
                (propertize (format " [Using %s instead of %s]" actual-model original-model)
                            'face '(:foreground "orange" :weight bold))))))))

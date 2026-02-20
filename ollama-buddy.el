@@ -1835,7 +1835,7 @@ TCP packets split a JSON object across multiple filter calls."
                                 ollama-buddy--current-tool-calls)))
 
                           ;; Display each tool as **** name with ***** call and ***** results folded
-                          (cl-mapcar
+                          (cl-mapc
                            (lambda (call result)
                              (let* ((func (alist-get 'function call))
                                     (name (alist-get 'name func))
@@ -1849,9 +1849,7 @@ TCP packets split a JSON object across multiple filter calls."
                                ;; Fold the **** heading — hides both ***** subtrees
                                (save-excursion
                                  (goto-char tool-heading-start)
-                                 (outline-hide-subtree))
-                               ;; Separator inserted outside the fold overlay so it stays visible
-                               (insert "\n")))
+                                 (outline-hide-subtree))))
                            ollama-buddy--current-tool-calls
                            tool-results)
 
@@ -1862,31 +1860,18 @@ TCP packets split a JSON object across multiple filter calls."
                           ;; Reset tool call state
                           (setq ollama-buddy--current-tool-calls nil)
                           (makunbound 'ollama-buddy--current-response)
-                          ;; A tool may request a pause (e.g. propose_file_changes
-                          ;; opens ediff).  In that case don't auto-continue so
-                          ;; the LLM doesn't disrupt the interactive session.
-                          (if (and (boundp 'ollama-buddy-tools--pause-continuation)
-                                   ollama-buddy-tools--pause-continuation)
+                          ;; A terminal tool (e.g. propose_file_changes) breaks
+                          ;; the tool-call cycle by sending "continue" as a plain
+                          ;; user message — the LLM summarises without calling
+                          ;; more tools, and the user can then reply normally.
+                          (if (and (boundp 'ollama-buddy-tools--stop-after-batch)
+                                   ollama-buddy-tools--stop-after-batch)
                               (progn
-                                (setq ollama-buddy-tools--pause-continuation nil)
-                                ;; Mirror the normal completion cleanup so the
-                                ;; session is fully ready for the next user message.
-                                (when ollama-buddy--token-update-timer
-                                  (cancel-timer ollama-buddy--token-update-timer)
-                                  (setq ollama-buddy--token-update-timer nil))
-                                (setq ollama-buddy--current-token-count 0
-                                      ollama-buddy--current-token-start-time nil
-                                      ollama-buddy--last-token-count 0
-                                      ollama-buddy--last-update-time nil
-                                      ollama-buddy--in-reasoning-section nil
-                                      ollama-buddy--reasoning-status-message nil
-                                      ollama-buddy--reasoning-skip-newlines nil)
-                                (insert "\n*** PAUSED")
-                                (ollama-buddy--update-status " PAUSED")
-                                ;; Don't call --prepare-prompt-area here; the
-                                ;; ediff-quit-hook will fire a tool continuation
-                                ;; which will call it when the LLM finishes.
-                                (message "Ediff opened — tool continuation resumes on quit."))
+                                (setq ollama-buddy-tools--stop-after-batch nil)
+                                ;; Prevent the LLM from calling tools again in
+                                ;; its summary response.
+                                (setq ollama-buddy--suppress-tools-once t)
+                                (ollama-buddy--send "continue, I will manually apply the changes using ediff, please just supply a brief summary of what was changed making sure to mention that the file is available in the eregistry" ollama-buddy--current-model nil))
                             (ollama-buddy--send nil ollama-buddy--current-model t)))))
 
                   ;; No tool calls (or limit reached) - normal completion
@@ -2574,10 +2559,15 @@ and no new user message is added."
                         (when ollama-buddy-keepalive
                           `((keep_alive . ,ollama-buddy-keepalive)))))
          ;; Add tools schema if enabled and model supports tools
-         (with-tools (let ((schema (when (and (featurep 'ollama-buddy-tools)
+         (with-tools (let* ((suppress (and (boundp 'ollama-buddy--suppress-tools-once)
+                                           ollama-buddy--suppress-tools-once))
+                            (_ (when suppress
+                                 (setq ollama-buddy--suppress-tools-once nil)))
+                            (schema (when (and (not suppress)
+                                              (featurep 'ollama-buddy-tools)
                                               (bound-and-true-p ollama-buddy-tools-enabled)
                                               (ollama-buddy--model-supports-tools model))
-                                     (ollama-buddy-tools--generate-schema))))
+                                      (ollama-buddy-tools--generate-schema))))
                        (if schema
                            (append base-payload `((tools . ,schema)))
                          base-payload)))

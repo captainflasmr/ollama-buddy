@@ -127,9 +127,13 @@ send a new message to resume the conversation normally.")
 interactive tool UI (e.g. ediff).  Shown as ⏸ in the status line.
 Cleared automatically when the user sends a new message.")
 
+(defvar ollama-buddy-tools--stop-after-batch nil
+  "When non-nil, end the tool batch without auto-continuing the LLM.
+Set when any :terminal tool executes.  Cleared after the batch.")
+
 ;;; Tool Registration
 
-(defun ollama-buddy-tools-register (name description parameters function &optional safe)
+(defun ollama-buddy-tools-register (name description parameters function &optional safe terminal)
   "Register a tool for use with Ollama Buddy.
 
 NAME is the tool name (symbol or string).
@@ -138,6 +142,9 @@ PARAMETERS is a JSON schema object describing the tool's parameters.
 FUNCTION is the Elisp function to execute when the tool is called.
   It receives an alist of arguments and should return a string result.
 SAFE indicates if the tool is safe (read-only) - defaults to nil.
+TERMINAL when non-nil, stops auto-continuation after this tool executes.
+  Use for tools that launch interactive Emacs UI sessions (e.g. ediff)
+  where you want the LLM to stop and wait for the user's next message.
 
 Example:
 
@@ -159,7 +166,8 @@ Example:
              (list :description description
                    :parameters parameters
                    :function function
-                   :safe (or safe nil))
+                   :safe (or safe nil)
+                   :terminal (or terminal nil))
              ollama-buddy-tools--registry)
     (message "Registered tool: %s" name-str)))
 
@@ -245,8 +253,18 @@ Returns the result as a string, or an error message if execution fails."
                                              name-str
                                              (ollama-buddy-tools--format-args-for-display arguments)))))
           (error "Tool execution cancelled by user"))
-        ;; Execute the function
-        (let ((result (funcall func arguments)))
+        ;; If this tool is marked terminal, flag that auto-continuation should
+        ;; stop after this batch — set before calling in case of error.
+        (when (plist-get spec :terminal)
+          (setq ollama-buddy-tools--stop-after-batch t))
+        ;; Some models send arguments as a JSON string rather than a JSON object.
+        ;; Parse it into an alist so tool functions can use alist-get normally.
+        (let* ((parsed-args (if (stringp arguments)
+                                (condition-case nil
+                                    (json-read-from-string arguments)
+                                  (error arguments))
+                              arguments))
+               (result (funcall func parsed-args)))
           (if (stringp result)
               result
             (format "%S" result))))
@@ -470,10 +488,10 @@ Returns a list of tool result messages to append to the conversation."
        (let* ((file-path (alist-get 'file_path args))
               (new-content (alist-get 'new_content args)))
          (cond
-          ((not file-path)
-           "Error: file_path is required.")
-          ((not new-content)
-           "Error: new_content is required.")
+          ((not (stringp file-path))
+           "Error: file_path is required (must be a string).")
+          ((not (stringp new-content))
+           "Error: new_content is required (must be a string).")
           ((not (file-exists-p file-path))
            (format "Error: file not found: %s" file-path))
           (t
@@ -484,57 +502,16 @@ Returns a list of tool result messages to append to the conversation."
              (require 'ediff)
              (let* ((proposed-buf (find-file-noselect proposed-tmp))
                     (original-buf (find-file-noselect file-path)))
-               ;; Pause tool continuation and mark session as paused.
-               ;; ollama-buddy.el will insert *** PAUSED and refresh the header.
-               (setq ollama-buddy-tools--pause-continuation t)
-               (setq ollama-buddy-tools--session-paused t)
-               ;; Use the startup hook to: (a) attach the quit notification,
-               ;; (b) schedule ediff-next-difference via an idle timer so
-               ;; ediff properly repositions both windows (direct window
-               ;; manipulation fights ediff's own recenter calls).
-               (let ((ediff-startup-hook
-                      (cons (lambda ()
-                              (let ((ctrl-buf (current-buffer)))
-                                ;; Clear paused state on quit
-                                (add-hook 'ediff-quit-hook
-                                          (lambda ()
-                                            (setq ollama-buddy-tools--session-paused nil)
-                                            ;; Trigger tool continuation so the LLM can
-                                            ;; respond to the tool results (summary, more
-                                            ;; tool calls, etc.) exactly as in the normal
-                                            ;; tool flow.  Use an idle timer so ediff has
-                                            ;; fully cleaned up before we start a request.
-                                            (run-with-idle-timer
-                                             0 nil
-                                             (lambda ()
-                                               (let ((model (bound-and-true-p ollama-buddy--current-model))
-                                                     (chat-buf (and (boundp 'ollama-buddy--chat-buffer)
-                                                                    (get-buffer ollama-buddy--chat-buffer))))
-                                                 (when (and model chat-buf (fboundp 'ollama-buddy--send))
-                                                   (with-current-buffer chat-buf
-                                                     (ollama-buddy--update-status "Resuming...")
-                                                     (ollama-buddy--send nil model t)))))))
-                                          nil t)
-                                ;; Navigate to first difference — this is what
-                                ;; properly repositions both windows in ediff.
-                                (run-with-idle-timer
-                                 0 nil
-                                 (lambda ()
-                                   (when (buffer-live-p ctrl-buf)
-                                     (let ((ctrl-win (get-buffer-window ctrl-buf t)))
-                                       (when ctrl-win
-                                         ;; Inject a synthetic "n" keypress into
-                                         ;; the command loop so ediff-next-difference
-                                         ;; runs with full redisplay, matching what
-                                         ;; happens when the user presses n manually.
-                                         (select-window ctrl-win)
-                                         (setq unread-command-events
-                                               (listify-key-sequence (kbd "n"))))))))))
-                            ediff-startup-hook)))
+               ;; save-window-excursion is synchronous: the window config is
+               ;; restored before Emacs redraws, so the ediff windows never
+               ;; appear on screen — but the session is registered in the
+               ;; ediff registry for the user to open with M-x eregistry.
+               (save-window-excursion
                  (ediff-buffers proposed-buf original-buf)))
-             (format "Opened ediff for %s\nLeft: proposed changes  Right: original\nUse 'n'/'p' to navigate hunks, 'b' to apply a hunk (left to right), then save the original file when done.\nTool calling is paused until you send a new chat message."
+             (format "Ediff session created silently for %s (left: proposed, right: original). Inform the user they can open it at any time with M-x ediff-show-registry — for example in a new frame or tab. In ediff: 'n'/'p' navigate differences, 'b' copies a hunk left-to-right into the original, then save the file."
                      file-path))))))
-     nil) ; not safe — launches ediff UI
+     nil  ; not safe — launches ediff UI
+     t)   ; terminal — stop LLM auto-continuation after ediff session created
 
     (message "Initialized %d built-in tools" (hash-table-count ollama-buddy-tools--registry))))
 
