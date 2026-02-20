@@ -1061,8 +1061,8 @@ Next: [[#Core-Features][Core Features]], Previous:
 - Generating a commit message :: Select your changes, press =C-c o=,
   then choose "Git Commit Message" (or press =g=).
 
-- Changing models :: Press =C-c m= to switch between available models,
-  or =C-u C-c m= to select from cloud models.
+- Changing models :: Press =C-c m= to switch between available models.
+  Cloud models appear in the list marked with =☁=.
 
 - Using the transient menu :: Press =C-c O= for the main transient menu
   with all features organized by category.
@@ -4404,8 +4404,7 @@ Cloud models have a =-cloud= suffix in their names.
 :END:
 To select a cloud model:
 
-- Use =C-u C-c m= (universal argument with model switch)
-- Use the transient menu: =C-c O= then "Model > Cloud"
+- Use =C-c m= and search for the cloud model name (marked with =☁=)
 - Select from the =☁ Cloud Models= section in Model Management (=C-c M=)
 
 Cloud models are displayed with a =cl:= prefix (e.g.
@@ -4890,7 +4889,7 @@ non-string value, it is formatted with =%S=.
 :CUSTOM_ID: interactive-commands
 :CLASS: section
 :END:
-- =ollama-buddy-tools-toggle (==C-c W==)= :: Toggle tool calling on or
+- =ollama-buddy-tools-toggle (==C-c SPC==)= :: Toggle tool calling on or
   off. When toggled, the header line updates to show/hide the =⚒=
   indicator.
 
@@ -4908,7 +4907,7 @@ non-string value, it is formatted with =%S=.
 These commands are also available from the transient menu (C-c O) under
 the “Actions” section:
 
-- W - Toggle Tools
+- SPC - Toggle Tools
 - Q - List Tools
 
 <<Tool-Indicators>>
@@ -4921,7 +4920,7 @@ The =⚒= (hammer and wrench) indicator appears in two places with
 different meanings:
 
 - Header line :: Shows =⚒= when tool calling is currently /enabled/
-  (toggled on with C-c W). This indicates that tool calls will be sent
+  (toggled on with C-c SPC). This indicates that tool calls will be sent
   to the model.
 
 - Prompt line :: Shows =⚒= when the current model /supports/ tool
@@ -4931,7 +4930,7 @@ different meanings:
 For example, with a tool-capable model like =qwen3:8b=:
 
 - The prompt always shows: =* *qwen3:8b* ⚒ >> PROMPT:=
-- The header line shows =⚒= only when you've enabled tools with C-c W
+- The header line shows =⚒= only when you've enabled tools with C-c SPC
 
 Additional places showing tool capability:
 
@@ -5382,10 +5381,8 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 
 - =ollama-buddy--send-prompt= :: Send the current prompt to the AI.
 
-- =ollama-buddy--swap-model= :: Switch to a different model. With prefix
-  argument, select from cloud models.
-
-- =ollama-buddy--swap-model-cloud= :: Switch to an Ollama cloud model.
+- =ollama-buddy--swap-model= :: Switch to a different model. All models
+  (including cloud models marked with =☁=) are listed together.
 
 - =ollama-buddy-cloud-signin= :: Sign in to Ollama cloud services.
 
@@ -5621,7 +5618,7 @@ pulling them. Internet is needed for:
 Cloud models require authentication:
 
 1. Run =M-x ollama-buddy-cloud-signin= to sign in
-2. Select cloud models with =C-u C-c m=
+2. Select cloud models with =C-c m= (they appear marked with =☁=)
 3. The =☁= symbol in the header indicates cloud model usage
 
 <<Which-models-work-best-with-Ollama-Buddy_003f>>

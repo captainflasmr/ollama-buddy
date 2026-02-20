@@ -2052,55 +2052,26 @@ Shows capability indicators like ☁ for cloud, ⚒ for tool support, ⊙ for vi
       (setq indicators (concat indicators " ⊙")))
     indicators))
 
-(defun ollama-buddy--swap-model (&optional arg)
+(defun ollama-buddy--swap-model ()
   "Swap ollama model, including remote and cloud models if available.
-With prefix ARG (\\[universal-argument]), select from online remote models only.
 When airplane mode is active, only local Ollama models are offered."
-  (interactive "P")
-  (if (and arg (bound-and-true-p ollama-buddy-airplane-mode))
-      (message "✈ Airplane mode is active — remote models are not available")
-    (let* ((models (if arg
-                       ollama-buddy-remote-models
-                     (if (bound-and-true-p ollama-buddy-airplane-mode)
-                         (ollama-buddy--get-models)
-                       (ollama-buddy--get-models-with-others))))
-           (prompt (if arg "Online Model: " "Model: "))
-           (new-model (completing-read prompt
-                                       (lambda (string pred action)
-                                         (if (eq action 'metadata)
-                                             '(metadata (annotation-function . ollama-buddy--model-annotation))
-                                           (complete-with-action action models string pred)))
-                                       nil t)))
-      (setq ollama-buddy-default-model new-model)
-      (setq ollama-buddy--current-model new-model)
-      (message "Switched to %smodel: %s" (if arg "online " "") new-model)
-      (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
-      (ollama-buddy--prepare-prompt-area t t)
-      (goto-char (point-max))
-      (ollama-buddy--update-status "Idle"))))
-
-(defun ollama-buddy--swap-model-cloud ()
-  "Switch to an Ollama cloud model.
-Cloud models run on ollama.com infrastructure and require authentication
-via `ollama signin'."
   (interactive)
-  (if (bound-and-true-p ollama-buddy-airplane-mode)
-      (message "✈ Airplane mode is active — cloud models are not available")
-    (let* ((cloud-models (mapcar #'ollama-buddy--get-full-cloud-model-name
-                                 ollama-buddy-cloud-models))
-           (new-model (completing-read "Cloud Model: "
-                                       (lambda (string pred action)
-                                         (if (eq action 'metadata)
-                                             '(metadata (annotation-function . ollama-buddy--model-annotation))
-                                           (complete-with-action action cloud-models string pred)))
-                                       nil t)))
-      (setq ollama-buddy-default-model new-model)
-      (setq ollama-buddy--current-model new-model)
-      (message "Switched to cloud model: %s" new-model)
-      (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
-      (ollama-buddy--prepare-prompt-area t t)
-      (goto-char (point-max))
-      (ollama-buddy--update-status "Idle"))))
+  (let* ((models (if (bound-and-true-p ollama-buddy-airplane-mode)
+                     (ollama-buddy--get-models)
+                   (ollama-buddy--get-models-with-others)))
+         (new-model (completing-read "Model: "
+                                     (lambda (string pred action)
+                                       (if (eq action 'metadata)
+                                           '(metadata (annotation-function . ollama-buddy--model-annotation))
+                                         (complete-with-action action models string pred)))
+                                     nil t)))
+    (setq ollama-buddy-default-model new-model)
+    (setq ollama-buddy--current-model new-model)
+    (message "Switched to model: %s" new-model)
+    (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
+    (ollama-buddy--prepare-prompt-area t t)
+    (goto-char (point-max))
+    (ollama-buddy--update-status "Idle")))
 
 (defvar ollama-buddy--signin-url-opened nil
   "Flag to track whether we've already opened the signin URL.")

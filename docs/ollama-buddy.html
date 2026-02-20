@@ -1128,7 +1128,7 @@ Next: <a href="#Core-Features" accesskey="n" rel="next">Core Features</a>, Previ
 </p>
 </dd>
 <dt>Changing models</dt>
-<dd><p>Press <code class="code">C-c m</code> to switch between available models, or <code class="code">C-u C-c m</code> to select from cloud models.
+<dd><p>Press <code class="code">C-c m</code> to switch between available models. Cloud models appear in the list marked with <code class="code">☁</code>.
 </p>
 </dd>
 <dt>Using the transient menu</dt>
@@ -4286,8 +4286,7 @@ Next: <a href="#Global-System-Prompt" accesskey="n" rel="next">Global System Pro
 
 <p>To select a cloud model:
 </p><ul class="itemize mark-bullet">
-<li>Use <code class="code">C-u C-c m</code> (universal argument with model switch)
-</li><li>Use the transient menu: <code class="code">C-c O</code> then &quot;Model &gt; Cloud&quot;
+<li>Use <code class="code">C-c m</code> and search for the cloud model name (marked with <code class="code">☁</code>)
 </li><li>Select from the <code class="code">☁ Cloud Models</code> section in Model Management (<code class="code">C-c M</code>)
 </li></ul>
 
@@ -4722,7 +4721,7 @@ When nil, only custom user-registered tools are available.
 <h3 class="section"><span>21.8 Interactive Commands<a class="copiable-link" href="#Interactive-Commands"> &para;</a></span></h3>
 
 <dl class="table">
-<dt><code class="code">ollama-buddy-tools-toggle (<kbd class="kbd">C-c W</kbd>)</code></dt>
+<dt><code class="code">ollama-buddy-tools-toggle (<kbd class="kbd">C-c SPC</kbd>)</code></dt>
 <dd><p>Toggle tool calling on or off. When toggled, the header line updates to show/hide the <code class="code">⚒</code> indicator.
 </p>
 </dd>
@@ -4745,7 +4744,7 @@ When nil, only custom user-registered tools are available.
 
 <p>These commands are also available from the transient menu (<kbd class="kbd">C-c O</kbd>) under the &ldquo;Actions&rdquo; section:
 </p><ul class="itemize mark-bullet">
-<li><kbd class="kbd">W</kbd> - Toggle Tools
+<li><kbd class="kbd">SPC</kbd> - Toggle Tools
 </li><li><kbd class="kbd">Q</kbd> - List Tools
 </li></ul>
 
@@ -4757,7 +4756,7 @@ When nil, only custom user-registered tools are available.
 </p>
 <dl class="table">
 <dt>Header line</dt>
-<dd><p>Shows <code class="code">⚒</code> when tool calling is currently <em class="emph">enabled</em> (toggled on with <kbd class="kbd">C-c W</kbd>). This indicates that tool calls will be sent to the model.
+<dd><p>Shows <code class="code">⚒</code> when tool calling is currently <em class="emph">enabled</em> (toggled on with <kbd class="kbd">C-c SPC</kbd>). This indicates that tool calls will be sent to the model.
 </p>
 </dd>
 <dt>Prompt line</dt>
@@ -4768,7 +4767,7 @@ When nil, only custom user-registered tools are available.
 <p>For example, with a tool-capable model like <code class="code">qwen3:8b</code>:
 </p><ul class="itemize mark-bullet">
 <li>The prompt always shows: <code class="code">* *qwen3:8b* ⚒ &gt;&gt; PROMPT:</code>
-</li><li>The header line shows <code class="code">⚒</code> only when you&rsquo;ve enabled tools with <kbd class="kbd">C-c W</kbd>
+</li><li>The header line shows <code class="code">⚒</code> only when you&rsquo;ve enabled tools with <kbd class="kbd">C-c SPC</kbd>
 </li></ul>
 
 <p>Additional places showing tool capability:
@@ -5191,11 +5190,7 @@ Next: <a href="#FAQ" accesskey="n" rel="next">Frequently Asked Questions</a>, Pr
 </p>
 </dd>
 <dt><code class="code">ollama-buddy--swap-model</code></dt>
-<dd><p>Switch to a different model. With prefix argument, select from cloud models.
-</p>
-</dd>
-<dt><code class="code">ollama-buddy--swap-model-cloud</code></dt>
-<dd><p>Switch to an Ollama cloud model.
+<dd><p>Switch to a different model. All models (including cloud models marked with <code class="code">☁</code>) are listed together.
 </p>
 </dd>
 <dt><code class="code">ollama-buddy-cloud-signin</code></dt>
@@ -5498,7 +5493,7 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 <p>Cloud models require authentication:
 </p><ol class="enumerate">
 <li> Run <code class="code">M-x ollama-buddy-cloud-signin</code> to sign in
-</li><li> Select cloud models with <code class="code">C-u C-c m</code>
+</li><li> Select cloud models with <code class="code">C-c m</code> (they appear marked with <code class="code">☁</code>)
 </li><li> The <code class="code">☁</code> symbol in the header indicates cloud model usage
 </li></ol>
 

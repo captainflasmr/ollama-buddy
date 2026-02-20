@@ -495,8 +495,8 @@ Generating a commit message
      Message" (or press ‘g’).
 
 Changing models
-     Press ‘C-c m’ to switch between available models, or ‘C-u C-c m’ to
-     select from cloud models.
+     Press ‘C-c m’ to switch between available models.  Cloud models
+     appear in the list marked with ‘☁’.
 
 Using the transient menu
      Press ‘C-c O’ for the main transient menu with all features
@@ -2900,8 +2900,7 @@ Cloud models are configured via ‘ollama-buddy-cloud-models’:
 ===========================
 
 To select a cloud model:
-   • Use ‘C-u C-c m’ (universal argument with model switch)
-   • Use the transient menu: ‘C-c O’ then "Model > Cloud"
+   • Use ‘C-c m’ and search for the cloud model name (marked with ‘☁’)
    • Select from the ‘☁ Cloud Models’ section in Model Management (‘C-c
      M’)
 
@@ -3247,7 +3246,7 @@ returns a non-string value, it is formatted with ‘%S’.
 21.8 Interactive Commands
 =========================
 
-‘ollama-buddy-tools-toggle (C-c W)’
+‘ollama-buddy-tools-toggle (C-c SPC)’
      Toggle tool calling on or off.  When toggled, the header line
      updates to show/hide the ‘⚒’ indicator.
 
@@ -3267,7 +3266,7 @@ returns a non-string value, it is formatted with ‘%S’.
 
    These commands are also available from the transient menu (‘C-c O’)
 under the "Actions" section:
-   • ‘W’ - Toggle Tools
+   • ‘SPC’ - Toggle Tools
    • ‘Q’ - List Tools
 
 21.9 Tool Indicators
@@ -3278,7 +3277,7 @@ different meanings:
 
 Header line
      Shows ‘⚒’ when tool calling is currently _enabled_ (toggled on with
-     ‘C-c W’).  This indicates that tool calls will be sent to the
+     ‘C-c SPC’).  This indicates that tool calls will be sent to the
      model.
 
 Prompt line
@@ -3289,7 +3288,7 @@ Prompt line
    For example, with a tool-capable model like ‘qwen3:8b’:
    • The prompt always shows: ‘* *qwen3:8b* ⚒ >> PROMPT:’
    • The header line shows ‘⚒’ only when you've enabled tools with ‘C-c
-     W’
+     SPC’
 
    Additional places showing tool capability:
    • The ‘C-c m’ completing-read model selector (alongside ‘⊙’ for
@@ -3602,11 +3601,8 @@ File: ollama-buddy.info,  Node: API Reference,  Next: FAQ,  Prev: Advanced Usage
      Send the current prompt to the AI.
 
 ‘ollama-buddy--swap-model’
-     Switch to a different model.  With prefix argument, select from
-     cloud models.
-
-‘ollama-buddy--swap-model-cloud’
-     Switch to an Ollama cloud model.
+     Switch to a different model.  All models (including cloud models
+     marked with ‘☁’) are listed together.
 
 ‘ollama-buddy-cloud-signin’
      Sign in to Ollama cloud services.
@@ -3825,7 +3821,7 @@ pulling them.  Internet is needed for:
 
 Cloud models require authentication:
   1. Run ‘M-x ollama-buddy-cloud-signin’ to sign in
-  2. Select cloud models with ‘C-u C-c m’
+  2. Select cloud models with ‘C-c m’ (they appear marked with ‘☁’)
   3. The ‘☁’ symbol in the header indicates cloud model usage
 
 25.1.4 Which models work best with Ollama Buddy?
@@ -4177,30 +4173,30 @@ Node: Introduction2714
 Node: Installation4902
 Node: Configuration7859
 Node: Quick Start16129
-Node: Core Features18365
-Node: Chat Interface22642
-Node: Working with Models29720
-Node: Context Management34117
-Node: File Attachments39726
-Node: Web Search45648
-Node: Parameter Control52594
-Node: Session Management54991
-Node: User System Prompts57900
-Node: Roles and Commands66388
-Node: Fabric Pattern Integration81363
-Node: Awesome ChatGPT Prompts83590
-Node: Remote Providers87440
-Node: Ollama Cloud Models92374
-Node: Global System Prompt95293
-Node: Tone Selector97047
-Node: Tool Calling98851
-Node: RAG106630
-Node: Advanced Usage113013
-Node: API Reference115562
-Node: FAQ121546
-Node: Troubleshooting128599
-Node: Contributing131104
-Node: Index133772
+Node: Core Features18373
+Node: Chat Interface22650
+Node: Working with Models29728
+Node: Context Management34125
+Node: File Attachments39734
+Node: Web Search45656
+Node: Parameter Control52602
+Node: Session Management54999
+Node: User System Prompts57908
+Node: Roles and Commands66396
+Node: Fabric Pattern Integration81371
+Node: Awesome ChatGPT Prompts83598
+Node: Remote Providers87448
+Node: Ollama Cloud Models92382
+Node: Global System Prompt95254
+Node: Tone Selector97008
+Node: Tool Calling98812
+Node: RAG106599
+Node: Advanced Usage112982
+Node: API Reference115531
+Node: FAQ121470
+Node: Troubleshooting128555
+Node: Contributing131060
+Node: Index133728
 
 End Tag Table
 

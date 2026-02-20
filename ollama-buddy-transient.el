@@ -31,7 +31,6 @@
 (declare-function ollama-buddy-menu "ollama-buddy")
 (declare-function ollama-buddy-manage-models "ollama-buddy")
 (declare-function ollama-buddy--swap-model "ollama-buddy")
-(declare-function ollama-buddy--swap-model-cloud "ollama-buddy")
 (declare-function ollama-buddy-cloud-signin "ollama-buddy")
 (declare-function ollama-buddy-cloud-signout "ollama-buddy")
 (declare-function ollama-buddy-cloud-status "ollama-buddy")
@@ -133,7 +132,6 @@
    ["Model"
     ("M" "Manage" ollama-buddy-manage-models)
     ("m" "Switch" ollama-buddy--swap-model)
-    ("c" "Cloud" ollama-buddy--swap-model-cloud)
     ("i" "Info" ollama-buddy-show-raw-model-info)
     ("U" "Multishot" ollama-buddy--multishot-prompt)
     ]

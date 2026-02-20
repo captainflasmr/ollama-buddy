@@ -530,10 +530,9 @@ When enabling, warns if the current model does not support tool calling."
         (message "Model '%s' does not support tool calling - tools not enabled. Switch to a tool-capable model first."
                  current-model)
       (setq ollama-buddy-tools-enabled enabling)
-      ;; Refresh header line to update tool indicator
       (when (fboundp 'ollama-buddy--update-status)
-        (ollama-buddy--update-status (or (bound-and-true-p ollama-buddy--status) "")))
-      (message "Tool calling %s" (if ollama-buddy-tools-enabled "enabled" "disabled")))))
+        (ollama-buddy--update-status
+         (if ollama-buddy-tools-enabled "Tools enabled" "Tools disabled"))))))
 
 (defun ollama-buddy-tools-toggle-safe-mode ()
   "Toggle safe mode for tool execution."

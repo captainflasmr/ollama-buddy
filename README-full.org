@@ -34,24 +34,23 @@ You can install with literally no config, but I would suggest binding to both me
 A simple text information screen will be presented on the first opening of the chat (by selecting "o" from any of the menus), its just a bit of fun, but I wanted a quick start tutorial/assistant type of feel, here is what will be presented:
 
 #+begin_src
-,#+TITLE: Ollama Buddy Chat
-
-,* Welcome to OLLAMA BUDDY
+,* Welcome to _OLLAMA BUDDY_
 
 ,#+begin_example
- ___ _ _      n _ n      ___       _   _ _ _
-|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |
-| | | | | .  |2.0.0| .  | . | | | . | . |__ |
-|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|
+┌───────────────────────────────────┐
+│  O L L A M A B U D D Y  [v2.6.0]  │
+└───────────────────────────────────┘
 ,#+end_example
 
-- Ask me anything!       C-c C-c / C-c RET
-- Cancel request         C-c C-k
-- Select model           C-c m
-- Main transient menu    C-c O
-- Browse prompt history  M-p/n/r
-- Manage models          C-c M
-- ollama-buddy Manual    C-c ?
+o: Ollama (5)             cl: Cloud (2)
+
+- /Ask me anything!/       C-c C-c / C-c RET
+- /Cancel request/         C-c C-k
+- /Select model/           C-c m
+- /Main transient menu/    C-c O
+- /Browse prompt history/  M-p/n/r
+- /Manage models/          C-c M
+- /ollama-buddy Manual/    C-c ?
 
 ,* *tinyllama:latest >> PROMPT:* <put prompt in here>
 #+end_src
