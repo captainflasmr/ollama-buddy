@@ -105,6 +105,17 @@ Returns a plist with :category and :title, or nil if not a valid format."
         (insert-file-contents file-path)
         (buffer-string)))))
 
+(defun ollama-buddy-user-prompts--strip-org-headers (content)
+  "Strip org file headers from CONTENT, returning the prompt text."
+  (with-temp-buffer
+    (insert content)
+    (goto-char (point-min))
+    (while (and (not (eobp)) (looking-at "^#\\+"))
+      (forward-line 1))
+    (while (and (not (eobp)) (looking-at "^$"))
+      (forward-line 1))
+    (if (eobp) "" (string-trim (buffer-substring-no-properties (point) (point-max))))))
+
 ;;;###autoload
 (defun ollama-buddy-user-prompts-save ()
   "Save the current system prompt to a file."
@@ -158,22 +169,7 @@ Returns a plist with :category and :title, or nil if not a valid format."
       
       (when content
         ;; Extract just the content without org headers
-        (setq content (with-temp-buffer
-                        (insert content)
-                        (goto-char (point-min))
-                        
-                        ;; Skip org headers - but check we haven't reached end of buffer
-                        (while (and (not (eobp)) (looking-at "^#\\+"))
-                          (forward-line 1))
-                        
-                        ;; Skip any empty lines after headers - but check we haven't reached end
-                        (while (and (not (eobp)) (looking-at "^$"))
-                          (forward-line 1))
-                        
-                        ;; Get remaining content, or empty string if nothing left
-                        (if (eobp)
-                            ""
-                          (string-trim (buffer-substring-no-properties (point) (point-max))))))
+        (setq content (ollama-buddy-user-prompts--strip-org-headers content))
         
         ;; Check if we actually have content after stripping headers
         (if (string-empty-p content)
@@ -195,6 +191,48 @@ Returns a plist with :category and :title, or nil if not a valid format."
             (ollama-buddy--open-chat))
           (message "Loaded user prompt: %s" title))))))
 
+(defvar ollama-buddy-user-prompts-list-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "RET") #'ollama-buddy-user-prompts-set-at-point)
+    map)
+  "Keymap for `ollama-buddy-user-prompts-list-mode'.")
+
+(define-minor-mode ollama-buddy-user-prompts-list-mode
+  "Minor mode for the *User System Prompts* browse buffer.
+\\{ollama-buddy-user-prompts-list-mode-map}"
+  :lighter nil
+  :keymap ollama-buddy-user-prompts-list-mode-map
+  (when ollama-buddy-user-prompts-list-mode
+    (setq-local minor-mode-overriding-map-alist
+                (cons (cons 'ollama-buddy-user-prompts-list-mode
+                            ollama-buddy-user-prompts-list-mode-map)
+                      minor-mode-overriding-map-alist))))
+
+;;;###autoload
+(defun ollama-buddy-user-prompts-set-at-point ()
+  "Set the system prompt heading at point as the current system prompt."
+  (interactive)
+  (let ((prompts (ollama-buddy-user-prompts--get-prompts)))
+    (unless prompts
+      (user-error "No user system prompts available"))
+    (save-excursion
+      (condition-case nil
+          (org-back-to-heading t)
+        (error (user-error "Point is not under a heading")))
+      (when (= (org-outline-level) 1)
+        (user-error "Point is on a category heading — move to a prompt heading"))
+      (let* ((title (org-get-heading t t t t))
+             (prompt (cl-find title prompts :test #'string= :key (lambda (p) (plist-get p :title)))))
+        (unless prompt
+          (user-error "Could not find prompt matching heading '%s'" title))
+        (let* ((file (plist-get prompt :file))
+               (raw (ollama-buddy-user-prompts--read-prompt-content file))
+               (content (ollama-buddy-user-prompts--strip-org-headers raw)))
+          (if (string-empty-p content)
+              (user-error "Prompt file '%s' has no content" file)
+            (ollama-buddy--set-system-prompt-with-metadata content title "user")
+            (message "System prompt set: %s" title)))))))
+
 ;;;###autoload
 (defun ollama-buddy-user-prompts-list ()
   "Display a list of all saved user system prompt."
@@ -208,8 +246,9 @@ Returns a plist with :category and :title, or nil if not a valid format."
         (org-mode)
         (setq-local org-hide-emphasis-markers t)
         (setq-local org-hide-leading-stars t)
-        
-        (insert "#+TITLE: User System Prompts\n\n")
+
+        (insert "#+TITLE: User System Prompts\n")
+        (insert "# RET on a prompt heading to set as current system prompt\n\n")
         
         (if (null prompts)
             (insert "No user system prompts found.\n\n")
@@ -234,6 +273,7 @@ Returns a plist with :category and :title, or nil if not a valid format."
                     (insert (concat content "\n\n"))))))))
         (goto-char (point-min))
         (view-mode 1)
+        (ollama-buddy-user-prompts-list-mode 1)
         (org-content))
     (display-buffer buf))))
 

@@ -413,6 +413,45 @@ of the awesome-chatgpt-prompts CSV file."
     ;; Send the request
     (ollama-buddy--send selected-text)))
 
+(defvar ollama-buddy-awesome-list-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "RET") #'ollama-buddy-awesome-set-at-point)
+    map)
+  "Keymap for `ollama-buddy-awesome-list-mode'.")
+
+(define-minor-mode ollama-buddy-awesome-list-mode
+  "Minor mode for the *Awesome ChatGPT Prompts List* browse buffer.
+\\{ollama-buddy-awesome-list-mode-map}"
+  :lighter nil
+  :keymap ollama-buddy-awesome-list-mode-map
+  (when ollama-buddy-awesome-list-mode
+    (setq-local minor-mode-overriding-map-alist
+                (cons (cons 'ollama-buddy-awesome-list-mode
+                            ollama-buddy-awesome-list-mode-map)
+                      minor-mode-overriding-map-alist))))
+
+(defun ollama-buddy-awesome-set-at-point ()
+  "Set the Awesome ChatGPT Prompt heading at point as the current system prompt."
+  (interactive)
+  (unless ollama-buddy-awesome--prompts
+    (ollama-buddy-awesome-populate-prompts))
+  (unless ollama-buddy-awesome--prompts
+    (user-error "No Awesome ChatGPT Prompts available"))
+  (save-excursion
+    (condition-case nil
+        (org-back-to-heading t)
+      (error (user-error "Point is not under a heading")))
+    (when (= (org-outline-level) 1)
+      (user-error "Point is on a category heading — move to a prompt heading"))
+    (let* ((title (org-get-heading t t t t))
+           (prompt (cl-find title ollama-buddy-awesome--prompts
+                            :test #'string= :key (lambda (p) (plist-get p :title)))))
+      (unless prompt
+        (user-error "Could not find prompt matching heading '%s'" title))
+      (let ((content (plist-get prompt :content)))
+        (ollama-buddy--set-system-prompt-with-metadata content title "awesome")
+        (message "System prompt set: %s" title)))))
+
 (defun ollama-buddy-awesome-list-prompts ()
   "Display a list of available Awesome ChatGPT Prompt."
   (interactive)
@@ -427,8 +466,9 @@ of the awesome-chatgpt-prompts CSV file."
         (setq-local org-hide-emphasis-markers t)
         (setq-local org-hide-leading-stars t)
 
-        (insert "#+TITLE: Awesome ChatGPT Prompts\n\n")
-        
+        (insert "#+TITLE: Awesome ChatGPT Prompts\n")
+        (insert "# RET on a prompt heading to set as current system prompt\n\n")
+
         (if ollama-buddy-awesome--last-sync-time
             (insert (format "Last synced: %s\n\n"
                             (format-time-string "%Y-%m-%d %H:%M:%S"
@@ -452,6 +492,7 @@ of the awesome-chatgpt-prompts CSV file."
               (goto-char (point-max))))))
       (goto-char (point-min))
       (view-mode 1)
+      (ollama-buddy-awesome-list-mode 1)
       (org-content))
     (display-buffer buf)))
 

@@ -58,6 +58,10 @@ Submit queries, swap models, view token usage and statistics:
 - *RAG* -- Index local documents and source code, retrieve relevant context for conversations via semantic search. Inline =@rag(query)= syntax for automatic context attachment.
 - *Lightweight* -- No external dependencies; a minified 200-line version (=ollama-buddy-mini=) is also available
 
+* What's New (2.7.1)
+
+- *RET to set system prompt in org list buffers* -- Pressing =RET= on a prompt/pattern heading in the =*User System Prompts*=, =*Awesome ChatGPT Prompts List*=, or =*Fabric Patterns List*= browse buffers instantly sets it as the current system prompt, with a hint comment at the top of each buffer.
+
 * What's New (2.7.0)
 
 - *Airplane Mode* -- Toggle =C-c != to completely isolate the package from the internet. While active, all external LLM providers (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter) and Ollama cloud models are blocked. Only local Ollama models are available. Web search is also disabled. The =✈= indicator appears in the header line, and attempting to send to an internet-requiring model shows a minibuffer message. Toggle via =C-c !=, the transient menu Actions section, or =M-x ollama-buddy-toggle-airplane-mode=.

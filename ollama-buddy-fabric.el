@@ -315,6 +315,60 @@ Returns the first paragraph (up to 250 chars) as a description."
           (let ((desc (buffer-substring-no-properties start end)))
               desc))))))
 
+(defvar ollama-buddy-fabric-list-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "RET") #'ollama-buddy-fabric-set-at-point)
+    map)
+  "Keymap for `ollama-buddy-fabric-list-mode'.")
+
+(define-minor-mode ollama-buddy-fabric-list-mode
+  "Minor mode for the *Fabric Patterns List* browse buffer.
+\\{ollama-buddy-fabric-list-mode-map}"
+  :lighter nil
+  :keymap ollama-buddy-fabric-list-mode-map
+  (when ollama-buddy-fabric-list-mode
+    (setq-local minor-mode-overriding-map-alist
+                (cons (cons 'ollama-buddy-fabric-list-mode
+                            ollama-buddy-fabric-list-mode-map)
+                      minor-mode-overriding-map-alist))))
+
+(defun ollama-buddy-fabric-set-at-point ()
+  "Set the Fabric pattern heading at point as the current system prompt."
+  (interactive)
+  (unless ollama-buddy-fabric--patterns
+    (ollama-buddy-fabric-populate-patterns))
+  (unless ollama-buddy-fabric--patterns
+    (user-error "No Fabric patterns available"))
+  (save-excursion
+    (condition-case nil
+        (org-back-to-heading t)
+      (error (user-error "Point is not under a heading")))
+    (when (= (org-outline-level) 1)
+      (user-error "Point is on a category heading — move to a pattern heading"))
+    (let* ((name (org-get-heading t t t t))
+           (category (save-excursion
+                       (org-up-heading-safe)
+                       (downcase (org-get-heading t t t t))))
+           (pattern (cl-find-if
+                     (lambda (p)
+                       (let* ((parts (split-string p "_"))
+                              (p-cat (car parts))
+                              (p-name (mapconcat #'identity (cdr parts) "_")))
+                         (and (string= p-cat category)
+                              (string= p-name name))))
+                     ollama-buddy-fabric--patterns)))
+      (unless pattern
+        (user-error "Could not find pattern matching heading '%s'" name))
+      (let* ((system-file (expand-file-name (format "%s/%s/system.md"
+                                                     (ollama-buddy-fabric--patterns-path)
+                                                     pattern)))
+             (system-prompt (with-temp-buffer
+                              (insert-file-contents system-file)
+                              (buffer-string)))
+             (title (replace-regexp-in-string "_" " " (capitalize pattern))))
+        (ollama-buddy--set-system-prompt-with-metadata system-prompt title "fabric")
+        (message "System prompt set: %s" title)))))
+
 (defun ollama-buddy-fabric-list-patterns ()
   "Display a list of available Fabric patterns with descriptions."
   (interactive)
@@ -329,8 +383,9 @@ Returns the first paragraph (up to 250 chars) as a description."
         (setq-local org-hide-emphasis-markers t)
         (setq-local org-hide-leading-stars t)
 
-        (insert "#+TITLE: Fabric Patterns\n\n")
-        
+        (insert "#+TITLE: Fabric Patterns\n")
+        (insert "# RET on a pattern heading to set as current system prompt\n\n")
+
         (if ollama-buddy-fabric--last-sync-time
             (insert (format "Last synced: %s\n\n"
                             (format-time-string "%Y-%m-%d %H:%M:%S"
@@ -365,6 +420,7 @@ Returns the first paragraph (up to 250 chars) as a description."
               (goto-char (point-max))))))
       (goto-char (point-min))
       (view-mode 1)
+      (ollama-buddy-fabric-list-mode 1)
       (org-content))
     (display-buffer buf)))
 
