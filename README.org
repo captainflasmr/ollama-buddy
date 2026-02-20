@@ -148,8 +148,10 @@ curl -sL https://api.github.com/repos/captainflasmr/ollama-buddy/tarball/main | 
   ("C-c o" . ollama-buddy-role-transient-menu)
   ("C-c O" . ollama-buddy-transient-menu-wrapper)
   :config
+  
   ;; overall default model
-  (setq ollama-buddy-default-model "kimi-k2.5:cloud")
+  (setq ollama-buddy-default-model "glm-4.7:cloud")
+  
   ;; key setup
   (setq ollama-buddy-openai-api-key
         (auth-source-pick-first-password :host "ollama-buddy-openai" :user "apikey"))
@@ -161,37 +163,36 @@ curl -sL https://api.github.com/repos/captainflasmr/ollama-buddy/tarball/main | 
         (auth-source-pick-first-password :host "ollama-buddy-grok" :user "apikey"))
   (setq ollama-buddy-codestral-api-key
         (auth-source-pick-first-password :host "ollama-buddy-codestral" :user "apikey"))
+  (setq ollama-buddy-openrouter-api-key
+        (auth-source-pick-first-password :host "ollama-buddy-openrouter" :user "apikey"))
+  (setq ollama-buddy-deepseek-api-key
+        (auth-source-pick-first-password :host "ollama-buddy-deepseek" :user "apikey"))
   (setq ollama-buddy-cloud-api-key
         (auth-source-pick-first-password :host "ollama-buddy-cloud" :user "apikey"))
   (setq ollama-buddy-web-search-api-key
         (auth-source-pick-first-password :host "ollama-buddy-web-search" :user "apikey"))
 
-  ;; not currently including remote LLMs
   ;; (require 'ollama-buddy-openai nil t)
   ;; (require 'ollama-buddy-claude nil t)
   ;; (require 'ollama-buddy-gemini nil t)
   ;; (require 'ollama-buddy-grok nil t)
   ;; (require 'ollama-buddy-codestral nil t)
   ;; (require 'ollama-buddy-copilot nil t)
+  ;; (require 'ollama-buddy-openrouter nil t)
+  ;; (require 'ollama-buddy-deepseek nil t)
 
-  ;; enable tooling
-  (require 'ollama-buddy-tools)
-  (setq ollama-buddy-tools-enabled t)
-  (setq ollama-buddy-tools-auto-execute nil)
-  (setq ollama-buddy-tools-safe-mode nil)
+  ;; other
+  (setq ollama-buddy-full-welcome-enabled nil)
 
   ;; setup default custom menu for preferred models
   (ollama-buddy-update-menu-entry 'refactor-code     :model "qwen3-coder:480b-cloud")
   (ollama-buddy-update-menu-entry 'git-commit        :model "glm-4.7:cloud")
-  (ollama-buddy-update-menu-entry 'describe-code     :model "kimi-k2.5:cloud")
-  (ollama-buddy-update-menu-entry 'dictionary-lookup :model "kimi-k2.5:cloud")
-  (ollama-buddy-update-menu-entry 'synonym           :model "kimi-k2.5:cloud")
-  ;; (ollama-buddy-update-menu-entry 'describe-code     :model "minimax-m2.1:cloud")
-  ;; (ollama-buddy-update-menu-entry 'dictionary-lookup :model "minimax-m2.1:cloud")
-  ;; (ollama-buddy-update-menu-entry 'synonym           :model "minimax-m2.1:cloud")
+  (ollama-buddy-update-menu-entry 'describe-code     :model "minimax-m2.1:cloud")
+  (ollama-buddy-update-menu-entry 'dictionary-lookup :model "minimax-m2.1:cloud")
+  (ollama-buddy-update-menu-entry 'synonym           :model "minimax-m2.1:cloud")
   (ollama-buddy-update-menu-entry 'proofread         :model "deepseek-v3.1:671b-cloud")
 
-  ;; dired integration for attaching files
+  ;; dired integration
   (with-eval-after-load 'dired
     (define-key dired-mode-map (kbd "C-c C-a") #'ollama-buddy-dired-attach-marked-files)))
 #+end_src
@@ -204,7 +205,6 @@ curl -sL https://api.github.com/repos/captainflasmr/ollama-buddy/tarball/main | 
 | C-c RET   | Send prompt (alt)             |
 | C-c C-k   | Cancel request                |
 | C-c m     | Change model                  |
-| C-u C-c m | Select cloud model            |
 | C-c M     | Manage models                 |
 | C-c O     | Main transient menu           |
 | M-p / M-n | Browse prompt history         |
@@ -300,8 +300,6 @@ See the [[file:README-full.org][full README]] for all 30+ demos with description
 
 ** Future Considerations
 
-*** Refactor external LLMs to eliminate duplicate code
-
 *** Structured Outputs (JSON Schema)
 
 The =format= parameter supports JSON schema for structured responses.
@@ -312,6 +310,8 @@ The =format= parameter supports JSON schema for structured responses.
 - Structured data extraction workflows
 
 *** External LLMs to use tooling
+
+In this case I might not ever do this, I am always mindful of burning through tokens.
 
 *** Anthropic Messages API Compatibility
 

@@ -31,11 +31,15 @@ elisp_files=(
   "ollama-buddy-copilot.el"
   "ollama-buddy-core.el"
   "ollama-buddy-curl.el"
+  "ollama-buddy-deepseek.el"
   "ollama-buddy.el"
   "ollama-buddy-fabric.el"
   "ollama-buddy-gemini.el"
   "ollama-buddy-grok.el"
   "ollama-buddy-openai.el"
+  "ollama-buddy-openrouter.el"
+  "ollama-buddy-rag.el"
+  "ollama-buddy-remote.el"
   "ollama-buddy-tools.el"
   "ollama-buddy-transient.el"
   "ollama-buddy-user-prompts.el"
@@ -87,12 +91,6 @@ cat > "$INIT_FILE" << EOF
 
 ;; Load the package
 (require 'ollama-buddy)
-(require 'ollama-buddy-transient)
-(require 'ollama-buddy-tools)
-(require 'ollama-buddy-web-search)
-
-;; Enable tool calling
-(setq ollama-buddy-tools-enabled t)
 
 ;; Add the key binding
 (global-set-key (kbd "C-c o") 'ollama-buddy-menu)
