@@ -1818,6 +1818,7 @@ When SYSTEM-PROMPT is non-nil, mark as a system prompt."
     (let ((url-request-method method)
           (url-request-extra-headers '(("Content-Type" . "application/json")
                                        ("Connection" . "close")))
+          (url-show-status nil)
           (url (format "http://%s:%d%s"
                        ollama-buddy-host ollama-buddy-port endpoint)))
       (with-temp-buffer
@@ -1836,6 +1837,7 @@ When complete, CALLBACK is called with the status response and result."
           (url-request-extra-headers '(("Content-Type" . "application/json")
                                        ("Connection" . "close")))
           (url-request-data (when payload (encode-coding-string payload 'utf-8)))
+          (url-show-status nil)
           (url (format "http://%s:%d%s"
                        ollama-buddy-host ollama-buddy-port endpoint)))
       (url-retrieve url
@@ -1867,8 +1869,9 @@ When complete, CALLBACK is called with the status response and result."
      (t
       (condition-case nil
           (progn
-            (url-retrieve-synchronously 
-             (format "http://%s:%s/api/tags" ollama-buddy-host ollama-buddy-port))
+            (let ((url-show-status nil))
+              (url-retrieve-synchronously
+               (format "http://%s:%s/api/tags" ollama-buddy-host ollama-buddy-port)))
             t)
         (error nil))))))
 
