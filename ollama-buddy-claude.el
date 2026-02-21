@@ -235,18 +235,29 @@ Use nil for API default behavior (adaptive)."
 
                  (condition-case err
                      (let* ((json-response (json-read-from-string json-response-raw))
-                            (models-data (alist-get 'data json-response))
-                            (models (mapcar (lambda (model-info)
-                                              (alist-get 'id model-info))
-                                            (append models-data nil)))
-                            (chat-models (cl-remove-if-not
-                                          (lambda (model)
-                                            (string-match-p "claude" model))
-                                          models)))
+                            (models-data (append (alist-get 'data json-response) nil))
+                            ;; Build list of (id . display_name) pairs for claude models
+                            (model-pairs
+                             (delq nil
+                                   (mapcar (lambda (model-info)
+                                             (let ((id      (alist-get 'id model-info))
+                                                   (display (alist-get 'display_name model-info)))
+                                               (when (string-match-p "claude" id)
+                                                 (cons id display))))
+                                           models-data)))
+                            (chat-models (mapcar #'car model-pairs)))
                        (ollama-buddy-remote--register-models
                         ollama-buddy-claude-marker-prefix
                         chat-models
-                        #'ollama-buddy-claude--send))
+                        #'ollama-buddy-claude--send)
+                       ;; Store display names and context windows in the shared metadata cache
+                       (dolist (pair model-pairs)
+                         (let* ((full-name (concat ollama-buddy-claude-marker-prefix (car pair)))
+                                (ctx (ollama-buddy--get-context-window full-name)))
+                           (puthash full-name
+                                    `((display-name    . ,(cdr pair))
+                                      (context-window  . ,ctx))
+                                    ollama-buddy--models-metadata-cache))))
                    (error
                     (message "Error parsing Claude models response: %s" (error-message-string err))
                     (ollama-buddy--update-status "Failed to parse Claude models response"))))))))))))

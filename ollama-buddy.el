@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 2.7.1
+;; Version: 2.7.2
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -2040,16 +2040,59 @@ TCP packets split a JSON object across multiple filter calls."
     ;; Auto-save transcript (for sentinel-based completions)
     (ollama-buddy--autosave-transcript)))
 
+(defun ollama-buddy--format-model-size (bytes)
+  "Format BYTES as a human-readable size string."
+  (when (and bytes (> bytes 0))
+    (cond
+     ((>= bytes 1073741824)
+      (format "%.1f GB" (/ (float bytes) 1073741824)))
+     ((>= bytes 1048576)
+      (format "%.0f MB" (/ (float bytes) 1048576)))
+     (t (format "%d B" bytes)))))
+
 (defun ollama-buddy--model-annotation (model)
   "Return annotation string for MODEL in completing-read.
-Shows capability indicators like ☁ for cloud, ⚒ for tool support, ⊙ for vision."
-  (let ((indicators ""))
+Shows provider, capability indicators, running status, display name,
+context window, parameter count, quantization, and disk size."
+  (let* ((indicators "")
+         (meta         (gethash model ollama-buddy--models-metadata-cache))
+         (running      (member (ollama-buddy--get-real-model-name model)
+                               (mapcar #'ollama-buddy--get-real-model-name
+                                       (ollama-buddy--get-running-models))))
+         ;; Local Ollama model fields
+         (params       (when meta (alist-get 'parameter-size meta)))
+         (quant        (when meta (alist-get 'quantization meta)))
+         (size         (when meta (ollama-buddy--format-model-size (alist-get 'size meta))))
+         ;; Remote provider fields
+         (provider     (ollama-buddy--get-provider-label model))
+         (display-name (when meta (alist-get 'display-name meta)))
+         (ctx-str      (ollama-buddy--format-context-window
+                        (ollama-buddy--get-context-window model))))
+    ;; Provider label for remote models
+    (when provider
+      (setq indicators (concat indicators "  " provider)))
+    ;; Capability indicators
     (when (ollama-buddy--cloud-model-p model)
       (setq indicators (concat indicators " ☁")))
+    (when running
+      (setq indicators (concat indicators " ▶")))
     (when (ollama-buddy--model-supports-tools model)
       (setq indicators (concat indicators " ⚒")))
     (when (ollama-buddy--model-supports-vision model)
       (setq indicators (concat indicators " ⊙")))
+    ;; Remote: human-readable display name (e.g. from Claude API)
+    (when display-name
+      (setq indicators (concat indicators "  " display-name)))
+    ;; Context window for remote models (Gemini from API, others from static table)
+    (when ctx-str
+      (setq indicators (concat indicators "  " ctx-str)))
+    ;; Local: parameter count, quantization, disk size
+    (when params
+      (setq indicators (concat indicators "  " params)))
+    (when quant
+      (setq indicators (concat indicators " " quant)))
+    (when size
+      (setq indicators (concat indicators "  " size)))
     indicators))
 
 (defun ollama-buddy--swap-model ()

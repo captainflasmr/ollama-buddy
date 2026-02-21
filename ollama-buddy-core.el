@@ -802,6 +802,112 @@ is a unique identifier and DESCRIPTION is displayed in the status line.")
 (defvar ollama-buddy--models-cache-timestamp nil
   "Timestamp when models cache was last updated.")
 
+(defvar ollama-buddy--models-metadata-cache (make-hash-table :test 'equal)
+  "Hash table mapping model name to metadata alist.
+For local Ollama models the keys come from /api/tags with fields:
+  size, parameter-size, quantization, family.
+For remote models keys are the full prefixed name with fields:
+  context-window, display-name.")
+
+(defvar ollama-buddy--provider-labels
+  '(("a:" . "OpenAI")
+    ("c:" . "Anthropic")
+    ("g:" . "Google")
+    ("k:" . "Grok")
+    ("p:" . "Copilot")
+    ("s:" . "Mistral")
+    ("d:" . "DeepSeek")
+    ("r:" . "OpenRouter"))
+  "Alist mapping model prefix string to provider display name.")
+
+(defvar ollama-buddy--context-window-table
+  '(;; OpenAI — longer/more-specific prefixes must come before shorter ones
+    ("gpt-4.1-mini"         . 1047576)
+    ("gpt-4.1-nano"         . 1047576)
+    ("gpt-4.1"              . 1047576)
+    ("gpt-4o-mini"          . 128000)
+    ("gpt-4o"               . 128000)
+    ("gpt-4-turbo"          . 128000)
+    ("gpt-4"                . 8192)
+    ("gpt-3.5-turbo"        . 16385)
+    ("gpt-5"                . 1000000)
+    ("o1-mini"              . 128000)
+    ("o1"                   . 200000)
+    ("o3-mini"              . 200000)
+    ("o3"                   . 200000)
+    ("o4-mini"              . 200000)
+    ;; Anthropic Claude — newer naming (no "3-") first, then legacy
+    ("claude-opus-4"        . 200000)
+    ("claude-sonnet-4"      . 200000)
+    ("claude-haiku-4"       . 200000)
+    ("claude-haiku"         . 200000)
+    ("claude-3-7-sonnet"    . 200000)
+    ("claude-3-5-sonnet"    . 200000)
+    ("claude-3-5-haiku"     . 200000)
+    ("claude-3-opus"        . 200000)
+    ("claude-3-haiku"       . 200000)
+    ;; Grok (xAI)
+    ("grok-4"               . 256000)
+    ("grok-3-mini"          . 131072)
+    ("grok-3"               . 131072)
+    ("grok-2"               . 131072)
+    ("grok-1"               . 8192)
+    ;; DeepSeek
+    ("deepseek-chat"        . 65536)
+    ("deepseek-reasoner"    . 65536)
+    ;; Mistral / Codestral
+    ("codestral"            . 256000)
+    ("mistral-large"        . 131072)
+    ("mistral-small"        . 131072))
+  "Static context window sizes (tokens) for well-known remote models.
+Matched by prefix of the real model name (without provider prefix).
+More specific prefixes must appear before less specific ones.")
+
+(defun ollama-buddy--get-provider-label (model)
+  "Return the provider display name for MODEL based on its prefix, or nil."
+  (catch 'found
+    (dolist (pair ollama-buddy--provider-labels)
+      (when (string-prefix-p (car pair) model)
+        (throw 'found (cdr pair))))))
+
+(defun ollama-buddy--format-context-window (tokens)
+  "Format TOKENS count as a compact context-window string.
+Uses M suffix for >= 1M (e.g. \"1M ctx\"), k suffix for >= 1k (\"128k ctx\"),
+and plain number below that."
+  (when (and tokens (> tokens 0))
+    (cond
+     ((>= tokens 1000000)
+      (format "%dM ctx" (round (/ (float tokens) 1000000))))
+     ((>= tokens 1000)
+      (format "%dk ctx" (/ tokens 1000)))
+     (t (format "%d ctx" tokens)))))
+
+(defun ollama-buddy--get-context-window (model)
+  "Return context window size in tokens for MODEL, or nil if unknown.
+Checks `ollama-buddy--models-metadata-cache' first, then the static
+`ollama-buddy--context-window-table' matched by bare model name prefix.
+Strips both local Ollama prefixes (o:, cl:) and remote provider prefixes
+(a:, c:, g:, etc.) before doing the static table lookup."
+  (let* ((meta (gethash model ollama-buddy--models-metadata-cache))
+         (cached (when meta (alist-get 'context-window meta))))
+    (or cached
+        (let* (;; Strip local prefix (o: / cl:) first
+               (after-local (ollama-buddy--get-real-model-name model))
+               ;; Then strip any remote provider prefix (a:, c:, g: ...)
+               (bare (or (catch 'stripped
+                           (dolist (pair ollama-buddy--provider-labels)
+                             (when (string-prefix-p (car pair) after-local)
+                               (throw 'stripped
+                                      (substring after-local
+                                                 (length (car pair)))))))
+                         after-local))
+               (found nil))
+          (dolist (pair ollama-buddy--context-window-table)
+            (when (and (not found)
+                       (string-prefix-p (car pair) bare))
+              (setq found (cdr pair))))
+          found))))
+
 (defvar ollama-buddy--models-cache-ttl 5
   "Time-to-live for models cache in seconds.")
 
@@ -1465,7 +1571,7 @@ Each element is a plist with :name, :authenticated, and :enabled."
            "\n\n* Welcome to _OLLAMA BUDDY_\n\n"
            "#+begin_example\n"
            "┌───────────────────────────────────┐\n"
-           "│  O L L A M A B U D D Y  [v2.7.1]  │\n"
+           "│  O L L A M A B U D D Y  [v2.7.2]  │\n"
            "└───────────────────────────────────┘\n"
            ;; "╔════════════════════════════════════════════════════════════╗\n"
            ;; "║  ▄▀▀▀▄ █   █   ▄▀▀▀▄ █▀▄▀█ ▄▀▀▀▄ █▀▀▄ █  █ █▀▀▄ █▀▀▄ █  █  ║\n"
@@ -1932,14 +2038,26 @@ When complete, CALLBACK is called with the status response and result."
 (defun ollama-buddy--get-model-names-from-result (result)
   "Extract model names from API RESULT, applying prefix if needed.
 Cloud models (those with a `-cloud' suffix or in `ollama-buddy-cloud-models')
-are excluded since they appear under the `cl:' prefix instead."
+are excluded since they appear under the `cl:' prefix instead.
+Also populates `ollama-buddy--models-metadata-cache' with size and detail info."
   (when result
+    (clrhash ollama-buddy--models-metadata-cache)
     (cl-remove-if
      (lambda (name)
        (ollama-buddy--cloud-model-p
         (ollama-buddy--get-real-model-name name)))
      (mapcar (lambda (m)
-               (ollama-buddy--get-full-model-name (alist-get 'name m)))
+               (let* ((raw-name (alist-get 'name m))
+                      (full-name (ollama-buddy--get-full-model-name raw-name))
+                      (details (alist-get 'details m))
+                      (size (alist-get 'size m)))
+                 (puthash full-name
+                          `((size          . ,size)
+                            (parameter-size . ,(alist-get 'parameter_size details))
+                            (quantization   . ,(alist-get 'quantization_level details))
+                            (family         . ,(alist-get 'family details)))
+                          ollama-buddy--models-metadata-cache)
+                 full-name))
              (alist-get 'models result)))))
 
 (defun ollama-buddy--get-running-models ()

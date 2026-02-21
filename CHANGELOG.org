@@ -11,6 +11,20 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-21 Fri> *2.7.2*
+
+Enhanced model completing-read with rich metadata annotations.
+
+*** New Features
+
+- *Rich model annotations in completing-read* -- The model selection prompt (=C-c m=) now shows metadata alongside each model name:
+  - *Local Ollama models*: parameter size (e.g. =8.0B=), quantization level (=Q4_K_M=), disk size (=4.6 GB=), and a =▶= indicator when the model is currently loaded
+  - *Remote provider models*: provider label (e.g. =OpenAI=, =Anthropic=, =Google=), context window size (e.g. =128k ctx=, =1M ctx=, =200k ctx=)
+  - *Claude models*: human-readable display name (e.g. =Claude 3 Haiku=, =Claude Sonnet 4.6=) fetched from the Anthropic API
+  - *Gemini models*: display name (e.g. =Gemini 2.5 Flash=) and context window fetched live from the Google API
+  - *All models*: existing capability indicators (=☁= cloud, =▶= running, =⚒= tools, =⊙= vision) retained
+- *Static context window table* -- Built-in context window sizes for well-known models across OpenAI, Anthropic, Grok, DeepSeek, and Mistral/Codestral; falls back to live API data for Gemini
+
 ** <2026-02-20 Thu> *2.7.1*
 
 System prompt selection directly from org browse buffers.

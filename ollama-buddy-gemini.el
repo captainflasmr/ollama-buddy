@@ -255,25 +255,32 @@ Use nil for API default behavior (adaptive)."
 
                  (condition-case err
                      (let* ((json-response (json-read-from-string json-response-raw))
-                            (models-data (alist-get 'models json-response))
-                            (models (mapcar (lambda (model-info)
-                                              (alist-get 'name model-info))
-                                            (append models-data nil)))
-                            ;; Extract just the model name part, removing the "models/" prefix
-                            (processed-models (mapcar (lambda (model)
-                                                        (if (string-match "models/\\(.*\\)" model)
-                                                            (match-string 1 model)
-                                                          model))
-                                                      models))
-                            ;; Filter to include only gemini models
-                            (chat-models (cl-remove-if-not
-                                          (lambda (model)
-                                            (string-match-p "gemini" model))
-                                          processed-models)))
+                            (models-data (append (alist-get 'models json-response) nil))
+                            ;; Build list of (short-name ctx display-name) entries
+                            (model-triples
+                             (delq nil
+                                   (mapcar (lambda (model-info)
+                                             (let* ((raw     (alist-get 'name model-info))
+                                                    (short   (if (string-match "models/\\(.*\\)" raw)
+                                                                 (match-string 1 raw)
+                                                               raw))
+                                                    (ctx     (alist-get 'inputTokenLimit model-info))
+                                                    (display (alist-get 'displayName model-info)))
+                                               (when (string-match-p "gemini" short)
+                                                 (list short ctx display))))
+                                           models-data)))
+                            (chat-models (mapcar #'car model-triples)))
                        (ollama-buddy-remote--register-models
                         ollama-buddy-gemini-marker-prefix
                         chat-models
-                        #'ollama-buddy-gemini--send))
+                        #'ollama-buddy-gemini--send)
+                       ;; Store context windows and display names in the shared metadata cache
+                       (dolist (entry model-triples)
+                         (let ((full-name (concat ollama-buddy-gemini-marker-prefix (car entry))))
+                           (puthash full-name
+                                    `((context-window . ,(cadr entry))
+                                      (display-name   . ,(caddr entry)))
+                                    ollama-buddy--models-metadata-cache))))
                    (error
                     (message "Error parsing Gemini models response: %s" (error-message-string err))
                     (ollama-buddy--update-status "Failed to parse Gemini models response"))))))))))))
