@@ -285,8 +285,10 @@ and then cleared.")
 
 (defun ollama-buddy--model-supports-thinking (model)
   "Check if MODEL supports thinking/reasoning capabilities.
-Checks both the static `ollama-buddy-thinking-models' list and the
-metadata cache populated from Ollama's /api/show capabilities array."
+Checks (in order):
+1. The exact-name list `ollama-buddy-thinking-models'.
+2. The substring/prefix patterns in `ollama-buddy-thinking-model-patterns'.
+3. The metadata cache populated from Ollama's /api/show capabilities array."
   (when model
     (let* ((real-model (ollama-buddy--get-real-model-name model))
            ;; Strip cloud suffixes for matching
@@ -296,6 +298,9 @@ metadata cache populated from Ollama's /api/show capabilities array."
            (meta (gethash model ollama-buddy--models-metadata-cache)))
       (or (member base-model ollama-buddy-thinking-models)
           (member name-only ollama-buddy-thinking-models)
+          (cl-some (lambda (pattern)
+                     (string-match-p (regexp-quote pattern) base-model))
+                   ollama-buddy-thinking-model-patterns)
           (and meta (alist-get 'thinking meta))))))
 
 ;; Function to unload a single model
@@ -2316,6 +2321,11 @@ When airplane mode is active, only local Ollama models are offered."
                                      nil t)))
     (setq ollama-buddy-default-model new-model)
     (setq ollama-buddy--current-model new-model)
+    ;; Fetch capabilities now so thinking/vision indicators are correct immediately.
+    ;; This populates the metadata cache (including the `thinking' flag from
+    ;; /api/show capabilities) before prepare-prompt-area reads it.
+    (when (ollama-buddy--ollama-running)
+      (ollama-buddy--fetch-model-context-size-sync new-model))
     (message "Switched to model: %s" new-model)
     (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
     (ollama-buddy--prepare-prompt-area t t)
@@ -3482,6 +3492,8 @@ Modifies the variable in place."
   "Set MODEL as the current model."
   (setq ollama-buddy-default-model model)
   (setq ollama-buddy--current-model model)
+  (when (ollama-buddy--ollama-running)
+    (ollama-buddy--fetch-model-context-size-sync model))
   (message "Selected model: %s" model)
   (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
   (ollama-buddy--prepare-prompt-area)
