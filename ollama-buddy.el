@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 2.7.2
+;; Version: 2.7.3
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -121,6 +121,24 @@
 
 (defvar ollama-buddy--reasoning-status-message nil
   "Current reasoning status message.")
+
+(defvar-local ollama-buddy--thinking-block-start nil
+  "Marker for the start of the currently-streaming thinking block content.
+Set when a thinking start marker is detected; cleared when the block is folded.")
+
+(defvar-local ollama-buddy--thinking-heading-markers nil
+  "List of markers, each pointing to the start of a `*** ✦ Think' heading line.
+Used by `ollama-buddy-toggle-all-thinking-blocks' to fold/unfold all blocks.")
+
+(defvar-local ollama-buddy--thinking-api-active nil
+  "Non-nil while thinking tokens are arriving via `message.thinking' API field.
+Used by models like deepseek-r1 that use a dedicated thinking field rather than
+embedding <think>...</think> tags inside message.content.")
+
+(defvar-local ollama-buddy--thinking-arrow-marker nil
+  "Marker at the start of the `*** ✦ Think' heading for the block being streamed.
+Set when the heading is inserted; passed to `ollama-buddy--collapse-thinking-block'
+and then cleared.")
 
 (defvar ollama-buddy-mode-line-segment nil
   "Mode line segment for Ollama Buddy.")
@@ -265,6 +283,21 @@
       (or (member base-model ollama-buddy-tools-models)
           (member name-only ollama-buddy-tools-models)))))
 
+(defun ollama-buddy--model-supports-thinking (model)
+  "Check if MODEL supports thinking/reasoning capabilities.
+Checks both the static `ollama-buddy-thinking-models' list and the
+metadata cache populated from Ollama's /api/show capabilities array."
+  (when model
+    (let* ((real-model (ollama-buddy--get-real-model-name model))
+           ;; Strip cloud suffixes for matching
+           (base-model (replace-regexp-in-string "[-:]cloud$" "" real-model))
+           ;; Also get name without tag (e.g. "deepseek-r1:7b" -> "deepseek-r1")
+           (name-only (car (split-string base-model ":")))
+           (meta (gethash model ollama-buddy--models-metadata-cache)))
+      (or (member base-model ollama-buddy-thinking-models)
+          (member name-only ollama-buddy-thinking-models)
+          (and meta (alist-get 'thinking meta))))))
+
 ;; Function to unload a single model
 (defun ollama-buddy-unload-model (model)
   "Unload MODEL from Ollama to free up resources.
@@ -308,15 +341,88 @@ with an empty messages array and keep_alive set to 0."
         (dolist (model running-models)
           (ollama-buddy-unload-model model))))))
 
-;; Function to toggle reasoning visibility
-(defun ollama-buddy-toggle-reasoning-visibility ()
-  "Toggle visibility of reasoning/thinking sections in responses."
+;; --- Thinking block org-heading helpers ---
+
+(defun ollama-buddy--insert-thinking-header ()
+  "Insert a `*** ✦ Think' org heading at current point (end of buffer).
+Must be called inside an `inhibit-read-only' block.
+Returns a marker at the start of the heading line."
+  (let ((heading-start (point)))
+    (insert "*** ✦ Think\n\n")
+    (copy-marker heading-start nil)))
+
+(defun ollama-buddy--collapse-thinking-block (end heading-marker)
+  "Finalise the thinking block ending at END and fold it.
+Inserts a `*** ✦ Response' heading at END, which terminates the Think subtree
+so that `outline-hide-subtree' conceals only the thinking content.
+HEADING-MARKER must point to the first character of the `*** ✦ Think' heading
+line (returned by `ollama-buddy--insert-thinking-header')."
+  ;; End the Think subtree by starting the Response section.
+  (save-excursion
+    (goto-char end)
+    (let ((inhibit-read-only t))
+      (insert "\n\n*** ✦ Response\n\n")))
+  ;; Fold the *** ✦ Think subtree using native outline folding.
+  (when (and heading-marker (marker-buffer heading-marker))
+    (save-excursion
+      (goto-char (marker-position heading-marker))
+      (outline-hide-subtree)))
+  ;; Remember this heading for toggle-all.
+  (push heading-marker ollama-buddy--thinking-heading-markers))
+
+(defun ollama-buddy--thinking-heading-folded-p (pos)
+  "Return non-nil if the `*** ✦ Think' heading at POS is currently folded."
+  (save-excursion
+    (goto-char pos)
+    (end-of-line)
+    (and (not (eobp))
+         (invisible-p (1+ (point))))))
+
+(defun ollama-buddy-toggle-thinking-at-point ()
+  "Toggle the `*** ✦ Think' heading at or above point."
   (interactive)
-  (setq ollama-buddy-hide-reasoning (not ollama-buddy-hide-reasoning))
-  (ollama-buddy--update-status
-   (if ollama-buddy-hide-reasoning "Reasoning hidden" "Reasoning shown"))
-  (message "Reasoning sections: %s"
-           (if ollama-buddy-hide-reasoning "hidden" "shown")))
+  (save-excursion
+    (beginning-of-line)
+    (unless (looking-at "^\\*\\*\\* ✦ Think")
+      (re-search-backward "^\\*\\*\\* ✦ Think" nil t))
+    (if (looking-at "^\\*\\*\\* ✦ Think")
+        (if (ollama-buddy--thinking-heading-folded-p (point))
+            (outline-show-subtree)
+          (outline-hide-subtree))
+      (message "No thinking block at or above point"))))
+
+(defun ollama-buddy-toggle-all-thinking-blocks ()
+  "Toggle all `*** ✦ Think' headings in the current buffer.
+If any is folded, expand all; otherwise fold all."
+  (interactive)
+  (let ((live (cl-remove-if-not #'marker-buffer
+                                ollama-buddy--thinking-heading-markers)))
+    (if (null live)
+        (message "No thinking blocks in this buffer")
+      (let ((any-folded (cl-some (lambda (m)
+                                   (ollama-buddy--thinking-heading-folded-p
+                                    (marker-position m)))
+                                 live)))
+        (dolist (m live)
+          (save-excursion
+            (goto-char (marker-position m))
+            (if any-folded
+                (outline-show-subtree)
+              (outline-hide-subtree))))))))
+
+(defun ollama-buddy-toggle-reasoning-visibility ()
+  "Toggle thinking block visibility.
+In collapse mode (`ollama-buddy-collapse-thinking'), folds or unfolds all
+`*** ✦ Think' headings in the buffer.
+In hide mode, toggles `ollama-buddy-hide-reasoning'."
+  (interactive)
+  (if ollama-buddy-collapse-thinking
+      (ollama-buddy-toggle-all-thinking-blocks)
+    (setq ollama-buddy-hide-reasoning (not ollama-buddy-hide-reasoning))
+    (ollama-buddy--update-status
+     (if ollama-buddy-hide-reasoning "Reasoning hidden" "Reasoning shown"))
+    (message "Reasoning sections: %s"
+             (if ollama-buddy-hide-reasoning "hidden" "shown"))))
 
 ;; Function to check if text contains a reasoning marker
 (defun ollama-buddy--find-reasoning-marker (text)
@@ -1647,6 +1753,8 @@ TCP packets split a JSON object across multiple filter calls."
     (let* ((error-msg (alist-get 'error json-data))
            (message-data (alist-get 'message json-data))
            (text (when message-data (alist-get 'content message-data)))
+           ;; thinking field: used by models like deepseek-r1 instead of <think> tags
+           (thinking-text (when message-data (alist-get 'thinking message-data)))
            (tool-calls (when message-data (alist-get 'tool_calls message-data))))
 
       ;; Check for authentication errors (cloud models)
@@ -1663,6 +1771,40 @@ TCP packets split a JSON object across multiple filter calls."
                   (insert (format "\n\n*Authentication Error:* %s\n\nPlease sign in using =C-c A= or =M-x ollama-buddy-cloud-signin=" error-msg))
                 (insert (format "\n\n*Error:* %s" error-msg)))))
           (ollama-buddy--update-status (if is-auth-error "Auth Required" "Error"))))
+
+      ;; Handle thinking tokens from the dedicated API field (e.g. deepseek-r1).
+      ;; These models stream thinking in message.thinking with content="" rather
+      ;; than embedding <think>...</think> tags in message.content.
+      (when (and thinking-text (not (string-empty-p thinking-text)))
+        ;; Start token timer on first token
+        (unless ollama-buddy--current-token-start-time
+          (setq ollama-buddy--current-token-start-time (float-time)
+                ollama-buddy--last-token-count 0
+                ollama-buddy--last-update-time nil)
+          (when ollama-buddy--token-update-timer
+            (cancel-timer ollama-buddy--token-update-timer))
+          (setq ollama-buddy--token-update-timer
+                (run-with-timer 0 ollama-buddy--token-update-interval
+                                #'ollama-buddy--update-token-rate-display)))
+        (setq ollama-buddy--current-token-count (1+ ollama-buddy--current-token-count))
+        (with-current-buffer ollama-buddy--chat-buffer
+          (let ((inhibit-read-only t))
+            (save-excursion
+              (goto-char (point-max))
+              (cond
+               ;; Collapse: stream content visibly, overlay applied on transition
+               (ollama-buddy-collapse-thinking
+                (unless ollama-buddy--thinking-api-active
+                  (setq ollama-buddy--thinking-api-active t
+                        ollama-buddy--thinking-arrow-marker (ollama-buddy--insert-thinking-header)
+                        ollama-buddy--thinking-block-start  (copy-marker (point) nil)))
+                (insert thinking-text))
+               ;; Hide: silently discard
+               (ollama-buddy-hide-reasoning
+                (setq ollama-buddy--thinking-api-active t))
+               ;; Show: insert raw
+               (t
+                (insert thinking-text)))))))
 
       ;; Rest of the function remains the same...
       (when text
@@ -1696,12 +1838,55 @@ TCP packets split a JSON object across multiple filter calls."
               (goto-char (point-max))
 
               (setq ollama-buddy--reasoning-marker-found nil)
-              
-              (when ollama-buddy-hide-reasoning
-                (setq ollama-buddy--reasoning-marker-found (ollama-buddy--find-reasoning-marker text))
+
+              ;; Close thinking-API block when content tokens start arriving.
+              ;; deepseek-r1 style: thinking came via message.thinking, content="" until now.
+              (when (and ollama-buddy--thinking-api-active
+                         (not (string-empty-p text)))
+                (setq ollama-buddy--thinking-api-active nil
+                      ollama-buddy--reasoning-skip-newlines t)
+                (when (and ollama-buddy-collapse-thinking
+                           ollama-buddy--thinking-block-start)
+                  (ollama-buddy--collapse-thinking-block
+                   (point-max)
+                   ollama-buddy--thinking-arrow-marker)
+                  (set-marker ollama-buddy--thinking-block-start nil)
+                  (setq ollama-buddy--thinking-block-start  nil
+                        ollama-buddy--thinking-arrow-marker nil)))
+
+              (cond
+               ;; --- Collapse mode: stream content visibly, then fold heading ---
+               (ollama-buddy-collapse-thinking
+                (setq ollama-buddy--reasoning-marker-found
+                      (ollama-buddy--find-reasoning-marker text))
                 (cond
-                 ;; Found a start marker
-                 ((and ollama-buddy--reasoning-marker-found (eq (car ollama-buddy--reasoning-marker-found) 'start))
+                 ;; Start marker: insert header as real text, record content start
+                 ((and ollama-buddy--reasoning-marker-found
+                       (eq (car ollama-buddy--reasoning-marker-found) 'start))
+                  (setq ollama-buddy--in-reasoning-section t
+                        ollama-buddy--thinking-arrow-marker (ollama-buddy--insert-thinking-header)
+                        ollama-buddy--thinking-block-start  (copy-marker (point) nil)))
+                 ;; End marker: fold the *** ✦ Think heading
+                 ((and ollama-buddy--reasoning-marker-found
+                       (eq (car ollama-buddy--reasoning-marker-found) 'end)
+                       ollama-buddy--in-reasoning-section)
+                  (setq ollama-buddy--in-reasoning-section nil
+                        ollama-buddy--reasoning-skip-newlines t)
+                  (when ollama-buddy--thinking-block-start
+                    (ollama-buddy--collapse-thinking-block
+                     (point-max)
+                     ollama-buddy--thinking-arrow-marker)
+                    (set-marker ollama-buddy--thinking-block-start nil)
+                    (setq ollama-buddy--thinking-block-start  nil
+                          ollama-buddy--thinking-arrow-marker nil)))))
+
+               ;; --- Hide mode: show status message then delete block ---
+               (ollama-buddy-hide-reasoning
+                (setq ollama-buddy--reasoning-marker-found
+                      (ollama-buddy--find-reasoning-marker text))
+                (cond
+                 ((and ollama-buddy--reasoning-marker-found
+                       (eq (car ollama-buddy--reasoning-marker-found) 'start))
                   (setq ollama-buddy--in-reasoning-section t
                         ollama-buddy--reasoning-status-message
                         (format "%s..."
@@ -1710,29 +1895,33 @@ TCP packets split a JSON object across multiple filter calls."
                                   "[<>]" "" (car (cdr ollama-buddy--reasoning-marker-found))))))
                   (setq ollama-buddy--start-point (point))
                   (insert ollama-buddy--reasoning-status-message))
-                 ;; Found an end marker
-                 ((and ollama-buddy--reasoning-marker-found (eq (car ollama-buddy--reasoning-marker-found) 'end))
+                 ((and ollama-buddy--reasoning-marker-found
+                       (eq (car ollama-buddy--reasoning-marker-found) 'end))
                   (setq ollama-buddy--in-reasoning-section nil
                         ollama-buddy--reasoning-status-message nil
-                        ollama-buddy--reasoning-skip-newlines t)  ; Flag to skip initial newlines
-                  ;; (message "end : %s" text)
+                        ollama-buddy--reasoning-skip-newlines t)
                   (when ollama-buddy--start-point
                     (delete-region ollama-buddy--start-point (point-max))
-                    (setq ollama-buddy--start-point nil)))))
-              
-              (when (and (not ollama-buddy-hide-reasoning) ollama-buddy--start-point)
+                    (setq ollama-buddy--start-point nil))))))
+
+              ;; Legacy: clean up stray start-point when neither mode is active
+              (when (and (not ollama-buddy-hide-reasoning)
+                         (not ollama-buddy-collapse-thinking)
+                         ollama-buddy--start-point)
                 (delete-region ollama-buddy--start-point (point-max))
                 (setq ollama-buddy--start-point nil))
-              
+
+              ;; Insert text unless: hide-mode and inside block, or any marker chunk found
+              ;; (In collapse mode we still insert during the block so user sees it stream)
               (unless (or (and ollama-buddy-hide-reasoning
+                               (not ollama-buddy-collapse-thinking)
                                ollama-buddy--in-reasoning-section)
                           ollama-buddy--reasoning-marker-found)
-                ;; If we just exited reasoning section and need to skip newlines
+                ;; Skip leading newlines immediately after a thinking block ends
                 (if (and ollama-buddy--reasoning-skip-newlines
                          (not ollama-buddy--in-reasoning-section)
                          (string-match "^[\n\r]+" text))
                     (let ((cleaned-text (replace-regexp-in-string "^[\n\r]+" "" text)))
-                      ;; Only insert if there's content after removing newlines
                       (unless (string-empty-p cleaned-text)
                         (insert cleaned-text)
                         (setq ollama-buddy--reasoning-skip-newlines nil)))
@@ -1760,23 +1949,38 @@ TCP packets split a JSON object across multiple filter calls."
                            (ollama-buddy--cloud-model-p ollama-buddy--current-model))
                   (ollama-buddy--set-cloud-auth-status t))
 
-                ;; If we're still in a reasoning section at the end, force exit
-                (when (and ollama-buddy-hide-reasoning
-                           ollama-buddy--in-reasoning-section)
-                  (setq ollama-buddy--in-reasoning-section nil
-                        ollama-buddy--reasoning-status-message nil)
-                  (when ollama-buddy--start-point
-                    (delete-region ollama-buddy--start-point (point-max))
-                    (setq ollama-buddy--start-point nil))
-                  (insert "\n[Warning: Response ended with unclosed reasoning section]\n\n")
-                  ;; Show any remaining content that wasn't displayed
-                  (when (boundp 'ollama-buddy--current-response)
-                    (let ((remaining-content (substring ollama-buddy--current-response
-                                                        (if ollama-buddy--start-point
-                                                            (- ollama-buddy--start-point (point-min))
-                                                          0))))
-                      (unless (string-empty-p remaining-content)
-                        (insert remaining-content)))))
+                ;; If still in thinking-API phase at stream end, close overlay
+                (when ollama-buddy--thinking-api-active
+                  (setq ollama-buddy--thinking-api-active nil)
+                  (when (and ollama-buddy-collapse-thinking
+                             ollama-buddy--thinking-block-start)
+                    (ollama-buddy--collapse-thinking-block
+                     (point-max)
+                     ollama-buddy--thinking-arrow-marker)
+                    (set-marker ollama-buddy--thinking-block-start nil)
+                    (setq ollama-buddy--thinking-block-start  nil
+                          ollama-buddy--thinking-arrow-marker nil)))
+
+                ;; If still in a marker-based reasoning section at stream end, force exit
+                (when ollama-buddy--in-reasoning-section
+                  (setq ollama-buddy--in-reasoning-section nil)
+                  (cond
+                   ;; Collapse mode: fold whatever arrived into the heading
+                   (ollama-buddy-collapse-thinking
+                    (when ollama-buddy--thinking-block-start
+                      (ollama-buddy--collapse-thinking-block
+                       (point-max)
+                       ollama-buddy--thinking-arrow-marker)
+                      (set-marker ollama-buddy--thinking-block-start nil)
+                      (setq ollama-buddy--thinking-block-start  nil
+                            ollama-buddy--thinking-arrow-marker nil)))
+                   ;; Hide mode: delete the partial block
+                   (ollama-buddy-hide-reasoning
+                    (setq ollama-buddy--reasoning-status-message nil)
+                    (when ollama-buddy--start-point
+                      (delete-region ollama-buddy--start-point (point-max))
+                      (setq ollama-buddy--start-point nil))
+                    (insert "\n[Warning: Response ended with unclosed reasoning section]\n\n"))))
 
                 ;; Pulse the response region to indicate completion
                 (when (and ollama-buddy-pulse-response
@@ -2080,6 +2284,8 @@ context window, parameter count, quantization, and disk size."
       (setq indicators (concat indicators " ⚒")))
     (when (ollama-buddy--model-supports-vision model)
       (setq indicators (concat indicators " ⊙")))
+    (when (ollama-buddy--model-supports-thinking model)
+      (setq indicators (concat indicators " ✦")))
     ;; Remote: human-readable display name (e.g. from Claude API)
     (when display-name
       (setq indicators (concat indicators "  " display-name)))
@@ -3138,6 +3344,8 @@ Modifies the variable in place."
               (insert " ⚒"))
             (when (ollama-buddy--model-supports-vision model)
               (insert " ⊙"))
+            (when (ollama-buddy--model-supports-thinking model)
+              (insert " ✦"))
 
             (insert "  ")
 
@@ -3216,6 +3424,8 @@ Modifies the variable in place."
                 (insert "⚒"))
               (when (ollama-buddy--model-supports-vision display-model)
                 (insert "⊙"))
+              (when (ollama-buddy--model-supports-thinking display-model)
+                (insert "✦"))
               (insert "  ")
               ;; Pull manifest button
               (insert-text-button
@@ -3259,6 +3469,8 @@ Modifies the variable in place."
                       (insert " ⚒"))
                     (when (ollama-buddy--model-supports-vision display-model)
                       (insert " ⊙"))
+                    (when (ollama-buddy--model-supports-thinking display-model)
+                      (insert " ✦"))
                     (insert "\n")))
                 (insert "\n")))))
         )

@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 2.5.3
+@subtitle For Ollama Buddy version 2.7.3
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -64,6 +64,7 @@ allowing you to leverage powerful large language models (LLMs) directly within y
 * Ollama Cloud Models::         Using Ollama's cloud-hosted models
 * Global System Prompt::        Configuring a persistent global system prompt
 * Tone Selector::               Quickly switch response style
+* Thinking Blocks::             Collapsible reasoning output for thinking models
 * Tool Calling::                Enabling LLMs to invoke Emacs functions
 * RAG::                         Retrieval-Augmented Generation with local documents
 * Advanced Usage::              Tips and techniques for power users
@@ -3100,6 +3101,48 @@ The currently active tone name (default: @code{"Normal"}).
 The selected tone text is prepended to the effective system prompt. The combination order is: tone + global prompt + session prompt. When the tone is ``Normal'' (empty string), no tone text is added.
 
 The header line shows a @code{~X} indicator when a non-Normal tone is active, where @code{X} is the first letter of the tone name (e.g.@: @code{~C} for Concise, @code{~L} for Learning).
+
+@node Thinking Blocks
+@chapter Thinking Blocks
+
+@section Overview
+
+Reasoning models (such as DeepSeek-R1, QwQ, and others) produce an internal chain-of-thought before giving their final answer. Ollama Buddy renders this reasoning content as a native org-mode heading that folds automatically, so the thinking process is available for inspection but does not clutter the conversation.
+
+@section How It Works
+
+When a model emits @code{<think>} tags or uses the DeepSeek @code{message.thinking} API field, Ollama Buddy:
+
+@enumerate
+@item Inserts a @code{*** ✦ Think} org heading in the chat buffer.
+@item Streams the reasoning content under that heading in real time.
+@item When reasoning ends, folds the heading with @code{outline-hide-subtree} and inserts a @code{*** ✦ Response} heading to mark the start of the actual answer.
+@end enumerate
+
+The @code{✦} symbol appears in the header line and prompt line whenever the active model supports thinking/reasoning.
+
+@section Key Bindings
+
+@table @kbd
+@item C-c V
+Toggle all thinking blocks in the buffer --- expands any that are folded, or folds all if they are all expanded.
+
+@item TAB
+On a @code{*** ✦ Think} heading line, cycle visibility of that individual block (standard org-mode behavior).
+@end table
+
+@section Configuration
+
+@table @asis
+@item @code{ollama-buddy-collapse-thinking}
+When non-nil (default @code{t}), thinking content is automatically collapsed to the @code{*** ✦ Think} heading after the reasoning block ends.
+
+@item @code{ollama-buddy-hide-reasoning}
+When non-nil and @code{ollama-buddy-collapse-thinking} is nil, the thinking block is hidden entirely (replaced by ``Thinking@dots{}'') rather than kept in the buffer.
+
+@item @code{ollama-buddy-thinking-models}
+Static list of model name substrings that are known reasoning models. Auto-detection from the Ollama @code{/api/show} capabilities array is also performed.
+@end table
 
 @node Tool Calling
 @chapter Tool Calling

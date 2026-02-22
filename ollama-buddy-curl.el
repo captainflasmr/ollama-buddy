@@ -20,6 +20,8 @@
 (declare-function ollama-buddy--model-supports-vision "ollama-buddy")
 (declare-function ollama-buddy--check-context-before-send "ollama-buddy")
 (declare-function ollama-buddy--find-reasoning-marker "ollama-buddy")
+(declare-function ollama-buddy--insert-thinking-header "ollama-buddy")
+(declare-function ollama-buddy--collapse-thinking-block "ollama-buddy")
 (declare-function ollama-buddy--update-token-rate-display "ollama-buddy")
 (declare-function ollama-buddy--send-next-in-sequence "ollama-buddy")
 (declare-function ollama-buddy--autosave-transcript "ollama-buddy")
@@ -217,15 +219,59 @@ When complete, CALLBACK is called with the status response and result."
         (let* ((json-data (json-read-from-string json-line))
                (message-data (alist-get 'message json-data))
                (content (when message-data (alist-get 'content message-data)))
+               (thinking-text (when message-data (alist-get 'thinking message-data)))
                (done (alist-get 'done json-data)))
-          
+
+          ;; Handle thinking-API tokens (e.g. deepseek-r1)
+          (when (and thinking-text (not (string-empty-p thinking-text)))
+            (ollama-buddy-curl--handle-thinking thinking-text))
+
           (when content
             (ollama-buddy-curl--handle-content content))
-          
+
           (when (eq done t)
             (ollama-buddy-curl--handle-completion json-data)))
       (error
        (message "Error parsing JSON: %s" (error-message-string err))))))
+
+(defun ollama-buddy-curl--handle-thinking (thinking-text)
+  "Handle a thinking token from the message.thinking API field."
+  (unless ollama-buddy--current-token-start-time
+    (setq ollama-buddy--current-token-start-time (float-time)
+          ollama-buddy--current-token-count 0
+          ollama-buddy--current-response "")
+    (when ollama-buddy--token-update-timer
+      (cancel-timer ollama-buddy--token-update-timer))
+    (setq ollama-buddy--token-update-timer
+          (run-with-timer 0 ollama-buddy--token-update-interval
+                          #'ollama-buddy--update-token-rate-display)))
+  (setq ollama-buddy--current-token-count (1+ ollama-buddy--current-token-count))
+  (with-current-buffer ollama-buddy--chat-buffer
+    (let* ((inhibit-read-only t)
+           (window (get-buffer-window ollama-buddy--chat-buffer t))
+           (old-point (and window (window-point window)))
+           (was-at-end (and window (>= old-point (point-max))))
+           (old-window-start (and window (window-start window))))
+      (save-excursion
+        (goto-char (point-max))
+        (cond
+         (ollama-buddy-collapse-thinking
+          (unless ollama-buddy--thinking-api-active
+            (setq ollama-buddy--thinking-api-active t
+                  ollama-buddy--thinking-arrow-marker (ollama-buddy--insert-thinking-header)
+                  ollama-buddy--thinking-block-start  (copy-marker (point) nil)))
+          (insert thinking-text))
+         (ollama-buddy-hide-reasoning
+          (setq ollama-buddy--thinking-api-active t))
+         (t
+          (insert thinking-text))))
+      (when window
+        (cond
+         ((and was-at-end ollama-buddy-auto-scroll)
+          (set-window-point window (point-max)))
+         (t
+          (set-window-point window old-point)
+          (set-window-start window old-window-start t)))))))
 
 (defun ollama-buddy-curl--handle-content (content)
   "Handle content token from curl response."
@@ -262,12 +308,48 @@ When complete, CALLBACK is called with the status response and result."
         (save-excursion
           (goto-char (point-max))
 
-          ;; Handle reasoning hiding
+          ;; Close thinking-API block on first content token (deepseek-r1 style)
+          (when (and ollama-buddy--thinking-api-active
+                     (not (string-empty-p content)))
+            (setq ollama-buddy--thinking-api-active nil)
+            (when (and ollama-buddy-collapse-thinking
+                       ollama-buddy--thinking-block-start)
+              (ollama-buddy--collapse-thinking-block
+               (point-max)
+               ollama-buddy--thinking-arrow-marker)
+              (set-marker ollama-buddy--thinking-block-start nil)
+              (setq ollama-buddy--thinking-block-start  nil
+                    ollama-buddy--thinking-arrow-marker nil)))
+
+          ;; Handle thinking block / reasoning hiding
           (let ((should-show-content t))
-            (when ollama-buddy-hide-reasoning
-              (let ((reasoning-marker (ollama-buddy--find-reasoning-marker content)))
+            (let ((reasoning-marker (ollama-buddy--find-reasoning-marker content)))
+              (cond
+               ;; --- Collapse mode ---
+               (ollama-buddy-collapse-thinking
                 (cond
-                 ;; Start of reasoning section
+                 ((and reasoning-marker (eq (car reasoning-marker) 'start))
+                  (setq ollama-buddy--in-reasoning-section t
+                        should-show-content nil
+                        ollama-buddy--thinking-arrow-marker (ollama-buddy--insert-thinking-header)
+                        ollama-buddy--thinking-block-start  (copy-marker (point) nil)))
+                 ((and reasoning-marker (eq (car reasoning-marker) 'end)
+                       ollama-buddy--in-reasoning-section)
+                  (setq ollama-buddy--in-reasoning-section nil
+                        should-show-content nil)
+                  (when ollama-buddy--thinking-block-start
+                    (ollama-buddy--collapse-thinking-block
+                     (point-max)
+                     ollama-buddy--thinking-arrow-marker)
+                    (set-marker ollama-buddy--thinking-block-start nil)
+                    (setq ollama-buddy--thinking-block-start  nil
+                          ollama-buddy--thinking-arrow-marker nil)))
+                 ;; Inside block: stream normally
+                 (ollama-buddy--in-reasoning-section
+                  (setq should-show-content t))))
+               ;; --- Hide mode ---
+               (ollama-buddy-hide-reasoning
+                (cond
                  ((and reasoning-marker (eq (car reasoning-marker) 'start))
                   (setq ollama-buddy--in-reasoning-section t
                         should-show-content nil)
@@ -276,18 +358,15 @@ When complete, CALLBACK is called with the status response and result."
                                    (replace-regexp-in-string
                                     "[<>]" ""
                                     (cadr reasoning-marker))))))
-                 ;; End of reasoning section
                  ((and reasoning-marker (eq (car reasoning-marker) 'end))
                   (setq ollama-buddy--in-reasoning-section nil
                         should-show-content nil)
-                  ;; Remove the reasoning indicator if present
                   (when (re-search-backward "\\[.*\\.\\.\\.]" (line-beginning-position) t)
                     (delete-region (match-beginning 0) (match-end 0))))
-                 ;; Inside reasoning section
                  (ollama-buddy--in-reasoning-section
-                  (setq should-show-content nil)))))
+                  (setq should-show-content nil))))))
 
-            ;; Insert content if not hidden
+            ;; Insert content if not suppressed
             (when should-show-content
               (insert content))))
 
@@ -378,6 +457,11 @@ When complete, CALLBACK is called with the status response and result."
               ollama-buddy--current-response ""
               ollama-buddy--in-reasoning-section nil
               ollama-buddy-curl--headers-processed nil)
+        (when ollama-buddy--thinking-block-start
+          (set-marker ollama-buddy--thinking-block-start nil)
+          (setq ollama-buddy--thinking-block-start nil))
+        (setq ollama-buddy--thinking-api-active nil
+              ollama-buddy--thinking-arrow-marker nil)
         
         ;; Reset temporary model
         (when ollama-buddy--current-request-temporary-model

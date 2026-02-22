@@ -35,6 +35,7 @@
 (declare-function ollama-buddy--detect-image-files "ollama-buddy")
 (declare-function ollama-buddy--model-supports-vision "ollama-buddy")
 (declare-function ollama-buddy--model-supports-tools "ollama-buddy")
+(declare-function ollama-buddy--model-supports-thinking "ollama-buddy")
 (declare-function ollama-buddy--check-context-before-send "ollama-buddy")
 (declare-function ollama-buddy-curl--validate-executable "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--test-connection "ollama-buddy-curl")
@@ -192,6 +193,19 @@ Second value (1.0) is the red threshold (at or exceeding limit)."
   :type '(repeat string)
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-thinking-models
+  '("deepseek-r1" "deepseek-r1:1.5b" "deepseek-r1:7b" "deepseek-r1:8b"
+    "deepseek-r1:14b" "deepseek-r1:32b" "deepseek-r1:70b" "deepseek-r1:671b"
+    "qwen3" "qwen3:0.6b" "qwen3:1.7b" "qwen3:4b" "qwen3:8b"
+    "qwen3:14b" "qwen3:30b" "qwen3:32b" "qwen3:235b"
+    "phi4-mini-reasoning" "phi4-reasoning"
+    "marco-o1" "skyfall" "deepthink")
+  "List of models known to support thinking/reasoning capabilities.
+These models emit extended reasoning in <think>...</think> blocks.
+Auto-detection via Ollama's /api/show capabilities array supplements this list."
+  :type '(repeat string)
+  :group 'ollama-buddy)
+
 (defvar ollama-buddy-airplane-mode nil
   "When non-nil, restrict ollama-buddy to local Ollama models only.
 All cloud models, external providers (OpenAI, Claude, Gemini, etc.) and
@@ -204,8 +218,17 @@ Use `ollama-buddy-toggle-airplane-mode' to toggle.")
   :type '(repeat string)
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-collapse-thinking t
+  "When non-nil, wrap thinking blocks in a collapsible overlay after streaming.
+Content streams in visibly, then collapses to a `[✦ Think ▶]' header when
+`</think>' is received.  Toggle with `C-c V' or by pressing RET on the header.
+When nil, `ollama-buddy-hide-reasoning' controls the behaviour instead."
+  :type 'boolean
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-hide-reasoning nil
-  "When non-nil, hide reasoning/thinking blocks from the stream output."
+  "When non-nil, hide reasoning/thinking blocks from the stream output.
+Has no effect when `ollama-buddy-collapse-thinking' is non-nil."
   :type 'boolean
   :group 'ollama-buddy)
 
@@ -1335,13 +1358,25 @@ The context length is stored in keys like `llama.context_length' or
 
 (defun ollama-buddy--fetch-model-context-size-sync (model)
   "Synchronously fetch context size for MODEL from Ollama API.
-Returns the context size or nil if the API call fails."
+Returns the context size or nil if the API call fails.
+As a side effect, caches the thinking capability in
+`ollama-buddy--models-metadata-cache' when the capabilities array
+from /api/show includes \"thinking\"."
   (condition-case nil
       (let* ((real-model (ollama-buddy--get-real-model-name model))
              (endpoint "/api/show")
              (payload (json-encode `((model . ,real-model))))
              (response (ollama-buddy--make-request endpoint "POST" payload)))
         (when response
+          ;; Cache thinking capability detected via Ollama's capabilities array
+          (let ((capabilities (append (alist-get 'capabilities response) nil)))
+            (when (member "thinking" capabilities)
+              (let ((cached-meta (or (gethash model ollama-buddy--models-metadata-cache) '())))
+                (unless (alist-get 'thinking cached-meta)
+                  (puthash model
+                           (cons '(thinking . t) cached-meta)
+                           ollama-buddy--models-metadata-cache)))))
+          ;; Return context size
           (let ((model-info (alist-get 'model_info response)))
             (ollama-buddy--extract-context-length-from-model-info model-info))))
     (error nil)))
@@ -1571,7 +1606,7 @@ Each element is a plist with :name, :authenticated, and :enabled."
            "\n\n* Welcome to _OLLAMA BUDDY_\n\n"
            "#+begin_example\n"
            "┌───────────────────────────────────┐\n"
-           "│  O L L A M A B U D D Y  [v2.7.2]  │\n"
+           "│  O L L A M A B U D D Y  [v2.7.3]  │\n"
            "└───────────────────────────────────┘\n"
            ;; "╔════════════════════════════════════════════════════════════╗\n"
            ;; "║  ▄▀▀▀▄ █   █   ▄▀▀▀▄ █▀▄▀█ ▄▀▀▀▄ █▀▀▄ █  █ █▀▀▄ █▀▀▄ █  █  ║\n"
@@ -1879,7 +1914,8 @@ When SYSTEM-PROMPT is non-nil, mark as a system prompt."
          (existing-content (when keep-content (ollama-buddy--text-after-prompt)))
          (cloud-indicator (if (ollama-buddy--cloud-model-p model) "☁" ""))
          (tools-indicator (if (ollama-buddy--model-supports-tools model) "⚒" ""))
-         (indicators (string-trim (concat cloud-indicator tools-indicator))))
+         (thinking-indicator (if (ollama-buddy--model-supports-thinking model) "✦" ""))
+         (indicators (string-trim (concat cloud-indicator tools-indicator thinking-indicator))))
 
     (let ((buf (get-buffer-create ollama-buddy--chat-buffer)))
       (with-current-buffer buf
@@ -2363,6 +2399,7 @@ ACTUAL-MODEL is the model being used instead."
                                      (ollama-buddy--model-supports-tools model))
                                 "⚒" ""))
            (vision-indicator (if (ollama-buddy--model-supports-vision model) "⊙" ""))
+           (thinking-indicator (if (ollama-buddy--model-supports-thinking model) "✦" ""))
            (attachment-indicator (if ollama-buddy--current-attachments
                                      (propertize (format "≡%d" (length ollama-buddy--current-attachments))
                                                  'face '(:weight bold))
@@ -2385,7 +2422,7 @@ ACTUAL-MODEL is the model being used instead."
                                            'face '(:weight bold))))))
       (setq header-line-format
             (concat
-             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s %s %s%s"
+             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s %s %s%s"
                      airplane-indicator
                      (if ollama-buddy-streaming-enabled "" "x")
                      (ollama-buddy--add-context-to-status-format)
@@ -2394,10 +2431,12 @@ ACTUAL-MODEL is the model being used instead."
                      cloud-indicator
                      tools-indicator
                      vision-indicator
+                     thinking-indicator
                      attachment-indicator
                      web-search-indicator
                      rag-indicator
-                     (if ollama-buddy-hide-reasoning "V" "")
+                     (if (and ollama-buddy-hide-reasoning
+                              (not ollama-buddy-collapse-thinking)) "V" "")
                      (if ollama-buddy-display-token-stats "T" "")
                      tone-indicator
 

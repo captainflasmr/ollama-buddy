@@ -11,6 +11,20 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-22 Sun> *2.7.3*
+
+Native org-mode collapsible thinking blocks for reasoning models.
+
+*** New Features
+
+- *Collapsible thinking blocks* -- Reasoning model output (=<think>= tags and DeepSeek =message.thinking= API field) is now rendered as a native org-mode heading (=*** ✦ Think=) that folds with =outline-hide-subtree=. While the model streams its reasoning the content is visible under the heading; when the thinking ends the heading is automatically folded, and a =*** ✦ Response= heading is inserted to mark the start of the actual response. Use =C-c V= to toggle all thinking blocks in the buffer, or =TAB= on any =*** ✦ Think= heading line to toggle that block individually.
+- *Thinking block visual demarcation* -- When a thinking block is expanded a blank line precedes the =*** ✦ Response= heading, giving clear visual separation between reasoning and response content.
+- *Thinking model indicator* -- The =✦= symbol is shown in the status line header and prompt line when the current model supports thinking/reasoning.
+
+*** Internal
+
+- Replaced custom overlay approach with native org/outline folding (=outline-hide-subtree= / =outline-show-subtree=), eliminating all custom keymaps, text-property tracking, and arrow-char manipulation from the previous implementation.
+
 ** <2026-02-21 Fri> *2.7.2*
 
 Enhanced model completing-read with rich metadata annotations.

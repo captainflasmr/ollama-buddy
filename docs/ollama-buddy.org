@@ -269,117 +269,122 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Built_002din-Tones][20.3 Built-in Tones]]
   - [[#Configuration-5][20.4 Configuration]]
   - [[#How-It-Works-2][20.5 How It Works]]
-- [[#Tool-Calling][21 Tool Calling]]
+- [[#Thinking-Blocks][21 Thinking Blocks]]
   - [[#Overview-7][21.1 Overview]]
-  - [[#Setup][21.2 Setup]]
-  - [[#Built_002din-Tools][21.3 Built-in Tools]]
-    - [[#Safe-Tools-_0028available-in-safe-mode_0029][21.3.1 Safe Tools
-      (available in safe mode)]]
-    - [[#Unsafe-Tools-_0028require-safe-mode-off_0029][21.3.2 Unsafe
-      Tools (require safe mode off)]]
-  - [[#Example-Prompts][21.4 Example Prompts]]
-  - [[#How-It-Works-3][21.5 How It Works]]
-    - [[#Model-Compatibility][21.5.1 Model Compatibility]]
-  - [[#Configuration-6][21.6 Configuration]]
-  - [[#Registering-Custom-Tools][21.7 Registering Custom Tools]]
-  - [[#Interactive-Commands][21.8 Interactive Commands]]
-  - [[#Tool-Indicators][21.9 Tool Indicators]]
-- [[#RAG][22 RAG (Retrieval-Augmented Generation)]]
+  - [[#How-It-Works-3][21.2 How It Works]]
+  - [[#Key-Bindings][21.3 Key Bindings]]
+  - [[#Configuration-6][21.4 Configuration]]
+- [[#Tool-Calling][22 Tool Calling]]
   - [[#Overview-8][22.1 Overview]]
-  - [[#Requirements][22.2 Requirements]]
-  - [[#Quick-Start-2][22.3 Quick Start]]
-  - [[#How-It-Works-4][22.4 How It Works]]
-  - [[#Configuration-7][22.5 Configuration]]
-  - [[#PDF-Support][22.6 PDF Support]]
-  - [[#Interactive-Commands-1][22.7 Interactive Commands]]
-  - [[#Inline-_0040rag_0028_0029-Syntax][22.8 Inline @rag() Syntax]]
-  - [[#Example-Workflow][22.9 Example Workflow]]
-- [[#Advanced-Usage][23 Advanced Usage]]
-  - [[#Managing-Token-Usage][23.1 Managing Token Usage]]
-  - [[#Customizing-the-Interface][23.2 Customizing the Interface]]
-    - [[#Streaming-Options][23.2.1 Streaming Options]]
-    - [[#Debug-Mode][23.2.2 Debug Mode]]
-  - [[#Editing-Conversation-History][23.3 Editing Conversation History]]
-  - [[#Advanced-System-Prompt-Management][23.4 Advanced System Prompt
+  - [[#Setup][22.2 Setup]]
+  - [[#Built_002din-Tools][22.3 Built-in Tools]]
+    - [[#Safe-Tools-_0028available-in-safe-mode_0029][22.3.1 Safe Tools
+      (available in safe mode)]]
+    - [[#Unsafe-Tools-_0028require-safe-mode-off_0029][22.3.2 Unsafe
+      Tools (require safe mode off)]]
+  - [[#Example-Prompts][22.4 Example Prompts]]
+  - [[#How-It-Works-4][22.5 How It Works]]
+    - [[#Model-Compatibility][22.5.1 Model Compatibility]]
+  - [[#Configuration-7][22.6 Configuration]]
+  - [[#Registering-Custom-Tools][22.7 Registering Custom Tools]]
+  - [[#Interactive-Commands][22.8 Interactive Commands]]
+  - [[#Tool-Indicators][22.9 Tool Indicators]]
+- [[#RAG][23 RAG (Retrieval-Augmented Generation)]]
+  - [[#Overview-9][23.1 Overview]]
+  - [[#Requirements][23.2 Requirements]]
+  - [[#Quick-Start-2][23.3 Quick Start]]
+  - [[#How-It-Works-5][23.4 How It Works]]
+  - [[#Configuration-8][23.5 Configuration]]
+  - [[#PDF-Support][23.6 PDF Support]]
+  - [[#Interactive-Commands-1][23.7 Interactive Commands]]
+  - [[#Inline-_0040rag_0028_0029-Syntax][23.8 Inline @rag() Syntax]]
+  - [[#Example-Workflow][23.9 Example Workflow]]
+- [[#Advanced-Usage][24 Advanced Usage]]
+  - [[#Managing-Token-Usage][24.1 Managing Token Usage]]
+  - [[#Customizing-the-Interface][24.2 Customizing the Interface]]
+    - [[#Streaming-Options][24.2.1 Streaming Options]]
+    - [[#Debug-Mode][24.2.2 Debug Mode]]
+  - [[#Editing-Conversation-History][24.3 Editing Conversation History]]
+  - [[#Advanced-System-Prompt-Management][24.4 Advanced System Prompt
     Management]]
-    - [[#Setting-a-system-prompt-without-sending][23.4.1 Setting a
+    - [[#Setting-a-system-prompt-without-sending][24.4.1 Setting a
       system prompt without sending]]
-    - [[#Using-a-system-prompt-from-Fabric][23.4.2 Using a system prompt
+    - [[#Using-a-system-prompt-from-Fabric][24.4.2 Using a system prompt
       from Fabric]]
-  - [[#Using-Direct-API-Access][23.5 Using Direct API Access]]
-- [[#API-Reference][24 API Reference]]
-  - [[#Interactive-Functions][24.1 Interactive Functions]]
-  - [[#Core-Functions][24.2 Core Functions]]
-  - [[#Customization-Functions][24.3 Customization Functions]]
-- [[#FAQ][25 Frequently Asked Questions]]
-  - [[#General-Questions][25.1 General Questions]]
-    - [[#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f][25.1.1
+  - [[#Using-Direct-API-Access][24.5 Using Direct API Access]]
+- [[#API-Reference][25 API Reference]]
+  - [[#Interactive-Functions][25.1 Interactive Functions]]
+  - [[#Core-Functions][25.2 Core Functions]]
+  - [[#Customization-Functions][25.3 Customization Functions]]
+- [[#FAQ][26 Frequently Asked Questions]]
+  - [[#General-Questions][26.1 General Questions]]
+    - [[#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f][26.1.1
       What is the difference between Ollama Buddy and other AI
       assistants?]]
-    - [[#Does-Ollama-Buddy-require-an-internet-connection_003f][25.1.2
+    - [[#Does-Ollama-Buddy-require-an-internet-connection_003f][26.1.2
       Does Ollama Buddy require an internet connection?]]
-    - [[#How-do-I-use-Ollama-cloud-models_003f][25.1.3 How do I use
+    - [[#How-do-I-use-Ollama-cloud-models_003f][26.1.3 How do I use
       Ollama cloud models?]]
-    - [[#Which-models-work-best-with-Ollama-Buddy_003f][25.1.4 Which
+    - [[#Which-models-work-best-with-Ollama-Buddy_003f][26.1.4 Which
       models work best with Ollama Buddy?]]
-    - [[#How-much-RAM-do-I-need_003f][25.1.5 How much RAM do I need?]]
-  - [[#Usage-Questions][25.2 Usage Questions]]
-    - [[#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f][25.2.1
+    - [[#How-much-RAM-do-I-need_003f][26.1.5 How much RAM do I need?]]
+  - [[#Usage-Questions][26.2 Usage Questions]]
+    - [[#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f][26.2.1
       How do I cancel a request that's taking too long?]]
-    - [[#How-can-I-save-my-conversations_003f][25.2.2 How can I save my
+    - [[#How-can-I-save-my-conversations_003f][26.2.2 How can I save my
       conversations?]]
-    - [[#Can-I-use-multiple-models-in-the-same-conversation_003f][25.2.3
+    - [[#Can-I-use-multiple-models-in-the-same-conversation_003f][26.2.3
       Can I use multiple models in the same conversation?]]
-    - [[#How-do-I-clear-the-conversation-history_003f][25.2.4 How do I
+    - [[#How-do-I-clear-the-conversation-history_003f][26.2.4 How do I
       clear the conversation history?]]
-    - [[#How-can-I-create-a-custom-command_003f][25.2.5 How can I create
+    - [[#How-can-I-create-a-custom-command_003f][26.2.5 How can I create
       a custom command?]]
-    - [[#How-can-I-manage-context-windows_003f][25.2.6 How can I manage
+    - [[#How-can-I-manage-context-windows_003f][26.2.6 How can I manage
       context windows?]]
-    - [[#What-happens-when-I-exceed-the-context-limit_003f][25.2.7 What
+    - [[#What-happens-when-I-exceed-the-context-limit_003f][26.2.7 What
       happens when I exceed the context limit?]]
-    - [[#How-do-I-create-effective-system-prompts_003f][25.2.8 How do I
+    - [[#How-do-I-create-effective-system-prompts_003f][26.2.8 How do I
       create effective system prompts?]]
-    - [[#Where-are-my-system-prompts-stored_003f][25.2.9 Where are my
+    - [[#Where-are-my-system-prompts-stored_003f][26.2.9 Where are my
       system prompts stored?]]
-  - [[#Troubleshooting-2][25.3 Troubleshooting]]
-    - [[#Ollama-Buddy-shows-_0022OFFLINE_0022-status][25.3.1 Ollama
+  - [[#Troubleshooting-2][26.3 Troubleshooting]]
+    - [[#Ollama-Buddy-shows-_0022OFFLINE_0022-status][26.3.1 Ollama
       Buddy shows "OFFLINE" status]]
-    - [[#Responses-are-slow-or-the-model-seems-to-hang][25.3.2 Responses
+    - [[#Responses-are-slow-or-the-model-seems-to-hang][26.3.2 Responses
       are slow or the model seems to hang]]
-    - [[#Getting-_0022error-parsing-model_0022-when-pulling-a-model][25.3.3
+    - [[#Getting-_0022error-parsing-model_0022-when-pulling-a-model][26.3.3
       Getting "error parsing model" when pulling a model]]
-    - [[#Model-responses-are-low-quality-or-truncated][25.3.4 Model
+    - [[#Model-responses-are-low-quality-or-truncated][26.3.4 Model
       responses are low quality or truncated]]
-    - [[#How-do-system-prompts-differ-from-regular-prompts_003f][25.3.5
+    - [[#How-do-system-prompts-differ-from-regular-prompts_003f][26.3.5
       How do system prompts differ from regular prompts?]]
-    - [[#What-is-the-global-system-prompt_003f][25.3.6 What is the
+    - [[#What-is-the-global-system-prompt_003f][26.3.6 What is the
       global system prompt?]]
-    - [[#How-do-I-use-image-analysis_002fvision-features_003f][25.3.7
+    - [[#How-do-I-use-image-analysis_002fvision-features_003f][26.3.7
       How do I use image analysis/vision features?]]
-    - [[#Can-I-share-system-prompts-between-different-installations_003f][25.3.8
+    - [[#Can-I-share-system-prompts-between-different-installations_003f][26.3.8
       Can I share system prompts between different installations?]]
-- [[#Troubleshooting][26 Troubleshooting]]
-  - [[#Common-Issues][26.1 Common Issues]]
-    - [[#Connection-Problems][26.1.1 Connection Problems]]
-    - [[#Model-Problems][26.1.2 Model Problems]]
-    - [[#Interface-Issues][26.1.3 Interface Issues]]
-  - [[#Debugging][26.2 Debugging]]
-    - [[#Enable-Debug-Mode][26.2.1 Enable Debug Mode]]
-    - [[#Check-Logs][26.2.2 Check Logs]]
-    - [[#Report-Issues][26.2.3 Report Issues]]
-- [[#Contributing][27 Contributing]]
-  - [[#Getting-Started][27.1 Getting Started]]
-  - [[#Development-Setup][27.2 Development Setup]]
-    - [[#Required-Tools][27.2.1 Required Tools]]
-    - [[#Recommended-Packages][27.2.2 Recommended Packages]]
-  - [[#Coding-Guidelines][27.3 Coding Guidelines]]
-  - [[#Testing][27.4 Testing]]
-    - [[#Run-Existing-Tests][27.4.1 Run Existing Tests]]
-    - [[#Adding-New-Tests][27.4.2 Adding New Tests]]
-  - [[#Feature-Requests-and-Bug-Reports][27.5 Feature Requests and Bug
+- [[#Troubleshooting][27 Troubleshooting]]
+  - [[#Common-Issues][27.1 Common Issues]]
+    - [[#Connection-Problems][27.1.1 Connection Problems]]
+    - [[#Model-Problems][27.1.2 Model Problems]]
+    - [[#Interface-Issues][27.1.3 Interface Issues]]
+  - [[#Debugging][27.2 Debugging]]
+    - [[#Enable-Debug-Mode][27.2.1 Enable Debug Mode]]
+    - [[#Check-Logs][27.2.2 Check Logs]]
+    - [[#Report-Issues][27.2.3 Report Issues]]
+- [[#Contributing][28 Contributing]]
+  - [[#Getting-Started][28.1 Getting Started]]
+  - [[#Development-Setup][28.2 Development Setup]]
+    - [[#Required-Tools][28.2.1 Required Tools]]
+    - [[#Recommended-Packages][28.2.2 Recommended Packages]]
+  - [[#Coding-Guidelines][28.3 Coding Guidelines]]
+  - [[#Testing][28.4 Testing]]
+    - [[#Run-Existing-Tests][28.4.1 Run Existing Tests]]
+    - [[#Adding-New-Tests][28.4.2 Adding New Tests]]
+  - [[#Feature-Requests-and-Bug-Reports][28.5 Feature Requests and Bug
     Reports]]
-    - [[#User-System-Prompts-Issues][27.5.1 User System Prompts Issues]]
+    - [[#User-System-Prompts-Issues][28.5.1 User System Prompts Issues]]
 - [[#Index][Index]]
 
 --------------
@@ -4556,7 +4561,7 @@ specialized prompts for specific tasks.
 
 <<Tone-Selector>>
 
-Next: [[#Tool-Calling][Tool Calling]], Previous:
+Next: [[#Thinking-Blocks][Thinking Blocks]], Previous:
 [[#Global-System-Prompt][Global System Prompt]], Up: [[#Top][Ollama
 Buddy]]   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
@@ -4648,31 +4653,109 @@ where =X= is the first letter of the tone name (e.g. =~C= for Concise,
 
 --------------
 
-<<Tool-Calling>>
+<<Thinking-Blocks>>
 
-Next: [[#RAG][RAG (Retrieval-Augmented Generation)]], Previous:
-[[#Tone-Selector][Tone Selector]], Up: [[#Top][Ollama Buddy]]  
+Next: [[#Tool-Calling][Tool Calling]], Previous: [[#Tone-Selector][Tone
+Selector]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 21 Tool Calling [[#Tool-Calling-1][¶]]
+** 21 Thinking Blocks [[#Thinking-Blocks-1][¶]]
 :PROPERTIES:
-:CUSTOM_ID: Tool-Calling-1
+:CUSTOM_ID: Thinking-Blocks-1
 :CLASS: chapter
 :END:
 - [[#Overview-7][Overview]]
-- [[#Setup][Setup]]
-- [[#Built_002din-Tools][Built-in Tools]]
-- [[#Example-Prompts][Example Prompts]]
 - [[#How-It-Works-3][How It Works]]
+- [[#Key-Bindings][Key Bindings]]
 - [[#Configuration-6][Configuration]]
-- [[#Registering-Custom-Tools][Registering Custom Tools]]
-- [[#Interactive-Commands][Interactive Commands]]
-- [[#Tool-Indicators][Tool Indicators]]
 
 <<Overview-7>>
 *** 21.1 Overview [[#Overview-7][¶]]
 :PROPERTIES:
 :CUSTOM_ID: overview-7
+:CLASS: section
+:END:
+Reasoning models (such as DeepSeek-R1, QwQ, and others) produce an
+internal chain-of-thought before giving their final answer. Ollama Buddy
+renders this reasoning content as a native org-mode heading that folds
+automatically, so the thinking process is available for inspection but
+does not clutter the conversation.
+
+<<How-It-Works-3>>
+*** 21.2 How It Works [[#How-It-Works-3][¶]]
+:PROPERTIES:
+:CUSTOM_ID: how-it-works-3
+:CLASS: section
+:END:
+When a model emits =<think>= tags or uses the DeepSeek
+=message.thinking= API field, Ollama Buddy:
+
+1. Inserts a =*** ✦ Think= org heading in the chat buffer.
+2. Streams the reasoning content under that heading in real time.
+3. When reasoning ends, folds the heading with =outline-hide-subtree=
+   and inserts a =*** ✦ Response= heading to mark the start of the
+   actual answer.
+
+The =✦= symbol appears in the header line and prompt line whenever the
+active model supports thinking/reasoning.
+
+<<Key-Bindings>>
+*** 21.3 Key Bindings [[#Key-Bindings][¶]]
+:PROPERTIES:
+:CUSTOM_ID: key-bindings
+:CLASS: section
+:END:
+- C-c V :: Toggle all thinking blocks in the buffer --- expands any that
+  are folded, or folds all if they are all expanded.
+
+- TAB :: On a =*** ✦ Think= heading line, cycle visibility of that
+  individual block (standard org-mode behavior).
+
+<<Configuration-6>>
+*** 21.4 Configuration [[#Configuration-6][¶]]
+:PROPERTIES:
+:CUSTOM_ID: configuration-4
+:CLASS: section
+:END:
+- =ollama-buddy-collapse-thinking= :: When non-nil (default =t=),
+  thinking content is automatically collapsed to the =*** ✦ Think=
+  heading after the reasoning block ends.
+
+- =ollama-buddy-hide-reasoning= :: When non-nil and
+  =ollama-buddy-collapse-thinking= is nil, the thinking block is hidden
+  entirely (replaced by “Thinking...”) rather than kept in the buffer.
+
+- =ollama-buddy-thinking-models= :: Static list of model name substrings
+  that are known reasoning models. Auto-detection from the Ollama
+  =/api/show= capabilities array is also performed.
+
+--------------
+
+<<Tool-Calling>>
+
+Next: [[#RAG][RAG (Retrieval-Augmented Generation)]], Previous:
+[[#Thinking-Blocks][Thinking Blocks]], Up: [[#Top][Ollama Buddy]]  
+[[[#SEC_Contents][Contents]]][[[#Index][Index]]]
+
+** 22 Tool Calling [[#Tool-Calling-1][¶]]
+:PROPERTIES:
+:CUSTOM_ID: Tool-Calling-1
+:CLASS: chapter
+:END:
+- [[#Overview-8][Overview]]
+- [[#Setup][Setup]]
+- [[#Built_002din-Tools][Built-in Tools]]
+- [[#Example-Prompts][Example Prompts]]
+- [[#How-It-Works-4][How It Works]]
+- [[#Configuration-7][Configuration]]
+- [[#Registering-Custom-Tools][Registering Custom Tools]]
+- [[#Interactive-Commands][Interactive Commands]]
+- [[#Tool-Indicators][Tool Indicators]]
+
+<<Overview-8>>
+*** 22.1 Overview [[#Overview-8][¶]]
+:PROPERTIES:
+:CUSTOM_ID: overview-8
 :CLASS: section
 :END:
 Tool calling (also known as function calling) enables LLMs to invoke
@@ -4684,7 +4767,7 @@ automatically within the conversation flow.
 The tool calling framework is provided by =ollama-buddy-tools.el=.
 
 <<Setup>>
-*** 21.2 Setup [[#Setup][¶]]
+*** 22.2 Setup [[#Setup][¶]]
 :PROPERTIES:
 :CUSTOM_ID: setup
 :CLASS: section
@@ -4703,7 +4786,7 @@ indicated with a =⚒= symbol in the header line, model selection, and
 model management buffer.
 
 <<Built_002din-Tools>>
-*** 21.3 Built-in Tools [[#Built_002din-Tools][¶]]
+*** 22.3 Built-in Tools [[#Built_002din-Tools][¶]]
 :PROPERTIES:
 :CUSTOM_ID: built-in-tools
 :CLASS: section
@@ -4714,7 +4797,7 @@ model management buffer.
   safe mode off)]]
 
 <<Safe-Tools-_0028available-in-safe-mode_0029>>
-**** 21.3.1 Safe Tools (available in safe mode) [[#Safe-Tools-_0028available-in-safe-mode_0029][¶]]
+**** 22.3.1 Safe Tools (available in safe mode) [[#Safe-Tools-_0028available-in-safe-mode_0029][¶]]
 :PROPERTIES:
 :CUSTOM_ID: safe-tools-available-in-safe-mode
 :CLASS: subsection
@@ -4735,7 +4818,7 @@ model management buffer.
   matching lines.
 
 <<Unsafe-Tools-_0028require-safe-mode-off_0029>>
-**** 21.3.2 Unsafe Tools (require safe mode off) [[#Unsafe-Tools-_0028require-safe-mode-off_0029][¶]]
+**** 22.3.2 Unsafe Tools (require safe mode off) [[#Unsafe-Tools-_0028require-safe-mode-off_0029][¶]]
 :PROPERTIES:
 :CUSTOM_ID: unsafe-tools-require-safe-mode-off
 :CLASS: subsection
@@ -4745,7 +4828,7 @@ model management buffer.
 - =execute_shell= :: Execute a shell command and return its output.
 
 <<Example-Prompts>>
-*** 21.4 Example Prompts [[#Example-Prompts][¶]]
+*** 22.4 Example Prompts [[#Example-Prompts][¶]]
 :PROPERTIES:
 :CUSTOM_ID: example-prompts
 :CLASS: section
@@ -4772,10 +4855,10 @@ Run df -h and tell me how much disk space I have.
 Create a file at /tmp/hello.txt with Hello World.
 #+end_src
 
-<<How-It-Works-3>>
-*** 21.5 How It Works [[#How-It-Works-3][¶]]
+<<How-It-Works-4>>
+*** 22.5 How It Works [[#How-It-Works-4][¶]]
 :PROPERTIES:
-:CUSTOM_ID: how-it-works-3
+:CUSTOM_ID: how-it-works-4
 :CLASS: section
 :END:
 When tool calling is enabled and a tool-capable model is selected, the
@@ -4800,7 +4883,7 @@ the chat buffer.
 - [[#Model-Compatibility][Model Compatibility]]
 
 <<Model-Compatibility>>
-**** 21.5.1 Model Compatibility [[#Model-Compatibility][¶]]
+**** 22.5.1 Model Compatibility [[#Model-Compatibility][¶]]
 :PROPERTIES:
 :CUSTOM_ID: model-compatibility
 :CLASS: subsection
@@ -4819,10 +4902,10 @@ enabled but switch to a model that doesn't support tool calling:
 This allows you to leave tools enabled globally while freely switching
 between models.
 
-<<Configuration-6>>
-*** 21.6 Configuration [[#Configuration-6][¶]]
+<<Configuration-7>>
+*** 22.6 Configuration [[#Configuration-7][¶]]
 :PROPERTIES:
-:CUSTOM_ID: configuration-4
+:CUSTOM_ID: configuration-5
 :CLASS: section
 :END:
 - =ollama-buddy-tools-enabled= :: Whether tool calling is active
@@ -4852,7 +4935,7 @@ between models.
   #+end_src
 
 <<Registering-Custom-Tools>>
-*** 21.7 Registering Custom Tools [[#Registering-Custom-Tools][¶]]
+*** 22.7 Registering Custom Tools [[#Registering-Custom-Tools][¶]]
 :PROPERTIES:
 :CUSTOM_ID: registering-custom-tools
 :CLASS: section
@@ -4884,7 +4967,7 @@ JSON response and must return a string result. If the function returns a
 non-string value, it is formatted with =%S=.
 
 <<Interactive-Commands>>
-*** 21.8 Interactive Commands [[#Interactive-Commands][¶]]
+*** 22.8 Interactive Commands [[#Interactive-Commands][¶]]
 :PROPERTIES:
 :CUSTOM_ID: interactive-commands
 :CLASS: section
@@ -4911,7 +4994,7 @@ the “Actions” section:
 - Q - List Tools
 
 <<Tool-Indicators>>
-*** 21.9 Tool Indicators [[#Tool-Indicators][¶]]
+*** 22.9 Tool Indicators [[#Tool-Indicators][¶]]
 :PROPERTIES:
 :CUSTOM_ID: tool-indicators
 :CLASS: section
@@ -4951,25 +5034,25 @@ Next: [[#Advanced-Usage][Advanced Usage]], Previous:
 [[#Tool-Calling][Tool Calling]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 22 RAG (Retrieval-Augmented Generation) [[#RAG-_0028Retrieval_002dAugmented-Generation_0029][¶]]
+** 23 RAG (Retrieval-Augmented Generation) [[#RAG-_0028Retrieval_002dAugmented-Generation_0029][¶]]
 :PROPERTIES:
 :CUSTOM_ID: RAG-_0028Retrieval_002dAugmented-Generation_0029
 :CLASS: chapter
 :END:
-- [[#Overview-8][Overview]]
+- [[#Overview-9][Overview]]
 - [[#Requirements][Requirements]]
 - [[#Quick-Start-2][Quick Start]]
-- [[#How-It-Works-4][How It Works]]
-- [[#Configuration-7][Configuration]]
+- [[#How-It-Works-5][How It Works]]
+- [[#Configuration-8][Configuration]]
 - [[#PDF-Support][PDF Support]]
 - [[#Interactive-Commands-1][Interactive Commands]]
 - [[#Inline-_0040rag_0028_0029-Syntax][Inline @rag() Syntax]]
 - [[#Example-Workflow][Example Workflow]]
 
-<<Overview-8>>
-*** 22.1 Overview [[#Overview-8][¶]]
+<<Overview-9>>
+*** 23.1 Overview [[#Overview-9][¶]]
 :PROPERTIES:
-:CUSTOM_ID: overview-8
+:CUSTOM_ID: overview-9
 :CLASS: section
 :END:
 RAG allows you to index local documents and source code, then retrieve
@@ -4981,7 +5064,7 @@ efficient and responses grounded in your actual documents.
 The RAG module (=ollama-buddy-rag.el=) is loaded by default.
 
 <<Requirements>>
-*** 22.2 Requirements [[#Requirements][¶]]
+*** 23.2 Requirements [[#Requirements][¶]]
 :PROPERTIES:
 :CUSTOM_ID: requirements
 :CLASS: section
@@ -4997,7 +5080,7 @@ Other supported embedding models include =mxbai-embed-large= and
 “Embedding (RAG)” category.
 
 <<Quick-Start-2>>
-*** 22.3 Quick Start [[#Quick-Start-2][¶]]
+*** 23.3 Quick Start [[#Quick-Start-2][¶]]
 :PROPERTIES:
 :CUSTOM_ID: quick-start
 :CLASS: section
@@ -5010,10 +5093,10 @@ Other supported embedding models include =mxbai-embed-large= and
 6. Or attach context to a conversation: select a, enter a query, then
    chat normally
 
-<<How-It-Works-4>>
-*** 22.4 How It Works [[#How-It-Works-4][¶]]
+<<How-It-Works-5>>
+*** 23.4 How It Works [[#How-It-Works-5][¶]]
 :PROPERTIES:
-:CUSTOM_ID: how-it-works-4
+:CUSTOM_ID: how-it-works-5
 :CLASS: section
 :END:
 1. *Indexing*: Files in a directory are read, split into chunks (by
@@ -5027,10 +5110,10 @@ Other supported embedding models include =mxbai-embed-large= and
    context as a system-level prefix, so the LLM can reference them when
    generating a response.
 
-<<Configuration-7>>
-*** 22.5 Configuration [[#Configuration-7][¶]]
+<<Configuration-8>>
+*** 23.5 Configuration [[#Configuration-8][¶]]
 :PROPERTIES:
-:CUSTOM_ID: configuration-5
+:CUSTOM_ID: configuration-6
 :CLASS: section
 :END:
 - =ollama-buddy-rag-embedding-model= :: The embedding model to use
@@ -5063,7 +5146,7 @@ Other supported embedding models include =mxbai-embed-large= and
   call (default: =20=).
 
 <<PDF-Support>>
-*** 22.6 PDF Support [[#PDF-Support][¶]]
+*** 23.6 PDF Support [[#PDF-Support][¶]]
 :PROPERTIES:
 :CUSTOM_ID: pdf-support
 :CLASS: section
@@ -5091,7 +5174,7 @@ brew install poppler
 #+end_src
 
 <<Interactive-Commands-1>>
-*** 22.7 Interactive Commands [[#Interactive-Commands-1][¶]]
+*** 23.7 Interactive Commands [[#Interactive-Commands-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: interactive-commands-1
 :CLASS: section
@@ -5117,7 +5200,7 @@ These commands are available from the RAG transient menu (C-c O then r):
 - =ollama-buddy-rag-delete-index (==d==)= :: Delete a saved RAG index.
 
 <<Inline-_0040rag_0028_0029-Syntax>>
-*** 22.8 Inline @rag() Syntax [[#Inline-_0040rag_0028_0029-Syntax][¶]]
+*** 23.8 Inline @rag() Syntax [[#Inline-_0040rag_0028_0029-Syntax][¶]]
 :PROPERTIES:
 :CUSTOM_ID: inline-rag-syntax
 :CLASS: section
@@ -5148,7 +5231,7 @@ If you have multiple indexes, you will be prompted to select one. If
 only one index exists, it is used automatically.
 
 <<Example-Workflow>>
-*** 22.9 Example Workflow [[#Example-Workflow][¶]]
+*** 23.9 Example Workflow [[#Example-Workflow][¶]]
 :PROPERTIES:
 :CUSTOM_ID: example-workflow
 :CLASS: section
@@ -5181,7 +5264,7 @@ Next: [[#API-Reference][API Reference]], Previous: [[#RAG][RAG
 (Retrieval-Augmented Generation)]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 23 Advanced Usage [[#Advanced-Usage-1][¶]]
+** 24 Advanced Usage [[#Advanced-Usage-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Advanced-Usage-1
 :CLASS: chapter
@@ -5194,7 +5277,7 @@ Next: [[#API-Reference][API Reference]], Previous: [[#RAG][RAG
 - [[#Using-Direct-API-Access][Using Direct API Access]]
 
 <<Managing-Token-Usage>>
-*** 23.1 Managing Token Usage [[#Managing-Token-Usage][¶]]
+*** 24.1 Managing Token Usage [[#Managing-Token-Usage][¶]]
 :PROPERTIES:
 :CUSTOM_ID: managing-token-usage
 :CLASS: section
@@ -5221,7 +5304,7 @@ This displays a combined view with token usage graphs by model, average
 token rates, and recent interactions.
 
 <<Customizing-the-Interface>>
-*** 23.2 Customizing the Interface [[#Customizing-the-Interface][¶]]
+*** 24.2 Customizing the Interface [[#Customizing-the-Interface][¶]]
 :PROPERTIES:
 :CUSTOM_ID: customizing-the-interface
 :CLASS: section
@@ -5230,7 +5313,7 @@ token rates, and recent interactions.
 - [[#Debug-Mode][Debug Mode]]
 
 <<Streaming-Options>>
-**** 23.2.1 Streaming Options [[#Streaming-Options][¶]]
+**** 24.2.1 Streaming Options [[#Streaming-Options][¶]]
 :PROPERTIES:
 :CUSTOM_ID: streaming-options
 :CLASS: subsection
@@ -5251,7 +5334,7 @@ Control how responses are displayed:
   completes.
 
 <<Debug-Mode>>
-**** 23.2.2 Debug Mode [[#Debug-Mode][¶]]
+**** 24.2.2 Debug Mode [[#Debug-Mode][¶]]
 :PROPERTIES:
 :CUSTOM_ID: debug-mode
 :CLASS: subsection
@@ -5267,7 +5350,7 @@ or press =C-c B= in the chat buffer.
 This shows raw JSON messages in a debug buffer.
 
 <<Editing-Conversation-History>>
-*** 23.3 Editing Conversation History [[#Editing-Conversation-History][¶]]
+*** 24.3 Editing Conversation History [[#Editing-Conversation-History][¶]]
 :PROPERTIES:
 :CUSTOM_ID: editing-conversation-history
 :CLASS: section
@@ -5286,7 +5369,7 @@ modify it and press =C-c C-c= to save or =C-c C-k= to cancel.
 To edit history for a specific model, use =C-u C-c J=.
 
 <<Advanced-System-Prompt-Management>>
-*** 23.4 Advanced System Prompt Management [[#Advanced-System-Prompt-Management][¶]]
+*** 24.4 Advanced System Prompt Management [[#Advanced-System-Prompt-Management][¶]]
 :PROPERTIES:
 :CUSTOM_ID: advanced-system-prompt-management
 :CLASS: section
@@ -5299,7 +5382,7 @@ For more control over system prompts:
   Fabric]]
 
 <<Setting-a-system-prompt-without-sending>>
-**** 23.4.1 Setting a system prompt without sending [[#Setting-a-system-prompt-without-sending][¶]]
+**** 24.4.1 Setting a system prompt without sending [[#Setting-a-system-prompt-without-sending][¶]]
 :PROPERTIES:
 :CUSTOM_ID: setting-a-system-prompt-without-sending
 :CLASS: subsection
@@ -5312,7 +5395,7 @@ For more control over system prompts:
 Enter your system prompt, then press =C-c s=.
 
 <<Using-a-system-prompt-from-Fabric>>
-**** 23.4.2 Using a system prompt from Fabric [[#Using-a-system-prompt-from-Fabric][¶]]
+**** 24.4.2 Using a system prompt from Fabric [[#Using-a-system-prompt-from-Fabric][¶]]
 :PROPERTIES:
 :CUSTOM_ID: using-a-system-prompt-from-fabric
 :CLASS: subsection
@@ -5325,7 +5408,7 @@ M-x ollama-buddy-fabric-set-system-prompt
 or press =C-c f p=.
 
 <<Using-Direct-API-Access>>
-*** 23.5 Using Direct API Access [[#Using-Direct-API-Access][¶]]
+*** 24.5 Using Direct API Access [[#Using-Direct-API-Access][¶]]
 :PROPERTIES:
 :CUSTOM_ID: using-direct-api-access
 :CLASS: section
@@ -5352,7 +5435,7 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 [[#Advanced-Usage][Advanced Usage]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 24 API Reference [[#API-Reference-1][¶]]
+** 25 API Reference [[#API-Reference-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: API-Reference-1
 :CLASS: chapter
@@ -5362,7 +5445,7 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 - [[#Customization-Functions][Customization Functions]]
 
 <<Interactive-Functions>>
-*** 24.1 Interactive Functions [[#Interactive-Functions][¶]]
+*** 25.1 Interactive Functions [[#Interactive-Functions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: interactive-functions
 :CLASS: section
@@ -5509,7 +5592,7 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
   menu for user system prompts.
 
 <<Core-Functions>>
-*** 24.2 Core Functions [[#Core-Functions][¶]]
+*** 25.2 Core Functions [[#Core-Functions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: core-functions
 :CLASS: section
@@ -5536,7 +5619,7 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 - =ollama-buddy--update-status= :: Update the status display.
 
 <<Customization-Functions>>
-*** 24.3 Customization Functions [[#Customization-Functions][¶]]
+*** 25.3 Customization Functions [[#Customization-Functions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: customization-functions
 :CLASS: section
@@ -5560,7 +5643,7 @@ Next: [[#Troubleshooting][Troubleshooting]], Previous:
 [[#API-Reference][API Reference]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 25 Frequently Asked Questions [[#Frequently-Asked-Questions][¶]]
+** 26 Frequently Asked Questions [[#Frequently-Asked-Questions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Frequently-Asked-Questions
 :CLASS: chapter
@@ -5570,7 +5653,7 @@ Next: [[#Troubleshooting][Troubleshooting]], Previous:
 - [[#Troubleshooting-2][Troubleshooting]]
 
 <<General-Questions>>
-*** 25.1 General Questions [[#General-Questions][¶]]
+*** 26.1 General Questions [[#General-Questions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: general-questions
 :CLASS: section
@@ -5586,7 +5669,7 @@ Next: [[#Troubleshooting][Troubleshooting]], Previous:
 - [[#How-much-RAM-do-I-need_003f][How much RAM do I need?]]
 
 <<What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f>>
-**** 25.1.1 What is the difference between Ollama Buddy and other AI assistants? [[#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f][¶]]
+**** 26.1.1 What is the difference between Ollama Buddy and other AI assistants? [[#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: what-is-the-difference-between-ollama-buddy-and-other-ai-assistants
 :CLASS: subsection
@@ -5596,7 +5679,7 @@ privacy, customization, and seamless Emacs integration without relying
 on external API services.
 
 <<Does-Ollama-Buddy-require-an-internet-connection_003f>>
-**** 25.1.2 Does Ollama Buddy require an internet connection? [[#Does-Ollama-Buddy-require-an-internet-connection_003f][¶]]
+**** 26.1.2 Does Ollama Buddy require an internet connection? [[#Does-Ollama-Buddy-require-an-internet-connection_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: does-ollama-buddy-require-an-internet-connection
 :CLASS: subsection
@@ -5610,7 +5693,7 @@ pulling them. Internet is needed for:
 - Syncing Fabric patterns or Awesome ChatGPT Prompts
 
 <<How-do-I-use-Ollama-cloud-models_003f>>
-**** 25.1.3 How do I use Ollama cloud models? [[#How-do-I-use-Ollama-cloud-models_003f][¶]]
+**** 26.1.3 How do I use Ollama cloud models? [[#How-do-I-use-Ollama-cloud-models_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-do-i-use-ollama-cloud-models
 :CLASS: subsection
@@ -5622,7 +5705,7 @@ Cloud models require authentication:
 3. The =☁= symbol in the header indicates cloud model usage
 
 <<Which-models-work-best-with-Ollama-Buddy_003f>>
-**** 25.1.4 Which models work best with Ollama Buddy? [[#Which-models-work-best-with-Ollama-Buddy_003f][¶]]
+**** 26.1.4 Which models work best with Ollama Buddy? [[#Which-models-work-best-with-Ollama-Buddy_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: which-models-work-best-with-ollama-buddy
 :CLASS: subsection
@@ -5635,7 +5718,7 @@ Most models supported by Ollama work well. Popular choices include:
 - phi:latest - Smaller model that works well on limited hardware
 
 <<How-much-RAM-do-I-need_003f>>
-**** 25.1.5 How much RAM do I need? [[#How-much-RAM-do-I-need_003f][¶]]
+**** 26.1.5 How much RAM do I need? [[#How-much-RAM-do-I-need_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-much-ram-do-i-need
 :CLASS: subsection
@@ -5649,7 +5732,7 @@ It depends on the model:
 Quantized models (e.g., Q4_K_M variants) require less RAM.
 
 <<Usage-Questions>>
-*** 25.2 Usage Questions [[#Usage-Questions][¶]]
+*** 26.2 Usage Questions [[#Usage-Questions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: usage-questions
 :CLASS: section
@@ -5674,7 +5757,7 @@ Quantized models (e.g., Q4_K_M variants) require less RAM.
   prompts stored?]]
 
 <<How-do-I-cancel-a-request-that_0027s-taking-too-long_003f>>
-**** 25.2.1 How do I cancel a request that's taking too long? [[#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f][¶]]
+**** 26.2.1 How do I cancel a request that's taking too long? [[#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-do-i-cancel-a-request-thats-taking-too-long
 :CLASS: subsection
@@ -5682,7 +5765,7 @@ Quantized models (e.g., Q4_K_M variants) require less RAM.
 Press =C-c k= in the chat buffer or select "Kill Request" from the menu.
 
 <<How-can-I-save-my-conversations_003f>>
-**** 25.2.2 How can I save my conversations? [[#How-can-I-save-my-conversations_003f][¶]]
+**** 26.2.2 How can I save my conversations? [[#How-can-I-save-my-conversations_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-can-i-save-my-conversations
 :CLASS: subsection
@@ -5691,7 +5774,7 @@ Use =C-c S= to save the current session, giving it a name. You can
 restore it later with =C-c L=.
 
 <<Can-I-use-multiple-models-in-the-same-conversation_003f>>
-**** 25.2.3 Can I use multiple models in the same conversation? [[#Can-I-use-multiple-models-in-the-same-conversation_003f][¶]]
+**** 26.2.3 Can I use multiple models in the same conversation? [[#Can-I-use-multiple-models-in-the-same-conversation_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: can-i-use-multiple-models-in-the-same-conversation
 :CLASS: subsection
@@ -5700,7 +5783,7 @@ Yes, you can switch models at any time with =C-c m=. Each model
 maintains its own conversation history.
 
 <<How-do-I-clear-the-conversation-history_003f>>
-**** 25.2.4 How do I clear the conversation history? [[#How-do-I-clear-the-conversation-history_003f][¶]]
+**** 26.2.4 How do I clear the conversation history? [[#How-do-I-clear-the-conversation-history_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-do-i-clear-the-conversation-history
 :CLASS: subsection
@@ -5709,7 +5792,7 @@ Press =C-c X= to clear history, or =C-c N= to start a completely new
 session.
 
 <<How-can-I-create-a-custom-command_003f>>
-**** 25.2.5 How can I create a custom command? [[#How-can-I-create-a-custom-command_003f][¶]]
+**** 26.2.5 How can I create a custom command? [[#How-can-I-create-a-custom-command_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-can-i-create-a-custom-command
 :CLASS: subsection
@@ -5719,7 +5802,7 @@ the prompts to create commands with specific prompts, models, and
 parameters.
 
 <<How-can-I-manage-context-windows_003f>>
-**** 25.2.6 How can I manage context windows? [[#How-can-I-manage-context-windows_003f][¶]]
+**** 26.2.6 How can I manage context windows? [[#How-can-I-manage-context-windows_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-can-i-manage-context-windows
 :CLASS: subsection
@@ -5733,7 +5816,7 @@ Ollama Buddy provides several options:
 - Set model-specific context sizes with C-c $
 
 <<What-happens-when-I-exceed-the-context-limit_003f>>
-**** 25.2.7 What happens when I exceed the context limit? [[#What-happens-when-I-exceed-the-context-limit_003f][¶]]
+**** 26.2.7 What happens when I exceed the context limit? [[#What-happens-when-I-exceed-the-context-limit_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: what-happens-when-i-exceed-the-context-limit
 :CLASS: subsection
@@ -5745,7 +5828,7 @@ When context monitoring is enabled:
 - You can choose to proceed anyway or modify your content
 
 <<How-do-I-create-effective-system-prompts_003f>>
-**** 25.2.8 How do I create effective system prompts? [[#How-do-I-create-effective-system-prompts_003f][¶]]
+**** 26.2.8 How do I create effective system prompts? [[#How-do-I-create-effective-system-prompts_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-do-i-create-effective-system-prompts
 :CLASS: subsection
@@ -5760,7 +5843,7 @@ Effective system prompts typically include:
 Start simple, test the response, and refine iteratively.
 
 <<Where-are-my-system-prompts-stored_003f>>
-**** 25.2.9 Where are my system prompts stored? [[#Where-are-my-system-prompts-stored_003f][¶]]
+**** 26.2.9 Where are my system prompts stored? [[#Where-are-my-system-prompts-stored_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: where-are-my-system-prompts-stored
 :CLASS: subsection
@@ -5770,7 +5853,7 @@ System prompts are stored as .org files in the directory specified by
 ‘~/.emacs.d/ollama-buddy-user-prompts/‘.
 
 <<Troubleshooting-2>>
-*** 25.3 Troubleshooting [[#Troubleshooting-2][¶]]
+*** 26.3 Troubleshooting [[#Troubleshooting-2][¶]]
 :PROPERTIES:
 :CUSTOM_ID: troubleshooting-1
 :CLASS: section
@@ -5793,7 +5876,7 @@ System prompts are stored as .org files in the directory specified by
   I share system prompts between different installations?]]
 
 <<Ollama-Buddy-shows-_0022OFFLINE_0022-status>>
-**** 25.3.1 Ollama Buddy shows "OFFLINE" status [[#Ollama-Buddy-shows-_0022OFFLINE_0022-status][¶]]
+**** 26.3.1 Ollama Buddy shows "OFFLINE" status [[#Ollama-Buddy-shows-_0022OFFLINE_0022-status][¶]]
 :PROPERTIES:
 :CUSTOM_ID: ollama-buddy-shows-offline-status
 :CLASS: subsection
@@ -5806,7 +5889,7 @@ Ensure that:
 - Your firewall isn't blocking connections
 
 <<Responses-are-slow-or-the-model-seems-to-hang>>
-**** 25.3.2 Responses are slow or the model seems to hang [[#Responses-are-slow-or-the-model-seems-to-hang][¶]]
+**** 26.3.2 Responses are slow or the model seems to hang [[#Responses-are-slow-or-the-model-seems-to-hang][¶]]
 :PROPERTIES:
 :CUSTOM_ID: responses-are-slow-or-the-model-seems-to-hang
 :CLASS: subsection
@@ -5819,7 +5902,7 @@ Try:
 - Checking CPU/RAM usage to ensure your system isn't overloaded
 
 <<Getting-_0022error-parsing-model_0022-when-pulling-a-model>>
-**** 25.3.3 Getting "error parsing model" when pulling a model [[#Getting-_0022error-parsing-model_0022-when-pulling-a-model][¶]]
+**** 26.3.3 Getting "error parsing model" when pulling a model [[#Getting-_0022error-parsing-model_0022-when-pulling-a-model][¶]]
 :PROPERTIES:
 :CUSTOM_ID: getting-error-parsing-model-when-pulling-a-model
 :CLASS: subsection
@@ -5831,7 +5914,7 @@ This usually means:
 - You have network connectivity issues
 
 <<Model-responses-are-low-quality-or-truncated>>
-**** 25.3.4 Model responses are low quality or truncated [[#Model-responses-are-low-quality-or-truncated][¶]]
+**** 26.3.4 Model responses are low quality or truncated [[#Model-responses-are-low-quality-or-truncated][¶]]
 :PROPERTIES:
 :CUSTOM_ID: model-responses-are-low-quality-or-truncated
 :CLASS: subsection
@@ -5844,7 +5927,7 @@ Try:
 - Providing clearer instructions in your prompt
 
 <<How-do-system-prompts-differ-from-regular-prompts_003f>>
-**** 25.3.5 How do system prompts differ from regular prompts? [[#How-do-system-prompts-differ-from-regular-prompts_003f][¶]]
+**** 26.3.5 How do system prompts differ from regular prompts? [[#How-do-system-prompts-differ-from-regular-prompts_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-do-system-prompts-differ-from-regular-prompts
 :CLASS: subsection
@@ -5855,7 +5938,7 @@ requests. System prompts persist across the conversation, affecting all
 responses, while regular prompts are one-time interactions.
 
 <<What-is-the-global-system-prompt_003f>>
-**** 25.3.6 What is the global system prompt? [[#What-is-the-global-system-prompt_003f][¶]]
+**** 26.3.6 What is the global system prompt? [[#What-is-the-global-system-prompt_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: what-is-the-global-system-prompt
 :CLASS: subsection
@@ -5866,7 +5949,7 @@ all models. Toggle it with
 =M-x ollama-buddy-toggle-global-system-prompt=.
 
 <<How-do-I-use-image-analysis_002fvision-features_003f>>
-**** 25.3.7 How do I use image analysis/vision features? [[#How-do-I-use-image-analysis_002fvision-features_003f][¶]]
+**** 26.3.7 How do I use image analysis/vision features? [[#How-do-I-use-image-analysis_002fvision-features_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: how-do-i-use-image-analysisvision-features
 :CLASS: subsection
@@ -5878,7 +5961,7 @@ all models. Toggle it with
 Supported formats: PNG, JPG, JPEG, WebP, GIF.
 
 <<Can-I-share-system-prompts-between-different-installations_003f>>
-**** 25.3.8 Can I share system prompts between different installations? [[#Can-I-share-system-prompts-between-different-installations_003f][¶]]
+**** 26.3.8 Can I share system prompts between different installations? [[#Can-I-share-system-prompts-between-different-installations_003f][¶]]
 :PROPERTIES:
 :CUSTOM_ID: can-i-share-system-prompts-between-different-installations
 :CLASS: subsection
@@ -5895,7 +5978,7 @@ Next: [[#Contributing][Contributing]], Previous: [[#FAQ][Frequently
 Asked Questions]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 26 Troubleshooting [[#Troubleshooting-3][¶]]
+** 27 Troubleshooting [[#Troubleshooting-3][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Troubleshooting-3
 :CLASS: chapter
@@ -5904,7 +5987,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
 - [[#Debugging][Debugging]]
 
 <<Common-Issues>>
-*** 26.1 Common Issues [[#Common-Issues][¶]]
+*** 27.1 Common Issues [[#Common-Issues][¶]]
 :PROPERTIES:
 :CUSTOM_ID: common-issues
 :CLASS: section
@@ -5914,7 +5997,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
 - [[#Interface-Issues][Interface Issues]]
 
 <<Connection-Problems>>
-**** 26.1.1 Connection Problems [[#Connection-Problems][¶]]
+**** 27.1.1 Connection Problems [[#Connection-Problems][¶]]
 :PROPERTIES:
 :CUSTOM_ID: connection-problems
 :CLASS: subsection
@@ -5931,7 +6014,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
   - Check if your OS has any network timeout settings
 
 <<Model-Problems>>
-**** 26.1.2 Model Problems [[#Model-Problems][¶]]
+**** 27.1.2 Model Problems [[#Model-Problems][¶]]
 :PROPERTIES:
 :CUSTOM_ID: model-problems
 :CLASS: subsection
@@ -5947,7 +6030,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
   - Set =low_vram= to =t= if using GPU
 
 <<Interface-Issues>>
-**** 26.1.3 Interface Issues [[#Interface-Issues][¶]]
+**** 27.1.3 Interface Issues [[#Interface-Issues][¶]]
 :PROPERTIES:
 :CUSTOM_ID: interface-issues
 :CLASS: subsection
@@ -5963,7 +6046,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
   - Try editing the history to fix formatting issues
 
 <<Debugging>>
-*** 26.2 Debugging [[#Debugging][¶]]
+*** 27.2 Debugging [[#Debugging][¶]]
 :PROPERTIES:
 :CUSTOM_ID: debugging
 :CLASS: section
@@ -5973,7 +6056,7 @@ Asked Questions]], Up: [[#Top][Ollama Buddy]]  
 - [[#Report-Issues][Report Issues]]
 
 <<Enable-Debug-Mode>>
-**** 26.2.1 Enable Debug Mode [[#Enable-Debug-Mode][¶]]
+**** 27.2.1 Enable Debug Mode [[#Enable-Debug-Mode][¶]]
 :PROPERTIES:
 :CUSTOM_ID: enable-debug-mode
 :CLASS: subsection
@@ -5987,7 +6070,7 @@ M-x ollama-buddy-toggle-debug-mode
 This opens a debug buffer showing raw JSON communication with Ollama.
 
 <<Check-Logs>>
-**** 26.2.2 Check Logs [[#Check-Logs][¶]]
+**** 27.2.2 Check Logs [[#Check-Logs][¶]]
 :PROPERTIES:
 :CUSTOM_ID: check-logs
 :CLASS: subsection
@@ -5999,7 +6082,7 @@ tail -f ~/.ollama/logs/ollama.log
 #+end_src
 
 <<Report-Issues>>
-**** 26.2.3 Report Issues [[#Report-Issues][¶]]
+**** 27.2.3 Report Issues [[#Report-Issues][¶]]
 :PROPERTIES:
 :CUSTOM_ID: report-issues
 :CLASS: subsection
@@ -6024,7 +6107,7 @@ Next: [[#Index][Index]], Previous:
 [[#Troubleshooting][Troubleshooting]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 27 Contributing [[#Contributing-1][¶]]
+** 28 Contributing [[#Contributing-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: Contributing-1
 :CLASS: chapter
@@ -6037,7 +6120,7 @@ Next: [[#Index][Index]], Previous:
   Reports]]
 
 <<Getting-Started>>
-*** 27.1 Getting Started [[#Getting-Started][¶]]
+*** 28.1 Getting Started [[#Getting-Started][¶]]
 :PROPERTIES:
 :CUSTOM_ID: getting-started
 :CLASS: section
@@ -6056,7 +6139,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 8. Create a pull request
 
 <<Development-Setup>>
-*** 27.2 Development Setup [[#Development-Setup][¶]]
+*** 28.2 Development Setup [[#Development-Setup][¶]]
 :PROPERTIES:
 :CUSTOM_ID: development-setup
 :CLASS: section
@@ -6065,7 +6148,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 - [[#Recommended-Packages][Recommended Packages]]
 
 <<Required-Tools>>
-**** 27.2.1 Required Tools [[#Required-Tools][¶]]
+**** 28.2.1 Required Tools [[#Required-Tools][¶]]
 :PROPERTIES:
 :CUSTOM_ID: required-tools
 :CLASS: subsection
@@ -6075,7 +6158,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 - Git
 
 <<Recommended-Packages>>
-**** 27.2.2 Recommended Packages [[#Recommended-Packages][¶]]
+**** 28.2.2 Recommended Packages [[#Recommended-Packages][¶]]
 :PROPERTIES:
 :CUSTOM_ID: recommended-packages
 :CLASS: subsection
@@ -6085,7 +6168,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 - elisp-lint
 
 <<Coding-Guidelines>>
-*** 27.3 Coding Guidelines [[#Coding-Guidelines][¶]]
+*** 28.3 Coding Guidelines [[#Coding-Guidelines][¶]]
 :PROPERTIES:
 :CUSTOM_ID: coding-guidelines
 :CLASS: section
@@ -6098,7 +6181,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 - Use prefix =ollama-buddy-= for public functions
 
 <<Testing>>
-*** 27.4 Testing [[#Testing][¶]]
+*** 28.4 Testing [[#Testing][¶]]
 :PROPERTIES:
 :CUSTOM_ID: testing
 :CLASS: section
@@ -6107,7 +6190,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 - [[#Adding-New-Tests][Adding New Tests]]
 
 <<Run-Existing-Tests>>
-**** 27.4.1 Run Existing Tests [[#Run-Existing-Tests][¶]]
+**** 28.4.1 Run Existing Tests [[#Run-Existing-Tests][¶]]
 :PROPERTIES:
 :CUSTOM_ID: run-existing-tests
 :CLASS: subsection
@@ -6122,7 +6205,7 @@ M-x ollama-buddy-parameter-run-tests
 #+end_src
 
 <<Adding-New-Tests>>
-**** 27.4.2 Adding New Tests [[#Adding-New-Tests][¶]]
+**** 28.4.2 Adding New Tests [[#Adding-New-Tests][¶]]
 :PROPERTIES:
 :CUSTOM_ID: adding-new-tests
 :CLASS: subsection
@@ -6134,7 +6217,7 @@ When adding features, please also add tests:
 - Parameter tests for parameter handling
 
 <<Feature-Requests-and-Bug-Reports>>
-*** 27.5 Feature Requests and Bug Reports [[#Feature-Requests-and-Bug-Reports][¶]]
+*** 28.5 Feature Requests and Bug Reports [[#Feature-Requests-and-Bug-Reports][¶]]
 :PROPERTIES:
 :CUSTOM_ID: feature-requests-and-bug-reports
 :CLASS: section
@@ -6146,7 +6229,7 @@ When adding features, please also add tests:
 - [[#User-System-Prompts-Issues][User System Prompts Issues]]
 
 <<User-System-Prompts-Issues>>
-**** 27.5.1 User System Prompts Issues [[#User-System-Prompts-Issues][¶]]
+**** 28.5.1 User System Prompts Issues [[#User-System-Prompts-Issues][¶]]
 :PROPERTIES:
 :CUSTOM_ID: user-system-prompts-issues
 :CLASS: subsection

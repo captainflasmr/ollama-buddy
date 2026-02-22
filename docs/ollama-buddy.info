@@ -45,6 +45,7 @@ language models (LLMs) directly within your Emacs workflow.
 * Ollama Cloud Models::         Using Ollama's cloud-hosted models
 * Global System Prompt::        Configuring a persistent global system prompt
 * Tone Selector::               Quickly switch response style
+* Thinking Blocks::             Collapsible reasoning output for thinking models
 * Tool Calling::                Enabling LLMs to invoke Emacs functions
 * RAG::                         Retrieval-Augmented Generation with local documents
 * Advanced Usage::              Tips and techniques for power users
@@ -3007,7 +3008,7 @@ session-specific system prompt:
 specialized prompts for specific tasks.
 
 
-File: ollama-buddy.info,  Node: Tone Selector,  Next: Tool Calling,  Prev: Global System Prompt,  Up: Top
+File: ollama-buddy.info,  Node: Tone Selector,  Next: Thinking Blocks,  Prev: Global System Prompt,  Up: Top
 
 20 Tone Selector
 ****************
@@ -3067,12 +3068,71 @@ active, where ‘X’ is the first letter of the tone name (e.g. ‘~C’ for
 Concise, ‘~L’ for Learning).
 
 
-File: ollama-buddy.info,  Node: Tool Calling,  Next: RAG,  Prev: Tone Selector,  Up: Top
+File: ollama-buddy.info,  Node: Thinking Blocks,  Next: Tool Calling,  Prev: Tone Selector,  Up: Top
 
-21 Tool Calling
-***************
+21 Thinking Blocks
+******************
 
 21.1 Overview
+=============
+
+Reasoning models (such as DeepSeek-R1, QwQ, and others) produce an
+internal chain-of-thought before giving their final answer.  Ollama
+Buddy renders this reasoning content as a native org-mode heading that
+folds automatically, so the thinking process is available for inspection
+but does not clutter the conversation.
+
+21.2 How It Works
+=================
+
+When a model emits ‘<think>’ tags or uses the DeepSeek
+‘message.thinking’ API field, Ollama Buddy:
+
+  1. Inserts a ‘*** ✦ Think’ org heading in the chat buffer.
+  2. Streams the reasoning content under that heading in real time.
+  3. When reasoning ends, folds the heading with ‘outline-hide-subtree’
+     and inserts a ‘*** ✦ Response’ heading to mark the start of the
+     actual answer.
+
+   The ‘✦’ symbol appears in the header line and prompt line whenever
+the active model supports thinking/reasoning.
+
+21.3 Key Bindings
+=================
+
+‘C-c V’
+     Toggle all thinking blocks in the buffer -- expands any that are
+     folded, or folds all if they are all expanded.
+
+‘TAB’
+     On a ‘*** ✦ Think’ heading line, cycle visibility of that
+     individual block (standard org-mode behavior).
+
+21.4 Configuration
+==================
+
+‘ollama-buddy-collapse-thinking’
+     When non-nil (default ‘t’), thinking content is automatically
+     collapsed to the ‘*** ✦ Think’ heading after the reasoning block
+     ends.
+
+‘ollama-buddy-hide-reasoning’
+     When non-nil and ‘ollama-buddy-collapse-thinking’ is nil, the
+     thinking block is hidden entirely (replaced by "Thinking...")
+     rather than kept in the buffer.
+
+‘ollama-buddy-thinking-models’
+     Static list of model name substrings that are known reasoning
+     models.  Auto-detection from the Ollama ‘/api/show’ capabilities
+     array is also performed.
+
+
+File: ollama-buddy.info,  Node: Tool Calling,  Next: RAG,  Prev: Thinking Blocks,  Up: Top
+
+22 Tool Calling
+***************
+
+22.1 Overview
 =============
 
 Tool calling (also known as function calling) enables LLMs to invoke
@@ -3083,7 +3143,7 @@ automatically within the conversation flow.
 
    The tool calling framework is provided by ‘ollama-buddy-tools.el’.
 
-21.2 Setup
+22.2 Setup
 ==========
 
      ;; Load the tools module
@@ -3096,10 +3156,10 @@ automatically within the conversation flow.
 are indicated with a ‘⚒’ symbol in the header line, model selection, and
 model management buffer.
 
-21.3 Built-in Tools
+22.3 Built-in Tools
 ===================
 
-21.3.1 Safe Tools (available in safe mode)
+22.3.1 Safe Tools (available in safe mode)
 ------------------------------------------
 
 ‘read_file’
@@ -3120,7 +3180,7 @@ model management buffer.
 ‘search_buffer’
      Search for a regex pattern in a buffer and return matching lines.
 
-21.3.2 Unsafe Tools (require safe mode off)
+22.3.2 Unsafe Tools (require safe mode off)
 -------------------------------------------
 
 ‘write_file’
@@ -3129,7 +3189,7 @@ model management buffer.
 ‘execute_shell’
      Execute a shell command and return its output.
 
-21.4 Example Prompts
+22.4 Example Prompts
 ====================
 
 With a tool-capable model selected and tools enabled, try prompts like:
@@ -3150,7 +3210,7 @@ With a tool-capable model selected and tools enabled, try prompts like:
 
      Create a file at /tmp/hello.txt with Hello World.
 
-21.5 How It Works
+22.5 How It Works
 =================
 
 When tool calling is enabled and a tool-capable model is selected, the
@@ -3172,7 +3232,7 @@ conversation flow works as follows:
    This loop is transparent to the user -- you see the final response in
 the chat buffer.
 
-21.5.1 Model Compatibility
+22.5.1 Model Compatibility
 --------------------------
 
 Tools are only sent to models that support them.  If you have tools
@@ -3189,7 +3249,7 @@ enabled but switch to a model that doesn't support tool calling:
    This allows you to leave tools enabled globally while freely
 switching between models.
 
-21.6 Configuration
+22.6 Configuration
 ==================
 
 ‘ollama-buddy-tools-enabled’
@@ -3219,7 +3279,7 @@ switching between models.
             '("qwen3" "qwen3-coder" "llama3.1" "llama3.3"
               "mistral" "gpt-oss" "command-r"))
 
-21.7 Registering Custom Tools
+22.7 Registering Custom Tools
 =============================
 
 Use ‘ollama-buddy-tools-register’ to add your own tools:
@@ -3243,7 +3303,7 @@ Use ‘ollama-buddy-tools-register’ to add your own tools:
 model's JSON response and must return a string result.  If the function
 returns a non-string value, it is formatted with ‘%S’.
 
-21.8 Interactive Commands
+22.8 Interactive Commands
 =========================
 
 ‘ollama-buddy-tools-toggle (C-c SPC)’
@@ -3269,7 +3329,7 @@ under the "Actions" section:
    • ‘SPC’ - Toggle Tools
    • ‘Q’ - List Tools
 
-21.9 Tool Indicators
+22.9 Tool Indicators
 ====================
 
 The ‘⚒’ (hammer and wrench) indicator appears in two places with
@@ -3303,10 +3363,10 @@ base names.
 
 File: ollama-buddy.info,  Node: RAG,  Next: Advanced Usage,  Prev: Tool Calling,  Up: Top
 
-22 RAG (Retrieval-Augmented Generation)
+23 RAG (Retrieval-Augmented Generation)
 ***************************************
 
-22.1 Overview
+23.1 Overview
 =============
 
 RAG allows you to index local documents and source code, then retrieve
@@ -3317,7 +3377,7 @@ efficient and responses grounded in your actual documents.
 
    The RAG module (‘ollama-buddy-rag.el’) is loaded by default.
 
-22.2 Requirements
+23.2 Requirements
 =================
 
 RAG requires an embedding model pulled into Ollama:
@@ -3328,7 +3388,7 @@ RAG requires an embedding model pulled into Ollama:
 ‘all-minilm’.  You can pull these from Model Management (‘C-c M’) under
 the "Embedding (RAG)" category.
 
-22.3 Quick Start
+23.3 Quick Start
 ================
 
   1. Pull an embedding model: ‘ollama pull nomic-embed-text’
@@ -3339,7 +3399,7 @@ the "Embedding (RAG)" category.
   6. Or attach context to a conversation: select ‘a’, enter a query,
      then chat normally
 
-22.4 How It Works
+23.4 How It Works
 =================
 
   1. *Indexing*: Files in a directory are read, split into chunks (by
@@ -3353,7 +3413,7 @@ the "Embedding (RAG)" category.
      context as a system-level prefix, so the LLM can reference them
      when generating a response.
 
-22.5 Configuration
+23.5 Configuration
 ==================
 
 ‘ollama-buddy-rag-embedding-model’
@@ -3388,7 +3448,7 @@ the "Embedding (RAG)" category.
 ‘ollama-buddy-rag-batch-size’
      Number of chunks to embed per API call (default: ‘20’).
 
-22.6 PDF Support
+23.6 PDF Support
 ================
 
 RAG can index PDF files if ‘pdftotext’ (from ‘poppler-utils’) is
@@ -3411,7 +3471,7 @@ installed on your system.  PDF support is auto-detected at runtime:
      # macOS
      brew install poppler
 
-22.7 Interactive Commands
+23.7 Interactive Commands
 =========================
 
 These commands are available from the RAG transient menu (‘C-c O’ then
@@ -3438,7 +3498,7 @@ These commands are available from the RAG transient menu (‘C-c O’ then
 ‘ollama-buddy-rag-delete-index (d)’
      Delete a saved RAG index.
 
-22.8 Inline @rag() Syntax
+23.8 Inline @rag() Syntax
 =========================
 
 You can use ‘@rag(query)’ directly in prompts to automatically search
@@ -3463,7 +3523,7 @@ needed.  This mirrors the ‘@search(query)’ syntax for web search.
    If you have multiple indexes, you will be prompted to select one.  If
 only one index exists, it is used automatically.
 
-22.9 Example Workflow
+23.9 Example Workflow
 =====================
 
 Suppose you have the text of "Twenty Thousand Leagues Under the Sea" in
@@ -3488,10 +3548,10 @@ document.
 
 File: ollama-buddy.info,  Node: Advanced Usage,  Next: API Reference,  Prev: RAG,  Up: Top
 
-23 Advanced Usage
+24 Advanced Usage
 *****************
 
-23.1 Managing Token Usage
+24.1 Managing Token Usage
 =========================
 
 Ollama Buddy can track token usage statistics:
@@ -3507,10 +3567,10 @@ Ollama Buddy can track token usage statistics:
    This displays a combined view with token usage graphs by model,
 average token rates, and recent interactions.
 
-23.2 Customizing the Interface
+24.2 Customizing the Interface
 ==============================
 
-23.2.1 Streaming Options
+24.2.1 Streaming Options
 ------------------------
 
 Control how responses are displayed:
@@ -3525,7 +3585,7 @@ Control how responses are displayed:
 ‘ollama-buddy-pulse-response’
      Flash the response when streaming completes.
 
-23.2.2 Debug Mode
+24.2.2 Debug Mode
 -----------------
 
 For advanced troubleshooting, you can enable debug mode:
@@ -3534,7 +3594,7 @@ For advanced troubleshooting, you can enable debug mode:
 
    This shows raw JSON messages in a debug buffer.
 
-23.3 Editing Conversation History
+24.3 Editing Conversation History
 =================================
 
 To manually edit conversation history:
@@ -3546,24 +3606,24 @@ modify it and press ‘C-c C-c’ to save or ‘C-c C-k’ to cancel.
 
    To edit history for a specific model, use ‘C-u C-c J’.
 
-23.4 Advanced System Prompt Management
+24.4 Advanced System Prompt Management
 ======================================
 
 For more control over system prompts:
 
-23.4.1 Setting a system prompt without sending
+24.4.1 Setting a system prompt without sending
 ----------------------------------------------
 
      (ollama-buddy-set-system-prompt)
    Enter your system prompt, then press ‘C-c s’.
 
-23.4.2 Using a system prompt from Fabric
+24.4.2 Using a system prompt from Fabric
 ----------------------------------------
 
      M-x ollama-buddy-fabric-set-system-prompt
    or press ‘C-c f p’.
 
-23.5 Using Direct API Access
+24.5 Using Direct API Access
 ============================
 
 For direct programmatic access to Ollama:
@@ -3578,10 +3638,10 @@ For direct programmatic access to Ollama:
 
 File: ollama-buddy.info,  Node: API Reference,  Next: FAQ,  Prev: Advanced Usage,  Up: Top
 
-24 API Reference
+25 API Reference
 ****************
 
-24.1 Interactive Functions
+25.1 Interactive Functions
 ==========================
 
 ‘ollama-buddy-role-transient-menu’
@@ -3748,7 +3808,7 @@ File: ollama-buddy.info,  Node: API Reference,  Next: FAQ,  Prev: Advanced Usage
 ‘ollama-buddy-transient-user-prompts-menu’
      Display the transient menu for user system prompts.
 
-24.2 Core Functions
+25.2 Core Functions
 ===================
 
 ‘ollama-buddy--send’
@@ -3775,7 +3835,7 @@ File: ollama-buddy.info,  Node: API Reference,  Next: FAQ,  Prev: Advanced Usage
 ‘ollama-buddy--update-status’
      Update the status display.
 
-24.3 Customization Functions
+25.3 Customization Functions
 ============================
 
 ‘ollama-buddy-update-command-with-params’
@@ -3793,20 +3853,20 @@ File: ollama-buddy.info,  Node: API Reference,  Next: FAQ,  Prev: Advanced Usage
 
 File: ollama-buddy.info,  Node: FAQ,  Next: Troubleshooting,  Prev: API Reference,  Up: Top
 
-25 Frequently Asked Questions
+26 Frequently Asked Questions
 *****************************
 
-25.1 General Questions
+26.1 General Questions
 ======================
 
-25.1.1 What is the difference between Ollama Buddy and other AI assistants?
+26.1.1 What is the difference between Ollama Buddy and other AI assistants?
 ---------------------------------------------------------------------------
 
 Ollama Buddy integrates with Ollama to run LLMs locally, offering
 privacy, customization, and seamless Emacs integration without relying
 on external API services.
 
-25.1.2 Does Ollama Buddy require an internet connection?
+26.1.2 Does Ollama Buddy require an internet connection?
 --------------------------------------------------------
 
 For local Ollama models, no internet connection is required after
@@ -3816,7 +3876,7 @@ pulling them.  Internet is needed for:
    • Using remote providers (OpenAI, Claude, Gemini, Grok, Codestral)
    • Syncing Fabric patterns or Awesome ChatGPT Prompts
 
-25.1.3 How do I use Ollama cloud models?
+26.1.3 How do I use Ollama cloud models?
 ----------------------------------------
 
 Cloud models require authentication:
@@ -3824,7 +3884,7 @@ Cloud models require authentication:
   2. Select cloud models with ‘C-c m’ (they appear marked with ‘☁’)
   3. The ‘☁’ symbol in the header indicates cloud model usage
 
-25.1.4 Which models work best with Ollama Buddy?
+26.1.4 Which models work best with Ollama Buddy?
 ------------------------------------------------
 
 Most models supported by Ollama work well.  Popular choices include:
@@ -3833,7 +3893,7 @@ Most models supported by Ollama work well.  Popular choices include:
    • mistral:latest - Good balance of performance and quality
    • phi:latest - Smaller model that works well on limited hardware
 
-25.1.5 How much RAM do I need?
+26.1.5 How much RAM do I need?
 ------------------------------
 
 It depends on the model:
@@ -3843,40 +3903,40 @@ It depends on the model:
 
    Quantized models (e.g., Q4_K_M variants) require less RAM.
 
-25.2 Usage Questions
+26.2 Usage Questions
 ====================
 
-25.2.1 How do I cancel a request that's taking too long?
+26.2.1 How do I cancel a request that's taking too long?
 --------------------------------------------------------
 
 Press ‘C-c k’ in the chat buffer or select "Kill Request" from the menu.
 
-25.2.2 How can I save my conversations?
+26.2.2 How can I save my conversations?
 ---------------------------------------
 
 Use ‘C-c S’ to save the current session, giving it a name.  You can
 restore it later with ‘C-c L’.
 
-25.2.3 Can I use multiple models in the same conversation?
+26.2.3 Can I use multiple models in the same conversation?
 ----------------------------------------------------------
 
 Yes, you can switch models at any time with ‘C-c m’.  Each model
 maintains its own conversation history.
 
-25.2.4 How do I clear the conversation history?
+26.2.4 How do I clear the conversation history?
 -----------------------------------------------
 
 Press ‘C-c X’ to clear history, or ‘C-c N’ to start a completely new
 session.
 
-25.2.5 How can I create a custom command?
+26.2.5 How can I create a custom command?
 -----------------------------------------
 
 The easiest way is through the role creator: press ‘C-c E’ and follow
 the prompts to create commands with specific prompts, models, and
 parameters.
 
-25.2.6 How can I manage context windows?
+26.2.6 How can I manage context windows?
 ----------------------------------------
 
 Ollama Buddy provides several options:
@@ -3886,7 +3946,7 @@ Ollama Buddy provides several options:
    • Limit history length with ‘C-c Y’
    • Set model-specific context sizes with ‘C-c $’
 
-25.2.7 What happens when I exceed the context limit?
+26.2.7 What happens when I exceed the context limit?
 ----------------------------------------------------
 
 When context monitoring is enabled:
@@ -3894,7 +3954,7 @@ When context monitoring is enabled:
    • You'll get an error dialog at or above 100%
    • You can choose to proceed anyway or modify your content
 
-25.2.8 How do I create effective system prompts?
+26.2.8 How do I create effective system prompts?
 ------------------------------------------------
 
 Effective system prompts typically include:
@@ -3904,17 +3964,17 @@ Effective system prompts typically include:
    • Constraints or limitations to observe
    Start simple, test the response, and refine iteratively.
 
-25.2.9 Where are my system prompts stored?
+26.2.9 Where are my system prompts stored?
 ------------------------------------------
 
 System prompts are stored as .org files in the directory specified by
 'ollama-buddy-user-prompts-directory', which defaults to
 '~/.emacs.d/ollama-buddy-user-prompts/'.
 
-25.3 Troubleshooting
+26.3 Troubleshooting
 ====================
 
-25.3.1 Ollama Buddy shows "OFFLINE" status
+26.3.1 Ollama Buddy shows "OFFLINE" status
 ------------------------------------------
 
 Ensure that:
@@ -3923,7 +3983,7 @@ Ensure that:
      and ‘ollama-buddy-port’)
    • Your firewall isn't blocking connections
 
-25.3.2 Responses are slow or the model seems to hang
+26.3.2 Responses are slow or the model seems to hang
 ----------------------------------------------------
 
 Try:
@@ -3932,7 +3992,7 @@ Try:
    • Setting ‘low_vram’ to ‘t’ if you have limited GPU memory
    • Checking CPU/RAM usage to ensure your system isn't overloaded
 
-25.3.3 Getting "error parsing model" when pulling a model
+26.3.3 Getting "error parsing model" when pulling a model
 ---------------------------------------------------------
 
 This usually means:
@@ -3940,7 +4000,7 @@ This usually means:
    • The model is not available in the Ollama repository
    • You have network connectivity issues
 
-25.3.4 Model responses are low quality or truncated
+26.3.4 Model responses are low quality or truncated
 ---------------------------------------------------
 
 Try:
@@ -3949,7 +4009,7 @@ Try:
    • Using a more capable model
    • Providing clearer instructions in your prompt
 
-25.3.5 How do system prompts differ from regular prompts?
+26.3.5 How do system prompts differ from regular prompts?
 ---------------------------------------------------------
 
 System prompts provide overall instructions to the AI about its role and
@@ -3957,7 +4017,7 @@ how to respond, while regular prompts are your specific questions or
 requests.  System prompts persist across the conversation, affecting all
 responses, while regular prompts are one-time interactions.
 
-25.3.6 What is the global system prompt?
+26.3.6 What is the global system prompt?
 ----------------------------------------
 
 The global system prompt is a baseline prompt automatically prepended to
@@ -3965,7 +4025,7 @@ all requests.  It's useful for consistent formatting instructions across
 all models.  Toggle it with ‘M-x
 ollama-buddy-toggle-global-system-prompt’.
 
-25.3.7 How do I use image analysis/vision features?
+26.3.7 How do I use image analysis/vision features?
 ---------------------------------------------------
 
   1. Select a vision-capable model (e.g., gemma3:4b, llama3.2:3b)
@@ -3974,7 +4034,7 @@ ollama-buddy-toggle-global-system-prompt’.
 
    Supported formats: PNG, JPG, JPEG, WebP, GIF.
 
-25.3.8 Can I share system prompts between different installations?
+26.3.8 Can I share system prompts between different installations?
 ------------------------------------------------------------------
 
 Yes, the user system prompts are stored as plain text .org files in your
@@ -3984,13 +4044,13 @@ share them with colleagues or between different machines.
 
 File: ollama-buddy.info,  Node: Troubleshooting,  Next: Contributing,  Prev: FAQ,  Up: Top
 
-26 Troubleshooting
+27 Troubleshooting
 ******************
 
-26.1 Common Issues
+27.1 Common Issues
 ==================
 
-26.1.1 Connection Problems
+27.1.1 Connection Problems
 --------------------------
 
 Symptom: Unable to connect to Ollama server
@@ -4005,7 +4065,7 @@ Symptom: Connection breaks during long responses
         • Try setting a lower ‘num_predict’ value
         • Check if your OS has any network timeout settings
 
-26.1.2 Model Problems
+27.1.2 Model Problems
 ---------------------
 
 Symptom: Model loads but gives poor responses
@@ -4020,7 +4080,7 @@ Symptom: Model fails to load or crashes
         • Adjust ‘num_ctx’ to a smaller value
         • Set ‘low_vram’ to ‘t’ if using GPU
 
-26.1.3 Interface Issues
+27.1.3 Interface Issues
 -----------------------
 
 Symptom: Chat buffer becomes unresponsive
@@ -4034,10 +4094,10 @@ Symptom: Markdown conversion issues
         • Check if the response contains complex formatting
         • Try editing the history to fix formatting issues
 
-26.2 Debugging
+27.2 Debugging
 ==============
 
-26.2.1 Enable Debug Mode
+27.2.1 Enable Debug Mode
 ------------------------
 
 To get more information about what's happening:
@@ -4045,13 +4105,13 @@ To get more information about what's happening:
 
    This opens a debug buffer showing raw JSON communication with Ollama.
 
-26.2.2 Check Logs
+27.2.2 Check Logs
 -----------------
 
 Ollama logs can be useful for troubleshooting:
      tail -f ~/.ollama/logs/ollama.log
 
-26.2.3 Report Issues
+27.2.3 Report Issues
 --------------------
 
 If you encounter a bug:
@@ -4068,10 +4128,10 @@ If you encounter a bug:
 
 File: ollama-buddy.info,  Node: Contributing,  Next: Index,  Prev: Troubleshooting,  Up: Top
 
-27 Contributing
+28 Contributing
 ***************
 
-27.1 Getting Started
+28.1 Getting Started
 ====================
 
 Ollama Buddy is an open-source project, and contributions are welcome!
@@ -4087,24 +4147,24 @@ Ollama Buddy is an open-source project, and contributions are welcome!
   7. Push to your fork
   8. Create a pull request
 
-27.2 Development Setup
+28.2 Development Setup
 ======================
 
-27.2.1 Required Tools
+28.2.1 Required Tools
 ---------------------
 
    • Emacs 28.1+
    • Ollama installed and running
    • Git
 
-27.2.2 Recommended Packages
+28.2.2 Recommended Packages
 ---------------------------
 
    • package-lint
    • flycheck
    • elisp-lint
 
-27.3 Coding Guidelines
+28.3 Coding Guidelines
 ======================
 
    • Follow Emacs Lisp conventions
@@ -4114,10 +4174,10 @@ Ollama Buddy is an open-source project, and contributions are welcome!
    • Use prefix ‘ollama-buddy--’ for internal functions
    • Use prefix ‘ollama-buddy-’ for public functions
 
-27.4 Testing
+28.4 Testing
 ============
 
-27.4.1 Run Existing Tests
+28.4.1 Run Existing Tests
 -------------------------
 
 The package includes comprehensive tests:
@@ -4127,7 +4187,7 @@ The package includes comprehensive tests:
      M-x ollama-buddy-fabric-run-tests
      M-x ollama-buddy-parameter-run-tests
 
-27.4.2 Adding New Tests
+28.4.2 Adding New Tests
 -----------------------
 
 When adding features, please also add tests:
@@ -4135,14 +4195,14 @@ When adding features, please also add tests:
    • Integration tests for API interactions
    • Parameter tests for parameter handling
 
-27.5 Feature Requests and Bug Reports
+28.5 Feature Requests and Bug Reports
 =====================================
 
    • Use GitHub Issues for bug reports and feature requests
    • Provide clear steps to reproduce bugs
    • For feature requests, explain the use case
 
-27.5.1 User System Prompts Issues
+28.5.1 User System Prompts Issues
 ---------------------------------
 
 Symptom: Cannot save system prompts
@@ -4169,34 +4229,35 @@ Index
 
 Tag Table:
 Node: Top555
-Node: Introduction2714
-Node: Installation4902
-Node: Configuration7859
-Node: Quick Start16129
-Node: Core Features18373
-Node: Chat Interface22650
-Node: Working with Models29728
-Node: Context Management34125
-Node: File Attachments39734
-Node: Web Search45656
-Node: Parameter Control52602
-Node: Session Management54999
-Node: User System Prompts57908
-Node: Roles and Commands66396
-Node: Fabric Pattern Integration81371
-Node: Awesome ChatGPT Prompts83598
-Node: Remote Providers87448
-Node: Ollama Cloud Models92382
-Node: Global System Prompt95254
-Node: Tone Selector97008
-Node: Tool Calling98812
-Node: RAG106599
-Node: Advanced Usage112982
-Node: API Reference115531
-Node: FAQ121470
-Node: Troubleshooting128555
-Node: Contributing131060
-Node: Index133728
+Node: Introduction2795
+Node: Installation4983
+Node: Configuration7940
+Node: Quick Start16210
+Node: Core Features18454
+Node: Chat Interface22731
+Node: Working with Models29809
+Node: Context Management34206
+Node: File Attachments39815
+Node: Web Search45737
+Node: Parameter Control52683
+Node: Session Management55080
+Node: User System Prompts57989
+Node: Roles and Commands66477
+Node: Fabric Pattern Integration81452
+Node: Awesome ChatGPT Prompts83679
+Node: Remote Providers87529
+Node: Ollama Cloud Models92463
+Node: Global System Prompt95335
+Node: Tone Selector97089
+Node: Thinking Blocks98896
+Node: Tool Calling100918
+Node: RAG108707
+Node: Advanced Usage115090
+Node: API Reference117639
+Node: FAQ123578
+Node: Troubleshooting130663
+Node: Contributing133168
+Node: Index135836
 
 End Tag Table
 

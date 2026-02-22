@@ -57,6 +57,7 @@ Submit queries, swap models, view token usage and statistics:
 - *Interactive Menus* -- Transient popup menus with role-based command grouping
 - *Roles & Presets* -- Switchable command configurations (developer, writer, tutor, documenter, custom)
 - *Sessions & History* -- Save/load conversations, prompt history navigation
+- *Thinking Block Folding* -- Reasoning model output (=<think>= tags, DeepSeek API) rendered as collapsible org headings; =C-c V= toggles all blocks
 - *File Attachments* -- Attach files and images (vision models) to conversations
 - *Model Management* -- Pull, delete, copy models; categorized recommendations; cloud model support
 - *Multishot* -- Send the same prompt to multiple models simultaneously
@@ -65,6 +66,10 @@ Submit queries, swap models, view token usage and statistics:
 - *Token Tracking* -- Real-time token usage statistics with graphs
 - *RAG* -- Index local documents and source code, retrieve relevant context for conversations via semantic search. Inline =@rag(query)= syntax for automatic context attachment.
 - *Lightweight* -- No external dependencies; a minified 200-line version (=ollama-buddy-mini=) is also available
+
+* What's New (2.7.3)
+
+- *Collapsible thinking blocks* -- Reasoning model output (from =<think>= tags or the DeepSeek API =message.thinking= field) now renders as a native org-mode heading (=*** ✦ Think=) that folds automatically when the model finishes reasoning. A =*** ✦ Response= heading marks the start of the actual answer. Use =C-c V= to toggle all thinking blocks in the buffer, or =TAB= on any =*** ✦ Think= heading to toggle it individually. The =✦= symbol appears in the header line and prompt line when the active model supports thinking/reasoning.
 
 * What's New (2.7.1)
 
