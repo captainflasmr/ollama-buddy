@@ -11,6 +11,22 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-22 Sun> *2.8.0*
+
+Initial in-buffer replace mode — an early-stage feature that streams LLM output directly back into the source buffer instead of the chat buffer.
+
+*** New Features
+
+- *In-buffer replace mode (initial pass)* -- New =ollama-buddy-in-buffer-replace= toggle allows commands that operate on a selected region (refactor, proofread, etc.) to stream their response back into the source buffer in place, replacing the selection. This is an initial attempt at in-buffer editing; the core chat buffer workflow is completely unchanged when the toggle is off.
+  - Toggle via transient menu Actions → =W=, or =M-x ollama-buddy-toggle-in-buffer-replace=
+  - The =✎= indicator appears in the header line and prompt line when the mode is active
+  - While streaming, a =​[Rewriting...]=​ placeholder (dimmed italic) replaces the selection, then streams in with a green highlight
+  - After streaming completes, a minor mode activates with two keys: =C-c C-c= to accept (keep new text, remove highlight) and =C-c C-k= to reject (restore original text)
+  - Cancellation mid-stream with =C-c C-k= stops the network process and restores the original selection
+  - The mode line shows =​ [Rewrite?]=​ while a rewrite is pending decision
+  - Only the output destination changes; prompt construction, model selection, system prompts, and command definitions are unaffected
+  - New module =ollama-buddy-rewrite.el= loaded optionally via =(require 'ollama-buddy-rewrite nil t)=
+
 ** <2026-02-22 Sun> *2.7.3*
 
 Native org-mode collapsible thinking blocks for reasoning models.

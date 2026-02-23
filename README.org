@@ -65,7 +65,20 @@ Submit queries, swap models, view token usage and statistics:
 - *Fabric Patterns* -- Integration with [[https://github.com/danielmiessler/fabric][Fabric]] prompt patterns
 - *Token Tracking* -- Real-time token usage statistics with graphs
 - *RAG* -- Index local documents and source code, retrieve relevant context for conversations via semantic search. Inline =@rag(query)= syntax for automatic context attachment.
+- *In-Buffer Replace (initial)* -- An early-stage mode that streams LLM output directly back into the source buffer, replacing the selected region in-place with accept/reject confirmation
 - *Lightweight* -- No external dependencies; a minified 200-line version (=ollama-buddy-mini=) is also available
+
+* What's New (2.8.0)
+
+This release adds an initial pass at in-buffer replacement — a first attempt at bringing LLM rewrites directly into the source buffer rather than the chat buffer. The feature is intentionally conservative: it does not change any existing workflow, prompt handling, or command definitions. When toggled off (the default) everything behaves exactly as before.
+
+- *In-buffer replace mode* -- Toggle =W= in the transient Actions menu (or =M-x ollama-buddy-toggle-in-buffer-replace=) to activate. With a region selected, any role command (Refactor, Proofread, etc.) will:
+  1. Replace the selection with a =​[Rewriting...]=​ placeholder
+  2. Stream the model's response back into the source buffer with a green highlight
+  3. Activate =C-c C-c= (accept) / =C-c C-k= (reject/restore original) when the stream finishes
+  - Cancelling mid-stream with =C-c C-k= stops the network process and restores the original text
+  - The =✎= symbol appears in the header and prompt line while the mode is active
+  - Mode line shows =​ [Rewrite?]=​ while a decision is pending
 
 * What's New (2.7.3)
 

@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 2.7.3
+;; Version: 2.8.0
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -78,6 +78,7 @@
 (require 'ollama-buddy-web-search)
 (require 'ollama-buddy-rag)
 (require 'ollama-buddy-tools)
+(require 'ollama-buddy-rewrite nil t)
 
 (declare-function ollama-buddy-curl--validate-executable "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--test-connection "ollama-buddy-curl")
@@ -2464,42 +2465,67 @@ Shows cached status. Use signin/signout to update or try a cloud model request."
                            (region-beginning) (region-end))))
          (model (ollama-buddy--get-command-prop command-name :model))
          (params-alist (ollama-buddy--get-command-prop command-name :parameters)))
-    
+
     ;; Verify requirements
     (when (and prompt-text (not selected-text))
       (user-error "This command requires selected text"))
-    
-    (ollama-buddy--open-chat)
-    
-    ;; Apply command-specific parameters if provided
-    (when params-alist
-      (ollama-buddy--apply-command-parameters params-alist))
-    
-    ;; Display which system prompt will be used
-    (when system-text
-      (ollama-buddy--display-system-prompt system-text 3))
-    
-    ;; Prepare and send the prompt
-    (let ((full-prompt (ollama-buddy--prepare-command-prompt command-name selected-text)))
-      ;; Temporarily set system prompt if specified for this command
-      (let ((old-system-prompt ollama-buddy--current-system-prompt))
-        (when system-text
-          (setq ollama-buddy--current-system-prompt system-text))
 
-        (when (and prompt-text (not (string-empty-p prompt-text)))
-          (put 'ollama-buddy--cycle-prompt-history 'history-position -1)
-          (add-to-history 'ollama-buddy--prompt-history prompt-text))
-        
-        ;; Send the request
-        (ollama-buddy--send-backend (string-trim full-prompt) model)
-        
-        ;; Restore the original system prompt if we changed it
-        (when system-text
-          (setq ollama-buddy--current-system-prompt old-system-prompt))
-        
-        ;; Restore default parameters if we changed them
-        (when params-alist
-          (ollama-buddy--restore-default-parameters))))))
+    ;; --- In-buffer replace branch ---
+    (if (and (bound-and-true-p ollama-buddy-in-buffer-replace)
+             selected-text
+             (featurep 'ollama-buddy-rewrite))
+        (let* ((source-buf      (current-buffer))
+               (r-start         (region-beginning))
+               (r-end           (region-end))
+               (cmd-prompt      (ollama-buddy--get-command-prop command-name :prompt))
+               (full-prompt     (if cmd-prompt
+                                    (concat cmd-prompt "\n\n" selected-text)
+                                  selected-text))
+               (effective-system (or system-text
+                                     ollama-buddy--current-system-prompt))
+               (effective-model  (or model
+                                     ollama-buddy--current-model
+                                     ollama-buddy-default-model)))
+          (when params-alist
+            (ollama-buddy--apply-command-parameters params-alist))
+          (ollama-buddy-rewrite-from-command
+           source-buf r-start r-end selected-text
+           effective-system full-prompt effective-model)
+          (when params-alist
+            (ollama-buddy--restore-default-parameters)))
+
+      ;; --- Normal branch (unchanged) ---
+      (ollama-buddy--open-chat)
+
+      ;; Apply command-specific parameters if provided
+      (when params-alist
+        (ollama-buddy--apply-command-parameters params-alist))
+
+      ;; Display which system prompt will be used
+      (when system-text
+        (ollama-buddy--display-system-prompt system-text 3))
+
+      ;; Prepare and send the prompt
+      (let ((full-prompt (ollama-buddy--prepare-command-prompt command-name selected-text)))
+        ;; Temporarily set system prompt if specified for this command
+        (let ((old-system-prompt ollama-buddy--current-system-prompt))
+          (when system-text
+            (setq ollama-buddy--current-system-prompt system-text))
+
+          (when (and prompt-text (not (string-empty-p prompt-text)))
+            (put 'ollama-buddy--cycle-prompt-history 'history-position -1)
+            (add-to-history 'ollama-buddy--prompt-history prompt-text))
+
+          ;; Send the request
+          (ollama-buddy--send-backend (string-trim full-prompt) model)
+
+          ;; Restore the original system prompt if we changed it
+          (when system-text
+            (setq ollama-buddy--current-system-prompt old-system-prompt))
+
+          ;; Restore default parameters if we changed them
+          (when params-alist
+            (ollama-buddy--restore-default-parameters)))))))
 
 (defun ollama-buddy--calculate-prompt-context-percentage ()
   "Calculate and return the context percentage for the current prompt."

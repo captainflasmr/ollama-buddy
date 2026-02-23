@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 2.7.3
+@subtitle For Ollama Buddy version 2.8.0
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -65,6 +65,7 @@ allowing you to leverage powerful large language models (LLMs) directly within y
 * Global System Prompt::        Configuring a persistent global system prompt
 * Tone Selector::               Quickly switch response style
 * Thinking Blocks::             Collapsible reasoning output for thinking models
+* In-Buffer Replace::           Stream rewrites directly into source buffers (initial)
 * Tool Calling::                Enabling LLMs to invoke Emacs functions
 * RAG::                         Retrieval-Augmented Generation with local documents
 * Advanced Usage::              Tips and techniques for power users
@@ -3143,6 +3144,89 @@ When non-nil and @code{ollama-buddy-collapse-thinking} is nil, the thinking bloc
 @item @code{ollama-buddy-thinking-models}
 Static list of model name substrings that are known reasoning models. Auto-detection from the Ollama @code{/api/show} capabilities array is also performed.
 @end table
+
+@node In-Buffer Replace
+@chapter In-Buffer Replace
+
+@section Overview
+
+In-buffer replace is an @emph{initial pass} at a feature that streams LLM output directly
+into the source buffer rather than the chat buffer.  When active, commands that operate on
+a selected region (such as Refactor, Proofread, or any custom role command) will replace
+the selection in-place with the model's response.
+
+This is an early-stage capability.  The existing chat buffer workflow is completely
+unchanged when the toggle is off (the default), and all existing commands, prompts,
+system prompts, and model selection logic are unaffected --- only the output destination
+changes.
+
+@section Enabling In-Buffer Replace
+
+Toggle via the transient menu (@code{C-c O}) @samp{Actions} section, key @kbd{W}:
+
+@example
+M-x ollama-buddy-toggle-in-buffer-replace
+@end example
+
+The @code{✎} symbol appears in the header line and prompt line while the mode is active.
+
+@section Workflow
+
+@enumerate
+@item Toggle in-buffer replace on (@kbd{W} in the transient Actions menu).
+@item In any source buffer, select a region of text (e.g.@: a function body, a paragraph).
+@item Invoke a role command (e.g.@: Refactor from the Developer role).
+@item A dimmed @samp{[Rewriting...]} placeholder replaces the selection.
+@item The model's response streams in with a green highlight.
+@item When streaming finishes, a minor mode activates.  The mode line shows @samp{ [Rewrite?]}.
+@item Press @kbd{C-c C-c} to @strong{accept} (keep new text, remove highlight).
+@item Press @kbd{C-c C-k} to @strong{reject} (discard new text and restore the original).
+@end enumerate
+
+Cancelling mid-stream with @kbd{C-c C-k} stops the network process and restores the
+original selection immediately.
+
+@section Key Bindings (while rewrite is pending)
+
+@table @kbd
+@item C-c C-c
+Accept the rewrite --- keep the streamed text and remove the highlight.
+
+@item C-c C-k
+Reject the rewrite --- stop streaming (if still in progress) and restore the original
+selected text.
+@end table
+
+@section Implementation Notes
+
+The feature is implemented in @file{ollama-buddy-rewrite.el}, loaded optionally:
+
+@example
+(require 'ollama-buddy-rewrite nil t)
+@end example
+
+The module creates a direct @code{make-network-process} connection to Ollama
+(@code{/api/chat}) and streams JSON responses using the same line-delimited format
+as the main chat buffer filter.  Two Emacs markers track the rewrite region:
+
+@itemize @bullet
+@item A @emph{non-advancing} start marker (stays before inserted text).
+@item An @emph{advancing} end marker (moves past each newly inserted chunk).
+@end itemize
+
+Original text is preserved in memory for rejection; no undo history manipulation is
+required.
+
+@section Current Limitations
+
+This is an initial implementation.  Known limitations for future work:
+
+@itemize @bullet
+@item Only works with local Ollama models (not remote providers).
+@item Only one rewrite can be pending at a time.
+@item The streaming response is inserted verbatim; no markdown-to-org conversion
+is performed (unlike the chat buffer).
+@end itemize
 
 @node Tool Calling
 @chapter Tool Calling

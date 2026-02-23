@@ -224,6 +224,10 @@ All cloud models, external providers (OpenAI, Claude, Gemini, etc.) and
 web search are blocked to prevent unintended internet access and token usage.
 Use `ollama-buddy-toggle-airplane-mode' to toggle.")
 
+(defvar ollama-buddy-in-buffer-replace nil
+  "When non-nil, commands that operate on a region stream their response
+back into the source buffer instead of the chat buffer.
+Toggle with `ollama-buddy-toggle-in-buffer-replace' or the transient menu.")
 
 (defcustom ollama-buddy-image-formats '("\\.png$" "\\.jpg$" "\\.jpeg$" "\\.webp$" "\\.gif$")
   "List of regular expressions matching supported image file formats."
@@ -1927,7 +1931,9 @@ When SYSTEM-PROMPT is non-nil, mark as a system prompt."
          (cloud-indicator (if (ollama-buddy--cloud-model-p model) "☁" ""))
          (tools-indicator (if (ollama-buddy--model-supports-tools model) "⚒" ""))
          (thinking-indicator (if (ollama-buddy--model-supports-thinking model) "✦" ""))
-         (indicators (string-trim (concat cloud-indicator tools-indicator thinking-indicator))))
+         (in-buffer-indicator (if (bound-and-true-p ollama-buddy-in-buffer-replace) "✎" ""))
+         (indicators (string-trim (concat cloud-indicator tools-indicator
+                                          thinking-indicator in-buffer-indicator))))
 
     (let ((buf (get-buffer-create ollama-buddy--chat-buffer)))
       (with-current-buffer buf
@@ -2186,6 +2192,17 @@ is disabled, preventing any internet access from this package."
   (message "Airplane mode %s"
            (if ollama-buddy-airplane-mode "enabled ✈ — local Ollama only" "disabled")))
 
+(defun ollama-buddy-toggle-in-buffer-replace ()
+  "Toggle in-buffer replacement mode on/off.
+When enabled, commands that operate on a region stream their response
+back into the source buffer instead of the chat buffer."
+  (interactive)
+  (setq ollama-buddy-in-buffer-replace (not ollama-buddy-in-buffer-replace))
+  (when (fboundp 'ollama-buddy--update-status)
+    (ollama-buddy--update-status (or (bound-and-true-p ollama-buddy--status) "")))
+  (message "In-buffer replace %s"
+           (if ollama-buddy-in-buffer-replace "ON (✎)" "OFF")))
+
 (defun ollama-buddy--validate-model (model)
   "Validate MODEL availability.
 Cloud models are always considered valid if Ollama is running."
@@ -2427,6 +2444,7 @@ ACTUAL-MODEL is the model being used instead."
                               (propertize (format "⊕%d " (ollama-buddy-rag-count))
                                           'face '(:weight bold))
                             ""))
+           (in-buffer-indicator (if (bound-and-true-p ollama-buddy-in-buffer-replace) "✎" ""))
            (tone-indicator (let ((tone ollama-buddy--current-tone))
                              (if (or (null tone) (string= tone "Normal"))
                                  ""
@@ -2434,7 +2452,7 @@ ACTUAL-MODEL is the model being used instead."
                                            'face '(:weight bold))))))
       (setq header-line-format
             (concat
-             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s %s %s%s"
+             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s %s %s%s"
                      airplane-indicator
                      (if ollama-buddy-streaming-enabled "" "x")
                      (ollama-buddy--add-context-to-status-format)
@@ -2444,6 +2462,7 @@ ACTUAL-MODEL is the model being used instead."
                      tools-indicator
                      vision-indicator
                      thinking-indicator
+                     in-buffer-indicator
                      attachment-indicator
                      web-search-indicator
                      rag-indicator
