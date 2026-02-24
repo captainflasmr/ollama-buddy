@@ -202,18 +202,20 @@ Second value (1.0) is the red threshold (at or exceeding limit)."
     "marco-o1" "skyfall" "deepthink")
   "List of models known to support thinking/reasoning capabilities.
 These models emit extended reasoning in <think>...</think> blocks.
-Exact name matches only; see `ollama-buddy-thinking-model-patterns' for
-substring/prefix-based heuristics.
-Auto-detection via Ollama's /api/show capabilities array also supplements this list."
+Exact name matches only; see `ollama-buddy-thinking-model-patterns'
+for substring/prefix-based heuristics.
+Auto-detection via Ollama's /api/show capabilities array also
+supplements this list."
   :type '(repeat string)
   :group 'ollama-buddy)
 
 (defcustom ollama-buddy-thinking-model-patterns
   '("deepseek" "reasoning" "qwq" "think")
   "List of substrings used as a heuristic fallback for thinking model detection.
-If any string in this list appears anywhere in the model name (case-insensitive),
-the model is assumed to support thinking/reasoning.  This allows broad families
-like all DeepSeek models to be recognised without listing every variant.
+If any string in this list appears anywhere in the model name
+\(case-insensitive), the model is assumed to support thinking/reasoning.
+This allows broad families like all DeepSeek models to be recognised
+without listing every variant.
 Takes effect before the /api/show capabilities cache is populated."
   :type '(repeat string)
   :group 'ollama-buddy)

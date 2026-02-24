@@ -40,6 +40,7 @@ elisp_files=(
   "ollama-buddy-openrouter.el"
   "ollama-buddy-rag.el"
   "ollama-buddy-remote.el"
+  "ollama-buddy-rewrite.el"
   "ollama-buddy-tools.el"
   "ollama-buddy-transient.el"
   "ollama-buddy-user-prompts.el"

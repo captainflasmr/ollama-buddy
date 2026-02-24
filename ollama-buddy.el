@@ -137,9 +137,9 @@ Used by models like deepseek-r1 that use a dedicated thinking field rather than
 embedding <think>...</think> tags inside message.content.")
 
 (defvar-local ollama-buddy--thinking-arrow-marker nil
-  "Marker at the start of the `*** ✦ Think' heading for the block being streamed.
-Set when the heading is inserted; passed to `ollama-buddy--collapse-thinking-block'
-and then cleared.")
+  "Marker at the start of the `*** ✦ Think' heading for the current block.
+Set when the heading is inserted; passed to
+`ollama-buddy--collapse-thinking-block' and then cleared.")
 
 (defvar ollama-buddy-mode-line-segment nil
   "Mode line segment for Ollama Buddy.")
