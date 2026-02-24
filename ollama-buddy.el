@@ -1734,24 +1734,57 @@ TCP packets split a JSON object across multiple filter calls."
     (setq ollama-buddy--stream-pending
           (concat ollama-buddy--stream-pending output))
 
-    ;; Strip HTTP headers if still present (first chunk contains them)
-    (when (string-match "^HTTP/.*?\r?\n\r?\n" ollama-buddy--stream-pending)
-      (setq ollama-buddy--stream-pending
-            (substring ollama-buddy--stream-pending (match-end 0))))
+    ;; Strip HTTP headers if still present (first chunk contains them).
+    ;; Capture the status code so non-2xx responses can be handled specially.
+    (when (string-match "^HTTP/[0-9.]+ \\([0-9]+\\)" ollama-buddy--stream-pending)
+      (let ((status (string-to-number (match-string 1 ollama-buddy--stream-pending))))
+        (when (string-match "^HTTP/.*?\r?\n\r?\n" ollama-buddy--stream-pending)
+          (setq ollama-buddy--stream-pending
+                (substring ollama-buddy--stream-pending (match-end 0)))
+          (unless (and (>= status 200) (< status 300))
+            (setq ollama-buddy--stream-http-status status)))))
 
-    ;; Process all complete newline-delimited JSON lines
-    (while (string-match "\\([^\n]*\\)\n" ollama-buddy--stream-pending)
-      (let* ((line (match-string 1 ollama-buddy--stream-pending)))
-        (setq ollama-buddy--stream-pending
-              (substring ollama-buddy--stream-pending (match-end 0)))
-        ;; Strip any non-JSON prefix (e.g. chunk encoding) and parse
-        (let* ((json-str (replace-regexp-in-string "^[^{]*" "" line))
-               (json-data (when (and (stringp json-str)
-                                     (> (length json-str) 0))
-                            (ignore-errors
-                              (json-read-from-string json-str)))))
-          (when json-data
-            (ollama-buddy--stream-process-json json-data)))))))
+    ;; Non-2xx: the error body is a single pretty-printed JSON object, not
+    ;; newline-delimited.  Try to parse the whole body at once; ignore-errors
+    ;; handles the case where the body has not fully arrived yet (next chunk
+    ;; retries).  On success, display the error and tear down the process.
+    (when ollama-buddy--stream-http-status
+      (let ((error-json (ignore-errors
+                          (json-read-from-string ollama-buddy--stream-pending))))
+        (when error-json
+          (let* ((error-msg (or (alist-get 'error error-json)
+                                (alist-get 'Status error-json)
+                                (format "HTTP %d" ollama-buddy--stream-http-status)))
+                 (code ollama-buddy--stream-http-status))
+            (with-current-buffer ollama-buddy--chat-buffer
+              (let ((inhibit-read-only t))
+                (save-excursion
+                  (goto-char (point-max))
+                  (insert (format "\n\n*Error %d:* %s" code error-msg))
+                  (ollama-buddy--prepare-prompt-area))))
+            (ollama-buddy--update-status (format "Error %d" code))
+            (setq ollama-buddy--stream-pending "")
+            ;; Delete the process; sentinel fires with "deleted" and skips
+            ;; inserting the normal completion/interrupted message.
+            (when (and ollama-buddy--active-process
+                       (process-live-p ollama-buddy--active-process))
+              (delete-process ollama-buddy--active-process))))))
+
+    ;; Process all complete newline-delimited JSON lines.
+    ;; Skipped when we are in HTTP-error mode to avoid spurious parse attempts.
+    (unless ollama-buddy--stream-http-status
+      (while (string-match "\\([^\n]*\\)\n" ollama-buddy--stream-pending)
+        (let* ((line (match-string 1 ollama-buddy--stream-pending)))
+          (setq ollama-buddy--stream-pending
+                (substring ollama-buddy--stream-pending (match-end 0)))
+          ;; Strip any non-JSON prefix (e.g. chunk encoding) and parse
+          (let* ((json-str (replace-regexp-in-string "^[^{]*" "" line))
+                 (json-data (when (and (stringp json-str)
+                                       (> (length json-str) 0))
+                              (ignore-errors
+                                (json-read-from-string json-str)))))
+            (when json-data
+              (ollama-buddy--stream-process-json json-data))))))))
 
 (defun ollama-buddy--stream-process-json (json-data)
   "Process a single parsed JSON-DATA object from the Ollama stream."
@@ -2183,6 +2216,11 @@ TCP packets split a JSON object across multiple filter calls."
 
 (defun ollama-buddy--stream-sentinel (_proc event)
   "Handle stream completion EVENT."
+  ;; If we already handled an HTTP error in the filter, just reset the
+  ;; status flag and return — the error message and prompt area were already
+  ;; written; no need for the usual "[Stream …]" completion notice.
+  (if ollama-buddy--stream-http-status
+      (setq ollama-buddy--stream-http-status nil)
   (when-let* ((status (cond ((string-match-p "finished" event) "Completed")
                             ((string-match-p "\\(?:deleted\\|connection broken\\)" event) "Interrupted")))
               (msg (format "\n\n[Stream %s]" status)))
@@ -2248,7 +2286,7 @@ TCP packets split a JSON object across multiple filter calls."
         (ollama-buddy--update-status (concat "Stream " status))))
 
     ;; Auto-save transcript (for sentinel-based completions)
-    (ollama-buddy--autosave-transcript)))
+    (ollama-buddy--autosave-transcript))))
 
 (defun ollama-buddy--format-model-size (bytes)
   "Format BYTES as a human-readable size string."

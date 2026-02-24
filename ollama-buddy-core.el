@@ -1033,6 +1033,12 @@ Strips both local Ollama prefixes (o:, cl:) and remote provider prefixes
 (defvar ollama-buddy--stream-pending ""
   "Pending partial data from the stream not yet forming a complete JSON line.")
 
+(defvar ollama-buddy--stream-http-status nil
+  "Non-nil when the current stream received a non-2xx HTTP response.
+Holds the integer status code (e.g. 429).  The filter accumulates the full
+error body and displays it; the sentinel suppresses its normal completion
+message while this is set.")
+
 (defvar ollama-buddy--status "Idle"
   "Current status of the Ollama request.")
 
