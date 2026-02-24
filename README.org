@@ -25,6 +25,14 @@ That's it. Start =ollama serve=, open Emacs, press =C-c o=, select =[o]= to open
 
 https://www.youtube.com/@OllamaBuddyforEmacs
 
+** In-buffer replacement demo
+
+Demonstrating in-buffer in-line modification, now we are out of the chat buffer!
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_037.gif]]
+
 ** Tool Calling Demo
 
 LLMs can invoke Emacs functions: read/write files, execute shell commands, search buffers, and more.

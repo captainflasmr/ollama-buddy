@@ -613,3 +613,25 @@ https://github.com/captainflasmr/ollama-buddy
 #+attr_org: :width 300px
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_036.gif]]
+
+** 037 In-Buffer responses with in-line inpsection #emacs #ollama
+
+Demonstrating in-buffer in-line modification, now we are out of the chat buffer!
+
+- Turn in-buffer through menu W
+- open ollama-buddy-rewrite-samples.org
+- Refactor Code : Sample 2 - refactor
+- show original in-buffer and accept
+- Proofred Text : Sample 1 - select paragraph and proofred
+- show original in-buffer and accept
+
+This demonstrates how ollama-buddy can now return LLM requests directly into the buffer
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_037.gif]]
