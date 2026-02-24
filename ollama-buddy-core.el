@@ -1331,6 +1331,7 @@ separated by two newlines when combined."
   (let ((tone (completing-read "Tone: " (mapcar #'car ollama-buddy-tone-alist) nil t)))
     (setq ollama-buddy--current-tone tone)
     (ollama-buddy--update-status (format "Tone: %s" tone))
+    (force-mode-line-update t)
     (message "Tone set to %s" tone)))
 
 (defun ollama-buddy-show-system-prompt-info ()

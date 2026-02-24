@@ -1334,14 +1334,20 @@ Filters stop words and returns up to 5 key words joined by hyphens."
 
 
 (defun ollama-buddy-update-mode-line ()
-  "Update the mode line to show the current session name."
-  (let ((session-name (or ollama-buddy-current-session-name "No Session"))
-        (segment-name 'ollama-buddy-mode-line-segment))
-    
-    ;; Define a new mode line segment
+  "Update the mode line to show the current session name and tone."
+  (let ((segment-name 'ollama-buddy-mode-line-segment))
+
+    ;; Define a dynamic segment that reads session and tone at display time
     (setq ollama-buddy-mode-line-segment
-          `(:eval (format "[%s]" ,session-name)))
-    
+          '(:eval
+            (let* ((session (or ollama-buddy-current-session-name "No Session"))
+                   (tone (and (boundp 'ollama-buddy--current-tone)
+                              ollama-buddy--current-tone))
+                   (show-tone (and tone (not (string= tone "Normal")))))
+              (if show-tone
+                  (format "[%s] %s" session tone)
+                (format "[%s]" session)))))
+
     ;; Search and replace the existing segment in the mode line
     (setq mode-line-format
           (mapcar (lambda (segment)
@@ -1350,7 +1356,7 @@ Filters stop words and returns up to 5 key words joined by hyphens."
                         ollama-buddy-mode-line-segment
                       segment))
                   mode-line-format))
-    
+
     ;; If the segment isn't already present, add it at the beginning
     (unless (member ollama-buddy-mode-line-segment mode-line-format)
       (setq mode-line-format
@@ -1438,6 +1444,7 @@ Filters stop words and returns up to 5 key words joined by hyphens."
     
     ;; Clear current session
     (setq ollama-buddy--current-session nil)
+    (setq ollama-buddy-current-session-name nil)
 
     ;; Clear current system prompt
     (setq ollama-buddy--current-system-prompt nil)
@@ -1456,8 +1463,9 @@ Filters stop words and returns up to 5 key words joined by hyphens."
         (insert (ollama-buddy--create-intro-message))
         (ollama-buddy--prepare-prompt-area)))
     
-    ;; Update status
+    ;; Update status and mode line
     (ollama-buddy--update-status "New session started")
+    (ollama-buddy-update-mode-line)
     (message "Started new session")))
 
 (defun ollama-buddy-clear-history (&optional all-models)
@@ -1701,7 +1709,8 @@ Optional MENU-COLUMNS specifies the number of columns for the menu display."
           (insert (format "\n\n* NO DEFAULT MODEL : Using best guess : %s" model))))
       (ollama-buddy--prepare-prompt-area)
       (put 'ollama-buddy--cycle-prompt-history 'history-position -1))
-    (ollama-buddy--update-status "Idle")))
+    (ollama-buddy--update-status "Idle")
+    (ollama-buddy-update-mode-line)))
 
 (defun ollama-buddy--stream-filter (_proc output)
   "Process stream OUTPUT while preserving cursor position.

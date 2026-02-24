@@ -72,10 +72,6 @@ System prompt selection directly from org browse buffers.
 
 - *RET to set system prompt in org list buffers* -- Pressing =RET= on a level-2 heading in the =*User System Prompts*=, =*Awesome ChatGPT Prompts List*=, or =*Fabric Patterns List*= buffers immediately sets that entry as the current system prompt, without leaving the browse buffer or using the completion UI. A hint comment at the top of each buffer documents the binding. Category (level-1) headings produce a clear error message.
 
-*** Fixes
-
-- *Header line spacing* -- Added a space between the status message and the system prompt indicator in the header line.
-
 ** <2026-02-19 Wed> *2.7.0*
 
 Airplane mode for complete internet isolation.
