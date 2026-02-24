@@ -1,0 +1,192 @@
+#+title: In-Buffer Replace — Manual Test Samples
+#+author: James Dyer
+#+email: captainflasmr@gmail.com
+#+language: en
+#+options: ':t toc:t author:nil email:nil num:nil title:nil
+#+startup: showall
+
+This file contains sample content for manually testing each in-buffer replace
+command.  Open this file in Emacs, enable in-buffer replace mode, select the
+marked region for each test, then invoke the command from the role menu.
+
+* Setup
+
+1. Enable in-buffer replace: =C-c O= → Actions → =W= (toggle on, header shows =✎=)
+2. Select the sample region
+3. Invoke the command: =C-c o= → choose the command key
+4. Accept with =C-c C-c= or reject with =C-c C-k=
+
+Tip: use =C-c C-k= at any point during streaming to cancel and restore the original.
+
+-----
+
+* Refactor Code  [key: r]
+
+Select the function body between the markers and invoke Refactor Code.
+
+** Sample 1 — Elisp: poor names, no docstring, repetition
+
+#+begin_src emacs-lisp
+(defun do-stuff (x y z)
+  (let ((a nil)
+        (b nil)
+        (c nil))
+    (if (> x 0)
+        (setq a (* x x))
+      (setq a 0))
+    (if (> y 0)
+        (setq b (* y y))
+      (setq b 0))
+    (if (> z 0)
+        (setq c (* z z))
+      (setq c 0))
+    (+ a b c)))
+#+end_src
+
+** Sample 2 — Elisp: imperative loop, no error handling
+
+#+begin_src emacs-lisp
+(defun count-words-in-file (f)
+  (let ((count 0)
+        (buf (find-file-noselect f)))
+    (with-current-buffer buf
+      (goto-char (point-min))
+      (while (re-search-forward "\\w+" nil t)
+        (setq count (+ count 1))))
+    (kill-buffer buf)
+    count))
+#+end_src
+
+** Sample 3 — Python: duplicated logic, magic numbers
+
+#+begin_src python
+def calculate_bmi(weight_kg, height_cm):
+    h = height_cm / 100
+    bmi = weight_kg / (h * h)
+    if bmi < 18.5:
+        cat = "underweight"
+    elif bmi >= 18.5 and bmi < 25.0:
+        cat = "normal"
+    elif bmi >= 25.0 and bmi < 30.0:
+        cat = "overweight"
+    elif bmi >= 30.0:
+        cat = "obese"
+    return (bmi, cat)
+#+end_src
+
+* Describe Code  [key: c]
+
+Select the function and invoke Describe Code.
+
+** Sample 1 — Elisp: marker-based streaming insert
+
+#+begin_src emacs-lisp
+(defun ollama-buddy--rewrite-insert-content (content)
+  (when ollama-buddy--rewrite-state
+    (let* ((source-buf (plist-get ollama-buddy--rewrite-state :source-buffer))
+           (start-m    (plist-get ollama-buddy--rewrite-state :start-marker))
+           (end-m      (plist-get ollama-buddy--rewrite-state :end-marker))
+           (first-p    (plist-get ollama-buddy--rewrite-state :first-content)))
+      (when (buffer-live-p source-buf)
+        (with-current-buffer source-buf
+          (let ((inhibit-read-only t))
+            (when first-p
+              (delete-region (marker-position start-m)
+                             (marker-position end-m))
+              (setq ollama-buddy--rewrite-state
+                    (plist-put ollama-buddy--rewrite-state :first-content nil)))
+            (save-excursion
+              (goto-char (marker-position end-m))
+              (insert content))
+            (add-text-properties (marker-position start-m)
+                                 (marker-position end-m)
+                                 '(face ollama-buddy-rewrite-face
+                                   ollama-buddy-rewrite t))))))))
+#+end_src
+
+** Sample 2 — Python: recursive descent parser fragment
+
+#+begin_src python
+def parse_expr(tokens, pos):
+    left, pos = parse_term(tokens, pos)
+    while pos < len(tokens) and tokens[pos] in ('+', '-'):
+        op = tokens[pos]
+        pos += 1
+        right, pos = parse_term(tokens, pos)
+        left = (op, left, right)
+    return left, pos
+
+def parse_term(tokens, pos):
+    left, pos = parse_factor(tokens, pos)
+    while pos < len(tokens) and tokens[pos] in ('*', '/'):
+        op = tokens[pos]
+        pos += 1
+        right, pos = parse_factor(tokens, pos)
+        left = (op, left, right)
+    return left, pos
+#+end_src
+
+* Dictionary Lookup  [key: d]
+
+Select a single word and invoke Dictionary Lookup.
+
+** Samples — select one word at a time
+
+ephemeral
+
+sanguine
+
+melancholy
+
+liminal
+
+perspicacious
+
+obstreperous
+
+* Word Synonym  [key: s]
+
+Select a single word and invoke Word Synonym.
+
+** Samples — select one word at a time
+
+happy
+
+fast
+
+difficult
+
+verbose
+
+ancient
+
+beautiful
+
+* Proofread Text  [key: p]
+
+Select the paragraph and invoke Proofread Text.
+
+** Sample 1 — General prose with mixed errors
+
+The ollama-buddy package provide a convinient way to intergrate local large language models in to your emacs workflow.  It support both local ollama models and sevral remote providers, like OpenAI Claude and gemini.  User can attach files, search the web, and mange there conversation history all from whithin a single coherant interface.  The package are designed to be lightwieght and require no external dependancies beyond emacs itself.
+
+** Sample 2 — Technical writing with punctuation and style issues
+
+In-buffer replace mode, is activated by pressing W in the transient menu it allows commands that operate on selected regions, to stream their response back in to the source buffer.  The original text are preserved in memory so if you decide you dont want the rewrite, pressing C-c C-k will discard the streamed content and restore what was their before.  This make it possible to refactor code, proofread prose, or lookup definitions without ever leaving the file your currently editing.
+
+** Sample 3 — Code comment with errors
+
+;; This function calculates the total price including tax.
+;; It take a base price and a tax rate as it's arguements and
+;; returns the final ammount.  Note that the tax rate should be
+;; provided as a decimal (eg. 0.2 for 20%) not a percentage value.
+;; The function doesnt handle negative prices or tax rates above 1.0
+
+* Notes
+
+- *Refactor Code* and *Describe Code* work best with complete, self-contained functions
+- *Dictionary Lookup* and *Synonym* expect a single word (no punctuation)
+- *Proofread* works on any prose; code comments also work well
+- If the response still includes a preamble, try a more capable model
+- The "In-Buffer" tone is automatically prepended to every rewrite system prompt;
+  adjust it via =M-x customize-variable RET ollama-buddy-tone-alist= if needed
