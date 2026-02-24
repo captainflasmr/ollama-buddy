@@ -11,6 +11,19 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-24 Mon> *2.8.1*
+
+Inline diff inspection and polish for in-buffer replace mode.
+
+*** New Features
+
+- *Inline diff view* (=C-c d=) -- After a rewrite streams in, pressing =C-c d= inserts the original text immediately below the new text in the same buffer.  Word-level differences are highlighted using =smerge-refine-regions=: green overlays mark added/changed words in the new text; red strikethrough overlays mark removed words in the original block.  Pressing =C-c d= again hides the view.  Accepting or rejecting the rewrite automatically removes the diff block.
+- *Automatic "In-Buffer" tone* -- When in-buffer replace is active the system prompt is automatically prefixed with a clean-output instruction ("Return only the requested content.  No preamble, no introduction…"), minimising extraneous text in rewritten regions.
+- *Code fence stripping* -- If the model wraps its response in a markdown code block (e.g.@: =```lisp … ```=), the fences are stripped before the text is placed in the buffer, leaving only the inner content.
+- *=C-c W= keybinding* in the chat buffer to toggle in-buffer replace without opening the transient menu.
+- *Tighter command prompts* -- All region-operating commands (Refactor, Git Commit, Describe Code, Dictionary Lookup, Synonym) now say "Return ONLY …" to suppress introductory phrases and commentary that look out of place when inserted directly into source code.
+- Transient menu Actions section shows a live =In-Buffer Replace [ON]/[OFF]= toggle with =✎= indicator; the custom role menu footer shows the same toggle.
+
 ** <2026-02-22 Sun> *2.8.0*
 
 Initial in-buffer replace mode — an early-stage feature that streams LLM output directly back into the source buffer instead of the chat buffer.
@@ -36,10 +49,6 @@ Native org-mode collapsible thinking blocks for reasoning models.
 - *Collapsible thinking blocks* -- Reasoning model output (=<think>= tags and DeepSeek =message.thinking= API field) is now rendered as a native org-mode heading (=*** ✦ Think=) that folds with =outline-hide-subtree=. While the model streams its reasoning the content is visible under the heading; when the thinking ends the heading is automatically folded, and a =*** ✦ Response= heading is inserted to mark the start of the actual response. Use =C-c V= to toggle all thinking blocks in the buffer, or =TAB= on any =*** ✦ Think= heading line to toggle that block individually.
 - *Thinking block visual demarcation* -- When a thinking block is expanded a blank line precedes the =*** ✦ Response= heading, giving clear visual separation between reasoning and response content.
 - *Thinking model indicator* -- The =✦= symbol is shown in the status line header and prompt line when the current model supports thinking/reasoning.
-
-*** Internal
-
-- Replaced custom overlay approach with native org/outline folding (=outline-hide-subtree= / =outline-show-subtree=), eliminating all custom keymaps, text-property tracking, and arrow-char manipulation from the previous implementation.
 
 ** <2026-02-21 Fri> *2.7.2*
 

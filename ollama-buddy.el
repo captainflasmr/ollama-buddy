@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 2.8.0
+;; Version: 2.8.1
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -2481,8 +2481,16 @@ Shows cached status. Use signin/signout to update or try a cloud model request."
                (full-prompt     (if cmd-prompt
                                     (concat cmd-prompt "\n\n" selected-text)
                                   selected-text))
-               (effective-system (or system-text
+               (base-system     (or system-text
                                      ollama-buddy--current-system-prompt))
+               (ib-tone-text    (cdr (assoc "In-Buffer" ollama-buddy-tone-alist)))
+               (effective-system (if (and ib-tone-text
+                                          (not (string-empty-p ib-tone-text)))
+                                     (if (and base-system
+                                              (not (string-empty-p base-system)))
+                                         (concat ib-tone-text "\n\n" base-system)
+                                       ib-tone-text)
+                                   base-system))
                (effective-model  (or model
                                      ollama-buddy--current-model
                                      ollama-buddy-default-model)))
@@ -4045,6 +4053,7 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c x") #'ollama-buddy-toggle-streaming)
     (define-key map (kbd "C-c v") #'ollama-buddy-set-keepalive)
     (define-key map (kbd "C-c !") #'ollama-buddy-toggle-airplane-mode)
+    (define-key map (kbd "C-c W") #'ollama-buddy-toggle-in-buffer-replace)
 
     ;; Prompts section keybindings
     (define-key map (kbd "C-c l") (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))

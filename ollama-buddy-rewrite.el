@@ -5,7 +5,16 @@
 ;; When `ollama-buddy-in-buffer-replace' is enabled, commands that operate
 ;; on a region stream their response back into the source buffer instead of
 ;; the chat buffer, replacing the selection with green-highlighted new text.
-;; Accept with C-c C-c or reject (restore original) with C-c C-k.
+;;
+;; After streaming completes:
+;;   C-c C-c  accept  — keep the new text, clear highlight
+;;   C-c C-k  reject  — restore original text
+;;   C-c d    diff    — toggle an inline diff view beneath the new text
+;;
+;; The diff view inserts the original text immediately below the rewrite,
+;; with word-level smerge highlighting: green on added words in the new
+;; text, red/strikethrough on removed words in the original block.
+;; Accepting or rejecting automatically removes the diff block.
 
 ;;; Code:
 
@@ -27,16 +36,36 @@
   "Face for the [Rewriting...] placeholder shown during streaming."
   :group 'ollama-buddy)
 
+(defface ollama-buddy-rewrite-original-face
+  '((((class color) (background light)) :background "#fff3cd" :extend t)
+    (((class color) (background dark))  :background "#3a3a10" :extend t))
+  "Face for the original-text block shown during inline diff inspection."
+  :group 'ollama-buddy)
+
+(defface ollama-buddy-rewrite-changed-face
+  '((((class color) (background light)) :background "#52be80")
+    (((class color) (background dark))  :background "#1e8449"))
+  "Face for added/changed words in the new text during diff inspection.
+Applied as smerge overlays on top of `ollama-buddy-rewrite-face'."
+  :group 'ollama-buddy)
+
+(defface ollama-buddy-rewrite-removed-face
+  '((((class color) (background light)) :background "#f5c6cb" :strike-through t)
+    (((class color) (background dark))  :background "#5a1a1a" :strike-through t))
+  "Face for removed words in the original text block during diff inspection."
+  :group 'ollama-buddy)
+
 ;;; State variables
 
 (defvar ollama-buddy--rewrite-state nil
   "Plist holding the current rewrite state, nil when idle.
 Keys:
-  :source-buffer — buffer being edited
-  :start-marker  — fixed anchor before the replaced text (type nil)
-  :end-marker    — advances past each streaming insertion (type t)
-  :original-text — full original region string (for reject)
-  :first-content — t until first real token arrives")
+  :source-buffer   — buffer being edited
+  :start-marker    — fixed anchor before the replaced text (type nil)
+  :end-marker      — end of new text; type t during streaming, nil after
+  :original-text   — full original region string (for reject)
+  :first-content   — t until first real token arrives
+  :diff-end-marker — end of the inline diff block when visible, else nil")
 
 (defvar ollama-buddy--rewrite-process nil
   "Active network process for an in-progress rewrite, or nil.")
@@ -47,6 +76,7 @@ Keys:
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-c") #'ollama-buddy-rewrite-accept)
     (define-key map (kbd "C-c C-k") #'ollama-buddy-rewrite-reject)
+    (define-key map (kbd "C-c d")   #'ollama-buddy-rewrite-show-diff)
     map)
   "Keymap for `ollama-buddy-rewrite-mode'.")
 
@@ -65,21 +95,45 @@ Keys:
     (delete-process ollama-buddy--rewrite-process))
   (setq ollama-buddy--rewrite-process nil)
   (when ollama-buddy--rewrite-state
-    (let ((source-buf (plist-get ollama-buddy--rewrite-state :source-buffer))
-          (start-m    (plist-get ollama-buddy--rewrite-state :start-marker))
-          (end-m      (plist-get ollama-buddy--rewrite-state :end-marker)))
-      (when (markerp start-m) (set-marker start-m nil))
-      (when (markerp end-m)   (set-marker end-m nil))
+    (let ((source-buf  (plist-get ollama-buddy--rewrite-state :source-buffer))
+          (start-m     (plist-get ollama-buddy--rewrite-state :start-marker))
+          (end-m       (plist-get ollama-buddy--rewrite-state :end-marker))
+          (diff-end    (plist-get ollama-buddy--rewrite-state :diff-end-marker)))
+      (when (markerp start-m)  (set-marker start-m nil))
+      (when (markerp end-m)    (set-marker end-m nil))
+      (when (markerp diff-end) (set-marker diff-end nil))
       (when (buffer-live-p source-buf)
         (with-current-buffer source-buf
           (ollama-buddy-rewrite-mode -1)))))
   (setq ollama-buddy--rewrite-state nil))
+
+(defun ollama-buddy--rewrite-hide-diff ()
+  "Remove the inline diff block and word-level overlays, keeping state intact."
+  (let* ((diff-end  (plist-get ollama-buddy--rewrite-state :diff-end-marker))
+         (source-buf (plist-get ollama-buddy--rewrite-state :source-buffer))
+         (start-m   (plist-get ollama-buddy--rewrite-state :start-marker))
+         (end-m     (plist-get ollama-buddy--rewrite-state :end-marker)))
+    (when (and (markerp diff-end) (buffer-live-p source-buf))
+      (with-current-buffer source-buf
+        (let ((inhibit-read-only t))
+          ;; Remove the diff block (end-m..diff-end)
+          (delete-region (marker-position end-m)
+                         (marker-position diff-end))
+          ;; Remove smerge overlays from new text region
+          (remove-overlays (marker-position start-m)
+                           (marker-position end-m)))))
+    (when (markerp diff-end) (set-marker diff-end nil))
+    (setq ollama-buddy--rewrite-state
+          (plist-put ollama-buddy--rewrite-state :diff-end-marker nil))))
 
 (defun ollama-buddy-rewrite-accept ()
   "Accept the pending rewrite, keeping the streamed text in place."
   (interactive)
   (unless ollama-buddy--rewrite-state
     (user-error "No rewrite pending"))
+  ;; Remove diff view if open before finalising
+  (when (plist-get ollama-buddy--rewrite-state :diff-end-marker)
+    (ollama-buddy--rewrite-hide-diff))
   (let* ((source-buf (plist-get ollama-buddy--rewrite-state :source-buffer))
          (start-m    (plist-get ollama-buddy--rewrite-state :start-marker))
          (end-m      (plist-get ollama-buddy--rewrite-state :end-marker)))
@@ -97,15 +151,18 @@ Keys:
   (interactive)
   (unless ollama-buddy--rewrite-state
     (user-error "No rewrite pending"))
+  ;; Stop the stream first
+  (when (and ollama-buddy--rewrite-process
+             (process-live-p ollama-buddy--rewrite-process))
+    (delete-process ollama-buddy--rewrite-process)
+    (setq ollama-buddy--rewrite-process nil))
+  ;; Remove diff view if open before restoring
+  (when (plist-get ollama-buddy--rewrite-state :diff-end-marker)
+    (ollama-buddy--rewrite-hide-diff))
   (let* ((source-buf (plist-get ollama-buddy--rewrite-state :source-buffer))
          (start-m    (plist-get ollama-buddy--rewrite-state :start-marker))
          (end-m      (plist-get ollama-buddy--rewrite-state :end-marker))
          (original   (plist-get ollama-buddy--rewrite-state :original-text)))
-    ;; Stop the stream first
-    (when (and ollama-buddy--rewrite-process
-               (process-live-p ollama-buddy--rewrite-process))
-      (delete-process ollama-buddy--rewrite-process)
-      (setq ollama-buddy--rewrite-process nil))
     (when (buffer-live-p source-buf)
       (with-current-buffer source-buf
         (let ((inhibit-read-only t))
@@ -142,9 +199,124 @@ Keys:
                                  '(face ollama-buddy-rewrite-face
                                    ollama-buddy-rewrite t))))))))
 
+(defun ollama-buddy--rewrite-strip-fences ()
+  "Strip markdown code-block fences from the rewrite region if present.
+Handles opening fences with optional language specifier (e.g. ```lisp)
+and the matching closing fence, replacing the region with the inner content."
+  (when ollama-buddy--rewrite-state
+    (let* ((source-buf (plist-get ollama-buddy--rewrite-state :source-buffer))
+           (start-m    (plist-get ollama-buddy--rewrite-state :start-marker))
+           (end-m      (plist-get ollama-buddy--rewrite-state :end-marker)))
+      (when (buffer-live-p source-buf)
+        (with-current-buffer source-buf
+          (let* ((inhibit-read-only t)
+                 (content (string-trim
+                           (buffer-substring-no-properties
+                            (marker-position start-m)
+                            (marker-position end-m)))))
+            (when (string-match "\\`[ \t]*```[^\n]*\n" content)
+              (let* ((after-open (substring content (match-end 0)))
+                     (inner (if (string-match "\n[ \t]*```[ \t]*\\'" after-open)
+                                (substring after-open 0 (match-beginning 0))
+                              after-open)))
+                (delete-region (marker-position start-m)
+                               (marker-position end-m))
+                (goto-char (marker-position start-m))
+                (insert inner)
+                (add-text-properties (marker-position start-m)
+                                     (marker-position end-m)
+                                     '(face ollama-buddy-rewrite-face
+                                       ollama-buddy-rewrite t))))))))))
+
 (defun ollama-buddy--rewrite-complete ()
   "Called when the rewrite stream has finished."
-  (message "Rewrite complete.  C-c C-c accept  ·  C-c C-k reject"))
+  (ollama-buddy--rewrite-strip-fences)
+  ;; Switch end-m to non-advancing so diff block insertions at its position
+  ;; do not push it forward (streaming is complete; no more content arrives).
+  (let ((end-m (plist-get ollama-buddy--rewrite-state :end-marker)))
+    (when (markerp end-m)
+      (set-marker-insertion-type end-m nil)))
+  ;; Explicitly close the process so show-diff's liveness check passes immediately.
+  (when (and ollama-buddy--rewrite-process
+             (process-live-p ollama-buddy--rewrite-process))
+    (delete-process ollama-buddy--rewrite-process))
+  (setq ollama-buddy--rewrite-process nil)
+  (message "Rewrite complete.  C-c C-c accept  ·  C-c C-k reject  ·  C-c d diff"))
+
+;;; Inline diff view
+
+(defun ollama-buddy-rewrite-show-diff ()
+  "Toggle an inline diff view beneath the rewritten text.
+The original text is inserted immediately below the new (green) region with a
+yellow background.  `smerge-refine-regions' then highlights word-level
+differences: green overlays on added/changed words in the new text, red
+strikethrough overlays on removed words in the original block.
+
+Calling this command again hides the diff block without accepting or rejecting.
+Accepting (\\[ollama-buddy-rewrite-accept]) or rejecting
+(\\[ollama-buddy-rewrite-reject]) also removes the diff block automatically."
+  (interactive)
+  (unless ollama-buddy--rewrite-state
+    (user-error "No rewrite pending"))
+  (when (and ollama-buddy--rewrite-process
+             (process-live-p ollama-buddy--rewrite-process))
+    (user-error "Rewrite still streaming — wait for completion before diffing"))
+  (cond
+   ;; Toggle off: diff block already showing — remove it
+   ((plist-get ollama-buddy--rewrite-state :diff-end-marker)
+    (ollama-buddy--rewrite-hide-diff)
+    (message "Diff hidden.  C-c C-c accept  ·  C-c C-k reject"))
+   ;; Toggle on: insert diff block beneath new text
+   (t
+    (let* ((source-buf (plist-get ollama-buddy--rewrite-state :source-buffer))
+           (start-m    (plist-get ollama-buddy--rewrite-state :start-marker))
+           (end-m      (plist-get ollama-buddy--rewrite-state :end-marker))
+           (original   (plist-get ollama-buddy--rewrite-state :original-text)))
+      (unless (buffer-live-p source-buf)
+        (user-error "Source buffer no longer available"))
+      (with-current-buffer source-buf
+        (let* ((inhibit-read-only t)
+               (insert-pos (marker-position end-m))
+               orig-start orig-end diff-end-pos)
+          (save-excursion
+            (goto-char insert-pos)
+            ;; Header separator
+            (insert "\n\n── Original " (make-string 40 ?─) "\n")
+            (setq orig-start (point))
+            ;; Original text with its own background face
+            (insert original)
+            (setq orig-end (point))
+            (add-text-properties orig-start orig-end
+                                 '(face ollama-buddy-rewrite-original-face
+                                   ollama-buddy-rewrite-diff t))
+            ;; Footer separator
+            (insert "\n" (make-string 53 ?─) "\n")
+            (setq diff-end-pos (point))
+            ;; Apply the original face to the separators too
+            (add-text-properties insert-pos diff-end-pos
+                                 '(face ollama-buddy-rewrite-original-face
+                                   ollama-buddy-rewrite-diff t)))
+          ;; Store the end marker for the whole diff block
+          (setq ollama-buddy--rewrite-state
+                (plist-put ollama-buddy--rewrite-state
+                           :diff-end-marker
+                           (copy-marker diff-end-pos nil)))
+          ;; Apply word-level smerge diff between the two sections
+          ;; Both regions are now in the same buffer, so plain positions work.
+          (when (and (require 'smerge-mode nil t)
+                     (fboundp 'smerge-refine-regions))
+            (condition-case nil
+                (smerge-refine-regions
+                 (copy-marker orig-start nil)   ; original block start
+                 (copy-marker orig-end nil)     ; original block end
+                 (copy-marker (marker-position start-m) nil) ; new text start
+                 (copy-marker (marker-position end-m) nil)   ; new text end
+                 nil nil
+                 '((face . ollama-buddy-rewrite-removed-face))  ; removals → original block
+                 '((face . ollama-buddy-rewrite-changed-face))) ; additions → new text
+              (error nil)))
+          (message
+           "Diff shown.  C-c C-c accept  ·  C-c C-k reject  ·  C-c d hide")))))))
 
 ;;; Stream filter
 

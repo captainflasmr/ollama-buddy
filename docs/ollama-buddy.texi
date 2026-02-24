@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 2.8.0
+@subtitle For Ollama Buddy version 2.8.1
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -65,7 +65,7 @@ allowing you to leverage powerful large language models (LLMs) directly within y
 * Global System Prompt::        Configuring a persistent global system prompt
 * Tone Selector::               Quickly switch response style
 * Thinking Blocks::             Collapsible reasoning output for thinking models
-* In-Buffer Replace::           Stream rewrites directly into source buffers (initial)
+* In-Buffer Replace::           Stream rewrites directly into source buffers with inline diff
 * Tool Calling::                Enabling LLMs to invoke Emacs functions
 * RAG::                         Retrieval-Augmented Generation with local documents
 * Advanced Usage::              Tips and techniques for power users
@@ -3150,41 +3150,66 @@ Static list of model name substrings that are known reasoning models. Auto-detec
 
 @section Overview
 
-In-buffer replace is an @emph{initial pass} at a feature that streams LLM output directly
-into the source buffer rather than the chat buffer.  When active, commands that operate on
-a selected region (such as Refactor, Proofread, or any custom role command) will replace
-the selection in-place with the model's response.
+In-buffer replace streams LLM output directly into the source buffer rather than the
+chat buffer.  When active, commands that operate on a selected region (Refactor, Proofread,
+Git Commit, Dictionary Lookup, Synonym, Describe Code, or any custom role command) replace
+the selection in-place with the model's response, shown with a green highlight pending
+your decision.
 
-This is an early-stage capability.  The existing chat buffer workflow is completely
-unchanged when the toggle is off (the default), and all existing commands, prompts,
-system prompts, and model selection logic are unaffected --- only the output destination
-changes.
+The existing chat buffer workflow is completely unchanged when the toggle is off (the
+default).  All existing commands, prompts, system prompts, and model selection logic are
+unaffected --- only the output destination changes.
 
 @section Enabling In-Buffer Replace
 
-Toggle via the transient menu (@code{C-c O}) @samp{Actions} section, key @kbd{W}:
+Toggle via the transient Actions menu (@kbd{C-c O}, key @kbd{W}), the chat buffer
+keybinding @kbd{C-c W}, or:
 
 @example
 M-x ollama-buddy-toggle-in-buffer-replace
 @end example
 
 The @code{✎} symbol appears in the header line and prompt line while the mode is active.
+The custom role menu footer shows a live @samp{In-Buffer Replace [ON] / [OFF]} toggle.
 
-@section Workflow
+@section Basic Workflow
 
 @enumerate
-@item Toggle in-buffer replace on (@kbd{W} in the transient Actions menu).
+@item Toggle in-buffer replace on (@kbd{W} or @kbd{C-c W}).
 @item In any source buffer, select a region of text (e.g.@: a function body, a paragraph).
 @item Invoke a role command (e.g.@: Refactor from the Developer role).
-@item A dimmed @samp{[Rewriting...]} placeholder replaces the selection.
+@item A dimmed @samp{[Rewriting...]} placeholder replaces the selection while connecting.
 @item The model's response streams in with a green highlight.
-@item When streaming finishes, a minor mode activates.  The mode line shows @samp{ [Rewrite?]}.
+@item When streaming finishes, the mode line shows @samp{ [Rewrite?]}.
 @item Press @kbd{C-c C-c} to @strong{accept} (keep new text, remove highlight).
 @item Press @kbd{C-c C-k} to @strong{reject} (discard new text and restore the original).
 @end enumerate
 
 Cancelling mid-stream with @kbd{C-c C-k} stops the network process and restores the
 original selection immediately.
+
+@section Inline Diff View
+
+After streaming completes, press @kbd{C-c d} to open an inline diff view inside the
+same buffer:
+
+@example
+[new text — green background]
+  [changed words — brighter green overlay]
+
+── Original ────────────────────────────
+[original text — yellow background]
+  [removed words — red strikethrough overlay]
+────────────────────────────────────────
+@end example
+
+Word-level differences are highlighted by @code{smerge-refine-regions}: green overlays
+mark added or changed words in the new text; red strikethrough overlays mark words present
+in the original but absent from the rewrite.
+
+Press @kbd{C-c d} again to hide the diff block without accepting or rejecting.
+Accepting (@kbd{C-c C-c}) or rejecting (@kbd{C-c C-k}) automatically removes the diff
+block.
 
 @section Key Bindings (while rewrite is pending)
 
@@ -3195,7 +3220,25 @@ Accept the rewrite --- keep the streamed text and remove the highlight.
 @item C-c C-k
 Reject the rewrite --- stop streaming (if still in progress) and restore the original
 selected text.
+
+@item C-c d
+Toggle the inline diff view.  Shows the original text below the new text with
+word-level smerge highlighting.  Press again to hide.
 @end table
+
+@section Automatic Output Polishing
+
+Two automatic adjustments help keep in-buffer results clean:
+
+@itemize @bullet
+@item @strong{Clean-output tone} --- when in-buffer replace is active a
+``Return only the requested content'' instruction is automatically prepended to the
+effective system prompt, suppressing introductory phrases and commentary.
+
+@item @strong{Code-fence stripping} --- if the model wraps its response in markdown code
+fences (@samp{```lang @dots{} ```}), the fences are stripped before insertion, leaving
+only the inner content.
+@end itemize
 
 @section Implementation Notes
 
@@ -3206,26 +3249,30 @@ The feature is implemented in @file{ollama-buddy-rewrite.el}, loaded optionally:
 @end example
 
 The module creates a direct @code{make-network-process} connection to Ollama
-(@code{/api/chat}) and streams JSON responses using the same line-delimited format
-as the main chat buffer filter.  Two Emacs markers track the rewrite region:
+(@code{/api/chat}) and streams JSON responses using the same line-delimited format as the
+main chat buffer filter.  Two Emacs markers track the rewrite region:
 
 @itemize @bullet
-@item A @emph{non-advancing} start marker (stays before inserted text).
-@item An @emph{advancing} end marker (moves past each newly inserted chunk).
+@item A @emph{non-advancing} start marker (type @code{nil}) --- stays before inserted text.
+@item An @emph{advancing} end marker (type @code{t} during streaming, switched to
+@code{nil} on completion) --- moves past each newly inserted chunk, then fixed so the
+diff block insertion does not displace it.
 @end itemize
 
-Original text is preserved in memory for rejection; no undo history manipulation is
-required.
+The inline diff block is inserted as real buffer text at the fixed end marker position.
+@code{smerge-refine-regions} is called with both the original block and the new text
+residing in the same buffer, which is the standard within-buffer usage of that function.
+Original text is preserved in the rewrite state plist for rejection; no undo history
+manipulation is required.
 
-@section Current Limitations
-
-This is an initial implementation.  Known limitations for future work:
+@section Limitations
 
 @itemize @bullet
 @item Only works with local Ollama models (not remote providers).
 @item Only one rewrite can be pending at a time.
 @item The streaming response is inserted verbatim; no markdown-to-org conversion
-is performed (unlike the chat buffer).
+is performed (unlike the chat buffer) --- the fence stripper handles the common
+code-block case.
 @end itemize
 
 @node Tool Calling

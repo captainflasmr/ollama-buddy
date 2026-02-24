@@ -460,28 +460,35 @@ Returns the interned command symbol."
             (nreverse group-order))))
 
 (defun ollama-buddy--selection-status ()
-  "Return a string describing the current selection status."
-  (if (use-region-p)
-      (let* ((beg (region-beginning))
-             (end (region-end))
-             (chars (- end beg))
-             (lines (count-lines beg end)))
-        (format "Selection: %d chars, %d lines" chars lines))
-    "No selection"))
+  "Return a string describing the current selection and active mode indicators."
+  (let ((selection (if (use-region-p)
+                       (let* ((beg (region-beginning))
+                              (end (region-end))
+                              (chars (- end beg))
+                              (lines (count-lines beg end)))
+                         (format "Selection: %d chars, %d lines" chars lines))
+                     "No selection"))
+        (in-buffer (if (bound-and-true-p ollama-buddy-in-buffer-replace)
+                       " ✎ In-Buffer" "")))
+    (concat selection in-buffer)))
 
 (defun ollama-buddy-role-transient-menu ()
   "Dynamic role-specific command menu.
 Rebuilds the transient prefix each invocation to reflect the
 current role's `ollama-buddy-command-definitions'."
   (interactive)
-  (let ((group-vectors (ollama-buddy--role-menu-build-groups))
-        (selection-status (ollama-buddy--selection-status)))
+  (let* ((group-vectors (ollama-buddy--role-menu-build-groups))
+         (selection-status (ollama-buddy--selection-status))
+         (toggle-label (if (bound-and-true-p ollama-buddy-in-buffer-replace)
+                           "In-Buffer Replace [ON]  ✎"
+                         "In-Buffer Replace [OFF]")))
     (eval
      `(transient-define-prefix ollama-buddy--role-transient-menu-impl ()
         "Dynamic role-specific command menu."
         [:description
          (lambda () ,selection-status)
-         ,@group-vectors]))
+         ,@group-vectors]
+        [("W" ,toggle-label ollama-buddy-toggle-in-buffer-replace)]))
     (transient-setup 'ollama-buddy--role-transient-menu-impl)))
 
 (provide 'ollama-buddy-transient)

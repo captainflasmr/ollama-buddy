@@ -65,12 +65,22 @@ Submit queries, swap models, view token usage and statistics:
 - *Fabric Patterns* -- Integration with [[https://github.com/danielmiessler/fabric][Fabric]] prompt patterns
 - *Token Tracking* -- Real-time token usage statistics with graphs
 - *RAG* -- Index local documents and source code, retrieve relevant context for conversations via semantic search. Inline =@rag(query)= syntax for automatic context attachment.
-- *In-Buffer Replace (initial)* -- An early-stage mode that streams LLM output directly back into the source buffer, replacing the selected region in-place with accept/reject confirmation
+- *In-Buffer Replace* -- Stream LLM output directly into the source buffer, replacing the selected region in-place; accept/reject confirmation; inline diff view (=C-c d=) with word-level smerge highlighting; automatic code-fence stripping
 - *Lightweight* -- No external dependencies; a minified 200-line version (=ollama-buddy-mini=) is also available
+
+* What's New (2.8.1)
+
+Polish and new inspection capability for in-buffer replace mode.
+
+- *Inline diff view* (=C-c d=) -- After a rewrite completes, press =C-c d= to insert the original text immediately below the new text, with word-level smerge highlighting: green on added/changed words in the new region, red strikethrough on removed words in the original block. Press =C-c d= again to hide it; accept or reject removes it automatically.
+- *Automatic clean-output tone* -- When in-buffer replace is active, a "Return only the content" instruction is automatically prepended to the effective system prompt, keeping responses free of introductory phrases and commentary.
+- *Code fence stripping* -- Markdown ``` fences (with optional language tag) are stripped from the response before it is placed in the buffer.
+- *=C-c W=* -- New chat-buffer binding to toggle in-buffer replace without opening the transient menu.
+- *Tighter command prompts* -- Region commands (Refactor, Git Commit, Describe Code, Dictionary Lookup, Synonym) now say "Return ONLY …" to avoid preamble when results are inserted directly into source code.
 
 * What's New (2.8.0)
 
-This release adds an initial pass at in-buffer replacement — a first attempt at bringing LLM rewrites directly into the source buffer rather than the chat buffer. The feature is intentionally conservative: it does not change any existing workflow, prompt handling, or command definitions. When toggled off (the default) everything behaves exactly as before.
+Initial in-buffer replacement mode — streams LLM rewrites directly into the source buffer rather than the chat buffer. The feature is off by default; the existing chat buffer workflow is completely unchanged.
 
 - *In-buffer replace mode* -- Toggle =W= in the transient Actions menu (or =M-x ollama-buddy-toggle-in-buffer-replace=) to activate. With a region selected, any role command (Refactor, Proofread, etc.) will:
   1. Replace the selection with a =​[Rewriting...]=​ placeholder

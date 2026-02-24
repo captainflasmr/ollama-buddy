@@ -417,8 +417,8 @@ These are the only parameters that will be sent to Ollama."
      :key ?r
      :description "Refactor code"
      :group "Custom"
-     :prompt "refactor the following code:"
-     :system "You are an expert software engineer who improves code quality while maintaining functionality, focusing on readability, maintainability, and efficiency by applying clean code principles and design patterns with clear explanations for each change."
+     :prompt "Return only the refactored version of the following code, with no explanation or commentary:"
+     :system "You are an expert software engineer. Return ONLY the refactored code with no preamble, explanation, or commentary. Improve readability, maintainability, and efficiency by applying clean code principles and design patterns."
      :parameters ((temperature . 0.2) (top_p . 0.7) (repeat_penalty . 1.3))
      :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
 
@@ -426,32 +426,32 @@ These are the only parameters that will be sent to Ollama."
      :key ?g
      :description "Git commit message"
      :group "Custom"
-     :prompt "write a concise git commit message for the following:"
-     :system "You are a version control expert who creates clear commit messages using imperative mood, keeping summaries under 50 characters, explaining the what and why of changes, and referencing issue numbers where applicable."
+     :prompt "Write a git commit message for the following, returning only the commit message text:"
+     :system "You are a version control expert. Return ONLY the commit message text with no explanation or preamble. Use imperative mood, keep the summary under 50 characters, explain the what and why of changes, and reference issue numbers where applicable."
      :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
 
     (describe-code
      :key ?c
      :description "Describe code"
      :group "Custom"
-     :prompt "describe the following code:"
-     :system "You are a technical documentation specialist who analyzes code to provide high-level summaries, explain main components and control flow, highlight notable patterns or optimizations, and clarify complex parts in accessible language."
+     :prompt "Describe the following code, returning only the description with no preamble:"
+     :system "You are a technical documentation specialist. Return ONLY the description — no introductory phrase, no preamble. Provide a high-level summary covering main components, control flow, notable patterns, and any complex parts explained in accessible language."
      :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
 
     (dictionary-lookup
      :key ?d
      :description "Dictionary Lookup"
      :group "Custom"
-     :prompt "For the following word provide a typical dictionary definition:"
-     :system "You are a professional lexicographer who provides comprehensive word definitions including pronunciation, all relevant parts of speech, etymology, examples of usage, and related synonyms and antonyms in a clear dictionary-style format."
+     :prompt "Provide a dictionary definition for the following word, returning only the entry:"
+     :system "You are a professional lexicographer. Return ONLY the dictionary entry with no preamble. Include pronunciation, all relevant parts of speech, etymology, examples of usage, and related synonyms and antonyms."
      :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup)))
 
     (synonym
      :key ?s
      :description "Word synonym"
      :group "Custom"
-     :prompt "list synonyms for word:"
-     :system "You are a linguistic expert who provides contextually grouped synonyms with notes on connotation, formality levels, and usage contexts to help find the most precise alternative word for specific situations."
+     :prompt "List synonyms for the following word, returning only the synonyms:"
+     :system "You are a linguistic expert. Return ONLY a concise list of synonyms with no preamble or explanation. Group by connotation or formality where helpful."
      :action (lambda () (ollama-buddy--send-with-command 'synonym)))
 
     (proofread
@@ -547,11 +547,14 @@ combined with session-specific prompts (personas, roles, etc.)."
     ("Concise" . "Be concise and direct. Give short, focused answers without unnecessary elaboration.")
     ("Learning" . "Explain concepts thoroughly as if teaching. Include context, examples and analogies to aid understanding.")
     ("Explanatory" . "Provide detailed explanations with reasoning. Break down complex topics step by step.")
-    ("Formal" . "Use a formal, professional tone. Be precise and structured in your responses."))
+    ("Formal" . "Use a formal, professional tone. Be precise and structured in your responses.")
+    ("In-Buffer" . "Return only the requested content. No preamble, no introduction, no closing remarks, no commentary. Begin your output immediately with the content itself."))
   "Alist mapping tone names to system prompt modifier strings.
 Each entry is (NAME . PROMPT-TEXT).  The selected tone text is
 prepended to the global system prompt.  An empty string means no
-modification (the default \"Normal\" tone)."
+modification (the default \"Normal\" tone).
+The \"In-Buffer\" tone is automatically applied when
+`ollama-buddy-in-buffer-replace' is active."
   :type '(alist :key-type string :value-type string)
   :group 'ollama-buddy)
 
@@ -1633,7 +1636,7 @@ Each element is a plist with :name, :authenticated, and :enabled."
            ;; "╚════════════════════════════════════════════════════════════╝\n"
            ;; " ___ _ _      n _ n      ___       _   _ _ _\n"
            ;; "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |\n"
-           ;; "| | | | | .  |2.6.0| .  | . | | | . | . |__ |\n"
+           ;; "| | | | | .  |2.8.1| .  | . | | | . | . |__ |\n"
            ;; "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n"
            "#+end_example\n\n"
            (when (not (ollama-buddy--check-status))
