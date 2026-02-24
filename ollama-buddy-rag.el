@@ -14,7 +14,7 @@
 ;; Features:
 ;; - Index directories of source code, org files, markdown, etc.
 ;; - Chunk documents with configurable size and overlap
-;; - Generate embeddings using Ollama's /api/embed endpoint
+;; - Generate embeddings via Ollama (/api/embed) or any OpenAI-compatible service (/v1/embeddings)
 ;; - Cosine similarity search for relevant document chunks
 ;; - Attach retrieved context to chat conversations
 ;;
@@ -111,6 +111,31 @@ Files larger than this are skipped.  Default is 1MB."
   "Number of chunks to embed in a single API call.
 Larger batches are faster but use more memory."
   :type 'integer
+  :group 'ollama-buddy-rag)
+
+(defcustom ollama-buddy-rag-embedding-base-url nil
+  "Base URL for the embedding service.
+When nil, uses the main Ollama host and port
+\(i.e. `http://ollama-buddy-host:ollama-buddy-port').
+Set this to point at a separate OpenAI-compatible embedding server"
+  :type '(choice (const :tag "Use Ollama host/port" nil)
+                 (string :tag "Custom base URL"))
+  :group 'ollama-buddy-rag)
+
+(defcustom ollama-buddy-rag-embedding-api-style 'ollama
+  "API style used by the embedding endpoint.
+- `ollama'  uses POST /api/embed  (Ollama native)
+- `openai'  uses POST /v1/embeddings  (OpenAI-compatible)"
+  :type '(choice (const :tag "Ollama  (/api/embed)" ollama)
+                 (const :tag "OpenAI  (/v1/embeddings)" openai))
+  :group 'ollama-buddy-rag)
+
+(defcustom ollama-buddy-rag-embedding-api-key nil
+  "API key sent as a Bearer token to the embedding service.
+Only needed when `ollama-buddy-rag-embedding-api-style' is `openai'
+and the service requires authentication.  Leave nil for local servers."
+  :type '(choice (const :tag "None" nil)
+                 (string :tag "API key"))
   :group 'ollama-buddy-rag)
 
 (defcustom ollama-buddy-rag-exclude-patterns
@@ -225,6 +250,40 @@ Returns the extracted text string, or nil if extraction fails."
   (let ((ext (file-name-extension filepath)))
     (and ext (string= (downcase ext) "pdf"))))
 
+;;; Embedding Helpers
+
+(defun ollama-buddy-rag--embedding-url ()
+  "Return the full URL for the configured embedding endpoint."
+  (let ((base (or ollama-buddy-rag-embedding-base-url
+                  (format "http://%s:%d" ollama-buddy-host ollama-buddy-port))))
+    (if (eq ollama-buddy-rag-embedding-api-style 'openai)
+        (concat base "/v1/embeddings")
+      (concat base "/api/embed"))))
+
+(defun ollama-buddy-rag--embedding-headers ()
+  "Return request headers for the embedding endpoint."
+  (let ((headers '(("Content-Type" . "application/json"))))
+    (when (and (eq ollama-buddy-rag-embedding-api-style 'openai)
+               ollama-buddy-rag-embedding-api-key)
+      (push (cons "Authorization"
+                  (concat "Bearer " ollama-buddy-rag-embedding-api-key))
+            headers))
+    headers))
+
+(defun ollama-buddy-rag--parse-embeddings (response &optional single-p)
+  "Extract embedding vectors from a parsed JSON RESPONSE.
+Handles both Ollama and OpenAI response shapes.
+If SINGLE-P, return just the first vector; otherwise return all."
+  (if (eq ollama-buddy-rag-embedding-api-style 'openai)
+      (let* ((data (alist-get 'data response))
+             (sorted (sort (copy-sequence data)
+                           (lambda (a b)
+                             (< (alist-get 'index a) (alist-get 'index b)))))
+             (vecs (mapcar (lambda (item) (alist-get 'embedding item)) sorted)))
+        (if single-p (car vecs) vecs))
+    (let ((embeddings (alist-get 'embeddings response)))
+      (if single-p (car embeddings) embeddings))))
+
 ;;; Embedding Model Validation
 
 (defun ollama-buddy-rag--embedding-model-available-p ()
@@ -247,8 +306,10 @@ Returns non-nil if the model is pulled and ready."
     (error nil)))
 
 (defun ollama-buddy-rag--ensure-embedding-model ()
-  "Signal an error if the embedding model is not available."
-  (unless (ollama-buddy-rag--embedding-model-available-p)
+  "Signal an error if the embedding model is not available.
+Skips the check when using an external embedding service."
+  (unless (or ollama-buddy-rag-embedding-base-url
+              (ollama-buddy-rag--embedding-model-available-p))
     (user-error "Embedding model '%s' is not available. Run: ollama pull %s"
                 ollama-buddy-rag-embedding-model
                 ollama-buddy-rag-embedding-model)))
@@ -256,14 +317,14 @@ Returns non-nil if the model is pulled and ready."
 ;;; Embedding API Functions
 
 (defun ollama-buddy-rag--get-embedding-async (text callback)
-  "Get embedding vector for TEXT using Ollama API asynchronously.
+  "Get embedding vector for TEXT asynchronously.
 Calls CALLBACK with the embedding vector or nil on error."
   (let* ((url-request-method "POST")
-         (url-request-extra-headers '(("Content-Type" . "application/json")))
+         (url-request-extra-headers (ollama-buddy-rag--embedding-headers))
          (payload (json-encode `((model . ,ollama-buddy-rag-embedding-model)
                                  (input . ,text))))
          (url-request-data (encode-coding-string payload 'utf-8))
-         (url (format "http://%s:%d/api/embed" ollama-buddy-host ollama-buddy-port)))
+         (url (ollama-buddy-rag--embedding-url)))
     (url-retrieve
      url
      (lambda (status cb)
@@ -277,9 +338,8 @@ Calls CALLBACK with the embedding vector or nil on error."
                (re-search-forward "\n\n")
                (let* ((json-object-type 'alist)
                       (json-array-type 'list)
-                      (response (json-read))
-                      (embeddings (alist-get 'embeddings response)))
-                 (funcall cb (car embeddings))))
+                      (response (json-read)))
+                 (funcall cb (ollama-buddy-rag--parse-embeddings response t))))
            (error
             (message "Embedding parse error: %s" (error-message-string err))
             (funcall cb nil)))))
@@ -292,11 +352,11 @@ Calls CALLBACK with list of embedding vectors or nil on error."
   (if (null texts)
       (funcall callback nil)
     (let* ((url-request-method "POST")
-           (url-request-extra-headers '(("Content-Type" . "application/json")))
+           (url-request-extra-headers (ollama-buddy-rag--embedding-headers))
            (payload (json-encode `((model . ,ollama-buddy-rag-embedding-model)
                                    (input . ,(vconcat texts)))))
            (url-request-data (encode-coding-string payload 'utf-8))
-           (url (format "http://%s:%d/api/embed" ollama-buddy-host ollama-buddy-port)))
+           (url (ollama-buddy-rag--embedding-url)))
       (url-retrieve
        url
        (lambda (status cb)
@@ -311,7 +371,7 @@ Calls CALLBACK with list of embedding vectors or nil on error."
                  (let* ((json-object-type 'alist)
                         (json-array-type 'list)
                         (response (json-read)))
-                   (funcall cb (alist-get 'embeddings response))))
+                   (funcall cb (ollama-buddy-rag--parse-embeddings response nil))))
              (error
               (message "Batch embedding parse error: %s" (error-message-string err))
               (funcall cb nil)))))
@@ -824,11 +884,11 @@ Returns nil if no RAG results are attached."
   "Get embedding vector for TEXT synchronously.
 Returns the embedding vector or nil on error."
   (let* ((url-request-method "POST")
-         (url-request-extra-headers '(("Content-Type" . "application/json")))
+         (url-request-extra-headers (ollama-buddy-rag--embedding-headers))
          (payload (json-encode `((model . ,ollama-buddy-rag-embedding-model)
                                  (input . ,text))))
          (url-request-data (encode-coding-string payload 'utf-8))
-         (url (format "http://%s:%d/api/embed" ollama-buddy-host ollama-buddy-port)))
+         (url (ollama-buddy-rag--embedding-url)))
     (condition-case err
         (with-current-buffer (url-retrieve-synchronously url t)
           (goto-char (point-min))
@@ -836,7 +896,7 @@ Returns the embedding vector or nil on error."
           (let* ((json-object-type 'alist)
                  (json-array-type 'list)
                  (response (json-read)))
-            (car (alist-get 'embeddings response))))
+            (ollama-buddy-rag--parse-embeddings response t)))
       (error
        (message "Embedding sync error: %s" (error-message-string err))
        nil))))

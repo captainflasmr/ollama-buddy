@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 2.8.1
+@subtitle For Ollama Buddy version 2.9
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -3503,15 +3503,21 @@ The RAG module (@code{ollama-buddy-rag.el}) is loaded by default.
 
 @section Requirements
 
-RAG requires an embedding model pulled into Ollama:
+By default, RAG uses Ollama for embeddings and requires an embedding model to be
+pulled:
 
 @example
 ollama pull nomic-embed-text
 @end example
 
-Other supported embedding models include @code{mxbai-embed-large} and
+Other Ollama embedding models include @code{mxbai-embed-large} and
 @code{all-minilm}.  You can pull these from Model Management (@kbd{C-c M})
 under the ``Embedding (RAG)'' category.
+
+Alternatively, you can point RAG at any OpenAI-compatible embedding server
+instance) by setting @code{ollama-buddy-rag-embedding-base-url} and
+@code{ollama-buddy-rag-embedding-api-style}.  In that case no Ollama embedding
+model is needed.
 
 @section Quick Start
 
@@ -3571,6 +3577,35 @@ List of glob patterns to exclude from indexing
 
 @item ollama-buddy-rag-batch-size
 Number of chunks to embed per API call (default: @code{20}).
+
+@item ollama-buddy-rag-embedding-base-url
+Base URL for the embedding service.  When @code{nil} (the default), the main
+Ollama host and port are used.  Set this to point at a separate
+OpenAI-compatible embedding server, for example:
+
+@example
+(setq ollama-buddy-rag-embedding-base-url "http://localhost:9000")
+@end example
+
+This is useful when running a dedicated embedding service independently
+from your Ollama instance.
+
+@item ollama-buddy-rag-embedding-api-style
+The API style used by the embedding endpoint.  Two values are supported:
+
+@table @code
+@item ollama
+(default) POST to @code{/api/embed} --- the Ollama native endpoint.
+
+@item openai
+POST to @code{/v1/embeddings} --- compatible with any OpenAI-style embedding
+service.  Use this together with @code{ollama-buddy-rag-embedding-base-url}.
+@end table
+
+@item ollama-buddy-rag-embedding-api-key
+Optional Bearer token sent to the embedding service.  Only needed when
+@code{ollama-buddy-rag-embedding-api-style} is @code{openai} and the service
+requires authentication.  Leave @code{nil} for local servers.
 @end table
 
 @section PDF Support

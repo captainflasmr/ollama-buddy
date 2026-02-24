@@ -277,11 +277,13 @@ language models (LLMs) directly within your Emacs workflow.
 - [[#In_002dBuffer-Replace][22 In-Buffer Replace]]
   - [[#Overview-8][22.1 Overview]]
   - [[#Enabling-In_002dBuffer-Replace][22.2 Enabling In-Buffer Replace]]
-  - [[#Workflow][22.3 Workflow]]
-  - [[#Key-Bindings-_0028while-rewrite-is-pending_0029][22.4 Key
+  - [[#Basic-Workflow][22.3 Basic Workflow]]
+  - [[#Inline-Diff-View][22.4 Inline Diff View]]
+  - [[#Key-Bindings-_0028while-rewrite-is-pending_0029][22.5 Key
     Bindings (while rewrite is pending)]]
-  - [[#Implementation-Notes][22.5 Implementation Notes]]
-  - [[#Current-Limitations][22.6 Current Limitations]]
+  - [[#Automatic-Output-Polishing][22.6 Automatic Output Polishing]]
+  - [[#Implementation-Notes][22.7 Implementation Notes]]
+  - [[#Limitations][22.8 Limitations]]
 - [[#Tool-Calling][23 Tool Calling]]
   - [[#Overview-9][23.1 Overview]]
   - [[#Setup][23.2 Setup]]
@@ -4752,11 +4754,13 @@ Next: [[#Tool-Calling][Tool Calling]], Previous:
 :END:
 - [[#Overview-8][Overview]]
 - [[#Enabling-In_002dBuffer-Replace][Enabling In-Buffer Replace]]
-- [[#Workflow][Workflow]]
+- [[#Basic-Workflow][Basic Workflow]]
+- [[#Inline-Diff-View][Inline Diff View]]
 - [[#Key-Bindings-_0028while-rewrite-is-pending_0029][Key Bindings
   (while rewrite is pending)]]
+- [[#Automatic-Output-Polishing][Automatic Output Polishing]]
 - [[#Implementation-Notes][Implementation Notes]]
-- [[#Current-Limitations][Current Limitations]]
+- [[#Limitations][Limitations]]
 
 <<Overview-8>>
 *** 22.1 Overview [[#Overview-8][¶]]
@@ -4764,16 +4768,17 @@ Next: [[#Tool-Calling][Tool Calling]], Previous:
 :CUSTOM_ID: overview-8
 :CLASS: section
 :END:
-In-buffer replace is an /initial pass/ at a feature that streams LLM
-output directly into the source buffer rather than the chat buffer. When
-active, commands that operate on a selected region (such as Refactor,
-Proofread, or any custom role command) will replace the selection
-in-place with the model's response.
+In-buffer replace streams LLM output directly into the source buffer
+rather than the chat buffer. When active, commands that operate on a
+selected region (Refactor, Proofread, Git Commit, Dictionary Lookup,
+Synonym, Describe Code, or any custom role command) replace the
+selection in-place with the model's response, shown with a green
+highlight pending your decision.
 
-This is an early-stage capability. The existing chat buffer workflow is
-completely unchanged when the toggle is off (the default), and all
-existing commands, prompts, system prompts, and model selection logic
-are unaffected --- only the output destination changes.
+The existing chat buffer workflow is completely unchanged when the
+toggle is off (the default). All existing commands, prompts, system
+prompts, and model selection logic are unaffected --- only the output
+destination changes.
 
 <<Enabling-In_002dBuffer-Replace>>
 *** 22.2 Enabling In-Buffer Replace [[#Enabling-In_002dBuffer-Replace][¶]]
@@ -4781,29 +4786,31 @@ are unaffected --- only the output destination changes.
 :CUSTOM_ID: enabling-in-buffer-replace
 :CLASS: section
 :END:
-Toggle via the transient menu (=C-c O=) ‘=Actions=' section, key W:
+Toggle via the transient Actions menu (C-c O, key W), the chat buffer
+keybinding C-c W, or:
 
 #+begin_src example-preformatted
 M-x ollama-buddy-toggle-in-buffer-replace
 #+end_src
 
 The =✎= symbol appears in the header line and prompt line while the mode
-is active.
+is active. The custom role menu footer shows a live
+‘=In-Buffer Replace [ON] / [OFF]=' toggle.
 
-<<Workflow>>
-*** 22.3 Workflow [[#Workflow][¶]]
+<<Basic-Workflow>>
+*** 22.3 Basic Workflow [[#Basic-Workflow][¶]]
 :PROPERTIES:
-:CUSTOM_ID: workflow
+:CUSTOM_ID: basic-workflow
 :CLASS: section
 :END:
-1. Toggle in-buffer replace on (W in the transient Actions menu).
+1. Toggle in-buffer replace on (W or C-c W).
 2. In any source buffer, select a region of text (e.g. a function body,
    a paragraph).
 3. Invoke a role command (e.g. Refactor from the Developer role).
-4. A dimmed ‘=[Rewriting...]=' placeholder replaces the selection.
+4. A dimmed ‘=[Rewriting...]=' placeholder replaces the selection while
+   connecting.
 5. The model's response streams in with a green highlight.
-6. When streaming finishes, a minor mode activates. The mode line shows
-   ‘= [Rewrite?]='.
+6. When streaming finishes, the mode line shows ‘= [Rewrite?]='.
 7. Press C-c C-c to *accept* (keep new text, remove highlight).
 8. Press C-c C-k to *reject* (discard new text and restore the
    original).
@@ -4811,8 +4818,35 @@ is active.
 Cancelling mid-stream with C-c C-k stops the network process and
 restores the original selection immediately.
 
+<<Inline-Diff-View>>
+*** 22.4 Inline Diff View [[#Inline-Diff-View][¶]]
+:PROPERTIES:
+:CUSTOM_ID: inline-diff-view
+:CLASS: section
+:END:
+After streaming completes, press C-c d to open an inline diff view
+inside the same buffer:
+
+#+begin_src example-preformatted
+[new text — green background]
+  [changed words — brighter green overlay]
+
+── Original ────────────────────────────
+[original text — yellow background]
+  [removed words — red strikethrough overlay]
+────────────────────────────────────────
+#+end_src
+
+Word-level differences are highlighted by =smerge-refine-regions=: green
+overlays mark added or changed words in the new text; red strikethrough
+overlays mark words present in the original but absent from the rewrite.
+
+Press C-c d again to hide the diff block without accepting or rejecting.
+Accepting (C-c C-c) or rejecting (C-c C-k) automatically removes the
+diff block.
+
 <<Key-Bindings-_0028while-rewrite-is-pending_0029>>
-*** 22.4 Key Bindings (while rewrite is pending) [[#Key-Bindings-_0028while-rewrite-is-pending_0029][¶]]
+*** 22.5 Key Bindings (while rewrite is pending) [[#Key-Bindings-_0028while-rewrite-is-pending_0029][¶]]
 :PROPERTIES:
 :CUSTOM_ID: key-bindings-while-rewrite-is-pending
 :CLASS: section
@@ -4823,8 +4857,27 @@ restores the original selection immediately.
 - C-c C-k :: Reject the rewrite --- stop streaming (if still in
   progress) and restore the original selected text.
 
+- C-c d :: Toggle the inline diff view. Shows the original text below
+  the new text with word-level smerge highlighting. Press again to hide.
+
+<<Automatic-Output-Polishing>>
+*** 22.6 Automatic Output Polishing [[#Automatic-Output-Polishing][¶]]
+:PROPERTIES:
+:CUSTOM_ID: automatic-output-polishing
+:CLASS: section
+:END:
+Two automatic adjustments help keep in-buffer results clean:
+
+- *Clean-output tone* --- when in-buffer replace is active a “Return
+  only the requested content” instruction is automatically prepended to
+  the effective system prompt, suppressing introductory phrases and
+  commentary.
+- *Code-fence stripping* --- if the model wraps its response in markdown
+  code fences (‘=```lang … ```='), the fences are stripped before
+  insertion, leaving only the inner content.
+
 <<Implementation-Notes>>
-*** 22.5 Implementation Notes [[#Implementation-Notes][¶]]
+*** 22.7 Implementation Notes [[#Implementation-Notes][¶]]
 :PROPERTIES:
 :CUSTOM_ID: implementation-notes
 :CLASS: section
@@ -4841,24 +4894,30 @@ The module creates a direct =make-network-process= connection to Ollama
 format as the main chat buffer filter. Two Emacs markers track the
 rewrite region:
 
-- A /non-advancing/ start marker (stays before inserted text).
-- An /advancing/ end marker (moves past each newly inserted chunk).
+- A /non-advancing/ start marker (type =nil=) --- stays before inserted
+  text.
+- An /advancing/ end marker (type =t= during streaming, switched to
+  =nil= on completion) --- moves past each newly inserted chunk, then
+  fixed so the diff block insertion does not displace it.
 
-Original text is preserved in memory for rejection; no undo history
+The inline diff block is inserted as real buffer text at the fixed end
+marker position. =smerge-refine-regions= is called with both the
+original block and the new text residing in the same buffer, which is
+the standard within-buffer usage of that function. Original text is
+preserved in the rewrite state plist for rejection; no undo history
 manipulation is required.
 
-<<Current-Limitations>>
-*** 22.6 Current Limitations [[#Current-Limitations][¶]]
+<<Limitations>>
+*** 22.8 Limitations [[#Limitations][¶]]
 :PROPERTIES:
-:CUSTOM_ID: current-limitations
+:CUSTOM_ID: limitations
 :CLASS: section
 :END:
-This is an initial implementation. Known limitations for future work:
-
 - Only works with local Ollama models (not remote providers).
 - Only one rewrite can be pending at a time.
 - The streaming response is inserted verbatim; no markdown-to-org
-  conversion is performed (unlike the chat buffer).
+  conversion is performed (unlike the chat buffer) --- the fence
+  stripper handles the common code-block case.
 
 --------------
 
@@ -5200,15 +5259,21 @@ The RAG module (=ollama-buddy-rag.el=) is loaded by default.
 :CUSTOM_ID: requirements
 :CLASS: section
 :END:
-RAG requires an embedding model pulled into Ollama:
+By default, RAG uses Ollama for embeddings and requires an embedding
+model to be pulled:
 
 #+begin_src example-preformatted
 ollama pull nomic-embed-text
 #+end_src
 
-Other supported embedding models include =mxbai-embed-large= and
+Other Ollama embedding models include =mxbai-embed-large= and
 =all-minilm=. You can pull these from Model Management (C-c M) under the
 “Embedding (RAG)” category.
+
+Alternatively, you can point RAG at any OpenAI-compatible embedding
+server instance) by setting =ollama-buddy-rag-embedding-base-url= and
+=ollama-buddy-rag-embedding-api-style=. In that case no Ollama embedding
+model is needed.
 
 <<Quick-Start-2>>
 *** 24.3 Quick Start [[#Quick-Start-2][¶]]
@@ -5275,6 +5340,33 @@ Other supported embedding models include =mxbai-embed-large= and
 
 - =ollama-buddy-rag-batch-size= :: Number of chunks to embed per API
   call (default: =20=).
+
+- =ollama-buddy-rag-embedding-base-url= :: Base URL for the embedding
+  service. When =nil= (the default), the main Ollama host and port are
+  used. Set this to point at a separate OpenAI-compatible embedding
+  server, for example:
+
+  #+begin_src example-preformatted
+  (setq ollama-buddy-rag-embedding-base-url "http://localhost:9000")
+  #+end_src
+
+  This is useful when running a dedicated embedding service
+  independently from your Ollama instance.
+
+- =ollama-buddy-rag-embedding-api-style= :: The API style used by the
+  embedding endpoint. Two values are supported:
+
+  - =ollama= :: (default) POST to =/api/embed= --- the Ollama native
+    endpoint.
+
+  - =openai= :: POST to =/v1/embeddings= --- compatible with any
+    OpenAI-style embedding service. Use this together with
+    =ollama-buddy-rag-embedding-base-url=.
+
+- =ollama-buddy-rag-embedding-api-key= :: Optional Bearer token sent to
+  the embedding service. Only needed when
+  =ollama-buddy-rag-embedding-api-style= is =openai= and the service
+  requires authentication. Leave =nil= for local servers.
 
 <<PDF-Support>>
 *** 24.6 PDF Support [[#PDF-Support][¶]]

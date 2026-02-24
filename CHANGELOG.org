@@ -11,6 +11,26 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-24 Mon> *2.9*
+
+Configurable embedding endpoint for RAG — point the RAG module at any
+OpenAI-compatible embedding service independently of your Ollama instance.
+
+*** New Features
+
+- *Configurable RAG embedding endpoint* -- Three new customization variables give
+  full control over where embeddings are generated:
+  - =ollama-buddy-rag-embedding-base-url= -- set to e.g.@: ="http://localhost:9000"=
+    to use a separate embedding server; =nil= (default) keeps the existing
+    behaviour of using the main Ollama host and port.
+  - =ollama-buddy-rag-embedding-api-style= -- choose between =ollama= (default,
+    POST =/api/embed=) and =openai= (POST =/v1/embeddings=) to match the API
+    shape of the target server.
+  - =ollama-buddy-rag-embedding-api-key= -- optional Bearer token for
+    authenticated embedding services; leave =nil= for local servers.
+- *OpenAI-compatible embedding services* -- RAG can now use dedicated embedding
+  backends!
+
 ** <2026-02-24 Mon> *2.8.1*
 
 Inline diff inspection and polish for in-buffer replace mode.

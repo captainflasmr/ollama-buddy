@@ -46,7 +46,7 @@ language models (LLMs) directly within your Emacs workflow.
 * Global System Prompt::        Configuring a persistent global system prompt
 * Tone Selector::               Quickly switch response style
 * Thinking Blocks::             Collapsible reasoning output for thinking models
-* In-Buffer Replace::           Stream rewrites directly into source buffers (initial)
+* In-Buffer Replace::           Stream rewrites directly into source buffers with inline diff
 * Tool Calling::                Enabling LLMs to invoke Emacs functions
 * RAG::                         Retrieval-Augmented Generation with local documents
 * Advanced Usage::              Tips and techniques for power users
@@ -3136,38 +3136,41 @@ File: ollama-buddy.info,  Node: In-Buffer Replace,  Next: Tool Calling,  Prev: T
 22.1 Overview
 =============
 
-In-buffer replace is an _initial pass_ at a feature that streams LLM
-output directly into the source buffer rather than the chat buffer.
-When active, commands that operate on a selected region (such as
-Refactor, Proofread, or any custom role command) will replace the
-selection in-place with the model's response.
+In-buffer replace streams LLM output directly into the source buffer
+rather than the chat buffer.  When active, commands that operate on a
+selected region (Refactor, Proofread, Git Commit, Dictionary Lookup,
+Synonym, Describe Code, or any custom role command) replace the
+selection in-place with the model's response, shown with a green
+highlight pending your decision.
 
-   This is an early-stage capability.  The existing chat buffer workflow
-is completely unchanged when the toggle is off (the default), and all
-existing commands, prompts, system prompts, and model selection logic
-are unaffected -- only the output destination changes.
+   The existing chat buffer workflow is completely unchanged when the
+toggle is off (the default).  All existing commands, prompts, system
+prompts, and model selection logic are unaffected -- only the output
+destination changes.
 
 22.2 Enabling In-Buffer Replace
 ===============================
 
-Toggle via the transient menu (‘C-c O’) ‘Actions’ section, key ‘W’:
+Toggle via the transient Actions menu (‘C-c O’, key ‘W’), the chat
+buffer keybinding ‘C-c W’, or:
 
      M-x ollama-buddy-toggle-in-buffer-replace
 
    The ‘✎’ symbol appears in the header line and prompt line while the
-mode is active.
+mode is active.  The custom role menu footer shows a live ‘In-Buffer
+Replace [ON] / [OFF]’ toggle.
 
-22.3 Workflow
-=============
+22.3 Basic Workflow
+===================
 
-  1. Toggle in-buffer replace on (‘W’ in the transient Actions menu).
+  1. Toggle in-buffer replace on (‘W’ or ‘C-c W’).
   2. In any source buffer, select a region of text (e.g. a function
      body, a paragraph).
   3. Invoke a role command (e.g. Refactor from the Developer role).
-  4. A dimmed ‘[Rewriting...]’ placeholder replaces the selection.
+  4. A dimmed ‘[Rewriting...]’ placeholder replaces the selection while
+     connecting.
   5. The model's response streams in with a green highlight.
-  6. When streaming finishes, a minor mode activates.  The mode line
-     shows ‘ [Rewrite?]’.
+  6. When streaming finishes, the mode line shows ‘ [Rewrite?]’.
   7. Press ‘C-c C-c’ to *accept* (keep new text, remove highlight).
   8. Press ‘C-c C-k’ to *reject* (discard new text and restore the
      original).
@@ -3175,7 +3178,30 @@ mode is active.
    Cancelling mid-stream with ‘C-c C-k’ stops the network process and
 restores the original selection immediately.
 
-22.4 Key Bindings (while rewrite is pending)
+22.4 Inline Diff View
+=====================
+
+After streaming completes, press ‘C-c d’ to open an inline diff view
+inside the same buffer:
+
+     [new text — green background]
+       [changed words — brighter green overlay]
+
+     ── Original ────────────────────────────
+     [original text — yellow background]
+       [removed words — red strikethrough overlay]
+     ────────────────────────────────────────
+
+   Word-level differences are highlighted by ‘smerge-refine-regions’:
+green overlays mark added or changed words in the new text; red
+strikethrough overlays mark words present in the original but absent
+from the rewrite.
+
+   Press ‘C-c d’ again to hide the diff block without accepting or
+rejecting.  Accepting (‘C-c C-c’) or rejecting (‘C-c C-k’) automatically
+removes the diff block.
+
+22.5 Key Bindings (while rewrite is pending)
 ============================================
 
 ‘C-c C-c’
@@ -3186,7 +3212,25 @@ restores the original selection immediately.
      Reject the rewrite -- stop streaming (if still in progress) and
      restore the original selected text.
 
-22.5 Implementation Notes
+‘C-c d’
+     Toggle the inline diff view.  Shows the original text below the new
+     text with word-level smerge highlighting.  Press again to hide.
+
+22.6 Automatic Output Polishing
+===============================
+
+Two automatic adjustments help keep in-buffer results clean:
+
+   • *Clean-output tone* -- when in-buffer replace is active a "Return
+     only the requested content" instruction is automatically prepended
+     to the effective system prompt, suppressing introductory phrases
+     and commentary.
+
+   • *Code-fence stripping* -- if the model wraps its response in
+     markdown code fences (‘```lang ... ```’), the fences are stripped
+     before insertion, leaving only the inner content.
+
+22.7 Implementation Notes
 =========================
 
 The feature is implemented in ‘ollama-buddy-rewrite.el’, loaded
@@ -3199,21 +3243,27 @@ Ollama (‘/api/chat’) and streams JSON responses using the same
 line-delimited format as the main chat buffer filter.  Two Emacs markers
 track the rewrite region:
 
-   • A _non-advancing_ start marker (stays before inserted text).
-   • An _advancing_ end marker (moves past each newly inserted chunk).
+   • A _non-advancing_ start marker (type ‘nil’) -- stays before
+     inserted text.
+   • An _advancing_ end marker (type ‘t’ during streaming, switched to
+     ‘nil’ on completion) -- moves past each newly inserted chunk, then
+     fixed so the diff block insertion does not displace it.
 
-   Original text is preserved in memory for rejection; no undo history
+   The inline diff block is inserted as real buffer text at the fixed
+end marker position.  ‘smerge-refine-regions’ is called with both the
+original block and the new text residing in the same buffer, which is
+the standard within-buffer usage of that function.  Original text is
+preserved in the rewrite state plist for rejection; no undo history
 manipulation is required.
 
-22.6 Current Limitations
-========================
-
-This is an initial implementation.  Known limitations for future work:
+22.8 Limitations
+================
 
    • Only works with local Ollama models (not remote providers).
    • Only one rewrite can be pending at a time.
    • The streaming response is inserted verbatim; no markdown-to-org
-     conversion is performed (unlike the chat buffer).
+     conversion is performed (unlike the chat buffer) -- the fence
+     stripper handles the common code-block case.
 
 
 File: ollama-buddy.info,  Node: Tool Calling,  Next: RAG,  Prev: In-Buffer Replace,  Up: Top
@@ -3469,13 +3519,19 @@ efficient and responses grounded in your actual documents.
 24.2 Requirements
 =================
 
-RAG requires an embedding model pulled into Ollama:
+By default, RAG uses Ollama for embeddings and requires an embedding
+model to be pulled:
 
      ollama pull nomic-embed-text
 
-   Other supported embedding models include ‘mxbai-embed-large’ and
+   Other Ollama embedding models include ‘mxbai-embed-large’ and
 ‘all-minilm’.  You can pull these from Model Management (‘C-c M’) under
 the "Embedding (RAG)" category.
+
+   Alternatively, you can point RAG at any OpenAI-compatible embedding
+server instance) by setting ‘ollama-buddy-rag-embedding-base-url’ and
+‘ollama-buddy-rag-embedding-api-style’.  In that case no Ollama
+embedding model is needed.
 
 24.3 Quick Start
 ================
@@ -3536,6 +3592,33 @@ the "Embedding (RAG)" category.
 
 ‘ollama-buddy-rag-batch-size’
      Number of chunks to embed per API call (default: ‘20’).
+
+‘ollama-buddy-rag-embedding-base-url’
+     Base URL for the embedding service.  When ‘nil’ (the default), the
+     main Ollama host and port are used.  Set this to point at a
+     separate OpenAI-compatible embedding server, for example:
+
+          (setq ollama-buddy-rag-embedding-base-url "http://localhost:9000")
+
+     This is useful when running a dedicated embedding service
+     independently from your Ollama instance.
+
+‘ollama-buddy-rag-embedding-api-style’
+     The API style used by the embedding endpoint.  Two values are
+     supported:
+
+     ‘ollama’
+          (default) POST to ‘/api/embed’ -- the Ollama native endpoint.
+
+     ‘openai’
+          POST to ‘/v1/embeddings’ -- compatible with any OpenAI-style
+          embedding service.  Use this together with
+          ‘ollama-buddy-rag-embedding-base-url’.
+
+‘ollama-buddy-rag-embedding-api-key’
+     Optional Bearer token sent to the embedding service.  Only needed
+     when ‘ollama-buddy-rag-embedding-api-style’ is ‘openai’ and the
+     service requires authentication.  Leave ‘nil’ for local servers.
 
 24.6 PDF Support
 ================
@@ -4318,36 +4401,36 @@ Index
 
 Tag Table:
 Node: Top555
-Node: Introduction2882
-Node: Installation5070
-Node: Configuration8027
-Node: Quick Start16297
-Node: Core Features18541
-Node: Chat Interface22818
-Node: Working with Models29896
-Node: Context Management34293
-Node: File Attachments39902
-Node: Web Search45824
-Node: Parameter Control52770
-Node: Session Management55167
-Node: User System Prompts58076
-Node: Roles and Commands66564
-Node: Fabric Pattern Integration81539
-Node: Awesome ChatGPT Prompts83766
-Node: Remote Providers87616
-Node: Ollama Cloud Models92550
-Node: Global System Prompt95422
-Node: Tone Selector97176
-Node: Thinking Blocks98983
-Node: In-Buffer Replace101010
-Node: Tool Calling104173
-Node: RAG111964
-Node: Advanced Usage118347
-Node: API Reference120896
-Node: FAQ126835
-Node: Troubleshooting133920
-Node: Contributing136425
-Node: Index139093
+Node: Introduction2889
+Node: Installation5077
+Node: Configuration8034
+Node: Quick Start16304
+Node: Core Features18548
+Node: Chat Interface22825
+Node: Working with Models29903
+Node: Context Management34300
+Node: File Attachments39909
+Node: Web Search45831
+Node: Parameter Control52777
+Node: Session Management55174
+Node: User System Prompts58083
+Node: Roles and Commands66571
+Node: Fabric Pattern Integration81546
+Node: Awesome ChatGPT Prompts83773
+Node: Remote Providers87623
+Node: Ollama Cloud Models92557
+Node: Global System Prompt95429
+Node: Tone Selector97183
+Node: Thinking Blocks98990
+Node: In-Buffer Replace101017
+Node: Tool Calling106402
+Node: RAG114193
+Node: Advanced Usage121972
+Node: API Reference124521
+Node: FAQ130460
+Node: Troubleshooting137545
+Node: Contributing140050
+Node: Index142718
 
 End Tag Table
 
