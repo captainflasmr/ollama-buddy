@@ -619,11 +619,11 @@ https://github.com/captainflasmr/ollama-buddy
 Demonstrating in-buffer in-line modification, now we are out of the chat buffer!
 
 - Turn in-buffer through menu W
-- open ollama-buddy-rewrite-samples.org
-- Refactor Code : Sample 2 - refactor
-- show original in-buffer and accept
-- Proofread Text : Sample 1 - select paragraph and proofred
-- show original in-buffer and accept
+- Open ollama-buddy-rewrite-samples.org
+- Refactor Code: Sample 2 - Refactor
+- Show original in-buffer and accept
+- Proofread Text: Sample 1 - Select paragraph and proofread
+- Show original in-buffer and accept
 
 This demonstrates how ollama-buddy can now return LLM requests directly into the buffer
 
