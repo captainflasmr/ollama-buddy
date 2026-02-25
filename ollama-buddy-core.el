@@ -1606,6 +1606,21 @@ Each element is a plist with :name, :authenticated, and :enabled."
        providers
        " | "))))
 
+;;; Tips
+
+(require 'ollama-buddy-tips)
+
+(defcustom ollama-buddy-show-tips t
+  "When non-nil, display a random tip in the welcome screen."
+  :type 'boolean
+  :group 'ollama-buddy)
+
+(defun ollama-buddy--get-random-tip ()
+  "Return a random tip string from `ollama-buddy-tips'.
+Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
+  (when (and ollama-buddy-show-tips ollama-buddy-tips)
+    (nth (random (length ollama-buddy-tips)) ollama-buddy-tips)))
+
 (defun ollama-buddy--create-intro-message ()
   "Create minimal welcome message with essential commands in org format."
   (setq-local org-hide-emphasis-markers t)
@@ -1675,8 +1690,10 @@ please run =ollama serve=\n\n")
 - /Main transient menu/    C-c O
 - /Browse prompt history/  M-p/n/r
 - /Manage models/          C-c M
-- /ollama-buddy Manual/    C-c ?"
-             ))))
+- /ollama-buddy Manual/    C-c ?")
+           (when-let ((tip (ollama-buddy--get-random-tip)))
+             (concat "\n\n** Tip\n" tip))
+           )))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
 

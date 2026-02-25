@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 2.9
+@subtitle For Ollama Buddy version 2.9.1
 @author James Dyer
 @page
 @vskip 0pt plus 1filll

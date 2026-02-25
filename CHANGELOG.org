@@ -11,6 +11,17 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-25 Tue> *2.9.1*
+
+Random tips shown on the welcome screen to help users discover features.
+
+*** New Features
+
+- *Welcome screen tips* -- =ollama-buddy-tips.el= ships a curated list of tips
+  shown at random on the welcome screen.  Set =ollama-buddy-show-tips= to =nil=
+  to disable, or extend the list with
+  =(add-to-list 'ollama-buddy-tips "My tip" t)=.
+
 ** <2026-02-24 Mon> *2.9*
 
 Configurable embedding endpoint for RAG — point the RAG module at any

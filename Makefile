@@ -21,7 +21,9 @@ ELISP_FILES = ollama-buddy.el \
               ollama-buddy-codestral.el \
               ollama-buddy-deepseek.el \
               ollama-buddy-openrouter.el \
-              ollama-buddy-rag.el
+              ollama-buddy-openai-compat.el \
+              ollama-buddy-rag.el \
+              ollama-buddy-tips.el
 
 # Test files
 TEST_DIR = tests
