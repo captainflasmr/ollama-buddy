@@ -739,5 +739,163 @@ Binds `test-dir' to the directory containing the files."
   (should (equal "just a normal prompt"
                  (ollama-buddy-rag-process-inline "just a normal prompt"))))
 
+;;; Configurable Embedding Endpoint Tests
+;; ============================================================================
+;; These tests cover ollama-buddy-rag--embedding-url,
+;; ollama-buddy-rag--embedding-headers, ollama-buddy-rag--parse-embeddings,
+;; and the model-availability skip when a custom base URL is set.
+;; All tests are offline — no network calls are made.
+
+;; -- ollama-buddy-rag--embedding-url ------------------------------------------
+
+(ert-deftest ollama-buddy-rag-test-embedding-url-default-ollama ()
+  "Default config uses Ollama host/port with /api/embed path."
+  :tags '(rag)
+  (let ((ollama-buddy-rag-embedding-base-url nil)
+        (ollama-buddy-rag-embedding-api-style 'ollama)
+        (ollama-buddy-host "localhost")
+        (ollama-buddy-port 11434))
+    (should (equal "http://localhost:11434/api/embed"
+                   (ollama-buddy-rag--embedding-url)))))
+
+(ert-deftest ollama-buddy-rag-test-embedding-url-default-openai-style ()
+  "Nil base-url with openai style uses Ollama host/port with /v1/embeddings."
+  :tags '(rag)
+  (let ((ollama-buddy-rag-embedding-base-url nil)
+        (ollama-buddy-rag-embedding-api-style 'openai)
+        (ollama-buddy-host "localhost")
+        (ollama-buddy-port 11434))
+    (should (equal "http://localhost:11434/v1/embeddings"
+                   (ollama-buddy-rag--embedding-url)))))
+
+(ert-deftest ollama-buddy-rag-test-embedding-url-custom-base-ollama-style ()
+  "Custom base URL with ollama style appends /api/embed."
+  :tags '(rag)
+  (let ((ollama-buddy-rag-embedding-base-url "http://192.168.1.10:9000")
+        (ollama-buddy-rag-embedding-api-style 'ollama))
+    (should (equal "http://192.168.1.10:9000/api/embed"
+                   (ollama-buddy-rag--embedding-url)))))
+
+(ert-deftest ollama-buddy-rag-test-embedding-url-custom-base-openai-style ()
+  "Custom base URL with openai style appends /v1/embeddings."
+  :tags '(rag)
+  (let ((ollama-buddy-rag-embedding-base-url "http://localhost:9000")
+        (ollama-buddy-rag-embedding-api-style 'openai))
+    (should (equal "http://localhost:9000/v1/embeddings"
+                   (ollama-buddy-rag--embedding-url)))))
+
+(ert-deftest ollama-buddy-rag-test-embedding-url-custom-host-non-default-port ()
+  "Custom base URL with non-default port is reflected correctly."
+  :tags '(rag)
+  (let ((ollama-buddy-rag-embedding-base-url "http://embed-server:8080")
+        (ollama-buddy-rag-embedding-api-style 'openai))
+    (should (equal "http://embed-server:8080/v1/embeddings"
+                   (ollama-buddy-rag--embedding-url)))))
+
+;; -- ollama-buddy-rag--embedding-headers --------------------------------------
+
+(ert-deftest ollama-buddy-rag-test-embedding-headers-no-key ()
+  "Without API key, only Content-Type header is present."
+  :tags '(rag)
+  (let ((ollama-buddy-rag-embedding-api-style 'ollama)
+        (ollama-buddy-rag-embedding-api-key nil))
+    (let ((headers (ollama-buddy-rag--embedding-headers)))
+      (should (assoc "Content-Type" headers))
+      (should-not (assoc "Authorization" headers)))))
+
+(ert-deftest ollama-buddy-rag-test-embedding-headers-openai-no-key ()
+  "OpenAI style without API key still omits Authorization header."
+  :tags '(rag)
+  (let ((ollama-buddy-rag-embedding-api-style 'openai)
+        (ollama-buddy-rag-embedding-api-key nil))
+    (let ((headers (ollama-buddy-rag--embedding-headers)))
+      (should (assoc "Content-Type" headers))
+      (should-not (assoc "Authorization" headers)))))
+
+(ert-deftest ollama-buddy-rag-test-embedding-headers-openai-with-key ()
+  "OpenAI style with API key includes correct Authorization header."
+  :tags '(rag)
+  (let ((ollama-buddy-rag-embedding-api-style 'openai)
+        (ollama-buddy-rag-embedding-api-key "sk-test-1234"))
+    (let ((headers (ollama-buddy-rag--embedding-headers)))
+      (should (assoc "Content-Type" headers))
+      (let ((auth (assoc "Authorization" headers)))
+        (should auth)
+        (should (equal "Bearer sk-test-1234" (cdr auth)))))))
+
+(ert-deftest ollama-buddy-rag-test-embedding-headers-ollama-key-ignored ()
+  "Ollama style never adds Authorization even when a key is set."
+  :tags '(rag)
+  (let ((ollama-buddy-rag-embedding-api-style 'ollama)
+        (ollama-buddy-rag-embedding-api-key "should-be-ignored"))
+    (should-not (assoc "Authorization"
+                       (ollama-buddy-rag--embedding-headers)))))
+
+;; -- ollama-buddy-rag--parse-embeddings ---------------------------------------
+
+(ert-deftest ollama-buddy-rag-test-parse-embeddings-ollama-single ()
+  "Ollama style single parse returns first embedding from `embeddings' key."
+  :tags '(rag)
+  (let ((ollama-buddy-rag-embedding-api-style 'ollama)
+        (response '((embeddings . ((1.0 0.0 0.0) (0.0 1.0 0.0))))))
+    (should (equal '(1.0 0.0 0.0)
+                   (ollama-buddy-rag--parse-embeddings response t)))))
+
+(ert-deftest ollama-buddy-rag-test-parse-embeddings-ollama-batch ()
+  "Ollama style batch parse returns full `embeddings' list."
+  :tags '(rag)
+  (let ((ollama-buddy-rag-embedding-api-style 'ollama)
+        (response '((embeddings . ((1.0 0.0) (0.0 1.0) (0.5 0.5))))))
+    (let ((result (ollama-buddy-rag--parse-embeddings response nil)))
+      (should (= 3 (length result)))
+      (should (equal '(1.0 0.0) (nth 0 result)))
+      (should (equal '(0.0 1.0) (nth 1 result)))
+      (should (equal '(0.5 0.5) (nth 2 result))))))
+
+(ert-deftest ollama-buddy-rag-test-parse-embeddings-openai-single ()
+  "OpenAI style single parse returns first item's `embedding' field."
+  :tags '(rag)
+  (let ((ollama-buddy-rag-embedding-api-style 'openai)
+        (response '((data . (((index . 0) (embedding . (0.1 0.2 0.3))))))))
+    (should (equal '(0.1 0.2 0.3)
+                   (ollama-buddy-rag--parse-embeddings response t)))))
+
+(ert-deftest ollama-buddy-rag-test-parse-embeddings-openai-batch ()
+  "OpenAI style batch parse returns list of embedding vectors."
+  :tags '(rag)
+  (let ((ollama-buddy-rag-embedding-api-style 'openai)
+        (response '((data . (((index . 0) (embedding . (1.0 0.0)))
+                             ((index . 1) (embedding . (0.0 1.0)))
+                             ((index . 2) (embedding . (0.5 0.5))))))))
+    (let ((result (ollama-buddy-rag--parse-embeddings response nil)))
+      (should (= 3 (length result)))
+      (should (equal '(1.0 0.0) (nth 0 result)))
+      (should (equal '(0.0 1.0) (nth 1 result)))
+      (should (equal '(0.5 0.5) (nth 2 result))))))
+
+(ert-deftest ollama-buddy-rag-test-parse-embeddings-openai-out-of-order ()
+  "OpenAI style batch is sorted by index regardless of arrival order."
+  :tags '(rag)
+  (let ((ollama-buddy-rag-embedding-api-style 'openai)
+        ;; API returned index 1 before index 0
+        (response '((data . (((index . 1) (embedding . (0.0 1.0)))
+                             ((index . 0) (embedding . (1.0 0.0))))))))
+    (let ((result (ollama-buddy-rag--parse-embeddings response nil)))
+      (should (equal '(1.0 0.0) (nth 0 result)))
+      (should (equal '(0.0 1.0) (nth 1 result))))))
+
+;; -- ensure-embedding-model skip with custom base-url -------------------------
+
+(ert-deftest ollama-buddy-rag-test-ensure-model-skipped-for-external-url ()
+  "Ensure-embedding-model raises no error when a custom base URL is set.
+The Ollama model-availability check is bypassed for external services."
+  :tags '(rag)
+  (let ((ollama-buddy-rag-embedding-base-url "http://localhost:9000")
+        (ollama-buddy-rag-embedding-model "non-existent-model"))
+    ;; Should not signal any error even though the model doesn't exist in Ollama
+    (should (null (condition-case err
+                      (progn (ollama-buddy-rag--ensure-embedding-model) nil)
+                    (error err))))))
+
 (provide 'ollama-buddy-rag-test)
 ;;; ollama-buddy-rag-test.el ends here
