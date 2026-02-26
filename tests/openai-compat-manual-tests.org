@@ -1,0 +1,46 @@
+#+title: Manual Integration Tests: ollama-buddy-openai-compat
+#+author: James Dyer
+#+email: captainflasmr@gmail.com
+#+language: en
+#+options: ':t toc:nil author:nil email:nil num:nil title:nil
+#+startup: showall
+
+This document covers manual integration testing of =ollama-buddy-openai-compat=
+against real local inference servers.  Unlike the ERT unit tests (which run
+entirely offline), these tests require an actual server to be running.
+
+Each section describes: server setup, the Emacs configuration to load, what
+you should see in ollama-buddy's UI, and specific prompts/actions to verify.
+
+* LM Studio
+
+** Server setup
+
+1. Download LM Studio from https://lmstudio.ai
+2. In the Models tab, download a model
+3. Switch to the Local Server tab
+4. Click =Start Server= — default port is =1234=
+
+** Emacs configuration
+
+#+begin_src elisp
+(require 'ollama-buddy-openai-compat)
+;; LM Studio default — this is the built-in default so no change needed
+(setq ollama-buddy-openai-compat-base-url "http://localhost:1234")
+(setq ollama-buddy-openai-compat-provider-name "LM Studio")
+;; No API key needed for LM Studio
+(setq ollama-buddy-openai-compat-api-key "")
+#+end_src
+
+** Expected: model auto-discovery
+
+In the model list (=C-c m=) you should see the models currently loaded in
+LM Studio, e.g.:
+
+#+begin_example
+l:tinyllama-1.1b-chat-v1.0
+#+end_example
+
+LM Studio only lists the model currently loaded in the server slot.  If you
+switch models in LM Studio, run =M-x ollama-buddy-openai-compat-refresh-models=
+and check =C-c m= again — the new model should appear (and the old one removed).
