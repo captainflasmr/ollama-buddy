@@ -1552,6 +1552,16 @@ PROMPT, SPECIFIED-MODEL and TOOL-CONTINUATION-P are passed through."
       (push (format "d: DeepSeek (%d)" (ollama-buddy--count-models-with-prefix "d:")) providers))
     (when (featurep 'ollama-buddy-openrouter)
       (push (format "r: OpenRouter (%d)" (ollama-buddy--count-models-with-prefix "r:")) providers))
+    (when (featurep 'ollama-buddy-openai-compat)
+      (push (format "l: %s (%d)"
+                    (if (boundp 'ollama-buddy-openai-compat-provider-name)
+                        ollama-buddy-openai-compat-provider-name
+                      "LocalAI")
+                    (ollama-buddy--count-models-with-prefix
+                     (if (boundp 'ollama-buddy-openai-compat-marker-prefix)
+                         ollama-buddy-openai-compat-marker-prefix
+                       "l:")))
+            providers))
     (nreverse providers)))
 
 (defvar ollama-buddy--cloud-auth-status 'unknown
@@ -1646,6 +1656,7 @@ Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
             (when (and (> ollama-count 0) use-prefixes)
               (push (format "o: Ollama (%d)" ollama-count) parts))
             (when external-providers
+              (princ external-providers)
               (setq parts (append (nreverse parts) external-providers)
                     parts (nreverse parts)))
             ;; Only show "cl: Cloud" with prefix when external providers are loaded
@@ -1659,7 +1670,7 @@ Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
            "\n\n* Welcome to _OLLAMA BUDDY_\n\n"
            "#+begin_example\n"
            "┌───────────────────────────────────┐\n"
-           "│  O L L A M A B U D D Y  [v2.9.2]  │\n"
+           "│  O L L A M A B U D D Y  [v3.0.0]  │\n"
            "└───────────────────────────────────┘\n"
            ;; "╔════════════════════════════════════════════════════════════╗\n"
            ;; "║  ▄▀▀▀▄ █   █   ▄▀▀▀▄ █▀▄▀█ ▄▀▀▀▄ █▀▀▄ █  █ █▀▀▄ █▀▀▄ █  █  ║\n"
@@ -2070,7 +2081,8 @@ When complete, CALLBACK is called with the status response and result."
           (progn
             (let ((url-show-status nil))
               (url-retrieve-synchronously
-               (format "http://%s:%s/api/tags" ollama-buddy-host ollama-buddy-port)))
+               (format "http://%s:%s/api/tags" ollama-buddy-host ollama-buddy-port)
+               nil nil 2))
             t)
         (error nil))))))
 

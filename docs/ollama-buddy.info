@@ -2796,6 +2796,12 @@ GitHub Copilot (prefix: ‘p:’)
 Codestral/Mistral (prefix: ‘s:’)
      Load with ‘(require 'ollama-buddy-codestral nil t)’
 
+Generic OpenAI-compatible server (prefix: ‘l:’, configurable)
+     Load with ‘(require 'ollama-buddy-openai-compat nil t)’.  Works
+     with LM Studio, llama.cpp, vLLM, Jan, and any
+     ‘/v1/chat/completions’-compatible endpoint.  No API key needed for
+     local servers.
+
    Local Ollama models use the ‘o:’ prefix when remote models are
 available, or no prefix when only local models are present.
 
@@ -2815,6 +2821,7 @@ The header line shows compact status indicators:
    • ‘♁N’ - Number of web search results attached
    • ‘V’ - Reasoning/thinking sections hidden
    • ‘T’ - Token statistics display enabled
+   • ‘l’ - Generic OpenAI-compatible server provider loaded
 
    Example: ‘☁⚒≡2♁1’ means cloud model with tool support, 2 file
 attachments and 1 web search attached.
@@ -2922,6 +2929,58 @@ prefix:
 
 ‘ollama-buddy-codestral-default-model’
      Default Codestral model to use.
+
+17.5.7 Generic OpenAI-Compatible Server Configuration
+-----------------------------------------------------
+
+‘ollama-buddy-openai-compat’ connects to any server that speaks the
+OpenAI ‘/v1/chat/completions’ API -- including LM Studio, llama.cpp,
+vLLM, Jan, and self-hosted services.
+
+‘ollama-buddy-openai-compat-base-url’
+     Base URL of the server, without a trailing slash (default:
+     ‘"http://localhost:1234"’ for LM Studio).  The module appends
+     ‘/v1/chat/completions’ for chat and ‘/v1/models’ for model
+     discovery.
+
+‘ollama-buddy-openai-compat-api-key’
+     Optional Bearer token.  Leave empty (‘""’) for local servers that
+     do not require authentication.
+
+‘ollama-buddy-openai-compat-models’
+     Fallback list of model name strings used when automatic discovery
+     fails or is disabled.
+
+‘ollama-buddy-openai-compat-default-model’
+     Default model used when no model is explicitly selected.  If empty,
+     the first discovered model is used.
+
+‘ollama-buddy-openai-compat-provider-name’
+     Display name shown in the status line and chat buffer headings
+     (default: ‘"LocalAI"’).
+
+‘ollama-buddy-openai-compat-marker-prefix’
+     The prefix string prepended to model names in the model list
+     (default: ‘"l:"’).
+
+‘ollama-buddy-openai-compat-fetch-models’
+     When non-nil (default ‘t’), attempt ‘GET /v1/models’ on load to
+     auto-discover available models.  Set to ‘nil’ to skip discovery and
+     use ‘ollama-buddy-openai-compat-models’ directly.
+
+   Minimal setup for LM Studio:
+     (require 'ollama-buddy-openai-compat)
+     ;; LM Studio runs on localhost:1234 by default — no further config needed.
+
+   Setup for a password-protected remote server:
+     (require 'ollama-buddy-openai-compat)
+     (setq ollama-buddy-openai-compat-base-url "https://my-server.example.com"
+           ollama-buddy-openai-compat-api-key  "sk-my-secret-key"
+           ollama-buddy-openai-compat-provider-name "MyServer")
+
+   To refresh the model list after changing the base URL or loading a
+new model in the server UI:
+     M-x ollama-buddy-openai-compat-refresh-models
 
 17.6 History Management
 =======================
@@ -4486,19 +4545,19 @@ Node: Roles and Commands66571
 Node: Fabric Pattern Integration83761
 Node: Awesome ChatGPT Prompts85988
 Node: Remote Providers89838
-Node: Ollama Cloud Models94772
-Node: Global System Prompt97644
-Node: Tone Selector99398
-Node: Thinking Blocks101205
-Node: In-Buffer Replace103232
-Node: Tool Calling109104
-Node: RAG116895
-Node: Advanced Usage124674
-Node: API Reference127223
-Node: FAQ133162
-Node: Troubleshooting140247
-Node: Contributing142752
-Node: Index145420
+Node: Ollama Cloud Models97298
+Node: Global System Prompt100170
+Node: Tone Selector101924
+Node: Thinking Blocks103731
+Node: In-Buffer Replace105758
+Node: Tool Calling111630
+Node: RAG119421
+Node: Advanced Usage127200
+Node: API Reference129749
+Node: FAQ135688
+Node: Troubleshooting142773
+Node: Contributing145278
+Node: Index147946
 
 End Tag Table
 

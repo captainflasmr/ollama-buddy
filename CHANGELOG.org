@@ -11,6 +11,34 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-26 Thu> *3.0.0*
+
+Generic OpenAI-compatible chat provider — connect to LM Studio, llama.cpp, vLLM, Jan, or
+any OpenAI-API-compatible server.
+
+*** New Features
+
+- *Generic OpenAI-compatible chat provider* (=ollama-buddy-openai-compat=) -- A new
+  provider module that works with any server speaking the OpenAI chat-completions API.
+  Unlike the dedicated =ollama-buddy-openai= module (hardwired to =api.openai.com=), this
+  module is fully configurable:
+  - =ollama-buddy-openai-compat-base-url= -- server base URL (default:
+    =http://localhost:1234= for LM Studio)
+  - =ollama-buddy-openai-compat-api-key= -- optional Bearer token; leave empty for
+    unauthenticated local servers
+  - =ollama-buddy-openai-compat-models= -- fallback model list when auto-discovery is
+    unavailable
+  - =ollama-buddy-openai-compat-default-model= -- default model name
+  - =ollama-buddy-openai-compat-provider-name= -- display name shown in the UI (default:
+    =LocalAI=)
+  - =ollama-buddy-openai-compat-fetch-models= -- whether to auto-discover models via
+    =GET /v1/models= on load (default: =t=)
+  - =M-x ollama-buddy-openai-compat-refresh-models= -- re-discover models at runtime
+    after changing the base URL or loading a new model in LM Studio / Jan
+  - Models are registered under a configurable prefix (default =l:=) and appear
+    alongside all other providers in the model list
+  - Status line shows =l= indicator when the module is loaded
+
 ** <2026-02-26 Thu> *2.9.2*
 
 Per-command response destination routing for command definitions.

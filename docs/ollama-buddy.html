@@ -335,6 +335,7 @@ allowing you to leverage powerful large language models (LLMs) directly within y
       <li><a id="toc-Grok-Configuration" href="#Grok-Configuration">17.5.4 Grok Configuration</a></li>
       <li><a id="toc-GitHub-Copilot-Configuration" href="#GitHub-Copilot-Configuration">17.5.5 GitHub Copilot Configuration</a></li>
       <li><a id="toc-Codestral-Configuration" href="#Codestral-Configuration">17.5.6 Codestral Configuration</a></li>
+      <li><a id="toc-Generic-OpenAI_002dCompatible-Server-Configuration" href="#Generic-OpenAI_002dCompatible-Server-Configuration">17.5.7 Generic OpenAI-Compatible Server Configuration</a></li>
     </ul></li>
     <li><a id="toc-History-Management" href="#History-Management">17.6 History Management</a></li>
   </ul></li>
@@ -4143,6 +4144,12 @@ Next: <a href="#Ollama-Cloud-Models" accesskey="n" rel="next">Ollama Cloud Model
 </dd>
 <dt>Codestral/Mistral (prefix: <code class="code">s:</code>)</dt>
 <dd><p>Load with <code class="code">(require 'ollama-buddy-codestral nil t)</code>
+</p>
+</dd>
+<dt>Generic OpenAI-compatible server (prefix: <code class="code">l:</code>, configurable)</dt>
+<dd><p>Load with <code class="code">(require 'ollama-buddy-openai-compat nil t)</code>.
+Works with LM Studio, llama.cpp, vLLM, Jan, and any
+<code class="code">/v1/chat/completions</code>-compatible endpoint.  No API key needed for local servers.
 </p></dd>
 </dl>
 
@@ -4165,6 +4172,7 @@ Next: <a href="#Ollama-Cloud-Models" accesskey="n" rel="next">Ollama Cloud Model
 </li><li><code class="code">♁N</code> - Number of web search results attached
 </li><li><code class="code">V</code> - Reasoning/thinking sections hidden
 </li><li><code class="code">T</code> - Token statistics display enabled
+</li><li><code class="code">l</code> - Generic OpenAI-compatible server provider loaded
 </li></ul>
 
 <p>Example: <code class="code">☁⚒≡2♁1</code> means cloud model with tool support, 2 file attachments and 1 web search attached.
@@ -4214,6 +4222,7 @@ machine ollama-buddy-codestral login apikey password YOUR_CODESTRAL_API_KEY
 <li><a href="#Grok-Configuration" accesskey="4">Grok Configuration</a></li>
 <li><a href="#GitHub-Copilot-Configuration" accesskey="5">GitHub Copilot Configuration</a></li>
 <li><a href="#Codestral-Configuration" accesskey="6">Codestral Configuration</a></li>
+<li><a href="#Generic-OpenAI_002dCompatible-Server-Configuration" accesskey="7">Generic OpenAI-Compatible Server Configuration</a></li>
 </ul>
 <div class="subsection-level-extent" id="OpenAI-Configuration">
 <h4 class="subsection"><span>17.5.1 OpenAI Configuration<a class="copiable-link" href="#OpenAI-Configuration"> &para;</a></span></h4>
@@ -4314,6 +4323,70 @@ Get your token from <a class="url" href="https://github.com/settings/tokens">htt
 <dd><p>Default Codestral model to use.
 </p></dd>
 </dl>
+
+</div>
+<div class="subsection-level-extent" id="Generic-OpenAI_002dCompatible-Server-Configuration">
+<h4 class="subsection"><span>17.5.7 Generic OpenAI-Compatible Server Configuration<a class="copiable-link" href="#Generic-OpenAI_002dCompatible-Server-Configuration"> &para;</a></span></h4>
+
+<p><code class="code">ollama-buddy-openai-compat</code> connects to any server that speaks the OpenAI
+<code class="code">/v1/chat/completions</code> API &mdash; including LM Studio, llama.cpp, vLLM, Jan, and
+self-hosted services.
+</p>
+<dl class="table">
+<dt><code class="code">ollama-buddy-openai-compat-base-url</code></dt>
+<dd><p>Base URL of the server, without a trailing slash (default: <code class="code">&quot;http://localhost:1234&quot;</code>
+for LM Studio).  The module appends <code class="code">/v1/chat/completions</code> for chat and
+<code class="code">/v1/models</code> for model discovery.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-openai-compat-api-key</code></dt>
+<dd><p>Optional Bearer token.  Leave empty (<code class="code">&quot;&quot;</code>) for local servers that do not require
+authentication.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-openai-compat-models</code></dt>
+<dd><p>Fallback list of model name strings used when automatic discovery fails or is disabled.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-openai-compat-default-model</code></dt>
+<dd><p>Default model used when no model is explicitly selected.  If empty, the first discovered
+model is used.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-openai-compat-provider-name</code></dt>
+<dd><p>Display name shown in the status line and chat buffer headings (default: <code class="code">&quot;LocalAI&quot;</code>).
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-openai-compat-marker-prefix</code></dt>
+<dd><p>The prefix string prepended to model names in the model list (default: <code class="code">&quot;l:&quot;</code>).
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-openai-compat-fetch-models</code></dt>
+<dd><p>When non-nil (default <code class="code">t</code>), attempt <code class="code">GET /v1/models</code> on load to auto-discover
+available models.  Set to <code class="code">nil</code> to skip discovery and use
+<code class="code">ollama-buddy-openai-compat-models</code> directly.
+</p></dd>
+</dl>
+
+<p>Minimal setup for LM Studio:
+</p><div class="example">
+<pre class="example-preformatted">(require 'ollama-buddy-openai-compat)
+;; LM Studio runs on localhost:1234 by default — no further config needed.
+</pre></div>
+
+<p>Setup for a password-protected remote server:
+</p><div class="example">
+<pre class="example-preformatted">(require 'ollama-buddy-openai-compat)
+(setq ollama-buddy-openai-compat-base-url &quot;https://my-server.example.com&quot;
+      ollama-buddy-openai-compat-api-key  &quot;sk-my-secret-key&quot;
+      ollama-buddy-openai-compat-provider-name &quot;MyServer&quot;)
+</pre></div>
+
+<p>To refresh the model list after changing the base URL or loading a new model in the
+server UI:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-openai-compat-refresh-models
+</pre></div>
 
 </div>
 </div>

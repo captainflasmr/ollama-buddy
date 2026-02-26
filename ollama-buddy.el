@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 2.9.2
+;; Version: 3.0.0
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -60,6 +60,7 @@
 ;;   (require 'ollama-buddy-codestral)   ; s: Mistral Codestral
 ;;   (require 'ollama-buddy-deepseek)    ; d: DeepSeek
 ;;   (require 'ollama-buddy-openrouter)  ; r: OpenRouter (400+ models)
+;;   (require 'ollama-buddy-openai-compat) ; l: any OpenAI-compatible server (LM Studio, llama.cpp, vLLM…)
 ;;
 ;; Each provider needs an API key (see PROVIDERS.org for setup details).
 ;;

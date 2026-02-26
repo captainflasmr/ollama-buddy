@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 2.9.2
+@subtitle For Ollama Buddy version 3.0.0
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -2859,6 +2859,11 @@ Load with @code{(require 'ollama-buddy-copilot nil t)}
 
 @item Codestral/Mistral (prefix: @code{s:})
 Load with @code{(require 'ollama-buddy-codestral nil t)}
+
+@item Generic OpenAI-compatible server (prefix: @code{l:}, configurable)
+Load with @code{(require 'ollama-buddy-openai-compat nil t)}.
+Works with LM Studio, llama.cpp, vLLM, Jan, and any
+@code{/v1/chat/completions}-compatible endpoint.  No API key needed for local servers.
 @end table
 
 Local Ollama models use the @code{o:} prefix when remote models are available, or no prefix when only local models are present.
@@ -2878,6 +2883,7 @@ The header line shows compact status indicators:
 @item @code{♁N} - Number of web search results attached
 @item @code{V} - Reasoning/thinking sections hidden
 @item @code{T} - Token statistics display enabled
+@item @code{l} - Generic OpenAI-compatible server provider loaded
 @end itemize
 
 Example: @code{☁⚒≡2♁1} means cloud model with tool support, 2 file attachments and 1 web search attached.
@@ -2985,6 +2991,61 @@ Your Mistral Codestral API key.
 @item ollama-buddy-codestral-default-model
 Default Codestral model to use.
 @end table
+
+@subsection Generic OpenAI-Compatible Server Configuration
+
+@code{ollama-buddy-openai-compat} connects to any server that speaks the OpenAI
+@code{/v1/chat/completions} API --- including LM Studio, llama.cpp, vLLM, Jan, and
+self-hosted services.
+
+@table @code
+@item ollama-buddy-openai-compat-base-url
+Base URL of the server, without a trailing slash (default: @code{"http://localhost:1234"}
+for LM Studio).  The module appends @code{/v1/chat/completions} for chat and
+@code{/v1/models} for model discovery.
+
+@item ollama-buddy-openai-compat-api-key
+Optional Bearer token.  Leave empty (@code{""}) for local servers that do not require
+authentication.
+
+@item ollama-buddy-openai-compat-models
+Fallback list of model name strings used when automatic discovery fails or is disabled.
+
+@item ollama-buddy-openai-compat-default-model
+Default model used when no model is explicitly selected.  If empty, the first discovered
+model is used.
+
+@item ollama-buddy-openai-compat-provider-name
+Display name shown in the status line and chat buffer headings (default: @code{"LocalAI"}).
+
+@item ollama-buddy-openai-compat-marker-prefix
+The prefix string prepended to model names in the model list (default: @code{"l:"}).
+
+@item ollama-buddy-openai-compat-fetch-models
+When non-nil (default @code{t}), attempt @code{GET /v1/models} on load to auto-discover
+available models.  Set to @code{nil} to skip discovery and use
+@code{ollama-buddy-openai-compat-models} directly.
+@end table
+
+Minimal setup for LM Studio:
+@example
+(require 'ollama-buddy-openai-compat)
+;; LM Studio runs on localhost:1234 by default — no further config needed.
+@end example
+
+Setup for a password-protected remote server:
+@example
+(require 'ollama-buddy-openai-compat)
+(setq ollama-buddy-openai-compat-base-url "https://my-server.example.com"
+      ollama-buddy-openai-compat-api-key  "sk-my-secret-key"
+      ollama-buddy-openai-compat-provider-name "MyServer")
+@end example
+
+To refresh the model list after changing the base URL or loading a new model in the
+server UI:
+@example
+M-x ollama-buddy-openai-compat-refresh-models
+@end example
 
 @section History Management
 
