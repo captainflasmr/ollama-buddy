@@ -551,16 +551,25 @@ Each entry is (NAME . FUNCTION) where FUNCTION is called interactively."
 
 (defun ollama-buddy--slash-complete ()
   "Complete a `/' slash command in the prompt area.
-When point is in the prompt area, offer `completing-read' with
-available slash commands and execute the chosen action.
-Outside the prompt area, insert a literal `/'.
-Cancelling with \\[keyboard-quit] does nothing; use \\[quoted-insert] / for a literal `/' in the prompt."
+Slash-command completion is offered only when `/' is the first
+non-whitespace character typed in the current prompt — i.e. nothing
+but whitespace sits between the `>> PROMPT:' marker and point.  In
+every other position (mid-prompt, paths, regex, outside the prompt
+area) a literal `/' is inserted instead, so no special escape key
+is ever needed."
   (interactive)
-  (let ((in-prompt
-         (save-excursion
-           (beginning-of-line)
-           (re-search-forward ">> \\(?:PROMPT\\|SYSTEM PROMPT\\):" (line-end-position) t))))
-    (if (not in-prompt)
+  (let* ((prompt-content-start
+          (save-excursion
+            (beginning-of-line)
+            (when (re-search-forward ">> \\(?:PROMPT\\|SYSTEM PROMPT\\):"
+                                     (line-end-position) t)
+              (point))))
+         (at-prompt-start
+          (and prompt-content-start
+               (>= (point) prompt-content-start)
+               (string-blank-p
+                (buffer-substring-no-properties prompt-content-start (point))))))
+    (if (not at-prompt-start)
         (self-insert-command 1)
       (let* ((candidates
               (cl-remove-if-not
