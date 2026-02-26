@@ -1713,7 +1713,7 @@ please run =ollama serve=\n\n")
 - /Manage models/          C-c M
 - /ollama-buddy Manual/    C-c ?")
            (when-let ((tip (ollama-buddy--get-random-tip)))
-             (concat "\n\n** Tip\n" tip))
+             (concat "\n\n" tip))
            )))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
