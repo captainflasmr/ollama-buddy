@@ -2213,7 +2213,8 @@ For more advanced customization, create role files manually:
           :model "codellama:7b"
           :prompt "Refactor this code to improve readability and efficiency:"
           :system "You are an expert software engineer who improves code quality."
-          :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
+          :action (lambda () (ollama-buddy--send-with-command 'refactor-code))
+          :destination in-buffer)
 
          (explain-code
           :key ?e
@@ -2222,7 +2223,8 @@ For more advanced customization, create role files manually:
           :model "deepseek-r1:7b"
           :prompt "Explain what this code does in detail:"
           :system "You are a programming teacher who explains code clearly."
-          :action (lambda () (ollama-buddy--send-with-command 'explain-code)))
+          :action (lambda () (ollama-buddy--send-with-command 'explain-code))
+          :destination chat)
 
          (git-commit
           :key ?g
@@ -2230,7 +2232,8 @@ For more advanced customization, create role files manually:
           :group "Utility"
           :prompt "Write a concise git commit message for these changes:"
           :system "You are a version control expert who creates clear commit messages."
-          :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+          :action (lambda () (ollama-buddy--send-with-command 'git-commit))
+          :destination chat)
 
          ;; System commands
          (custom-prompt
@@ -2270,7 +2273,60 @@ clean, discoverable layout:
 Generation", "Custom", "System", etc.  You can use any group names you
 like in your own presets.
 
-14.6 Switching Roles
+14.6 Per-Command Response Destination
+=====================================
+
+The optional ‘:destination’ property on a command definition overrides
+the global ‘ollama-buddy-in-buffer-replace’ toggle for that specific
+command:
+
+‘in-buffer’
+     Always stream the response back into the source buffer, replacing
+     the selected region (requires ‘ollama-buddy-rewrite’ to be loaded).
+     The global toggle is ignored.
+
+‘chat’
+     Always open the chat buffer, regardless of the global toggle.
+
+‘nil (or absent)’
+     Honour ‘ollama-buddy-in-buffer-replace’ as before -- this is the
+     default and preserves full backwards compatibility.
+
+   Use ‘:destination in-buffer’ for commands that _transform_ selected
+text (refactoring, proofreading, translation, style rewrites) and
+‘:destination chat’ for commands that _analyse or generate new content_
+about the selection (code explanations, commit messages, dictionary
+lookups).
+
+     ;; Transforms selected text --- always rewrites in-buffer
+     (refactor-code
+      :key ?r
+      :description "Refactor code"
+      :prompt "Refactor this code:"
+      :action (lambda () (ollama-buddy--send-with-command 'refactor-code))
+      :destination in-buffer)
+
+     ;; Generates new content --- always goes to chat
+     (explain-code
+      :key ?e
+      :description "Explain code"
+      :prompt "Explain this code:"
+      :action (lambda () (ollama-buddy--send-with-command 'explain-code))
+      :destination chat)
+
+     ;; No :destination --- honours the global toggle
+     (describe-code
+      :key ?c
+      :description "Describe code"
+      :prompt "Describe this code:"
+      :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
+
+   All built-in presets ship with ‘:destination’ annotations.  Commands
+added via ‘ollama-buddy-update-menu-entry’ or ‘add-to-list’ on
+‘ollama-buddy-command-definitions’ work identically -- simply include or
+omit the ‘:destination’ key as appropriate.
+
+14.7 Switching Roles
 ====================
 
 To switch between roles:
@@ -2279,7 +2335,7 @@ To switch between roles:
 
    You'll be presented with a list of available roles to choose from.
 
-14.7 Managing Role Files
+14.8 Managing Role Files
 ========================
 
 Roles are stored as Elisp files in the ‘ollama-buddy-roles-directory’.
@@ -2296,10 +2352,10 @@ you can customize it:
      M-x ollama-buddy-roles-open-directory
    or press ‘C-c D’ in the chat buffer.
 
-14.8 Advanced Role Customization
+14.9 Advanced Role Customization
 ================================
 
-14.8.1 Per-Role Menu Columns
+14.9.1 Per-Role Menu Columns
 ----------------------------
 
 Each role can define its own menu column layout by setting
@@ -2313,14 +2369,14 @@ many commands to use more columns, while simpler roles can use fewer:
 The menu display automatically adjusts its height to ensure all items
 are visible, regardless of the number of rows.
 
-14.8.2 Command-Specific Models
+14.9.2 Command-Specific Models
 ------------------------------
 
 Assign specific models to commands for optimal performance:
 
      (ollama-buddy-add-model-to-menu-entry 'refactor-code "codellama:7b")
 
-14.8.3 Command-Specific Parameters
+14.9.3 Command-Specific Parameters
 ----------------------------------
 
 Optimize parameters for specific commands:
@@ -2330,7 +2386,7 @@ Optimize parameters for specific commands:
        'top_p 0.7
        'repeat_penalty 1.3)
 
-14.8.4 Creating New Commands
+14.9.4 Creating New Commands
 ----------------------------
 
 Add entirely new commands to your menu:
@@ -2342,11 +2398,11 @@ Add entirely new commands to your menu:
        :system "You are an expert system specialized in this task."
        :action (lambda () (ollama-buddy--send-with-command 'my-new-command)))
 
-14.9 Role Examples
-==================
+14.10 Role Examples
+===================
 
-14.9.1 Programming Role
------------------------
+14.10.1 Programming Role
+------------------------
 
 A complete example of a programming-focused role:
 
@@ -2367,7 +2423,8 @@ A complete example of a programming-focused role:
           :model "codellama:7b"
           :prompt "Refactor this code to improve readability and efficiency:"
           :system "You are an expert software engineer who improves code quality."
-          :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
+          :action (lambda () (ollama-buddy--send-with-command 'refactor-code))
+          :destination in-buffer)
 
          (explain-code
           :key ?e
@@ -2375,7 +2432,8 @@ A complete example of a programming-focused role:
           :model "deepseek-r1:7b"
           :prompt "Explain what this code does in detail:"
           :system "You are a programming teacher who explains code clearly."
-          :action (lambda () (ollama-buddy--send-with-command 'explain-code)))
+          :action (lambda () (ollama-buddy--send-with-command 'explain-code))
+          :destination chat)
 
          (add-tests
           :key ?t
@@ -2383,17 +2441,19 @@ A complete example of a programming-focused role:
           :model "qwen2.5-coder:7b"
           :prompt "Generate unit tests for this code:"
           :system "You are a test automation expert who creates comprehensive test cases."
-          :action (lambda () (ollama-buddy--send-with-command 'add-tests)))
+          :action (lambda () (ollama-buddy--send-with-command 'add-tests))
+          :destination chat)
 
          (git-commit
           :key ?g
           :description "Git commit message"
           :prompt "Write a concise git commit message for these changes:"
-          :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+          :action (lambda () (ollama-buddy--send-with-command 'git-commit))
+          :destination chat)
          ))
 
-14.9.2 Writing Role
--------------------
+14.10.2 Writing Role
+--------------------
 
 A complete example of a writing-focused role:
 
@@ -2439,7 +2499,7 @@ A complete example of a writing-focused role:
           :action (lambda () (ollama-buddy--send-with-command 'brainstorm)))
          ))
 
-14.10 Tips for Effective Role Usage
+14.11 Tips for Effective Role Usage
 ===================================
 
   1. Group related commands: Create roles around specific workflows or
@@ -2453,7 +2513,7 @@ A complete example of a writing-focused role:
   5. Create specialized roles: Consider roles for programming, writing,
      translation, or domain-specific knowledge
 
-14.11 Built-in Role Presets
+14.12 Built-in Role Presets
 ===========================
 
 Ollama Buddy comes with several pre-configured role presets that you can
@@ -3147,6 +3207,14 @@ highlight pending your decision.
 toggle is off (the default).  All existing commands, prompts, system
 prompts, and model selection logic are unaffected -- only the output
 destination changes.
+
+   *Per-command override:* individual commands can pin their destination
+regardless of the global toggle by setting the ‘:destination’ property
+in ‘ollama-buddy-command-definitions’.  A command with ‘:destination
+in-buffer’ always rewrites in-buffer; one with ‘:destination chat’
+always opens the chat buffer.  Commands without a ‘:destination’
+property continue to honour the global toggle.  *Note Per-Command
+Response Destination: Roles and Commands, for details.
 
 22.2 Enabling In-Buffer Replace
 ===============================
@@ -4415,22 +4483,22 @@ Node: Parameter Control52777
 Node: Session Management55174
 Node: User System Prompts58083
 Node: Roles and Commands66571
-Node: Fabric Pattern Integration81546
-Node: Awesome ChatGPT Prompts83773
-Node: Remote Providers87623
-Node: Ollama Cloud Models92557
-Node: Global System Prompt95429
-Node: Tone Selector97183
-Node: Thinking Blocks98990
-Node: In-Buffer Replace101017
-Node: Tool Calling106402
-Node: RAG114193
-Node: Advanced Usage121972
-Node: API Reference124521
-Node: FAQ130460
-Node: Troubleshooting137545
-Node: Contributing140050
-Node: Index142718
+Node: Fabric Pattern Integration83761
+Node: Awesome ChatGPT Prompts85988
+Node: Remote Providers89838
+Node: Ollama Cloud Models94772
+Node: Global System Prompt97644
+Node: Tone Selector99398
+Node: Thinking Blocks101205
+Node: In-Buffer Replace103232
+Node: Tool Calling109104
+Node: RAG116895
+Node: Advanced Usage124674
+Node: API Reference127223
+Node: FAQ133162
+Node: Troubleshooting140247
+Node: Contributing142752
+Node: Index145420
 
 End Tag Table
 

@@ -281,22 +281,23 @@ allowing you to leverage powerful large language models (LLMs) directly within y
       <li><a id="toc-Manual-Role-Creation" href="#Manual-Role-Creation">14.4.2 Manual Role Creation</a></li>
     </ul></li>
     <li><a id="toc-Command-Grouping" href="#Command-Grouping">14.5 Command Grouping</a></li>
-    <li><a id="toc-Switching-Roles" href="#Switching-Roles">14.6 Switching Roles</a></li>
-    <li><a id="toc-Managing-Role-Files" href="#Managing-Role-Files">14.7 Managing Role Files</a></li>
-    <li><a id="toc-Advanced-Role-Customization" href="#Advanced-Role-Customization">14.8 Advanced Role Customization</a>
+    <li><a id="toc-Per_002dCommand-Response-Destination" href="#Per_002dCommand-Response-Destination">14.6 Per-Command Response Destination</a></li>
+    <li><a id="toc-Switching-Roles" href="#Switching-Roles">14.7 Switching Roles</a></li>
+    <li><a id="toc-Managing-Role-Files" href="#Managing-Role-Files">14.8 Managing Role Files</a></li>
+    <li><a id="toc-Advanced-Role-Customization" href="#Advanced-Role-Customization">14.9 Advanced Role Customization</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Per_002dRole-Menu-Columns" href="#Per_002dRole-Menu-Columns">14.8.1 Per-Role Menu Columns</a></li>
-      <li><a id="toc-Command_002dSpecific-Models" href="#Command_002dSpecific-Models">14.8.2 Command-Specific Models</a></li>
-      <li><a id="toc-Command_002dSpecific-Parameters-1" href="#Command_002dSpecific-Parameters-1">14.8.3 Command-Specific Parameters</a></li>
-      <li><a id="toc-Creating-New-Commands" href="#Creating-New-Commands">14.8.4 Creating New Commands</a></li>
+      <li><a id="toc-Per_002dRole-Menu-Columns" href="#Per_002dRole-Menu-Columns">14.9.1 Per-Role Menu Columns</a></li>
+      <li><a id="toc-Command_002dSpecific-Models" href="#Command_002dSpecific-Models">14.9.2 Command-Specific Models</a></li>
+      <li><a id="toc-Command_002dSpecific-Parameters-1" href="#Command_002dSpecific-Parameters-1">14.9.3 Command-Specific Parameters</a></li>
+      <li><a id="toc-Creating-New-Commands" href="#Creating-New-Commands">14.9.4 Creating New Commands</a></li>
     </ul></li>
-    <li><a id="toc-Role-Examples" href="#Role-Examples">14.9 Role Examples</a>
+    <li><a id="toc-Role-Examples" href="#Role-Examples">14.10 Role Examples</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Programming-Role" href="#Programming-Role">14.9.1 Programming Role</a></li>
-      <li><a id="toc-Writing-Role" href="#Writing-Role">14.9.2 Writing Role</a></li>
+      <li><a id="toc-Programming-Role" href="#Programming-Role">14.10.1 Programming Role</a></li>
+      <li><a id="toc-Writing-Role" href="#Writing-Role">14.10.2 Writing Role</a></li>
     </ul></li>
-    <li><a id="toc-Tips-for-Effective-Role-Usage" href="#Tips-for-Effective-Role-Usage">14.10 Tips for Effective Role Usage</a></li>
-    <li><a id="toc-Built_002din-Role-Presets" href="#Built_002din-Role-Presets">14.11 Built-in Role Presets</a></li>
+    <li><a id="toc-Tips-for-Effective-Role-Usage" href="#Tips-for-Effective-Role-Usage">14.11 Tips for Effective Role Usage</a></li>
+    <li><a id="toc-Built_002din-Role-Presets" href="#Built_002din-Role-Presets">14.12 Built-in Role Presets</a></li>
   </ul></li>
   <li><a id="toc-Fabric-Pattern-Integration" href="#Fabric-Pattern-Integration">15 Fabric Pattern Integration</a>
   <ul class="toc-numbered-mark">
@@ -3265,10 +3266,11 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 <li><a href="#Built_002din-Commands" accesskey="3">Built-in Commands</a></li>
 <li><a href="#Creating-Custom-Roles" accesskey="4">Creating Custom Roles</a></li>
 <li><a href="#Command-Grouping" accesskey="5">Command Grouping</a></li>
-<li><a href="#Switching-Roles" accesskey="6">Switching Roles</a></li>
-<li><a href="#Managing-Role-Files" accesskey="7">Managing Role Files</a></li>
-<li><a href="#Advanced-Role-Customization" accesskey="8">Advanced Role Customization</a></li>
-<li><a href="#Role-Examples" accesskey="9">Role Examples</a></li>
+<li><a href="#Per_002dCommand-Response-Destination" accesskey="6">Per-Command Response Destination</a></li>
+<li><a href="#Switching-Roles" accesskey="7">Switching Roles</a></li>
+<li><a href="#Managing-Role-Files" accesskey="8">Managing Role Files</a></li>
+<li><a href="#Advanced-Role-Customization" accesskey="9">Advanced Role Customization</a></li>
+<li><a href="#Role-Examples">Role Examples</a></li>
 <li><a href="#Tips-for-Effective-Role-Usage">Tips for Effective Role Usage</a></li>
 <li><a href="#Built_002din-Role-Presets">Built-in Role Presets</a></li>
 </ul>
@@ -3420,7 +3422,8 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
      :model &quot;codellama:7b&quot;
      :prompt &quot;Refactor this code to improve readability and efficiency:&quot;
      :system &quot;You are an expert software engineer who improves code quality.&quot;
-     :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
+     :action (lambda () (ollama-buddy--send-with-command 'refactor-code))
+     :destination in-buffer)
 
     (explain-code
      :key ?e
@@ -3429,7 +3432,8 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
      :model &quot;deepseek-r1:7b&quot;
      :prompt &quot;Explain what this code does in detail:&quot;
      :system &quot;You are a programming teacher who explains code clearly.&quot;
-     :action (lambda () (ollama-buddy--send-with-command 'explain-code)))
+     :action (lambda () (ollama-buddy--send-with-command 'explain-code))
+     :destination chat)
 
     (git-commit
      :key ?g
@@ -3437,7 +3441,8 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
      :group &quot;Utility&quot;
      :prompt &quot;Write a concise git commit message for these changes:&quot;
      :system &quot;You are a version control expert who creates clear commit messages.&quot;
-     :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+     :action (lambda () (ollama-buddy--send-with-command 'git-commit))
+     :destination chat)
 
     ;; System commands
     (custom-prompt
@@ -3475,8 +3480,66 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 <p>Built-in presets use groups like &ldquo;General&rdquo;, &ldquo;Code Analysis&rdquo;, &ldquo;Code Generation&rdquo;, &ldquo;Custom&rdquo;, &ldquo;System&rdquo;, etc. You can use any group names you like in your own presets.
 </p>
 </div>
+<div class="section-level-extent" id="Per_002dCommand-Response-Destination">
+<h3 class="section"><span>14.6 Per-Command Response Destination<a class="copiable-link" href="#Per_002dCommand-Response-Destination"> &para;</a></span></h3>
+
+<p>The optional <code class="code">:destination</code> property on a command definition overrides the global
+<code class="code">ollama-buddy-in-buffer-replace</code> toggle for that specific command:
+</p>
+<dl class="table">
+<dt><code class="code">in-buffer</code></dt>
+<dd><p>Always stream the response back into the source buffer, replacing the selected region
+(requires <code class="code">ollama-buddy-rewrite</code> to be loaded).  The global toggle is ignored.
+</p>
+</dd>
+<dt><code class="code">chat</code></dt>
+<dd><p>Always open the chat buffer, regardless of the global toggle.
+</p>
+</dd>
+<dt><code class="code">nil (or absent)</code></dt>
+<dd><p>Honour <code class="code">ollama-buddy-in-buffer-replace</code> as before &mdash; this is the default and
+preserves full backwards compatibility.
+</p></dd>
+</dl>
+
+<p>Use <code class="code">:destination in-buffer</code> for commands that <em class="emph">transform</em> selected text
+(refactoring, proofreading, translation, style rewrites) and <code class="code">:destination chat</code>
+for commands that <em class="emph">analyse or generate new content</em> about the selection (code
+explanations, commit messages, dictionary lookups).
+</p>
+<div class="example">
+<pre class="example-preformatted">;; Transforms selected text --- always rewrites in-buffer
+(refactor-code
+ :key ?r
+ :description &quot;Refactor code&quot;
+ :prompt &quot;Refactor this code:&quot;
+ :action (lambda () (ollama-buddy--send-with-command 'refactor-code))
+ :destination in-buffer)
+
+;; Generates new content --- always goes to chat
+(explain-code
+ :key ?e
+ :description &quot;Explain code&quot;
+ :prompt &quot;Explain this code:&quot;
+ :action (lambda () (ollama-buddy--send-with-command 'explain-code))
+ :destination chat)
+
+;; No :destination --- honours the global toggle
+(describe-code
+ :key ?c
+ :description &quot;Describe code&quot;
+ :prompt &quot;Describe this code:&quot;
+ :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
+</pre></div>
+
+<p>All built-in presets ship with <code class="code">:destination</code> annotations.  Commands added via
+<code class="code">ollama-buddy-update-menu-entry</code> or <code class="code">add-to-list</code> on
+<code class="code">ollama-buddy-command-definitions</code> work identically &mdash; simply include or omit the
+<code class="code">:destination</code> key as appropriate.
+</p>
+</div>
 <div class="section-level-extent" id="Switching-Roles">
-<h3 class="section"><span>14.6 Switching Roles<a class="copiable-link" href="#Switching-Roles"> &para;</a></span></h3>
+<h3 class="section"><span>14.7 Switching Roles<a class="copiable-link" href="#Switching-Roles"> &para;</a></span></h3>
 
 <p>To switch between roles:
 </p><div class="example">
@@ -3488,7 +3551,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 </p>
 </div>
 <div class="section-level-extent" id="Managing-Role-Files">
-<h3 class="section"><span>14.7 Managing Role Files<a class="copiable-link" href="#Managing-Role-Files"> &para;</a></span></h3>
+<h3 class="section"><span>14.8 Managing Role Files<a class="copiable-link" href="#Managing-Role-Files"> &para;</a></span></h3>
 
 <p>Roles are stored as Elisp files in the <code class="code">ollama-buddy-roles-directory</code>.
 </p>
@@ -3511,7 +3574,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 </p>
 </div>
 <div class="section-level-extent" id="Advanced-Role-Customization">
-<h3 class="section"><span>14.8 Advanced Role Customization<a class="copiable-link" href="#Advanced-Role-Customization"> &para;</a></span></h3>
+<h3 class="section"><span>14.9 Advanced Role Customization<a class="copiable-link" href="#Advanced-Role-Customization"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#Per_002dRole-Menu-Columns" accesskey="1">Per-Role Menu Columns</a></li>
@@ -3520,7 +3583,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 <li><a href="#Creating-New-Commands" accesskey="4">Creating New Commands</a></li>
 </ul>
 <div class="subsection-level-extent" id="Per_002dRole-Menu-Columns">
-<h4 class="subsection"><span>14.8.1 Per-Role Menu Columns<a class="copiable-link" href="#Per_002dRole-Menu-Columns"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.9.1 Per-Role Menu Columns<a class="copiable-link" href="#Per_002dRole-Menu-Columns"> &para;</a></span></h4>
 
 <p>Each role can define its own menu column layout by setting <code class="code">ollama-buddy-menu-columns</code> in the role file. This allows roles with many commands to use more columns, while simpler roles can use fewer:
 </p>
@@ -3533,7 +3596,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 </p>
 </div>
 <div class="subsection-level-extent" id="Command_002dSpecific-Models">
-<h4 class="subsection"><span>14.8.2 Command-Specific Models<a class="copiable-link" href="#Command_002dSpecific-Models"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.9.2 Command-Specific Models<a class="copiable-link" href="#Command_002dSpecific-Models"> &para;</a></span></h4>
 
 <p>Assign specific models to commands for optimal performance:
 </p>
@@ -3543,7 +3606,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 
 </div>
 <div class="subsection-level-extent" id="Command_002dSpecific-Parameters-1">
-<h4 class="subsection"><span>14.8.3 Command-Specific Parameters<a class="copiable-link" href="#Command_002dSpecific-Parameters-1"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.9.3 Command-Specific Parameters<a class="copiable-link" href="#Command_002dSpecific-Parameters-1"> &para;</a></span></h4>
 
 <p>Optimize parameters for specific commands:
 </p>
@@ -3556,7 +3619,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 
 </div>
 <div class="subsection-level-extent" id="Creating-New-Commands">
-<h4 class="subsection"><span>14.8.4 Creating New Commands<a class="copiable-link" href="#Creating-New-Commands"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.9.4 Creating New Commands<a class="copiable-link" href="#Creating-New-Commands"> &para;</a></span></h4>
 
 <p>Add entirely new commands to your menu:
 </p>
@@ -3572,14 +3635,14 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 </div>
 </div>
 <div class="section-level-extent" id="Role-Examples">
-<h3 class="section"><span>14.9 Role Examples<a class="copiable-link" href="#Role-Examples"> &para;</a></span></h3>
+<h3 class="section"><span>14.10 Role Examples<a class="copiable-link" href="#Role-Examples"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#Programming-Role" accesskey="1">Programming Role</a></li>
 <li><a href="#Writing-Role" accesskey="2">Writing Role</a></li>
 </ul>
 <div class="subsection-level-extent" id="Programming-Role">
-<h4 class="subsection"><span>14.9.1 Programming Role<a class="copiable-link" href="#Programming-Role"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.10.1 Programming Role<a class="copiable-link" href="#Programming-Role"> &para;</a></span></h4>
 
 <p>A complete example of a programming-focused role:
 </p>
@@ -3601,35 +3664,39 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
      :model &quot;codellama:7b&quot;
      :prompt &quot;Refactor this code to improve readability and efficiency:&quot;
      :system &quot;You are an expert software engineer who improves code quality.&quot;
-     :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
-    
+     :action (lambda () (ollama-buddy--send-with-command 'refactor-code))
+     :destination in-buffer)
+
     (explain-code
      :key ?e
      :description &quot;Explain code&quot;
      :model &quot;deepseek-r1:7b&quot;
      :prompt &quot;Explain what this code does in detail:&quot;
      :system &quot;You are a programming teacher who explains code clearly.&quot;
-     :action (lambda () (ollama-buddy--send-with-command 'explain-code)))
-    
+     :action (lambda () (ollama-buddy--send-with-command 'explain-code))
+     :destination chat)
+
     (add-tests
      :key ?t
      :description &quot;Generate tests&quot;
      :model &quot;qwen2.5-coder:7b&quot;
      :prompt &quot;Generate unit tests for this code:&quot;
      :system &quot;You are a test automation expert who creates comprehensive test cases.&quot;
-     :action (lambda () (ollama-buddy--send-with-command 'add-tests)))
-    
+     :action (lambda () (ollama-buddy--send-with-command 'add-tests))
+     :destination chat)
+
     (git-commit
      :key ?g
      :description &quot;Git commit message&quot;
      :prompt &quot;Write a concise git commit message for these changes:&quot;
-     :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+     :action (lambda () (ollama-buddy--send-with-command 'git-commit))
+     :destination chat)
     ))
 </pre></div>
 
 </div>
 <div class="subsection-level-extent" id="Writing-Role">
-<h4 class="subsection"><span>14.9.2 Writing Role<a class="copiable-link" href="#Writing-Role"> &para;</a></span></h4>
+<h4 class="subsection"><span>14.10.2 Writing Role<a class="copiable-link" href="#Writing-Role"> &para;</a></span></h4>
 
 <p>A complete example of a writing-focused role:
 </p>
@@ -3680,7 +3747,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 </div>
 </div>
 <div class="section-level-extent" id="Tips-for-Effective-Role-Usage">
-<h3 class="section"><span>14.10 Tips for Effective Role Usage<a class="copiable-link" href="#Tips-for-Effective-Role-Usage"> &para;</a></span></h3>
+<h3 class="section"><span>14.11 Tips for Effective Role Usage<a class="copiable-link" href="#Tips-for-Effective-Role-Usage"> &para;</a></span></h3>
 
 <ol class="enumerate">
 <li> Group related commands: Create roles around specific workflows or tasks
@@ -3692,7 +3759,7 @@ Next: <a href="#Fabric-Pattern-Integration" accesskey="n" rel="next">Fabric Patt
 
 </div>
 <div class="section-level-extent" id="Built_002din-Role-Presets">
-<h3 class="section"><span>14.11 Built-in Role Presets<a class="copiable-link" href="#Built_002din-Role-Presets"> &para;</a></span></h3>
+<h3 class="section"><span>14.12 Built-in Role Presets<a class="copiable-link" href="#Built_002din-Role-Presets"> &para;</a></span></h3>
 
 <p>Ollama Buddy comes with several pre-configured role presets that you can use immediately or customize:
 </p>
@@ -4613,6 +4680,13 @@ your decision.
 <p>The existing chat buffer workflow is completely unchanged when the toggle is off (the
 default).  All existing commands, prompts, system prompts, and model selection logic are
 unaffected &mdash; only the output destination changes.
+</p>
+<p><strong class="strong">Per-command override:</strong> individual commands can pin their destination regardless of
+the global toggle by setting the <code class="code">:destination</code> property in
+<code class="code">ollama-buddy-command-definitions</code>.  A command with <code class="code">:destination in-buffer</code>
+always rewrites in-buffer; one with <code class="code">:destination chat</code> always opens the chat buffer.
+Commands without a <code class="code">:destination</code> property continue to honour the global toggle.
+See <a class="xref" href="#Roles-and-Commands">Per-Command Response Destination</a>, for details.
 </p>
 </div>
 <div class="section-level-extent" id="Enabling-In_002dBuffer-Replace">

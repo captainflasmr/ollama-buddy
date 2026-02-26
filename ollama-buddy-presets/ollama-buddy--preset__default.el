@@ -41,15 +41,17 @@
          :group "Custom"
          :prompt "refactor the following code:"
          :system "You are an expert software engineer who improves code quality while maintaining functionality, focusing on readability, maintainability, and efficiency by applying clean code principles and design patterns with clear explanations for each change."
-         :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
-        
+         :action (lambda () (ollama-buddy--send-with-command 'refactor-code))
+         :destination in-buffer)
+
         (git-commit
          :key ?g
          :description "Git commit message"
          :group "Custom"
          :prompt "write a concise git commit message for the following:"
          :system "You are a version control expert who creates clear commit messages using imperative mood, keeping summaries under 50 characters, explaining the what and why of changes, and referencing issue numbers where applicable."
-         :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+         :action (lambda () (ollama-buddy--send-with-command 'git-commit))
+         :destination chat)
 
         (describe-code
          :key ?c
@@ -57,7 +59,8 @@
          :group "Custom"
          :prompt "describe the following code:"
          :system "You are a technical documentation specialist who analyzes code to provide high-level summaries, explain main components and control flow, highlight notable patterns or optimizations, and clarify complex parts in accessible language."
-         :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
+         :action (lambda () (ollama-buddy--send-with-command 'describe-code))
+         :destination chat)
 
         (dictionary-lookup
          :key ?d
@@ -65,7 +68,8 @@
          :group "Custom"
          :prompt "For the following word provide a typical dictionary definition:"
          :system "You are a professional lexicographer who provides comprehensive word definitions including pronunciation, all relevant parts of speech, etymology, examples of usage, and related synonyms and antonyms in a clear dictionary-style format."
-         :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup)))
+         :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup))
+         :destination chat)
 
         (synonym
          :key ?n
@@ -73,7 +77,8 @@
          :group "Custom"
          :prompt "list synonyms for word:"
          :system "You are a linguistic expert who provides contextually grouped synonyms with notes on connotation, formality levels, and usage contexts to help find the most precise alternative word for specific situations."
-         :action (lambda () (ollama-buddy--send-with-command 'synonym)))
+         :action (lambda () (ollama-buddy--send-with-command 'synonym))
+         :destination chat)
 
         (proofread
          :key ?p
@@ -81,7 +86,8 @@
          :group "Custom"
          :prompt "proofread the following:"
          :system "You are a professional editor who identifies and corrects grammar, spelling, punctuation, and style errors with brief explanations of corrections, providing both the corrected text and a list of changes made."
-         :action (lambda () (ollama-buddy--send-with-command 'proofread)))
+         :action (lambda () (ollama-buddy--send-with-command 'proofread))
+         :destination chat)
 
         ;; System Commands
         (custom-prompt

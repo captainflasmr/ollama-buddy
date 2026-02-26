@@ -42,7 +42,8 @@
          :group "Languages"
          :prompt "Translate the following text to English:"
          :system "You are a professional translator who provides accurate, natural-sounding English translations that preserve the original meaning, tone, and cultural nuances while adapting idioms appropriately and maintaining the original formatting and structure."
-         :action (lambda () (ollama-buddy--send-with-command 'translate-to-english)))
+         :action (lambda () (ollama-buddy--send-with-command 'translate-to-english))
+         :destination in-buffer)
 
         (translate-to-spanish
          :key ?s
@@ -50,7 +51,8 @@
          :group "Languages"
          :prompt "Translate the following text to Spanish:"
          :system "You are a professional Spanish translator who provides accurate translations with correct grammar, appropriate formality level, regional variation awareness, proper gender agreement, and natural-sounding expressions while preserving the original meaning and tone."
-         :action (lambda () (ollama-buddy--send-with-command 'translate-to-spanish)))
+         :action (lambda () (ollama-buddy--send-with-command 'translate-to-spanish))
+         :destination in-buffer)
 
         (translate-to-french
          :key ?f
@@ -58,7 +60,8 @@
          :group "Languages"
          :prompt "Translate the following text to French:"
          :system "You are a professional French translator who provides accurate translations with correct grammar, appropriate formality distinctions (tu/vous), proper gender and number agreement, natural idiomatic expressions, and attention to cultural context while preserving the original meaning."
-         :action (lambda () (ollama-buddy--send-with-command 'translate-to-french)))
+         :action (lambda () (ollama-buddy--send-with-command 'translate-to-french))
+         :destination in-buffer)
 
         (translate-to-german
          :key ?g
@@ -66,7 +69,8 @@
          :group "Languages"
          :prompt "Translate the following text to German:"
          :system "You are a professional German translator who provides accurate translations with correct grammar, case declensions, compound word construction, formal/informal distinctions, and natural-sounding sentence structure while preserving technical precision and the original tone."
-         :action (lambda () (ollama-buddy--send-with-command 'translate-to-german)))
+         :action (lambda () (ollama-buddy--send-with-command 'translate-to-german))
+         :destination in-buffer)
 
         (translate-to-japanese
          :key ?j
@@ -74,7 +78,8 @@
          :group "Languages"
          :prompt "Translate the following text to Japanese:"
          :system "You are a professional Japanese translator who provides accurate translations with appropriate keigo (politeness levels), natural sentence structures, cultural adaptations, proper kanji usage balanced with kana, and contextually appropriate pronouns and relationship terms."
-         :action (lambda () (ollama-buddy--send-with-command 'translate-to-japanese)))
+         :action (lambda () (ollama-buddy--send-with-command 'translate-to-japanese))
+         :destination in-buffer)
 
         (translate-to-chinese
          :key ?c
@@ -82,7 +87,8 @@
          :group "Languages"
          :prompt "Translate the following text to Chinese (Simplified):"
          :system "You are a professional Chinese translator who provides accurate translations in simplified characters with appropriate measure words, natural word order, proper formal/informal tone, culturally appropriate idioms, and concise expression while preserving the original meaning and intent."
-         :action (lambda () (ollama-buddy--send-with-command 'translate-to-chinese)))
+         :action (lambda () (ollama-buddy--send-with-command 'translate-to-chinese))
+         :destination in-buffer)
 
         (improve-translation
          :key ?i
@@ -90,7 +96,8 @@
          :group "Tools"
          :prompt "This is a machine translation that needs improvement. Please fix any errors and make it sound more natural:"
          :system "You are a professional translation editor who identifies and corrects grammatical errors, awkward phrasing, mistranslated idioms, inconsistent terminology, and unnatural expressions to produce a polished translation that reads as if originally written in the target language."
-         :action (lambda () (ollama-buddy--send-with-command 'improve-translation)))
+         :action (lambda () (ollama-buddy--send-with-command 'improve-translation))
+         :destination in-buffer)
 
         (explain-idiom
          :key ?d
@@ -98,7 +105,8 @@
          :group "Tools"
          :prompt "Explain the meaning and cultural context of this idiom or phrase:"
          :system "You are a linguistic and cultural expert who explains idioms by providing their literal translation, figurative meaning, cultural origin and context, usage examples in natural conversation, and equivalent expressions in other languages when possible."
-         :action (lambda () (ollama-buddy--send-with-command 'explain-idiom)))
+         :action (lambda () (ollama-buddy--send-with-command 'explain-idiom))
+         :destination chat)
 
         ;; System Commands
         (custom-prompt

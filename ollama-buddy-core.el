@@ -422,7 +422,8 @@ These are the only parameters that will be sent to Ollama."
      :prompt "Return only the refactored version of the following code, with no explanation or commentary:"
      :system "You are an expert software engineer. Return ONLY the refactored code with no preamble, explanation, or commentary. Improve readability, maintainability, and efficiency by applying clean code principles and design patterns."
      :parameters ((temperature . 0.2) (top_p . 0.7) (repeat_penalty . 1.3))
-     :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
+     :action (lambda () (ollama-buddy--send-with-command 'refactor-code))
+     :destination in-buffer)
 
     (git-commit
      :key ?g
@@ -430,7 +431,8 @@ These are the only parameters that will be sent to Ollama."
      :group "Custom"
      :prompt "Write a git commit message for the following, returning only the commit message text:"
      :system "You are a version control expert. Return ONLY the commit message text with no explanation or preamble. Use imperative mood, keep the summary under 50 characters, explain the what and why of changes, and reference issue numbers where applicable."
-     :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+     :action (lambda () (ollama-buddy--send-with-command 'git-commit))
+     :destination chat)
 
     (describe-code
      :key ?c
@@ -438,7 +440,8 @@ These are the only parameters that will be sent to Ollama."
      :group "Custom"
      :prompt "Describe the following code, returning only the description with no preamble:"
      :system "You are a technical documentation specialist. Return ONLY the description — no introductory phrase, no preamble. Provide a high-level summary covering main components, control flow, notable patterns, and any complex parts explained in accessible language."
-     :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
+     :action (lambda () (ollama-buddy--send-with-command 'describe-code))
+     :destination chat)
 
     (dictionary-lookup
      :key ?d
@@ -446,7 +449,8 @@ These are the only parameters that will be sent to Ollama."
      :group "Custom"
      :prompt "Provide a dictionary definition for the following word, returning only the entry:"
      :system "You are a professional lexicographer. Return ONLY the dictionary entry with no preamble. Include pronunciation, all relevant parts of speech, etymology, examples of usage, and related synonyms and antonyms."
-     :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup)))
+     :action (lambda () (ollama-buddy--send-with-command 'dictionary-lookup))
+     :destination chat)
 
     (synonym
      :key ?s
@@ -454,7 +458,8 @@ These are the only parameters that will be sent to Ollama."
      :group "Custom"
      :prompt "List synonyms for the following word, returning only the synonyms:"
      :system "You are a linguistic expert. Return ONLY a concise list of synonyms with no preamble or explanation. Group by connotation or formality where helpful."
-     :action (lambda () (ollama-buddy--send-with-command 'synonym)))
+     :action (lambda () (ollama-buddy--send-with-command 'synonym))
+     :destination chat)
 
     (proofread
      :key ?p
@@ -462,7 +467,8 @@ These are the only parameters that will be sent to Ollama."
      :group "Custom"
      :prompt "Proofread the following text and return only the corrected version, with no explanations or extra text:"
      :system "You are a professional editor. Only return the corrected text with all grammar, spelling, punctuation, and style errors corrected. Do not include explanations, lists, or any extra commentary."
-     :action (lambda () (ollama-buddy--send-with-command 'proofread)))
+     :action (lambda () (ollama-buddy--send-with-command 'proofread))
+     :destination in-buffer)
 
     ;; System Commands
     (custom-prompt
@@ -502,7 +508,11 @@ Each command is defined with:
                         (:action (choice :tag "Action"
                                          (function :tag "Existing Function")
                                          (sexp :tag "Lambda Expression")))
-                        (:group (string :tag "Menu Group Name"))))))
+                        (:group (string :tag "Menu Group Name"))
+                        (:destination (choice :tag "Response Destination"
+                                              (const :tag "Honour global toggle" nil)
+                                              (const :tag "Always chat buffer" chat)
+                                              (const :tag "Always in-buffer replace" in-buffer)))))))
   :group 'ollama-buddy)
 
 (defcustom ollama-buddy-params-active
@@ -1649,7 +1659,7 @@ Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
            "\n\n* Welcome to _OLLAMA BUDDY_\n\n"
            "#+begin_example\n"
            "┌───────────────────────────────────┐\n"
-           "│  O L L A M A B U D D Y  [v2.9.0]  │\n"
+           "│  O L L A M A B U D D Y  [v2.9.2]  │\n"
            "└───────────────────────────────────┘\n"
            ;; "╔════════════════════════════════════════════════════════════╗\n"
            ;; "║  ▄▀▀▀▄ █   █   ▄▀▀▀▄ █▀▄▀█ ▄▀▀▀▄ █▀▀▄ █  █ █▀▀▄ █▀▀▄ █  █  ║\n"

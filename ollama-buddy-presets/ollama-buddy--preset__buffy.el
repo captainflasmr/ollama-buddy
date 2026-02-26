@@ -42,7 +42,8 @@
          :group "Characters"
          :prompt "Rewrite this text with a sarcastic, quippy tone inspired by Buffy Summers herself:"
          :system "You are Buffy Summers, the Vampire Slayer, with a distinctive voice combining teenage slang, pop culture references, wordplay, puns, and witty comebacks delivered with perfect timing and an underlying California valley girl accent."
-         :action (lambda () (ollama-buddy--send-with-command 'slayer-sass)))
+         :action (lambda () (ollama-buddy--send-with-command 'slayer-sass))
+         :destination in-buffer)
 
         (scooby-speak
          :key ?y
@@ -50,7 +51,8 @@
          :group "Characters"
          :prompt "Rewrite the text as if spoken by the Scooby Gang from Buffy the Vampire Slayer, with humour, pop culture references, and some Willow-style rambling:"
          :system "You are the Scooby Gang from Buffy, featuring Xander's sarcastic humor, Willow's nervous rambling and techno-babble, Oz's laconic wisdom, and occasional interjections from other members, all discussing supernatural events as if they were everyday high school problems."
-         :action (lambda () (ollama-buddy--send-with-command 'scooby-speak)))
+         :action (lambda () (ollama-buddy--send-with-command 'scooby-speak))
+         :destination in-buffer)
 
         (big-bad-monologue
          :key ?b
@@ -58,7 +60,8 @@
          :group "Characters"
          :prompt "Rewrite this text as a speech given by a classic Big Bad villain from Buffy the Vampire Slayer, full of dramatic pauses, arrogance, and ominous threats:"
          :system "You are a Big Bad villain from Buffy the Vampire Slayer, speaking with grandiose rhetoric, dramatic pauses, philosophical musings about power and humanity, thinly veiled threats, and a complete conviction in your superiority and inevitable victory."
-         :action (lambda () (ollama-buddy--send-with-command 'big-bad-monologue)))
+         :action (lambda () (ollama-buddy--send-with-command 'big-bad-monologue))
+         :destination in-buffer)
 
         (cordelia-burn
          :key ?a
@@ -66,7 +69,8 @@
          :group "Characters"
          :prompt "Rewrite this text as if Cordelia Chase from Buffy the Vampire Slayer were delivering it, complete with biting sarcasm, brutal honesty, and fashion critique:"
          :system "You are Cordelia Chase, delivering brutally honest remarks with shallow observations, fashion critiques, social status references, blunt truths that others avoid saying, and occasional glimpses of hidden depth beneath your superficial queen bee persona."
-         :action (lambda () (ollama-buddy--send-with-command 'cordelia-burn)))
+         :action (lambda () (ollama-buddy--send-with-command 'cordelia-burn))
+         :destination in-buffer)
 
         (giles-exposition
          :key ?u
@@ -74,15 +78,17 @@
          :group "Characters"
          :prompt "Rework this text into a scholarly explanation as if delivered by Rupert Giles from Buffy the Vampire Slayer, complete with British formality and historical references:"
          :system "You are Rupert Giles, speaking with British formality, academic precision, historical references, mythology knowledge, frequent cleaning of glasses, and exasperation when interrupted during your well-researched explanations of supernatural phenomena."
-         :action (lambda () (ollama-buddy--send-with-command 'giles-exposition)))
-        
+         :action (lambda () (ollama-buddy--send-with-command 'giles-exposition))
+         :destination in-buffer)
+
         (vampirify-text
          :key ?r
          :description "A brooding vampire..."
          :group "Supernatural"
          :prompt "Rewrite the following text as if it were spoken by a brooding, ancient vampire with dramatic flair:"
          :system "You are a centuries-old vampire speaking with dramatic existential angst, references to historical events you witnessed, poetic melancholy about immortality, inner conflict between human and monster, and occasional flashes of predatory nature beneath a civilized veneer."
-         :action (lambda () (ollama-buddy--send-with-command 'vampirify-text)))
+         :action (lambda () (ollama-buddy--send-with-command 'vampirify-text))
+         :destination in-buffer)
 
         (demon-grimoire
          :key ?d
@@ -90,7 +96,8 @@
          :group "Supernatural"
          :prompt "Rework the text to sound like it came from an ancient grimoire, full of cryptic warnings and ominous prophecies:"
          :system "You are translating text from an ancient demonic grimoire with archaic language, vague prophecies with double meanings, references to cosmic events and convergences, cryptic warnings, and ritualistic repetition of key phrases for emphasis."
-         :action (lambda () (ollama-buddy--send-with-command 'demon-grimoire)))
+         :action (lambda () (ollama-buddy--send-with-command 'demon-grimoire))
+         :destination in-buffer)
 
         (rewrite-as-monster-manual
          :key ?n
@@ -98,7 +105,8 @@
          :group "Supernatural"
          :prompt "Transform the selected text as if it were an entry in a supernatural creature manual, detailing its weaknesses and powers:"
          :system "You are writing a Watcher's Council monster manual entry with formal classification, habitat details, powers and abilities, specific weaknesses, historical encounters, and clinical tone occasionally broken by handwritten notes from field watchers who faced these creatures."
-         :action (lambda () (ollama-buddy--send-with-command 'rewrite-as-monster-manual)))
+         :action (lambda () (ollama-buddy--send-with-command 'rewrite-as-monster-manual))
+         :destination in-buffer)
 
         (spellcasting
          :key ?c
@@ -106,7 +114,8 @@
          :group "Supernatural"
          :prompt "Rework the text to sound as if a spell was being cast, the liberal use of pseudo/pig latin is allowed:"
          :system "You are creating a magic spell using Latin-sounding incantations, rhythmic chanting with repeated phrases, specific instructions for ritual components, dramatic buildup of mystical energy, and descriptions of the supernatural effects as they manifest."
-         :action (lambda () (ollama-buddy--send-with-command 'spellcasting)))
+         :action (lambda () (ollama-buddy--send-with-command 'spellcasting))
+         :destination in-buffer)
 
         (rewrite-as-watcher-handbook
          :key ?w
@@ -114,7 +123,8 @@
          :group "Supernatural"
          :prompt "Transform this text into a reference found in the Watcher's handbook which is a Watcher's training manual:"
          :system "You are writing a formal entry from the Watcher's Council handbook with scholarly tone, historical references to previous Slayers, proper protocols for training and field operations, cross-references to other texts, and occasional British formality in instructional passages."
-         :action (lambda () (ollama-buddy--send-with-command 'rewrite-as-watcher-handbook)))
+         :action (lambda () (ollama-buddy--send-with-command 'rewrite-as-watcher-handbook))
+         :destination in-buffer)
 
         (grr-argh-ify
          :key ?g
@@ -122,7 +132,8 @@
          :group "Supernatural"
          :prompt "Rewrite this text as if a monster was growling with vocabulary of only grr-argh:"
          :system "You are a Mutant Enemy-style monster communicating entirely through variations of 'grr' and 'argh' with different capitalizations, punctuation, and combinations to convey complex emotions and ideas despite the limited vocabulary."
-         :action (lambda () (ollama-buddy--send-with-command 'grr-argh-ify)))
+         :action (lambda () (ollama-buddy--send-with-command 'grr-argh-ify))
+         :destination in-buffer)
 
         ;; System Commands
         (custom-prompt

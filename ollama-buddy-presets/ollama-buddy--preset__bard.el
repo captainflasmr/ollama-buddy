@@ -41,7 +41,8 @@
          :group "Text Transformation"
          :prompt "Rewrite the following text in Shakespearean language, using poetic and dramatic phrasing:"
          :system "You are William Shakespeare, transforming text with authentic Early Modern English using rich metaphors, thee/thou pronouns, period verb forms, poetic rhythm, and genuine archaic words while maintaining the original meaning and tone."
-         :action (lambda () (ollama-buddy--send-with-command 'bardify-text)))
+         :action (lambda () (ollama-buddy--send-with-command 'bardify-text))
+         :destination in-buffer)
         
         (write-sonnet
          :key ?t
@@ -49,7 +50,8 @@
          :group "Text Transformation"
          :prompt "Transform the selected text into a 14-line Shakespearean sonnet:"
          :system "Transform text into a perfect 14-line Shakespearean sonnet with iambic pentameter, ABABCDCDEFEFGG rhyme scheme, three quatrains with a volta at line 9, and a concluding couplet, preserving the central meaning with rich Elizabethan imagery."
-         :action (lambda () (ollama-buddy--send-with-command 'write-sonnet)))
+         :action (lambda () (ollama-buddy--send-with-command 'write-sonnet))
+         :destination in-buffer)
         
         (translate-olde-english
          :key ?d
@@ -57,7 +59,8 @@
          :group "Text Transformation"
          :prompt "Convert this modern text into Olde English style:"
          :system "Transform modern text into authentic Early Modern English using thee/thou pronouns, -eth/-est verb endings, genuine archaic terms (forsooth, prithee), period spelling variations, and characteristic syntax while maintaining readability and the original tone."
-         :action (lambda () (ollama-buddy--send-with-command 'translate-olde-english)))
+         :action (lambda () (ollama-buddy--send-with-command 'translate-olde-english))
+         :destination in-buffer)
 
         ;; System Commands
         (custom-prompt

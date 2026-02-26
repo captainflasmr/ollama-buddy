@@ -200,20 +200,22 @@ language models (LLMs) directly within your Emacs workflow.
     - [[#Interactive-Role-Creator][14.4.1 Interactive Role Creator]]
     - [[#Manual-Role-Creation][14.4.2 Manual Role Creation]]
   - [[#Command-Grouping][14.5 Command Grouping]]
-  - [[#Switching-Roles][14.6 Switching Roles]]
-  - [[#Managing-Role-Files][14.7 Managing Role Files]]
-  - [[#Advanced-Role-Customization][14.8 Advanced Role Customization]]
-    - [[#Per_002dRole-Menu-Columns][14.8.1 Per-Role Menu Columns]]
-    - [[#Command_002dSpecific-Models][14.8.2 Command-Specific Models]]
-    - [[#Command_002dSpecific-Parameters-1][14.8.3 Command-Specific
+  - [[#Per_002dCommand-Response-Destination][14.6 Per-Command Response
+    Destination]]
+  - [[#Switching-Roles][14.7 Switching Roles]]
+  - [[#Managing-Role-Files][14.8 Managing Role Files]]
+  - [[#Advanced-Role-Customization][14.9 Advanced Role Customization]]
+    - [[#Per_002dRole-Menu-Columns][14.9.1 Per-Role Menu Columns]]
+    - [[#Command_002dSpecific-Models][14.9.2 Command-Specific Models]]
+    - [[#Command_002dSpecific-Parameters-1][14.9.3 Command-Specific
       Parameters]]
-    - [[#Creating-New-Commands][14.8.4 Creating New Commands]]
-  - [[#Role-Examples][14.9 Role Examples]]
-    - [[#Programming-Role][14.9.1 Programming Role]]
-    - [[#Writing-Role][14.9.2 Writing Role]]
-  - [[#Tips-for-Effective-Role-Usage][14.10 Tips for Effective Role
+    - [[#Creating-New-Commands][14.9.4 Creating New Commands]]
+  - [[#Role-Examples][14.10 Role Examples]]
+    - [[#Programming-Role][14.10.1 Programming Role]]
+    - [[#Writing-Role][14.10.2 Writing Role]]
+  - [[#Tips-for-Effective-Role-Usage][14.11 Tips for Effective Role
     Usage]]
-  - [[#Built_002din-Role-Presets][14.11 Built-in Role Presets]]
+  - [[#Built_002din-Role-Presets][14.12 Built-in Role Presets]]
 - [[#Fabric-Pattern-Integration][15 Fabric Pattern Integration]]
   - [[#What-are-Fabric-Patterns_003f][15.1 What are Fabric Patterns?]]
   - [[#Setting-Up-Fabric-Integration][15.2 Setting Up Fabric
@@ -3281,6 +3283,8 @@ Previous: [[#User-System-Prompts][User System Prompts]], Up:
 - [[#Built_002din-Commands][Built-in Commands]]
 - [[#Creating-Custom-Roles][Creating Custom Roles]]
 - [[#Command-Grouping][Command Grouping]]
+- [[#Per_002dCommand-Response-Destination][Per-Command Response
+  Destination]]
 - [[#Switching-Roles][Switching Roles]]
 - [[#Managing-Role-Files][Managing Role Files]]
 - [[#Advanced-Role-Customization][Advanced Role Customization]]
@@ -3435,7 +3439,8 @@ For more advanced customization, create role files manually:
      :model "codellama:7b"
      :prompt "Refactor this code to improve readability and efficiency:"
      :system "You are an expert software engineer who improves code quality."
-     :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
+     :action (lambda () (ollama-buddy--send-with-command 'refactor-code))
+     :destination in-buffer)
 
     (explain-code
      :key ?e
@@ -3444,7 +3449,8 @@ For more advanced customization, create role files manually:
      :model "deepseek-r1:7b"
      :prompt "Explain what this code does in detail:"
      :system "You are a programming teacher who explains code clearly."
-     :action (lambda () (ollama-buddy--send-with-command 'explain-code)))
+     :action (lambda () (ollama-buddy--send-with-command 'explain-code))
+     :destination chat)
 
     (git-commit
      :key ?g
@@ -3452,7 +3458,8 @@ For more advanced customization, create role files manually:
      :group "Utility"
      :prompt "Write a concise git commit message for these changes:"
      :system "You are a version control expert who creates clear commit messages."
-     :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+     :action (lambda () (ollama-buddy--send-with-command 'git-commit))
+     :destination chat)
 
     ;; System commands
     (custom-prompt
@@ -3498,8 +3505,64 @@ Built-in presets use groups like “General”, “Code Analysis”, “Code
 Generation”, “Custom”, “System”, etc. You can use any group names you
 like in your own presets.
 
+<<Per_002dCommand-Response-Destination>>
+*** 14.6 Per-Command Response Destination [[#Per_002dCommand-Response-Destination][¶]]
+:PROPERTIES:
+:CUSTOM_ID: per-command-response-destination
+:CLASS: section
+:END:
+The optional =:destination= property on a command definition overrides
+the global =ollama-buddy-in-buffer-replace= toggle for that specific
+command:
+
+- =in-buffer= :: Always stream the response back into the source buffer,
+  replacing the selected region (requires =ollama-buddy-rewrite= to be
+  loaded). The global toggle is ignored.
+
+- =chat= :: Always open the chat buffer, regardless of the global
+  toggle.
+
+- =nil (or absent)= :: Honour =ollama-buddy-in-buffer-replace= as before
+  --- this is the default and preserves full backwards compatibility.
+
+Use =:destination in-buffer= for commands that /transform/ selected text
+(refactoring, proofreading, translation, style rewrites) and
+=:destination chat= for commands that /analyse or generate new content/
+about the selection (code explanations, commit messages, dictionary
+lookups).
+
+#+begin_src example-preformatted
+;; Transforms selected text --- always rewrites in-buffer
+(refactor-code
+ :key ?r
+ :description "Refactor code"
+ :prompt "Refactor this code:"
+ :action (lambda () (ollama-buddy--send-with-command 'refactor-code))
+ :destination in-buffer)
+
+;; Generates new content --- always goes to chat
+(explain-code
+ :key ?e
+ :description "Explain code"
+ :prompt "Explain this code:"
+ :action (lambda () (ollama-buddy--send-with-command 'explain-code))
+ :destination chat)
+
+;; No :destination --- honours the global toggle
+(describe-code
+ :key ?c
+ :description "Describe code"
+ :prompt "Describe this code:"
+ :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
+#+end_src
+
+All built-in presets ship with =:destination= annotations. Commands
+added via =ollama-buddy-update-menu-entry= or =add-to-list= on
+=ollama-buddy-command-definitions= work identically --- simply include
+or omit the =:destination= key as appropriate.
+
 <<Switching-Roles>>
-*** 14.6 Switching Roles [[#Switching-Roles][¶]]
+*** 14.7 Switching Roles [[#Switching-Roles][¶]]
 :PROPERTIES:
 :CUSTOM_ID: switching-roles
 :CLASS: section
@@ -3515,7 +3578,7 @@ or press =C-c R= in the chat buffer.
 You'll be presented with a list of available roles to choose from.
 
 <<Managing-Role-Files>>
-*** 14.7 Managing Role Files [[#Managing-Role-Files][¶]]
+*** 14.8 Managing Role Files [[#Managing-Role-Files][¶]]
 :PROPERTIES:
 :CUSTOM_ID: managing-role-files
 :CLASS: section
@@ -3545,7 +3608,7 @@ M-x ollama-buddy-roles-open-directory
 or press =C-c D= in the chat buffer.
 
 <<Advanced-Role-Customization>>
-*** 14.8 Advanced Role Customization [[#Advanced-Role-Customization][¶]]
+*** 14.9 Advanced Role Customization [[#Advanced-Role-Customization][¶]]
 :PROPERTIES:
 :CUSTOM_ID: advanced-role-customization
 :CLASS: section
@@ -3556,7 +3619,7 @@ or press =C-c D= in the chat buffer.
 - [[#Creating-New-Commands][Creating New Commands]]
 
 <<Per_002dRole-Menu-Columns>>
-**** 14.8.1 Per-Role Menu Columns [[#Per_002dRole-Menu-Columns][¶]]
+**** 14.9.1 Per-Role Menu Columns [[#Per_002dRole-Menu-Columns][¶]]
 :PROPERTIES:
 :CUSTOM_ID: per-role-menu-columns
 :CLASS: subsection
@@ -3575,7 +3638,7 @@ menu display automatically adjusts its height to ensure all items are
 visible, regardless of the number of rows.
 
 <<Command_002dSpecific-Models>>
-**** 14.8.2 Command-Specific Models [[#Command_002dSpecific-Models][¶]]
+**** 14.9.2 Command-Specific Models [[#Command_002dSpecific-Models][¶]]
 :PROPERTIES:
 :CUSTOM_ID: command-specific-models
 :CLASS: subsection
@@ -3587,7 +3650,7 @@ Assign specific models to commands for optimal performance:
 #+end_src
 
 <<Command_002dSpecific-Parameters-1>>
-**** 14.8.3 Command-Specific Parameters [[#Command_002dSpecific-Parameters-1][¶]]
+**** 14.9.3 Command-Specific Parameters [[#Command_002dSpecific-Parameters-1][¶]]
 :PROPERTIES:
 :CUSTOM_ID: command-specific-parameters-1
 :CLASS: subsection
@@ -3602,7 +3665,7 @@ Optimize parameters for specific commands:
 #+end_src
 
 <<Creating-New-Commands>>
-**** 14.8.4 Creating New Commands [[#Creating-New-Commands][¶]]
+**** 14.9.4 Creating New Commands [[#Creating-New-Commands][¶]]
 :PROPERTIES:
 :CUSTOM_ID: creating-new-commands
 :CLASS: subsection
@@ -3619,7 +3682,7 @@ Add entirely new commands to your menu:
 #+end_src
 
 <<Role-Examples>>
-*** 14.9 Role Examples [[#Role-Examples][¶]]
+*** 14.10 Role Examples [[#Role-Examples][¶]]
 :PROPERTIES:
 :CUSTOM_ID: role-examples
 :CLASS: section
@@ -3628,7 +3691,7 @@ Add entirely new commands to your menu:
 - [[#Writing-Role][Writing Role]]
 
 <<Programming-Role>>
-**** 14.9.1 Programming Role [[#Programming-Role][¶]]
+**** 14.10.1 Programming Role [[#Programming-Role][¶]]
 :PROPERTIES:
 :CUSTOM_ID: programming-role
 :CLASS: subsection
@@ -3653,34 +3716,38 @@ A complete example of a programming-focused role:
      :model "codellama:7b"
      :prompt "Refactor this code to improve readability and efficiency:"
      :system "You are an expert software engineer who improves code quality."
-     :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
-    
+     :action (lambda () (ollama-buddy--send-with-command 'refactor-code))
+     :destination in-buffer)
+
     (explain-code
      :key ?e
      :description "Explain code"
      :model "deepseek-r1:7b"
      :prompt "Explain what this code does in detail:"
      :system "You are a programming teacher who explains code clearly."
-     :action (lambda () (ollama-buddy--send-with-command 'explain-code)))
-    
+     :action (lambda () (ollama-buddy--send-with-command 'explain-code))
+     :destination chat)
+
     (add-tests
      :key ?t
      :description "Generate tests"
      :model "qwen2.5-coder:7b"
      :prompt "Generate unit tests for this code:"
      :system "You are a test automation expert who creates comprehensive test cases."
-     :action (lambda () (ollama-buddy--send-with-command 'add-tests)))
-    
+     :action (lambda () (ollama-buddy--send-with-command 'add-tests))
+     :destination chat)
+
     (git-commit
      :key ?g
      :description "Git commit message"
      :prompt "Write a concise git commit message for these changes:"
-     :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+     :action (lambda () (ollama-buddy--send-with-command 'git-commit))
+     :destination chat)
     ))
 #+end_src
 
 <<Writing-Role>>
-**** 14.9.2 Writing Role [[#Writing-Role][¶]]
+**** 14.10.2 Writing Role [[#Writing-Role][¶]]
 :PROPERTIES:
 :CUSTOM_ID: writing-role
 :CLASS: subsection
@@ -3732,7 +3799,7 @@ A complete example of a writing-focused role:
 #+end_src
 
 <<Tips-for-Effective-Role-Usage>>
-*** 14.10 Tips for Effective Role Usage [[#Tips-for-Effective-Role-Usage][¶]]
+*** 14.11 Tips for Effective Role Usage [[#Tips-for-Effective-Role-Usage][¶]]
 :PROPERTIES:
 :CUSTOM_ID: tips-for-effective-role-usage
 :CLASS: section
@@ -3749,7 +3816,7 @@ A complete example of a writing-focused role:
    translation, or domain-specific knowledge
 
 <<Built_002din-Role-Presets>>
-*** 14.11 Built-in Role Presets [[#Built_002din-Role-Presets][¶]]
+*** 14.12 Built-in Role Presets [[#Built_002din-Role-Presets][¶]]
 :PROPERTIES:
 :CUSTOM_ID: built-in-role-presets
 :CLASS: section
@@ -4779,6 +4846,14 @@ The existing chat buffer workflow is completely unchanged when the
 toggle is off (the default). All existing commands, prompts, system
 prompts, and model selection logic are unaffected --- only the output
 destination changes.
+
+*Per-command override:* individual commands can pin their destination
+regardless of the global toggle by setting the =:destination= property
+in =ollama-buddy-command-definitions=. A command with
+=:destination in-buffer= always rewrites in-buffer; one with
+=:destination chat= always opens the chat buffer. Commands without a
+=:destination= property continue to honour the global toggle. See
+[[#Roles-and-Commands][Per-Command Response Destination]], for details.
 
 <<Enabling-In_002dBuffer-Replace>>
 *** 22.2 Enabling In-Buffer Replace [[#Enabling-In_002dBuffer-Replace][¶]]

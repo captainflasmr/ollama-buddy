@@ -11,6 +11,25 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-26 Thu> *2.9.2*
+
+Per-command response destination routing for command definitions.
+
+*** New Features
+
+- *=:destination= property for command definitions* -- Each entry in
+  =ollama-buddy-command-definitions= now accepts an optional =:destination=
+  keyword that overrides the global =ollama-buddy-in-buffer-replace= toggle:
+  - =in-buffer= -- always stream the response back into the buffer, replacing
+    the selected region (requires =ollama-buddy-rewrite=).
+  - =chat= -- always open the chat buffer, regardless of the global toggle.
+  - =nil= / absent -- honour =ollama-buddy-in-buffer-replace= as before.
+- *Preset =:destination= annotations* -- All built-in presets and the default
+  =ollama-buddy-command-definitions= have been annotated: transformation
+  commands (=refactor-code=, =proofread=, translations, style rewrites, etc.)
+  default to =in-buffer=; analytical and generative commands (=git-commit=,
+  =describe-code=, =explain-code=, etc.) default to =chat=.
+
 ** <2026-02-25 Tue> *2.9.1*
 
 Random tips shown on the welcome screen to help users discover features.

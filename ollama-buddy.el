@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 2.9.1
+;; Version: 2.9.2
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -2518,9 +2518,15 @@ Shows cached status. Use signin/signout to update or try a cloud model request."
       (user-error "This command requires selected text"))
 
     ;; --- In-buffer replace branch ---
-    (if (and (bound-and-true-p ollama-buddy-in-buffer-replace)
-             selected-text
-             (featurep 'ollama-buddy-rewrite))
+    (let* ((dest (ollama-buddy--get-command-prop command-name :destination))
+           (use-in-buffer
+            (and (featurep 'ollama-buddy-rewrite)
+                 selected-text
+                 (cond
+                  ((eq dest 'chat)      nil)
+                  ((eq dest 'in-buffer) t)
+                  (t (bound-and-true-p ollama-buddy-in-buffer-replace))))))
+    (if use-in-buffer
         (let* ((source-buf      (current-buffer))
                (r-start         (region-beginning))
                (r-end           (region-end))
@@ -2580,7 +2586,7 @@ Shows cached status. Use signin/signout to update or try a cloud model request."
 
           ;; Restore default parameters if we changed them
           (when params-alist
-            (ollama-buddy--restore-default-parameters)))))))
+            (ollama-buddy--restore-default-parameters))))))))
 
 (defun ollama-buddy--calculate-prompt-context-percentage ()
   "Calculate and return the context percentage for the current prompt."

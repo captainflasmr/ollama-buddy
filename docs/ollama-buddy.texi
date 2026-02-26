@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 2.9.1
+@subtitle For Ollama Buddy version 2.9.2
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -2275,7 +2275,8 @@ For more advanced customization, create role files manually:
      :model "codellama:7b"
      :prompt "Refactor this code to improve readability and efficiency:"
      :system "You are an expert software engineer who improves code quality."
-     :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
+     :action (lambda () (ollama-buddy--send-with-command 'refactor-code))
+     :destination in-buffer)
 
     (explain-code
      :key ?e
@@ -2284,7 +2285,8 @@ For more advanced customization, create role files manually:
      :model "deepseek-r1:7b"
      :prompt "Explain what this code does in detail:"
      :system "You are a programming teacher who explains code clearly."
-     :action (lambda () (ollama-buddy--send-with-command 'explain-code)))
+     :action (lambda () (ollama-buddy--send-with-command 'explain-code))
+     :destination chat)
 
     (git-commit
      :key ?g
@@ -2292,7 +2294,8 @@ For more advanced customization, create role files manually:
      :group "Utility"
      :prompt "Write a concise git commit message for these changes:"
      :system "You are a version control expert who creates clear commit messages."
-     :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+     :action (lambda () (ollama-buddy--send-with-command 'git-commit))
+     :destination chat)
 
     ;; System commands
     (custom-prompt
@@ -2325,6 +2328,59 @@ The @code{:group} property on command definitions controls how commands are orga
 @end example
 
 Built-in presets use groups like ``General'', ``Code Analysis'', ``Code Generation'', ``Custom'', ``System'', etc. You can use any group names you like in your own presets.
+
+@section Per-Command Response Destination
+
+The optional @code{:destination} property on a command definition overrides the global
+@code{ollama-buddy-in-buffer-replace} toggle for that specific command:
+
+@table @code
+@item in-buffer
+Always stream the response back into the source buffer, replacing the selected region
+(requires @code{ollama-buddy-rewrite} to be loaded).  The global toggle is ignored.
+
+@item chat
+Always open the chat buffer, regardless of the global toggle.
+
+@item nil (or absent)
+Honour @code{ollama-buddy-in-buffer-replace} as before --- this is the default and
+preserves full backwards compatibility.
+@end table
+
+Use @code{:destination in-buffer} for commands that @emph{transform} selected text
+(refactoring, proofreading, translation, style rewrites) and @code{:destination chat}
+for commands that @emph{analyse or generate new content} about the selection (code
+explanations, commit messages, dictionary lookups).
+
+@example
+;; Transforms selected text --- always rewrites in-buffer
+(refactor-code
+ :key ?r
+ :description "Refactor code"
+ :prompt "Refactor this code:"
+ :action (lambda () (ollama-buddy--send-with-command 'refactor-code))
+ :destination in-buffer)
+
+;; Generates new content --- always goes to chat
+(explain-code
+ :key ?e
+ :description "Explain code"
+ :prompt "Explain this code:"
+ :action (lambda () (ollama-buddy--send-with-command 'explain-code))
+ :destination chat)
+
+;; No :destination --- honours the global toggle
+(describe-code
+ :key ?c
+ :description "Describe code"
+ :prompt "Describe this code:"
+ :action (lambda () (ollama-buddy--send-with-command 'describe-code)))
+@end example
+
+All built-in presets ship with @code{:destination} annotations.  Commands added via
+@code{ollama-buddy-update-menu-entry} or @code{add-to-list} on
+@code{ollama-buddy-command-definitions} work identically --- simply include or omit the
+@code{:destination} key as appropriate.
 
 @section Switching Roles
 
@@ -2426,29 +2482,33 @@ A complete example of a programming-focused role:
      :model "codellama:7b"
      :prompt "Refactor this code to improve readability and efficiency:"
      :system "You are an expert software engineer who improves code quality."
-     :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
-    
+     :action (lambda () (ollama-buddy--send-with-command 'refactor-code))
+     :destination in-buffer)
+
     (explain-code
      :key ?e
      :description "Explain code"
      :model "deepseek-r1:7b"
      :prompt "Explain what this code does in detail:"
      :system "You are a programming teacher who explains code clearly."
-     :action (lambda () (ollama-buddy--send-with-command 'explain-code)))
-    
+     :action (lambda () (ollama-buddy--send-with-command 'explain-code))
+     :destination chat)
+
     (add-tests
      :key ?t
      :description "Generate tests"
      :model "qwen2.5-coder:7b"
      :prompt "Generate unit tests for this code:"
      :system "You are a test automation expert who creates comprehensive test cases."
-     :action (lambda () (ollama-buddy--send-with-command 'add-tests)))
-    
+     :action (lambda () (ollama-buddy--send-with-command 'add-tests))
+     :destination chat)
+
     (git-commit
      :key ?g
      :description "Git commit message"
      :prompt "Write a concise git commit message for these changes:"
-     :action (lambda () (ollama-buddy--send-with-command 'git-commit)))
+     :action (lambda () (ollama-buddy--send-with-command 'git-commit))
+     :destination chat)
     ))
 @end example
 
@@ -3159,6 +3219,13 @@ your decision.
 The existing chat buffer workflow is completely unchanged when the toggle is off (the
 default).  All existing commands, prompts, system prompts, and model selection logic are
 unaffected --- only the output destination changes.
+
+@strong{Per-command override:} individual commands can pin their destination regardless of
+the global toggle by setting the @code{:destination} property in
+@code{ollama-buddy-command-definitions}.  A command with @code{:destination in-buffer}
+always rewrites in-buffer; one with @code{:destination chat} always opens the chat buffer.
+Commands without a @code{:destination} property continue to honour the global toggle.
+@xref{Roles and Commands, Per-Command Response Destination}, for details.
 
 @section Enabling In-Buffer Replace
 
