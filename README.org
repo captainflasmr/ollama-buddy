@@ -60,10 +60,10 @@ Submit queries, swap models, view token usage and statistics:
 * Features
 
 - *Tool Calling* -- LLMs can invoke registered Emacs functions (file ops, shell commands, buffer search, calculations). Safe mode restricts to read-only tools.
-- *Multiple Providers* -- Local Ollama, Ollama Cloud, OpenAI, Claude, Gemini, Grok, GitHub Copilot, Codestral, DeepSeek, OpenRouter
+- *Multiple Providers* -- Local Ollama, Ollama Cloud, OpenAI, Claude, Gemini, Grok, GitHub Copilot, Codestral, DeepSeek, OpenRouter, and any generic OpenAI-compatible server (LM Studio, llama.cpp, vLLM, Jan…)
 - *Web Search* -- Inline =@search(query)= syntax for real-time web search via Ollama's API
 - *Interactive Menus* -- Transient popup menus with role-based command grouping
-- *Roles & Presets* -- Switchable command configurations (developer, writer, tutor, documenter, custom)
+- *Roles & Presets* -- Switchable command configurations (developer, writer, tutor, documenter, custom); each command carries a =:destination= hint (=chat= or =in-buffer=) so rewrites go to the right place automatically
 - *Sessions & History* -- Save/load conversations, prompt history navigation
 - *Thinking Block Folding* -- Reasoning model output (=<think>= tags, DeepSeek API) rendered as collapsible org headings; =C-c V= toggles all blocks
 - *File Attachments* -- Attach files and images (vision models) to conversations
@@ -72,49 +72,30 @@ Submit queries, swap models, view token usage and statistics:
 - *Parameters* -- Full control over temperature, top_k, top_p, and all Ollama API options
 - *Fabric Patterns* -- Integration with [[https://github.com/danielmiessler/fabric][Fabric]] prompt patterns
 - *Token Tracking* -- Real-time token usage statistics with graphs
-- *RAG* -- Index local documents and source code, retrieve relevant context for conversations via semantic search. Inline =@rag(query)= syntax for automatic context attachment.
+- *RAG* -- Index local documents and source code; retrieve relevant context via semantic search; inline =@rag(query)= syntax; configurable embedding backend (Ollama =/api/embed= or any OpenAI-compatible =/v1/embeddings= service, e.g. LM Studio)
 - *In-Buffer Replace* -- Stream LLM output directly into the source buffer, replacing the selected region in-place; accept/reject confirmation; inline diff view (=C-c d=) with word-level smerge highlighting; automatic code-fence stripping
 - *Lightweight* -- No external dependencies; a minified 200-line version (=ollama-buddy-mini=) is also available
 
-* What's New (2.8.1)
+* What's New (v3.0.0)
 
-Polish and new inspection capability for in-buffer replace mode.
+Generic OpenAI-compatible chat provider — connect ollama-buddy to *any* server that speaks the OpenAI chat-completions API without needing a dedicated module.
 
-- *Inline diff view* (=C-c d=) -- After a rewrite completes, press =C-c d= to insert the original text immediately below the new text, with word-level smerge highlighting: green on added/changed words in the new region, red strikethrough on removed words in the original block. Press =C-c d= again to hide it; accept or reject removes it automatically.
-- *Automatic clean-output tone* -- When in-buffer replace is active, a "Return only the content" instruction is automatically prepended to the effective system prompt, keeping responses free of introductory phrases and commentary.
-- *Code fence stripping* -- Markdown ``` fences (with optional language tag) are stripped from the response before it is placed in the buffer.
-- *=C-c W=* -- New chat-buffer binding to toggle in-buffer replace without opening the transient menu.
-- *Tighter command prompts* -- Region commands (Refactor, Git Commit, Describe Code, Dictionary Lookup, Synonym) now say "Return ONLY …" to avoid preamble when results are inserted directly into source code.
+- *=ollama-buddy-openai-compat=* (new module, prefix =l:=) -- works out of the box with LM Studio (default =http://localhost:1234=), llama.cpp, vLLM, Jan, or any other local/remote OpenAI-API server. Key settings:
+  - =ollama-buddy-openai-compat-base-url= -- server address
+  - =ollama-buddy-openai-compat-provider-name= -- display name in the UI
+  - =ollama-buddy-openai-compat-api-key= -- optional Bearer token (leave empty for local servers)
+  - Models are auto-discovered via =GET /v1/models= on load; run =M-x ollama-buddy-openai-compat-refresh-models= to re-discover after switching models at runtime.
+  - The =l= indicator appears in the status line when the module is active.
 
-* What's New (2.8.0)
+* Recent Changes
 
-Initial in-buffer replacement mode — streams LLM rewrites directly into the source buffer rather than the chat buffer. The feature is off by default; the existing chat buffer workflow is completely unchanged.
-
-- *In-buffer replace mode* -- Toggle =W= in the transient Actions menu (or =M-x ollama-buddy-toggle-in-buffer-replace=) to activate. With a region selected, any role command (Refactor, Proofread, etc.) will:
-  1. Replace the selection with a =​[Rewriting...]=​ placeholder
-  2. Stream the model's response back into the source buffer with a green highlight
-  3. Activate =C-c C-c= (accept) / =C-c C-k= (reject/restore original) when the stream finishes
-  - Cancelling mid-stream with =C-c C-k= stops the network process and restores the original text
-  - The =✎= symbol appears in the header and prompt line while the mode is active
-  - Mode line shows =​ [Rewrite?]=​ while a decision is pending
-
-* What's New (2.7.3)
-
-- *Collapsible thinking blocks* -- Reasoning model output (from =<think>= tags or the DeepSeek API =message.thinking= field) now renders as a native org-mode heading (=*** ✦ Think=) that folds automatically when the model finishes reasoning. A =*** ✦ Response= heading marks the start of the actual answer. Use =C-c V= to toggle all thinking blocks in the buffer, or =TAB= on any =*** ✦ Think= heading to toggle it individually. The =✦= symbol appears in the header line and prompt line when the active model supports thinking/reasoning.
-
-* What's New (2.7.1)
-
-- *RET to set system prompt in org list buffers* -- Pressing =RET= on a prompt/pattern heading in the =*User System Prompts*=, =*Awesome ChatGPT Prompts List*=, or =*Fabric Patterns List*= browse buffers instantly sets it as the current system prompt, with a hint comment at the top of each buffer.
-
-* What's New (2.7.0)
-
-- *Airplane Mode* -- Toggle =C-c != to completely isolate the package from the internet. While active, all external LLM providers (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter) and Ollama cloud models are blocked. Only local Ollama models are available. Web search is also disabled. The =✈= indicator appears in the header line, and attempting to send to an internet-requiring model shows a minibuffer message. Toggle via =C-c !=, the transient menu Actions section, or =M-x ollama-buddy-toggle-airplane-mode=.
-
-* What's New (2.6.0)
-
-- *Remote provider refactor* -- All remote provider modules now share common infrastructure via =ollama-buddy-remote.el=, eliminating ~1400 lines of duplicated code. Adding a new OpenAI-compatible provider now requires ~100 lines instead of ~350.
-- *DeepSeek provider* -- New =ollama-buddy-deepseek.el= module (prefix: =d:=) with support for =deepseek-chat= and =deepseek-reasoner= models.
-- *OpenRouter provider* -- New =ollama-buddy-openrouter.el= module (prefix: =r:=) providing access to 400+ models from all major providers through a single API, with optional model filtering.
+| Version | Summary                                                                                                                                                                                                                   |
+|---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *2.9.2* | =:destination= property for command definitions — per-command routing to =chat= or =in-buffer=, overriding the global toggle; all built-in commands and presets pre-annotated.                                            |
+| *2.9.1* | Welcome screen tips — =ollama-buddy-tips.el= shows a random usage tip on every fresh chat buffer; disable with =(setq ollama-buddy-show-tips nil)=.                                                                       |
+| *2.9*   | Configurable RAG embedding backend — =ollama-buddy-rag-embedding-base-url= and =ollama-buddy-rag-embedding-api-style= let you point RAG at any =/v1/embeddings= server (e.g. LM Studio) instead of Ollama's =/api/embed=. |
+| *2.8.1* | In-buffer replace polish: inline diff view (=C-c d=, word-level smerge highlighting), automatic clean-output tone, code-fence stripping, =C-c W= toggle.                                                                  |
+| *2.8.0* | Initial in-buffer replace mode — stream rewrites directly into the source buffer; =C-c C-c= accept / =C-c C-k= reject.                                                                                                    |
 
 See [[file:CHANGELOG.org]] for full history.
 
@@ -141,10 +122,36 @@ See [[file:CHANGELOG.org]] for full history.
   :custom
   (ollama-buddy-openai-api-key
    (auth-source-pick-first-password :host "ollama-buddy-openai" :user "apikey"))
-  ;; e.t.c
+  ;; add other providers similarly …
   :config
   (require 'ollama-buddy-openai nil t)
-  ;; e.t.c)
+  ;; other cloud providers …
+  )
+#+end_src
+
+** With a Local OpenAI-Compatible Server (LM Studio, llama.cpp, vLLM…)
+
+No API key needed for local servers:
+
+#+begin_src elisp
+(use-package ollama-buddy
+  :ensure t
+  :bind
+  ("C-c o" . ollama-buddy-role-transient-menu)
+  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  :config
+  (require 'ollama-buddy-openai-compat)
+  ;; point at your server — LM Studio default shown here
+  (setq ollama-buddy-openai-compat-base-url "http://localhost:1234")
+  (setq ollama-buddy-openai-compat-provider-name "LM Studio"))
+#+end_src
+
+Optionally also route RAG embeddings through the same server:
+
+#+begin_src elisp
+(setq ollama-buddy-rag-embedding-base-url "http://localhost:1234")
+(setq ollama-buddy-rag-embedding-api-style 'openai)
+(setq ollama-buddy-rag-embedding-model "nomic-embed-text")
 #+end_src
 
 ** Manual
@@ -186,6 +193,7 @@ curl -sL https://api.github.com/repos/captainflasmr/ollama-buddy/tarball/main | 
 
 #+begin_src elisp
 (use-package ollama-buddy
+  :load-path "~/source/repos/ollama-buddy"
   :demand t
   :bind
   ;; ("C-c o" . ollama-buddy-menu)
@@ -216,25 +224,43 @@ curl -sL https://api.github.com/repos/captainflasmr/ollama-buddy/tarball/main | 
   (setq ollama-buddy-web-search-api-key
         (auth-source-pick-first-password :host "ollama-buddy-web-search" :user "apikey"))
 
-  ;; (require 'ollama-buddy-openai nil t)
-  ;; (require 'ollama-buddy-claude nil t)
-  ;; (require 'ollama-buddy-gemini nil t)
-  ;; (require 'ollama-buddy-grok nil t)
-  ;; (require 'ollama-buddy-codestral nil t)
-  ;; (require 'ollama-buddy-copilot nil t)
-  ;; (require 'ollama-buddy-openrouter nil t)
-  ;; (require 'ollama-buddy-deepseek nil t)
+  (require 'ollama-buddy-openai nil t)
+  (require 'ollama-buddy-claude nil t)
+  (require 'ollama-buddy-gemini nil t)
+  (require 'ollama-buddy-grok nil t)
+  (require 'ollama-buddy-codestral nil t)
+  (require 'ollama-buddy-copilot nil t)
+  (require 'ollama-buddy-openrouter nil t)
+  (require 'ollama-buddy-deepseek nil t)
 
   ;; other
   (setq ollama-buddy-full-welcome-enabled nil)
 
+  (require 'ollama-buddy-openai-compat)
+  ;; LM Studio default — this is the built-in default so no change needed
+  (setq ollama-buddy-openai-compat-base-url "http://localhost:1234")
+  (setq ollama-buddy-openai-compat-provider-name "LM Studio")
+  ;; No API key needed for LM Studio
+  (setq ollama-buddy-openai-compat-api-key "")
+  
+  ;; Use LM Studio's /v1/embeddings endpoint instead of Ollama's /api/embed
+  (setq ollama-buddy-rag-embedding-base-url "http://localhost:1234")
+  (setq ollama-buddy-rag-embedding-api-style 'openai)
+  (setq ollama-buddy-rag-embedding-model "text-embedding-nomic-embed-text-v1.5")
+  
   ;; setup default custom menu for preferred models
-  (ollama-buddy-update-menu-entry 'refactor-code     :model "qwen3-coder:480b-cloud")
+  (ollama-buddy-update-menu-entry 'refactor-code     :model "minimax-m2.1:cloud")
   (ollama-buddy-update-menu-entry 'git-commit        :model "glm-4.7:cloud")
   (ollama-buddy-update-menu-entry 'describe-code     :model "minimax-m2.1:cloud")
   (ollama-buddy-update-menu-entry 'dictionary-lookup :model "minimax-m2.1:cloud")
   (ollama-buddy-update-menu-entry 'synonym           :model "minimax-m2.1:cloud")
-  (ollama-buddy-update-menu-entry 'proofread         :model "deepseek-v3.1:671b-cloud")
+  (ollama-buddy-update-menu-entry 'proofread         :model "minimax-m2.1:cloud")
+  ;; (ollama-buddy-update-menu-entry 'refactor-code     :model "tinyllama:1.1b")
+  ;; (ollama-buddy-update-menu-entry 'git-commit        :model "tinyllama:1.1b")
+  ;; (ollama-buddy-update-menu-entry 'describe-code     :model "tinyllama:1.1b")
+  ;; (ollama-buddy-update-menu-entry 'dictionary-lookup :model "tinyllama:1.1b")
+  ;; (ollama-buddy-update-menu-entry 'synonym           :model "tinyllama:1.1b")
+  ;; (ollama-buddy-update-menu-entry 'proofread         :model "tinyllama:1.1b")
 
   ;; dired integration
   (with-eval-after-load 'dired

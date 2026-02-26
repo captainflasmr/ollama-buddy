@@ -44,3 +44,125 @@ l:tinyllama-1.1b-chat-v1.0
 LM Studio only lists the model currently loaded in the server slot.  If you
 switch models in LM Studio, run =M-x ollama-buddy-openai-compat-refresh-models=
 and check =C-c m= again — the new model should appear (and the old one removed).
+
+* LM Studio — RAG Embeddings
+
+LM Studio exposes a =POST /v1/embeddings= endpoint (OpenAI-compatible) when an
+embedding model is loaded in its server slot.  This lets you use LM Studio as the
+embedding backend for =ollama-buddy-rag= instead of the Ollama =/api/embed= endpoint.
+
+** Server setup
+
+1. In LM Studio open the =My Models= tab and download an embedding model, e.g.:
+   - =nomic-embed-text= (768 dims, good general purpose)
+   - =text-embedding-nomic-embed-text-v1.5= (768 dims)
+   - =bge-large-en-v1.5= (1024 dims, higher quality)
+2. Switch to the =Local Server= tab.
+3. Load the embedding model into the server slot (use the model drop-down at the
+   top of the server panel).
+4. Click =Start Server= if it is not already running — default port =1234=.
+5. Confirm the endpoint is live:
+   #+begin_src bash
+   curl -s http://localhost:1234/v1/embeddings \
+     -H "Content-Type: application/json" \
+     -d '{"model":"nomic-embed-text","input":"hello world"}' | head -c 200
+   #+end_src
+   You should see JSON beginning with ={\"object\":\"list\",\"data\":[...}=.
+
+** Emacs configuration
+
+Point the RAG embedding backend at LM Studio's server and select the model name
+exactly as LM Studio reports it (visible in the server panel's model drop-down):
+
+#+begin_src elisp
+;; Use LM Studio's /v1/embeddings endpoint instead of Ollama's /api/embed
+(setq ollama-buddy-rag-embedding-base-url "http://localhost:1234")
+(setq ollama-buddy-rag-embedding-api-style 'openai)
+(setq ollama-buddy-rag-embedding-model "text-embedding-nomic-embed-text-v1.5")
+;; No API key needed for LM Studio
+;; (setq ollama-buddy-rag-embedding-api-key nil)
+#+end_src
+
+The model name must match what LM Studio exposes via =GET /v1/models=.  Run
+
+#+begin_src bash
+curl -s http://localhost:1234/v1/models | python3 -m json.tool
+#+end_src
+
+and copy the =id= field of the embedding model entry.
+
+** Running a chat model alongside the embedding model
+
+LM Studio's single server slot means loading an embedding model displaces the
+chat model.  Options:
+
+- *Two LM Studio server ports* — start a second LM Studio instance bound to a
+  different port (e.g. =1235=) with the chat model, and keep port =1234= for
+  embeddings:
+  #+begin_src elisp
+  (setq ollama-buddy-openai-compat-base-url "http://localhost:1235")
+  (setq ollama-buddy-rag-embedding-base-url "http://localhost:1234")
+  #+end_src
+- *Ollama for chat, LM Studio for embeddings* — leave =ollama-buddy-openai-compat=
+  unconfigured and use Ollama models for chat while LM Studio serves only embeddings.
+- *Reload between uses* — swap the model in LM Studio's server slot and call
+  =M-x ollama-buddy-openai-compat-refresh-models= after switching back to a chat model.
+
+** Expected: indexing a directory
+
+With the embedding backend configured, index a directory:
+
+#+begin_example
+M-x ollama-buddy-rag-index-directory
+Directory to index: ~/my-project
+#+end_example
+
+In =*Messages*= you should see progress lines like:
+
+#+begin_example
+RAG: indexing ~/my-project (42 files)...
+RAG: embedding chunk 1/120...
+RAG: embedding chunk 10/120...
+...
+RAG: index saved → my-project-a1b2c3d4
+#+end_example
+
+No error about the embedding model being unavailable — the code skips the
+Ollama model-availability check when =ollama-buddy-rag-embedding-base-url= is set.
+
+** Expected: search and attach
+
+#+begin_example
+M-x ollama-buddy-rag-attach
+Query: how does authentication work
+Index: my-project-a1b2c3d4
+#+end_example
+
+The chat prompt area should show a =♁1= indicator in the header and the context
+block prepended with the matching chunks.  Token count is shown in =*Messages*=:
+
+#+begin_example
+RAG: attached 5 results (~320 tokens)
+#+end_example
+
+** Edge case: embedding model name mismatch
+
+If =ollama-buddy-rag-embedding-model= does not match the model loaded in LM
+Studio, the =/v1/embeddings= call returns a 400 or 404 error.  In =*Messages*=:
+
+#+begin_example
+Embedding error: (error http 400)
+#+end_example
+
+Fix: check the exact model id with =curl -s http://localhost:1234/v1/models= and
+update =ollama-buddy-rag-embedding-model= to match.
+
+** Edge case: embedding server not running
+
+Stop the LM Studio server.  Attempt to index or search.  Expected in =*Messages*=:
+
+#+begin_example
+Embedding error: (error url-queue ...)
+#+end_example
+
+No crash or hang — the indexing operation fails gracefully per chunk.
