@@ -37,6 +37,7 @@ elisp_files=(
   "ollama-buddy-gemini.el"
   "ollama-buddy-grok.el"
   "ollama-buddy-openai.el"
+  "ollama-buddy-openai-compat.el"
   "ollama-buddy-openrouter.el"
   "ollama-buddy-rag.el"
   "ollama-buddy-remote.el"
