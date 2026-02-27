@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 3.0.0
+;; Version: 3.1.0
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -542,8 +542,9 @@ Cancelling with \\[keyboard-quit] does nothing; use \\[quoted-insert] @ for a li
     ("tone"      . ollama-buddy-set-tone)
     ("fabric"    . ollama-buddy-fabric-set-system-prompt)
     ("awesome"   . ollama-buddy-awesome-set-system-prompt)
-    ("streaming" . ollama-buddy-toggle-streaming)
-    ("reset"     . ollama-buddy-reset-system-prompt))
+    ("streaming"  . ollama-buddy-toggle-streaming)
+    ("reset"      . ollama-buddy-reset-system-prompt)
+    ("completion" . ollama-buddy-completion-toggle))
   "Alist of available `/' slash commands.
 Each entry is (NAME . FUNCTION) where FUNCTION is called interactively."
   :type '(alist :key-type string :value-type function)

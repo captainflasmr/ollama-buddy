@@ -61,6 +61,11 @@
 (declare-function ollama-buddy-rag-get-context "ollama-buddy-rag")
 (declare-function ollama-buddy-rag-clear-attached "ollama-buddy-rag")
 
+;; Completion forward declarations
+(declare-function ollama-buddy-completion-mode "ollama-buddy-completion")
+(declare-function ollama-buddy-completion-trigger "ollama-buddy-completion")
+(declare-function ollama-buddy-completion-toggle "ollama-buddy-completion")
+
 (defgroup ollama-buddy-params nil
   "Customization group for Ollama API parameters."
   :group 'ollama-buddy
@@ -1670,7 +1675,7 @@ Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
            "\n\n* Welcome to _OLLAMA BUDDY_\n\n"
            "#+begin_example\n"
            "┌───────────────────────────────────┐\n"
-           "│  O L L A M A B U D D Y  [v3.0.0]  │\n"
+           "│  O L L A M A B U D D Y  [v3.1.0]  │\n"
            "└───────────────────────────────────┘\n"
            ;; "╔════════════════════════════════════════════════════════════╗\n"
            ;; "║  ▄▀▀▀▄ █   █   ▄▀▀▀▄ █▀▄▀█ ▄▀▀▀▄ █▀▀▄ █  █ █▀▀▄ █▀▀▄ █  █  ║\n"

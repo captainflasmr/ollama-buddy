@@ -11,6 +11,31 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-27 Thu> *3.1.0*
+
+Inline ghost-text code completions — a first, simple implementation of Copilot-style
+completions powered by Ollama's =/api/generate= endpoint.
+
+*** New Features
+
+- *Inline ghost-text completions* (=ollama-buddy-completion=) -- A new module providing
+  manual code completions that appear as dimmed ghost text at point.  This is a first effort
+  and intentionally simple; results will vary depending on the model used — dedicated code
+  models (e.g. =codellama=, =qwen2.5-coder=) work best, while general-purpose and thinking
+  models may produce verbose or less useful suggestions.
+  - =C-c TAB= triggers a completion at point
+  - =TAB= accepts the ghost text into the buffer
+  - Any other key dismisses the suggestion
+  - *Fill-in-the-middle* (FIM) — sends both prefix (50 lines) and suffix (20 lines) context
+    to the model, enabling better contextual completions for models that support FIM
+  - *Thinking model support* — handles models that use =thinking= tokens (e.g. cloud thinking
+    models); falls back to thinking output when =response= is empty
+  - *Fence stripping* — automatically removes markdown code fences from model output
+  - Multi-line ghost text display
+  - Configurable via =ollama-buddy-completion-model=, =ollama-buddy-completion-max-tokens= (default 80),
+    =ollama-buddy-completion-context-lines= (default 50), =ollama-buddy-completion-suffix-lines= (default 20)
+  - Toggle with =M-x ollama-buddy-completion-mode= or =M-x ollama-buddy-completion-toggle=
+
 ** <2026-02-26 Thu> *3.0.0*
 
 Generic OpenAI-compatible chat provider — connect to LM Studio, llama.cpp, vLLM, Jan, or

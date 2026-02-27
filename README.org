@@ -76,21 +76,22 @@ Submit queries, swap models, view token usage and statistics:
 - *In-Buffer Replace* -- Stream LLM output directly into the source buffer, replacing the selected region in-place; accept/reject confirmation; inline diff view (=C-c d=) with word-level smerge highlighting; automatic code-fence stripping
 - *Lightweight* -- No external dependencies; a minified 200-line version (=ollama-buddy-mini=) is also available
 
-* What's New (v3.0.0)
+* What's New (v3.1.0)
 
-Generic OpenAI-compatible chat provider — connect ollama-buddy to *any* server that speaks the OpenAI chat-completions API without needing a dedicated module.
+Inline ghost-text code completions — a first, simple implementation of Copilot-style completions.
 
-- *=ollama-buddy-openai-compat=* (new module, prefix =l:=) -- works out of the box with LM Studio (default =http://localhost:1234=), llama.cpp, vLLM, Jan, or any other local/remote OpenAI-API server. Key settings:
-  - =ollama-buddy-openai-compat-base-url= -- server address
-  - =ollama-buddy-openai-compat-provider-name= -- display name in the UI
-  - =ollama-buddy-openai-compat-api-key= -- optional Bearer token (leave empty for local servers)
-  - Models are auto-discovered via =GET /v1/models= on load; run =M-x ollama-buddy-openai-compat-refresh-models= to re-discover after switching models at runtime.
-  - The =l= indicator appears in the status line when the module is active.
+- *=ollama-buddy-completion=* (new module) -- Manual inline completions that appear as dimmed ghost text at point.  This is an initial, straightforward implementation; quality depends heavily on the model — dedicated code models (=codellama=, =qwen2.5-coder=) work best, while general-purpose or thinking models may produce verbose suggestions.
+  - =C-c TAB= to trigger, =TAB= to accept, any other key dismisses
+  - Fill-in-the-middle (FIM): sends prefix *and* suffix context
+  - Thinking model fallback, markdown fence stripping, multi-line display
+  - Toggle with =M-x ollama-buddy-completion-mode=
 
 * Recent Changes
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *3.1.0* | Inline ghost-text code completions (=ollama-buddy-completion=) — simple, manual Copilot-style completions with FIM context, thinking model support, fence stripping.                                                      |
+| *3.0.0* | Generic OpenAI-compatible chat provider (=ollama-buddy-openai-compat=) — connect to LM Studio, llama.cpp, vLLM, Jan, or any OpenAI-API server.                                                                            |
 | *2.9.2* | =:destination= property for command definitions — per-command routing to =chat= or =in-buffer=, overriding the global toggle; all built-in commands and presets pre-annotated.                                            |
 | *2.9.1* | Welcome screen tips — =ollama-buddy-tips.el= shows a random usage tip on every fresh chat buffer; disable with =(setq ollama-buddy-show-tips nil)=.                                                                       |
 | *2.9*   | Configurable RAG embedding backend — =ollama-buddy-rag-embedding-base-url= and =ollama-buddy-rag-embedding-api-style= let you point RAG at any =/v1/embeddings= server (e.g. LM Studio) instead of Ollama's =/api/embed=. |

@@ -73,6 +73,7 @@
 (declare-function ollama-buddy-toggle-in-buffer-replace "ollama-buddy-core")
 (declare-function ollama-buddy-tools-toggle "ollama-buddy-tools")
 (declare-function ollama-buddy-tools-info "ollama-buddy-tools")
+(declare-function ollama-buddy-completion-toggle "ollama-buddy-completion")
 
 (defun ollama-buddy-transient--tools-toggle ()
   "Toggle tool calling if ollama-buddy-tools is loaded, else prompt to load it."
@@ -120,6 +121,7 @@
     ("v" "Keep Alive" ollama-buddy-set-keepalive)
     ("!" "Airplane Mode" ollama-buddy-toggle-airplane-mode)
     ("W" "In-Buffer Replace" ollama-buddy-toggle-in-buffer-replace)
+    ("c" "Completion Mode" ollama-buddy-completion-toggle)
     ("Q" "List Tools" ollama-buddy-transient--tools-info)
     ]
 
