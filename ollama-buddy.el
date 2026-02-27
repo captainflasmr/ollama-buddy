@@ -264,26 +264,34 @@ Set when the heading is inserted; passed to
 
 ;; Function to check if the current model supports vision
 (defun ollama-buddy--model-supports-vision (model)
-  "Check if MODEL supports vision capabilities."
+  "Check if MODEL supports vision capabilities.
+Checks the static `ollama-buddy-vision-models' list and the
+metadata cache populated from /api/show capabilities."
   (when model
     (let* ((real-model (ollama-buddy--get-real-model-name model))
            ;; Strip cloud suffixes for matching
            (base-model (replace-regexp-in-string "[-:]cloud$" "" real-model))
            ;; Also get name without tag (e.g. "gemma3:4b" -> "gemma3")
-           (name-only (car (split-string base-model ":"))))
+           (name-only (car (split-string base-model ":")))
+           (meta (gethash model ollama-buddy--models-metadata-cache)))
       (or (member base-model ollama-buddy-vision-models)
-          (member name-only ollama-buddy-vision-models)))))
+          (member name-only ollama-buddy-vision-models)
+          (and meta (alist-get 'vision meta))))))
 
 (defun ollama-buddy--model-supports-tools (model)
-  "Check if MODEL supports tool calling capabilities."
+  "Check if MODEL supports tool calling capabilities.
+Checks the static `ollama-buddy-tools-models' list and the
+metadata cache populated from /api/show capabilities."
   (when model
     (let* ((real-model (ollama-buddy--get-real-model-name model))
            ;; Strip cloud suffixes for matching
            (base-model (replace-regexp-in-string "[-:]cloud$" "" real-model))
            ;; Also get name without tag (e.g. "qwen3:32b" -> "qwen3")
-           (name-only (car (split-string base-model ":"))))
+           (name-only (car (split-string base-model ":")))
+           (meta (gethash model ollama-buddy--models-metadata-cache)))
       (or (member base-model ollama-buddy-tools-models)
-          (member name-only ollama-buddy-tools-models)))))
+          (member name-only ollama-buddy-tools-models)
+          (and meta (alist-get 'tools meta))))))
 
 (defun ollama-buddy--model-supports-thinking (model)
   "Check if MODEL supports thinking/reasoning capabilities.
@@ -297,13 +305,42 @@ Checks (in order):
            (base-model (replace-regexp-in-string "[-:]cloud$" "" real-model))
            ;; Also get name without tag (e.g. "deepseek-r1:7b" -> "deepseek-r1")
            (name-only (car (split-string base-model ":")))
+           (base-lower (downcase base-model))
            (meta (gethash model ollama-buddy--models-metadata-cache)))
       (or (member base-model ollama-buddy-thinking-models)
           (member name-only ollama-buddy-thinking-models)
           (cl-some (lambda (pattern)
-                     (string-match-p (regexp-quote pattern) base-model))
+                     (string-match-p (regexp-quote (downcase pattern)) base-lower))
                    ollama-buddy-thinking-model-patterns)
           (and meta (alist-get 'thinking meta))))))
+
+(defun ollama-buddy--fetch-model-capabilities (models)
+  "Proactively fetch /api/show capabilities for MODELS.
+Populates the metadata cache with thinking, vision and tool
+capabilities so that indicators are accurate before any model
+is selected."
+  (when (ollama-buddy--ollama-running)
+    (dolist (model models)
+      ;; Skip models that already have capabilities cached.
+      (let ((meta (gethash model ollama-buddy--models-metadata-cache)))
+        (unless (alist-get 'capabilities-fetched meta)
+          (condition-case nil
+              (let* ((real-model (ollama-buddy--get-real-model-name model))
+                     (payload (json-encode `((model . ,real-model))))
+                     (response (ollama-buddy--make-request "/api/show" "POST" payload)))
+                (when response
+                  (let* ((capabilities (append (alist-get 'capabilities response) nil))
+                         (cached-meta (or (gethash model ollama-buddy--models-metadata-cache) '())))
+                    (push '(capabilities-fetched . t) cached-meta)
+                    (when (member "thinking" capabilities)
+                      (push '(thinking . t) cached-meta))
+                    (when (member "vision" capabilities)
+                      (push '(vision . t) cached-meta))
+                    (when (member "tools" capabilities)
+                      (push '(tools . t) cached-meta))
+                    (puthash model cached-meta
+                             ollama-buddy--models-metadata-cache))))
+            (error nil)))))))
 
 ;; Function to unload a single model
 (defun ollama-buddy-unload-model (model)
@@ -3376,6 +3413,8 @@ Modifies the variable in place."
   (let* ((available-models (ollama-buddy--get-models))
          (running-models (ollama-buddy--get-running-models))
          (_letters (ollama-buddy--assign-model-letters available-models))
+         (cloud-display-models (mapcar #'ollama-buddy--get-full-cloud-model-name
+                                       ollama-buddy-cloud-models))
          (models-to-pull
           (when (ollama-buddy--ollama-running)
             (let ((available-for-pull
@@ -3389,6 +3428,10 @@ Modifies the variable in place."
                available-models
                :test #'string=))))
          (buf (get-buffer-create "*Ollama Models Management*")))
+    ;; Proactively fetch /api/show capabilities for all models so
+    ;; thinking/vision/tools indicators are accurate.
+    (ollama-buddy--fetch-model-capabilities
+     (append available-models cloud-display-models))
     
     (with-current-buffer buf
       (let ((inhibit-read-only t))
