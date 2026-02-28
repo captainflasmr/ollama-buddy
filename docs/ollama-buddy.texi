@@ -3117,6 +3117,39 @@ and the request is not sent.
 
 When using a cloud model, the header line displays a @code{☁} symbol to indicate cloud model usage.
 
+@section Cloud Usage Stats
+
+The Model Management page (@code{C-c M}) can display your Ollama cloud usage
+(session and weekly percentages) as visual progress bars in the Cloud Models section.
+
+To enable this, set @code{ollama-buddy-cloud-session-token} to the value of the
+@code{__Secure-session} cookie from ollama.com:
+
+@enumerate
+@item Sign in at @uref{https://ollama.com}
+@item Open browser DevTools (@kbd{F12})
+@item Go to Application (Chrome) or Storage (Firefox) > Cookies > ollama.com
+@item Copy the value of the @code{__Secure-session} cookie
+@item Set it in Emacs:
+@end enumerate
+
+@example
+(setq ollama-buddy-cloud-session-token "your-cookie-value")
+@end example
+
+Or use @code{auth-source}:
+
+@example
+(setq ollama-buddy-cloud-session-token
+      (auth-source-pick-first-password
+       :host "ollama-buddy-cloud" :user "session"))
+@end example
+
+Usage data is cached for 5 minutes (configurable via
+@code{ollama-buddy-cloud-usage-cache-seconds}).  Use @code{M-x
+ollama-buddy-cloud-refresh-usage} or the ``Refresh'' button on the Model
+Management page to re-fetch.
+
 @section Configuration
 
 @table @code
@@ -3125,6 +3158,12 @@ List of available Ollama cloud models.
 
 @item ollama-buddy-ollama-executable
 Path to the ollama CLI executable (default: "ollama"). Used for signin/signout commands.
+
+@item ollama-buddy-cloud-session-token
+Session token (cookie value) for fetching cloud usage stats from ollama.com.
+
+@item ollama-buddy-cloud-usage-cache-seconds
+Seconds to cache cloud usage data before re-fetching (default: 300).
 @end table
 
 @node Global System Prompt

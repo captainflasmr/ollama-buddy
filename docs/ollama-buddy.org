@@ -261,7 +261,8 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Cloud-Authentication][18.4 Cloud Authentication]]
   - [[#Automatic-Manifest-Pulling][18.5 Automatic Manifest Pulling]]
   - [[#Cloud-Model-Indicator][18.6 Cloud Model Indicator]]
-  - [[#Configuration-3][18.7 Configuration]]
+  - [[#Cloud-Usage-Stats][18.7 Cloud Usage Stats]]
+  - [[#Configuration-3][18.8 Configuration]]
 - [[#Global-System-Prompt][19 Global System Prompt]]
   - [[#Overview-5][19.1 Overview]]
   - [[#Configuration-4][19.2 Configuration]]
@@ -4515,6 +4516,7 @@ Next: [[#Global-System-Prompt][Global System Prompt]], Previous:
 - [[#Cloud-Authentication][Cloud Authentication]]
 - [[#Automatic-Manifest-Pulling][Automatic Manifest Pulling]]
 - [[#Cloud-Model-Indicator][Cloud Model Indicator]]
+- [[#Cloud-Usage-Stats][Cloud Usage Stats]]
 - [[#Configuration-3][Configuration]]
 
 <<Overview-4>>
@@ -4608,8 +4610,45 @@ error is displayed and the request is not sent.
 When using a cloud model, the header line displays a =☁= symbol to
 indicate cloud model usage.
 
+<<Cloud-Usage-Stats>>
+*** 18.7 Cloud Usage Stats [[#Cloud-Usage-Stats][¶]]
+:PROPERTIES:
+:CUSTOM_ID: cloud-usage-stats
+:CLASS: section
+:END:
+The Model Management page (=C-c M=) can display your Ollama cloud usage
+(session and weekly percentages) as visual progress bars in the Cloud
+Models section.
+
+To enable this, set =ollama-buddy-cloud-session-token= to the value of
+the =__Secure-session= cookie from ollama.com:
+
+1. Sign in at [[https://ollama.com]]
+2. Open browser DevTools (F12)
+3. Go to Application (Chrome) or Storage (Firefox) > Cookies >
+   ollama.com
+4. Copy the value of the =__Secure-session= cookie
+5. Set it in Emacs:
+
+#+begin_src example-preformatted
+(setq ollama-buddy-cloud-session-token "your-cookie-value")
+#+end_src
+
+Or use =auth-source=:
+
+#+begin_src example-preformatted
+(setq ollama-buddy-cloud-session-token
+      (auth-source-pick-first-password
+       :host "ollama-buddy-cloud" :user "session"))
+#+end_src
+
+Usage data is cached for 5 minutes (configurable via
+=ollama-buddy-cloud-usage-cache-seconds=). Use
+=M-x ollama-buddy-cloud-refresh-usage= or the “Refresh” button on the
+Model Management page to re-fetch.
+
 <<Configuration-3>>
-*** 18.7 Configuration [[#Configuration-3][¶]]
+*** 18.8 Configuration [[#Configuration-3][¶]]
 :PROPERTIES:
 :CUSTOM_ID: configuration-1
 :CLASS: section
@@ -4618,6 +4657,12 @@ indicate cloud model usage.
 
 - =ollama-buddy-ollama-executable= :: Path to the ollama CLI executable
   (default: "ollama"). Used for signin/signout commands.
+
+- =ollama-buddy-cloud-session-token= :: Session token (cookie value) for
+  fetching cloud usage stats from ollama.com.
+
+- =ollama-buddy-cloud-usage-cache-seconds= :: Seconds to cache cloud
+  usage data before re-fetching (default: 300).
 
 --------------
 

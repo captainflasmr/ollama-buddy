@@ -220,8 +220,8 @@ curl -sL https://api.github.com/repos/captainflasmr/ollama-buddy/tarball/main | 
         (auth-source-pick-first-password :host "ollama-buddy-openrouter" :user "apikey"))
   (setq ollama-buddy-deepseek-api-key
         (auth-source-pick-first-password :host "ollama-buddy-deepseek" :user "apikey"))
-  (setq ollama-buddy-cloud-api-key
-        (auth-source-pick-first-password :host "ollama-buddy-cloud" :user "apikey"))
+  (setq ollama-buddy-cloud-session-token
+        (auth-source-pick-first-password :host "ollama-buddy-cloud" :user "session"))
   (setq ollama-buddy-web-search-api-key
         (auth-source-pick-first-password :host "ollama-buddy-web-search" :user "apikey"))
 

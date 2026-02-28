@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 3.1.0
+;; Version: 3.2.0
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -156,6 +156,17 @@ Set when the heading is inserted; passed to
 
 (defvar ollama-buddy--start-point nil
   "General store of a starting point.")
+
+(defvar ollama-buddy--cloud-usage-cache nil
+  "Cached cloud usage data: ((session . \"N%\") (weekly . \"N%\")).")
+
+(defvar ollama-buddy--cloud-usage-cache-time nil
+  "Time when cloud usage was last fetched.")
+
+(defcustom ollama-buddy-cloud-usage-cache-seconds 300
+  "Seconds to cache cloud usage data before re-fetching."
+  :type 'integer
+  :group 'ollama-buddy)
 
 ;; creating vision payload
 (defun ollama-buddy--create-vision-message (prompt image-files)
@@ -2503,6 +2514,79 @@ Shows cached status. Use signin/signout to update or try a cloud model request."
                ('not-authenticated "Not signed in (use C-c A to sign in)")
                ('unknown "Unknown (try using a cloud model to verify)")))))
 
+(defun ollama-buddy--fetch-cloud-usage ()
+  "Fetch cloud usage stats from ollama.com/settings.
+Returns an alist ((session . \"N.N%\") (weekly . \"N.N%\")) or nil on failure.
+Uses `ollama-buddy-cloud-session-token' cookie for authentication via curl.
+Results are cached for `ollama-buddy-cloud-usage-cache-seconds'."
+  (when (and (stringp ollama-buddy-cloud-session-token)
+             (not (string-empty-p ollama-buddy-cloud-session-token)))
+    ;; Return cached value if still fresh
+    (if (and ollama-buddy--cloud-usage-cache
+             ollama-buddy--cloud-usage-cache-time
+             (< (float-time (time-subtract (current-time)
+                                           ollama-buddy--cloud-usage-cache-time))
+                ollama-buddy-cloud-usage-cache-seconds))
+        ollama-buddy--cloud-usage-cache
+      ;; Fetch fresh data using curl with session cookie
+      (condition-case err
+          (let ((buf (generate-new-buffer " *ollama-cloud-usage*")))
+            (unwind-protect
+                (let ((exit-code
+                       (call-process
+                        ollama-buddy-curl-executable nil buf nil
+                        "-s"
+                        "-b" (concat "__Secure-session=" ollama-buddy-cloud-session-token)
+                        "https://ollama.com/settings")))
+                  (when (zerop exit-code)
+                    (let ((html (with-current-buffer buf (buffer-string)))
+                          session-pct weekly-pct)
+                      ;; Extract session usage - look for width style after "Session usage"
+                      (when (string-match "Session usage" html)
+                        (let ((start (match-end 0)))
+                          (when (string-match "width:\\s-*\\([0-9]+\\(?:\\.[0-9]+\\)?\\)%" html start)
+                            (setq session-pct (concat (match-string 1 html) "%")))))
+                      ;; Extract weekly usage - look for width style after "Weekly usage"
+                      (when (string-match "Weekly usage" html)
+                        (let ((start (match-end 0)))
+                          (when (string-match "width:\\s-*\\([0-9]+\\(?:\\.[0-9]+\\)?\\)%" html start)
+                            (setq weekly-pct (concat (match-string 1 html) "%")))))
+                      (when (or session-pct weekly-pct)
+                        (let ((result `((session . ,(or session-pct "N/A"))
+                                        (weekly . ,(or weekly-pct "N/A")))))
+                          (setq ollama-buddy--cloud-usage-cache result
+                                ollama-buddy--cloud-usage-cache-time (current-time))
+                          result)))))
+              (kill-buffer buf)))
+        (error
+         (message "Failed to fetch cloud usage: %s" (error-message-string err))
+         nil)))))
+
+(defun ollama-buddy--cloud-usage-bar (percentage &optional width)
+  "Generate a text progress bar for PERCENTAGE string like \"45.2%\".
+WIDTH is the total bar width in characters (default 10)."
+  (let* ((w (or width 10))
+         (pct (string-to-number (replace-regexp-in-string "%" "" percentage)))
+         (filled (round (* w (/ pct 100.0))))
+         (empty (- w filled)))
+    (concat (make-string filled ?█)
+            (make-string empty ?░))))
+
+(defun ollama-buddy-cloud-refresh-usage ()
+  "Clear cached cloud usage and re-fetch.
+Refreshes the model management buffer if visible."
+  (interactive)
+  (setq ollama-buddy--cloud-usage-cache nil
+        ollama-buddy--cloud-usage-cache-time nil)
+  (let ((usage (ollama-buddy--fetch-cloud-usage)))
+    (if usage
+        (message "Cloud usage - Session: %s | Weekly: %s"
+                 (alist-get 'session usage)
+                 (alist-get 'weekly usage))
+      (message "Could not fetch cloud usage (check API key)")))
+  (when (get-buffer "*ollama-buddy-models*")
+    (ollama-buddy-manage-models)))
+
 ;; Update buffer initialization to check status
 (defun ollama-buddy--open-chat ()
   "Open chat buffer and initialize if needed."
@@ -3554,6 +3638,25 @@ Modifies the variable in place."
                    (not ollama-buddy-airplane-mode))
           (insert (format "\n* ☁ Cloud Models %s\n\n"
                           (ollama-buddy--cloud-auth-status-indicator)))
+          ;; Cloud usage stats
+          (let ((usage (ollama-buddy--fetch-cloud-usage)))
+            (if usage
+                (let ((session (alist-get 'session usage))
+                      (weekly (alist-get 'weekly usage)))
+                  (insert (format "  Session: %s %s  |  Weekly: %s %s  "
+                                  (ollama-buddy--cloud-usage-bar session)
+                                  session
+                                  (ollama-buddy--cloud-usage-bar weekly)
+                                  weekly))
+                  (insert-text-button
+                   "Refresh"
+                   'action (lambda (_)
+                             (ollama-buddy-cloud-refresh-usage))
+                   'help-echo "Re-fetch cloud usage stats")
+                  (insert "\n\n"))
+              (when (or (not (stringp ollama-buddy-cloud-session-token))
+                        (string-empty-p ollama-buddy-cloud-session-token))
+                (insert "  (Set ollama-buddy-cloud-session-token for usage stats)\n\n"))))
           (dolist (model ollama-buddy-cloud-models)
             (let* ((display-model (ollama-buddy--get-full-cloud-model-name model))
                    (letter (ollama-buddy--get-model-letter display-model))

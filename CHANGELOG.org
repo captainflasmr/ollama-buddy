@@ -11,6 +11,27 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-02-28 Fri> *3.2.0*
+
+Cloud usage statistics on the Model Management page.
+
+*** New Features
+
+- *Cloud usage stats* -- The Model Management page (=C-c M=) now displays session and weekly
+  usage percentages for Ollama cloud models, shown as visual progress bars in the =☁ Cloud
+  Models= section.
+  - Requires setting =ollama-buddy-cloud-session-token= to the =__Secure-session= cookie
+    value from ollama.com (sign in via browser, then copy from DevTools > Cookies)
+  - Results are cached for 5 minutes (configurable via =ollama-buddy-cloud-usage-cache-seconds=)
+  - =M-x ollama-buddy-cloud-refresh-usage= clears cache and re-fetches
+  - "Refresh" button available directly on the Model Management page
+  - When no token is configured, a helpful hint is shown instead
+
+*** New Customizations
+
+- =ollama-buddy-cloud-session-token= -- Session token for fetching cloud usage stats
+- =ollama-buddy-cloud-usage-cache-seconds= -- Cache duration for usage data (default: 300)
+
 ** <2026-02-27 Thu> *3.1.0*
 
 Inline ghost-text code completions — a first, simple implementation of Copilot-style

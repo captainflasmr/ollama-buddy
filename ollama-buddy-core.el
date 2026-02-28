@@ -838,6 +838,14 @@ to select from this list."
   :type '(repeat string)
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-cloud-session-token ""
+  "Session token for fetching Ollama cloud usage stats.
+This is the value of the `__Secure-session' cookie from ollama.com.
+To obtain it: sign in at https://ollama.com, open browser DevTools (F12),
+go to Application > Cookies > ollama.com, and copy the `__Secure-session' value."
+  :type 'string
+  :group 'ollama-buddy)
+
 (defvar ollama-buddy-current-session-name nil
   "The name of the currently loaded session.")
 
@@ -1675,7 +1683,7 @@ Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
            "\n\n* Welcome to _OLLAMA BUDDY_\n\n"
            "#+begin_example\n"
            "┌───────────────────────────────────┐\n"
-           "│  O L L A M A B U D D Y  [v3.1.0]  │\n"
+           "│  O L L A M A B U D D Y  [v3.2.0]  │\n"
            "└───────────────────────────────────┘\n"
            ;; "╔════════════════════════════════════════════════════════════╗\n"
            ;; "║  ▄▀▀▀▄ █   █   ▄▀▀▀▄ █▀▄▀█ ▄▀▀▀▄ █▀▀▄ █  █ █▀▀▄ █▀▀▄ █  █  ║\n"

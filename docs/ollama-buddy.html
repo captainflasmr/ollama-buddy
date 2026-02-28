@@ -347,7 +347,8 @@ allowing you to leverage powerful large language models (LLMs) directly within y
     <li><a id="toc-Cloud-Authentication" href="#Cloud-Authentication">18.4 Cloud Authentication</a></li>
     <li><a id="toc-Automatic-Manifest-Pulling" href="#Automatic-Manifest-Pulling">18.5 Automatic Manifest Pulling</a></li>
     <li><a id="toc-Cloud-Model-Indicator" href="#Cloud-Model-Indicator">18.6 Cloud Model Indicator</a></li>
-    <li><a id="toc-Configuration-2" href="#Configuration-3">18.7 Configuration</a></li>
+    <li><a id="toc-Cloud-Usage-Stats" href="#Cloud-Usage-Stats">18.7 Cloud Usage Stats</a></li>
+    <li><a id="toc-Configuration-2" href="#Configuration-3">18.8 Configuration</a></li>
   </ul></li>
   <li><a id="toc-Global-System-Prompt" href="#Global-System-Prompt">19 Global System Prompt</a>
   <ul class="toc-numbered-mark">
@@ -4412,7 +4413,8 @@ Next: <a href="#Global-System-Prompt" accesskey="n" rel="next">Global System Pro
 <li><a href="#Cloud-Authentication" accesskey="4">Cloud Authentication</a></li>
 <li><a href="#Automatic-Manifest-Pulling" accesskey="5">Automatic Manifest Pulling</a></li>
 <li><a href="#Cloud-Model-Indicator" accesskey="6">Cloud Model Indicator</a></li>
-<li><a href="#Configuration-3" accesskey="7">Configuration</a></li>
+<li><a href="#Cloud-Usage-Stats" accesskey="7">Cloud Usage Stats</a></li>
+<li><a href="#Configuration-3" accesskey="8">Configuration</a></li>
 </ul>
 <div class="section-level-extent" id="Overview-4">
 <h3 class="section"><span>18.1 Overview<a class="copiable-link" href="#Overview-4"> &para;</a></span></h3>
@@ -4492,8 +4494,43 @@ and the request is not sent.
 <p>When using a cloud model, the header line displays a <code class="code">☁</code> symbol to indicate cloud model usage.
 </p>
 </div>
+<div class="section-level-extent" id="Cloud-Usage-Stats">
+<h3 class="section"><span>18.7 Cloud Usage Stats<a class="copiable-link" href="#Cloud-Usage-Stats"> &para;</a></span></h3>
+
+<p>The Model Management page (<code class="code">C-c M</code>) can display your Ollama cloud usage
+(session and weekly percentages) as visual progress bars in the Cloud Models section.
+</p>
+<p>To enable this, set <code class="code">ollama-buddy-cloud-session-token</code> to the value of the
+<code class="code">__Secure-session</code> cookie from ollama.com:
+</p>
+<ol class="enumerate">
+<li> Sign in at <a class="uref" href="https://ollama.com">https://ollama.com</a>
+</li><li> Open browser DevTools (<kbd class="kbd">F12</kbd>)
+</li><li> Go to Application (Chrome) or Storage (Firefox) &gt; Cookies &gt; ollama.com
+</li><li> Copy the value of the <code class="code">__Secure-session</code> cookie
+</li><li> Set it in Emacs:
+</li></ol>
+
+<div class="example">
+<pre class="example-preformatted">(setq ollama-buddy-cloud-session-token &quot;your-cookie-value&quot;)
+</pre></div>
+
+<p>Or use <code class="code">auth-source</code>:
+</p>
+<div class="example">
+<pre class="example-preformatted">(setq ollama-buddy-cloud-session-token
+      (auth-source-pick-first-password
+       :host &quot;ollama-buddy-cloud&quot; :user &quot;session&quot;))
+</pre></div>
+
+<p>Usage data is cached for 5 minutes (configurable via
+<code class="code">ollama-buddy-cloud-usage-cache-seconds</code>).  Use <code class="code">M-x
+ollama-buddy-cloud-refresh-usage</code> or the &ldquo;Refresh&rdquo; button on the Model
+Management page to re-fetch.
+</p>
+</div>
 <div class="section-level-extent" id="Configuration-3">
-<h3 class="section"><span>18.7 Configuration<a class="copiable-link" href="#Configuration-3"> &para;</a></span></h3>
+<h3 class="section"><span>18.8 Configuration<a class="copiable-link" href="#Configuration-3"> &para;</a></span></h3>
 
 <dl class="table">
 <dt><code class="code">ollama-buddy-cloud-models</code></dt>
@@ -4502,6 +4539,14 @@ and the request is not sent.
 </dd>
 <dt><code class="code">ollama-buddy-ollama-executable</code></dt>
 <dd><p>Path to the ollama CLI executable (default: &quot;ollama&quot;). Used for signin/signout commands.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-cloud-session-token</code></dt>
+<dd><p>Session token (cookie value) for fetching cloud usage stats from ollama.com.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-cloud-usage-cache-seconds</code></dt>
+<dd><p>Seconds to cache cloud usage data before re-fetching (default: 300).
 </p></dd>
 </dl>
 
