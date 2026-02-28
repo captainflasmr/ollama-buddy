@@ -28,6 +28,7 @@ elisp_files=(
   "ollama-buddy-awesome.el"
   "ollama-buddy-claude.el"
   "ollama-buddy-codestral.el"
+  "ollama-buddy-completion.el"
   "ollama-buddy-copilot.el"
   "ollama-buddy-core.el"
   "ollama-buddy-curl.el"
@@ -36,12 +37,13 @@ elisp_files=(
   "ollama-buddy-fabric.el"
   "ollama-buddy-gemini.el"
   "ollama-buddy-grok.el"
-  "ollama-buddy-openai.el"
   "ollama-buddy-openai-compat.el"
+  "ollama-buddy-openai.el"
   "ollama-buddy-openrouter.el"
   "ollama-buddy-rag.el"
   "ollama-buddy-remote.el"
   "ollama-buddy-rewrite.el"
+  "ollama-buddy-tips.el"
   "ollama-buddy-tools.el"
   "ollama-buddy-transient.el"
   "ollama-buddy-user-prompts.el"
@@ -78,7 +80,7 @@ Using the following script to generate a very simple init.el file which is then 
 
 # Default Emacs version if none specified
 VERSION=${1:-"28.2"}
-PACKAGE_PATH="~/source/repos/ollama-buddy"
+PACKAGE_PATH="$HOME/source/repos/ollama-buddy"
 
 # Create a temporary directory for the test
 TEMP_DIR=$(mktemp -d -t ollama-buddy-test-XXXXXX)
@@ -101,6 +103,10 @@ cat > "$INIT_FILE" << EOF
 ;; Show a message to confirm we're in test mode
 (message "Testing ollama-buddy in vanilla Emacs %s" emacs-version)
 EOF
+
+# Clean .elc files to avoid cross-version bytecode issues
+echo "Cleaning .elc files..."
+find "$PACKAGE_PATH" -maxdepth 1 -name "*.elc" -delete
 
 # Run Emacs with the temporary init file
 echo "Starting Emacs $VERSION with minimal configuration..."

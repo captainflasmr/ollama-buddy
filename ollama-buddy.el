@@ -74,7 +74,7 @@
 (require 'org)
 (require 'savehist)
 (require 'ollama-buddy-core)
-(require 'ollama-buddy-transient)
+(require 'ollama-buddy-transient nil t)
 (require 'ollama-buddy-user-prompts)
 (require 'ollama-buddy-web-search)
 (require 'ollama-buddy-rag)
