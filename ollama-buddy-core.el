@@ -643,7 +643,7 @@ The \"In-Buffer\" tone is automatically applied when
            :models ("gemma3:1b" "gemma3:4b" "gemma3:12b"))
     (:name "Coding"
            :description "Code generation, review and debugging"
-           :models ("qwen2.5-coder:1.5b" "qwen2.5-coder:7b" "qwen3-coder:8b" "starcoder2:3b"))
+           :models ("qwen2.5-coder:1.5b" "qwen2.5-coder:7b" "qwen3-coder:30b" "starcoder2:3b"))
     (:name "General Alternatives"
            :description "Other popular and versatile models"
            :models ("mistral:7b" "qwen3:4b" "qwen3:8b"))
@@ -2515,6 +2515,8 @@ ACTUAL-MODEL is the model being used instead."
                                (propertize (format "~%c" (aref tone 0))
                                            'face '(:weight bold))))))
       (setq header-line-format
+            (replace-regexp-in-string
+             "%" "%%"
             (concat
              (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s %s %s%s"
                      airplane-indicator
@@ -2547,7 +2549,7 @@ ACTUAL-MODEL is the model being used instead."
                      (or params ""))
              (when (and original-model actual-model (not (string= original-model actual-model)))
                (propertize (format " [Using %s instead of %s]" actual-model original-model)
-                           'face '(:foreground "orange" :weight bold))))))))
+                           'face '(:foreground "orange" :weight bold)))))))))
 
 (defun ollama-buddy--update-multishot-status ()
   "Update status line to show multishot progress.

@@ -3774,29 +3774,103 @@ When the operation completes, CALLBACK is called with no arguments if provided."
        ;; If no models to pull or Ollama isn't running, still allow custom input
        (list (read-string "Enter model name to pull: ")))))
 
-  (let ((payload (json-encode `((model . ,(ollama-buddy--get-real-model-name model)))))
-        (operation-id (gensym "pull-")))
+  (let* ((real-model (ollama-buddy--get-real-model-name model))
+         (payload (json-encode `((model . ,real-model))))
+         (operation-id (gensym "pull-"))
+         (pending "")
+         (headers-done nil)
+         (finished nil)
+         (pull-proc nil))
 
     (ollama-buddy--register-background-operation
      operation-id
      (format "Pulling %s" model))
-    
-    (ollama-buddy--make-request-async-backend
-     "/api/pull"
-     "POST"
-     payload
-     (lambda (status _result)
-       (if (plist-get status :error)
-           (progn
-             (message "Error pulling %s: %s" model (cdr (plist-get status :error)))
-             (ollama-buddy--complete-background-operation
-              operation-id
-              (format "Error pulling %s" model)))
-         (progn
-           (message "Successfully pulled model %s" model)
-           (ollama-buddy--complete-background-operation
-            operation-id
-            (format "Successfully pulled model %s" model))))))))
+
+    (condition-case err
+        (let ((proc (make-network-process
+                     :name (format "ollama-pull-%s" real-model)
+                     :buffer nil
+                     :host ollama-buddy-host
+                     :service ollama-buddy-port
+                     :coding 'utf-8
+                     :filter
+                     (lambda (_proc output)
+                       (unless finished
+                         (save-match-data
+                           (setq pending (concat pending output))
+                           ;; Skip HTTP headers
+                           (unless headers-done
+                             (when (string-match "\r\n\r\n" pending)
+                               (setq pending (substring pending (match-end 0)))
+                               (setq headers-done t)))
+                           (when headers-done
+                             ;; Process complete NDJSON lines
+                             (let (json-lines)
+                               ;; First collect all complete lines
+                               (while (string-match "^\\([^\n]+\\)\n" pending)
+                                 (push (match-string 1 pending) json-lines)
+                                 (setq pending (substring pending (match-end 0))))
+                               ;; Then process them (no match-data dependency)
+                               (dolist (line (nreverse json-lines))
+                                 (unless finished
+                                   (condition-case nil
+                                       (let* ((json (json-read-from-string line))
+                                              (status-text (cdr (assq 'status json)))
+                                              (total (cdr (assq 'total json)))
+                                              (completed (cdr (assq 'completed json)))
+                                              (err-text (cdr (assq 'error json))))
+                                         (cond
+                                          (err-text
+                                           (setq finished t)
+                                           (run-at-time 0 nil
+                                                        (lambda ()
+                                                          (message "Error pulling %s: %s" model err-text)
+                                                          (ollama-buddy--complete-background-operation
+                                                           operation-id
+                                                           (format "Error: %s" err-text))
+                                                          (when (and pull-proc (process-live-p pull-proc))
+                                                            (delete-process pull-proc)))))
+                                          ((equal status-text "success")
+                                           (setq finished t)
+                                           (run-at-time 0 nil
+                                                        (lambda ()
+                                                          (message "Successfully pulled model %s" model)
+                                                          (ollama-buddy--complete-background-operation
+                                                           operation-id
+                                                           (format "Successfully pulled %s" model))
+                                                          (when (and pull-proc (process-live-p pull-proc))
+                                                            (delete-process pull-proc)))))
+                                          ((and total (> total 0) completed)
+                                           (let ((pct (/ (* 100 completed) total)))
+                                             (ollama-buddy--update-background-operation
+                                              operation-id
+                                              (format "Pulling %s %d%%" model pct))))
+                                          (status-text
+                                           (ollama-buddy--update-background-operation
+                                            operation-id
+                                            (format "Pulling %s: %s" model status-text)))))
+                                     (error nil)))))))))
+                     :sentinel
+                     (lambda (_proc _event)
+                       (unless finished
+                         (setq finished t)
+                         (message "Error pulling %s: connection closed unexpectedly" model)
+                         (ollama-buddy--complete-background-operation
+                          operation-id
+                          (format "Error pulling %s" model)))))))
+          (setq pull-proc proc)
+          (process-send-string
+           proc
+           (concat "POST /api/pull HTTP/1.1\r\n"
+                   (format "Host: %s:%d\r\n" ollama-buddy-host ollama-buddy-port)
+                   "Content-Type: application/json\r\n"
+                   (format "Content-Length: %d\r\n\r\n" (string-bytes payload))
+                   payload)))
+      (error
+       (message "Error pulling %s: %s" model (error-message-string err))
+       (ollama-buddy--complete-background-operation
+        operation-id
+        (format "Error pulling %s" model))))))
 
 (defun ollama-buddy-copy-model (model)
   "Copy MODEL in Ollama."
@@ -3813,18 +3887,23 @@ When the operation completes, CALLBACK is called with no arguments if provided."
      "/api/copy"
      "POST"
      payload
-     (lambda (status _result)
-       (if (plist-get status :error)
-           (progn
-             (message "Error copying: %s" (cdr (plist-get status :error)))
-             (ollama-buddy--complete-background-operation
-              operation-id
-              (format "Error copying %s" model)))
-         (progn
-           (message "Model %s successfully copied to %s" model destination)
-           (ollama-buddy--complete-background-operation
-            operation-id
-            (format "Successfully copied model %s" model))))))))
+     (lambda (status result)
+       (cond
+        ((plist-get status :error)
+         (message "Error copying: %s" (cdr (plist-get status :error)))
+         (ollama-buddy--complete-background-operation
+          operation-id
+          (format "Error copying %s" model)))
+        ((and result (cdr (assq 'error result)))
+         (message "Error copying %s: %s" model (cdr (assq 'error result)))
+         (ollama-buddy--complete-background-operation
+          operation-id
+          (format "Error copying %s" model)))
+        (t
+         (message "Model %s successfully copied to %s" model destination)
+         (ollama-buddy--complete-background-operation
+          operation-id
+          (format "Successfully copied model %s" model))))))))
 
 (defun ollama-buddy-delete-model (model)
   "Delete MODEL from Ollama."
@@ -3839,18 +3918,23 @@ When the operation completes, CALLBACK is called with no arguments if provided."
      "/api/delete"
      "DELETE"
      payload
-     (lambda (status _result)
-       (if (plist-get status :error)
-           (progn
-             (message "Error deleting: %s" (cdr (plist-get status :error)))
-             (ollama-buddy--complete-background-operation
-              operation-id
-              (format "Error deleting %s" model)))
-         (progn
-           (message "Model %s successfully deleted" model)
-           (ollama-buddy--complete-background-operation
-            operation-id
-            (format "Successfully deleted model %s" model))))))))
+     (lambda (status result)
+       (cond
+        ((plist-get status :error)
+         (message "Error deleting: %s" (cdr (plist-get status :error)))
+         (ollama-buddy--complete-background-operation
+          operation-id
+          (format "Error deleting %s" model)))
+        ((and result (cdr (assq 'error result)))
+         (message "Error deleting %s: %s" model (cdr (assq 'error result)))
+         (ollama-buddy--complete-background-operation
+          operation-id
+          (format "Error deleting %s" model)))
+        (t
+         (message "Model %s successfully deleted" model)
+         (ollama-buddy--complete-background-operation
+          operation-id
+          (format "Successfully deleted model %s" model))))))))
 
 (defun ollama-buddy-params-help ()
   "Display help for Ollama parameters."
