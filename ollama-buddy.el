@@ -764,6 +764,43 @@ is ever needed."
                                     bar
                                     avg-rate))))))
 
+            ;; Average response wait time by model
+            (let ((wait-data (make-hash-table :test 'equal)))
+              ;; Gather wait times per model
+              (dolist (info ollama-buddy--token-usage-history)
+                (when-let* ((wt (plist-get info :wait-time)))
+                  (let* ((model (plist-get info :model))
+                         (entry (gethash model wait-data)))
+                    (unless entry
+                      (setq entry (list :waits nil))
+                      (puthash model entry wait-data))
+                    (plist-put entry :waits (cons wt (plist-get entry :waits))))))
+
+              (when (> (hash-table-count wait-data) 0)
+                (insert "\n* Average Time to First Token by Model\n\n")
+                (let ((wait-models nil)
+                      (max-wait 0)
+                      (max-model-len 0))
+                  (maphash (lambda (model entry)
+                             (let ((avg (/ (apply #'+ (plist-get entry :waits))
+                                           (float (length (plist-get entry :waits))))))
+                               (push (cons model avg) wait-models)
+                               (setq max-wait (max max-wait avg))
+                               (setq max-model-len (max max-model-len (length model)))))
+                           wait-data)
+                  ;; Sort by average wait time descending
+                  (setq wait-models (sort wait-models (lambda (a b) (> (cdr a) (cdr b)))))
+                  (when (> max-wait 0)
+                    (dolist (entry wait-models)
+                      (let* ((model (car entry))
+                             (avg (cdr entry))
+                             (count (length (plist-get (gethash model wait-data) :waits)))
+                             (bar-width (max 1 (round (* 50 (/ avg max-wait)))))
+                             (bar (make-string bar-width ?█)))
+                        (insert (format (format "%%-%ds │ %%s %%.1fs (%%d samples)\n"
+                                                max-model-len)
+                                        model bar avg count))))))))
+
             ;; Recent interactions
             (insert "\n* Recent Interactions\n\n")
             (let ((recent (seq-take ollama-buddy--token-usage-history 10)))
@@ -771,10 +808,13 @@ is ever needed."
                 (let ((model (plist-get info :model))
                       (tokens (plist-get info :tokens))
                       (rate (plist-get info :rate))
+                      (wait (plist-get info :wait-time))
                       (time (format-time-string "%Y-%m-%d %H:%M:%S"
                                                 (plist-get info :timestamp))))
-                  (insert (format "  *%s*: %d tokens (%.2f t/s) at %s\n"
-                                  model tokens rate time))))))))
+                  (insert (format "  *%s*: %d tokens (%.2f t/s)%s at %s\n"
+                                  model tokens rate
+                                  (if wait (format " [wait %.1fs]" wait) "")
+                                  time))))))))
       (goto-char (point-min))
       (visual-line-mode -1)
       (setq truncate-lines t)
@@ -1572,6 +1612,35 @@ With prefix argument ALL-MODELS, clear history for all models."
       (setq ollama-buddy--last-token-count ollama-buddy--current-token-count
             ollama-buddy--last-update-time current-time))))
 
+(defun ollama-buddy--start-response-wait-timer ()
+  "Start the response-wait elapsed timer if threshold is configured."
+  (ollama-buddy--cancel-response-wait-timer)
+  (setq ollama-buddy--response-wait-duration nil)
+  (setq ollama-buddy--response-wait-start (float-time))
+  (when ollama-buddy-response-wait-threshold
+    (setq ollama-buddy--response-wait-timer
+          (run-with-timer 1 1 #'ollama-buddy--update-response-wait-display))))
+
+(defun ollama-buddy--cancel-response-wait-timer ()
+  "Cancel the response-wait timer and reset state.
+Captures the elapsed wait duration before clearing."
+  (when ollama-buddy--response-wait-timer
+    (cancel-timer ollama-buddy--response-wait-timer)
+    (setq ollama-buddy--response-wait-timer nil))
+  (when ollama-buddy--response-wait-start
+    (setq ollama-buddy--response-wait-duration
+          (- (float-time) ollama-buddy--response-wait-start))
+    (setq ollama-buddy--response-wait-start nil)))
+
+(defun ollama-buddy--update-response-wait-display ()
+  "Update the status line with elapsed wait time."
+  (if (null ollama-buddy--response-wait-start)
+      ;; First token already arrived — cancel ourselves
+      (ollama-buddy--cancel-response-wait-timer)
+    (let ((elapsed (round (- (float-time) ollama-buddy--response-wait-start))))
+      (when (>= elapsed ollama-buddy-response-wait-threshold)
+        (ollama-buddy--update-status (format "Processing... %ds" elapsed))))))
+
 (defun ollama-buddy-toggle-token-display ()
   "Toggle display of token statistics after each response."
   (interactive)
@@ -1885,6 +1954,7 @@ TCP packets split a JSON object across multiple filter calls."
       (when (and thinking-text (not (string-empty-p thinking-text)))
         ;; Start token timer on first token
         (unless ollama-buddy--current-token-start-time
+          (ollama-buddy--cancel-response-wait-timer)
           (setq ollama-buddy--current-token-start-time (float-time)
                 ollama-buddy--last-token-count 0
                 ollama-buddy--last-update-time nil)
@@ -1917,10 +1987,11 @@ TCP packets split a JSON object across multiple filter calls."
       (when text
         ;; Set start time if this is the first token and start the update timer
         (unless ollama-buddy--current-token-start-time
+          (ollama-buddy--cancel-response-wait-timer)
           (setq ollama-buddy--current-token-start-time (float-time)
                 ollama-buddy--last-token-count 0
                 ollama-buddy--last-update-time nil)
-          
+
           ;; Start the real-time update timer
           (when ollama-buddy--token-update-timer
             (cancel-timer ollama-buddy--token-update-timer))
@@ -2203,6 +2274,7 @@ TCP packets split a JSON object across multiple filter calls."
                                            :tokens ollama-buddy--current-token-count
                                            :elapsed elapsed-time
                                            :rate token-rate
+                                           :wait-time ollama-buddy--response-wait-duration
                                            :timestamp (current-time))))
 
                     ;; Add to history
@@ -2306,6 +2378,9 @@ TCP packets split a JSON object across multiple filter calls."
     (when ollama-buddy--token-update-timer
       (cancel-timer ollama-buddy--token-update-timer)
       (setq ollama-buddy--token-update-timer nil))
+
+    ;; Clean up response wait timer
+    (ollama-buddy--cancel-response-wait-timer)
 
     ;; Reset stream buffer
     (setq ollama-buddy--stream-pending "")
@@ -3098,6 +3173,8 @@ and no new user message is added."
                                      "Vision Processing..."
                                    "Processing...")
                                  original-model model)
+
+    (ollama-buddy--start-response-wait-timer)
 
     (when (and ollama-buddy--active-process
                (process-live-p ollama-buddy--active-process))

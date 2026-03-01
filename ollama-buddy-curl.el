@@ -244,6 +244,7 @@ When complete, CALLBACK is called with the status response and result."
 (defun ollama-buddy-curl--handle-thinking (thinking-text)
   "Handle a thinking token from the message.thinking API field."
   (unless ollama-buddy--current-token-start-time
+    (ollama-buddy--cancel-response-wait-timer)
     (setq ollama-buddy--current-token-start-time (float-time)
           ollama-buddy--current-token-count 0
           ollama-buddy--current-response "")
@@ -284,10 +285,11 @@ When complete, CALLBACK is called with the status response and result."
   "Handle content token from curl response."
   ;; Initialize token tracking on first content
   (unless ollama-buddy--current-token-start-time
+    (ollama-buddy--cancel-response-wait-timer)
     (setq ollama-buddy--current-token-start-time (float-time)
           ollama-buddy--current-token-count 0
           ollama-buddy--current-response "")
-    
+
     ;; Start token rate timer
     (when ollama-buddy--token-update-timer
       (cancel-timer ollama-buddy--token-update-timer))
@@ -404,6 +406,7 @@ When complete, CALLBACK is called with the status response and result."
                                  :tokens ollama-buddy--current-token-count
                                  :elapsed elapsed
                                  :rate rate
+                                 :wait-time ollama-buddy--response-wait-duration
                                  :timestamp (current-time))))
           (push token-info ollama-buddy--token-usage-history))
         
@@ -458,6 +461,9 @@ When complete, CALLBACK is called with the status response and result."
               ;; Move to prompt if response is wholly visible
               (ollama-buddy--maybe-goto-prompt window response-start))))
         
+        ;; Clean up response wait timer
+        (ollama-buddy--cancel-response-wait-timer)
+
         ;; Reset tracking variables
         (setq ollama-buddy--current-token-count 0
               ollama-buddy--current-token-start-time nil
@@ -639,6 +645,8 @@ authentication via `ollama signin'."
                                      "Curl Vision Processing..."
                                    "Curl Processing...")
                                  original-model model)
+
+    (ollama-buddy--start-response-wait-timer)
 
     ;; Kill existing process
     (when (and ollama-buddy--active-process (process-live-p ollama-buddy--active-process))

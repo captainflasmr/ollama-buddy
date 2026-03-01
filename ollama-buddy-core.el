@@ -1014,6 +1014,24 @@ Strips both local Ollama prefixes (o:, cl:) and remote provider prefixes
 (defvar ollama-buddy--token-usage-history nil
   "History of token usage for ollama-buddy interactions.")
 
+(defcustom ollama-buddy-response-wait-threshold 3
+  "Seconds before showing elapsed time on the \"Processing...\" status.
+When non-nil, after this many seconds the status line will display
+\"Processing... Ns\" while waiting for the first token.
+Set to 0 to always show the timer, or nil to disable it."
+  :type '(choice (const :tag "Disabled" nil)
+                 (integer :tag "Seconds"))
+  :group 'ollama-buddy)
+
+(defvar ollama-buddy--response-wait-start nil
+  "Timestamp (`float-time') when the current request was sent, nil when idle.")
+
+(defvar ollama-buddy--response-wait-timer nil
+  "Timer object for the response-wait elapsed display.")
+
+(defvar ollama-buddy--response-wait-duration nil
+  "Seconds waited for first token in the current/last request.")
+
 (defvar ollama-buddy--current-token-count 0
   "Counter for tokens in the current response.")
 

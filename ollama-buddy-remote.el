@@ -200,6 +200,7 @@ TOKEN-COUNT-SYMBOL is the symbol to set with the token count."
                     :tokens token-count
                     :elapsed elapsed-time
                     :rate token-rate
+                    :wait-time ollama-buddy--response-wait-duration
                     :timestamp (current-time))
               ollama-buddy--token-usage-history)
 
@@ -475,6 +476,7 @@ Returns nil to skip the line (e.g. [DONE] or non-content events).")
                       :tokens token-count
                       :elapsed elapsed-time
                       :rate token-rate
+                      :wait-time ollama-buddy--response-wait-duration
                       :timestamp (current-time))
                 ollama-buddy--token-usage-history)
           ;; Show token stats if enabled
