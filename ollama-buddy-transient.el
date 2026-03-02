@@ -114,15 +114,18 @@
 
    ["Actions"
     ("h" "Help/Menu" ollama-buddy--menu-help-assistant)
-    ("SPC" "Toggle Tools" ollama-buddy-transient--tools-toggle)
     ("l" "Send Region" (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))
     ("k" "Cancel" ollama-buddy--cancel-request)
     ("x" "Toggle Stream" ollama-buddy-toggle-streaming)
     ("v" "Keep Alive" ollama-buddy-set-keepalive)
     ("!" "Airplane Mode" ollama-buddy-toggle-airplane-mode)
+    ]
+
+   ["Tools"
+    ("SPC" "Toggle Tools" ollama-buddy-transient--tools-toggle)
+    ("Q" "List Tools" ollama-buddy-transient--tools-info)
     ("W" "In-Buffer Replace" ollama-buddy-toggle-in-buffer-replace)
     ("c" "Completion Mode" ollama-buddy-completion-toggle)
-    ("Q" "List Tools" ollama-buddy-transient--tools-info)
     ]
 
    ["System Prompts"
