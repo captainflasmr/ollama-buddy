@@ -592,7 +592,9 @@ Cancelling with \\[keyboard-quit] does nothing; use \\[quoted-insert] @ for a li
     ("awesome"   . ollama-buddy-awesome-set-system-prompt)
     ("streaming"  . ollama-buddy-toggle-streaming)
     ("reset"      . ollama-buddy-reset-system-prompt)
-    ("completion" . ollama-buddy-completion-toggle))
+    ("completion" . ollama-buddy-completion-toggle)
+    ("new"        . ollama-buddy-sessions-new)
+    ("exit"       . ollama-buddy-exit))
   "Alist of available `/' slash commands.
 Each entry is (NAME . FUNCTION) where FUNCTION is called interactively."
   :type '(alist :key-type string :value-type function)
@@ -1658,6 +1660,13 @@ Filters stop words and returns up to 5 key words joined by hyphens."
     (ollama-buddy--update-status "New session started")
     (ollama-buddy-update-mode-line)
     (message "Started new session")))
+
+(defun ollama-buddy-exit ()
+  "Close the Ollama Buddy chat buffer."
+  (interactive)
+  (when-let* ((buf (get-buffer ollama-buddy--chat-buffer)))
+    (quit-window nil (get-buffer-window buf))
+    (kill-buffer buf)))
 
 (defun ollama-buddy-clear-history (&optional all-models)
   "Clear the conversation history.

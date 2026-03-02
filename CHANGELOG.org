@@ -30,6 +30,8 @@ Benchmark all models and multishot timeout.
   speed (40%), responsiveness (30%), and throughput (30%).  Medals (🥇🥈🥉) mark
   the top 3 and are propagated into the Token Count, Token Rate, and TTFT charts
   for at-a-glance cross-referencing.  Does not measure response accuracy or quality.
+- *=/new= and =/exit= slash commands* -- =/new= starts a fresh session (same as
+  =/clear=), =/exit= closes the chat buffer.
 
 *** New Customizations
 
