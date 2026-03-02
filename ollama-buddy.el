@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 3.2.0
+;; Version: 3.2.1
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -751,18 +751,26 @@ is ever needed."
                                  (setq max-rate (max max-rate avg))))))
                          model-data)
 
-                ;; Display bar chart
-                (dolist (model models)
-                  (let* ((stats (gethash model model-data))
-                         (rates (plist-get stats :rates))
-                         (avg-rate (if rates (/ (apply #'+ rates) (float (length rates))) 0))
-                         (bar-width (round (* 50 (/ avg-rate max-rate))))
-                         (bar (make-string bar-width ?█)))
-                    (insert (format (format "%%-%ds │ %%s %%.1f tokens/sec\n"
-                                            max-model-len)
-                                    model
-                                    bar
-                                    avg-rate))))))
+                ;; Sort models by average rate descending
+                (let ((rate-sorted
+                       (sort (copy-sequence models)
+                             (lambda (a b)
+                               (let ((ra (plist-get (gethash a model-data) :rates))
+                                     (rb (plist-get (gethash b model-data) :rates)))
+                                 (> (if ra (/ (apply #'+ ra) (float (length ra))) 0)
+                                    (if rb (/ (apply #'+ rb) (float (length rb))) 0)))))))
+                  ;; Display bar chart
+                  (dolist (model rate-sorted)
+                    (let* ((stats (gethash model model-data))
+                           (rates (plist-get stats :rates))
+                           (avg-rate (if rates (/ (apply #'+ rates) (float (length rates))) 0))
+                           (bar-width (round (* 50 (/ avg-rate max-rate))))
+                           (bar (make-string bar-width ?█)))
+                      (insert (format (format "%%-%ds │ %%s %%.1f tokens/sec\n"
+                                              max-model-len)
+                                      model
+                                      bar
+                                      avg-rate)))))))
 
             ;; Average response wait time by model
             (let ((wait-data (make-hash-table :test 'equal)))
@@ -788,8 +796,8 @@ is ever needed."
                                (setq max-wait (max max-wait avg))
                                (setq max-model-len (max max-model-len (length model)))))
                            wait-data)
-                  ;; Sort by average wait time descending
-                  (setq wait-models (sort wait-models (lambda (a b) (> (cdr a) (cdr b)))))
+                  ;; Sort by average wait time ascending (fastest first)
+                  (setq wait-models (sort wait-models (lambda (a b) (< (cdr a) (cdr b)))))
                   (when (> max-wait 0)
                     (dolist (entry wait-models)
                       (let* ((model (car entry))
@@ -2396,6 +2404,7 @@ TCP packets split a JSON object across multiple filter calls."
                   ;; Handle multishot progression here
                   (if ollama-buddy--multishot-sequence
                       (progn
+                        (ollama-buddy--multishot-cancel-timer)
                         ;; Increment progress
                         (if (< ollama-buddy--multishot-progress
                                (length ollama-buddy--multishot-sequence))
@@ -2440,7 +2449,7 @@ TCP packets split a JSON object across multiple filter calls."
               (msg (format "\n\n[Stream %s]" status)))
     ;; Clean up multishot variables but ensure we don't create out-of-range conditions
     (setq ollama-buddy--multishot-prompt nil)
-    
+
     ;; Only set sequence to nil if we're done with it or interrupted
     (when (or (string= status "Interrupted")
               (not ollama-buddy--multishot-sequence)
@@ -3309,17 +3318,75 @@ and no new user message is added."
   (setq ollama-buddy--current-request-temporary-model ollama-buddy--current-model)
   (ollama-buddy--send-next-in-sequence))
 
+(defun ollama-buddy--multishot-cancel-timer ()
+  "Cancel the multishot per-model timeout timer if active."
+  (when (timerp ollama-buddy--multishot-timer)
+    (cancel-timer ollama-buddy--multishot-timer)
+    (setq ollama-buddy--multishot-timer nil)))
+
+(defun ollama-buddy--multishot-timeout-handler ()
+  "Handle a multishot per-model timeout.
+Kill the active process, insert a timeout notice, and advance to the next model."
+  (setq ollama-buddy--multishot-timer nil)
+  (let ((model (or ollama-buddy--current-model "unknown")))
+    ;; Kill the active process.  Clear the sentinel first so it doesn't
+    ;; run synchronously during delete-process and wipe multishot state.
+    (when (and ollama-buddy--active-process
+               (process-live-p ollama-buddy--active-process))
+      (set-process-sentinel ollama-buddy--active-process nil)
+      (delete-process ollama-buddy--active-process)
+      (setq ollama-buddy--active-process nil))
+
+    ;; Clean up token tracking
+    (when ollama-buddy--token-update-timer
+      (cancel-timer ollama-buddy--token-update-timer)
+      (setq ollama-buddy--token-update-timer nil))
+    (ollama-buddy--cancel-response-wait-timer)
+    (setq ollama-buddy--current-token-count 0
+          ollama-buddy--current-token-start-time nil
+          ollama-buddy--last-token-count 0
+          ollama-buddy--last-update-time nil
+          ollama-buddy--stream-pending "")
+
+    ;; Insert timeout notice in the buffer
+    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+      (let ((inhibit-read-only t))
+        (save-excursion
+          (goto-char (point-max))
+          (insert (format "\n\n*** TIMED OUT (%ds)" ollama-buddy-multishot-timeout)))))
+
+    (message "Multishot: %s timed out after %ds, skipping"
+             model ollama-buddy-multishot-timeout)
+
+    ;; Restore the saved model before advancing
+    (when ollama-buddy--current-request-temporary-model
+      (setq ollama-buddy--current-model ollama-buddy--current-request-temporary-model
+            ollama-buddy--current-request-temporary-model nil))
+
+    ;; Advance to next model or finish
+    (if (and ollama-buddy--multishot-sequence
+             (< ollama-buddy--multishot-progress
+                (length ollama-buddy--multishot-sequence)))
+        (run-with-timer 0.5 nil #'ollama-buddy--send-next-in-sequence)
+      (ollama-buddy--update-status "Multi Finished")
+      (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+        (ollama-buddy--prepare-prompt-area))
+      (setq ollama-buddy--multishot-sequence nil
+            ollama-buddy--multishot-prompt nil
+            ollama-buddy--multishot-progress 0))))
+
 (defun ollama-buddy--send-next-in-sequence ()
   "Send prompt to next model in the multishot sequence."
   (when (and ollama-buddy--multishot-sequence
              ollama-buddy--multishot-prompt
              (< ollama-buddy--multishot-progress (length ollama-buddy--multishot-sequence)))
-    
+
+    ;; Cancel any previous per-model timer
+    (ollama-buddy--multishot-cancel-timer)
+
     ;; Get the next model key from the list
     (let* ((current-key (nth ollama-buddy--multishot-progress ollama-buddy--multishot-sequence))
            (model (cdr (assoc current-key ollama-buddy--model-letters))))
-      (prin1 "################1")
-      (prin1 ollama-buddy--multishot-progress)
       (when model
         ;; Set current model and prepare prompt
         (setq ollama-buddy--current-model model)
@@ -3331,11 +3398,17 @@ and no new user message is added."
               (with-current-buffer buf
                 (let ((inhibit-read-only t))
                   (insert ollama-buddy--multishot-prompt))))))
-        
+
         ;; Increment progress counter BEFORE sending the prompt
         ;; This is crucial to avoid access errors during the stream filter
         (setq ollama-buddy--multishot-progress (1+ ollama-buddy--multishot-progress))
-        
+
+        ;; Start per-model timeout timer
+        (when ollama-buddy-multishot-timeout
+          (setq ollama-buddy--multishot-timer
+                (run-with-timer ollama-buddy-multishot-timeout nil
+                               #'ollama-buddy--multishot-timeout-handler)))
+
         ;; Send the prompt
         (ollama-buddy--send-backend ollama-buddy--multishot-prompt model)))))
 
@@ -3385,6 +3458,29 @@ and no new user message is added."
         
         ;; Start the multishot sequence
         (ollama-buddy--multishot-send prompt-text valid-sequences)))))
+
+(defun ollama-buddy-benchmark-models ()
+  "Benchmark all available models by sending a prompt to each via multishot.
+Uses `ollama-buddy-benchmark-prompt' as the prompt text.  Embedding models
+are skipped.  Results are recorded in `ollama-buddy--token-usage-history'."
+  (interactive)
+  (ollama-buddy--assign-model-letters (ollama-buddy--get-models))
+  (let* ((model-alist ollama-buddy--model-letters)
+         (sequences
+          (cl-remove-if
+           (lambda (key)
+             (let ((model (cdr (assoc key model-alist))))
+               (and model (string-match-p "embed" model))))
+           (mapcar #'car model-alist))))
+    (unless sequences
+      (user-error "No models available to benchmark"))
+    ;; Ensure chat buffer exists and insert the benchmark prompt
+    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+      (ollama-buddy--prepare-prompt-area t t)
+      (let ((inhibit-read-only t))
+        (goto-char (point-max))
+        (insert ollama-buddy-benchmark-prompt)))
+    (ollama-buddy--multishot-send ollama-buddy-benchmark-prompt sequences)))
 
 (defun ollama-buddy--cycle-prompt-history (direction)
   "Cycle through prompt history in DIRECTION (1=forward, -1=backward)."
@@ -3565,7 +3661,8 @@ Modifies the variable in place."
         ;; Reset stream buffer
         (setq ollama-buddy--stream-pending "")
 
-        ;; Safely reset multishot variables
+        ;; Cancel multishot timer and reset multishot variables
+        (ollama-buddy--multishot-cancel-timer)
         (setq ollama-buddy--multishot-prompt nil)
         ;; Only reset sequence if we were using it
         (when ollama-buddy--multishot-sequence
@@ -4522,7 +4619,8 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c m") #'ollama-buddy--swap-model)
     (define-key map (kbd "C-c i") #'ollama-buddy-show-raw-model-info)
     (define-key map (kbd "C-c U") #'ollama-buddy--multishot-prompt)
-    
+    (define-key map (kbd "C-c u") #'ollama-buddy-benchmark-models)
+
     ;; Roles & Patterns keybindings
     (define-key map (kbd "C-c R") #'ollama-buddy-roles-switch-role)
     (define-key map (kbd "C-c E") #'ollama-buddy-role-creator-create-new-role)

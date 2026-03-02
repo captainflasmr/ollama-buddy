@@ -1090,6 +1090,22 @@ Multishot mode allows you to send the same prompt to multiple models simultaneou
 @item Watch as Ollama Buddy processes your request with each model in sequence
 @end enumerate
 
+Each model in a multishot sequence is subject to a per-model timeout
+(default 120 seconds, configurable via @code{ollama-buddy-multishot-timeout}).
+If a model exceeds the timeout, its request is cancelled, a @samp{TIMED OUT}
+marker is inserted, and the sequence continues with the next model.
+Set @code{ollama-buddy-multishot-timeout} to @code{nil} to disable.
+
+@subsection Benchmark All Models
+
+Press @code{C-c u} (or use the transient menu: @samp{u Benchmark All}) to
+automatically send a prompt to every available model via multishot.  This
+builds persistent token usage statistics for all accessible models in one
+command.  Embedding models are filtered out.
+
+The benchmark prompt is configurable via @code{ollama-buddy-benchmark-prompt}
+(default: @samp{"Explain what a binary tree is in 2-3 sentences."}).
+
 @node Context Management
 @chapter Context Management
 

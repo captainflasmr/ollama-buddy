@@ -1745,6 +1745,22 @@ simultaneously:
 5. Watch as Ollama Buddy processes your request with each model in
    sequence
 
+Each model in a multishot sequence is subject to a per-model timeout
+(default 120 seconds, configurable via =ollama-buddy-multishot-timeout=).
+If a model exceeds the timeout, its request is cancelled, a =TIMED OUT=
+marker is inserted, and the sequence continues with the next model.
+Set =ollama-buddy-multishot-timeout= to =nil= to disable.
+
+**** Benchmark All Models
+
+Press =C-c u= (or use the transient menu: =u Benchmark All=) to
+automatically send a prompt to every available model via multishot.  This
+builds persistent token usage statistics for all accessible models in one
+command.  Embedding models are filtered out.
+
+The benchmark prompt is configurable via =ollama-buddy-benchmark-prompt=
+(default: ="Explain what a binary tree is in 2-3 sentences."=).
+
 --------------
 
 <<Context-Management>>

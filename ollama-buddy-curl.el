@@ -24,6 +24,7 @@
 (declare-function ollama-buddy--collapse-thinking-block "ollama-buddy")
 (declare-function ollama-buddy--update-token-rate-display "ollama-buddy")
 (declare-function ollama-buddy--send-next-in-sequence "ollama-buddy")
+(declare-function ollama-buddy--multishot-cancel-timer "ollama-buddy")
 (declare-function ollama-buddy--autosave-transcript "ollama-buddy")
 
 ;; Buffer-local variables defined in ollama-buddy.el and used here as free vars.
@@ -484,9 +485,11 @@ When complete, CALLBACK is called with the status response and result."
         
         ;; Handle multishot or update status
         (if ollama-buddy--multishot-sequence
-            (if (< ollama-buddy--multishot-progress (length ollama-buddy--multishot-sequence))
-                (run-with-timer 0.5 nil #'ollama-buddy--send-next-in-sequence)
-              (ollama-buddy--update-status "Multi Finished"))
+            (progn
+              (ollama-buddy--multishot-cancel-timer)
+              (if (< ollama-buddy--multishot-progress (length ollama-buddy--multishot-sequence))
+                  (run-with-timer 0.5 nil #'ollama-buddy--send-next-in-sequence)
+                (ollama-buddy--update-status "Multi Finished")))
           (let ((last-info (car ollama-buddy--token-usage-history)))
             (if last-info
                 (ollama-buddy--update-status

@@ -138,6 +138,7 @@
     ("m" "Switch" ollama-buddy--swap-model)
     ("i" "Info" ollama-buddy-show-raw-model-info)
     ("U" "Multishot" ollama-buddy--multishot-prompt)
+    ("u" "Benchmark All" ollama-buddy-benchmark-models)
     ]
 
    ["Roles"

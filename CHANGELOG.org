@@ -11,6 +11,28 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-03-02 Sun> *3.2.1*
+
+Benchmark all models and multishot timeout.
+
+*** New Features
+
+- *Benchmark All Models* (=C-c u=) -- Send a configurable prompt to every available
+  model via multishot, automatically building token usage statistics for all
+  accessible models in one command.  Embedding models are filtered out.  Also
+  available from the transient menu (=u Benchmark All=).
+- *Multishot Per-Model Timeout* -- Each model in a multishot or benchmark sequence
+  gets a configurable timeout (default 120 seconds).  If a model exceeds the limit
+  its request is cancelled, a =*** TIMED OUT= marker is inserted, and the sequence
+  continues with the next model.
+
+*** New Customizations
+
+- =ollama-buddy-benchmark-prompt= -- Prompt sent to each model during benchmark
+  (default: ="Explain what a binary tree is in 2-3 sentences."=)
+- =ollama-buddy-multishot-timeout= -- Per-model timeout in seconds for multishot
+  sequences (default: 120, set to =nil= to disable)
+
 ** <2026-02-28 Fri> *3.2.0*
 
 Cloud usage statistics on the Model Management page.

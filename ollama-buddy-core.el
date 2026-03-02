@@ -1023,6 +1023,11 @@ When the history exceeds this size, oldest entries are trimmed."
   :type 'integer
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-benchmark-prompt "Explain what a binary tree is in 2-3 sentences."
+  "Prompt sent to each model during `ollama-buddy-benchmark-models'."
+  :type 'string
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-response-wait-threshold 3
   "Seconds before showing elapsed time on the \"Processing...\" status.
 When non-nil, after this many seconds the status line will display
@@ -1116,6 +1121,17 @@ Cleared automatically after it has been consumed.")
 
 (defvar ollama-buddy--multishot-prompt nil
   "The prompt being used for the current multishot sequence.")
+
+(defcustom ollama-buddy-multishot-timeout 120
+  "Per-model timeout in seconds during multishot sequences.
+When a model takes longer than this, its request is cancelled and
+the next model in the sequence is tried.  Set to nil to disable."
+  :type '(choice (const :tag "Disabled" nil)
+                 (integer :tag "Seconds"))
+  :group 'ollama-buddy)
+
+(defvar ollama-buddy--multishot-timer nil
+  "Timer for the current multishot per-model timeout.")
 
 (defvar ollama-buddy--model-handlers (make-hash-table :test 'equal)
   "Map of model prefixes to handler functions.")
@@ -1716,7 +1732,7 @@ Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
            "\n\n* Welcome to _OLLAMA BUDDY_\n\n"
            "#+begin_example\n"
            "┌───────────────────────────────────┐\n"
-           "│  O L L A M A B U D D Y  [v3.2.0]  │\n"
+           "│  O L L A M A B U D D Y  [v3.2.1]  │\n"
            "└───────────────────────────────────┘\n"
            ;; "╔════════════════════════════════════════════════════════════╗\n"
            ;; "║  ▄▀▀▀▄ █   █   ▄▀▀▀▄ █▀▄▀█ ▄▀▀▀▄ █▀▀▄ █  █ █▀▀▄ █▀▀▄ █  █  ║\n"

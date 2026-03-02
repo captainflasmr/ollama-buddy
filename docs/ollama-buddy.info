@@ -1023,6 +1023,25 @@ simultaneously:
   5. Watch as Ollama Buddy processes your request with each model in
      sequence
 
+   Each model in a multishot sequence is subject to a per-model timeout
+(default 120 seconds, configurable via
+‘ollama-buddy-multishot-timeout’).  If a model exceeds the timeout, its
+request is cancelled, a ‘TIMED OUT’ marker is inserted, and the sequence
+continues with the next model.  Set ‘ollama-buddy-multishot-timeout’ to
+‘nil’ to disable.
+
+7.8.1 Benchmark All Models
+--------------------------
+
+Press ‘C-c u’ (or use the transient menu: ‘u Benchmark All’) to
+automatically send a prompt to every available model via multishot.
+This builds persistent token usage statistics for all accessible models
+in one command.  Embedding models are filtered out.
+
+   The benchmark prompt is configurable via
+‘ollama-buddy-benchmark-prompt’ (default: ‘"Explain what a binary tree
+is in 2-3 sentences."’).
+
 
 File: ollama-buddy.info,  Node: Context Management,  Next: File Attachments,  Prev: Working with Models,  Up: Top
 
@@ -4573,29 +4592,29 @@ Node: Quick Start16304
 Node: Core Features18548
 Node: Chat Interface22825
 Node: Working with Models29903
-Node: Context Management34300
-Node: File Attachments39909
-Node: Web Search45831
-Node: Parameter Control52777
-Node: Session Management55174
-Node: User System Prompts58083
-Node: Roles and Commands66571
-Node: Fabric Pattern Integration83761
-Node: Awesome ChatGPT Prompts85988
-Node: Remote Providers89838
-Node: Ollama Cloud Models97298
-Node: Global System Prompt101459
-Node: Tone Selector103213
-Node: Thinking Blocks105020
-Node: In-Buffer Replace107047
-Node: Tool Calling112919
-Node: RAG120710
-Node: Advanced Usage128489
-Node: API Reference131038
-Node: FAQ136977
-Node: Troubleshooting144062
-Node: Contributing146567
-Node: Index149235
+Node: Context Management35132
+Node: File Attachments40741
+Node: Web Search46663
+Node: Parameter Control53609
+Node: Session Management56006
+Node: User System Prompts58915
+Node: Roles and Commands67403
+Node: Fabric Pattern Integration84593
+Node: Awesome ChatGPT Prompts86820
+Node: Remote Providers90670
+Node: Ollama Cloud Models98130
+Node: Global System Prompt102291
+Node: Tone Selector104045
+Node: Thinking Blocks105852
+Node: In-Buffer Replace107879
+Node: Tool Calling113751
+Node: RAG121542
+Node: Advanced Usage129321
+Node: API Reference131870
+Node: FAQ137809
+Node: Troubleshooting144894
+Node: Contributing147399
+Node: Index150067
 
 End Tag Table
 

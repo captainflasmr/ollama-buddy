@@ -68,7 +68,7 @@ Submit queries, swap models, view token usage and statistics:
 - *Thinking Block Folding* -- Reasoning model output (=<think>= tags, DeepSeek API) rendered as collapsible org headings; =C-c V= toggles all blocks
 - *File Attachments* -- Attach files and images (vision models) to conversations
 - *Model Management* -- Pull, delete, copy models; categorized recommendations; cloud model support
-- *Multishot* -- Send the same prompt to multiple models simultaneously
+- *Multishot & Benchmark* -- Send the same prompt to multiple models simultaneously; benchmark all models in one command with per-model timeout
 - *Parameters* -- Full control over temperature, top_k, top_p, and all Ollama API options
 - *Fabric Patterns* -- Integration with [[https://github.com/danielmiessler/fabric][Fabric]] prompt patterns
 - *Token Tracking* -- Real-time token usage statistics with graphs
@@ -76,20 +76,18 @@ Submit queries, swap models, view token usage and statistics:
 - *In-Buffer Replace* -- Stream LLM output directly into the source buffer, replacing the selected region in-place; accept/reject confirmation; inline diff view (=C-c d=) with word-level smerge highlighting; automatic code-fence stripping
 - *Lightweight* -- No external dependencies; a minified 200-line version (=ollama-buddy-mini=) is also available
 
-* What's New (v3.1.0)
+* What's New (v3.2.1)
 
-Inline ghost-text code completions — a first, simple implementation of Copilot-style completions.
+Benchmark all models and multishot timeout.
 
-- *=ollama-buddy-completion=* (new module) -- Manual inline completions that appear as dimmed ghost text at point.  This is an initial, straightforward implementation; quality depends heavily on the model — dedicated code models (=codellama=, =qwen2.5-coder=) work best, while general-purpose or thinking models may produce verbose suggestions.
-  - =C-c TAB= to trigger, =TAB= to accept, any other key dismisses
-  - Fill-in-the-middle (FIM): sends prefix *and* suffix context
-  - Thinking model fallback, markdown fence stripping, multi-line display
-  - Toggle with =M-x ollama-buddy-completion-mode=
+- *Benchmark All Models* (=C-c u=) -- Send a configurable prompt to every available model via multishot, building token usage statistics for all accessible models in one command.  Embedding models are filtered out.
+- *Multishot Per-Model Timeout* -- Each model in a multishot/benchmark sequence gets a configurable timeout (default 120s).  If exceeded, the request is cancelled and the sequence continues with the next model.
 
 * Recent Changes
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *3.2.1* | Benchmark all models (=C-c u=) — one-command multishot across all models with per-model timeout; builds persistent token stats.                                                                                           |
 | *3.1.0* | Inline ghost-text code completions (=ollama-buddy-completion=) — simple, manual Copilot-style completions with FIM context, thinking model support, fence stripping.                                                      |
 | *3.0.0* | Generic OpenAI-compatible chat provider (=ollama-buddy-openai-compat=) — connect to LM Studio, llama.cpp, vLLM, Jan, or any OpenAI-API server.                                                                            |
 | *2.9.2* | =:destination= property for command definitions — per-command routing to =chat= or =in-buffer=, overriding the global toggle; all built-in commands and presets pre-annotated.                                            |
