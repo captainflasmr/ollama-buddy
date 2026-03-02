@@ -594,7 +594,8 @@ Cancelling with \\[keyboard-quit] does nothing; use \\[quoted-insert] @ for a li
     ("reset"      . ollama-buddy-reset-system-prompt)
     ("completion" . ollama-buddy-completion-toggle)
     ("new"        . ollama-buddy-sessions-new)
-    ("exit"       . ollama-buddy-exit))
+    ("exit"       . ollama-buddy-exit)
+    ("unload"     . ollama-buddy-unload-model))
   "Alist of available `/' slash commands.
 Each entry is (NAME . FUNCTION) where FUNCTION is called interactively."
   :type '(alist :key-type string :value-type function)
@@ -1667,6 +1668,24 @@ Filters stop words and returns up to 5 key words joined by hyphens."
   (when-let* ((buf (get-buffer ollama-buddy--chat-buffer)))
     (quit-window nil (get-buffer-window buf))
     (kill-buffer buf)))
+
+(defun ollama-buddy-unload-model ()
+  "Unload running models from memory.
+Offers a completing-read of currently running models plus an
+\"[All]\" option to unload everything."
+  (interactive)
+  (let ((running (ollama-buddy--get-running-models)))
+    (if (null running)
+        (message "No models currently loaded")
+      (let* ((candidates (cons "[All]" running))
+             (choice (completing-read "Unload model: " candidates nil t)))
+        (let ((to-unload (if (string= choice "[All]") running (list choice))))
+          (dolist (model to-unload)
+            (let ((payload (json-encode `((model . ,model) (keep_alive . 0)))))
+              (ollama-buddy--make-request "/api/generate" "POST" payload))
+            (message "Unloaded %s" model))
+          (when (string= choice "[All]")
+            (message "Unloaded all models")))))))
 
 (defun ollama-buddy-clear-history (&optional all-models)
   "Clear the conversation history.
