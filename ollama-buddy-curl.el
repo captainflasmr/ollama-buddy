@@ -408,8 +408,9 @@ When complete, CALLBACK is called with the status response and result."
                                  :rate rate
                                  :wait-time ollama-buddy--response-wait-duration
                                  :timestamp (current-time))))
-          (push token-info ollama-buddy--token-usage-history))
-        
+          (push token-info ollama-buddy--token-usage-history)
+          (ollama-buddy--trim-token-history))
+
         ;; Add to history
         (ollama-buddy--add-to-history "user" ollama-buddy--current-prompt)
         (ollama-buddy--add-to-history "assistant" ollama-buddy--current-response)
@@ -615,10 +616,17 @@ authentication via `ollama signin'."
         (insert (format "\n\n[Including %d attached file(s) in context]"
                         (length ollama-buddy--current-attachments))))
       
-      (if has-images
-          (insert (format "\n\n** [%s: RESPONSE with %d image(s)]"
-                          model (length image-files)))
-        (insert (format "\n\n** [%s: RESPONSE]" model)))
+      (let ((avg-wait (ollama-buddy--model-average-wait-time model)))
+        (if has-images
+            (insert (format "\n\n** [%s: RESPONSE with %d image(s)]"
+                            model (length image-files)))
+          (insert (format "\n\n** [%s: RESPONSE]" model)))
+        ;; Insert countdown estimate before the closing ]
+        (when (and avg-wait (>= avg-wait 1))
+          (backward-char 1)  ; before ]
+          (setq ollama-buddy--response-countdown-marker (copy-marker (point)))
+          (insert (format " ~%ds" (round avg-wait)))
+          (end-of-line)))
 
       (setq ollama-buddy--response-start-position (point))
       (insert "\n\n")
@@ -640,13 +648,13 @@ authentication via `ollama signin'."
         (let ((inhibit-read-only t))
           (goto-char (point-max))
           (insert "Loading response..."))))
-    
+
     (ollama-buddy--update-status (if has-images
                                      "Curl Vision Processing..."
                                    "Curl Processing...")
                                  original-model model)
 
-    (ollama-buddy--start-response-wait-timer)
+    (ollama-buddy--start-response-wait-timer model)
 
     ;; Kill existing process
     (when (and ollama-buddy--active-process (process-live-p ollama-buddy--active-process))

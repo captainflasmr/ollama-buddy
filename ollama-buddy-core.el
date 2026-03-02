@@ -1014,6 +1014,15 @@ Strips both local Ollama prefixes (o:, cl:) and remote provider prefixes
 (defvar ollama-buddy--token-usage-history nil
   "History of token usage for ollama-buddy interactions.")
 
+(eval-after-load 'savehist
+  '(add-to-list 'savehist-additional-variables 'ollama-buddy--token-usage-history))
+
+(defcustom ollama-buddy-token-history-max-size 500
+  "Maximum number of entries to keep in `ollama-buddy--token-usage-history'.
+When the history exceeds this size, oldest entries are trimmed."
+  :type 'integer
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-response-wait-threshold 3
   "Seconds before showing elapsed time on the \"Processing...\" status.
 When non-nil, after this many seconds the status line will display
@@ -1031,6 +1040,12 @@ Set to 0 to always show the timer, or nil to disable it."
 
 (defvar ollama-buddy--response-wait-duration nil
   "Seconds waited for first token in the current/last request.")
+
+(defvar ollama-buddy--response-avg-wait nil
+  "Average wait time for the current model, used for countdown display.")
+
+(defvar ollama-buddy--response-countdown-marker nil
+  "Marker pointing to the start of countdown text in the RESPONSE header.")
 
 (defvar ollama-buddy--current-token-count 0
   "Counter for tokens in the current response.")

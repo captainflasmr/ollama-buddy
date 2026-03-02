@@ -1612,11 +1612,66 @@ With prefix argument ALL-MODELS, clear history for all models."
       (setq ollama-buddy--last-token-count ollama-buddy--current-token-count
             ollama-buddy--last-update-time current-time))))
 
-(defun ollama-buddy--start-response-wait-timer ()
-  "Start the response-wait elapsed timer if threshold is configured."
-  (ollama-buddy--cancel-response-wait-timer)
+(defun ollama-buddy--model-average-wait-time (model)
+  "Return the average wait time in seconds for MODEL, or nil if no data.
+Compares model names after stripping provider prefixes for consistency."
+  (let* ((real-name (ollama-buddy--get-real-model-name model))
+         (wait-times
+          (cl-loop for entry in ollama-buddy--token-usage-history
+                   for entry-model = (plist-get entry :model)
+                   when (and entry-model
+                             (string= (ollama-buddy--get-real-model-name entry-model)
+                                      real-name)
+                             (plist-get entry :wait-time)
+                             (numberp (plist-get entry :wait-time))
+                             (> (plist-get entry :wait-time) 0))
+                   collect (plist-get entry :wait-time))))
+    (when wait-times
+      (/ (apply #'+ wait-times) (float (length wait-times))))))
+
+(defun ollama-buddy--clear-response-countdown ()
+  "Remove countdown text from the RESPONSE header, if present."
+  (when (and ollama-buddy--response-countdown-marker
+             (marker-buffer ollama-buddy--response-countdown-marker)
+             (buffer-live-p (marker-buffer ollama-buddy--response-countdown-marker)))
+    (with-current-buffer (marker-buffer ollama-buddy--response-countdown-marker)
+      (let ((inhibit-read-only t))
+        (save-excursion
+          (goto-char ollama-buddy--response-countdown-marker)
+          (when (search-forward "]" (line-end-position) t)
+            (delete-region ollama-buddy--response-countdown-marker
+                          (1- (point))))))))
+  (when ollama-buddy--response-countdown-marker
+    (set-marker ollama-buddy--response-countdown-marker nil))
+  (setq ollama-buddy--response-countdown-marker nil
+        ollama-buddy--response-avg-wait nil))
+
+(defun ollama-buddy--trim-token-history ()
+  "Trim token usage history to `ollama-buddy-token-history-max-size'."
+  (when (> (length ollama-buddy--token-usage-history)
+           ollama-buddy-token-history-max-size)
+    (setcdr (nthcdr (1- ollama-buddy-token-history-max-size)
+                    ollama-buddy--token-usage-history)
+            nil)))
+
+(defun ollama-buddy--start-response-wait-timer (&optional model)
+  "Start the response-wait elapsed timer if threshold is configured.
+When MODEL is provided, compute the average wait time for countdown display."
+  ;; Temporarily detach countdown state so that cancel (which clears any
+  ;; previous countdown) does not destroy the marker the send function
+  ;; just created for the *current* request.
+  (let ((new-marker ollama-buddy--response-countdown-marker)
+        (new-avg ollama-buddy--response-avg-wait))
+    (setq ollama-buddy--response-countdown-marker nil
+          ollama-buddy--response-avg-wait nil)
+    (ollama-buddy--cancel-response-wait-timer)
+    (setq ollama-buddy--response-countdown-marker new-marker
+          ollama-buddy--response-avg-wait new-avg))
   (setq ollama-buddy--response-wait-duration nil)
   (setq ollama-buddy--response-wait-start (float-time))
+  (when (and model (not ollama-buddy--response-avg-wait))
+    (setq ollama-buddy--response-avg-wait
+          (ollama-buddy--model-average-wait-time model)))
   (when ollama-buddy-response-wait-threshold
     (setq ollama-buddy--response-wait-timer
           (run-with-timer 1 1 #'ollama-buddy--update-response-wait-display))))
@@ -1630,16 +1685,34 @@ Captures the elapsed wait duration before clearing."
   (when ollama-buddy--response-wait-start
     (setq ollama-buddy--response-wait-duration
           (- (float-time) ollama-buddy--response-wait-start))
-    (setq ollama-buddy--response-wait-start nil)))
+    (setq ollama-buddy--response-wait-start nil))
+  (ollama-buddy--clear-response-countdown))
 
 (defun ollama-buddy--update-response-wait-display ()
-  "Update the status line with elapsed wait time."
+  "Update the status line and in-buffer countdown with elapsed wait time."
   (if (null ollama-buddy--response-wait-start)
       ;; First token already arrived — cancel ourselves
       (ollama-buddy--cancel-response-wait-timer)
     (let ((elapsed (round (- (float-time) ollama-buddy--response-wait-start))))
       (when (>= elapsed ollama-buddy-response-wait-threshold)
-        (ollama-buddy--update-status (format "Processing... %ds" elapsed))))))
+        (ollama-buddy--update-status (format "Processing... %ds" elapsed)))
+      ;; Update in-buffer countdown
+      (when (and ollama-buddy--response-countdown-marker
+                 ollama-buddy--response-avg-wait
+                 (marker-buffer ollama-buddy--response-countdown-marker)
+                 (buffer-live-p (marker-buffer ollama-buddy--response-countdown-marker)))
+        (with-current-buffer (marker-buffer ollama-buddy--response-countdown-marker)
+          (let ((inhibit-read-only t)
+                (remaining (round (- ollama-buddy--response-avg-wait elapsed))))
+            (save-excursion
+              (goto-char ollama-buddy--response-countdown-marker)
+              (when (search-forward "]" (line-end-position) t)
+                (delete-region ollama-buddy--response-countdown-marker
+                              (1- (point)))
+                (goto-char ollama-buddy--response-countdown-marker)
+                (insert (if (> remaining 0)
+                            (format " ~%ds" remaining)
+                          (format " +%ds" (abs remaining))))))))))))
 
 (defun ollama-buddy-toggle-token-display ()
   "Toggle display of token statistics after each response."
@@ -2279,6 +2352,7 @@ TCP packets split a JSON object across multiple filter calls."
 
                     ;; Add to history
                     (push token-info ollama-buddy--token-usage-history)
+                    (ollama-buddy--trim-token-history)
 
                     ;; Display token info if enabled
                     (when ollama-buddy-display-token-stats
@@ -3143,10 +3217,17 @@ and no new user message is added."
                           (length ollama-buddy--current-attachments))))
 
         ;; Show whether we're using vision if applicable
-        (if has-images
-            (insert (format "\n\n** [%s: RESPONSE with %d image(s)]"
-                            model (length image-files)))
-          (insert (format "\n\n** [%s: RESPONSE]" model)))
+        (let ((avg-wait (ollama-buddy--model-average-wait-time model)))
+          (if has-images
+              (insert (format "\n\n** [%s: RESPONSE with %d image(s)]"
+                              model (length image-files)))
+            (insert (format "\n\n** [%s: RESPONSE]" model)))
+          ;; Insert countdown estimate before the closing ]
+          (when (and avg-wait (>= avg-wait 1))
+            (backward-char 1)  ; before ]
+            (setq ollama-buddy--response-countdown-marker (copy-marker (point)))
+            (insert (format " ~%ds" (round avg-wait)))
+            (end-of-line)))
 
         (setq ollama-buddy--response-start-position (point))
 
@@ -3168,13 +3249,13 @@ and no new user message is added."
     (when (not ollama-buddy-streaming-enabled)
       (setq ollama-buddy--start-point (point))
       (insert "Loading response..."))
-    
+
     (ollama-buddy--update-status (if has-images
                                      "Vision Processing..."
                                    "Processing...")
                                  original-model model)
 
-    (ollama-buddy--start-response-wait-timer)
+    (ollama-buddy--start-response-wait-timer model)
 
     (when (and ollama-buddy--active-process
                (process-live-p ollama-buddy--active-process))
@@ -3471,7 +3552,10 @@ Modifies the variable in place."
         (when ollama-buddy--token-update-timer
           (cancel-timer ollama-buddy--token-update-timer)
           (setq ollama-buddy--token-update-timer nil))
-        
+
+        ;; Cancel response wait timer (countdown + elapsed display)
+        (ollama-buddy--cancel-response-wait-timer)
+
         ;; Reset token tracking variables
         (setq ollama-buddy--current-token-count 0
               ollama-buddy--current-token-start-time nil
