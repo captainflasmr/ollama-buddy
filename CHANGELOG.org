@@ -30,9 +30,10 @@ Benchmark all models and multishot timeout.
   speed (40%), responsiveness (30%), and throughput (30%).  Medals (🥇🥈🥉) mark
   the top 3 and are propagated into the Token Count, Token Rate, and TTFT charts
   for at-a-glance cross-referencing.  Does not measure response accuracy or quality.
-- *=/new=, =/exit=, and =/unload= slash commands* -- =/new= starts a fresh session
-  (same as =/clear=), =/exit= closes the chat buffer, =/unload= lets you pick a
-  running model to unload from memory (or unload all at once via =[All]=).
+- *New slash commands* -- =/new= starts a fresh session (same as =/clear=), =/exit=
+  and =/bye= close the chat buffer, =/unload= lets you pick a running model to
+  unload from memory (or unload all at once via =[All]=), =/set= edits a model
+  parameter, =/show= displays current model info.
 
 *** New Customizations
 

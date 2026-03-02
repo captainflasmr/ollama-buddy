@@ -595,7 +595,10 @@ Cancelling with \\[keyboard-quit] does nothing; use \\[quoted-insert] @ for a li
     ("completion" . ollama-buddy-completion-toggle)
     ("new"        . ollama-buddy-sessions-new)
     ("exit"       . ollama-buddy-exit)
-    ("unload"     . ollama-buddy-unload-model))
+    ("bye"        . ollama-buddy-exit)
+    ("unload"     . ollama-buddy-unload-model)
+    ("set"        . ollama-buddy-params-edit)
+    ("show"       . ollama-buddy-show-raw-model-info))
   "Alist of available `/' slash commands.
 Each entry is (NAME . FUNCTION) where FUNCTION is called interactively."
   :type '(alist :key-type string :value-type function)
