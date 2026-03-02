@@ -25,6 +25,11 @@ Benchmark all models and multishot timeout.
   gets a configurable timeout (default 120 seconds).  If a model exceeds the limit
   its request is cancelled, a =*** TIMED OUT= marker is inserted, and the sequence
   continues with the next model.
+- *Model Rankings* on Token Stats page (=C-c #=) -- A composite ranking section
+  appears at the top when multiple models have data, scoring each model across
+  speed (40%), responsiveness (30%), and throughput (30%).  Medals (🥇🥈🥉) mark
+  the top 3 and are propagated into the Token Count, Token Rate, and TTFT charts
+  for at-a-glance cross-referencing.  Does not measure response accuracy or quality.
 
 *** New Customizations
 

@@ -695,7 +695,9 @@ is ever needed."
                             total-tokens avg-rate)))
 
           ;; Group by model
-          (let ((model-data (make-hash-table :test 'equal)))
+          (let ((model-data (make-hash-table :test 'equal))
+                (wait-data (make-hash-table :test 'equal))
+                (model-ranks (make-hash-table :test 'equal)))
             (dolist (info ollama-buddy--token-usage-history)
               (let* ((model (plist-get info :model))
                      (tokens (plist-get info :tokens))
@@ -708,6 +710,85 @@ is ever needed."
                 (plist-put model-stats :rates
                            (cons rate (plist-get model-stats :rates)))
                 (puthash model model-stats model-data)))
+
+            ;; Gather wait times per model (used for rankings and TTFT chart)
+            (dolist (info ollama-buddy--token-usage-history)
+              (when-let* ((wt (plist-get info :wait-time)))
+                (let* ((model (plist-get info :model))
+                       (entry (gethash model wait-data)))
+                  (unless entry
+                    (setq entry (list :waits nil))
+                    (puthash model entry wait-data))
+                  (plist-put entry :waits (cons wt (plist-get entry :waits))))))
+
+            ;; Model Rankings (composite score across speed, responsiveness, throughput)
+            (when (> (hash-table-count model-data) 1)
+              (insert "* Model Rankings\n\n"
+                      "Composite score: Speed 40% (avg tokens/sec), Responsiveness 30% (time to first token),\n"
+                      "Throughput 30% (total tokens). Does not measure response accuracy or quality.\n\n")
+              (let ((rankings nil)
+                    (max-rate 0)
+                    (max-wait 0)
+                    (max-tokens 0)
+                    (max-model-len 0))
+                ;; Compute per-model averages and find maximums
+                (maphash
+                 (lambda (model stats)
+                   (let* ((rates (plist-get stats :rates))
+                          (avg-rate (if rates (/ (apply #'+ rates) (float (length rates))) 0))
+                          (tokens (plist-get stats :tokens))
+                          (waits (plist-get (gethash model wait-data) :waits))
+                          (avg-wait (if waits (/ (apply #'+ waits) (float (length waits))) nil)))
+                     (push (list :model model :avg-rate avg-rate :tokens tokens :avg-wait avg-wait)
+                           rankings)
+                     (setq max-rate (max max-rate avg-rate))
+                     (when avg-wait (setq max-wait (max max-wait avg-wait)))
+                     (setq max-tokens (max max-tokens tokens))
+                     (setq max-model-len (max max-model-len (length model)))))
+                 model-data)
+                ;; Compute composite scores
+                (let ((scored
+                       (mapcar
+                        (lambda (r)
+                          (let* ((speed (if (> max-rate 0)
+                                            (* (/ (plist-get r :avg-rate) max-rate) 100)
+                                          0))
+                                 (throughput (if (> max-tokens 0)
+                                                 (* (/ (float (plist-get r :tokens)) max-tokens) 100)
+                                               0))
+                                 (avg-wait (plist-get r :avg-wait))
+                                 (has-wait (and avg-wait (> max-wait 0)))
+                                 (responsiveness (if has-wait
+                                                     (* (- 1 (/ avg-wait max-wait)) 100)
+                                                   nil))
+                                 (score (if responsiveness
+                                            (+ (* 0.4 speed) (* 0.3 responsiveness) (* 0.3 throughput))
+                                          (+ (* 0.57 speed) (* 0.43 throughput)))))
+                            (cons score r)))
+                        rankings)))
+                  ;; Sort by score descending
+                  (setq scored (sort scored (lambda (a b) (> (car a) (car b)))))
+                  ;; Display
+                  (let ((rank 0)
+                        (max-score (if scored (car (car scored)) 1)))
+                    (when (< max-score 1) (setq max-score 1))
+                    (insert (format (format "#  %%-%ds │ Score\n" max-model-len) "Model"))
+                    (dolist (entry scored)
+                      (setq rank (1+ rank))
+                      (let* ((score (car entry))
+                             (model (plist-get (cdr entry) :model))
+                             (medal (pcase rank
+                                      (1 "🥇")
+                                      (2 "🥈")
+                                      (3 "🥉")
+                                      (_ (number-to-string rank))))
+                             (rank-pad (make-string (max 0 (- 3 (string-width medal))) ?\s))
+                             (bar-width (max 1 (round (* 50 (/ score max-score)))))
+                             (bar (make-string bar-width ?█)))
+                        (puthash model medal model-ranks)
+                        (insert (format (format "%%s%%-%ds │ %%s %%.1f\n" max-model-len)
+                                        (concat medal rank-pad) model bar score))))
+                    (insert "\n")))))
 
             ;; Display token count graph
             (insert "* Token Count by Model\n\n")
@@ -733,9 +814,14 @@ is ever needed."
                        (tokens (plist-get stats :tokens))
                        (count (plist-get stats :count))
                        (bar-width (round (* 50 (/ (float tokens) max-tokens))))
-                       (bar (make-string bar-width ?█)))
-                  (insert (format (format "%%-%ds │ %%s %%d tokens (%%d responses)\n"
+                       (bar (make-string bar-width ?█))
+                       (rs (gethash model model-ranks))
+                       (rank-prefix (if rs
+                                        (concat rs (make-string (max 0 (- 3 (string-width rs))) ?\s))
+                                      "")))
+                  (insert (format (format "%%s%%-%ds │ %%s %%d tokens (%%d responses)\n"
                                           max-model-len)
+                                  rank-prefix
                                   model
                                   bar
                                   tokens count))))
@@ -765,49 +851,47 @@ is ever needed."
                            (rates (plist-get stats :rates))
                            (avg-rate (if rates (/ (apply #'+ rates) (float (length rates))) 0))
                            (bar-width (round (* 50 (/ avg-rate max-rate))))
-                           (bar (make-string bar-width ?█)))
-                      (insert (format (format "%%-%ds │ %%s %%.1f tokens/sec\n"
+                           (bar (make-string bar-width ?█))
+                           (rs (gethash model model-ranks))
+                           (rank-prefix (if rs
+                                            (concat rs (make-string (max 0 (- 3 (string-width rs))) ?\s))
+                                          "")))
+                      (insert (format (format "%%s%%-%ds │ %%s %%.1f tokens/sec\n"
                                               max-model-len)
+                                      rank-prefix
                                       model
                                       bar
                                       avg-rate)))))))
 
             ;; Average response wait time by model
-            (let ((wait-data (make-hash-table :test 'equal)))
-              ;; Gather wait times per model
-              (dolist (info ollama-buddy--token-usage-history)
-                (when-let* ((wt (plist-get info :wait-time)))
-                  (let* ((model (plist-get info :model))
-                         (entry (gethash model wait-data)))
-                    (unless entry
-                      (setq entry (list :waits nil))
-                      (puthash model entry wait-data))
-                    (plist-put entry :waits (cons wt (plist-get entry :waits))))))
-
-              (when (> (hash-table-count wait-data) 0)
-                (insert "\n* Average Time to First Token by Model\n\n")
-                (let ((wait-models nil)
-                      (max-wait 0)
-                      (max-model-len 0))
-                  (maphash (lambda (model entry)
-                             (let ((avg (/ (apply #'+ (plist-get entry :waits))
-                                           (float (length (plist-get entry :waits))))))
-                               (push (cons model avg) wait-models)
-                               (setq max-wait (max max-wait avg))
-                               (setq max-model-len (max max-model-len (length model)))))
-                           wait-data)
-                  ;; Sort by average wait time ascending (fastest first)
-                  (setq wait-models (sort wait-models (lambda (a b) (< (cdr a) (cdr b)))))
-                  (when (> max-wait 0)
-                    (dolist (entry wait-models)
-                      (let* ((model (car entry))
-                             (avg (cdr entry))
-                             (count (length (plist-get (gethash model wait-data) :waits)))
-                             (bar-width (max 1 (round (* 50 (/ avg max-wait)))))
-                             (bar (make-string bar-width ?█)))
-                        (insert (format (format "%%-%ds │ %%s %%.1fs (%%d samples)\n"
-                                                max-model-len)
-                                        model bar avg count))))))))
+            (when (> (hash-table-count wait-data) 0)
+              (insert "\n* Average Time to First Token by Model\n\n")
+              (let ((wait-models nil)
+                    (max-wait 0)
+                    (max-model-len 0))
+                (maphash (lambda (model entry)
+                           (let ((avg (/ (apply #'+ (plist-get entry :waits))
+                                         (float (length (plist-get entry :waits))))))
+                             (push (cons model avg) wait-models)
+                             (setq max-wait (max max-wait avg))
+                             (setq max-model-len (max max-model-len (length model)))))
+                         wait-data)
+                ;; Sort by average wait time ascending (fastest first)
+                (setq wait-models (sort wait-models (lambda (a b) (< (cdr a) (cdr b)))))
+                (when (> max-wait 0)
+                  (dolist (entry wait-models)
+                    (let* ((model (car entry))
+                           (avg (cdr entry))
+                           (count (length (plist-get (gethash model wait-data) :waits)))
+                           (bar-width (max 1 (round (* 50 (/ avg max-wait)))))
+                           (bar (make-string bar-width ?█))
+                           (rs (gethash model model-ranks))
+                           (rank-prefix (if rs
+                                            (concat rs (make-string (max 0 (- 3 (string-width rs))) ?\s))
+                                          "")))
+                      (insert (format (format "%%s%%-%ds │ %%s %%.1fs (%%d samples)\n"
+                                              max-model-len)
+                                      rank-prefix model bar avg count)))))))
 
             ;; Recent interactions
             (insert "\n* Recent Interactions\n\n")
