@@ -1763,8 +1763,8 @@ please run =ollama serve=\n\n")
                           lines)))
                 (mapconcat #'identity (nreverse lines) "\n"))
               "\n\n"))
-           (when auth-status
-             (concat "Auth: " auth-status "\n\n"))
+           ;; (when auth-status
+             ;; (concat "Auth: " auth-status "\n\n"))
            "- /Ask me anything!/       C-c C-c / C-c RET
 - /Cancel request/         C-c C-k
 - /Select model/           C-c m"
