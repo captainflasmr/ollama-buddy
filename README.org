@@ -76,17 +76,19 @@ Submit queries, swap models, view token usage and statistics:
 - *In-Buffer Replace* -- Stream LLM output directly into the source buffer, replacing the selected region in-place; accept/reject confirmation; inline diff view (=C-c d=) with word-level smerge highlighting; automatic code-fence stripping
 - *Lightweight* -- No external dependencies; a minified 200-line version (=ollama-buddy-mini=) is also available
 
-* What's New (v3.2.2)
+* What's New (v3.3.0)
 
-Benchmark all models and multishot timeout.
+Smart Project Integration.
 
-- *Benchmark All Models* (=C-c u=) -- Send a configurable prompt to every available model via multishot, building token usage statistics for all accessible models in one command.  Embedding models are filtered out.
-- *Multishot Per-Model Timeout* -- Each model in a multishot/benchmark sequence gets a configurable timeout (default 120s).  If exceeded, the request is cancelled and the sequence continues with the next model.
+- *Smart Project Integration* -- Deep context awareness using Emacs' built-in `project.el`.  Easily attach any file from the current project or automatically pull in standard files like README, TODO, and CHANGELOG.
+- *Project Slash Command* (=/project=) -- A new chat command to quickly search and attach files from the current project using completion.
+- *Project Transient Actions* -- The Attachments menu (=C-c O a=) now includes project-specific actions when working inside a project.
 
 * Recent Changes
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *3.3.0* | Smart Project Integration — `project.el` support for contextual file attachment and `/project` slash command.                                                                                          |
 | *3.2.2* | Main transient menu reorganization (=C-c O=) — 4x2 compact grid with streamlined sub-menus and top-level History/Sessions.                                                                                                   |
 | *3.2.1* | Benchmark all models (=C-c u=) — one-command multishot across all models with per-model timeout; builds persistent token stats.                                                                                           |
 | *3.1.0* | Inline ghost-text code completions (=ollama-buddy-completion=) — simple, manual Copilot-style completions with FIM context, thinking model support, fence stripping.                                                      |
@@ -276,6 +278,11 @@ curl -sL https://api.github.com/repos/captainflasmr/ollama-buddy/tarball/main | 
 | C-c C-k   | Cancel request                |
 | C-c m     | Change model                  |
 | C-c M     | Manage models                 |
+| C-c P     | Project sub-menu              |
+| C-c p     | Parameter sub-menu            |
+| C-c y     | System prompts sub-menu       |
+| C-c +     | Settings menu                 |
+| C-c S     | Save session                  |
 | C-c O     | Main transient menu           |
 | M-p / M-n | Browse prompt history         |
 | C-c a     | Attach file                   |

@@ -11,6 +11,21 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-03-03 Tue> *3.3.0*
+
+Smart Project Integration.
+
+*** New Features
+
+- *Smart Project Integration* -- Introduced `ollama-buddy-project.el` which leverages
+  the built-in `project.el` library for deep context awareness.
+- *Project Slash Command* -- Added `/project` slash command to the chat buffer for
+  quick file attachment from the current project.
+- *Project Meta-Context* -- New command `ollama-buddy-project-attach-context` to
+  instantly attach standard project files like README, TODO, and CHANGELOG.
+- *Transient Menu Integration* -- Enhanced the "Attachments" menu (=C-c O a=) with
+  a dynamic "Project" section that appears only when a project is detected.
+
 ** <2026-03-03 Tue> *3.2.2*
 
 Main transient menu reorganization.

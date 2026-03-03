@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 3.2.2
+;; Version: 3.3.0
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -74,6 +74,7 @@
 (require 'org)
 (require 'savehist)
 (require 'ollama-buddy-core)
+(require 'ollama-buddy-project) ;; Added by user instruction
 (require 'ollama-buddy-transient nil t)
 (require 'ollama-buddy-user-prompts)
 (require 'ollama-buddy-web-search)
@@ -691,6 +692,7 @@ Cancelling with \\[keyboard-quit] does nothing; use \\[quoted-insert] @ for a li
     ("bye"        ollama-buddy-exit                  "Close the chat buffer")
     ("unload"     ollama-buddy-unload-model           "Unload model from Ollama memory")
     ("manage"     ollama-buddy-manage-models          "Open the Model Management buffer")
+    ("project"    ollama-buddy-project-attach-file    "Attach a file from the current project")
     ("set"        ollama-buddy-params-edit            "Edit model generation parameters")
     ("show"       ollama-buddy-show-raw-model-info    "Show raw JSON model information"))
   "Alist of available `/' slash commands.
@@ -4847,6 +4849,7 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c ?") #'ollama-buddy-open-info)
     (define-key map (kbd "C-c C-u") #'ollama-buddy-unload-all-models)
     (define-key map (kbd "C-c a") #'ollama-buddy-transient-attachment-menu)
+    (define-key map (kbd "C-c P") #'ollama-buddy-transient-project-menu)
     (define-key map (kbd "C-c A") #'ollama-buddy-transient-auth-menu)
     
     ;; Chat section keybindings from transient
@@ -4864,6 +4867,7 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c s") #'ollama-buddy-transient-user-prompts-menu)
     (define-key map (kbd "C-c C-s") #'ollama-buddy-show-system-prompt-info)
     (define-key map (kbd "C-c C-r") #'ollama-buddy-reset-system-prompt)
+    (define-key map (kbd "C-c y") #'ollama-buddy-transient-system-prompts-menu)
 
     (define-key map (kbd "C-c b") #'ollama-buddy-role-transient-menu)
     
@@ -4878,7 +4882,6 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c E") #'ollama-buddy-role-creator-create-new-role)
     (define-key map (kbd "C-c D") #'ollama-buddy-roles-open-directory)
     (define-key map (kbd "C-c f") #'ollama-buddy-transient-fabric-menu)
-    (define-key map (kbd "C-c w") #'ollama-buddy-transient-awesome-menu)
     
     ;; Tools keybindings
     (define-key map (kbd "C-c SPC") #'ollama-buddy-tools-toggle)
@@ -4888,6 +4891,7 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c r") #'ollama-buddy-transient-rag-menu)
     
     ;; Display Options keybindings
+    (define-key map (kbd "C-c +") #'ollama-buddy-transient-settings-menu)
     (define-key map (kbd "C-c B") #'ollama-buddy-toggle-debug-mode)
     (define-key map (kbd "C-c >") #'ollama-buddy-toggle-show-history-indicator)
     (define-key map (kbd "C-c T") #'ollama-buddy-toggle-token-display)
@@ -4913,12 +4917,11 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c Z") #'ollama-buddy-sessions-directory)
     
     ;; Parameter keybindings
-    (define-key map (kbd "C-c P") #'ollama-buddy-transient-parameter-menu)
+    (define-key map (kbd "C-c p") #'ollama-buddy-transient-parameter-menu)
     (define-key map (kbd "C-c G") #'ollama-buddy-params-display)
     (define-key map (kbd "C-c I") #'ollama-buddy-params-help)
     (define-key map (kbd "C-c K") #'ollama-buddy-params-reset)
     (define-key map (kbd "C-c F") #'ollama-buddy-toggle-params-in-header)
-    (define-key map (kbd "C-c p") #'ollama-buddy-transient-profile-menu)
 
     ;; Context keybindings
     (define-key map (kbd "C-c $") #'ollama-buddy-set-model-context-size)

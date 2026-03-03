@@ -12,6 +12,7 @@
 (require 'ollama-buddy-fabric)
 (require 'ollama-buddy-awesome)
 (require 'ollama-buddy-user-prompts)
+(require 'ollama-buddy-project)
 (require 'ollama-buddy-rag)
 
 ;; Forward declarations for functions defined in ollama-buddy.el
@@ -135,15 +136,23 @@
    ("D" "Directory" ollama-buddy-roles-open-directory)
    ("q" "Quit" transient-quit-one)])
 
+(transient-define-prefix ollama-buddy-transient-project-menu ()
+  "Project menu for Ollama Buddy."
+  ["Project"
+   ("p" "Attach File" ollama-buddy-project-attach-file)
+   ("c" "Attach Context" ollama-buddy-project-attach-context)
+   ("i" "Project Info" ollama-buddy-project-info)]
+  [("q" "Quit" transient-quit-one)])
+
 (transient-define-prefix ollama-buddy-transient-menu ()
   "Ollama Buddy main menu."
   :info-manual "(ollama-buddy)Top"
   ["|o(Y)o| Ollama Buddy"
    ["Chat"
     ("o" "Open Chat" ollama-buddy--open-chat)
-    ("a" "Attachments" ollama-buddy-transient-attachment-menu)
-    ("/" "Web Search" ollama-buddy-transient-web-search-menu)
     ("r" "RAG" ollama-buddy-transient-rag-menu)
+    ("P" "Project" ollama-buddy-transient-project-menu
+     :if (lambda () (ollama-buddy-project-current-root)))
     ("A" "Authentication" ollama-buddy-transient-auth-menu)]
 
    ["Model"
@@ -180,9 +189,9 @@
     ("Z" "Directory" ollama-buddy-sessions-directory)]
 
    ["Sub-menus"
-    ("S" "Settings" ollama-buddy-transient-settings-menu)
-    ("p" "System Prompts" ollama-buddy-transient-system-prompts-menu)
-    ("P" "Parameters" ollama-buddy-transient-parameter-menu)
+    ("+" "Settings" ollama-buddy-transient-settings-menu)
+    ("y" "System Prompts" ollama-buddy-transient-system-prompts-menu)
+    ("p" "Parameters" ollama-buddy-transient-parameter-menu)
     ("R" "Roles" ollama-buddy-transient-roles-management-menu)]
    
    ["General"

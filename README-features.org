@@ -1460,7 +1460,7 @@ Ollama's API supports a rich set of parameters for fine-tuning text generation, 
 
 Parameter management is accessible through simple keyboard shortcuts from the chat buffer:
 
-- =C-c P= - Edit a parameter
+- =C-c p= - Edit a parameter
 - =C-c G= - Display current parameters
 - =C-c I= - Show parameter help
 - =C-c K= - Reset parameters to defaults
@@ -1547,7 +1547,7 @@ Implemented session management, so you can now save your conversations and bring
 
 With session management, you can now:
 
-- *Save session* with =ollama-buddy-sessions-save= (or through the ollama-buddy-menu) Preserve your current conversation with a custom name
+- *Save session* with =ollama-buddy-sessions-save= (or =C-c S=) Preserve your current conversation with a custom name
 - *Load session* with =ollama-buddy-sessions-load= (or through the ollama-buddy-menu) Return to previous conversations exactly where you left off
 - *List all sessions* with =ollama-buddy-sessions-list= (or through the ollama-buddy-menu) View all saved sessions with metadata including timestamps and models used
 - *Delete session* with =ollama-buddy-sessions-delete= (or through the ollama-buddy-menu) Clean up sessions you no longer need
@@ -1559,6 +1559,7 @@ The following commands have been added to the =ollama-buddy-menu=:
 
 - =E= New session
 - =L= Load session
+- =+= Settings menu
 - =S= Save session
 - =Y= List sessions
 - =K= Delete session

@@ -1095,7 +1095,10 @@ OR
 | C-c J           | Edit history                            |
 | C-c U           | Multishot (prompt to multiple models)   |
 | C-c M           | Manage models                           |
-| C-c P           | Edit parameters                         |
+| C-c P           | Project menu                            |
+| C-c p           | Parameter menu                          |
+| C-c y           | System prompts menu                     |
+| C-c +           | Settings menu                           |
 | C-c G           | Show parameters                         |
 | C-c K           | Reset parameters                        |
 | C-c B           | Toggle JSON debug mode                  |
@@ -1593,7 +1596,7 @@ Comprehensive parameter management gives you complete control over your Ollama m
 - *Visual Parameter Interface*: Clear display showing which parameters are active with highlighting
 
 Access parameter management through keyboard shortcuts:
-- =C-c P= - Edit a parameter
+- =C-c p= - Edit a parameter
 - =C-c G= - Display current parameters
 - =C-c I= - Show parameter help
 - =C-c K= - Reset parameters to defaults

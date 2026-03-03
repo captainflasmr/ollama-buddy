@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 3.2.2
+@subtitle For Ollama Buddy version 3.3.0
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -65,6 +65,7 @@ allowing you to leverage powerful large language models (LLMs) directly within y
 * Global System Prompt::        Configuring a persistent global system prompt
 * Tone Selector::               Quickly switch response style
 * Thinking Blocks::             Collapsible reasoning output for thinking models
+* Project Integration::         Smart context awareness with project.el
 * In-Buffer Replace::           Stream rewrites directly into source buffers with inline diff
 * Tool Calling::                Enabling LLMs to invoke Emacs functions
 * RAG::                         Retrieval-Augmented Generation with local documents
@@ -577,7 +578,10 @@ Press @code{C-c m} to switch between available models. Cloud models appear in th
 Press @code{C-c O} for the main transient menu with all features organized by category.
 
 @item Attaching files
-Press @code{C-c C-a} to attach a file, or use the transient menu "Attachments" section.
+Press @code{C-c C-a} to attach a file, or use the transient menu ``Project'' section.
+
+@item Project Integration
+Press @code{C-c P} for the Project sub-menu. Access project-specific file attachment and context.
 
 @item Toggling reasoning visibility
 Press @code{C-c V} to hide or show reasoning/thinking sections in responses.
@@ -592,7 +596,7 @@ Press @code{C-c <} to toggle the global system prompt on or off. The header line
 Select text, press @code{C-c O}, then @code{a} for the Awesome prompts menu, then @code{s} to send with a prompt.
 
 @item Using Fabric patterns
-Select text, press @code{C-c O}, then @code{f} for the Fabric menu, then @code{s} to send with a pattern.
+Select text, press @code{C-c O}, then @code{y} for the System Prompts menu, then @code{f} for Fabric.
 
 @item Getting help
 In the chat buffer, press @code{C-c h} to display the help screen with available commands and models.
@@ -804,6 +808,9 @@ Search a RAG index and attach results.
 
 @item @@file(path)
 Attach a file to the conversation context.
+
+@item @@project
+Search and attach files from the current project using completion.
 @end table
 
 @itemize @bullet
@@ -1229,7 +1236,7 @@ This keeps only the last 5 message pairs, reducing context usage.
 
 The @code{num_ctx} parameter allows you to set a specific context size:
 @enumerate
-@item Access the parameter menu with @kbd{C-c P}
+@item Access the parameter menu with @kbd{C-c p}
 @item Select @code{num_ctx}
 @item Enter your desired context size
 @item Ollama Buddy will respect this limit
@@ -1754,7 +1761,7 @@ Parameters that have been modified from default values are marked with an asteri
 To edit parameters:
 
 @enumerate
-@item Press @code{C-c P} to open the parameter menu
+@item Press @code{C-c p} to open the parameter menu
 @item Select the parameter you want to modify
 @item Enter the new value
 @end enumerate
@@ -1780,7 +1787,7 @@ To apply a profile:
 @example
 M-x ollama-buddy-transient-profile-menu
 @end example
-or press @code{C-c p} and select a profile.
+or press @code{C-c p} and select ``All Profiles'' (@kbd{A}).
 
 @section Command-Specific Parameters
 
@@ -3331,6 +3338,35 @@ When non-nil and @code{ollama-buddy-collapse-thinking} is nil, the thinking bloc
 @item @code{ollama-buddy-thinking-models}
 Static list of model name substrings that are known reasoning models. Auto-detection from the Ollama @code{/api/show} capabilities array is also performed.
 @end table
+
+@node Project Integration
+@chapter Project Integration
+
+Ollama Buddy provides deep integration with Emacs' built-in @code{project.el} to 
+provide context-aware assistance when working within a coding project.
+
+@section Project Awareness
+When you open a chat buffer from a file that is part of a project, Ollama Buddy 
+automatically detects the project root. The welcome screen will display 
+the project root and the number of indexed files.
+
+@section Project Commands
+The Project sub-menu (@kbd{C-c P}) provides the following commands:
+
+@table @asis
+@item Attach File (@kbd{p})
+Select and attach any file from the current project using completion.
+
+@item Attach Context (@kbd{c})
+Automatically attach standard project files like README, TODO, and CHANGELOG if they exist.
+
+@item Project Info (@kbd{i})
+Display information about the current project status.
+@end table
+
+@section Inline Project Command
+You can also use the inline @code{@@project} command in the prompt area to 
+quickly search and attach a file without leaving the prompt.
 
 @node In-Buffer Replace
 @chapter In-Buffer Replace

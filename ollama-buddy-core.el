@@ -65,6 +65,8 @@
 (declare-function ollama-buddy-completion-mode "ollama-buddy-completion")
 (declare-function ollama-buddy-completion-trigger "ollama-buddy-completion")
 (declare-function ollama-buddy-completion-toggle "ollama-buddy-completion")
+(declare-function ollama-buddy-project-get-status-string "ollama-buddy-project")
+(declare-function ollama-buddy-project-current-root "ollama-buddy-project")
 
 (defgroup ollama-buddy-params nil
   "Customization group for Ollama API parameters."
@@ -1725,6 +1727,10 @@ Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
             (when (and (> cloud-count 0) use-prefixes)
               (push (format "cl: Cloud (%d)" cloud-count) parts))
             (nreverse parts)))
+         (project-info (when (and (featurep 'ollama-buddy-project)
+                                  (fboundp 'ollama-buddy-project-current-root)
+                                  (ollama-buddy-project-current-root))
+                         (ollama-buddy-project-get-status-string)))
          (message-text
           (concat
            (when (= (buffer-size) 0)
@@ -1732,8 +1738,9 @@ Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
            "\n\n* Welcome to _OLLAMA BUDDY_\n\n"
            "#+begin_example\n"
            "┌───────────────────────────────────┐\n"
-           "│  O L L A M A B U D D Y  [v3.2.2]  │\n"
+           "│  O L L A M A B U D D Y  [v3.3.0]  │\n"
            "└───────────────────────────────────┘\n"
+           (if project-info (concat "  " project-info "\n") "")
            ;; "╔════════════════════════════════════════════════════════════╗\n"
            ;; "║  ▄▀▀▀▄ █   █   ▄▀▀▀▄ █▀▄▀█ ▄▀▀▀▄ █▀▀▄ █  █ █▀▀▄ █▀▀▄ █  █  ║\n"
            ;; "║  █   █ █   █   █▀▀▀█ █ █ █ █▀▀▀█ █▀▀▄ █  █ █  █ █  █ ▀█▀   ║\n"
