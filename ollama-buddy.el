@@ -3919,6 +3919,15 @@ Modifies the variable in place."
                  (insert "\nError creating model: " status)))
                (insert "\n")))))))))
 
+(defun ollama-buddy-manage-models-refresh ()
+  "Refresh the model management buffer, clearing all caches."
+  (interactive)
+  (setq ollama-buddy--cloud-usage-cache nil
+        ollama-buddy--cloud-usage-cache-time nil
+        ollama-buddy--models-cache-timestamp nil
+        ollama-buddy--running-models-cache-timestamp nil)
+  (ollama-buddy-manage-models))
+
 (defun ollama-buddy-manage-models ()
   "Update the model management interface to include unload capabilities."
   (interactive)
@@ -3951,6 +3960,7 @@ Modifies the variable in place."
         (when-let ((version (ollama-buddy--get-version)))
           (insert (format " (Ollama %s)" version)))
         (insert "\n\n")
+        (insert "Press =g= to refresh\n\n")
 
         ;; Show running models count with unload all button
         (when running-models
@@ -4066,17 +4076,11 @@ Modifies the variable in place."
             (if usage
                 (let ((session (alist-get 'session usage))
                       (weekly (alist-get 'weekly usage)))
-                  (insert (format "  Session: %s %s  |  Weekly: %s %s  "
+                  (insert (format "  Session: %s %s  |  Weekly: %s %s\n\n"
                                   (ollama-buddy--cloud-usage-bar session)
                                   session
                                   (ollama-buddy--cloud-usage-bar weekly)
-                                  weekly))
-                  (insert-text-button
-                   "Refresh"
-                   'action (lambda (_)
-                             (ollama-buddy-cloud-refresh-usage))
-                   'help-echo "Re-fetch cloud usage stats")
-                  (insert "\n\n"))
+                                  weekly)))
               (when (or (not (stringp ollama-buddy-cloud-session-token))
                         (string-empty-p ollama-buddy-cloud-session-token))
                 (insert "  (Set ollama-buddy-cloud-session-token for usage stats)\n\n"))))
@@ -4152,7 +4156,11 @@ Modifies the variable in place."
                 (insert "\n")))))
         )
       (goto-char (point-min))
-      (view-mode 1))
+      (view-mode 1)
+      (let ((map (make-sparse-keymap)))
+        (define-key map (kbd "g") #'ollama-buddy-manage-models-refresh)
+        (setq-local minor-mode-overriding-map-alist
+                    (list (cons 'view-mode map)))))
     (display-buffer buf)
     ;; Asynchronously fetch /api/show capabilities in the background.
     ;; The buffer renders immediately using static-list fallbacks;
