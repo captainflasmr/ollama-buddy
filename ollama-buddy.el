@@ -3993,6 +3993,7 @@ Modifies the variable in place."
         
         ;; List of models with status and actions
         (insert "\n\n* Available Models\n\n")
+        (insert "** Local\n\n")
         
         (dolist (model available-models)
           (let* ((is-running (member model running-models))
@@ -4069,7 +4070,7 @@ Modifies the variable in place."
         ;; Cloud models section (hidden in airplane mode)
         (when (and ollama-buddy-cloud-models
                    (not ollama-buddy-airplane-mode))
-          (insert (format "\n* ☁ Cloud Models %s\n\n"
+          (insert (format "\n** ☁ Cloud Models %s\n\n"
                           (ollama-buddy--cloud-auth-status-indicator)))
           ;; Cloud usage stats
           (let ((usage (ollama-buddy--fetch-cloud-usage)))
