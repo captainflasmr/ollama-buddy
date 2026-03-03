@@ -140,7 +140,13 @@ embedding <think>...</think> tags inside message.content.")
 (defvar-local ollama-buddy--thinking-arrow-marker nil
   "Marker at the start of the `*** ✦ Think' heading for the current block.
 Set when the heading is inserted; passed to
-`ollama-buddy--collapse-thinking-block' and then cleared.")
+`ollama-buddy--finalize-thinking-block' and then cleared.")
+
+(defvar-local ollama-buddy--thinking-content-accumulator nil
+  "String accumulating thinking tokens during streaming.
+Tokens are NOT inserted into the buffer during streaming; instead they are
+collected here and bulk-inserted by `ollama-buddy--finalize-thinking-block'
+which then folds the subtree with `outline-hide-subtree'.")
 
 (defvar ollama-buddy-mode-line-segment nil
   "Mode line segment for Ollama Buddy.")
@@ -454,31 +460,53 @@ with an empty messages array and keep_alive set to 0."
 ;; --- Thinking block org-heading helpers ---
 
 (defun ollama-buddy--insert-thinking-header ()
-  "Insert a `*** ✦ Think' org heading at current point (end of buffer).
+  "Insert `*** ✦ Thinking...' heading and `*** ✦ Response' heading.
+Thinking tokens are NOT inserted into the buffer during streaming;
+they accumulate in `ollama-buddy--thinking-content-accumulator'.
+When thinking ends, `ollama-buddy--finalize-thinking-block' inserts
+the accumulated content between the headings and folds the subtree.
 Must be called inside an `inhibit-read-only' block.
 Returns a marker at the start of the heading line."
   (let ((heading-start (point)))
-    (insert "*** ✦ Think\n\n")
+    (insert "*** ✦ Thinking...\n\n*** ✦ Response\n\n")
+    (setq ollama-buddy--thinking-content-accumulator "")
     (copy-marker heading-start nil)))
 
-(defun ollama-buddy--collapse-thinking-block (end heading-marker)
-  "Finalise the thinking block ending at END and fold it.
-Inserts a `*** ✦ Response' heading at END, which terminates the Think subtree
-so that `outline-hide-subtree' conceals only the thinking content.
-HEADING-MARKER must point to the first character of the `*** ✦ Think' heading
-line (returned by `ollama-buddy--insert-thinking-header')."
-  ;; End the Think subtree by starting the Response section.
-  (save-excursion
-    (goto-char end)
-    (let ((inhibit-read-only t))
-      (insert "\n\n*** ✦ Response\n\n")))
-  ;; Fold the *** ✦ Think subtree using native outline folding.
+(defun ollama-buddy--finalize-thinking-block (heading-marker)
+  "Finalise the thinking block: insert content, fold, rename heading.
+Inserts the accumulated thinking content between the headings, folds
+the Think subtree via `outline-hide-subtree', renames `Thinking...'
+to `Think', and registers the heading for toggle-all."
   (when (and heading-marker (marker-buffer heading-marker))
-    (save-excursion
-      (goto-char (marker-position heading-marker))
-      (outline-hide-subtree)))
-  ;; Remember this heading for toggle-all.
-  (push heading-marker ollama-buddy--thinking-heading-markers))
+    (let ((inhibit-read-only t))
+      ;; Insert accumulated thinking content between headings
+      (when (and ollama-buddy--thinking-content-accumulator
+                 (not (string-empty-p ollama-buddy--thinking-content-accumulator)))
+        (save-excursion
+          (goto-char (marker-position heading-marker))
+          (end-of-line)
+          (forward-char 1)              ;; past the heading's \n, onto blank line
+          (insert ollama-buddy--thinking-content-accumulator)))
+      ;; Fold the Think subtree
+      (save-excursion
+        (goto-char (marker-position heading-marker))
+        (outline-hide-subtree))
+      ;; Rename "Thinking..." -> "Think"
+      (save-excursion
+        (goto-char (marker-position heading-marker))
+        (when (looking-at "\\*\\*\\* ✦ Thinking\\.\\.\\.")
+          (replace-match "*** ✦ Think")))
+      ;; Advance response-start-position past the *** ✦ Response heading
+      ;; so md-to-org conversion doesn't touch the thinking block
+      (when ollama-buddy--response-start-position
+        (save-excursion
+          (goto-char (marker-position heading-marker))
+          (when (re-search-forward "^\\*\\*\\* ✦ Response\n+" nil t)
+            (setq ollama-buddy--response-start-position (point))))))
+    ;; Register for toggle-all
+    (push heading-marker ollama-buddy--thinking-heading-markers))
+  ;; Clean up
+  (setq ollama-buddy--thinking-content-accumulator nil))
 
 (defun ollama-buddy--thinking-heading-folded-p (pos)
   "Return non-nil if the `*** ✦ Think' heading at POS is currently folded."
@@ -2220,13 +2248,15 @@ TCP packets split a JSON object across multiple filter calls."
             (save-excursion
               (goto-char (point-max))
               (cond
-               ;; Collapse: stream content visibly, overlay applied on transition
+               ;; Collapse: accumulate content invisibly, fold when done
                (ollama-buddy-collapse-thinking
                 (unless ollama-buddy--thinking-api-active
                   (setq ollama-buddy--thinking-api-active t
                         ollama-buddy--thinking-arrow-marker (ollama-buddy--insert-thinking-header)
                         ollama-buddy--thinking-block-start  (copy-marker (point) nil)))
-                (insert thinking-text))
+                ;; Accumulate thinking tokens (not inserted into buffer)
+                (setq ollama-buddy--thinking-content-accumulator
+                      (concat ollama-buddy--thinking-content-accumulator thinking-text)))
                ;; Hide: silently discard
                (ollama-buddy-hide-reasoning
                 (setq ollama-buddy--thinking-api-active t))
@@ -2276,8 +2306,7 @@ TCP packets split a JSON object across multiple filter calls."
                       ollama-buddy--reasoning-skip-newlines t)
                 (when (and ollama-buddy-collapse-thinking
                            ollama-buddy--thinking-block-start)
-                  (ollama-buddy--collapse-thinking-block
-                   (point-max)
+                  (ollama-buddy--finalize-thinking-block
                    ollama-buddy--thinking-arrow-marker)
                   (set-marker ollama-buddy--thinking-block-start nil)
                   (setq ollama-buddy--thinking-block-start  nil
@@ -2295,15 +2324,14 @@ TCP packets split a JSON object across multiple filter calls."
                   (setq ollama-buddy--in-reasoning-section t
                         ollama-buddy--thinking-arrow-marker (ollama-buddy--insert-thinking-header)
                         ollama-buddy--thinking-block-start  (copy-marker (point) nil)))
-                 ;; End marker: fold the *** ✦ Think heading
+                 ;; End marker: finalize the *** ✦ Think heading
                  ((and ollama-buddy--reasoning-marker-found
                        (eq (car ollama-buddy--reasoning-marker-found) 'end)
                        ollama-buddy--in-reasoning-section)
                   (setq ollama-buddy--in-reasoning-section nil
                         ollama-buddy--reasoning-skip-newlines t)
                   (when ollama-buddy--thinking-block-start
-                    (ollama-buddy--collapse-thinking-block
-                     (point-max)
+                    (ollama-buddy--finalize-thinking-block
                      ollama-buddy--thinking-arrow-marker)
                     (set-marker ollama-buddy--thinking-block-start nil)
                     (setq ollama-buddy--thinking-block-start  nil
@@ -2341,20 +2369,25 @@ TCP packets split a JSON object across multiple filter calls."
                 (setq ollama-buddy--start-point nil))
 
               ;; Insert text unless: hide-mode and inside block, or any marker chunk found
-              ;; (In collapse mode we still insert during the block so user sees it stream)
               (unless (or (and ollama-buddy-hide-reasoning
                                (not ollama-buddy-collapse-thinking)
                                ollama-buddy--in-reasoning-section)
                           ollama-buddy--reasoning-marker-found)
-                ;; Skip leading newlines immediately after a thinking block ends
-                (if (and ollama-buddy--reasoning-skip-newlines
-                         (not ollama-buddy--in-reasoning-section)
-                         (string-match "^[\n\r]+" text))
-                    (let ((cleaned-text (replace-regexp-in-string "^[\n\r]+" "" text)))
-                      (unless (string-empty-p cleaned-text)
-                        (insert cleaned-text)
-                        (setq ollama-buddy--reasoning-skip-newlines nil)))
-                  (insert text)))
+                ;; In collapse mode, accumulate thinking content (don't insert)
+                (if (and ollama-buddy-collapse-thinking
+                         ollama-buddy--in-reasoning-section
+                         ollama-buddy--thinking-content-accumulator)
+                    (setq ollama-buddy--thinking-content-accumulator
+                          (concat ollama-buddy--thinking-content-accumulator text))
+                  ;; Skip leading newlines immediately after a thinking block ends
+                  (if (and ollama-buddy--reasoning-skip-newlines
+                           (not ollama-buddy--in-reasoning-section)
+                           (string-match "^[\n\r]+" text))
+                      (let ((cleaned-text (replace-regexp-in-string "^[\n\r]+" "" text)))
+                        (unless (string-empty-p cleaned-text)
+                          (insert cleaned-text)
+                          (setq ollama-buddy--reasoning-skip-newlines nil)))
+                    (insert text))))
               
               ;; Track the complete response for history
               (when (boundp 'ollama-buddy--current-response)
@@ -2378,13 +2411,12 @@ TCP packets split a JSON object across multiple filter calls."
                            (ollama-buddy--cloud-model-p ollama-buddy--current-model))
                   (ollama-buddy--set-cloud-auth-status t))
 
-                ;; If still in thinking-API phase at stream end, close overlay
+                ;; If still in thinking-API phase at stream end, finalize
                 (when ollama-buddy--thinking-api-active
                   (setq ollama-buddy--thinking-api-active nil)
                   (when (and ollama-buddy-collapse-thinking
                              ollama-buddy--thinking-block-start)
-                    (ollama-buddy--collapse-thinking-block
-                     (point-max)
+                    (ollama-buddy--finalize-thinking-block
                      ollama-buddy--thinking-arrow-marker)
                     (set-marker ollama-buddy--thinking-block-start nil)
                     (setq ollama-buddy--thinking-block-start  nil
@@ -2394,11 +2426,10 @@ TCP packets split a JSON object across multiple filter calls."
                 (when ollama-buddy--in-reasoning-section
                   (setq ollama-buddy--in-reasoning-section nil)
                   (cond
-                   ;; Collapse mode: fold whatever arrived into the heading
+                   ;; Collapse mode: finalize whatever arrived into the heading
                    (ollama-buddy-collapse-thinking
                     (when ollama-buddy--thinking-block-start
-                      (ollama-buddy--collapse-thinking-block
-                       (point-max)
+                      (ollama-buddy--finalize-thinking-block
                        ollama-buddy--thinking-arrow-marker)
                       (set-marker ollama-buddy--thinking-block-start nil)
                       (setq ollama-buddy--thinking-block-start  nil

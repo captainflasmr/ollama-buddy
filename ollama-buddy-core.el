@@ -1928,16 +1928,16 @@ Choose a preset or enter a custom duration string accepted by Ollama:
           (while (re-search-forward "^\\([ \t]*\\)[*-+] \\(.*\\)$" nil t)
             (replace-match (concat (match-string 1) "- \\2"))))
         
-        ;; Bold: `**bold**` -> `*bold*` only if directly adjacent
+        ;; Bold: `**bold**` -> `*bold*` only if directly adjacent (single line)
         (save-match-data
           (goto-char (point-min))
-          (while (re-search-forward "\\*\\*\\([^ ]\\(.*?\\)[^ ]\\)\\*\\*" nil t)
+          (while (re-search-forward "\\*\\*\\([^ \n]\\([^\n]*?\\)[^ \n]\\)\\*\\*" nil t)
             (replace-match "*\\1*")))
         
-        ;; Italics: `_italic_` -> `/italic/`
+        ;; Italics: `_italic_` -> `/italic/` (single line)
         (save-match-data
           (goto-char (point-min))
-          (while (re-search-forward "\\([ \n]\\)_\\([^ ].*?[^ ]\\)_\\([ \n]\\)" nil t)
+          (while (re-search-forward "\\([ \n]\\)_\\([^ \n][^\n]*?[^ \n]\\)_\\([ \n]\\)" nil t)
             (replace-match "\\1/\\2/\\3")))
         
         ;; Links: `[text](url)` -> `[[url][text]]`

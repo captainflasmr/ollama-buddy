@@ -21,7 +21,7 @@
 (declare-function ollama-buddy--check-context-before-send "ollama-buddy")
 (declare-function ollama-buddy--find-reasoning-marker "ollama-buddy")
 (declare-function ollama-buddy--insert-thinking-header "ollama-buddy")
-(declare-function ollama-buddy--collapse-thinking-block "ollama-buddy")
+(declare-function ollama-buddy--finalize-thinking-block "ollama-buddy")
 (declare-function ollama-buddy--update-token-rate-display "ollama-buddy")
 (declare-function ollama-buddy--send-next-in-sequence "ollama-buddy")
 (declare-function ollama-buddy--multishot-cancel-timer "ollama-buddy")
@@ -269,7 +269,9 @@ When complete, CALLBACK is called with the status response and result."
             (setq ollama-buddy--thinking-api-active t
                   ollama-buddy--thinking-arrow-marker (ollama-buddy--insert-thinking-header)
                   ollama-buddy--thinking-block-start  (copy-marker (point) nil)))
-          (insert thinking-text))
+          ;; Accumulate thinking tokens (not inserted into buffer)
+          (setq ollama-buddy--thinking-content-accumulator
+                (concat ollama-buddy--thinking-content-accumulator thinking-text)))
          (ollama-buddy-hide-reasoning
           (setq ollama-buddy--thinking-api-active t))
          (t
@@ -324,8 +326,7 @@ When complete, CALLBACK is called with the status response and result."
             (setq ollama-buddy--thinking-api-active nil)
             (when (and ollama-buddy-collapse-thinking
                        ollama-buddy--thinking-block-start)
-              (ollama-buddy--collapse-thinking-block
-               (point-max)
+              (ollama-buddy--finalize-thinking-block
                ollama-buddy--thinking-arrow-marker)
               (set-marker ollama-buddy--thinking-block-start nil)
               (setq ollama-buddy--thinking-block-start  nil
@@ -348,15 +349,17 @@ When complete, CALLBACK is called with the status response and result."
                   (setq ollama-buddy--in-reasoning-section nil
                         should-show-content nil)
                   (when ollama-buddy--thinking-block-start
-                    (ollama-buddy--collapse-thinking-block
-                     (point-max)
+                    (ollama-buddy--finalize-thinking-block
                      ollama-buddy--thinking-arrow-marker)
                     (set-marker ollama-buddy--thinking-block-start nil)
                     (setq ollama-buddy--thinking-block-start  nil
                           ollama-buddy--thinking-arrow-marker nil)))
-                 ;; Inside block: stream normally
+                 ;; Inside block: accumulate (don't insert into buffer)
                  (ollama-buddy--in-reasoning-section
-                  (setq should-show-content t))))
+                  (when ollama-buddy--thinking-content-accumulator
+                    (setq ollama-buddy--thinking-content-accumulator
+                          (concat ollama-buddy--thinking-content-accumulator content)))
+                  (setq should-show-content nil))))
                ;; --- Hide mode ---
                (ollama-buddy-hide-reasoning
                 (cond
@@ -475,6 +478,7 @@ When complete, CALLBACK is called with the status response and result."
         (when ollama-buddy--thinking-block-start
           (set-marker ollama-buddy--thinking-block-start nil)
           (setq ollama-buddy--thinking-block-start nil))
+        (setq ollama-buddy--thinking-content-accumulator nil)
         (setq ollama-buddy--thinking-api-active nil
               ollama-buddy--thinking-arrow-marker nil)
         
