@@ -2618,7 +2618,6 @@ TCP packets split a JSON object across multiple filter calls."
                     (setq ollama-buddy--current-model ollama-buddy--current-request-temporary-model)
                     (setq ollama-buddy--current-request-temporary-model nil))
 
-                  (insert "\n\n*** FINISHED")
 
                   ;; Handle multishot progression here
                   (if ollama-buddy--multishot-sequence

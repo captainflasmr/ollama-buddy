@@ -464,7 +464,6 @@ When complete, CALLBACK is called with the status response and result."
                                   (plist-get last-info :elapsed)
                                   (plist-get last-info :rate)))))
 
-              (insert "\n\n*** FINISHED")
               (ollama-buddy--prepare-prompt-area)
 
               ;; Move to prompt if response is wholly visible
