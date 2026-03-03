@@ -276,8 +276,9 @@ Set when the heading is inserted; passed to
 ;; Function to check if the current model supports vision
 (defun ollama-buddy--model-supports-vision (model)
   "Check if MODEL supports vision capabilities.
-Checks the static `ollama-buddy-vision-models' list and the
-metadata cache populated from /api/show capabilities."
+When /api/show capabilities have been fetched, trusts that data.
+Falls back to the static `ollama-buddy-vision-models' list when
+capabilities are not yet available."
   (when model
     (let* ((real-model (ollama-buddy--get-real-model-name model))
            ;; Strip cloud suffixes for matching
@@ -285,14 +286,18 @@ metadata cache populated from /api/show capabilities."
            ;; Also get name without tag (e.g. "gemma3:4b" -> "gemma3")
            (name-only (car (split-string base-model ":")))
            (meta (gethash model ollama-buddy--models-metadata-cache)))
-      (or (member base-model ollama-buddy-vision-models)
-          (member name-only ollama-buddy-vision-models)
-          (and meta (alist-get 'vision meta))))))
+      (if (and meta (alist-get 'capabilities-fetched meta))
+          ;; Capabilities fetched from /api/show — trust that data
+          (alist-get 'vision meta)
+        ;; Not yet fetched — fall back to static list
+        (or (member base-model ollama-buddy-vision-models)
+            (member name-only ollama-buddy-vision-models))))))
 
 (defun ollama-buddy--model-supports-tools (model)
   "Check if MODEL supports tool calling capabilities.
-Checks the static `ollama-buddy-tools-models' list and the
-metadata cache populated from /api/show capabilities."
+When /api/show capabilities have been fetched, trusts that data.
+Falls back to the static `ollama-buddy-tools-models' list when
+capabilities are not yet available."
   (when model
     (let* ((real-model (ollama-buddy--get-real-model-name model))
            ;; Strip cloud suffixes for matching
@@ -300,16 +305,18 @@ metadata cache populated from /api/show capabilities."
            ;; Also get name without tag (e.g. "qwen3:32b" -> "qwen3")
            (name-only (car (split-string base-model ":")))
            (meta (gethash model ollama-buddy--models-metadata-cache)))
-      (or (member base-model ollama-buddy-tools-models)
-          (member name-only ollama-buddy-tools-models)
-          (and meta (alist-get 'tools meta))))))
+      (if (and meta (alist-get 'capabilities-fetched meta))
+          ;; Capabilities fetched from /api/show — trust that data
+          (alist-get 'tools meta)
+        ;; Not yet fetched — fall back to static list
+        (or (member base-model ollama-buddy-tools-models)
+            (member name-only ollama-buddy-tools-models))))))
 
 (defun ollama-buddy--model-supports-thinking (model)
   "Check if MODEL supports thinking/reasoning capabilities.
-Checks (in order):
-1. The exact-name list `ollama-buddy-thinking-models'.
-2. The substring/prefix patterns in `ollama-buddy-thinking-model-patterns'.
-3. The metadata cache populated from Ollama's /api/show capabilities array."
+When /api/show capabilities have been fetched, trusts that data.
+Falls back to the static lists and patterns when capabilities
+are not yet available."
   (when model
     (let* ((real-model (ollama-buddy--get-real-model-name model))
            ;; Strip cloud suffixes for matching
@@ -318,12 +325,15 @@ Checks (in order):
            (name-only (car (split-string base-model ":")))
            (base-lower (downcase base-model))
            (meta (gethash model ollama-buddy--models-metadata-cache)))
-      (or (member base-model ollama-buddy-thinking-models)
-          (member name-only ollama-buddy-thinking-models)
-          (cl-some (lambda (pattern)
-                     (string-match-p (regexp-quote (downcase pattern)) base-lower))
-                   ollama-buddy-thinking-model-patterns)
-          (and meta (alist-get 'thinking meta))))))
+      (if (and meta (alist-get 'capabilities-fetched meta))
+          ;; Capabilities fetched from /api/show — trust that data
+          (alist-get 'thinking meta)
+        ;; Not yet fetched — fall back to static lists and patterns
+        (or (member base-model ollama-buddy-thinking-models)
+            (member name-only ollama-buddy-thinking-models)
+            (cl-some (lambda (pattern)
+                       (string-match-p (regexp-quote (downcase pattern)) base-lower))
+                     ollama-buddy-thinking-model-patterns))))))
 
 (defun ollama-buddy--fetch-model-capabilities (models)
   "Proactively fetch /api/show capabilities for MODELS.
@@ -340,18 +350,63 @@ is selected."
                      (payload (json-encode `((model . ,real-model))))
                      (response (ollama-buddy--make-request "/api/show" "POST" payload)))
                 (when response
-                  (let* ((capabilities (append (alist-get 'capabilities response) nil))
-                         (cached-meta (or (gethash model ollama-buddy--models-metadata-cache) '())))
-                    (push '(capabilities-fetched . t) cached-meta)
-                    (when (member "thinking" capabilities)
-                      (push '(thinking . t) cached-meta))
-                    (when (member "vision" capabilities)
-                      (push '(vision . t) cached-meta))
-                    (when (member "tools" capabilities)
-                      (push '(tools . t) cached-meta))
-                    (puthash model cached-meta
-                             ollama-buddy--models-metadata-cache))))
+                  (ollama-buddy--store-model-capabilities model response)))
             (error nil)))))))
+
+(defun ollama-buddy--store-model-capabilities (model response)
+  "Store capabilities from /api/show RESPONSE into cache for MODEL.
+Return non-nil if the stored capabilities differ from what the
+static-list fallbacks would have shown (i.e. indicators changed)."
+  (let ((old-tools (ollama-buddy--model-supports-tools model))
+        (old-vision (ollama-buddy--model-supports-vision model))
+        (old-thinking (ollama-buddy--model-supports-thinking model)))
+    (let* ((capabilities (append (alist-get 'capabilities response) nil))
+           (cached-meta (or (gethash model ollama-buddy--models-metadata-cache) '())))
+      (push '(capabilities-fetched . t) cached-meta)
+      (when (member "thinking" capabilities)
+        (push '(thinking . t) cached-meta))
+      (when (member "vision" capabilities)
+        (push '(vision . t) cached-meta))
+      (when (member "tools" capabilities)
+        (push '(tools . t) cached-meta))
+      (puthash model cached-meta
+               ollama-buddy--models-metadata-cache))
+    ;; Return non-nil when any indicator changed
+    (not (and (eq (not old-tools) (not (ollama-buddy--model-supports-tools model)))
+              (eq (not old-vision) (not (ollama-buddy--model-supports-vision model)))
+              (eq (not old-thinking) (not (ollama-buddy--model-supports-thinking model)))))))
+
+(defun ollama-buddy--fetch-model-capabilities-async (models &optional callback)
+  "Asynchronously fetch /api/show capabilities for MODELS.
+Like `ollama-buddy--fetch-model-capabilities' but non-blocking.
+When all fetches complete, call CALLBACK only if any model's
+displayed indicators actually changed compared to static-list fallbacks."
+  (let* ((models-to-fetch
+          (cl-remove-if
+           (lambda (model)
+             (alist-get 'capabilities-fetched
+                        (gethash model ollama-buddy--models-metadata-cache)))
+           models))
+         (remaining (length models-to-fetch))
+         (changed nil))
+    (unless (zerop remaining)
+      (dolist (model models-to-fetch)
+        (let ((model model)) ;; lexical capture
+          (condition-case nil
+              (let* ((real-model (ollama-buddy--get-real-model-name model))
+                     (payload (json-encode `((model . ,real-model)))))
+                (ollama-buddy--make-request-async-backend
+                 "/api/show" "POST" payload
+                 (lambda (_status result)
+                   (when result
+                     (when (ollama-buddy--store-model-capabilities model result)
+                       (setq changed t)))
+                   (cl-decf remaining)
+                   (when (and (zerop remaining) changed callback)
+                     (funcall callback)))))
+            (error (cl-decf remaining)
+                   (when (and (zerop remaining) changed callback)
+                     (funcall callback)))))))))
 
 ;; Function to unload a single model
 (defun ollama-buddy-unload-model (model)
@@ -3885,11 +3940,6 @@ Modifies the variable in place."
                available-models
                :test #'string=))))
          (buf (get-buffer-create "*Ollama Models Management*")))
-    ;; Proactively fetch /api/show capabilities for all models so
-    ;; thinking/vision/tools indicators are accurate.
-    (ollama-buddy--fetch-model-capabilities
-     (append available-models cloud-display-models))
-    
     (with-current-buffer buf
       (let ((inhibit-read-only t))
         (org-mode)
@@ -4103,7 +4153,25 @@ Modifies the variable in place."
         )
       (goto-char (point-min))
       (view-mode 1))
-    (display-buffer buf)))
+    (display-buffer buf)
+    ;; Asynchronously fetch /api/show capabilities in the background.
+    ;; The buffer renders immediately using static-list fallbacks;
+    ;; when capabilities arrive and any indicator actually changed,
+    ;; silently re-render with accurate data (no visible flash).
+    (ollama-buddy--fetch-model-capabilities-async
+     (append available-models cloud-display-models)
+     (lambda ()
+       (when (buffer-live-p buf)
+         (let ((win (get-buffer-window buf))
+               (saved-line (with-current-buffer buf
+                             (line-number-at-pos (point))))
+               (inhibit-redisplay t))
+           (ollama-buddy-manage-models)
+           (when win
+             (with-current-buffer buf
+               (goto-char (point-min))
+               (forward-line (1- saved-line))
+               (set-window-point win (point))))))))))
 
 (defun ollama-buddy-select-model (model)
   "Set MODEL as the current model."

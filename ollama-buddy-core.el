@@ -2206,26 +2206,43 @@ When complete, CALLBACK is called with the status response and result."
   "Extract model names from API RESULT, applying prefix if needed.
 Cloud models (those with a `-cloud' suffix or in `ollama-buddy-cloud-models')
 are excluded since they appear under the `cl:' prefix instead.
-Also populates `ollama-buddy--models-metadata-cache' with size and detail info."
+Also populates `ollama-buddy--models-metadata-cache' with size and detail info,
+preserving any capability data already fetched from /api/show."
   (when result
-    (clrhash ollama-buddy--models-metadata-cache)
-    (cl-remove-if
-     (lambda (name)
-       (ollama-buddy--cloud-model-p
-        (ollama-buddy--get-real-model-name name)))
-     (mapcar (lambda (m)
-               (let* ((raw-name (alist-get 'name m))
-                      (full-name (ollama-buddy--get-full-model-name raw-name))
-                      (details (alist-get 'details m))
-                      (size (alist-get 'size m)))
-                 (puthash full-name
-                          `((size          . ,size)
-                            (parameter-size . ,(alist-get 'parameter_size details))
-                            (quantization   . ,(alist-get 'quantization_level details))
-                            (family         . ,(alist-get 'family details)))
-                          ollama-buddy--models-metadata-cache)
-                 full-name))
-             (alist-get 'models result)))))
+    (let ((new-names nil)
+          ;; Collect capability keys to preserve per model.
+          (cap-keys '(capabilities-fetched tools vision thinking)))
+      (dolist (m (append (alist-get 'models result) nil))
+        (let* ((raw-name (alist-get 'name m))
+               (full-name (ollama-buddy--get-full-model-name raw-name))
+               (details (alist-get 'details m))
+               (size (alist-get 'size m))
+               (old-meta (gethash full-name ollama-buddy--models-metadata-cache))
+               (new-meta `((size          . ,size)
+                           (parameter-size . ,(alist-get 'parameter_size details))
+                           (quantization   . ,(alist-get 'quantization_level details))
+                           (family         . ,(alist-get 'family details)))))
+          ;; Preserve capability entries from previous /api/show fetch.
+          (dolist (key cap-keys)
+            (when-let ((val (alist-get key old-meta)))
+              (push (cons key val) new-meta)))
+          (puthash full-name new-meta ollama-buddy--models-metadata-cache)
+          (push full-name new-names)))
+      ;; Remove stale entries for models no longer present
+      ;; (but keep cloud model entries which aren't in /api/tags).
+      (let ((current-set (make-hash-table :test 'equal)))
+        (dolist (name new-names) (puthash name t current-set))
+        (maphash (lambda (key _val)
+                   (unless (or (gethash key current-set)
+                               (ollama-buddy--cloud-model-p
+                                (ollama-buddy--get-real-model-name key)))
+                     (remhash key ollama-buddy--models-metadata-cache)))
+                 ollama-buddy--models-metadata-cache))
+      (cl-remove-if
+       (lambda (name)
+         (ollama-buddy--cloud-model-p
+          (ollama-buddy--get-real-model-name name)))
+       (nreverse new-names)))))
 
 (defun ollama-buddy--get-running-models ()
   "Get list of currently running Ollama models with caching."
@@ -2267,11 +2284,10 @@ the manifest.  The pull is idempotent and returns instantly when the
 manifest is already present."
   (when (ollama-buddy--cloud-model-p model)
     (let ((raw (ollama-buddy--get-real-model-name model)))
-      (message "Pulling cloud model manifest for %s..." raw)
-      (let ((exit-code (call-process ollama-buddy-ollama-executable
+      (let ((inhibit-message t)
+            (exit-code (call-process ollama-buddy-ollama-executable
                                      nil nil nil "pull" raw)))
-        (if (zerop exit-code)
-            (message "Pulling cloud model manifest for %s...done" raw)
+        (unless (zerop exit-code)
           (user-error "Failed to pull cloud model manifest for %s (exit code %d)"
                       raw exit-code))))))
 
