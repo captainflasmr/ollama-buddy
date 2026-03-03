@@ -18,7 +18,7 @@ An Emacs package for interacting with local LLMs via [[https://ollama.ai/][Ollam
   :ensure t
   :bind
   ("C-c o" . ollama-buddy-role-transient-menu)
-  ("C-c O" . ollama-buddy-transient-menu-wrapper))
+  ("C-c O" . ollama-buddy-transient-menu))
 #+end_src
 
 That's it. Start =ollama serve=, open Emacs, press =C-c o=, select =[o]= to open chat, and go.
@@ -76,7 +76,7 @@ Submit queries, swap models, view token usage and statistics:
 - *In-Buffer Replace* -- Stream LLM output directly into the source buffer, replacing the selected region in-place; accept/reject confirmation; inline diff view (=C-c d=) with word-level smerge highlighting; automatic code-fence stripping
 - *Lightweight* -- No external dependencies; a minified 200-line version (=ollama-buddy-mini=) is also available
 
-* What's New (v3.2.1)
+* What's New (v3.2.2)
 
 Benchmark all models and multishot timeout.
 
@@ -87,6 +87,7 @@ Benchmark all models and multishot timeout.
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *3.2.2* | Main transient menu reorganization (=C-c O=) — 4x2 compact grid with streamlined sub-menus and top-level History/Sessions.                                                                                                   |
 | *3.2.1* | Benchmark all models (=C-c u=) — one-command multishot across all models with per-model timeout; builds persistent token stats.                                                                                           |
 | *3.1.0* | Inline ghost-text code completions (=ollama-buddy-completion=) — simple, manual Copilot-style completions with FIM context, thinking model support, fence stripping.                                                      |
 | *3.0.0* | Generic OpenAI-compatible chat provider (=ollama-buddy-openai-compat=) — connect to LM Studio, llama.cpp, vLLM, Jan, or any OpenAI-API server.                                                                            |
@@ -107,7 +108,7 @@ See [[file:CHANGELOG.org]] for full history.
   :ensure t
   :bind
   ("C-c o" . ollama-buddy-role-transient-menu)
-  ("C-c O" . ollama-buddy-transient-menu-wrapper))
+  ("C-c O" . ollama-buddy-transient-menu))
 #+end_src
 
 ** With Remote Providers
@@ -117,7 +118,7 @@ See [[file:CHANGELOG.org]] for full history.
   :ensure t
   :bind
   ("C-c o" . ollama-buddy-role-transient-menu)
-  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  ("C-c O" . ollama-buddy-transient-menu)
   :custom
   (ollama-buddy-openai-api-key
    (auth-source-pick-first-password :host "ollama-buddy-openai" :user "apikey"))
@@ -137,7 +138,7 @@ No API key needed for local servers:
   :ensure t
   :bind
   ("C-c o" . ollama-buddy-role-transient-menu)
-  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  ("C-c O" . ollama-buddy-transient-menu)
   :config
   (require 'ollama-buddy-openai-compat)
   ;; point at your server — LM Studio default shown here
@@ -163,7 +164,7 @@ git clone https://github.com/captainflasmr/ollama-buddy.git
 (add-to-list 'load-path "path/to/ollama-buddy")
 (require 'ollama-buddy)
 (global-set-key (kbd "C-c o") #'ollama-buddy-role-transient-menu)
-(global-set-key (kbd "C-c O") #'ollama-buddy-transient-menu-wrapper)
+(global-set-key (kbd "C-c O") #'ollama-buddy-transient-menu)
 #+end_src
 
 ** Manual Setup with Presets and User Prompts
@@ -197,7 +198,7 @@ curl -sL https://api.github.com/repos/captainflasmr/ollama-buddy/tarball/main | 
   :bind
   ;; ("C-c o" . ollama-buddy-menu)
   ("C-c o" . ollama-buddy-role-transient-menu)
-  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  ("C-c O" . ollama-buddy-transient-menu)
   :config
   
   ;; overall default model

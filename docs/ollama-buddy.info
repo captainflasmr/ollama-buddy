@@ -514,18 +514,18 @@ Toggling reasoning visibility
 
 Toggling Org/Markdown conversion
      Press ‘C-c C-o’ to switch between Org-mode and Markdown output.
-     Also available from the transient menu under "Diagnostics".
+     Also available from the transient menu under "Settings".
 
 Toggling Global System Prompt
      Press ‘C-c <’ to toggle the global system prompt on or off.  The
      header line shows ‘<’ when disabled.
 
 Using Awesome ChatGPT Prompts
-     Select text, press ‘C-c o’, then ‘a’ for the Awesome prompts menu,
+     Select text, press ‘C-c O’, then ‘a’ for the Awesome prompts menu,
      then ‘s’ to send with a prompt.
 
 Using Fabric patterns
-     Select text, press ‘C-c o’, then ‘f’ for the Fabric menu, then ‘s’
+     Select text, press ‘C-c O’, then ‘f’ for the Fabric menu, then ‘s’
      to send with a pattern.
 
 Getting help
@@ -841,11 +841,11 @@ Viewing the current system prompt
 
 Resetting the system prompt
      Press ‘C-c C-r’, or use the main transient menu (‘C-c O’) under
-     System Prompts ‘C-r’
+     System Prompts ‘p’ then ‘r’
 
 Using a pre-built prompt
-     Use Fabric patterns (‘C-c f p’) or Awesome ChatGPT prompts (‘C-c w
-     p’)
+     Use Fabric patterns (‘C-c O f’) or Awesome ChatGPT prompts (‘C-c O
+     a’)
 
    Example system prompt:
      You are a programming expert who specializes in Python.
@@ -1547,12 +1547,27 @@ in your prompts:
 10.4.3 Transient Menu
 ---------------------
 
-Access the web search menu via ‘C-c O /’ which provides:
+Access the main transient menu via ‘C-c O’, which is organized into a
+compact 4x2 grid for efficient access.  From here you can access:
 
-   • Search & Display - perform search and show results
-   • Search & Attach - perform search and attach to context
-   • Show Attachments - view all attachments including web searches
-   • Clear All - remove all attachments and web searches
+   • *Chat Operations*: Open chat, manage attachments, web search, RAG,
+     and authentication.
+   • *Model Management*: Switch models, manage installed models, view
+     info, and multishot/benchmark.
+   • *AI Actions*: Quick access to refactoring, describing code, git
+     commits, and proofreading.
+   • *Tools*: Fabric patterns, Awesome prompts, and Ollama tool-calling.
+   • *History & Sessions*: Toggle/clear history and save/load sessions.
+   • *Sub-menus*: Specialized menus for Settings, System Prompts,
+     Parameters, and Roles.
+   • *General*: Help, intro screen, and version information.
+
+   Access lower-level sub-menus for more specific tasks:
+   • *Settings (S)*: Buffer options, display toggles, and interface
+     level.
+   • *System Prompts (p)*: Manage your saved system prompt library.
+   • *Parameters (P)*: Fine-tune model generation and resource settings.
+   • *Roles (R)*: Switch between predefined AI personas.
 
 10.5 Viewing Web Search Results
 ===============================
@@ -3056,15 +3071,15 @@ Authentication is handled via the Ollama CLI:
 
 Sign In (‘M-x ollama-buddy-cloud-signin’)
      Opens your browser for Ollama cloud login.  Accessible from
-     transient menu "Cloud Auth > Sign In".
+     transient menu "Authentication (A)" > "Sign In (c)".
 
 Sign Out (‘M-x ollama-buddy-cloud-signout’)
      Signs out from cloud services.  Accessible from transient menu
-     "Cloud Auth > Sign Out".
+     "Authentication (A)" > "Sign Out (x)".
 
 Check Status (‘M-x ollama-buddy-cloud-status’)
      Verifies your authentication status.  Accessible from transient
-     menu "Cloud Auth > Auth Status".
+     menu "Authentication (A)" > "Status (s)".
 
 18.5 Automatic Manifest Pulling
 ===============================
@@ -3648,7 +3663,7 @@ returns a non-string value, it is formatted with ‘%S’.
      Re-initialize built-in tools.
 
    These commands are also available from the transient menu (‘C-c O’)
-under the "Actions" section:
+under the "Tools" section:
    • ‘SPC’ - Toggle Tools
    • ‘Q’ - List Tools
 
@@ -4589,32 +4604,32 @@ Node: Introduction2889
 Node: Installation5077
 Node: Configuration8034
 Node: Quick Start16304
-Node: Core Features18548
-Node: Chat Interface22825
-Node: Working with Models29903
-Node: Context Management35132
-Node: File Attachments40741
-Node: Web Search46663
-Node: Parameter Control53609
-Node: Session Management56006
-Node: User System Prompts58915
-Node: Roles and Commands67403
-Node: Fabric Pattern Integration84593
-Node: Awesome ChatGPT Prompts86820
-Node: Remote Providers90670
-Node: Ollama Cloud Models98130
-Node: Global System Prompt102291
-Node: Tone Selector104045
-Node: Thinking Blocks105852
-Node: In-Buffer Replace107879
-Node: Tool Calling113751
-Node: RAG121542
-Node: Advanced Usage129321
-Node: API Reference131870
-Node: FAQ137809
-Node: Troubleshooting144894
-Node: Contributing147399
-Node: Index150067
+Node: Core Features18545
+Node: Chat Interface22822
+Node: Working with Models29911
+Node: Context Management35140
+Node: File Attachments40749
+Node: Web Search46671
+Node: Parameter Control54409
+Node: Session Management56806
+Node: User System Prompts59715
+Node: Roles and Commands68203
+Node: Fabric Pattern Integration85393
+Node: Awesome ChatGPT Prompts87620
+Node: Remote Providers91470
+Node: Ollama Cloud Models98930
+Node: Global System Prompt103128
+Node: Tone Selector104882
+Node: Thinking Blocks106689
+Node: In-Buffer Replace108716
+Node: Tool Calling114588
+Node: RAG122377
+Node: Advanced Usage130156
+Node: API Reference132705
+Node: FAQ138644
+Node: Troubleshooting145729
+Node: Contributing148234
+Node: Index150902
 
 End Tag Table
 

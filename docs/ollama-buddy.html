@@ -142,7 +142,10 @@ allowing you to leverage powerful large language models (LLMs) directly within y
       <li><a id="toc-Configuring-Vision-Support" href="#Configuring-Vision-Support">7.7.1 Configuring Vision Support</a></li>
       <li><a id="toc-Using-Vision-Models" href="#Using-Vision-Models">7.7.2 Using Vision Models</a></li>
     </ul></li>
-    <li><a id="toc-Multishot-Mode" href="#Multishot-Mode">7.8 Multishot Mode</a></li>
+    <li><a id="toc-Multishot-Mode" href="#Multishot-Mode">7.8 Multishot Mode</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Benchmark-All-Models" href="#Benchmark-All-Models">7.8.1 Benchmark All Models</a></li>
+    </ul></li>
   </ul></li>
   <li><a id="toc-Context-Management" href="#Context-Management">8 Context Management</a>
   <ul class="toc-numbered-mark">
@@ -1165,7 +1168,7 @@ Next: <a href="#Core-Features" accesskey="n" rel="next">Core Features</a>, Previ
 </p>
 </dd>
 <dt>Toggling Org/Markdown conversion</dt>
-<dd><p>Press <code class="code">C-c C-o</code> to switch between Org-mode and Markdown output. Also available from the transient menu under &quot;Diagnostics&quot;.
+<dd><p>Press <code class="code">C-c C-o</code> to switch between Org-mode and Markdown output. Also available from the transient menu under &ldquo;Settings&rdquo;.
 </p>
 </dd>
 <dt>Toggling Global System Prompt</dt>
@@ -1173,11 +1176,11 @@ Next: <a href="#Core-Features" accesskey="n" rel="next">Core Features</a>, Previ
 </p>
 </dd>
 <dt>Using Awesome ChatGPT Prompts</dt>
-<dd><p>Select text, press <code class="code">C-c o</code>, then <code class="code">a</code> for the Awesome prompts menu, then <code class="code">s</code> to send with a prompt.
+<dd><p>Select text, press <code class="code">C-c O</code>, then <code class="code">a</code> for the Awesome prompts menu, then <code class="code">s</code> to send with a prompt.
 </p>
 </dd>
 <dt>Using Fabric patterns</dt>
-<dd><p>Select text, press <code class="code">C-c o</code>, then <code class="code">f</code> for the Fabric menu, then <code class="code">s</code> to send with a pattern.
+<dd><p>Select text, press <code class="code">C-c O</code>, then <code class="code">f</code> for the Fabric menu, then <code class="code">s</code> to send with a pattern.
 </p>
 </dd>
 <dt>Getting help</dt>
@@ -1591,11 +1594,11 @@ Requires <code class="code">ollama-buddy-awesome</code>.
 </p>
 </dd>
 <dt>Resetting the system prompt</dt>
-<dd><p>Press <code class="code">C-c C-r</code>, or use the main transient menu (<kbd class="kbd">C-c O</kbd>) under System Prompts <code class="code">C-r</code>
+<dd><p>Press <code class="code">C-c C-r</code>, or use the main transient menu (<kbd class="kbd">C-c O</kbd>) under System Prompts <code class="code">p</code> then <code class="code">r</code>
 </p>
 </dd>
 <dt>Using a pre-built prompt</dt>
-<dd><p>Use Fabric patterns (<code class="code">C-c f p</code>) or Awesome ChatGPT prompts (<code class="code">C-c w p</code>)
+<dd><p>Use Fabric patterns (<code class="code">C-c O f</code>) or Awesome ChatGPT prompts (<code class="code">C-c O a</code>)
 </p></dd>
 </dl>
 
@@ -1823,7 +1826,28 @@ org subheadings so you can collapse sections you are not interested in.
 </li><li> Watch as Ollama Buddy processes your request with each model in sequence
 </li></ol>
 
+<p>Each model in a multishot sequence is subject to a per-model timeout
+(default 120 seconds, configurable via <code class="code">ollama-buddy-multishot-timeout</code>).
+If a model exceeds the timeout, its request is cancelled, a &lsquo;<samp class="samp">TIMED OUT</samp>&rsquo;
+marker is inserted, and the sequence continues with the next model.
+Set <code class="code">ollama-buddy-multishot-timeout</code> to <code class="code">nil</code> to disable.
+</p>
+<ul class="mini-toc">
+<li><a href="#Benchmark-All-Models" accesskey="1">Benchmark All Models</a></li>
+</ul>
+<div class="subsection-level-extent" id="Benchmark-All-Models">
+<h4 class="subsection"><span>7.8.1 Benchmark All Models<a class="copiable-link" href="#Benchmark-All-Models"> &para;</a></span></h4>
+
+<p>Press <code class="code">C-c u</code> (or use the transient menu: &lsquo;<samp class="samp">u Benchmark All</samp>&rsquo;) to
+automatically send a prompt to every available model via multishot.  This
+builds persistent token usage statistics for all accessible models in one
+command.  Embedding models are filtered out.
+</p>
+<p>The benchmark prompt is configurable via <code class="code">ollama-buddy-benchmark-prompt</code>
+(default: &lsquo;<samp class="samp">&quot;Explain what a binary tree is in 2-3 sentences.&quot;</samp>&rsquo;).
+</p>
 <hr>
+</div>
 </div>
 </div>
 <div class="chapter-level-extent" id="Context-Management">
@@ -2532,13 +2556,24 @@ You no longer need to explicitly <code class="code">(require 'ollama-buddy-web-s
 <div class="subsection-level-extent" id="Transient-Menu">
 <h4 class="subsection"><span>10.4.3 Transient Menu<a class="copiable-link" href="#Transient-Menu"> &para;</a></span></h4>
 
-<p>Access the web search menu via <code class="code">C-c O /</code> which provides:
+<p>Access the main transient menu via <code class="code">C-c O</code>, which is organized into a compact 4x2 grid for efficient access. From here you can access:
 </p>
 <ul class="itemize mark-bullet">
-<li>Search &amp; Display - perform search and show results
-</li><li>Search &amp; Attach - perform search and attach to context
-</li><li>Show Attachments - view all attachments including web searches
-</li><li>Clear All - remove all attachments and web searches
+<li><strong class="strong">Chat Operations</strong>: Open chat, manage attachments, web search, RAG, and authentication.
+</li><li><strong class="strong">Model Management</strong>: Switch models, manage installed models, view info, and multishot/benchmark.
+</li><li><strong class="strong">AI Actions</strong>: Quick access to refactoring, describing code, git commits, and proofreading.
+</li><li><strong class="strong">Tools</strong>: Fabric patterns, Awesome prompts, and Ollama tool-calling.
+</li><li><strong class="strong">History &amp; Sessions</strong>: Toggle/clear history and save/load sessions.
+</li><li><strong class="strong">Sub-menus</strong>: Specialized menus for Settings, System Prompts, Parameters, and Roles.
+</li><li><strong class="strong">General</strong>: Help, intro screen, and version information.
+</li></ul>
+
+<p>Access lower-level sub-menus for more specific tasks:
+</p><ul class="itemize mark-bullet">
+<li><strong class="strong">Settings (S)</strong>: Buffer options, display toggles, and interface level.
+</li><li><strong class="strong">System Prompts (p)</strong>: Manage your saved system prompt library.
+</li><li><strong class="strong">Parameters (P)</strong>: Fine-tune model generation and resource settings.
+</li><li><strong class="strong">Roles (R)</strong>: Switch between predefined AI personas.
 </li></ul>
 
 </div>
@@ -4462,15 +4497,15 @@ current cloud authentication status next to the section heading.
 </p>
 <dl class="table">
 <dt>Sign In (<code class="code">M-x ollama-buddy-cloud-signin</code>)</dt>
-<dd><p>Opens your browser for Ollama cloud login. Accessible from transient menu &quot;Cloud Auth &gt; Sign In&quot;.
+<dd><p>Opens your browser for Ollama cloud login. Accessible from transient menu &ldquo;Authentication (A)&rdquo; &gt; &ldquo;Sign In (c)&rdquo;.
 </p>
 </dd>
 <dt>Sign Out (<code class="code">M-x ollama-buddy-cloud-signout</code>)</dt>
-<dd><p>Signs out from cloud services. Accessible from transient menu &quot;Cloud Auth &gt; Sign Out&quot;.
+<dd><p>Signs out from cloud services. Accessible from transient menu &ldquo;Authentication (A)&rdquo; &gt; &ldquo;Sign Out (x)&rdquo;.
 </p>
 </dd>
 <dt>Check Status (<code class="code">M-x ollama-buddy-cloud-status</code>)</dt>
-<dd><p>Verifies your authentication status. Accessible from transient menu &quot;Cloud Auth &gt; Auth Status&quot;.
+<dd><p>Verifies your authentication status. Accessible from transient menu &ldquo;Authentication (A)&rdquo; &gt; &ldquo;Status (s)&rdquo;.
 </p></dd>
 </dl>
 
@@ -5184,7 +5219,7 @@ When nil, only custom user-registered tools are available.
 </p></dd>
 </dl>
 
-<p>These commands are also available from the transient menu (<kbd class="kbd">C-c O</kbd>) under the &ldquo;Actions&rdquo; section:
+<p>These commands are also available from the transient menu (<kbd class="kbd">C-c O</kbd>) under the &ldquo;Tools&rdquo; section:
 </p><ul class="itemize mark-bullet">
 <li><kbd class="kbd">SPC</kbd> - Toggle Tools
 </li><li><kbd class="kbd">Q</kbd> - List Tools

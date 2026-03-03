@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 3.1.0
+@subtitle For Ollama Buddy version 3.2.2
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -583,16 +583,16 @@ Press @code{C-c C-a} to attach a file, or use the transient menu "Attachments" s
 Press @code{C-c V} to hide or show reasoning/thinking sections in responses.
 
 @item Toggling Org/Markdown conversion
-Press @code{C-c C-o} to switch between Org-mode and Markdown output. Also available from the transient menu under "Diagnostics".
+Press @code{C-c C-o} to switch between Org-mode and Markdown output. Also available from the transient menu under ``Settings''.
 
 @item Toggling Global System Prompt
 Press @code{C-c <} to toggle the global system prompt on or off. The header line shows @code{<} when disabled.
 
 @item Using Awesome ChatGPT Prompts
-Select text, press @code{C-c o}, then @code{a} for the Awesome prompts menu, then @code{s} to send with a prompt.
+Select text, press @code{C-c O}, then @code{a} for the Awesome prompts menu, then @code{s} to send with a prompt.
 
 @item Using Fabric patterns
-Select text, press @code{C-c o}, then @code{f} for the Fabric menu, then @code{s} to send with a pattern.
+Select text, press @code{C-c O}, then @code{f} for the Fabric menu, then @code{s} to send with a pattern.
 
 @item Getting help
 In the chat buffer, press @code{C-c h} to display the help screen with available commands and models.
@@ -907,10 +907,10 @@ Type your system prompt, then press @code{C-c s}
 Press @code{C-c C-s}
 
 @item Resetting the system prompt
-Press @code{C-c C-r}, or use the main transient menu (@kbd{C-c O}) under System Prompts @code{C-r}
+Press @code{C-c C-r}, or use the main transient menu (@kbd{C-c O}) under System Prompts @code{p} then @code{r}
 
 @item Using a pre-built prompt
-Use Fabric patterns (@code{C-c f p}) or Awesome ChatGPT prompts (@code{C-c w p})
+Use Fabric patterns (@code{C-c O f}) or Awesome ChatGPT prompts (@code{C-c O a})
 @end table
 
 Example system prompt:
@@ -1619,13 +1619,24 @@ Search and attach results to conversation context (@code{ollama-buddy-web-search
 
 @subsection Transient Menu
 
-Access the web search menu via @code{C-c O /} which provides:
+Access the main transient menu via @code{C-c O}, which is organized into a compact 4x2 grid for efficient access. From here you can access:
 
 @itemize @bullet
-@item Search & Display - perform search and show results
-@item Search & Attach - perform search and attach to context
-@item Show Attachments - view all attachments including web searches
-@item Clear All - remove all attachments and web searches
+@item @strong{Chat Operations}: Open chat, manage attachments, web search, RAG, and authentication.
+@item @strong{Model Management}: Switch models, manage installed models, view info, and multishot/benchmark.
+@item @strong{AI Actions}: Quick access to refactoring, describing code, git commits, and proofreading.
+@item @strong{Tools}: Fabric patterns, Awesome prompts, and Ollama tool-calling.
+@item @strong{History & Sessions}: Toggle/clear history and save/load sessions.
+@item @strong{Sub-menus}: Specialized menus for Settings, System Prompts, Parameters, and Roles.
+@item @strong{General}: Help, intro screen, and version information.
+@end itemize
+
+Access lower-level sub-menus for more specific tasks:
+@itemize @bullet
+@item @strong{Settings (S)}: Buffer options, display toggles, and interface level.
+@item @strong{System Prompts (p)}: Manage your saved system prompt library.
+@item @strong{Parameters (P)}: Fine-tune model generation and resource settings.
+@item @strong{Roles (R)}: Switch between predefined AI personas.
 @end itemize
 
 @section Viewing Web Search Results
@@ -3109,13 +3120,13 @@ Authentication is handled via the Ollama CLI:
 
 @table @asis
 @item Sign In (@code{M-x ollama-buddy-cloud-signin})
-Opens your browser for Ollama cloud login. Accessible from transient menu "Cloud Auth > Sign In".
+Opens your browser for Ollama cloud login. Accessible from transient menu ``Authentication (A)'' > ``Sign In (c)''.
 
 @item Sign Out (@code{M-x ollama-buddy-cloud-signout})
-Signs out from cloud services. Accessible from transient menu "Cloud Auth > Sign Out".
+Signs out from cloud services. Accessible from transient menu ``Authentication (A)'' > ``Sign Out (x)''.
 
 @item Check Status (@code{M-x ollama-buddy-cloud-status})
-Verifies your authentication status. Accessible from transient menu "Cloud Auth > Auth Status".
+Verifies your authentication status. Accessible from transient menu ``Authentication (A)'' > ``Status (s)''.
 @end table
 
 @section Automatic Manifest Pulling
@@ -3639,7 +3650,7 @@ Remove all registered tools.
 Re-initialize built-in tools.
 @end table
 
-These commands are also available from the transient menu (@kbd{C-c O}) under the ``Actions'' section:
+These commands are also available from the transient menu (@kbd{C-c O}) under the ``Tools'' section:
 @itemize @bullet
 @item @kbd{SPC} - Toggle Tools
 @item @kbd{Q} - List Tools

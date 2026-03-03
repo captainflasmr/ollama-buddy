@@ -28,7 +28,7 @@ You can install with literally no config, but I would suggest binding to both me
    (use-package ollama-buddy
      :bind
      ("C-c o" . ollama-buddy-role-transient-menu)
-     ("C-c O" . ollama-buddy-transient-menu-wrapper))
+     ("C-c O" . ollama-buddy-transient-menu))
   #+end_src
 
 A simple text information screen will be presented on the first opening of the chat (by selecting "o" from any of the menus), its just a bit of fun, but I wanted a quick start tutorial/assistant type of feel, here is what will be presented:
@@ -105,7 +105,7 @@ If desired, the following will get you going! (of course, have =ollama= running 
      :ensure t
      :bind
      ("C-c o" . ollama-buddy-role-transient-menu)
-     ("C-c O" . ollama-buddy-transient-menu-wrapper))
+     ("C-c O" . ollama-buddy-transient-menu))
   #+end_src
 
 - *Interactive Command Menu*
@@ -217,25 +217,24 @@ The main transient menu can be accessed with the keybinding =C-c O= when in an O
 
 ** What the Menu Looks Like
 
-When called, the main transient menu appears at the bottom of your Emacs frame, organized into logical sections with descriptive prefixes. Here's what you'll see:
+When called, the main transient menu appears at the bottom of your Emacs frame, organized into a compact 4x2 grid for efficient access. Here's what you'll see:
 
 #+begin_src 
 |o(Y)o| Ollama Buddy
-[Chat]             [Prompts]            [Model]               [Roles & Patterns]
-o  Open Chat       l  Send Region       W  Manage Models      R  Switch Roles
-O  Commands        s  Set System Prompt m  Switch Model       E  Create New Role
-RET Send Prompt    C-s Show System      c  Cloud Models        D  Open Roles Directory
-h  Help/Menu       r  Reset System      i  Show Model Info    f  Fabric Patterns
-k  Kill/Cancel     b  Ollama Buddy Menu M  Multishot          t  OpenAI Integration
-x  Toggle Streaming
+[Chat]              [Model]                [Actions]              [Tools]
+o  Open Chat        W  Manage Models       r  Refactor Code       f  Fabric Patterns
+O  Commands         m  Switch Model        d  Describe Code       u  Universal Patterns
+RET Send Prompt     c  Cloud Models        g  Git Commit Message  a  Awesome Prompts
+k  Kill/Cancel      i  Show Model Info     l  Lookup Definition   w  Web Search
+x  Toggle Streaming M  Multishot           p  Proofread Text      t  Ollama Tools
+h  Help/Menu        U  Check Status        c  Custom Prompt       r  RAG Integration
 
-[Display Options]          [History]              [Sessions]             [Parameters]
-A  Toggle Interface Level  H  Toggle History      N  New Session         P  Edit Parameter
-B  Toggle Debug Mode       X  Clear History       L  Load Session        G  Display Parameters
-T  Toggle Token Display    J  Edit History        S  Save Session        I  Parameter Help
-#  Token Stats                                    Q  List Sessions       K  Reset Parameters
-C-o Toggle Markdown->Org                          Z  Delete Session      F  Toggle Params in Header
-V  Toggle reasoning visibility                                           p  Parameter Profiles                                           
+[History]           [Sessions]             [Sub-menus]            [General]
+H  Toggle History   N  New Session         S  Settings             q  Quit
+X  Clear History    L  Load Session        P  System Prompts       ?  Help
+J  Edit History     S  Save Session        R  Roles Management     B  Intro Screen
+                    Q  List Sessions                              V  Version Info
+                    D  Open Directory                             z  About
 #+end_src
 
 This visual layout makes it easy to discover and access the full range of Ollama Buddy's functionality. Let's explore each section in detail.
@@ -249,9 +248,9 @@ This section contains the core interaction commands:
 - *Open Chat (o)*: Opens the Ollama Buddy chat buffer
 - *Commands (O)*: Opens a submenu with specialized commands
 - *Send Prompt (RET)*: Sends the current prompt to the model
-- *Help/Menu (h)*: Displays the help assistant with usage tips
 - *Kill/Cancel Request (k)*: Cancels the current ongoing request
 - *Toggle Streaming (x)*: Toggle streaming on and off only for ollama models
+- *Help/Menu (h)*: Displays the help assistant with usage tips
 
 *** Prompts Section
 
@@ -267,21 +266,34 @@ These commands help you manage and send prompts:
 
 Commands for model management:
 
-- *Manage Models (M)*: Info, Pull, Copy, Delete for each model, plus Import GGUF Model and Custom Pull from ollama library
+- *Manage Models (W)*: Info, Pull, Copy, Delete for each model, plus Import GGUF Model and Custom Pull from ollama library
 - *Switch Model (m)*: Changes the active LLM
 - *Cloud Model (c)*: Switch to a cloud model
 - *Show Model Info (i)*: Displays detailed information about the current model
-- *Multishot (U)*: Sends the same prompt to multiple models
+- *Multishot (M)*: Sends the same prompt to multiple models
+- *Check Status (U)*: Checks the status of the local Ollama server
 
-*** Roles & Patterns Section
+*** Actions Section
 
-These commands help manage roles and use fabric patterns:
+Quick access to common AI-powered text operations:
 
-- *Switch Roles (R)*: Switch to a different predefined role
-- *Create New Role (E)*: Create a new role interactively
-- *Open Roles Directory (D)*: Open the directory containing role definitions
-- *Fabric Patterns (f)*: Opens the submenu for Fabric patterns
-- *OpenAI Integration (t)*: Opens menu specifically for OpenAI/ChatGPT
+- *Refactor Code (r)*: Suggest improvements to selected code
+- *Describe Code (d)*: Explain the selected code snippet
+- *Git Commit Message (g)*: Generate a commit message from changes
+- *Lookup Definition (l)*: Look up a word or concept
+- *Proofread Text (p)*: Check for grammar and style
+- *Custom Prompt (c)*: Enter a one-off custom prompt
+
+*** Tools Section
+
+Integration with external knowledge and advanced features:
+
+- *Fabric Patterns (f)*: Access curated prompt templates from Fabric
+- *Universal Patterns (u)*: Generic patterns applicable to many situations
+- *Awesome Prompts (a)*: Access the Awesome ChatGPT Prompts collection
+- *Web Search (w)*: Search the web and integrate results
+- *Ollama Tools (t)*: Use tool-calling capabilities (if supported)
+- *RAG Integration (r)*: Search your local knowledge base
 
 When you select the Fabric Patterns option, you'll see a submenu like this:
 
@@ -324,18 +336,65 @@ Commands for session management:
 - *New Session (N)*: Start a new session
 - *Load Session (L)*: Load a saved session
 - *Save Session (S)*: Save the current session
-- *Directory (Z)*: Open sessions directory in Dired
+- *List Sessions (Q)*: Browse your saved sessions
+- *Open Directory (D)*: Open the sessions directory in Dired
 
-*** Parameters Section
+*** Sub-menus Section
 
-Commands for managing model parameters:
+Organized sub-menus for specialized settings:
 
-- *Edit Parameter (P)*: Opens a submenu to edit specific parameters
-- *Display Parameters (G)*: Show current parameter settings
-- *Parameter Help (I)*: Display help information about parameters
-- *Reset Parameters (K)*: Reset parameters to defaults
-- *Toggle Params in Header (F)*: Show/hide parameters in header
-- *Parameter Profiles (p)*: Opens the parameter profiles submenu
+- *Settings (S)*: Configure buffer behavior, display toggles, and UI options
+- *System Prompts (P)*: Manage your personal library of system prompts
+- *Roles Management (R)*: Create and switch between different AI roles
+
+*** General Section
+
+Global commands and information:
+
+- *Quit (q)*: Close the transient menu
+- *Help (?)*: Access full documentation
+- *Intro Screen (B)*: Show the welcome tutorial
+- *Version Info (V)*: Display the current package version
+- *About (z)*: Information about Ollama Buddy
+
+** Specialized Sub-menus
+
+*** Settings Sub-menu
+
+Accessed with *S* from the main menu, this organizes configuration options:
+
+#+begin_src 
+Ollama Buddy Settings
+[Buffer Options]           [Display Toggles]          [Interface]
+C  Clear Buffer            T  Token Display           A  Toggle Level
+o  Toggle Markdown->Org    B  Debug Mode              z  Toggle Full Welcome
+s  Scroll to Bottom        #  Token Stats             r  Reset Display
+w  Wrap Prefix             v  Reasoning Visibility
+#+end_src
+
+*** System Prompts Sub-menu
+
+Accessed with *P* from the main menu, this handles your prompt library:
+
+#+begin_src 
+System Prompts
+[Management]               [Active Prompt]            [Actions]
+L  List All Prompts        s  Set Current Prompt      q  Back to Main Menu
+E  Edit Prompt             r  Reset System Prompt
+S  Save Current as New     C-s Show Active Prompt
+#+end_src
+
+*** Roles Management Sub-menu
+
+Accessed with *R* from the main menu, this manages AI roles:
+
+#+begin_src 
+Roles Management
+[Actions]                  [Organization]             [Navigation]
+s  Switch Role             d  Open Roles Directory    q  Back to Main Menu
+c  Create New Role         r  Refresh Roles
+e  Edit Current Role
+#+end_src
 
 When you select the Edit Parameter option, you'll see a comprehensive submenu of all available parameters:
 

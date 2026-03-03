@@ -36,7 +36,7 @@ Users can enable the curl backend with a simple customization:
   :load-path "~/source/repos/ollama-buddy"
   :bind
   ("C-c o" . ollama-buddy-menu)
-  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  ("C-c O" . ollama-buddy-transient-menu)
   :config
   ;; Load curl backend first
   (require 'ollama-buddy-curl nil t)
@@ -530,7 +530,7 @@ Integration is very similar to other remote AIs:
 (use-package ollama-buddy
   :bind
   ("C-c o" . ollama-buddy-menu)
-  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  ("C-c O" . ollama-buddy-transient-menu)
   :custom
   (ollama-buddy-grok-api-key
    (auth-source-pick-first-password :host "ollama-buddy-grok" :user "apikey"))
@@ -566,7 +566,7 @@ As with the Claude and ChatGPT integration, you will need to add something simil
 (use-package ollama-buddy
   :bind
   ("C-c o" . ollama-buddy-menu)
-  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  ("C-c O" . ollama-buddy-transient-menu)
   :custom
   (ollama-buddy-openai-api-key
    (auth-source-pick-first-password :host "ollama-buddy-openai" :user "apikey"))
@@ -770,7 +770,7 @@ Then, modify your Emacs configuration:
   :load-path "~/source/repos/ollama-buddy"
   :bind
   ("C-c o" . ollama-buddy-menu)
-  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  ("C-c O" . ollama-buddy-transient-menu)
   :custom
   (ollama-buddy-openai-api-key
    (auth-source-pick-first-password :host "ollama-buddy-openai" :user "apikey"))
@@ -803,7 +803,7 @@ Then, modify your Emacs configuration:
   :load-path "~/source/repos/ollama-buddy"
   :bind
   ("C-c o" . ollama-buddy-menu)
-  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  ("C-c O" . ollama-buddy-transient-menu)
   :custom
   (ollama-buddy-openai-api-key
    (password-store-get "ollama-buddy/openai-api-key"))
@@ -830,7 +830,7 @@ Here is my current config, now mixing ChatGPT with =ollama= models:
 (use-package ollama-buddy
   :bind
   ("C-c o" . ollama-buddy-menu)
-  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  ("C-c O" . ollama-buddy-transient-menu)
   :custom
   (ollama-buddy-openai-api-key "<very long key>")
   (ollama-buddy-default-model "GPT gpt-4o")
@@ -976,26 +976,24 @@ The transient menu in Ollama Buddy leverages Emacs' =transient.el= package (the 
 
 The main transient menu can be accessed with the keybinding =C-c O= when in an Ollama Buddy chat buffer. You can also call it via =M-x ollama-buddy-transient-menu= from anywhere in Emacs.
 
-*** What the Menu Looks Like
-
-When called, the main transient menu appears at the bottom of your Emacs frame, organized into logical sections with descriptive prefixes. Here's what you'll see:
+When called, the main transient menu appears at the bottom of your Emacs frame, organized into a compact 4x2 grid for efficient access. Here's what you'll see:
 
 #+begin_src 
 |o(Y)o| Ollama Buddy
-[Chat]             [Prompts]            [Model]               [Roles & Patterns]
-o  Open Chat       l  Send Region       m  Switch Model       R  Switch Roles
-O  Commands        s  Set System Prompt v  View Model Status  E  Create New Role
-RET Send Prompt    C-s Show System      i  Show Model Info    D  Open Roles Directory
-h  Help/Menu       r  Reset System      M  Multishot          f  Fabric Patterns
-k  Kill/Cancel     b  Ollama Buddy Menu
+[Chat]              [Model]                [Actions]              [Tools]
+o  Open Chat        W  Manage Models       r  Refactor Code       f  Fabric Patterns
+O  Commands         m  Switch Model        d  Describe Code       u  Universal Patterns
+RET Send Prompt     c  Cloud Models        g  Git Commit Message  a  Awesome Prompts
+k  Kill/Cancel      i  Show Model Info     l  Lookup Definition   w  Web Search
+x  Toggle Streaming M  Multishot           p  Proofread Text      t  Ollama Tools
+h  Help/Menu        U  Check Status        c  Custom Prompt       r  RAG Integration
 
-[Display Options]          [History]              [Sessions]             [Parameters]
-A  Toggle Interface Level  H  Toggle History      N  New Session         P  Edit Parameter
-B  Toggle Debug Mode       X  Clear History       L  Load Session        G  Display Parameters
-T  Toggle Token Display    V  Display History     S  Save Session        I  Parameter Help
-#  Token Stats             J  Edit History        Q  List Sessions       K  Reset Parameters
-C-o Toggle Markdown->Org                          Z  Delete Session      F  Toggle Params in Header
-c  Toggle Model Colors                                                   p  Parameter Profiles
+[History]           [Sessions]             [Sub-menus]            [General]
+H  Toggle History   N  New Session         S  Settings             q  Quit
+X  Clear History    L  Load Session        P  System Prompts       ?  Help
+J  Edit History     S  Save Session        R  Roles Management     B  Intro Screen
+                    Q  List Sessions                              V  Version Info
+                    D  Open Directory                             z  About
 #+end_src
 
 This visual layout makes it easy to discover and access the full range of Ollama Buddy's functionality. Let's explore each section in detail.

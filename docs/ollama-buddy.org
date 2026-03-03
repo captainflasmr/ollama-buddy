@@ -86,6 +86,7 @@ language models (LLMs) directly within your Emacs workflow.
     - [[#Configuring-Vision-Support][7.7.1 Configuring Vision Support]]
     - [[#Using-Vision-Models][7.7.2 Using Vision Models]]
   - [[#Multishot-Mode][7.8 Multishot Mode]]
+    - [[#Benchmark-All-Models][7.8.1 Benchmark All Models]]
 - [[#Context-Management][8 Context Management]]
   - [[#Understanding-Context-Windows][8.1 Understanding Context
     Windows]]
@@ -1095,15 +1096,15 @@ Next: [[#Core-Features][Core Features]], Previous:
 
 - Toggling Org/Markdown conversion :: Press =C-c C-o= to switch between
   Org-mode and Markdown output. Also available from the transient menu
-  under "Diagnostics".
+  under “Settings”.
 
 - Toggling Global System Prompt :: Press =C-c <= to toggle the global
   system prompt on or off. The header line shows =<= when disabled.
 
-- Using Awesome ChatGPT Prompts :: Select text, press =C-c o=, then =a=
+- Using Awesome ChatGPT Prompts :: Select text, press =C-c O=, then =a=
   for the Awesome prompts menu, then =s= to send with a prompt.
 
-- Using Fabric patterns :: Select text, press =C-c o=, then =f= for the
+- Using Fabric patterns :: Select text, press =C-c O=, then =f= for the
   Fabric menu, then =s= to send with a pattern.
 
 - Getting help :: In the chat buffer, press =C-c h= to display the help
@@ -1485,10 +1486,10 @@ System prompts allow you to define the AI's behavior:
 - Viewing the current system prompt :: Press =C-c C-s=
 
 - Resetting the system prompt :: Press =C-c C-r=, or use the main
-  transient menu (C-c O) under System Prompts =C-r=
+  transient menu (C-c O) under System Prompts =p= then =r=
 
-- Using a pre-built prompt :: Use Fabric patterns (=C-c f p=) or Awesome
-  ChatGPT prompts (=C-c w p=)
+- Using a pre-built prompt :: Use Fabric patterns (=C-c O f=) or Awesome
+  ChatGPT prompts (=C-c O a=)
 
 Example system prompt:
 
@@ -1746,20 +1747,27 @@ simultaneously:
    sequence
 
 Each model in a multishot sequence is subject to a per-model timeout
-(default 120 seconds, configurable via =ollama-buddy-multishot-timeout=).
-If a model exceeds the timeout, its request is cancelled, a =TIMED OUT=
-marker is inserted, and the sequence continues with the next model.
-Set =ollama-buddy-multishot-timeout= to =nil= to disable.
+(default 120 seconds, configurable via
+=ollama-buddy-multishot-timeout=). If a model exceeds the timeout, its
+request is cancelled, a ‘=TIMED OUT=' marker is inserted, and the
+sequence continues with the next model. Set
+=ollama-buddy-multishot-timeout= to =nil= to disable.
 
-**** Benchmark All Models
+- [[#Benchmark-All-Models][Benchmark All Models]]
 
-Press =C-c u= (or use the transient menu: =u Benchmark All=) to
-automatically send a prompt to every available model via multishot.  This
-builds persistent token usage statistics for all accessible models in one
-command.  Embedding models are filtered out.
+<<Benchmark-All-Models>>
+**** 7.8.1 Benchmark All Models [[#Benchmark-All-Models][¶]]
+:PROPERTIES:
+:CUSTOM_ID: benchmark-all-models
+:CLASS: subsection
+:END:
+Press =C-c u= (or use the transient menu: ‘=u Benchmark All=') to
+automatically send a prompt to every available model via multishot. This
+builds persistent token usage statistics for all accessible models in
+one command. Embedding models are filtered out.
 
 The benchmark prompt is configurable via =ollama-buddy-benchmark-prompt=
-(default: ="Explain what a binary tree is in 2-3 sentences."=).
+(default: ‘="Explain what a binary tree is in 2-3 sentences."=').
 
 --------------
 
@@ -2492,12 +2500,27 @@ When you send the prompt, Ollama Buddy will:
 :CUSTOM_ID: transient-menu
 :CLASS: subsection
 :END:
-Access the web search menu via =C-c O /= which provides:
+Access the main transient menu via =C-c O=, which is organized into a
+compact 4x2 grid for efficient access. From here you can access:
 
-- Search & Display - perform search and show results
-- Search & Attach - perform search and attach to context
-- Show Attachments - view all attachments including web searches
-- Clear All - remove all attachments and web searches
+- *Chat Operations*: Open chat, manage attachments, web search, RAG, and
+  authentication.
+- *Model Management*: Switch models, manage installed models, view info,
+  and multishot/benchmark.
+- *AI Actions*: Quick access to refactoring, describing code, git
+  commits, and proofreading.
+- *Tools*: Fabric patterns, Awesome prompts, and Ollama tool-calling.
+- *History & Sessions*: Toggle/clear history and save/load sessions.
+- *Sub-menus*: Specialized menus for Settings, System Prompts,
+  Parameters, and Roles.
+- *General*: Help, intro screen, and version information.
+
+Access lower-level sub-menus for more specific tasks:
+
+- *Settings (S)*: Buffer options, display toggles, and interface level.
+- *System Prompts (p)*: Manage your saved system prompt library.
+- *Parameters (P)*: Fine-tune model generation and resource settings.
+- *Roles (R)*: Switch between predefined AI personas.
 
 <<Viewing-Web-Search-Results>>
 *** 10.5 Viewing Web Search Results [[#Viewing-Web-Search-Results][¶]]
@@ -4591,15 +4614,16 @@ status next to the section heading.
 Authentication is handled via the Ollama CLI:
 
 - Sign In (=M-x ollama-buddy-cloud-signin=) :: Opens your browser for
-  Ollama cloud login. Accessible from transient menu "Cloud Auth > Sign
-  In".
+  Ollama cloud login. Accessible from transient menu “Authentication
+  (A)” > “Sign In (c)”.
 
 - Sign Out (=M-x ollama-buddy-cloud-signout=) :: Signs out from cloud
-  services. Accessible from transient menu "Cloud Auth > Sign Out".
+  services. Accessible from transient menu “Authentication (A)” > “Sign
+  Out (x)”.
 
 - Check Status (=M-x ollama-buddy-cloud-status=) :: Verifies your
-  authentication status. Accessible from transient menu "Cloud Auth >
-  Auth Status".
+  authentication status. Accessible from transient menu “Authentication
+  (A)” > “Status (s)”.
 
 <<Automatic-Manifest-Pulling>>
 *** 18.5 Automatic Manifest Pulling [[#Automatic-Manifest-Pulling][¶]]
@@ -5384,7 +5408,7 @@ non-string value, it is formatted with =%S=.
 - =ollama-buddy-tools-setup= :: Re-initialize built-in tools.
 
 These commands are also available from the transient menu (C-c O) under
-the “Actions” section:
+the “Tools” section:
 
 - SPC - Toggle Tools
 - Q - List Tools

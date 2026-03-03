@@ -11,6 +11,20 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-03-03 Tue> *3.2.2*
+
+Main transient menu reorganization.
+
+*** New Features
+
+- *Transient Menu Reorganization* -- Reorganized the main transient menu (=C-c O=) into
+  a compact 4x2 grid.  Moved "History" and "Sessions" to the top level for
+  faster access.  Introduced specialized sub-menus for "Settings", "System
+  Prompts", and "Roles Management" to keep the interface clean and efficient.
+- *Documentation Update* -- Updated all project documentation (READMEs, main manual,
+  Texinfo, and docstrings) to reflect the new transient menu structure and
+  logical groupings.
+
 ** <2026-03-02 Sun> *3.2.1*
 
 Benchmark all models and multishot timeout.
