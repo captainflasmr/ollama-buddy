@@ -605,12 +605,12 @@ second go to column 0."
       (beginning-of-line)))))
 
 (defcustom ollama-buddy-at-commands
-  '(("search" . "@search(%s)")
-    ("rag" . "@rag(%s)")
-    ("file" . "@file(%s)"))
+  '(("search" "@search(%s)" "Search the web and attach results")
+    ("rag"    "@rag(%s)"   "Search RAG indexes and attach context")
+    ("file"   "@file(%s)"  "Attach a file inline"))
   "Alist of inline `@' commands and their syntax templates.
-Each entry is (NAME . TEMPLATE) where TEMPLATE has `%s' for cursor."
-  :type '(alist :key-type string :value-type string)
+Each entry is (NAME TEMPLATE DESCRIPTION)."
+  :type '(alist :key-type string :value-type (list string string))
   :group 'ollama-buddy)
 
 (defun ollama-buddy--at-complete ()
@@ -629,11 +629,16 @@ Cancelling with \\[keyboard-quit] does nothing; use \\[quoted-insert] @ for a li
       (let* ((candidates
               ollama-buddy-at-commands)
              (names (mapcar #'car candidates))
+             (completion-extra-properties
+              `(:annotation-function
+                ,(lambda (s)
+                   (let ((desc (caddr (assoc s candidates))))
+                     (and desc (concat " -- " desc))))))
              (choice (condition-case nil
                          (completing-read "@ command: " names nil t)
                        (quit nil))))
         (when choice
-          (let* ((template (cdr (assoc choice candidates)))
+          (let* ((template (cadr (assoc choice candidates)))
                  (parts (split-string template "%s")))
             (insert (car parts))
             (save-excursion
@@ -665,31 +670,32 @@ Cancelling with \\[keyboard-quit] does nothing; use \\[quoted-insert] @ for a li
     (message "No prompt history to retry")))
 
 (defcustom ollama-buddy-slash-commands
-  '(("model"     . ollama-buddy--swap-model)
-    ("system"    . ollama-buddy-user-prompts-load)
-    ("clear"     . ollama-buddy-sessions-new)
-    ("save"      . ollama-buddy-sessions-save)
-    ("load"      . ollama-buddy-sessions-load)
-    ("tools"     . ollama-buddy-tools-toggle)
-    ("context"   . ollama-buddy-show-attachments)
-    ("help"      . ollama-buddy--menu-help-assistant)
-    ("copy"      . ollama-buddy-copy-last-response)
-    ("retry"     . ollama-buddy-retry-last-prompt)
-    ("tone"      . ollama-buddy-set-tone)
-    ("fabric"    . ollama-buddy-fabric-set-system-prompt)
-    ("awesome"   . ollama-buddy-awesome-set-system-prompt)
-    ("streaming"  . ollama-buddy-toggle-streaming)
-    ("reset"      . ollama-buddy-reset-system-prompt)
-    ("completion" . ollama-buddy-completion-toggle)
-    ("new"        . ollama-buddy-sessions-new)
-    ("exit"       . ollama-buddy-exit)
-    ("bye"        . ollama-buddy-exit)
-    ("unload"     . ollama-buddy-unload-model)
-    ("set"        . ollama-buddy-params-edit)
-    ("show"       . ollama-buddy-show-raw-model-info))
+  '(("model"      ollama-buddy--swap-model            "Switch the current LLM model")
+    ("system"     ollama-buddy-user-prompts-load      "Load a saved system prompt")
+    ("clear"      ollama-buddy-sessions-new           "Start a fresh chat session")
+    ("save"       ollama-buddy-sessions-save          "Save the current session to a file")
+    ("load"       ollama-buddy-sessions-load          "Load a saved chat session")
+    ("tools"      ollama-buddy-tools-toggle           "Toggle LLM tool-calling capabilities")
+    ("context"    ollama-buddy-show-attachments       "View and manage attached context/files")
+    ("help"       ollama-buddy--menu-help-assistant    "Show chat interface commands and help")
+    ("copy"       ollama-buddy-copy-last-response     "Copy the last AI response to kill ring")
+    ("retry"      ollama-buddy-retry-last-prompt      "Resend the last prompt to the model")
+    ("tone"       ollama-buddy-set-tone               "Set the response tone/style")
+    ("fabric"     ollama-buddy-fabric-set-system-prompt "Set system prompt from Fabric pattern")
+    ("awesome"    ollama-buddy-awesome-set-system-prompt "Set system prompt from Awesome library")
+    ("streaming"  ollama-buddy-toggle-streaming       "Toggle real-time response streaming")
+    ("reset"      ollama-buddy-reset-system-prompt    "Clear the current system prompt")
+    ("completion" ollama-buddy-completion-toggle      "Toggle inline code completions")
+    ("new"        ollama-buddy-sessions-new           "Start a fresh chat session")
+    ("exit"       ollama-buddy-exit                  "Close the chat buffer")
+    ("bye"        ollama-buddy-exit                  "Close the chat buffer")
+    ("unload"     ollama-buddy-unload-model           "Unload model from Ollama memory")
+    ("manage"     ollama-buddy-manage-models          "Open the Model Management buffer")
+    ("set"        ollama-buddy-params-edit            "Edit model generation parameters")
+    ("show"       ollama-buddy-show-raw-model-info    "Show raw JSON model information"))
   "Alist of available `/' slash commands.
-Each entry is (NAME . FUNCTION) where FUNCTION is called interactively."
-  :type '(alist :key-type string :value-type function)
+Each entry is (NAME FUNCTION DESCRIPTION) where FUNCTION is called interactively."
+  :type '(alist :key-type string :value-type (list function string))
   :group 'ollama-buddy)
 
 (defun ollama-buddy--slash-complete ()
@@ -725,11 +731,16 @@ is ever needed."
                    (_ t)))
                ollama-buddy-slash-commands))
              (names (mapcar #'car candidates))
+             (completion-extra-properties
+              `(:annotation-function
+                ,(lambda (s)
+                   (let ((desc (cl-caddr (assoc s candidates))))
+                     (and desc (concat " -- " desc))))))
              (choice (condition-case nil
                          (completing-read "/ command: " names nil t)
                        (quit nil))))
         (when choice
-          (let ((fn (cdr (assoc choice candidates))))
+          (let ((fn (cadr (assoc choice candidates))))
             (call-interactively fn)))))))
 
 (defun ollama-buddy-history-search ()
