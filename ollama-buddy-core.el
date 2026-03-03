@@ -2042,10 +2042,12 @@ When SYSTEM-PROMPT is non-nil, mark as a system prompt."
          (existing-content (when keep-content (ollama-buddy--text-after-prompt)))
          (cloud-indicator (if (ollama-buddy--cloud-model-p model) "☁" ""))
          (tools-indicator (if (ollama-buddy--model-supports-tools model) "⚒" ""))
+         (vision-indicator (if (ollama-buddy--model-supports-vision model) "⊙" ""))
          (thinking-indicator (if (ollama-buddy--model-supports-thinking model) "✦" ""))
          (in-buffer-indicator (if (bound-and-true-p ollama-buddy-in-buffer-replace) "✎" ""))
          (indicators (string-trim (concat cloud-indicator tools-indicator
-                                          thinking-indicator in-buffer-indicator))))
+                                          vision-indicator thinking-indicator
+                                          in-buffer-indicator))))
 
     (let ((buf (get-buffer-create ollama-buddy--chat-buffer)))
       (with-current-buffer buf
