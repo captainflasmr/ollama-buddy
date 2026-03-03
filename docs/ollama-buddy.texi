@@ -571,8 +571,13 @@ Select code, press @code{C-c o}, then choose "Refactor Code" (or press @code{r})
 @item Generating a commit message
 Select your changes, press @code{C-c o}, then choose "Git Commit Message" (or press @code{g}).
 
-@item Changing models
-Press @code{C-c m} to switch between available models. Cloud models appear in the list marked with @code{☁}.
+@item C-c m
+Change model
+@item C-c l
+Pull new model
+Press @code{C-c m} to switch between available models.  Press @code{C-c l} to
+pull new models from Ollama Hub.  Cloud models appear in the list marked
+with @code{☁}.
 
 @item Using the transient menu
 Press @code{C-c O} for the main transient menu with all features organized by category.

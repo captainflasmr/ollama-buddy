@@ -497,8 +497,11 @@ Generating a commit message
      Select your changes, press ‘C-c o’, then choose "Git Commit
      Message" (or press ‘g’).
 
-Changing models
-     Press ‘C-c m’ to switch between available models.  Cloud models
+C-c m
+     Change model
+C-c l
+     Pull new model Press ‘C-c m’ to switch between available models.
+     Press ‘C-c l’ to pull new models from Ollama Hub.  Cloud models
      appear in the list marked with ‘☁’.
 
 Using the transient menu
@@ -4651,33 +4654,33 @@ Node: Introduction2961
 Node: Installation5149
 Node: Configuration8106
 Node: Quick Start16376
-Node: Core Features18738
-Node: Chat Interface23015
-Node: Working with Models30192
-Node: Context Management35421
-Node: File Attachments41030
-Node: Web Search46952
-Node: Parameter Control54690
-Node: Session Management57102
-Node: User System Prompts60011
-Node: Roles and Commands68499
-Node: Fabric Pattern Integration85689
-Node: Awesome ChatGPT Prompts87916
-Node: Remote Providers91766
-Node: Ollama Cloud Models99226
-Node: Global System Prompt103424
-Node: Tone Selector105178
-Node: Thinking Blocks106985
-Node: Project Integration109014
-Node: In-Buffer Replace110199
-Node: Tool Calling116075
-Node: RAG123864
-Node: Advanced Usage131643
-Node: API Reference134192
-Node: FAQ140131
-Node: Troubleshooting147216
-Node: Contributing149721
-Node: Index152389
+Node: Core Features18826
+Node: Chat Interface23103
+Node: Working with Models30280
+Node: Context Management35509
+Node: File Attachments41118
+Node: Web Search47040
+Node: Parameter Control54778
+Node: Session Management57190
+Node: User System Prompts60099
+Node: Roles and Commands68587
+Node: Fabric Pattern Integration85777
+Node: Awesome ChatGPT Prompts88004
+Node: Remote Providers91854
+Node: Ollama Cloud Models99314
+Node: Global System Prompt103512
+Node: Tone Selector105266
+Node: Thinking Blocks107073
+Node: Project Integration109102
+Node: In-Buffer Replace110287
+Node: Tool Calling116163
+Node: RAG123952
+Node: Advanced Usage131731
+Node: API Reference134280
+Node: FAQ140219
+Node: Troubleshooting147304
+Node: Contributing149809
+Node: Index152477
 
 End Tag Table
 

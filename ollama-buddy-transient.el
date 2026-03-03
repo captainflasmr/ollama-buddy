@@ -31,6 +31,7 @@
 (declare-function ollama-buddy-reset-system-prompt "ollama-buddy")
 (declare-function ollama-buddy-menu "ollama-buddy")
 (declare-function ollama-buddy-manage-models "ollama-buddy")
+(declare-function ollama-buddy-pull-model "ollama-buddy")
 (declare-function ollama-buddy--swap-model "ollama-buddy")
 (declare-function ollama-buddy-cloud-signin "ollama-buddy")
 (declare-function ollama-buddy-cloud-signout "ollama-buddy")
@@ -163,7 +164,7 @@
     ("u" "Benchmark All" ollama-buddy-benchmark-models)]
 
    ["Actions"
-    ("l" "Send Region" (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))
+    ("l" "Pull Model" ollama-buddy-pull-model)
     ("k" "Cancel" ollama-buddy--cancel-request)
     ("x" "Toggle Stream" ollama-buddy-toggle-streaming)
     ("v" "Keep Alive" ollama-buddy-set-keepalive)

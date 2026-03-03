@@ -1086,8 +1086,11 @@ Next: [[#Core-Features][Core Features]], Previous:
 - Generating a commit message :: Select your changes, press =C-c o=,
   then choose "Git Commit Message" (or press =g=).
 
-- Changing models :: Press =C-c m= to switch between available models.
-  Cloud models appear in the list marked with =☁=.
+- C-c m :: Change model
+
+- C-c l :: Pull new model Press =C-c m= to switch between available
+  models. Press =C-c l= to pull new models from Ollama Hub. Cloud models
+  appear in the list marked with =☁=.
 
 - Using the transient menu :: Press =C-c O= for the main transient menu
   with all features organized by category.
