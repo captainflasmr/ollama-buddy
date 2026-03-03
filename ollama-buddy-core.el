@@ -1894,7 +1894,13 @@ Choose a preset or enter a custom duration string accepted by Ollama:
 
       (goto-char (point-min))
       (while (re-search-forward "\n\n\n+" nil t)
-        (replace-match "\n\n"))
+        ;; Don't collapse blank lines adjacent to *** ✦ headings (Think/Response)
+        (unless (or (looking-at "\\*\\*\\* ✦")
+                    (save-excursion
+                      (goto-char (match-beginning 0))
+                      (forward-line 0)
+                      (looking-at "\\*\\*\\* ✦")))
+          (replace-match "\n\n")))
       
       ;; First, handle code blocks by temporarily protecting their content
       (goto-char (point-min))

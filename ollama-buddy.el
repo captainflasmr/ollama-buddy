@@ -460,36 +460,38 @@ with an empty messages array and keep_alive set to 0."
 ;; --- Thinking block org-heading helpers ---
 
 (defun ollama-buddy--insert-thinking-header ()
-  "Insert `*** ✦ Thinking...' heading and `*** ✦ Response' heading.
+  "Insert `*** ✦ Thinking...' heading.
 Thinking tokens are NOT inserted into the buffer during streaming;
 they accumulate in `ollama-buddy--thinking-content-accumulator'.
 When thinking ends, `ollama-buddy--finalize-thinking-block' inserts
-the accumulated content between the headings and folds the subtree.
+the accumulated content, the `*** ✦ Response' heading, and folds.
 Must be called inside an `inhibit-read-only' block.
 Returns a marker at the start of the heading line."
   (let ((heading-start (point)))
-    (insert "*** ✦ Thinking...\n\n*** ✦ Response\n\n")
+    (insert "*** ✦ Thinking...\n")
     (setq ollama-buddy--thinking-content-accumulator "")
     (copy-marker heading-start nil)))
 
 (defun ollama-buddy--finalize-thinking-block (heading-marker)
   "Finalise the thinking block: insert content, fold, rename heading.
-Inserts the accumulated thinking content between the headings, folds
-the Think subtree via `outline-hide-subtree', renames `Thinking...'
-to `Think', and registers the heading for toggle-all."
+Inserts the accumulated thinking content after the heading, appends
+the `*** ✦ Response' heading, folds the Think subtree via
+`outline-hide-subtree', renames `Thinking...' to `Think', and
+registers the heading for toggle-all."
   (when (and heading-marker (marker-buffer heading-marker))
     (let ((inhibit-read-only t))
-      ;; Insert accumulated thinking content between headings
-      (when (and ollama-buddy--thinking-content-accumulator
-                 (not (string-empty-p ollama-buddy--thinking-content-accumulator)))
-        (save-excursion
-          (goto-char (marker-position heading-marker))
-          (end-of-line)
-          (forward-char 1)              ;; past the heading's \n, onto blank line
-          (insert "\n" ollama-buddy--thinking-content-accumulator)
-          ;; Ensure blank line before *** ✦ Response heading
+      (save-excursion
+        (goto-char (marker-position heading-marker))
+        (end-of-line)
+        (forward-char 1)              ;; past the heading's \n, onto blank line
+        ;; Insert accumulated thinking content
+        (when (and ollama-buddy--thinking-content-accumulator
+                   (not (string-empty-p ollama-buddy--thinking-content-accumulator)))
+          (insert "\n\n" ollama-buddy--thinking-content-accumulator)
           (unless (string-suffix-p "\n" ollama-buddy--thinking-content-accumulator)
-            (insert "\n"))))
+            (insert "\n")))
+        ;; Insert *** ✦ Response heading after thinking content
+        (insert "\n*** ✦ Response\n\n"))
       ;; Fold the Think subtree
       (save-excursion
         (goto-char (marker-position heading-marker))
@@ -1809,13 +1811,22 @@ With prefix argument ALL-MODELS, clear history for all models."
                               (- current-time ollama-buddy--current-token-start-time))
                          0)))
 
-      (if (and ollama-buddy-hide-reasoning
-               ollama-buddy--in-reasoning-section)
-          (ollama-buddy--update-status ollama-buddy--reasoning-status-message)
-        ;; Update status with token information
+      (cond
+       ((and ollama-buddy-hide-reasoning
+             ollama-buddy--in-reasoning-section)
+        (ollama-buddy--update-status ollama-buddy--reasoning-status-message))
+       ;; Show "Thinking..." during thinking phase (collapse mode)
+       ((or ollama-buddy--thinking-api-active
+            (and ollama-buddy-collapse-thinking
+                 ollama-buddy--in-reasoning-section))
+        (ollama-buddy--update-status
+         (format "Thinking... [%d %.1f t/s]"
+                 ollama-buddy--current-token-count total-rate)))
+       ;; Normal typing
+       (t
         (ollama-buddy--update-status
          (format "Typing... [%d %.1f t/s]"
-                 ollama-buddy--current-token-count total-rate)))
+                 ollama-buddy--current-token-count total-rate))))
       
       ;; Update tracking variables
       (setq ollama-buddy--last-token-count ollama-buddy--current-token-count
