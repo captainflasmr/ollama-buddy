@@ -1740,7 +1740,7 @@ Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
            "┌───────────────────────────────────┐\n"
            "│  O L L A M A B U D D Y  [v3.3.0]  │\n"
            "└───────────────────────────────────┘\n"
-           (if project-info (concat "  " project-info "\n") "")
+           (if project-info (concat project-info "\n") "")
            ;; "╔════════════════════════════════════════════════════════════╗\n"
            ;; "║  ▄▀▀▀▄ █   █   ▄▀▀▀▄ █▀▄▀█ ▄▀▀▀▄ █▀▀▄ █  █ █▀▀▄ █▀▀▄ █  █  ║\n"
            ;; "║  █   █ █   █   █▀▀▀█ █ █ █ █▀▀▀█ █▀▀▄ █  █ █  █ █  █ ▀█▀   ║\n"
