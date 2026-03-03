@@ -636,25 +636,25 @@ The \"In-Buffer\" tone is automatically applied when
 (defcustom ollama-buddy-available-models
   '((:name "General Chat"
            :description "Everyday conversation, Q&A and general tasks"
-           :models ("llama3.2:1b" "llama3.2:3b" "llama3.1:8b"))
-    (:name "Reasoning"
+           :models ("llama3.2:1b" "llama3.2:3b" "llama3.1:8b" "mistral:latest"))
+    (:name "Reasoning (Thinking Models)"
            :description "Step-by-step problem solving and analysis"
-           :models ("deepseek-r1:1.5b" "deepseek-r1:7b" "deepseek-r1:14b"))
+           :models ("deepseek-r1:1.5b" "deepseek-r1:7b" "deepseek-r1:14b" "deepseek-r1:32b"))
     (:name "Efficient & Capable"
            :description "Balanced speed and quality from Google Gemma"
-           :models ("gemma3:1b" "gemma3:4b" "gemma3:12b"))
+           :models ("gemma2:2b" "gemma2:9b" "gemma2:27b"))
     (:name "Coding"
            :description "Code generation, review and debugging"
-           :models ("qwen2.5-coder:1.5b" "qwen2.5-coder:7b" "qwen3-coder:30b" "starcoder2:3b"))
+           :models ("qwen2.5-coder:1.5b" "qwen2.5-coder:7b" "qwen2.5-coder:14b" "qwen2.5-coder:32b" "starcoder2:3b" "starcoder2:7b"))
     (:name "General Alternatives"
            :description "Other popular and versatile models"
-           :models ("mistral:7b" "qwen3:4b" "qwen3:8b"))
+           :models ("phi3:latest" "phi3.5:latest" "qwen2.5:0.5b" "qwen2.5:1.5b" "qwen2.5:7b"))
     (:name "Embedding (RAG)"
            :description "Models for generating embeddings used by RAG search"
-           :models ("nomic-embed-text" "mxbai-embed-large" "all-minilm"))
+           :models ("nomic-embed-text" "mxbai-embed-large" "all-minilm" "bge-m3"))
     (:name "Testing"
            :description "Tiny models for fast local testing - speed over accuracy"
-           :models ("tinyllama:1.1b" "tinydolphin:1.1b" "qwen2.5:0.5b" "llama3.2:1b")))
+           :models ("tinyllama:latest" "tinydolphin:latest" "qwen2.5:0.5b" "llama3.2:1b")))
   "Categorized list of recommended models from the Ollama Hub.
 Each entry is a plist with :name, :description and :models keys."
   :type '(repeat (plist :options
@@ -667,6 +667,37 @@ Each entry is a plist with :name, :description and :models keys."
   "Return a flat list of all model names from `ollama-buddy-available-models'."
   (mapcan (lambda (cat) (copy-sequence (plist-get cat :models)))
           ollama-buddy-available-models))
+
+(defun ollama-buddy--pull-model-annotation (model)
+  "Return annotation for MODEL in pull selection.
+MODEL can be a plain name or prefixed with `ollama-buddy-marker-prefix'."
+  (let* ((real-name (if (and (boundp 'ollama-buddy-marker-prefix)
+                             (string-prefix-p ollama-buddy-marker-prefix model))
+                       (substring model (length ollama-buddy-marker-prefix))
+                     model))
+         (cat (cl-find-if (lambda (c) (member real-name (plist-get c :models)))
+                          ollama-buddy-available-models)))
+    (when cat
+      (concat (propertize " " 'display '(space :align-to 35))
+              (propertize (format "[%s] %s" 
+                                  (plist-get cat :name)
+                                  (plist-get cat :description))
+                          'face 'completions-annotations)))))
+
+(defun ollama-buddy--pull-model-completion-table (string pred action)
+  "Completion table for pulling models with metadata annotations."
+  (if (eq action 'metadata)
+      '(metadata (annotation-function . ollama-buddy--pull-model-annotation)
+                 (category . ollama-buddy-model))
+    (let* ((use-prefix (and (fboundp 'ollama-buddy--should-use-marker-prefix)
+                            (ollama-buddy--should-use-marker-prefix)))
+           (prefix (if (boundp 'ollama-buddy-marker-prefix) 
+                       ollama-buddy-marker-prefix 
+                     ""))
+           (models (mapcar (lambda (m)
+                             (if use-prefix (concat prefix m) m))
+                           (ollama-buddy--available-models-flat))))
+      (complete-with-action action models string pred))))
 
 (defcustom ollama-buddy-marker-prefix "o:"
   "Prefix used to identify Ollama models in the ollama-buddy interface."
@@ -1774,7 +1805,8 @@ please run =ollama serve=\n\n")
              ;; (concat "Auth: " auth-status "\n\n"))
            "- /Ask me anything!/       C-c C-c / C-c RET
 - /Cancel request/         C-c C-k
-- /Select model/           C-c m"
+- /Select model/           C-c m
+- /Pull new model/         C-c l"
            (when ollama-buddy-full-welcome-enabled
              "
 - /Main transient menu/    C-c O

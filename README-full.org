@@ -47,6 +47,7 @@ o: Ollama (5)             cl: Cloud (2)
 - /Ask me anything!/       C-c C-c / C-c RET
 - /Cancel request/         C-c C-k
 - /Select model/           C-c m
+- /Pull new model/         C-c l
 - /Main transient menu/    C-c O
 - /Browse prompt history/  M-p/n/r
 - /Manage models/          C-c M
@@ -1077,6 +1078,7 @@ OR
 | C-c C-c         | Send prompt                             |
 | C-c k           | Cancel request                          |
 | C-c m           | Change model                            |
+| C-c l           | Pull new model                          |
 | C-c h           | Show help                               |
 | C-c i           | Show model info                         |
 | C-c #           | Show token statistics                   |

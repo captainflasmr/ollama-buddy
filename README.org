@@ -277,6 +277,7 @@ curl -sL https://api.github.com/repos/captainflasmr/ollama-buddy/tarball/main | 
 | C-c RET   | Send prompt (alt)             |
 | C-c C-k   | Cancel request                |
 | C-c m     | Change model                  |
+| C-c l     | Pull new model                |
 | C-c M     | Manage models                 |
 | C-c P     | Project sub-menu              |
 | C-c p     | Parameter sub-menu            |

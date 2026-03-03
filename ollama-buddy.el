@@ -4260,31 +4260,14 @@ Modifies the variable in place."
   "Pull or update MODEL from Ollama Hub asynchronously.
 When the operation completes, CALLBACK is called with no arguments if provided."
   (interactive
-   (let* ((available-models (ollama-buddy--get-models))
-          (models-to-pull
-           (when (ollama-buddy--ollama-running)
-             (let ((available-for-pull
-                    (mapcar (lambda (model)
-                              (if (ollama-buddy--should-use-marker-prefix)
-                                  (concat ollama-buddy-marker-prefix model)
-                                model))
-                            (ollama-buddy--available-models-flat))))
-               ;; Compare with models already available in the system
-               (cl-set-difference
-                available-for-pull
-                available-models
-                :test #'string=)))))
-     (if models-to-pull
-         (list (completing-read
-                "Pull model: "
-                models-to-pull
-                nil
-                nil  ; Allow custom input
-                nil
-                nil
-                (car models-to-pull)))
-       ;; If no models to pull or Ollama isn't running, still allow custom input
-       (list (read-string "Enter model name to pull: ")))))
+   (list (completing-read
+          "Pull model: "
+          #'ollama-buddy--pull-model-completion-table
+          nil
+          nil  ; Allow custom input
+          nil
+          nil
+          (car (ollama-buddy--available-models-flat)))))
 
   (let* ((real-model (ollama-buddy--get-real-model-name model))
          (payload (json-encode `((model . ,real-model))))
@@ -4863,7 +4846,7 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c W") #'ollama-buddy-toggle-in-buffer-replace)
 
     ;; Prompts section keybindings
-    (define-key map (kbd "C-c l") (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))
+    (define-key map (kbd "C-c l") #'ollama-buddy-pull-model)
     (define-key map (kbd "C-c s") #'ollama-buddy-transient-user-prompts-menu)
     (define-key map (kbd "C-c C-s") #'ollama-buddy-show-system-prompt-info)
     (define-key map (kbd "C-c C-r") #'ollama-buddy-reset-system-prompt)
