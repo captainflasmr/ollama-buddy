@@ -97,67 +97,14 @@
 (declare-function ollama-buddy-rag-clear-attached "ollama-buddy-rag")
 (declare-function ollama-buddy-rag-count "ollama-buddy-rag")
 
-(transient-define-prefix ollama-buddy-transient-menu ()
-  "Ollama Buddy main menu."
-  :info-manual "(ollama-buddy)Top"
-  [
-   "|o(Y)o| Ollama Buddy"
-   
-   ["Chat"
-    ("o" "Open Chat" ollama-buddy--open-chat)
-    ("a" "Attachments" ollama-buddy-transient-attachment-menu)
-    ("/" "Web Search" ollama-buddy-transient-web-search-menu)
-    ("r" "RAG" ollama-buddy-transient-rag-menu)
-    ("A" "Authentication" ollama-buddy-transient-auth-menu)
-    ("b" "Role Menu" ollama-buddy-role-transient-menu)
-    ]
-
-   ["Actions"
-    ("h" "Help/Menu" ollama-buddy--menu-help-assistant)
-    ("l" "Send Region" (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))
-    ("k" "Cancel" ollama-buddy--cancel-request)
-    ("x" "Toggle Stream" ollama-buddy-toggle-streaming)
-    ("v" "Keep Alive" ollama-buddy-set-keepalive)
-    ("!" "Airplane Mode" ollama-buddy-toggle-airplane-mode)
-    ]
-
-   ["Tools"
-    ("SPC" "Toggle Tools" ollama-buddy-transient--tools-toggle)
-    ("Q" "List Tools" ollama-buddy-transient--tools-info)
-    ("W" "In-Buffer Replace" ollama-buddy-toggle-in-buffer-replace)
-    ("c" "Completion Mode" ollama-buddy-completion-toggle)
-    ]
-
-   ["System Prompts"
-    ("s" "User Defined" ollama-buddy-transient-user-prompts-menu)
-    ("f" "Fabric" ollama-buddy-transient-fabric-menu)
-    ("w" "Awesome" ollama-buddy-transient-awesome-menu)
-    ("C-s" "Show" ollama-buddy-show-system-prompt-info)
-    ("C-r" "Reset" ollama-buddy-reset-system-prompt)
-    ]
-
-   ["Model"
-    ("M" "Manage" ollama-buddy-manage-models)
-    ("m" "Switch" ollama-buddy--swap-model)
-    ("i" "Info" ollama-buddy-show-raw-model-info)
-    ("U" "Multishot" ollama-buddy--multishot-prompt)
-    ("u" "Benchmark All" ollama-buddy-benchmark-models)
-    ]
-
-   ["Roles"
-    ("R" "Switch" ollama-buddy-roles-switch-role)
-    ("E" "New" ollama-buddy-role-creator-create-new-role)
-    ("D" "Directory" ollama-buddy-roles-open-directory)
-    ]
-   ]
-  
+(transient-define-prefix ollama-buddy-transient-settings-menu ()
+  "Settings menu for Ollama Buddy."
   [
    ["Buffer"
     ("B" "Toggle Debug" ollama-buddy-toggle-debug-mode)
     ("#" "Token Stats" ollama-buddy-display-token-stats)
     ("C" "Context Info" ollama-buddy-show-context-info)
-    ("C-o" "Toggle ORG/MD" ollama-buddy-toggle-markdown-conversion)
-    ]
+    ("C-o" "Toggle ORG/MD" ollama-buddy-toggle-markdown-conversion)]
    
    ["Display Toggle"
     ("%" "Context Display" ollama-buddy-toggle-context-percentage)
@@ -166,32 +113,82 @@
     ("T" "Token Display" ollama-buddy-toggle-token-display)
     ("V" "Reasoning" ollama-buddy-toggle-reasoning-visibility)
     ("<" "Global Prompt" ollama-buddy-toggle-global-system-prompt)
-    ("~" "Tone" ollama-buddy-set-tone)
-    ]
-   
-   ["History"
+    ("~" "Tone" ollama-buddy-set-tone)]
+   ]
+  [("q" "Quit" transient-quit-one)])
+
+(transient-define-prefix ollama-buddy-transient-system-prompts-menu ()
+  "System prompts menu for Ollama Buddy."
+  ["System Prompts"
+   ("u" "User Defined" ollama-buddy-transient-user-prompts-menu)
+   ("f" "Fabric Patterns" ollama-buddy-transient-fabric-menu)
+   ("w" "Awesome Prompts" ollama-buddy-transient-awesome-menu)
+   ("s" "Show Current" ollama-buddy-show-system-prompt-info)
+   ("r" "Reset Current" ollama-buddy-reset-system-prompt)
+   ("q" "Quit" transient-quit-one)])
+
+(transient-define-prefix ollama-buddy-transient-roles-management-menu ()
+  "Role management menu for Ollama Buddy."
+  ["Roles"
+   ("R" "Switch" ollama-buddy-roles-switch-role)
+   ("E" "New" ollama-buddy-role-creator-create-new-role)
+   ("D" "Directory" ollama-buddy-roles-open-directory)
+   ("q" "Quit" transient-quit-one)])
+
+(transient-define-prefix ollama-buddy-transient-menu ()
+  "Ollama Buddy main menu."
+  :info-manual "(ollama-buddy)Top"
+  ["|o(Y)o| Ollama Buddy"
+   ["Chat"
+    ("o" "Open Chat" ollama-buddy--open-chat)
+    ("a" "Attachments" ollama-buddy-transient-attachment-menu)
+    ("/" "Web Search" ollama-buddy-transient-web-search-menu)
+    ("r" "RAG" ollama-buddy-transient-rag-menu)
+    ("A" "Authentication" ollama-buddy-transient-auth-menu)]
+
+   ["Model"
+    ("m" "Switch" ollama-buddy--swap-model)
+    ("M" "Manage" ollama-buddy-manage-models)
+    ("i" "Info" ollama-buddy-show-raw-model-info)
+    ("U" "Multishot" ollama-buddy--multishot-prompt)
+    ("u" "Benchmark All" ollama-buddy-benchmark-models)]
+
+   ["Actions"
+    ("l" "Send Region" (lambda () (interactive) (ollama-buddy--send-with-command 'send-region)))
+    ("k" "Cancel" ollama-buddy--cancel-request)
+    ("x" "Toggle Stream" ollama-buddy-toggle-streaming)
+    ("v" "Keep Alive" ollama-buddy-set-keepalive)
+    ("!" "Airplane Mode" ollama-buddy-toggle-airplane-mode)]
+
+   ["Tools"
+    ("SPC" "Toggle Tools" ollama-buddy-transient--tools-toggle)
+    ("Q" "List Tools" ollama-buddy-transient--tools-info)
+    ("W" "In-Buffer Replace" ollama-buddy-toggle-in-buffer-replace)
+    ("c" "Completion Mode" ollama-buddy-completion-toggle)]]
+  
+  [["History"
     ("H" "Toggle" ollama-buddy-toggle-history)
     ("X" "Clear" ollama-buddy-clear-history)
     ("J" "Edit" ollama-buddy-history-edit-model)
     ("Y" "Edit Max" ollama-buddy-set-max-history-length)
-    ("$" "Context Size" ollama-buddy-set-model-context-size)
-    ]
+    ("$" "Context Size" ollama-buddy-set-model-context-size)]
    
    ["Sessions"
     ("N" "New" ollama-buddy-sessions-new)
     ("L" "Load" ollama-buddy-sessions-load)
     ("S" "Save" ollama-buddy-sessions-save)
-    ("Z" "Directory" ollama-buddy-sessions-directory)
-    ]
+    ("Z" "Directory" ollama-buddy-sessions-directory)]
+
+   ["Sub-menus"
+    ("S" "Settings" ollama-buddy-transient-settings-menu)
+    ("p" "System Prompts" ollama-buddy-transient-system-prompts-menu)
+    ("P" "Parameters" ollama-buddy-transient-parameter-menu)
+    ("R" "Roles" ollama-buddy-transient-roles-management-menu)]
    
-   ["Parameters"
-    ("P" "Edit" ollama-buddy-transient-parameter-menu)
-    ("G" "Display" ollama-buddy-params-display)
-    ("I" "Help" ollama-buddy-params-help)
-    ("K" "Reset" ollama-buddy-params-reset)
-    ("F" "Toggle" ollama-buddy-toggle-params-in-header)
-    ]
-   ]
+   ["General"
+    ("h" "Help/Menu" ollama-buddy--menu-help-assistant)
+    ("b" "Dynamic Roles" ollama-buddy-role-transient-menu)
+    ("q" "Quit" transient-quit-one)]]
   )
 
 (transient-define-prefix ollama-buddy-transient-fabric-menu ()
@@ -202,7 +199,7 @@
     ("l" "List All Prompts" ollama-buddy-fabric-list-patterns)
     ("v" "View Prompt Details" ollama-buddy-fabric-show-pattern)
     ("S" "Sync Latest Prompts" ollama-buddy-fabric-sync-patterns)
-    ("q" "Quit" ollama-buddy-transient-menu)]]
+    ("q" "Quit" transient-quit-one)]]
   (interactive)
   (unless ollama-buddy-fabric--patterns
     (message "Loading Fabric patterns...")
@@ -229,7 +226,7 @@
                      (message "Applied Precise profile")))]
    
    ["Actions"
-    ("q" "Quit" ollama-buddy-transient-menu)]]
+    ("q" "Quit" transient-quit-one)]]
   (interactive)
   (transient-setup 'ollama-buddy-transient-profile-menu))
 
@@ -293,7 +290,7 @@
     ("R" "Reset All" ollama-buddy-params-reset)
     ("H" "Help" ollama-buddy-params-help)
     ("F" "Toggle Display in Header" ollama-buddy-toggle-params-in-header)
-    ("q" "Quit" ollama-buddy-transient-menu)]
+    ("q" "Quit" transient-quit-one)]
    ])
 
 (transient-define-prefix ollama-buddy-transient-awesome-menu ()
