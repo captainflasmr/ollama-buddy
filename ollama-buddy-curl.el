@@ -423,7 +423,9 @@ When complete, CALLBACK is called with the status response and result."
         (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
           (with-current-buffer ollama-buddy--chat-buffer
             (let ((inhibit-read-only t)
-                  (response-start ollama-buddy--response-start-position)
+                  (response-start (if (markerp ollama-buddy--response-start-position)
+                                      (marker-position ollama-buddy--response-start-position)
+                                    ollama-buddy--response-start-position))
                   (window (get-buffer-window ollama-buddy--chat-buffer t)))
               (goto-char (point-max))
 
@@ -447,6 +449,8 @@ When complete, CALLBACK is called with the status response and result."
                    ollama-buddy--response-start-position
                    (point-max))
                   ;; Reset the marker after conversion
+                  (when (markerp ollama-buddy--response-start-position)
+                    (set-marker ollama-buddy--response-start-position nil))
                   (setq ollama-buddy--response-start-position nil)))
 
               (unless ollama-buddy-convert-markdown-to-org
@@ -635,8 +639,8 @@ authentication via `ollama signin'."
           (insert (format " ~%ds" (round avg-wait)))
           (end-of-line)))
 
-      (setq ollama-buddy--response-start-position (point))
       (insert "\n\n")
+      (setq ollama-buddy--response-start-position (copy-marker (point)))
 
       (when (and original-model model (not (string= original-model model)))
         (insert (format "*[Using %s instead of %s]*\n\n" model original-model)))

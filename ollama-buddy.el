@@ -486,7 +486,10 @@ to `Think', and registers the heading for toggle-all."
           (goto-char (marker-position heading-marker))
           (end-of-line)
           (forward-char 1)              ;; past the heading's \n, onto blank line
-          (insert ollama-buddy--thinking-content-accumulator)))
+          (insert "\n" ollama-buddy--thinking-content-accumulator)
+          ;; Ensure blank line before *** ✦ Response heading
+          (unless (string-suffix-p "\n" ollama-buddy--thinking-content-accumulator)
+            (insert "\n"))))
       ;; Fold the Think subtree
       (save-excursion
         (goto-char (marker-position heading-marker))
@@ -502,7 +505,7 @@ to `Think', and registers the heading for toggle-all."
         (save-excursion
           (goto-char (marker-position heading-marker))
           (when (re-search-forward "^\\*\\*\\* ✦ Response\n+" nil t)
-            (setq ollama-buddy--response-start-position (point))))))
+            (setq ollama-buddy--response-start-position (copy-marker (point)))))))
     ;; Register for toggle-all
     (push heading-marker ollama-buddy--thinking-heading-markers))
   ;; Clean up
@@ -2291,7 +2294,9 @@ TCP packets split a JSON object across multiple filter calls."
                  (old-point (and window (window-point window)))
                  (at-end (and window (>= old-point (point-max))))
                  (old-window-start (and window (window-start window)))
-                 (response-start ollama-buddy--response-start-position)
+                 (response-start (if (markerp ollama-buddy--response-start-position)
+                                     (marker-position ollama-buddy--response-start-position)
+                                   ollama-buddy--response-start-position))
                  (completed nil))
             (save-excursion
               (goto-char (point-max))
@@ -2462,6 +2467,8 @@ TCP packets split a JSON object across multiple filter calls."
                      ollama-buddy--response-start-position
                      (point-max))
                     ;; Reset the marker after conversion
+                    (when (markerp ollama-buddy--response-start-position)
+                      (set-marker ollama-buddy--response-start-position nil))
                     (setq ollama-buddy--response-start-position nil)))
 
                 (unless ollama-buddy-convert-markdown-to-org
@@ -2677,7 +2684,9 @@ TCP packets split a JSON object across multiple filter calls."
     (with-current-buffer ollama-buddy--chat-buffer
       (let* ((inhibit-read-only t)
              (window (get-buffer-window ollama-buddy--chat-buffer t))
-             (response-start ollama-buddy--response-start-position)
+             (response-start (if (markerp ollama-buddy--response-start-position)
+                                 (marker-position ollama-buddy--response-start-position)
+                               ollama-buddy--response-start-position))
              (old-point (and window (window-point window)))
              (old-window-start (and window (window-start window))))
         (save-excursion
@@ -3417,9 +3426,8 @@ and no new user message is added."
                                            (skip-chars-backward " \t\n")
                                            (point))
                            (point-max))
-            (insert "\n\n*** [Tool Continuation]")
-            (setq ollama-buddy--response-start-position (point))
-            (insert "\n\n"))
+            (insert "\n\n*** [Tool Continuation]\n\n")
+            (setq ollama-buddy--response-start-position (copy-marker (point))))
         ;; Normal send - full header
         ;; Show any attached files
         (when ollama-buddy--current-attachments
@@ -3439,9 +3447,9 @@ and no new user message is added."
             (insert (format " ~%ds" (round avg-wait)))
             (end-of-line)))
 
-        (setq ollama-buddy--response-start-position (point))
-
         (insert "\n\n")
+
+        (setq ollama-buddy--response-start-position (copy-marker (point)))
 
         (when (and original-model model (not (string= original-model model)))
           (insert (format "*[Using %s instead of %s]*" model original-model)  "\n\n"))
