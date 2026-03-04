@@ -33,6 +33,12 @@
 (defvar ollama-buddy--thinking-api-active)
 (defvar ollama-buddy--thinking-arrow-marker)
 (defvar ollama-buddy--thinking-block-start)
+(defvar ollama-buddy--thinking-content-accumulator)
+
+(declare-function ollama-buddy--start-response-wait-timer "ollama-buddy")
+(declare-function ollama-buddy--model-average-wait-time "ollama-buddy")
+(declare-function ollama-buddy--trim-token-history "ollama-buddy")
+(declare-function ollama-buddy--cancel-response-wait-timer "ollama-buddy")
 
 ;; Curl-specific variables
 (defvar ollama-buddy-curl--headers-processed nil

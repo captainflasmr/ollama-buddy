@@ -1741,7 +1741,6 @@ Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
   (setq-local org-hide-emphasis-markers t)
   (setq-local org-hide-leading-stars t)
   (let* ((external-providers (ollama-buddy--get-enabled-external-providers))
-         (auth-status (ollama-buddy--format-auth-status))
          (ollama-count (length (ollama-buddy--get-models)))
          (cloud-count (length ollama-buddy-cloud-models))
          (use-prefixes (ollama-buddy--should-use-marker-prefix))

@@ -416,7 +416,7 @@ displayed indicators actually changed compared to static-list fallbacks."
                      (funcall callback)))))))))
 
 ;; Function to unload a single model
-(defun ollama-buddy-unload-model (model)
+(defun ollama-buddy--unload-single-model (model)
   "Unload MODEL from Ollama to free up resources.
 According to Ollama API, unloading is done by sending a chat request
 with an empty messages array and keep_alive set to 0."
@@ -456,7 +456,7 @@ with an empty messages array and keep_alive set to 0."
         (message "No models are currently running")
       (when (yes-or-no-p (format "Unload all %d running models? " (length running-models)))
         (dolist (model running-models)
-          (ollama-buddy-unload-model model))))))
+          (ollama-buddy--unload-single-model model))))))
 
 ;; --- Thinking block org-heading helpers ---
 
@@ -696,7 +696,8 @@ Cancelling with \\[keyboard-quit] does nothing; use \\[quoted-insert] @ for a li
     ("set"        ollama-buddy-params-edit            "Edit model generation parameters")
     ("show"       ollama-buddy-show-raw-model-info    "Show raw JSON model information"))
   "Alist of available `/' slash commands.
-Each entry is (NAME FUNCTION DESCRIPTION) where FUNCTION is called interactively."
+Each entry is (NAME FUNCTION DESCRIPTION) where FUNCTION is
+called interactively."
   :type '(alist :key-type string :value-type (list function string))
   :group 'ollama-buddy)
 
@@ -4095,7 +4096,7 @@ Modifies the variable in place."
                   (insert-text-button
                    "Unload"
                    'action `(lambda (_)
-                              (ollama-buddy-unload-model ,model)
+                              (ollama-buddy--unload-single-model ,model)
                               (run-with-timer 1 nil #'ollama-buddy-manage-models))
                    'help-echo "Unload this model to free up resources")
                   (insert "  "))

@@ -98,7 +98,7 @@ cat > "$INIT_FILE" << EOF
 
 ;; Add the key binding
 (global-set-key (kbd "C-c o") 'ollama-buddy-menu)
-(global-set-key (kbd "C-c O") 'ollama-buddy-transient-menu-wrapper)
+(global-set-key (kbd "C-c O") 'ollama-buddy-transient-menu)
 
 ;; Show a message to confirm we're in test mode
 (message "Testing ollama-buddy in vanilla Emacs %s" emacs-version)
@@ -122,9 +122,10 @@ rm -rf "$TEMP_DIR"
 #+end_src
 
 #+RESULTS:
+| Cleaning  | .elc         | files...  |                                       |         |                  |
 | Starting  | Emacs        | 28.2      | with                                  | minimal | configuration... |
-| Testing   | ollama-buddy | from:     | ~/source/repos/ollama-buddy           |         |                  |
-| Temporary | init         | file:     | /tmp/ollama-buddy-test-2gXF4C/init.el |         |                  |
+| Testing   | ollama-buddy | from:     | /home/jdyer/source/repos/ollama-buddy |         |                  |
+| Temporary | init         | file:     | /tmp/ollama-buddy-test-OsOd6E/init.el |         |                  |
 | Cleaning  | up           | temporary | directory...                          |         |                  |
 
 ** Prompt Text Edge Cases

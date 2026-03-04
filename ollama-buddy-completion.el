@@ -169,8 +169,8 @@ RAW is the full accumulated HTTP response including headers."
             (delete-process ollama-buddy-completion--process))
           (setq ollama-buddy-completion--process nil))))))
 
-(defun ollama-buddy-completion--sentinel (proc event)
-  "Clean up PROC on EVENT."
+(defun ollama-buddy-completion--sentinel (proc _event)
+  "Clean up PROC on completion."
   (unless (process-live-p proc)
     (let ((buf (process-get proc :target-buf)))
       (when (buffer-live-p buf)

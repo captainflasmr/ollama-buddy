@@ -77,6 +77,13 @@
 (declare-function ollama-buddy-tools-info "ollama-buddy-tools")
 (declare-function ollama-buddy-completion-toggle "ollama-buddy-completion")
 
+(defun ollama-buddy-transient--completion-toggle ()
+  "Toggle completion mode if loaded, else prompt to load it."
+  (interactive)
+  (if (fboundp 'ollama-buddy-completion-toggle)
+      (ollama-buddy-completion-toggle)
+    (message "Completion mode requires ollama-buddy-completion: (require 'ollama-buddy-completion)")))
+
 (defun ollama-buddy-transient--tools-toggle ()
   "Toggle tool calling if ollama-buddy-tools is loaded, else prompt to load it."
   (interactive)
@@ -174,7 +181,7 @@
     ("SPC" "Toggle Tools" ollama-buddy-transient--tools-toggle)
     ("Q" "List Tools" ollama-buddy-transient--tools-info)
     ("W" "In-Buffer Replace" ollama-buddy-toggle-in-buffer-replace)
-    ("c" "Completion Mode" ollama-buddy-completion-toggle)]]
+    ("c" "Completion Mode" ollama-buddy-transient--completion-toggle)]]
   
   [["History"
     ("H" "Toggle" ollama-buddy-toggle-history)

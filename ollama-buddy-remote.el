@@ -24,6 +24,8 @@
 (declare-function ollama-buddy-web-search-get-context "ollama-buddy-web-search")
 ;; RAG forward declarations
 (declare-function ollama-buddy-rag-process-inline "ollama-buddy-rag")
+;; Main module forward declarations
+(declare-function ollama-buddy--trim-token-history "ollama-buddy")
 
 (defvar ollama-buddy-remote--request-start-time nil
   "Timestamp when the current remote request was sent.")

@@ -36,7 +36,7 @@
   (when-let ((proj (project-current)))
     (if (fboundp 'project-root)
         (project-root proj)
-      (car (project-roots proj)))))
+      (with-no-warnings (car (project-roots proj))))))
 
 ;;;###autoload
 (defun ollama-buddy-project-attach-file ()
