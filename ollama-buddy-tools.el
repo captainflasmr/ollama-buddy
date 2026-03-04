@@ -513,6 +513,30 @@ Returns a list of tool result messages to append to the conversation."
      nil  ; not safe — launches ediff UI
      t)   ; terminal — stop LLM auto-continuation after ediff session created
 
+    ;; get_project_info - Get current project information via project.el
+    (ollama-buddy-tools-register
+     'get_project_info
+     "Get information about the current Emacs project using project.el. Returns the project root directory, project name, and top-level files/directories. Useful for understanding what project the user is working in."
+     '((type . "object")
+       (properties . ()))
+     (lambda (_args)
+       (if-let ((proj (project-current)))
+           (let* ((root (project-root proj))
+                  (name (file-name-nondirectory (directory-file-name root)))
+                  (entries (directory-files root nil "^[^.]"))
+                  (dirs (seq-filter
+                         (lambda (f) (file-directory-p (expand-file-name f root)))
+                         entries))
+                  (files (seq-remove
+                          (lambda (f) (file-directory-p (expand-file-name f root)))
+                          entries)))
+             (format "Project: %s\nRoot: %s\nDirectories: %s\nFiles: %s"
+                     name root
+                     (if dirs (mapconcat #'identity dirs ", ") "(none)")
+                     (if files (mapconcat #'identity files ", ") "(none)")))
+         "No project found for the current buffer. Try opening a file inside a project first."))
+     t) ; safe
+
     (message "Initialized %d built-in tools" (hash-table-count ollama-buddy-tools--registry))))
 
 ;;; Interactive Commands
