@@ -4889,6 +4889,7 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c v") #'ollama-buddy-set-keepalive)
     (define-key map (kbd "C-c !") #'ollama-buddy-toggle-airplane-mode)
     (define-key map (kbd "C-c W") #'ollama-buddy-toggle-in-buffer-replace)
+    (define-key map (kbd "C-c w") #'ollama-buddy-transient-awesome-menu)
 
     ;; Prompts section keybindings
     (define-key map (kbd "C-c l") #'ollama-buddy-pull-model)

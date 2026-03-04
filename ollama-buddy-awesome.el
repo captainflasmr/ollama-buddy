@@ -361,10 +361,19 @@ of the awesome-chatgpt-prompts CSV file."
 (defun ollama-buddy-awesome--format-prompt-name (prompt)
   "Format PROMPT name for display in the completion UI."
   (let ((category (plist-get prompt :category))
-        (title (plist-get prompt :title)))
-    (format "%s: %s"
-            (propertize category 'face 'font-lock-type-face)
-            (propertize title 'face 'font-lock-function-name-face))))
+        (title (plist-get prompt :title))
+        (content (plist-get prompt :content)))
+    (concat
+     (format "%s: %s"
+             (propertize category 'face 'font-lock-type-face)
+             (propertize title 'face 'font-lock-function-name-face))
+     (if (and content (not (string-empty-p content)))
+         (let* ((preview (car (split-string content "\n" t)))
+                (truncated (if (> (length preview) 60)
+                               (concat (substring preview 0 57) "...")
+                             preview)))
+           (concat " " (propertize (format "-- %s" truncated) 'face 'shadow)))
+       ""))))
 
 (defun ollama-buddy-awesome-yield-prompt ()
   "Select an Awesome ChatGPT Prompt and return its content."

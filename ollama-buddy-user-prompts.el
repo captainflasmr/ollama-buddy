@@ -76,7 +76,17 @@ Returns a plist with :category and :title, or nil if not a valid format."
            (mapcar (lambda (file)
                      (let ((parsed (ollama-buddy-user-prompts--parse-filename file)))
                        (when parsed
-                         (plist-put parsed :file file))))
+                         (plist-put parsed :file file)
+                         ;; Extract description/first line from content
+                         (let* ((raw (ollama-buddy-user-prompts--read-prompt-content file))
+                                (desc (when raw
+                                        (let* ((headers-stripped (ollama-buddy-user-prompts--strip-org-headers raw))
+                                               (first-line (car (split-string headers-stripped "\n" t))))
+                                          (if (and first-line (> (length first-line) 60))
+                                              (concat (substring first-line 0 57) "...")
+                                            first-line)))))
+                           (plist-put parsed :description desc)))
+                       parsed))
                    files)))
     (setq ollama-buddy-user-prompts--last-refresh (current-time))))
 
@@ -92,10 +102,15 @@ Returns a plist with :category and :title, or nil if not a valid format."
 (defun ollama-buddy-user-prompts--format-for-completion (prompt-info)
   "Format PROMPT-INFO for completion display."
   (let ((category (plist-get prompt-info :category))
-        (title (plist-get prompt-info :title)))
-    (format "%s: %s"
-            (propertize category 'face 'font-lock-type-face)
-            (propertize title 'face 'font-lock-function-name-face))))
+        (title (plist-get prompt-info :title))
+        (description (plist-get prompt-info :description)))
+    (concat
+     (format "%s: %s"
+             (propertize category 'face 'font-lock-type-face)
+             (propertize title 'face 'font-lock-function-name-face))
+     (if (and description (not (string-empty-p description)))
+         (concat " " (propertize (format "-- %s" description) 'face 'shadow))
+       ""))))
 
 (defun ollama-buddy-user-prompts--read-prompt-content (file)
   "Read the content of a system prompt FILE."

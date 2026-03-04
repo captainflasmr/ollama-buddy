@@ -69,7 +69,7 @@
          (pattern-alist (cl-mapcar #'cons formatted-patterns
                                    ollama-buddy-fabric--patterns))
          (selected-formatted (completing-read "Fabric pattern: " formatted-patterns nil t))
-         (selected-pattern (cdr (assoc selected-formatted pattern-alist)))
+         (selected-pattern (plist-get (cdr (assoc selected-formatted pattern-alist)) :name))
          (system-file (expand-file-name (format "%s/%s/system.md"
                                                 (ollama-buddy-fabric--patterns-path)
                                                 selected-pattern)))
@@ -200,12 +200,19 @@
          ;; Get all directories that don't start with a dot
          (directory-files (ollama-buddy-fabric--patterns-path) nil "^[^.]" t)))
   
+  ;; Cache descriptions for completion UI
+  (setq ollama-buddy-fabric--patterns
+        (mapcar (lambda (p)
+                  (let ((desc (ollama-buddy-fabric--extract-description-from-system p)))
+                    (list :name p :description (when desc (string-trim desc)))))
+                ollama-buddy-fabric--patterns))
+  
   ;; Sort patterns by category priority if possible
   (setq ollama-buddy-fabric--patterns
         (sort ollama-buddy-fabric--patterns
               (lambda (a b)
-                (let ((a-cat (ollama-buddy-fabric--pattern-category a))
-                      (b-cat (ollama-buddy-fabric--pattern-category b)))
+                (let ((a-cat (ollama-buddy-fabric--pattern-category (plist-get a :name)))
+                      (b-cat (ollama-buddy-fabric--pattern-category (plist-get b :name))))
                   (< (or (cl-position a-cat ollama-buddy-fabric-pattern-categories :test #'string=) 999)
                      (or (cl-position b-cat ollama-buddy-fabric-pattern-categories :test #'string=) 999)))))))
 
@@ -216,14 +223,24 @@
         (car parts)
       "")))
 
-(defun ollama-buddy-fabric--format-pattern-name (pattern)
-  "Format PATTERN name for display in the completion UI."
-  (let* ((parts (split-string pattern "_"))
+(defun ollama-buddy-fabric--format-pattern-name (pattern-info)
+  "Format PATTERN-INFO name for display in the completion UI."
+  (let* ((pattern (plist-get pattern-info :name))
+         (description (plist-get pattern-info :description))
+         (parts (split-string pattern "_"))
          (category (if (> (length parts) 0) (car parts) ""))
          (name (mapconcat #'identity (cdr parts) "_")))
-    (format "%s: %s"
-            (propertize category 'face 'font-lock-type-face)
-            (propertize name 'face 'font-lock-function-name-face))))
+    (concat
+     (format "%s: %s"
+             (propertize category 'face 'font-lock-type-face)
+             (propertize name 'face 'font-lock-function-name-face))
+     (if (and description (not (string-empty-p description)))
+         (let* ((preview (car (split-string description "\n" t)))
+                (truncated (if (> (length preview) 60)
+                               (concat (substring preview 0 57) "...")
+                             preview)))
+           (concat " " (propertize (format "-- %s" truncated) 'face 'shadow)))
+       ""))))
 
 (defun ollama-buddy-fabric-yield-prompt ()
   "Select a Fabric pattern and return its content."
@@ -235,7 +252,7 @@
          (pattern-alist (cl-mapcar #'cons formatted-patterns
                                    ollama-buddy-fabric--patterns))
          (selected-formatted (completing-read "Fabric pattern: " formatted-patterns nil t))
-         (selected-pattern (cdr (assoc selected-formatted pattern-alist)))
+         (selected-pattern (plist-get (cdr (assoc selected-formatted pattern-alist)) :name))
          (system-file (expand-file-name (format "%s/%s/system.md"
                                                 (ollama-buddy-fabric--patterns-path)
                                                 selected-pattern))))
@@ -256,7 +273,7 @@
          (pattern-alist (cl-mapcar #'cons formatted-patterns
                                    ollama-buddy-fabric--patterns))
          (selected-formatted (completing-read "Fabric pattern: " formatted-patterns nil t))
-         (selected-pattern (cdr (assoc selected-formatted pattern-alist)))
+         (selected-pattern (plist-get (cdr (assoc selected-formatted pattern-alist)) :name))
          (system-file (expand-file-name (format "%s/%s/system.md"
                                                 (ollama-buddy-fabric--patterns-path)
                                                 selected-pattern)))
@@ -349,14 +366,16 @@ Returns the first paragraph (up to 250 chars) as a description."
            (category (save-excursion
                        (org-up-heading-safe)
                        (downcase (org-get-heading t t t t))))
-           (pattern (cl-find-if
-                     (lambda (p)
-                       (let* ((parts (split-string p "_"))
-                              (p-cat (car parts))
-                              (p-name (mapconcat #'identity (cdr parts) "_")))
-                         (and (string= p-cat category)
-                              (string= p-name name))))
-                     ollama-buddy-fabric--patterns)))
+           (pattern-info (cl-find-if
+                      (lambda (p)
+                        (let* ((name-str (plist-get p :name))
+                               (parts (split-string name-str "_"))
+                               (p-cat (car parts))
+                               (p-name (mapconcat #'identity (cdr parts) "_")))
+                          (and (string= p-cat category)
+                               (string= p-name name))))
+                      ollama-buddy-fabric--patterns))
+           (pattern (plist-get pattern-info :name)))
       (unless pattern
         (user-error "Could not find pattern matching heading '%s'" name))
       (let* ((system-file (expand-file-name (format "%s/%s/system.md"
@@ -393,8 +412,10 @@ Returns the first paragraph (up to 250 chars) as a description."
           (insert "Never synced with GitHub repository\n\n"))
         
         (let ((current-category ""))
-          (dolist (pattern ollama-buddy-fabric--patterns)
-            (let* ((parts (split-string pattern "_"))
+          (dolist (pattern-info ollama-buddy-fabric--patterns)
+            (let* ((pattern (plist-get pattern-info :name))
+                   (description (plist-get pattern-info :description))
+                   (parts (split-string pattern "_"))
                    (category (if (> (length parts) 0) (car parts) ""))
                    (name (mapconcat #'identity (cdr parts) "_"))
                    (desc-file (expand-file-name
@@ -413,10 +434,8 @@ Returns the first paragraph (up to 250 chars) as a description."
                   (progn
                     (insert-file-contents (string-trim desc-file))
                     (insert "\n\n"))
-                (insert
-                 (string-trim
-                  (ollama-buddy-fabric--extract-description-from-system pattern))
-                 "\n\n"))
+                (when description
+                  (insert (string-trim description) "\n\n")))
               (goto-char (point-max))))))
       (goto-char (point-min))
       (view-mode 1)
@@ -432,8 +451,9 @@ Returns the first paragraph (up to 250 chars) as a description."
                                   ollama-buddy-fabric--patterns))))
   
   (let* ((pattern-name (car (last (split-string pattern ": "))))
-         (real-pattern (seq-find (lambda (p) (string-match-p pattern-name p))
-                                 ollama-buddy-fabric--patterns))
+         (real-pattern-info (seq-find (lambda (p) (string-match-p pattern-name (plist-get p :name)))
+                                      ollama-buddy-fabric--patterns))
+         (real-pattern (plist-get real-pattern-info :name))
          (system-file (expand-file-name (format "%s/%s/system.md"
                                                 (ollama-buddy-fabric--patterns-path)
                                                 real-pattern))))
