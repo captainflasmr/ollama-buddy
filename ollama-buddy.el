@@ -4930,14 +4930,13 @@ Returns the text with @file() delimiters removed."
     map)
   "Keymap for ollama-buddy mode.")
 
+;;;###autoload
 (define-minor-mode ollama-buddy-mode
   "Minor mode for ollama-buddy keybindings."
   :lighter " OB"
   :keymap ollama-buddy-mode-map)
 
 (push 'ollama-buddy--prompt-history savehist-additional-variables)
-
-(setq org-return-follows-link t)
 
 (provide 'ollama-buddy)
 ;;; ollama-buddy.el ends here

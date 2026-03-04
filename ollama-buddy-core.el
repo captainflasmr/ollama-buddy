@@ -1,13 +1,15 @@
 ;;; ollama-buddy-core.el --- Core functionality for ollama-buddy -*- lexical-binding: t; -*-
 
-;; Author: YourName
+;; Author: James Dyer <captainflasmr@gmail.com>
 ;; Keywords: local, tools
 ;; Package-Requires: ((emacs "28.1") (transient "0.4.0"))
 
 ;;; Commentary:
 
-;; This file contains core functionality, shared variables, and utility functions
-;; for the ollama-buddy package, which provides an interface to the Ollama API.
+;; This file provides the core logic, configuration groups, and shared 
+;; utilities for Ollama Buddy. It handles model capability discovery,
+;; parameter management, and provides the fundamental infrastructure 
+;; used by both the network and curl backends.
 
 ;;; Code:
 

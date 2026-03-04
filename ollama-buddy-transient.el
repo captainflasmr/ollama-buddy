@@ -152,6 +152,7 @@
    ("i" "Project Info" ollama-buddy-project-info)]
   [("q" "Quit" transient-quit-one)])
 
+;;;###autoload
 (transient-define-prefix ollama-buddy-transient-menu ()
   "Ollama Buddy main menu."
   :info-manual "(ollama-buddy)Top"
@@ -495,6 +496,7 @@ Returns the interned command symbol."
                        " ✎ In-Buffer" "")))
     (concat selection in-buffer)))
 
+;;;###autoload
 (defun ollama-buddy-role-transient-menu ()
   "Dynamic role-specific command menu.
 Rebuilds the transient prefix each invocation to reflect the
