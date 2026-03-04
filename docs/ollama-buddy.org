@@ -175,24 +175,28 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Loading-Saved-Prompts][13.4 Loading Saved Prompts]]
   - [[#Managing-Your-Prompt-Library][13.5 Managing Your Prompt Library]]
     - [[#Viewing-All-Prompts][13.5.1 Viewing All Prompts]]
-    - [[#Editing-Prompts][13.5.2 Editing Prompts]]
-    - [[#Creating-New-Prompts][13.5.3 Creating New Prompts]]
-    - [[#Deleting-Prompts][13.5.4 Deleting Prompts]]
-  - [[#Categories-and-Organization][13.6 Categories and Organization]]
-  - [[#Prompt-Storage-Format][13.7 Prompt Storage Format]]
-  - [[#Best-Practices-for-System-Prompts][13.8 Best Practices for System
+  - [[#Unified-Skills][13.6 Unified Skills]]
+    - [[#Categorizing-as-a-Skill][13.6.1 Categorizing as a Skill]]
+    - [[#Using-_0040skill-Inline][13.6.2 Using @skill Inline]]
+    - [[#The-_002fskill-Command][13.6.3 The /skill Command]]
+    - [[#Editing-Prompts][13.6.4 Editing Prompts]]
+    - [[#Creating-New-Prompts][13.6.5 Creating New Prompts]]
+    - [[#Deleting-Prompts][13.6.6 Deleting Prompts]]
+  - [[#Categories-and-Organization][13.7 Categories and Organization]]
+  - [[#Prompt-Storage-Format][13.8 Prompt Storage Format]]
+  - [[#Best-Practices-for-System-Prompts][13.9 Best Practices for System
     Prompts]]
-    - [[#Components-of-Effective-Prompts][13.8.1 Components of Effective
+    - [[#Components-of-Effective-Prompts][13.9.1 Components of Effective
       Prompts]]
-    - [[#Example-Patterns][13.8.2 Example Patterns]]
-  - [[#Example-System-Prompts][13.9 Example System Prompts]]
-    - [[#Technical-Writing-Assistant][13.9.1 Technical Writing
+    - [[#Example-Patterns][13.9.2 Example Patterns]]
+  - [[#Example-System-Prompts][13.10 Example System Prompts]]
+    - [[#Technical-Writing-Assistant][13.10.1 Technical Writing
       Assistant]]
-    - [[#Code-Reviewer][13.9.2 Code Reviewer]]
-  - [[#Workflow-Examples][13.10 Workflow Examples]]
-    - [[#Python-Code-Assistance][13.10.1 Python Code Assistance]]
-    - [[#Technical-Writing-Help][13.10.2 Technical Writing Help]]
-  - [[#Integration-with-Roles][13.11 Integration with Roles]]
+    - [[#Code-Reviewer][13.10.2 Code Reviewer]]
+  - [[#Workflow-Examples][13.11 Workflow Examples]]
+    - [[#Python-Code-Assistance][13.11.1 Python Code Assistance]]
+    - [[#Technical-Writing-Help][13.11.2 Technical Writing Help]]
+  - [[#Integration-with-Roles][13.12 Integration with Roles]]
 - [[#Roles-and-Commands][14 Roles and Commands]]
   - [[#Understanding-Roles][14.1 Understanding Roles]]
   - [[#Role-File-Naming-Convention][14.2 Role File Naming Convention]]
@@ -1393,6 +1397,9 @@ Available =@= commands:
 - =@rag(query)= :: Search a RAG index and attach results.
 
 - =@file(path)= :: Attach a file to the conversation context.
+
+- =@skill(name)= :: Inject a specific system prompt (skill) inline into
+  your user message.
 
 - =@project= :: Search and attach files from the current project using
   completion.
@@ -2945,6 +2952,7 @@ Next: [[#Roles-and-Commands][Roles and Commands]], Previous:
 - [[#Saving-System-Prompts][Saving System Prompts]]
 - [[#Loading-Saved-Prompts][Loading Saved Prompts]]
 - [[#Managing-Your-Prompt-Library][Managing Your Prompt Library]]
+- [[#Unified-Skills][Unified Skills]]
 - [[#Categories-and-Organization][Categories and Organization]]
 - [[#Prompt-Storage-Format][Prompt Storage Format]]
 - [[#Best-Practices-for-System-Prompts][Best Practices for System
@@ -3043,9 +3051,6 @@ selection.
 :CLASS: section
 :END:
 - [[#Viewing-All-Prompts][Viewing All Prompts]]
-- [[#Editing-Prompts][Editing Prompts]]
-- [[#Creating-New-Prompts][Creating New Prompts]]
-- [[#Deleting-Prompts][Deleting Prompts]]
 
 <<Viewing-All-Prompts>>
 **** 13.5.1 Viewing All Prompts [[#Viewing-All-Prompts][¶]]
@@ -3061,6 +3066,64 @@ M-x ollama-buddy-user-prompts-list
 
 or press =C-c s l=.
 
+<<Unified-Skills>>
+*** 13.6 Unified Skills [[#Unified-Skills][¶]]
+:PROPERTIES:
+:CUSTOM_ID: unified-skills
+:CLASS: section
+:END:
+The /Skills/ system is an extension of the User System Prompts library.
+By categorizing a prompt under the =skills= category, it becomes
+available for specialized interactive workflows.
+
+- [[#Categorizing-as-a-Skill][Categorizing as a Skill]]
+- [[#Using-_0040skill-Inline][Using @skill Inline]]
+- [[#The-_002fskill-Command][The /skill Command]]
+- [[#Editing-Prompts][Editing Prompts]]
+- [[#Creating-New-Prompts][Creating New Prompts]]
+- [[#Deleting-Prompts][Deleting Prompts]]
+
+<<Categorizing-as-a-Skill>>
+**** 13.6.1 Categorizing as a Skill [[#Categorizing-as-a-Skill][¶]]
+:PROPERTIES:
+:CUSTOM_ID: categorizing-as-a-skill
+:CLASS: subsection
+:END:
+When saving a prompt via =ollama-buddy-user-prompts-save=, select
+=skills= as the category. This flags the prompt for use in the =@skill=
+inline expansion.
+
+<<Using-_0040skill-Inline>>
+**** 13.6.2 Using @skill Inline [[#Using-_0040skill-Inline][¶]]
+:PROPERTIES:
+:CUSTOM_ID: using-skill-inline
+:CLASS: subsection
+:END:
+You can inject the content of any saved prompt directly into your user
+message using the =@skill(name)= syntax. This is useful for providing
+specific instructions to the model for a single query without changing
+your global session identity.
+
+To use it:
+
+1. Type =@= in the prompt area.
+2. Select =skill=.
+3. Select the desired skill from the collection.
+
+=ollama-buddy= will prioritize prompts in the =skills= category but can
+fall back to any title in your library.
+
+<<The-_002fskill-Command>>
+**** 13.6.3 The /skill Command [[#The-_002fskill-Command][¶]]
+:PROPERTIES:
+:CUSTOM_ID: the-skill-command
+:CLASS: subsection
+:END:
+The =/skill= slash command provides a quick way to switch your session's
+system prompt to one of your experts. It is a shortcut that uses the
+standard prompt loading interface but is filtered to highlight your
+skills.
+
 This displays a buffer showing:
 
 - Prompts organized by category
@@ -3068,7 +3131,7 @@ This displays a buffer showing:
 - Preview of prompt content
 
 <<Editing-Prompts>>
-**** 13.5.2 Editing Prompts [[#Editing-Prompts][¶]]
+**** 13.6.4 Editing Prompts [[#Editing-Prompts][¶]]
 :PROPERTIES:
 :CUSTOM_ID: editing-prompts
 :CLASS: subsection
@@ -3085,7 +3148,7 @@ This opens the prompt file in an Org mode buffer where you can make
 changes and save.
 
 <<Creating-New-Prompts>>
-**** 13.5.3 Creating New Prompts [[#Creating-New-Prompts][¶]]
+**** 13.6.5 Creating New Prompts [[#Creating-New-Prompts][¶]]
 :PROPERTIES:
 :CUSTOM_ID: creating-new-prompts
 :CLASS: subsection
@@ -3102,7 +3165,7 @@ This opens a template with Org headers where you can enter your prompt
 content.
 
 <<Deleting-Prompts>>
-**** 13.5.4 Deleting Prompts [[#Deleting-Prompts][¶]]
+**** 13.6.6 Deleting Prompts [[#Deleting-Prompts][¶]]
 :PROPERTIES:
 :CUSTOM_ID: deleting-prompts
 :CLASS: subsection
@@ -3118,7 +3181,7 @@ or press =C-c s d=.
 You'll be asked to confirm before the prompt is deleted.
 
 <<Categories-and-Organization>>
-*** 13.6 Categories and Organization [[#Categories-and-Organization][¶]]
+*** 13.7 Categories and Organization [[#Categories-and-Organization][¶]]
 :PROPERTIES:
 :CUSTOM_ID: categories-and-organization
 :CLASS: section
@@ -3142,7 +3205,7 @@ You can customize the default categories:
 #+end_src
 
 <<Prompt-Storage-Format>>
-*** 13.7 Prompt Storage Format [[#Prompt-Storage-Format][¶]]
+*** 13.8 Prompt Storage Format [[#Prompt-Storage-Format][¶]]
 :PROPERTIES:
 :CUSTOM_ID: prompt-storage-format
 :CLASS: section
@@ -3179,7 +3242,7 @@ When asked to debug, first identify the likely cause before suggesting fixes.
 #+end_src
 
 <<Best-Practices-for-System-Prompts>>
-*** 13.8 Best Practices for System Prompts [[#Best-Practices-for-System-Prompts][¶]]
+*** 13.9 Best Practices for System Prompts [[#Best-Practices-for-System-Prompts][¶]]
 :PROPERTIES:
 :CUSTOM_ID: best-practices-for-system-prompts
 :CLASS: section
@@ -3188,7 +3251,7 @@ When asked to debug, first identify the likely cause before suggesting fixes.
 - [[#Example-Patterns][Example Patterns]]
 
 <<Components-of-Effective-Prompts>>
-**** 13.8.1 Components of Effective Prompts [[#Components-of-Effective-Prompts][¶]]
+**** 13.9.1 Components of Effective Prompts [[#Components-of-Effective-Prompts][¶]]
 :PROPERTIES:
 :CUSTOM_ID: components-of-effective-prompts
 :CLASS: subsection
@@ -3202,7 +3265,7 @@ Well-designed system prompts typically include:
 - Examples of desired responses (optional)
 
 <<Example-Patterns>>
-**** 13.8.2 Example Patterns [[#Example-Patterns][¶]]
+**** 13.9.2 Example Patterns [[#Example-Patterns][¶]]
 :PROPERTIES:
 :CUSTOM_ID: example-patterns
 :CLASS: subsection
@@ -3220,7 +3283,7 @@ Well-designed system prompts typically include:
   problems into smaller components..."
 
 <<Example-System-Prompts>>
-*** 13.9 Example System Prompts [[#Example-System-Prompts][¶]]
+*** 13.10 Example System Prompts [[#Example-System-Prompts][¶]]
 :PROPERTIES:
 :CUSTOM_ID: example-system-prompts
 :CLASS: section
@@ -3229,7 +3292,7 @@ Well-designed system prompts typically include:
 - [[#Code-Reviewer][Code Reviewer]]
 
 <<Technical-Writing-Assistant>>
-**** 13.9.1 Technical Writing Assistant [[#Technical-Writing-Assistant][¶]]
+**** 13.10.1 Technical Writing Assistant [[#Technical-Writing-Assistant][¶]]
 :PROPERTIES:
 :CUSTOM_ID: technical-writing-assistant
 :CLASS: subsection
@@ -3250,7 +3313,7 @@ the target audience while preserving technical accuracy.
 #+end_src
 
 <<Code-Reviewer>>
-**** 13.9.2 Code Reviewer [[#Code-Reviewer][¶]]
+**** 13.10.2 Code Reviewer [[#Code-Reviewer][¶]]
 :PROPERTIES:
 :CUSTOM_ID: code-reviewer
 :CLASS: subsection
@@ -3270,7 +3333,7 @@ Balance constructive criticism with acknowledgment of well-written code.
 #+end_src
 
 <<Workflow-Examples>>
-*** 13.10 Workflow Examples [[#Workflow-Examples][¶]]
+*** 13.11 Workflow Examples [[#Workflow-Examples][¶]]
 :PROPERTIES:
 :CUSTOM_ID: workflow-examples
 :CLASS: section
@@ -3279,7 +3342,7 @@ Balance constructive criticism with acknowledgment of well-written code.
 - [[#Technical-Writing-Help][Technical Writing Help]]
 
 <<Python-Code-Assistance>>
-**** 13.10.1 Python Code Assistance [[#Python-Code-Assistance][¶]]
+**** 13.11.1 Python Code Assistance [[#Python-Code-Assistance][¶]]
 :PROPERTIES:
 :CUSTOM_ID: python-code-assistance
 :CLASS: subsection
@@ -3290,7 +3353,7 @@ Balance constructive criticism with acknowledgment of well-written code.
 4. Save the conversation as a session for future reference
 
 <<Technical-Writing-Help>>
-**** 13.10.2 Technical Writing Help [[#Technical-Writing-Help][¶]]
+**** 13.11.2 Technical Writing Help [[#Technical-Writing-Help][¶]]
 :PROPERTIES:
 :CUSTOM_ID: technical-writing-help
 :CLASS: subsection
@@ -3303,7 +3366,7 @@ Balance constructive criticism with acknowledgment of well-written code.
    writing
 
 <<Integration-with-Roles>>
-*** 13.11 Integration with Roles [[#Integration-with-Roles][¶]]
+*** 13.12 Integration with Roles [[#Integration-with-Roles][¶]]
 :PROPERTIES:
 :CUSTOM_ID: integration-with-roles
 :CLASS: section

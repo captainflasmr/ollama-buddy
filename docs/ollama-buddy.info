@@ -747,6 +747,10 @@ syntax templates into the prompt.
 ‘@file(path)’
      Attach a file to the conversation context.
 
+‘@skill(name)’
+     Inject a specific system prompt (skill) inline into your user
+     message.
+
 ‘@project’
      Search and attach files from the current project using completion.
 
@@ -1942,12 +1946,50 @@ To view your entire prompt collection:
      M-x ollama-buddy-user-prompts-list
    or press ‘C-c s l’.
 
+13.6 Unified Skills
+===================
+
+The “Skills” system is an extension of the User System Prompts library.
+By categorizing a prompt under the ‘skills’ category, it becomes
+available for specialized interactive workflows.
+
+13.6.1 Categorizing as a Skill
+------------------------------
+
+When saving a prompt via ‘ollama-buddy-user-prompts-save’, select
+‘skills’ as the category.  This flags the prompt for use in the ‘@skill’
+inline expansion.
+
+13.6.2 Using @skill Inline
+--------------------------
+
+You can inject the content of any saved prompt directly into your user
+message using the ‘@skill(name)’ syntax.  This is useful for providing
+specific instructions to the model for a single query without changing
+your global session identity.
+
+   To use it:
+  1. Type ‘@’ in the prompt area.
+  2. Select ‘skill’.
+  3. Select the desired skill from the collection.
+
+   ‘ollama-buddy’ will prioritize prompts in the ‘skills’ category but
+can fall back to any title in your library.
+
+13.6.3 The /skill Command
+-------------------------
+
+The ‘/skill’ slash command provides a quick way to switch your session's
+system prompt to one of your experts.  It is a shortcut that uses the
+standard prompt loading interface but is filtered to highlight your
+skills.
+
    This displays a buffer showing:
    • Prompts organized by category
    • Prompt titles
    • Preview of prompt content
 
-13.5.2 Editing Prompts
+13.6.4 Editing Prompts
 ----------------------
 
 To edit an existing prompt:
@@ -1957,7 +1999,7 @@ To edit an existing prompt:
    This opens the prompt file in an Org mode buffer where you can make
 changes and save.
 
-13.5.3 Creating New Prompts
+13.6.5 Creating New Prompts
 ---------------------------
 
 To create a new prompt from scratch:
@@ -1967,7 +2009,7 @@ To create a new prompt from scratch:
    This opens a template with Org headers where you can enter your
 prompt content.
 
-13.5.4 Deleting Prompts
+13.6.6 Deleting Prompts
 -----------------------
 
 To delete a prompt:
@@ -1976,7 +2018,7 @@ To delete a prompt:
 
    You'll be asked to confirm before the prompt is deleted.
 
-13.6 Categories and Organization
+13.7 Categories and Organization
 ================================
 
 Prompts are organized into categories for easier management.  Default
@@ -1994,7 +2036,7 @@ categories include:
      (setq ollama-buddy-user-prompts-default-categories
            '("general" "coding" "writing" "analysis" "creative" "custom"))
 
-13.7 Prompt Storage Format
+13.8 Prompt Storage Format
 ==========================
 
 System prompts are stored as Org mode files with a specific naming
@@ -2022,10 +2064,10 @@ convention:
 
      When asked to debug, first identify the likely cause before suggesting fixes.
 
-13.8 Best Practices for System Prompts
+13.9 Best Practices for System Prompts
 ======================================
 
-13.8.1 Components of Effective Prompts
+13.9.1 Components of Effective Prompts
 --------------------------------------
 
 Well-designed system prompts typically include:
@@ -2036,7 +2078,7 @@ Well-designed system prompts typically include:
    • Specific instructions for handling certain types of queries
    • Examples of desired responses (optional)
 
-13.8.2 Example Patterns
+13.9.2 Example Patterns
 -----------------------
 
 Expert Role
@@ -2055,11 +2097,11 @@ Thinking Process
      "Think step-by-step, breaking down complex problems into smaller
      components..."
 
-13.9 Example System Prompts
-===========================
+13.10 Example System Prompts
+============================
 
-13.9.1 Technical Writing Assistant
-----------------------------------
+13.10.1 Technical Writing Assistant
+-----------------------------------
 
      You are a technical writing expert who specializes in creating clear, concise,
      and accessible documentation. Your writing should:
@@ -2073,8 +2115,8 @@ Thinking Process
      When presented with technical content, focus on making it understandable to
      the target audience while preserving technical accuracy.
 
-13.9.2 Code Reviewer
---------------------
+13.10.2 Code Reviewer
+---------------------
 
      You are an experienced code reviewer with expertise in software engineering
      best practices. When reviewing code:
@@ -2087,10 +2129,10 @@ Thinking Process
 
      Balance constructive criticism with acknowledgment of well-written code.
 
-13.10 Workflow Examples
+13.11 Workflow Examples
 =======================
 
-13.10.1 Python Code Assistance
+13.11.1 Python Code Assistance
 ------------------------------
 
   1. Load your "Python Expert" system prompt with ‘C-c s L’
@@ -2098,7 +2140,7 @@ Thinking Process
   3. The AI responds with Python-specific expertise
   4. Save the conversation as a session for future reference
 
-13.10.2 Technical Writing Help
+13.11.2 Technical Writing Help
 ------------------------------
 
   1. Create a new system prompt for technical writing (‘C-c s N’)
@@ -2108,7 +2150,7 @@ Thinking Process
   5. The AI consistently provides responses optimized for technical
      writing
 
-13.11 Integration with Roles
+13.12 Integration with Roles
 ============================
 
 System prompts can be integrated with Ollama Buddy roles for more
@@ -4656,31 +4698,31 @@ Node: Configuration8106
 Node: Quick Start16376
 Node: Core Features18826
 Node: Chat Interface23103
-Node: Working with Models30280
-Node: Context Management35509
-Node: File Attachments41118
-Node: Web Search47040
-Node: Parameter Control54778
-Node: Session Management57190
-Node: User System Prompts60099
-Node: Roles and Commands68587
-Node: Fabric Pattern Integration85777
-Node: Awesome ChatGPT Prompts88004
-Node: Remote Providers91854
-Node: Ollama Cloud Models99314
-Node: Global System Prompt103512
-Node: Tone Selector105266
-Node: Thinking Blocks107073
-Node: Project Integration109102
-Node: In-Buffer Replace110287
-Node: Tool Calling116163
-Node: RAG123952
-Node: Advanced Usage131731
-Node: API Reference134280
-Node: FAQ140219
-Node: Troubleshooting147304
-Node: Contributing149809
-Node: Index152477
+Node: Working with Models30381
+Node: Context Management35610
+Node: File Attachments41219
+Node: Web Search47141
+Node: Parameter Control54879
+Node: Session Management57291
+Node: User System Prompts60200
+Node: Roles and Commands69996
+Node: Fabric Pattern Integration87186
+Node: Awesome ChatGPT Prompts89413
+Node: Remote Providers93263
+Node: Ollama Cloud Models100723
+Node: Global System Prompt104921
+Node: Tone Selector106675
+Node: Thinking Blocks108482
+Node: Project Integration110511
+Node: In-Buffer Replace111696
+Node: Tool Calling117572
+Node: RAG125361
+Node: Advanced Usage133140
+Node: API Reference135689
+Node: FAQ141628
+Node: Troubleshooting148713
+Node: Contributing151218
+Node: Index153886
 
 End Tag Table
 

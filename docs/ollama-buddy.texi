@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 3.3.0
+@subtitle For Ollama Buddy version 3.4.0
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -813,6 +813,9 @@ Search a RAG index and attach results.
 
 @item @@file(path)
 Attach a file to the conversation context.
+
+@item @@skill(name)
+Inject a specific system prompt (skill) inline into your user message.
 
 @item @@project
 Search and attach files from the current project using completion.
@@ -1997,6 +2000,31 @@ To view your entire prompt collection:
 M-x ollama-buddy-user-prompts-list
 @end example
 or press @code{C-c s l}.
+
+@section Unified Skills
+
+The @dfn{Skills} system is an extension of the User System Prompts library. By categorizing a prompt under the @code{skills} category, it becomes available for specialized interactive workflows.
+
+@subsection Categorizing as a Skill
+
+When saving a prompt via @code{ollama-buddy-user-prompts-save}, select @code{skills} as the category. This flags the prompt for use in the @code{@@skill} inline expansion.
+
+@subsection Using @@skill Inline
+
+You can inject the content of any saved prompt directly into your user message using the @code{@@skill(name)} syntax. This is useful for providing specific instructions to the model for a single query without changing your global session identity.
+
+To use it:
+@enumerate
+@item Type @code{@@} in the prompt area.
+@item Select @code{skill}.
+@item Select the desired skill from the collection.
+@end enumerate
+
+@code{ollama-buddy} will prioritize prompts in the @code{skills} category but can fall back to any title in your library.
+
+@subsection The /skill Command
+
+The @code{/skill} slash command provides a quick way to switch your session's system prompt to one of your experts. It is a shortcut that uses the standard prompt loading interface but is filtered to highlight your skills.
 
 This displays a buffer showing:
 @itemize @bullet

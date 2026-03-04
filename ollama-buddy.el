@@ -608,6 +608,7 @@ second go to column 0."
 (defcustom ollama-buddy-at-commands
   '(("search" "@search(%s)" "Search the web and attach results")
     ("rag"    "@rag(%s)"   "Search RAG indexes and attach context")
+    ("skill"  "@skill(%s)" "Inject a 'skill' category user prompt")
     ("file"   "@file(%s)"  "Attach a file inline"))
   "Alist of inline `@' commands and their syntax templates.
 Each entry is (NAME TEMPLATE DESCRIPTION)."
@@ -640,8 +641,21 @@ Cancelling with \\[keyboard-quit] does nothing; use \\[quoted-insert] @ for a li
                        (quit nil))))
         (when choice
           (let* ((template (cadr (assoc choice candidates)))
-                 (parts (split-string template "%s")))
+                 (parts (split-string template "%s"))
+                 (value ""))
+            ;; Special handling for commands that need a secondary completion
+            (cond
+             ((string= choice "skill")
+              (let* ((prompts (ollama-buddy-user-prompts--get-prompts))
+                     (formatted (mapcar #'ollama-buddy-user-prompts--format-for-completion prompts))
+                     (prompt-alist (cl-mapcar #'cons formatted prompts))
+                     (selected (completing-read "Select skill: " formatted nil t)))
+                (setq value (plist-get (cdr (assoc selected prompt-alist)) :title))))
+             ((string= choice "file")
+              (setq value (read-file-name "Attach file: " nil nil t))))
+            
             (insert (car parts))
+            (insert value)
             (save-excursion
               (insert (cadr parts)))))))))
 
@@ -685,6 +699,7 @@ Cancelling with \\[keyboard-quit] does nothing; use \\[quoted-insert] @ for a li
     ("fabric"     ollama-buddy-fabric-set-system-prompt "Set system prompt from Fabric pattern")
     ("awesome"    ollama-buddy-awesome-set-system-prompt "Set system prompt from Awesome library")
     ("streaming"  ollama-buddy-toggle-streaming       "Toggle real-time response streaming")
+    ("skill"      ollama-buddy-user-prompts-load      "Load a skill as system prompt")
     ("reset"      ollama-buddy-reset-system-prompt    "Clear the current system prompt")
     ("completion" ollama-buddy-completion-toggle      "Toggle inline code completions")
     ("new"        ollama-buddy-sessions-new           "Start a fresh chat session")
@@ -3329,6 +3344,7 @@ and no new user message is added."
 
   ;; Process inline @file() paths
   (setq prompt (ollama-buddy--file-process-inline prompt))
+  (setq prompt (ollama-buddy--skills-process-inline prompt))
 
   ;; Original Ollama send code with vision additions
   (let* ((model-info (ollama-buddy--get-valid-model specified-model))
@@ -4622,6 +4638,34 @@ Returns list of path strings found in @file(path) delimiters."
       (push (string-trim (match-string 1 text)) paths)
       (setq start (match-end 0)))
     (nreverse paths)))
+
+;; Inline @skill() support
+
+(defconst ollama-buddy--skills-inline-regexp
+  "@skill(\\([^)]+\\))"
+  "Regexp to match inline skill delimiters: @skill(name).")
+
+(defun ollama-buddy--skills-process-inline (text)
+  "Process TEXT for inline @skill(name) patterns.
+Replaces @skill(name) with the actual skill content from user prompts."
+  (let ((result text)
+        (start 0)
+        (prompts (ollama-buddy-user-prompts--get-prompts)))
+    (while (string-match ollama-buddy--skills-inline-regexp result start)
+      (let* ((name (match-string 1 result))
+             ;; Look for prompt in 'skills' category first, then any category
+             (skill (or (cl-find-if (lambda (p) 
+                                     (and (string= (plist-get p :category) "skills")
+                                          (string= (plist-get p :title) name)))
+                                   prompts)
+                        (cl-find name prompts :test #'string= :key (lambda (p) (plist-get p :title)))))
+             (content (if skill 
+                          (ollama-buddy-user-prompts--strip-org-headers 
+                           (ollama-buddy-user-prompts--read-prompt-content (plist-get skill :file)))
+                        (format "[Skill '%s' not found]" name))))
+        (setq result (replace-match content t t result))
+        (setq start (+ (match-beginning 0) (length content)))))
+    result))
 
 (defun ollama-buddy--file-remove-inline-delimiters (text)
   "Replace inline file delimiters with just the path text.

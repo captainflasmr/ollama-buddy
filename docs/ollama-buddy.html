@@ -250,28 +250,34 @@ allowing you to leverage powerful large language models (LLMs) directly within y
     <li><a id="toc-Managing-Your-Prompt-Library" href="#Managing-Your-Prompt-Library">13.5 Managing Your Prompt Library</a>
     <ul class="toc-numbered-mark">
       <li><a id="toc-Viewing-All-Prompts" href="#Viewing-All-Prompts">13.5.1 Viewing All Prompts</a></li>
-      <li><a id="toc-Editing-Prompts" href="#Editing-Prompts">13.5.2 Editing Prompts</a></li>
-      <li><a id="toc-Creating-New-Prompts" href="#Creating-New-Prompts">13.5.3 Creating New Prompts</a></li>
-      <li><a id="toc-Deleting-Prompts" href="#Deleting-Prompts">13.5.4 Deleting Prompts</a></li>
     </ul></li>
-    <li><a id="toc-Categories-and-Organization" href="#Categories-and-Organization">13.6 Categories and Organization</a></li>
-    <li><a id="toc-Prompt-Storage-Format" href="#Prompt-Storage-Format">13.7 Prompt Storage Format</a></li>
-    <li><a id="toc-Best-Practices-for-System-Prompts" href="#Best-Practices-for-System-Prompts">13.8 Best Practices for System Prompts</a>
+    <li><a id="toc-Unified-Skills" href="#Unified-Skills">13.6 Unified Skills</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Components-of-Effective-Prompts" href="#Components-of-Effective-Prompts">13.8.1 Components of Effective Prompts</a></li>
-      <li><a id="toc-Example-Patterns" href="#Example-Patterns">13.8.2 Example Patterns</a></li>
+      <li><a id="toc-Categorizing-as-a-Skill" href="#Categorizing-as-a-Skill">13.6.1 Categorizing as a Skill</a></li>
+      <li><a id="toc-Using-_0040skill-Inline" href="#Using-_0040skill-Inline">13.6.2 Using @skill Inline</a></li>
+      <li><a id="toc-The-_002fskill-Command" href="#The-_002fskill-Command">13.6.3 The /skill Command</a></li>
+      <li><a id="toc-Editing-Prompts" href="#Editing-Prompts">13.6.4 Editing Prompts</a></li>
+      <li><a id="toc-Creating-New-Prompts" href="#Creating-New-Prompts">13.6.5 Creating New Prompts</a></li>
+      <li><a id="toc-Deleting-Prompts" href="#Deleting-Prompts">13.6.6 Deleting Prompts</a></li>
     </ul></li>
-    <li><a id="toc-Example-System-Prompts" href="#Example-System-Prompts">13.9 Example System Prompts</a>
+    <li><a id="toc-Categories-and-Organization" href="#Categories-and-Organization">13.7 Categories and Organization</a></li>
+    <li><a id="toc-Prompt-Storage-Format" href="#Prompt-Storage-Format">13.8 Prompt Storage Format</a></li>
+    <li><a id="toc-Best-Practices-for-System-Prompts" href="#Best-Practices-for-System-Prompts">13.9 Best Practices for System Prompts</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Technical-Writing-Assistant" href="#Technical-Writing-Assistant">13.9.1 Technical Writing Assistant</a></li>
-      <li><a id="toc-Code-Reviewer" href="#Code-Reviewer">13.9.2 Code Reviewer</a></li>
+      <li><a id="toc-Components-of-Effective-Prompts" href="#Components-of-Effective-Prompts">13.9.1 Components of Effective Prompts</a></li>
+      <li><a id="toc-Example-Patterns" href="#Example-Patterns">13.9.2 Example Patterns</a></li>
     </ul></li>
-    <li><a id="toc-Workflow-Examples" href="#Workflow-Examples">13.10 Workflow Examples</a>
+    <li><a id="toc-Example-System-Prompts" href="#Example-System-Prompts">13.10 Example System Prompts</a>
     <ul class="toc-numbered-mark">
-      <li><a id="toc-Python-Code-Assistance" href="#Python-Code-Assistance">13.10.1 Python Code Assistance</a></li>
-      <li><a id="toc-Technical-Writing-Help" href="#Technical-Writing-Help">13.10.2 Technical Writing Help</a></li>
+      <li><a id="toc-Technical-Writing-Assistant" href="#Technical-Writing-Assistant">13.10.1 Technical Writing Assistant</a></li>
+      <li><a id="toc-Code-Reviewer" href="#Code-Reviewer">13.10.2 Code Reviewer</a></li>
     </ul></li>
-    <li><a id="toc-Integration-with-Roles" href="#Integration-with-Roles">13.11 Integration with Roles</a></li>
+    <li><a id="toc-Workflow-Examples" href="#Workflow-Examples">13.11 Workflow Examples</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Python-Code-Assistance" href="#Python-Code-Assistance">13.11.1 Python Code Assistance</a></li>
+      <li><a id="toc-Technical-Writing-Help" href="#Technical-Writing-Help">13.11.2 Technical Writing Help</a></li>
+    </ul></li>
+    <li><a id="toc-Integration-with-Roles" href="#Integration-with-Roles">13.12 Integration with Roles</a></li>
   </ul></li>
   <li><a id="toc-Roles-and-Commands" href="#Roles-and-Commands">14 Roles and Commands</a>
   <ul class="toc-numbered-mark">
@@ -1480,6 +1486,10 @@ menu of available inline commands.  These insert syntax templates into the promp
 </dd>
 <dt><code class="code">@file(path)</code></dt>
 <dd><p>Attach a file to the conversation context.
+</p>
+</dd>
+<dt><code class="code">@skill(name)</code></dt>
+<dd><p>Inject a specific system prompt (skill) inline into your user message.
 </p>
 </dd>
 <dt><code class="code">@project</code></dt>
@@ -2957,10 +2967,11 @@ Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands<
 <li><a href="#Saving-System-Prompts" accesskey="3">Saving System Prompts</a></li>
 <li><a href="#Loading-Saved-Prompts" accesskey="4">Loading Saved Prompts</a></li>
 <li><a href="#Managing-Your-Prompt-Library" accesskey="5">Managing Your Prompt Library</a></li>
-<li><a href="#Categories-and-Organization" accesskey="6">Categories and Organization</a></li>
-<li><a href="#Prompt-Storage-Format" accesskey="7">Prompt Storage Format</a></li>
-<li><a href="#Best-Practices-for-System-Prompts" accesskey="8">Best Practices for System Prompts</a></li>
-<li><a href="#Example-System-Prompts" accesskey="9">Example System Prompts</a></li>
+<li><a href="#Unified-Skills" accesskey="6">Unified Skills</a></li>
+<li><a href="#Categories-and-Organization" accesskey="7">Categories and Organization</a></li>
+<li><a href="#Prompt-Storage-Format" accesskey="8">Prompt Storage Format</a></li>
+<li><a href="#Best-Practices-for-System-Prompts" accesskey="9">Best Practices for System Prompts</a></li>
+<li><a href="#Example-System-Prompts">Example System Prompts</a></li>
 <li><a href="#Workflow-Examples">Workflow Examples</a></li>
 <li><a href="#Integration-with-Roles">Integration with Roles</a></li>
 </ul>
@@ -3061,9 +3072,6 @@ Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands<
 
 <ul class="mini-toc">
 <li><a href="#Viewing-All-Prompts" accesskey="1">Viewing All Prompts</a></li>
-<li><a href="#Editing-Prompts" accesskey="2">Editing Prompts</a></li>
-<li><a href="#Creating-New-Prompts" accesskey="3">Creating New Prompts</a></li>
-<li><a href="#Deleting-Prompts" accesskey="4">Deleting Prompts</a></li>
 </ul>
 <div class="subsection-level-extent" id="Viewing-All-Prompts">
 <h4 class="subsection"><span>13.5.1 Viewing All Prompts<a class="copiable-link" href="#Viewing-All-Prompts"> &para;</a></span></h4>
@@ -3074,6 +3082,47 @@ Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands<
 </pre></div>
 <p>or press <code class="code">C-c s l</code>.
 </p>
+</div>
+</div>
+<div class="section-level-extent" id="Unified-Skills">
+<h3 class="section"><span>13.6 Unified Skills<a class="copiable-link" href="#Unified-Skills"> &para;</a></span></h3>
+
+<p>The <em class="dfn">Skills</em> system is an extension of the User System Prompts library. By categorizing a prompt under the <code class="code">skills</code> category, it becomes available for specialized interactive workflows.
+</p>
+<ul class="mini-toc">
+<li><a href="#Categorizing-as-a-Skill" accesskey="1">Categorizing as a Skill</a></li>
+<li><a href="#Using-_0040skill-Inline" accesskey="2">Using @skill Inline</a></li>
+<li><a href="#The-_002fskill-Command" accesskey="3">The /skill Command</a></li>
+<li><a href="#Editing-Prompts" accesskey="4">Editing Prompts</a></li>
+<li><a href="#Creating-New-Prompts" accesskey="5">Creating New Prompts</a></li>
+<li><a href="#Deleting-Prompts" accesskey="6">Deleting Prompts</a></li>
+</ul>
+<div class="subsection-level-extent" id="Categorizing-as-a-Skill">
+<h4 class="subsection"><span>13.6.1 Categorizing as a Skill<a class="copiable-link" href="#Categorizing-as-a-Skill"> &para;</a></span></h4>
+
+<p>When saving a prompt via <code class="code">ollama-buddy-user-prompts-save</code>, select <code class="code">skills</code> as the category. This flags the prompt for use in the <code class="code">@skill</code> inline expansion.
+</p>
+</div>
+<div class="subsection-level-extent" id="Using-_0040skill-Inline">
+<h4 class="subsection"><span>13.6.2 Using @skill Inline<a class="copiable-link" href="#Using-_0040skill-Inline"> &para;</a></span></h4>
+
+<p>You can inject the content of any saved prompt directly into your user message using the <code class="code">@skill(name)</code> syntax. This is useful for providing specific instructions to the model for a single query without changing your global session identity.
+</p>
+<p>To use it:
+</p><ol class="enumerate">
+<li> Type <code class="code">@</code> in the prompt area.
+</li><li> Select <code class="code">skill</code>.
+</li><li> Select the desired skill from the collection.
+</li></ol>
+
+<p><code class="code">ollama-buddy</code> will prioritize prompts in the <code class="code">skills</code> category but can fall back to any title in your library.
+</p>
+</div>
+<div class="subsection-level-extent" id="The-_002fskill-Command">
+<h4 class="subsection"><span>13.6.3 The /skill Command<a class="copiable-link" href="#The-_002fskill-Command"> &para;</a></span></h4>
+
+<p>The <code class="code">/skill</code> slash command provides a quick way to switch your session&rsquo;s system prompt to one of your experts. It is a shortcut that uses the standard prompt loading interface but is filtered to highlight your skills.
+</p>
 <p>This displays a buffer showing:
 </p><ul class="itemize mark-bullet">
 <li>Prompts organized by category
@@ -3083,7 +3132,7 @@ Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands<
 
 </div>
 <div class="subsection-level-extent" id="Editing-Prompts">
-<h4 class="subsection"><span>13.5.2 Editing Prompts<a class="copiable-link" href="#Editing-Prompts"> &para;</a></span></h4>
+<h4 class="subsection"><span>13.6.4 Editing Prompts<a class="copiable-link" href="#Editing-Prompts"> &para;</a></span></h4>
 
 <p>To edit an existing prompt:
 </p><div class="example">
@@ -3095,7 +3144,7 @@ Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands<
 </p>
 </div>
 <div class="subsection-level-extent" id="Creating-New-Prompts">
-<h4 class="subsection"><span>13.5.3 Creating New Prompts<a class="copiable-link" href="#Creating-New-Prompts"> &para;</a></span></h4>
+<h4 class="subsection"><span>13.6.5 Creating New Prompts<a class="copiable-link" href="#Creating-New-Prompts"> &para;</a></span></h4>
 
 <p>To create a new prompt from scratch:
 </p><div class="example">
@@ -3107,7 +3156,7 @@ Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands<
 </p>
 </div>
 <div class="subsection-level-extent" id="Deleting-Prompts">
-<h4 class="subsection"><span>13.5.4 Deleting Prompts<a class="copiable-link" href="#Deleting-Prompts"> &para;</a></span></h4>
+<h4 class="subsection"><span>13.6.6 Deleting Prompts<a class="copiable-link" href="#Deleting-Prompts"> &para;</a></span></h4>
 
 <p>To delete a prompt:
 </p><div class="example">
@@ -3120,7 +3169,7 @@ Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands<
 </div>
 </div>
 <div class="section-level-extent" id="Categories-and-Organization">
-<h3 class="section"><span>13.6 Categories and Organization<a class="copiable-link" href="#Categories-and-Organization"> &para;</a></span></h3>
+<h3 class="section"><span>13.7 Categories and Organization<a class="copiable-link" href="#Categories-and-Organization"> &para;</a></span></h3>
 
 <p>Prompts are organized into categories for easier management. Default categories include:
 </p>
@@ -3142,7 +3191,7 @@ Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands<
 
 </div>
 <div class="section-level-extent" id="Prompt-Storage-Format">
-<h3 class="section"><span>13.7 Prompt Storage Format<a class="copiable-link" href="#Prompt-Storage-Format"> &para;</a></span></h3>
+<h3 class="section"><span>13.8 Prompt Storage Format<a class="copiable-link" href="#Prompt-Storage-Format"> &para;</a></span></h3>
 
 <p>System prompts are stored as Org mode files with a specific naming convention:
 </p>
@@ -3176,14 +3225,14 @@ When asked to debug, first identify the likely cause before suggesting fixes.
 
 </div>
 <div class="section-level-extent" id="Best-Practices-for-System-Prompts">
-<h3 class="section"><span>13.8 Best Practices for System Prompts<a class="copiable-link" href="#Best-Practices-for-System-Prompts"> &para;</a></span></h3>
+<h3 class="section"><span>13.9 Best Practices for System Prompts<a class="copiable-link" href="#Best-Practices-for-System-Prompts"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#Components-of-Effective-Prompts" accesskey="1">Components of Effective Prompts</a></li>
 <li><a href="#Example-Patterns" accesskey="2">Example Patterns</a></li>
 </ul>
 <div class="subsection-level-extent" id="Components-of-Effective-Prompts">
-<h4 class="subsection"><span>13.8.1 Components of Effective Prompts<a class="copiable-link" href="#Components-of-Effective-Prompts"> &para;</a></span></h4>
+<h4 class="subsection"><span>13.9.1 Components of Effective Prompts<a class="copiable-link" href="#Components-of-Effective-Prompts"> &para;</a></span></h4>
 
 <p>Well-designed system prompts typically include:
 </p>
@@ -3197,7 +3246,7 @@ When asked to debug, first identify the likely cause before suggesting fixes.
 
 </div>
 <div class="subsection-level-extent" id="Example-Patterns">
-<h4 class="subsection"><span>13.8.2 Example Patterns<a class="copiable-link" href="#Example-Patterns"> &para;</a></span></h4>
+<h4 class="subsection"><span>13.9.2 Example Patterns<a class="copiable-link" href="#Example-Patterns"> &para;</a></span></h4>
 
 <dl class="table">
 <dt>Expert Role</dt>
@@ -3220,14 +3269,14 @@ When asked to debug, first identify the likely cause before suggesting fixes.
 </div>
 </div>
 <div class="section-level-extent" id="Example-System-Prompts">
-<h3 class="section"><span>13.9 Example System Prompts<a class="copiable-link" href="#Example-System-Prompts"> &para;</a></span></h3>
+<h3 class="section"><span>13.10 Example System Prompts<a class="copiable-link" href="#Example-System-Prompts"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#Technical-Writing-Assistant" accesskey="1">Technical Writing Assistant</a></li>
 <li><a href="#Code-Reviewer" accesskey="2">Code Reviewer</a></li>
 </ul>
 <div class="subsection-level-extent" id="Technical-Writing-Assistant">
-<h4 class="subsection"><span>13.9.1 Technical Writing Assistant<a class="copiable-link" href="#Technical-Writing-Assistant"> &para;</a></span></h4>
+<h4 class="subsection"><span>13.10.1 Technical Writing Assistant<a class="copiable-link" href="#Technical-Writing-Assistant"> &para;</a></span></h4>
 
 <div class="example">
 <pre class="example-preformatted">You are a technical writing expert who specializes in creating clear, concise, 
@@ -3245,7 +3294,7 @@ the target audience while preserving technical accuracy.
 
 </div>
 <div class="subsection-level-extent" id="Code-Reviewer">
-<h4 class="subsection"><span>13.9.2 Code Reviewer<a class="copiable-link" href="#Code-Reviewer"> &para;</a></span></h4>
+<h4 class="subsection"><span>13.10.2 Code Reviewer<a class="copiable-link" href="#Code-Reviewer"> &para;</a></span></h4>
 
 <div class="example">
 <pre class="example-preformatted">You are an experienced code reviewer with expertise in software engineering 
@@ -3263,14 +3312,14 @@ Balance constructive criticism with acknowledgment of well-written code.
 </div>
 </div>
 <div class="section-level-extent" id="Workflow-Examples">
-<h3 class="section"><span>13.10 Workflow Examples<a class="copiable-link" href="#Workflow-Examples"> &para;</a></span></h3>
+<h3 class="section"><span>13.11 Workflow Examples<a class="copiable-link" href="#Workflow-Examples"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#Python-Code-Assistance" accesskey="1">Python Code Assistance</a></li>
 <li><a href="#Technical-Writing-Help" accesskey="2">Technical Writing Help</a></li>
 </ul>
 <div class="subsection-level-extent" id="Python-Code-Assistance">
-<h4 class="subsection"><span>13.10.1 Python Code Assistance<a class="copiable-link" href="#Python-Code-Assistance"> &para;</a></span></h4>
+<h4 class="subsection"><span>13.11.1 Python Code Assistance<a class="copiable-link" href="#Python-Code-Assistance"> &para;</a></span></h4>
 
 <ol class="enumerate">
 <li> Load your &quot;Python Expert&quot; system prompt with <code class="code">C-c s L</code>
@@ -3281,7 +3330,7 @@ Balance constructive criticism with acknowledgment of well-written code.
 
 </div>
 <div class="subsection-level-extent" id="Technical-Writing-Help">
-<h4 class="subsection"><span>13.10.2 Technical Writing Help<a class="copiable-link" href="#Technical-Writing-Help"> &para;</a></span></h4>
+<h4 class="subsection"><span>13.11.2 Technical Writing Help<a class="copiable-link" href="#Technical-Writing-Help"> &para;</a></span></h4>
 
 <ol class="enumerate">
 <li> Create a new system prompt for technical writing (<code class="code">C-c s N</code>)
@@ -3294,7 +3343,7 @@ Balance constructive criticism with acknowledgment of well-written code.
 </div>
 </div>
 <div class="section-level-extent" id="Integration-with-Roles">
-<h3 class="section"><span>13.11 Integration with Roles<a class="copiable-link" href="#Integration-with-Roles"> &para;</a></span></h3>
+<h3 class="section"><span>13.12 Integration with Roles<a class="copiable-link" href="#Integration-with-Roles"> &para;</a></span></h3>
 
 <p>System prompts can be integrated with Ollama Buddy roles for more specialized workflows:
 </p>

@@ -28,7 +28,7 @@
   :group 'ollama-buddy-user-prompts)
 
 (defcustom ollama-buddy-user-prompts-default-categories
-  '("general" "coding" "writing" "analysis" "creative" "technical" "documentation" "emacs")
+  '("general" "coding" "writing" "analysis" "creative" "technical" "documentation" "emacs" "skills")
   "List of default categories for user system prompts."
   :type '(repeat string)
   :group 'ollama-buddy-user-prompts)

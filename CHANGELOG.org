@@ -11,6 +11,24 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-03-04 Wed> *3.4.0*
+
+Unified Skills and User Prompts.
+
+*** New Features
+
+- *Unified Skills & Prompts* -- Integrated the "Skills" concept directly into 
+  `ollama-buddy-user-prompts.el`. Specialized personas are now managed as standard
+  user prompts within the new =skills= category.
+- *Interactive @skill Selection* -- Typing `@skill` in the prompt now triggers
+  a `completing-read` selection of available prompts from your library.
+- *Interactive @file Selection* -- Typing `@file` now triggers a `read-file-name`
+  prompt for quick inline attachment.
+- *Slash Command Integration* -- The `/skill` slash command now pulls from the 
+  unified user prompts library.
+- *Refactor Expert* -- Included a "Refactor Expert" sample prompt in the =skills=
+  category for Emacs Lisp development.
+
 ** <2026-03-03 Tue> *3.3.0*
 
 Smart Project Integration.

@@ -72,9 +72,18 @@ Submit queries, swap models, view token usage and statistics:
 - *Parameters* -- Full control over temperature, top_k, top_p, and all Ollama API options
 - *Fabric Patterns* -- Integration with [[https://github.com/danielmiessler/fabric][Fabric]] prompt patterns
 - *Token Tracking* -- Real-time token usage statistics with graphs
+- *Skills* -- Specialized AI personas and task-specific instructions integrated into the User Prompts library; use `/skill` slash command or `@skill(name)` for inline expansion
 - *RAG* -- Index local documents and source code; retrieve relevant context via semantic search; inline =@rag(query)= syntax; configurable embedding backend (Ollama =/api/embed= or any OpenAI-compatible =/v1/embeddings= service, e.g. LM Studio)
 - *In-Buffer Replace* -- Stream LLM output directly into the source buffer, replacing the selected region in-place; accept/reject confirmation; inline diff view (=C-c d=) with word-level smerge highlighting; automatic code-fence stripping
 - *Lightweight* -- No external dependencies; a minified 200-line version (=ollama-buddy-mini=) is also available
+
+* What's New (v3.4.0)
+
+Unified Skills and Prompts.
+
+- *Unified Skills* -- Task-specific AI personas are now integrated into the User Prompts library under the `skills` category.
+- *Integrated Commands* -- Access skills via the `/skill` slash command or the improved `@skill(name)` inline expansion with full `completing-read` support.
+- *At-Command Improvements* -- `@skill` and `@file` now trigger interactive selection prompts for faster workflow.
 
 * What's New (v3.3.0)
 
@@ -88,6 +97,7 @@ Smart Project Integration.
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *3.4.0* | Skills — Local Org-mode based AI personas and task-specific instructions; `/skill` slash command and `@skill(name)` inline syntax.                                                                                   |
 | *3.3.0* | Smart Project Integration — `project.el` support for contextual file attachment and `/project` slash command.                                                                                          |
 | *3.2.2* | Main transient menu reorganization (=C-c O=) — 4x2 compact grid with streamlined sub-menus and top-level History/Sessions.                                                                                                   |
 | *3.2.1* | Benchmark all models (=C-c u=) — one-command multishot across all models with per-model timeout; builds persistent token stats.                                                                                           |
