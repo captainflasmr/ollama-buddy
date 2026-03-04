@@ -377,23 +377,25 @@ https://github.com/captainflasmr/ollama-buddy
 
 Demonstrating the Emacs package ollama-buddy's web search integration.
 
-Select cl:minimax-m2.1:cloud
+Select minimax-m2.1:cloud
 
 - Open chat and type: =What is the next fixture for Manchester United=
-  Check that the LLM knows nothing about emacs 31
 - Open chat and type: =What is the @search(next fixture for Manchester United)=
 - Show the ♁N indicator appearing in the header line
-- Use =C-c C-w= to show the attached web search results
+- Use =C-c / l= to show the attached web search results
 - Ask a follow-up question using the attached context
   "and what about liverpools" - to prove that we only have Manchester United context
 - type: =and what about @search(liverpools next fixture?)=
-- Use =C-c C-w= to show the attached web search results
-- Use =C-c 0= to clear all attachments
+- Use =C-c / l= to show the attached web search results
 
 https://melpa.org/#/ollama-buddy
 https://github.com/captainflasmr/ollama-buddy
 
 #emacs #ollama
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_024.gif]]
 
 ** 025 Web Search - Manual Search and Attach #emacs #ollama
 
