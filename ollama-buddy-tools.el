@@ -249,11 +249,16 @@ Returns the result as a string, or an error message if execution fails."
                    (not (plist-get spec :safe)))
           (error "Tool %s is not safe for execution in safe mode" name-str))
         ;; Confirmation check
-        (when (and (not ollama-buddy-tools-auto-execute)
-                   (not (yes-or-no-p (format "Execute tool %s(%s)? "
-                                             name-str
-                                             (ollama-buddy-tools--format-args-for-display arguments)))))
-          (error "Tool execution cancelled by user"))
+        (unless ollama-buddy-tools-auto-execute
+          (let ((answer (read-char-choice
+                         (format "Execute tool %s(%s)? (y)es (n)o (a)ccept all: "
+                                 name-str
+                                 (ollama-buddy-tools--format-args-for-display arguments))
+                         '(?y ?n ?a))))
+            (pcase answer
+              (?a (setq ollama-buddy-tools-auto-execute t)
+                  (message "Tool auto-execute enabled for this session"))
+              (?n (error "Tool execution cancelled by user")))))
         ;; If this tool is marked terminal, flag that auto-continuation should
         ;; stop after this batch — set before calling in case of error.
         (when (plist-get spec :terminal)
@@ -558,6 +563,14 @@ When enabling, warns if the current model does not support tool calling."
       (when (fboundp 'ollama-buddy--update-status)
         (ollama-buddy--update-status
          (if ollama-buddy-tools-enabled "Tools enabled" "Tools disabled"))))))
+
+(defun ollama-buddy-tools-toggle-auto-execute ()
+  "Toggle auto-execution of tool calls (skip confirmation prompts)."
+  (interactive)
+  (setq ollama-buddy-tools-auto-execute (not ollama-buddy-tools-auto-execute))
+  (when (fboundp 'ollama-buddy--update-status)
+    (ollama-buddy--update-status
+     (if ollama-buddy-tools-auto-execute "Tool auto-execute enabled" "Tool auto-execute disabled"))))
 
 (defun ollama-buddy-tools-toggle-safe-mode ()
   "Toggle safe mode for tool execution."

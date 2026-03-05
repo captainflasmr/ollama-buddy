@@ -2620,6 +2620,12 @@ ACTUAL-MODEL is the model being used instead."
                                      ollama-buddy-tools-enabled
                                      (ollama-buddy--model-supports-tools model))
                                 "⚒" ""))
+           (auto-exec-indicator (if (and (boundp 'ollama-buddy-tools-auto-execute)
+                                         ollama-buddy-tools-auto-execute
+                                         (boundp 'ollama-buddy-tools-enabled)
+                                         ollama-buddy-tools-enabled
+                                         (ollama-buddy--model-supports-tools model))
+                                    "⚡" ""))
            (vision-indicator (if (ollama-buddy--model-supports-vision model) "⊙" ""))
            (thinking-indicator (if (ollama-buddy--model-supports-thinking model) "✦" ""))
            (thinking-visible-indicator (if ollama-buddy-stream-thinking-visible "◐" ""))
@@ -2648,7 +2654,7 @@ ACTUAL-MODEL is the model being used instead."
             (replace-regexp-in-string
              "%" "%%"
             (concat
-             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s %s %s%s"
+             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s %s %s%s"
                      airplane-indicator
                      (if ollama-buddy-streaming-enabled "" "x")
                      (ollama-buddy--add-context-to-status-format)
@@ -2656,6 +2662,7 @@ ACTUAL-MODEL is the model being used instead."
                      history
                      cloud-indicator
                      tools-indicator
+                     auto-exec-indicator
                      vision-indicator
                      thinking-indicator
                      thinking-visible-indicator
