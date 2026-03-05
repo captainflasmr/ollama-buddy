@@ -1979,7 +1979,7 @@ will sit under a *** Response sub-heading."
           ;; with bash/python comments that start with a single #
           (let ((offset (or heading-offset 2)))
             (goto-char (point-min))
-            (while (re-search-forward "^\\(###+\\) " nil t)
+            (while (re-search-forward "^\\(#\\{2,\\}\\) " nil t)
               (replace-match (make-string (+ offset (length (match-string 1))) ?*) nil nil nil 1)))
 
           ;; Lists: -, *, + -> -
@@ -1990,7 +1990,12 @@ will sit under a *** Response sub-heading."
           ;; Bold: **text** -> *text*
           (goto-char (point-min))
           (while (re-search-forward "\\*\\*\\(.+?\\)\\*\\*" nil t)
-            (replace-match "*\\1*"))
+            ;; Skip if this match is part of an org heading at line start
+            (unless (save-excursion
+                      (goto-char (match-beginning 0))
+                      (beginning-of-line)
+                      (looking-at-p "^\\*+ "))
+              (replace-match "*\\1*")))
 
           ;; Italics: _text_ -> /text/
           (goto-char (point-min))
