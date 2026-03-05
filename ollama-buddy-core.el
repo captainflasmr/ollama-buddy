@@ -2625,6 +2625,7 @@ ACTUAL-MODEL is the model being used instead."
                                 "⚒" ""))
            (vision-indicator (if (ollama-buddy--model-supports-vision model) "⊙" ""))
            (thinking-indicator (if (ollama-buddy--model-supports-thinking model) "✦" ""))
+           (thinking-visible-indicator (if ollama-buddy-stream-thinking-visible "◐" ""))
            (attachment-indicator (if ollama-buddy--current-attachments
                                      (propertize (format "≡%d" (length ollama-buddy--current-attachments))
                                                  'face '(:weight bold))
@@ -2650,7 +2651,7 @@ ACTUAL-MODEL is the model being used instead."
             (replace-regexp-in-string
              "%" "%%"
             (concat
-             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s %s %s%s"
+             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s %s %s%s"
                      airplane-indicator
                      (if ollama-buddy-streaming-enabled "" "x")
                      (ollama-buddy--add-context-to-status-format)
@@ -2660,6 +2661,7 @@ ACTUAL-MODEL is the model being used instead."
                      tools-indicator
                      vision-indicator
                      thinking-indicator
+                     thinking-visible-indicator
                      in-buffer-indicator
                      attachment-indicator
                      web-search-indicator
