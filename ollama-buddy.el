@@ -559,12 +559,19 @@ registers the heading for toggle-all."
         (goto-char (marker-position heading-marker))
         (end-of-line)
         (forward-char 1)              ;; past the heading's \n, onto blank line
-        ;; Insert accumulated thinking content
+        ;; Insert accumulated thinking content (convert md→org if enabled)
         (when (and ollama-buddy--thinking-content-accumulator
                    (not (string-empty-p ollama-buddy--thinking-content-accumulator)))
-          (insert "\n\n" ollama-buddy--thinking-content-accumulator)
-          (unless (string-suffix-p "\n" ollama-buddy--thinking-content-accumulator)
-            (insert "\n")))
+          (let ((content ollama-buddy--thinking-content-accumulator))
+            (when ollama-buddy-convert-markdown-to-org
+              (setq content
+                    (with-temp-buffer
+                      (insert content)
+                      (ollama-buddy--md-to-org-convert-region (point-min) (point-max) 3)
+                      (buffer-string))))
+            (insert "\n\n" content)
+            (unless (string-suffix-p "\n" content)
+              (insert "\n"))))
         ;; Insert *** Response heading after thinking content
         (insert "\n*** Response\n\n"))
       ;; Fold the Think subtree
@@ -2763,16 +2770,26 @@ TCP packets split a JSON object across multiple filter calls."
 
                     ;; Convert the response from markdown to org format if enabled
                     (when ollama-buddy-convert-markdown-to-org
-                      (let* ((converted-content (with-temp-buffer
-                                                  (insert ollama-buddy--current-response)
+                      (let* ((clean-response
+                              (let ((extracted (ollama-buddy--extract-thinking-from-response
+                                               ollama-buddy--current-response)))
+                                (if (car extracted) (cdr extracted) ollama-buddy--current-response)))
+                             (converted-content (with-temp-buffer
+                                                  (insert clean-response)
                                                   (ollama-buddy--md-to-org-convert-region (point-min) (point-max))
                                                   (buffer-string))))
                         (set-register ollama-buddy-default-register converted-content))
 
                       (when ollama-buddy--response-start-position
-                        (ollama-buddy--md-to-org-convert-region
-                         ollama-buddy--response-start-position
-                         (point-max))
+                        (let ((offset (if (save-excursion
+                                            (goto-char ollama-buddy--response-start-position)
+                                            (forward-line -1)
+                                            (looking-at-p "\\*\\*\\* Response"))
+                                          3 2)))
+                          (ollama-buddy--md-to-org-convert-region
+                           ollama-buddy--response-start-position
+                           (point-max)
+                           offset))
                         ;; Reset the marker after conversion
                         (when (markerp ollama-buddy--response-start-position)
                           (set-marker ollama-buddy--response-start-position nil))
@@ -2949,8 +2966,12 @@ TCP packets split a JSON object across multiple filter calls."
             (let ((end (point)))
               (when (re-search-backward ": RESPONSE" nil t)
                 (search-forward "]")
-                (ollama-buddy--md-to-org-convert-region
-                 (point) end)))))
+                ;; Skip past thinking block if present, use deeper offset
+                (let ((offset 2))
+                  (when (re-search-forward "^\\*\\*\\* Response\n" end t)
+                    (setq offset 3))
+                  (ollama-buddy--md-to-org-convert-region
+                   (point) end offset))))))
         (ollama-buddy--update-status (concat "Stream " status))))
 
     ;; Auto-save transcript (for sentinel-based completions)

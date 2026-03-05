@@ -483,16 +483,26 @@ When complete, CALLBACK is called with the status response and result."
 
               ;; Convert the response from markdown to org format if enabled
               (when ollama-buddy-convert-markdown-to-org
-                (let* ((converted-content (with-temp-buffer
-                                            (insert ollama-buddy--current-response)
+                (let* ((clean-response
+                        (let ((extracted (ollama-buddy--extract-thinking-from-response
+                                         ollama-buddy--current-response)))
+                          (if (car extracted) (cdr extracted) ollama-buddy--current-response)))
+                       (converted-content (with-temp-buffer
+                                            (insert clean-response)
                                             (ollama-buddy--md-to-org-convert-region (point-min) (point-max))
                                             (buffer-string))))
                   (set-register ollama-buddy-default-register converted-content))
 
                 (when ollama-buddy--response-start-position
-                  (ollama-buddy--md-to-org-convert-region
-                   ollama-buddy--response-start-position
-                   (point-max))
+                  (let ((offset (if (save-excursion
+                                      (goto-char ollama-buddy--response-start-position)
+                                      (forward-line -1)
+                                      (looking-at-p "\\*\\*\\* Response"))
+                                    3 2)))
+                    (ollama-buddy--md-to-org-convert-region
+                     ollama-buddy--response-start-position
+                     (point-max)
+                     offset))
                   ;; Reset the marker after conversion
                   (when (markerp ollama-buddy--response-start-position)
                     (set-marker ollama-buddy--response-start-position nil))
