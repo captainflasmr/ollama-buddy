@@ -2017,10 +2017,10 @@ With prefix argument ALL-MODELS, clear history for all models."
         (ollama-buddy--update-status
          (format "Thinking... [%d %.1f t/s]"
                  ollama-buddy--current-token-count total-rate)))
-       ;; Normal typing
+       ;; Normal working
        (t
         (ollama-buddy--update-status
-         (format "Typing... [%d %.1f t/s]"
+         (format "Working... [%d %.1f t/s]"
                  ollama-buddy--current-token-count total-rate))))
       
       ;; Update tracking variables
@@ -2110,7 +2110,7 @@ Captures the elapsed wait duration before clearing."
       (ollama-buddy--cancel-response-wait-timer)
     (let ((elapsed (round (- (float-time) ollama-buddy--response-wait-start))))
       (when (>= elapsed ollama-buddy-response-wait-threshold)
-        (ollama-buddy--update-status (format "Processing... %ds" elapsed)))
+        (ollama-buddy--update-status (format "Working... [%ds]" elapsed)))
       ;; Update in-buffer countdown
       (when (and ollama-buddy--response-countdown-marker
                  ollama-buddy--response-avg-wait
@@ -3732,8 +3732,8 @@ and no new user message is added."
       (insert "Loading response..."))
 
     (ollama-buddy--update-status (if has-images
-                                     "Vision Processing..."
-                                   "Processing...")
+                                     "Working... [vision]"
+                                   "Working...")
                                  original-model model)
 
     (ollama-buddy--start-response-wait-timer model)

@@ -712,8 +712,8 @@ authentication via `ollama signin'."
           (insert "Loading response..."))))
 
     (ollama-buddy--update-status (if has-images
-                                     "Curl Vision Processing..."
-                                   "Curl Processing...")
+                                     "Working... [curl vision]"
+                                   "Working... [curl]")
                                  original-model model)
 
     (ollama-buddy--start-response-wait-timer model)

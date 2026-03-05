@@ -1072,7 +1072,7 @@ When the history exceeds this size, oldest entries are trimmed."
   :type 'string
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-response-wait-threshold 3
+(defcustom ollama-buddy-response-wait-threshold nil
   "Seconds before showing elapsed time on the \"Processing...\" status.
 When non-nil, after this many seconds the status line will display
 \"Processing... Ns\" while waiting for the first token.
