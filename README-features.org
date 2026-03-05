@@ -1213,7 +1213,7 @@ Here is an example of the minimal welcome screen (=full-welcome-enabled= nil):
 └───────────────────────────────────┘
 ,#+end_example
 
-o: Ollama (5)             cl: Cloud (2)
+o: Ollama (5)             u: Cloud (2)
 
 - /Ask me anything!/       C-c C-c / C-c RET
 - /Cancel request/         C-c C-k
@@ -1231,7 +1231,7 @@ and the full welcome screen (default, =full-welcome-enabled= t):
 └───────────────────────────────────┘
 ,#+end_example
 
-o: Ollama (5)             cl: Cloud (2)
+o: Ollama (5)             u: Cloud (2)
 
 - /Ask me anything!/       C-c C-c / C-c RET
 - /Cancel request/         C-c C-k

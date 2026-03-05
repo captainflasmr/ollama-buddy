@@ -447,7 +447,7 @@ Models appear without prefix: @code{llama3:8b}, @code{qwen3-coder:480b-cloud}
 Prefixes disambiguate providers:
 @itemize @bullet
 @item @code{o:} - Ollama local (e.g., @code{o:llama3:8b})
-@item @code{cl:} - Ollama cloud (e.g., @code{cl:qwen3-coder:480b-cloud})
+@item @code{u:} - Ollama cloud (e.g., @code{u:qwen3-coder:480b-cloud})
 @item @code{a:} - OpenAI (e.g., @code{a:gpt-4})
 @item @code{c:} - Claude (e.g., @code{c:claude-3-opus})
 @item @code{g:} - Gemini (e.g., @code{g:gemini-pro})
@@ -1016,7 +1016,7 @@ From this interface, you can:
 @item Delete models you no longer need
 @item View detailed model information
 @item Select models for use
-@item Browse cloud models (@code{cl:} prefix) with Select and Pull Manifest actions
+@item Browse cloud models (@code{u:} prefix) with Select and Pull Manifest actions
 @item Browse and install recommended models organized by category (General Chat, Reasoning, Efficient & Capable, Coding, General Alternatives)
 @end itemize
 
@@ -3150,7 +3150,7 @@ To select a cloud model:
 @item Select from the @code{☁ Cloud Models} section in Model Management (@code{C-c M})
 @end itemize
 
-Cloud models are displayed with a @code{cl:} prefix (e.g.@: @code{cl:deepseek-v3.1:671b-cloud})
+Cloud models are displayed with a @code{u:} prefix (e.g.@: @code{u:deepseek-v3.1:671b-cloud})
 to distinguish them from local models.  The Model Management page also shows the
 current cloud authentication status next to the section heading.
 
@@ -3749,7 +3749,7 @@ Additional places showing tool capability:
 @item The model management buffer (@code{C-c M}) next to model names
 @end itemize
 
-The list of tool-capable models is configured via @code{ollama-buddy-tools-models}. Cloud model variants (e.g.@: @code{cl:qwen3-coder:480b-cloud}) are automatically matched against their base names.
+The list of tool-capable models is configured via @code{ollama-buddy-tools-models}. Cloud model variants (e.g.@: @code{u:qwen3-coder:480b-cloud}) are automatically matched against their base names.
 
 @node RAG
 @chapter RAG (Retrieval-Augmented Generation)

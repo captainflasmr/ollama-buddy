@@ -526,7 +526,7 @@ Enhanced the Model Management page (=C-c M=) with a dedicated cloud models secti
 
 - Cloud models now displayed in their own =☁ Cloud Models= section with auth status indicator
 - Each cloud model has Select and Pull Manifest actions
-- Cloud models use =cl:= prefix for clear visual distinction
+- Cloud models use =u:= prefix for clear visual distinction
 - Local Ollama models no longer show the =o:= prefix unless external providers (OpenAI, Claude, etc.) are loaded
 
 *** Categorized Recommended Models

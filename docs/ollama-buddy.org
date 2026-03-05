@@ -933,7 +933,7 @@ are loaded:
 - When external providers are loaded :: Prefixes disambiguate providers:
 
   - =o:= - Ollama local (e.g., =o:llama3:8b=)
-  - =cl:= - Ollama cloud (e.g., =cl:qwen3-coder:480b-cloud=)
+  - =u:= - Ollama cloud (e.g., =u:qwen3-coder:480b-cloud=)
   - =a:= - OpenAI (e.g., =a:gpt-4=)
   - =c:= - Claude (e.g., =c:claude-3-opus=)
   - =g:= - Gemini (e.g., =g:gemini-pro=)
@@ -1650,7 +1650,7 @@ From this interface, you can:
 - Delete models you no longer need
 - View detailed model information
 - Select models for use
-- Browse cloud models (=cl:= prefix) with Select and Pull Manifest
+- Browse cloud models (=u:= prefix) with Select and Pull Manifest
   actions
 - Browse and install recommended models organized by category (General
   Chat, Reasoning, Efficient & Capable, Coding, General Alternatives)
@@ -4676,10 +4676,10 @@ To select a cloud model:
 - Use =C-c m= and search for the cloud model name (marked with =☁=)
 - Select from the =☁ Cloud Models= section in Model Management (=C-c M=)
 
-Cloud models are displayed with a =cl:= prefix (e.g.
-=cl:deepseek-v3.1:671b-cloud=) to distinguish them from local models.
-The Model Management page also shows the current cloud authentication
-status next to the section heading.
+Cloud models are displayed with a =u:= prefix (e.g.
+=u:deepseek-v3.1:671b-cloud=) to distinguish them from local models. The
+Model Management page also shows the current cloud authentication status
+next to the section heading.
 
 <<Cloud-Authentication>>
 *** 18.4 Cloud Authentication [[#Cloud-Authentication][¶]]
@@ -5576,8 +5576,8 @@ Additional places showing tool capability:
 
 The list of tool-capable models is configured via
 =ollama-buddy-tools-models=. Cloud model variants (e.g.
-=cl:qwen3-coder:480b-cloud=) are automatically matched against their
-base names.
+=u:qwen3-coder:480b-cloud=) are automatically matched against their base
+names.
 
 --------------
 

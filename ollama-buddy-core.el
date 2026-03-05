@@ -708,7 +708,7 @@ MODEL can be a plain name or prefixed with `ollama-buddy-marker-prefix'."
   :type 'string
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-cloud-marker-prefix "cl:"
+(defcustom ollama-buddy-cloud-marker-prefix "u:"
   "Prefix used to identify Ollama cloud models in the ollama-buddy interface."
   :type 'string
   :group 'ollama-buddy)
@@ -716,7 +716,7 @@ MODEL can be a plain name or prefixed with `ollama-buddy-marker-prefix'."
 (defun ollama-buddy--should-use-marker-prefix ()
   "Determine if marker prefix should be used.
 Returns non-nil if any remote provider models are available.
-The `o:' prefix for local models and `cl:' prefix for cloud models
+The `o:' prefix for local models and `u:' prefix for cloud models
 are only needed when external providers (OpenAI, Claude, Gemini, etc.)
 are loaded to disambiguate."
   (and (boundp 'ollama-buddy-remote-models)
@@ -762,7 +762,7 @@ full display name including any prefix.")
   "Assign letters to LOCAL-MODELS and cloud models.
 LOCAL-MODELS should be the list already obtained from
 `ollama-buddy--get-models'.  Cloud models from
-`ollama-buddy-cloud-models' are appended with the `cl:' prefix
+`ollama-buddy-cloud-models' are appended with the `u:' prefix
 only when external providers are loaded.
 Supports more than 26 models by using `@a', `@b', etc. for
 additional models beyond the first 26.
@@ -990,12 +990,12 @@ and plain number below that."
   "Return context window size in tokens for MODEL, or nil if unknown.
 Checks `ollama-buddy--models-metadata-cache' first, then the static
 `ollama-buddy--context-window-table' matched by bare model name prefix.
-Strips both local Ollama prefixes (o:, cl:) and remote provider prefixes
+Strips both local Ollama prefixes (o:, u:) and remote provider prefixes
 (a:, c:, g:, etc.) before doing the static table lookup."
   (let* ((meta (gethash model ollama-buddy--models-metadata-cache))
          (cached (when meta (alist-get 'context-window meta))))
     (or cached
-        (let* (;; Strip local prefix (o: / cl:) first
+        (let* (;; Strip local prefix (o: / u:) first
                (after-local (ollama-buddy--get-real-model-name model))
                ;; Then strip any remote provider prefix (a:, c:, g: ...)
                (bare (or (catch 'stripped
@@ -1762,9 +1762,9 @@ Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
               (princ external-providers)
               (setq parts (append (nreverse parts) external-providers)
                     parts (nreverse parts)))
-            ;; Only show "cl: Cloud" with prefix when external providers are loaded
+            ;; Only show "u: Cloud" with prefix when external providers are loaded
             (when (and (> cloud-count 0) use-prefixes)
-              (push (format "cl: Cloud (%d)" cloud-count) parts))
+              (push (format "u: Cloud (%d)" cloud-count) parts))
             (nreverse parts)))
          (project-info (when (and (featurep 'ollama-buddy-project)
                                   (fboundp 'ollama-buddy-project-current-root)
@@ -2265,7 +2265,7 @@ When complete, CALLBACK is called with the status response and result."
 (defun ollama-buddy--get-model-names-from-result (result)
   "Extract model names from API RESULT, applying prefix if needed.
 Cloud models (those with a `-cloud' suffix or in `ollama-buddy-cloud-models')
-are excluded since they appear under the `cl:' prefix instead.
+are excluded since they appear under the `u:' prefix instead.
 Also populates `ollama-buddy--models-metadata-cache' with size and detail info,
 preserving any capability data already fetched from /api/show."
   (when result
@@ -2338,7 +2338,7 @@ preserving any capability data already fetched from /api/show."
 
 (defun ollama-buddy--ensure-cloud-model-available (model)
   "Ensure cloud MODEL has its manifest pulled locally.
-MODEL may have a `cl:' or `o:' prefix.  If MODEL is not a cloud model,
+MODEL may have a `u:' or `o:' prefix.  If MODEL is not a cloud model,
 return immediately.  Otherwise run `ollama pull' synchronously to fetch
 the manifest.  The pull is idempotent and returns instantly when the
 manifest is already present."
@@ -2353,7 +2353,7 @@ manifest is already present."
 
 (defun ollama-buddy--cloud-model-p (model)
   "Return non-nil if MODEL is a cloud model.
-Cloud models have a `-cloud' or `:cloud' suffix, `cl:' prefix,
+Cloud models have a `-cloud' or `:cloud' suffix, `u:' prefix,
 or are in `ollama-buddy-cloud-models'."
   (when model
     (or (string-suffix-p "-cloud" model)

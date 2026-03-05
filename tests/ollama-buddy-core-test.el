@@ -60,11 +60,11 @@
     (should (ollama-buddy--cloud-model-p "deepseek-v3.1:671b-cloud"))))
 
 (ert-deftest ollama-buddy-test-cloud-model-p-prefix ()
-  "Test cloud model detection by cl: prefix."
+  "Test cloud model detection by u: prefix."
   :tags '(core)
   (with-ollama-buddy-test-env
-    (should (ollama-buddy--cloud-model-p "cl:qwen3-coder:480b-cloud"))
-    (should (ollama-buddy--cloud-model-p "cl:some-model"))))
+    (should (ollama-buddy--cloud-model-p "u:qwen3-coder:480b-cloud"))
+    (should (ollama-buddy--cloud-model-p "u:some-model"))))
 
 (ert-deftest ollama-buddy-test-cloud-model-p-local ()
   "Test that local models are not detected as cloud."
@@ -207,11 +207,11 @@ are loaded, so the real model name is returned without the prefix."
                      (ollama-buddy--get-real-model-name "o:llama3.2:1b"))))))
 
 (ert-deftest ollama-buddy-test-get-real-model-name-cloud-prefix ()
-  "Test extracting real model name from cl: prefixed cloud model."
+  "Test extracting real model name from u: prefixed cloud model."
   :tags '(core)
   (with-ollama-buddy-test-env
     (should (equal "qwen3-coder:480b-cloud"
-                   (ollama-buddy--get-real-model-name "cl:qwen3-coder:480b-cloud")))))
+                   (ollama-buddy--get-real-model-name "u:qwen3-coder:480b-cloud")))))
 
 ;;; Provider Indicator Tests
 ;; ============================================================================
@@ -247,7 +247,7 @@ are loaded, so the real model name is returned without the prefix."
                    (setq pull-called t
                          pulled-model (nth 4 args))
                    0)))
-        (ollama-buddy--ensure-cloud-model-available "cl:deepseek-v3.1:671b-cloud")
+        (ollama-buddy--ensure-cloud-model-available "u:deepseek-v3.1:671b-cloud")
         (should pull-called)
         (should (equal "deepseek-v3.1:671b-cloud" pulled-model))))))
 

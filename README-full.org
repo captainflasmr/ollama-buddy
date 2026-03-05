@@ -42,7 +42,7 @@ A simple text information screen will be presented on the first opening of the c
 └───────────────────────────────────┘
 ,#+end_example
 
-o: Ollama (5)             cl: Cloud (2)
+o: Ollama (5)             u: Cloud (2)
 
 - /Ask me anything!/       C-c C-c / C-c RET
 - /Cancel request/         C-c C-k
@@ -61,7 +61,7 @@ a: OpenAI | c: Claude | g: Gemini
 
 Press =C-c M= to open the =*Ollama Models Management*= buffer which shows:
 - All installed local models with Select/Info/Pull/Copy/Delete/Unload actions
-- Cloud models (=cl:= prefix) with Select and Pull Manifest actions, plus auth status
+- Cloud models (=u:= prefix) with Select and Pull Manifest actions, plus auth status
 - Recommended models organized by category (General Chat, Reasoning, Coding, etc.)
 - Quick actions for importing GGUF files and pulling from Ollama Hub
 
@@ -838,7 +838,7 @@ https://github.com/captainflasmr/ollama-buddy
 
 Demonstrating the Emacs package ollama-buddy's web search integration.
 
-Select cl:minimax-m2.1:cloud
+Select u:minimax-m2.1:cloud
 
 - Open chat and type: =What is the next fixture for Manchester United=
   Check that the LLM knows nothing about emacs 31

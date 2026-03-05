@@ -1002,7 +1002,7 @@ machine ollama-buddy-codestral login apikey password YOUR_KEY
 <dd><p>Prefixes disambiguate providers:
 </p><ul class="itemize mark-bullet">
 <li><code class="code">o:</code> - Ollama local (e.g., <code class="code">o:llama3:8b</code>)
-</li><li><code class="code">cl:</code> - Ollama cloud (e.g., <code class="code">cl:qwen3-coder:480b-cloud</code>)
+</li><li><code class="code">u:</code> - Ollama cloud (e.g., <code class="code">u:qwen3-coder:480b-cloud</code>)
 </li><li><code class="code">a:</code> - OpenAI (e.g., <code class="code">a:gpt-4</code>)
 </li><li><code class="code">c:</code> - Claude (e.g., <code class="code">c:claude-3-opus</code>)
 </li><li><code class="code">g:</code> - Gemini (e.g., <code class="code">g:gemini-pro</code>)
@@ -1748,7 +1748,7 @@ Next: <a href="#Context-Management" accesskey="n" rel="next">Context Management<
 </li><li>Delete models you no longer need
 </li><li>View detailed model information
 </li><li>Select models for use
-</li><li>Browse cloud models (<code class="code">cl:</code> prefix) with Select and Pull Manifest actions
+</li><li>Browse cloud models (<code class="code">u:</code> prefix) with Select and Pull Manifest actions
 </li><li>Browse and install recommended models organized by category (General Chat, Reasoning, Efficient &amp; Capable, Coding, General Alternatives)
 </li></ul>
 
@@ -4554,7 +4554,7 @@ Next: <a href="#Global-System-Prompt" accesskey="n" rel="next">Global System Pro
 </li><li>Select from the <code class="code">☁ Cloud Models</code> section in Model Management (<code class="code">C-c M</code>)
 </li></ul>
 
-<p>Cloud models are displayed with a <code class="code">cl:</code> prefix (e.g. <code class="code">cl:deepseek-v3.1:671b-cloud</code>)
+<p>Cloud models are displayed with a <code class="code">u:</code> prefix (e.g. <code class="code">u:deepseek-v3.1:671b-cloud</code>)
 to distinguish them from local models.  The Model Management page also shows the
 current cloud authentication status next to the section heading.
 </p>
@@ -5371,7 +5371,7 @@ When nil, only custom user-registered tools are available.
 </li><li>The model management buffer (<code class="code">C-c M</code>) next to model names
 </li></ul>
 
-<p>The list of tool-capable models is configured via <code class="code">ollama-buddy-tools-models</code>. Cloud model variants (e.g. <code class="code">cl:qwen3-coder:480b-cloud</code>) are automatically matched against their base names.
+<p>The list of tool-capable models is configured via <code class="code">ollama-buddy-tools-models</code>. Cloud model variants (e.g. <code class="code">u:qwen3-coder:480b-cloud</code>) are automatically matched against their base names.
 </p>
 <hr>
 </div>

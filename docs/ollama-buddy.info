@@ -387,7 +387,7 @@ When only Ollama is used
 When external providers are loaded
      Prefixes disambiguate providers:
         • ‘o:’ - Ollama local (e.g., ‘o:llama3:8b’)
-        • ‘cl:’ - Ollama cloud (e.g., ‘cl:qwen3-coder:480b-cloud’)
+        • ‘u:’ - Ollama cloud (e.g., ‘u:qwen3-coder:480b-cloud’)
         • ‘a:’ - OpenAI (e.g., ‘a:gpt-4’)
         • ‘c:’ - Claude (e.g., ‘c:claude-3-opus’)
         • ‘g:’ - Gemini (e.g., ‘g:gemini-pro’)
@@ -952,7 +952,7 @@ access it:
    • Delete models you no longer need
    • View detailed model information
    • Select models for use
-   • Browse cloud models (‘cl:’ prefix) with Select and Pull Manifest
+   • Browse cloud models (‘u:’ prefix) with Select and Pull Manifest
      actions
    • Browse and install recommended models organized by category
      (General Chat, Reasoning, Efficient & Capable, Coding, General
@@ -3112,8 +3112,8 @@ To select a cloud model:
    • Select from the ‘☁ Cloud Models’ section in Model Management (‘C-c
      M’)
 
-   Cloud models are displayed with a ‘cl:’ prefix (e.g.
-‘cl:deepseek-v3.1:671b-cloud’) to distinguish them from local models.
+   Cloud models are displayed with a ‘u:’ prefix (e.g.
+‘u:deepseek-v3.1:671b-cloud’) to distinguish them from local models.
 The Model Management page also shows the current cloud authentication
 status next to the section heading.
 
@@ -3787,8 +3787,8 @@ Prompt line
 
    The list of tool-capable models is configured via
 ‘ollama-buddy-tools-models’.  Cloud model variants (e.g.
-‘cl:qwen3-coder:480b-cloud’) are automatically matched against their
-base names.
+‘u:qwen3-coder:480b-cloud’) are automatically matched against their base
+names.
 
 
 File: ollama-buddy.info,  Node: RAG,  Next: Advanced Usage,  Prev: Tool Calling,  Up: Top
@@ -4695,34 +4695,34 @@ Node: Top555
 Node: Introduction2961
 Node: Installation5149
 Node: Configuration8106
-Node: Quick Start16376
-Node: Core Features18826
-Node: Chat Interface23103
-Node: Working with Models30381
-Node: Context Management35610
-Node: File Attachments41219
-Node: Web Search47141
-Node: Parameter Control54879
-Node: Session Management57291
-Node: User System Prompts60200
-Node: Roles and Commands69996
-Node: Fabric Pattern Integration87186
-Node: Awesome ChatGPT Prompts89413
-Node: Remote Providers93263
-Node: Ollama Cloud Models100723
-Node: Global System Prompt104921
-Node: Tone Selector106675
-Node: Thinking Blocks108482
-Node: Project Integration110511
-Node: In-Buffer Replace111696
-Node: Tool Calling117572
-Node: RAG125361
-Node: Advanced Usage133140
-Node: API Reference135689
-Node: FAQ141628
-Node: Troubleshooting148713
-Node: Contributing151218
-Node: Index153886
+Node: Quick Start16374
+Node: Core Features18824
+Node: Chat Interface23101
+Node: Working with Models30379
+Node: Context Management35607
+Node: File Attachments41216
+Node: Web Search47138
+Node: Parameter Control54876
+Node: Session Management57288
+Node: User System Prompts60197
+Node: Roles and Commands69993
+Node: Fabric Pattern Integration87183
+Node: Awesome ChatGPT Prompts89410
+Node: Remote Providers93260
+Node: Ollama Cloud Models100720
+Node: Global System Prompt104916
+Node: Tone Selector106670
+Node: Thinking Blocks108477
+Node: Project Integration110506
+Node: In-Buffer Replace111691
+Node: Tool Calling117567
+Node: RAG125355
+Node: Advanced Usage133134
+Node: API Reference135683
+Node: FAQ141622
+Node: Troubleshooting148707
+Node: Contributing151212
+Node: Index153880
 
 End Tag Table
 
