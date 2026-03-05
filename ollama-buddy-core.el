@@ -1781,7 +1781,7 @@ Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
           (concat
            (when (= (buffer-size) 0)
              (concat "#+TITLE: Ollama Buddy Chat"))
-           "\n\n* Welcome to _OLLAMA BUDDY_\n\n"
+           "\n\n* Welcome\n\n"
            "#+begin_example\n"
            "┌───────────────────────────────────┐\n"
            "│  O L L A M A B U D D Y  [v3.4.1]  │\n"
@@ -1791,12 +1791,10 @@ Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
            ;; "║  ▄▀▀▀▄ █   █   ▄▀▀▀▄ █▀▄▀█ ▄▀▀▀▄ █▀▀▄ █  █ █▀▀▄ █▀▀▄ █  █  ║\n"
            ;; "║  █   █ █   █   █▀▀▀█ █ █ █ █▀▀▀█ █▀▀▄ █  █ █  █ █  █ ▀█▀   ║\n"
            ;; "║   ▀▀▀  ▀▀▀ ▀▀▀ ▀   ▀ ▀   ▀ ▀   ▀ ▀▀▀  ▀▀▀▀ ▀▀▀  ▀▀▀   ▀    ║\n"
-           ;; "╠════════════════════════════════════════════════════════════╣\n"
-           ;; "║ > Model: Llama-3-8B                                        ║\n"
            ;; "╚════════════════════════════════════════════════════════════╝\n"
            ;; " ___ _ _      n _ n      ___       _   _ _ _\n"
            ;; "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |\n"
-           ;; "| | | | | .  |2.8.1| .  | . | | | . | . |__ |\n"
+           ;; "| | | | | .  |3.4.1| .  | . | | | . | . |__ |\n"
            ;; "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n"
            "#+end_example\n\n"
            (when (not (ollama-buddy--check-status))
@@ -1805,7 +1803,7 @@ please run =ollama serve=\n\n")
            (when provider-summary
              (concat
               (let* ((items provider-summary)
-                     (col-width 28)
+                     (col-width 24)
                      (lines nil))
                 (while items
                   (let ((left (pop items))
@@ -1818,16 +1816,15 @@ please run =ollama serve=\n\n")
               "\n\n"))
            ;; (when auth-status
              ;; (concat "Auth: " auth-status "\n\n"))
-           "- /Ask me anything!/       C-c C-c / C-c RET
-- /Cancel request/         C-c C-k
-- /Select model/           C-c m
-- /Pull new model/         C-c l"
+           "- /Ask me anything!/       *C-c C-c* OR *C-c RET*
+- /Main transient menu/    *C-c O*
+- /Select model/           *C-c m*
+- /Pull new model/         *C-c l*"
            (when ollama-buddy-full-welcome-enabled
              "
-- /Main transient menu/    C-c O
-- /Browse prompt history/  M-p/n/r
-- /Manage models/          C-c M
-- /ollama-buddy Manual/    C-c ?")
+- /Browse prompt history/  *M-p/n/r*
+- /Manage models/          *C-c M*
+- /ollama-buddy Manual/    *C-c ?*")
            (when-let ((tip (ollama-buddy--get-random-tip)))
              (concat "\n\n" tip))
            )))
