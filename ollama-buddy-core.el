@@ -2649,12 +2649,28 @@ ACTUAL-MODEL is the model being used instead."
                              (if (or (null tone) (string= tone "Normal"))
                                  ""
                                (propertize (format "~%c" (aref tone 0))
-                                           'face '(:weight bold))))))
+                                           'face '(:weight bold)))))
+           (cloud-usage-indicator
+            (if (and (ollama-buddy--cloud-model-p model)
+                     (fboundp 'ollama-buddy--fetch-cloud-usage))
+                (let ((usage (ollama-buddy--fetch-cloud-usage)))
+                  (if usage
+                      (let* ((session (alist-get 'session usage))
+                             (weekly (alist-get 'weekly usage))
+                             (s-bar (if (and session (fboundp 'ollama-buddy--cloud-usage-bar))
+                                        (ollama-buddy--cloud-usage-bar session 5) ""))
+                             (w-bar (if (and weekly (fboundp 'ollama-buddy--cloud-usage-bar))
+                                        (ollama-buddy--cloud-usage-bar weekly 5) "")))
+                        (format " S:%s%s W:%s%s"
+                                s-bar (or session "?")
+                                w-bar (or weekly "?")))
+                    ""))
+              "")))
       (setq header-line-format
             (replace-regexp-in-string
              "%" "%%"
             (concat
-             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s %s %s%s"
+             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s%s %s%s%s"
                      airplane-indicator
                      (if ollama-buddy-streaming-enabled "" "x")
                      (ollama-buddy--add-context-to-status-format)
@@ -2682,6 +2698,7 @@ ACTUAL-MODEL is the model being used instead."
                      (if (ollama-buddy--check-status)
                          (propertize model 'face `(:weight bold :box (:line-width 1 :style flat-button)))
                        (propertize model 'face `(:weight bold :inherit shadow :box (:line-width 1 :style flat-button))))
+                     cloud-usage-indicator
                      status
                      system-indicator
                      (or params ""))
