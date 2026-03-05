@@ -75,6 +75,7 @@ Submit queries, swap models, view token usage and statistics:
 - *Skills* -- Specialized AI personas and task-specific instructions integrated into the User Prompts library; use `/skill` slash command or `@skill(name)` for inline expansion
 - *RAG* -- Index local documents and source code; retrieve relevant context via semantic search; inline =@rag(query)= syntax; configurable embedding backend (Ollama =/api/embed= or any OpenAI-compatible =/v1/embeddings= service, e.g. LM Studio)
 - *In-Buffer Replace* -- Stream LLM output directly into the source buffer, replacing the selected region in-place; accept/reject confirmation; inline diff view (=C-c d=) with word-level smerge highlighting; automatic code-fence stripping
+- *Pandoc Markdown to Org Conversion* -- Optionally use Pandoc for higher quality markdown to org-mode conversion (=ollama-buddy-use-pandoc-for-md-to-org=)
 - *Lightweight* -- No external dependencies; a minified 200-line version (=ollama-buddy-mini=) is also available
 
 * What's New (v3.4.0)

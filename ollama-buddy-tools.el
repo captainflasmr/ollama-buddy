@@ -61,6 +61,7 @@
 
 (require 'json)
 (require 'cl-lib)
+(require 'project)
 (require 'ollama-buddy-core)
 
 ;;; Customization

@@ -581,6 +581,14 @@ The \"In-Buffer\" tone is automatically applied when
   :type '(alist :key-type string :value-type string)
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-use-pandoc-for-md-to-org nil
+  "Whether to use Pandoc for converting Markdown to Org-mode.
+When non-nil and the `pandoc' executable is available, it will be
+used instead of the built-in Lisp conversion logic. Pandoc provides
+more accurate and robust conversion but requires the external tool."
+  :type 'boolean
+  :group 'ollama-buddy)
+
 (defvar ollama-buddy--current-tone "Normal"
   "Currently active tone name from `ollama-buddy-tone-alist'.")
 
@@ -1932,14 +1940,47 @@ Choose a preset or enter a custom duration string accepted by Ollama:
     (message "Ollama keep-alive set to: %s"
              (or value "default (5m)"))))
 
+(defun ollama-buddy--pandoc-convert (start end format-from format-to)
+  "Convert the region from START to END from FORMAT-FROM to FORMAT-TO using pandoc.
+Returns non-nil on success."
+  (if (executable-find "pandoc")
+      (let* ((temp-file (make-temp-file "ollama-buddy-pandoc-"))
+             (exit-code 0))
+        (unwind-protect
+            (progn
+              ;; Write region to input file
+              (write-region start end temp-file nil 'silent)
+              ;; Run pandoc and replace region
+              (delete-region start end)
+              (setq exit-code
+                    (call-process "pandoc"
+                                  temp-file
+                                  t
+                                  nil
+                                  "-f" format-from
+                                  "-t" format-to))
+              (if (= exit-code 0)
+                  t
+                (message "Pandoc conversion failed with code %d" exit-code)
+                nil))
+          (when (file-exists-p temp-file)
+            (delete-file temp-file))))
+    (message "Pandoc executable not found.")
+    nil))
+
 (defun ollama-buddy--md-to-org-convert-region (start end)
   "Convert the region from START to END from Markdown to Org-mode format."
-
   (save-excursion
     (save-restriction
       (narrow-to-region start end)
 
-      (goto-char (point-min))
+      (if (and ollama-buddy-use-pandoc-for-md-to-org
+               (executable-find "pandoc"))
+          ;; Use Pandoc for conversion
+          (ollama-buddy--pandoc-convert (point-min) (point-max) "markdown" "org")
+
+        ;; Fallback to built-in Lisp conversion
+        (goto-char (point-min))
       (while (re-search-forward "\n\n\n+" nil t)
         ;; Don't collapse blank lines adjacent to *** ✦ headings (Think/Response)
         (unless (or (looking-at "\\*\\*\\* ✦")
@@ -1948,88 +1989,98 @@ Choose a preset or enter a custom duration string accepted by Ollama:
                       (forward-line 0)
                       (looking-at "\\*\\*\\* ✦")))
           (replace-match "\n\n")))
-      
+
       ;; First, handle code blocks by temporarily protecting their content
       (goto-char (point-min))
       (let ((code-blocks nil)
             (counter 0)
             block-start block-end lang content placeholder)
-        
+
         ;; IMPORTANT: Add save-match-data here
         (save-match-data
           ;; Find and replace code blocks with placeholders
-          (while (re-search-forward "```\\(.*?\\)\\(?:\n\\|\\s-\\)\\(\\(?:.\\|\n\\)*?\\)```" nil t)
-            (setq lang (match-string 1)
-                  content (match-string 2)
+          (while (re-search-forward "^\\([ \t]*\\)```\\([^\n]*\\)\n\\(\\(?:.*\n\\)*?\\)\\1```" nil t)
+            (setq lang (match-string 2)
+                  content (match-string 3)
                   block-start (match-beginning 0)
                   block-end (match-end 0)
                   placeholder (format "CODE_BLOCK_PLACEHOLDER_%d" counter))
-            
+
             ;; Store the code block information for later restoration
             (push (list placeholder lang content) code-blocks)
-            
+
             ;; Replace with placeholder
             (delete-region block-start block-end)
             (goto-char block-start)
             (insert placeholder)
             (setq counter (1+ counter))))
-        
-        ;; Apply regular Markdown to Org transformations - in individual save-match-data blocks
-        ;; Lists: Translate `-`, `*`, or `+` lists to Org-mode lists
-        (save-match-data
-          (goto-char (point-min))
-          (while (re-search-forward "^\\([ \t]*\\)[*-+] \\(.*\\)$" nil t)
-            (replace-match (concat (match-string 1) "- \\2"))))
-        
-        ;; Bold: `**bold**` -> `*bold*` only if directly adjacent (single line)
-        (save-match-data
-          (goto-char (point-min))
-          (while (re-search-forward "\\*\\*\\([^ \n]\\([^\n]*?\\)[^ \n]\\)\\*\\*" nil t)
-            (replace-match "*\\1*")))
-        
-        ;; Italics: `_italic_` -> `/italic/` (single line)
-        (save-match-data
-          (goto-char (point-min))
-          (while (re-search-forward "\\([ \n]\\)_\\([^ \n][^\n]*?[^ \n]\\)_\\([ \n]\\)" nil t)
-            (replace-match "\\1/\\2/\\3")))
-        
-        ;; Links: `[text](url)` -> `[[url][text]]`
-        (save-match-data
-          (goto-char (point-min))
-          (while (re-search-forward "\\[\\(.*?\\)\\](\\(.*?\\))" nil t)
-            (replace-match "[[\\2][\\1]]")))
-        
-        ;; Inline code: `code` -> =code=
-        (save-match-data
-          (goto-char (point-min))
-          (while (re-search-forward "`\\(.*?\\)`" nil t)
-            (replace-match "=\\1=")))
-        
-        ;; Horizontal rules: `---` or `***` -> `-----`
-        (save-match-data
-          (goto-char (point-min))
-          (while (re-search-forward "^\\(-{3,}\\|\\*{3,}\\)$" nil t)
-            (replace-match "-----")))
-        
-        ;; Images: `![alt text](url)` -> `[[url]]`
-        (save-match-data
-          (goto-char (point-min))
-          (while (re-search-forward "!\\[.*?\\](\\(.*?\\))" nil t)
-            (replace-match "[[\\1]]")))
-        
-        ;; Headers: Adjust '#' - add 2 levels so MD H1 becomes org level 3
-        ;; (below the ** [MODEL] RESPONSE heading)
-        (save-match-data
-          (goto-char (point-min))
-          (while (re-search-forward "^\\(#+\\) " nil t)
-            (replace-match (make-string (+ 2 (length (match-string 1))) ?*) nil nil nil 1)))
-        
-        ;; Any extra characters
-        (save-match-data
-          (goto-char (point-min))
-          (while (re-search-forward "—" nil t)
-            (replace-match ", ")))
-        
+
+        ;; Protect inline code with placeholders before other conversions
+        (let ((inline-codes nil)
+              (inline-counter 0))
+          (save-match-data
+            (goto-char (point-min))
+            (while (re-search-forward "`\\([^`\n]+\\)`" nil t)
+              (push (cons inline-counter (match-string 1)) inline-codes)
+              (replace-match (format "INLINE_CODE_PLACEHOLDER_%d" inline-counter) t t)
+              (setq inline-counter (1+ inline-counter))))
+
+          ;; Headers: Adjust '#' - add 2 levels so MD H1 becomes org level 3
+          ;; (below the ** [MODEL] RESPONSE heading) - must come before list conversion
+          (save-match-data
+            (goto-char (point-min))
+            (while (re-search-forward "^\\(#+\\) " nil t)
+              (replace-match (make-string (+ 2 (length (match-string 1))) ?*) nil nil nil 1)))
+
+          ;; Lists: Translate `-`, `*`, or `+` lists to Org-mode lists
+          (save-match-data
+            (goto-char (point-min))
+            (while (re-search-forward "^\\([ \t]*\\)[*+-] " nil t)
+              (replace-match "\\1- ")))
+
+          ;; Bold: `**bold**` -> `*bold*`
+          (save-match-data
+            (goto-char (point-min))
+            (while (re-search-forward "\\*\\*\\(.+?\\)\\*\\*" nil t)
+              (replace-match "*\\1*")))
+
+          ;; Italics: `_italic_` -> `/italic/`
+          (save-match-data
+            (goto-char (point-min))
+            (while (re-search-forward "\\_<_\\([^_]+\\)_\\_>" nil t)
+              (replace-match "/\\1/")))
+
+          ;; Images: `![alt text](url)` -> `[[url]]` (must come before links)
+          (save-match-data
+            (goto-char (point-min))
+            (while (re-search-forward "!\\[\\(?:[^]]*\\)\\](\\([^)]+\\))" nil t)
+              (replace-match "[[\\1]]")))
+
+          ;; Links: `[text](url)` -> `[[url][text]]`
+          (save-match-data
+            (goto-char (point-min))
+            (while (re-search-forward "\\[\\([^]]+\\)\\](\\([^)]+\\))" nil t)
+              (replace-match "[[\\2][\\1]]")))
+
+          ;; Horizontal rules: `---`, `***`, or `___` -> `-----`
+          (save-match-data
+            (goto-char (point-min))
+            (while (re-search-forward "^[ \t]*\\(-\\{3,\\}\\|\\*\\{3,\\}\\|_\\{3,\\}\\)[ \t]*$" nil t)
+              (replace-match "-----")))
+
+          ;; Blockquotes: `> text` -> `: text`
+          (save-match-data
+            (goto-char (point-min))
+            (while (re-search-forward "^> \\(.*\\)$" nil t)
+              (replace-match ": \\1")))
+
+          ;; Restore inline code as =code=
+          (save-match-data
+            (dolist (item inline-codes)
+              (goto-char (point-min))
+              (when (search-forward (format "INLINE_CODE_PLACEHOLDER_%d" (car item)) nil t)
+                (replace-match (format "=%s=" (cdr item)) t t)))))
+
         ;; Restore code blocks with proper Org syntax
         (save-match-data
           (dolist (block (nreverse code-blocks))
@@ -2038,7 +2089,7 @@ Choose a preset or enter a custom duration string accepted by Ollama:
                   (content (nth 2 block)))
               (goto-char (point-min))
               (when (search-forward placeholder nil t)
-                (replace-match (format "#+begin_src %s\n%s#+end_src" lang content) t t)))))))))
+                (replace-match (format "#+begin_src %s\n%s#+end_src" lang content) t t))))))))))
 
 (defun ollama-buddy--text-after-prompt ()
   "Get the text after the prompt:."
