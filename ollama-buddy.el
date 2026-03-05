@@ -180,6 +180,11 @@ Returns the position where the response content should start."
         (goto-char (or start-pos (point-max)))
         ;; Ensure we are after any previous turn's final newline but before current turn content
         (unless (bolp) (insert "\n"))
+        ;; After a folded subtree the preceding newlines are invisible;
+        ;; insert an extra newline so the header has visual separation.
+        (when (and (> (point) (point-min))
+                   (invisible-p (1- (point))))
+          (insert "\n"))
         (insert "\n")
         (let ((avg-wait (ollama-buddy--model-average-wait-time model)))
           (if has-images

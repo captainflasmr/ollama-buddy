@@ -193,6 +193,7 @@ Second value (1.0) is the red threshold (at or exceeding limit)."
 
 (defcustom ollama-buddy-tools-models
   '("qwen3" "qwen3:32b" "qwen3:14b" "qwen3:8b"
+    "qwen3.5"
     "qwen3-coder-next" "qwen3-coder:480b"
     "deepseek-v3.1:671b" "gpt-oss:120b" "gpt-oss:20b"
     "glm-4.7" "glm-4.7-flash"
@@ -207,6 +208,7 @@ Second value (1.0) is the red threshold (at or exceeding limit)."
     "deepseek-r1:14b" "deepseek-r1:32b" "deepseek-r1:70b" "deepseek-r1:671b"
     "qwen3" "qwen3:0.6b" "qwen3:1.7b" "qwen3:4b" "qwen3:8b"
     "qwen3:14b" "qwen3:30b" "qwen3:32b" "qwen3:235b"
+    "qwen3.5"
     "phi4-mini-reasoning" "phi4-reasoning"
     "marco-o1" "skyfall" "deepthink")
   "List of models known to support thinking/reasoning capabilities.
@@ -638,10 +640,10 @@ The \"In-Buffer\" tone is automatically applied when
 (defcustom ollama-buddy-available-models
   '((:name "General Chat"
            :description "Everyday conversation, Q&A and general tasks"
-           :models ("llama3.2:1b" "llama3.2:3b" "llama3.1:8b" "mistral:latest"))
+           :models ("llama3.2:1b" "llama3.2:3b" "llama3.1:8b" "qwen3.5:0.8b" "qwen3.5:2b" "qwen3.5:4b" "qwen3.5:9b" "qwen3.5:27b" "qwen3.5:35b" "mistral:latest"))
     (:name "Reasoning (Thinking Models)"
            :description "Step-by-step problem solving and analysis"
-           :models ("deepseek-r1:1.5b" "deepseek-r1:7b" "deepseek-r1:14b" "deepseek-r1:32b"))
+           :models ("qwen3.5:0.8b" "qwen3.5:2b" "qwen3.5:4b" "qwen3.5:9b" "qwen3.5:27b" "qwen3.5:35b" "deepseek-r1:1.5b" "deepseek-r1:7b" "deepseek-r1:14b" "deepseek-r1:32b"))
     (:name "Efficient & Capable"
            :description "Balanced speed and quality from Google Gemma"
            :models ("gemma2:2b" "gemma2:9b" "gemma2:27b"))
@@ -1494,22 +1496,27 @@ The context length is stored in keys like `llama.context_length' or
 (defun ollama-buddy--fetch-model-context-size-sync (model)
   "Synchronously fetch context size for MODEL from Ollama API.
 Returns the context size or nil if the API call fails.
-As a side effect, caches the thinking capability in
-`ollama-buddy--models-metadata-cache' when the capabilities array
-from /api/show includes \"thinking\"."
+As a side effect, caches all capabilities (thinking, tools, vision) in
+`ollama-buddy--models-metadata-cache' from the /api/show capabilities array."
   (condition-case nil
       (let* ((real-model (ollama-buddy--get-real-model-name model))
              (endpoint "/api/show")
              (payload (json-encode `((model . ,real-model))))
              (response (ollama-buddy--make-request endpoint "POST" payload)))
         (when response
-          ;; Cache thinking capability detected via Ollama's capabilities array
+          ;; Cache all capabilities from Ollama's capabilities array
           (let ((capabilities (append (alist-get 'capabilities response) nil)))
-            (when (member "thinking" capabilities)
+            (when capabilities
               (let ((cached-meta (or (gethash model ollama-buddy--models-metadata-cache) '())))
-                (unless (alist-get 'thinking cached-meta)
-                  (puthash model
-                           (cons '(thinking . t) cached-meta)
+                (unless (alist-get 'capabilities-fetched cached-meta)
+                  (push '(capabilities-fetched . t) cached-meta)
+                  (when (member "thinking" capabilities)
+                    (push '(thinking . t) cached-meta))
+                  (when (member "tools" capabilities)
+                    (push '(tools . t) cached-meta))
+                  (when (member "vision" capabilities)
+                    (push '(vision . t) cached-meta))
+                  (puthash model cached-meta
                            ollama-buddy--models-metadata-cache)))))
           ;; Return context size
           (let ((model-info (alist-get 'model_info response)))
