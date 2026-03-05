@@ -2319,6 +2319,10 @@ Optional MENU-COLUMNS specifies the number of columns for the menu display."
           (setq ollama-buddy--current-model model)
           (setq ollama-buddy-default-model model)
           (insert (format "\n\n* NO DEFAULT MODEL : Using best guess : %s" model))))
+      ;; Fetch capabilities so thinking/vision/tools indicators are correct
+      (when (and ollama-buddy--current-model
+                 (ollama-buddy--ollama-running))
+        (ollama-buddy--fetch-model-context-size-sync ollama-buddy--current-model))
       (ollama-buddy--prepare-prompt-area)
       (put 'ollama-buddy--cycle-prompt-history 'history-position -1))
     (ollama-buddy--update-status "Idle")
