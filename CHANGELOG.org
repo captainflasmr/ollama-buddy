@@ -28,9 +28,6 @@ Unified Skills and User Prompts.
   unified user prompts library.
 - *Refactor Expert* -- Included a "Refactor Expert" sample prompt in the =skills=
   category for Emacs Lisp development.
-- *Pandoc Markdown to Org Option* -- Added =ollama-buddy-use-pandoc-for-md-to-org=
-  customization to optionally leverage Pandoc for higher-fidelity markdown-to-org
-  conversion during generation.
 
 ** <2026-03-03 Tue> *3.3.0*
 
