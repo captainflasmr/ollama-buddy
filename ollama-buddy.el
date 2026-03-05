@@ -759,8 +759,11 @@ second go to column 0."
       (goto-char prompt-pos))
 
      ;; Otherwise fallback to regular C-a behavior
+     ;; Use beginning-of-visual-line so that on a folded org heading
+     ;; (e.g. *** Think...) we land at the heading start, not at the
+     ;; start of a hidden line inside the fold.
      (t
-      (beginning-of-line)))))
+      (beginning-of-visual-line)))))
 
 (defcustom ollama-buddy-at-commands
   '(("search" "@search(%s)" "Search the web and attach results")
