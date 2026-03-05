@@ -3944,13 +3944,18 @@ are skipped.  Results are recorded in `ollama-buddy--token-usage-history'."
            (mapcar #'car model-alist))))
     (unless sequences
       (user-error "No models available to benchmark"))
-    ;; Ensure chat buffer exists and insert the benchmark prompt
-    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-      (ollama-buddy--prepare-prompt-area t t)
-      (let ((inhibit-read-only t))
-        (goto-char (point-max))
-        (insert ollama-buddy-benchmark-prompt)))
-    (ollama-buddy--multishot-send ollama-buddy-benchmark-prompt sequences)))
+    ;; Ask user for confirmation
+    (when (yes-or-no-p
+           (format "Benchmark %d models?\\n\\nThis will send the prompt \\\"%s\\\" to each model.\\n\\nBenchmark now? "
+                   (length sequences)
+                   ollama-buddy-benchmark-prompt))
+      ;; Ensure chat buffer exists and insert the benchmark prompt
+      (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+        (ollama-buddy--prepare-prompt-area t t)
+        (let ((inhibit-read-only t))
+          (goto-char (point-max))
+          (insert ollama-buddy-benchmark-prompt)))
+      (ollama-buddy--multishot-send ollama-buddy-benchmark-prompt sequences))))
 
 (defun ollama-buddy--cycle-prompt-history (direction)
   "Cycle through prompt history in DIRECTION (1=forward, -1=backward)."
