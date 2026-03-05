@@ -162,14 +162,13 @@
     ("r" "RAG" ollama-buddy-transient-rag-menu)
     ("P" "Project" ollama-buddy-transient-project-menu
      :if (lambda () (ollama-buddy-project-current-root)))
-    ("A" "Authentication" ollama-buddy-transient-auth-menu)]
+    ("A" "Auth" ollama-buddy-transient-auth-menu)]
 
    ["Model"
     ("m" "Switch" ollama-buddy--swap-model)
     ("M" "Manage" ollama-buddy-manage-models)
     ("i" "Info" ollama-buddy-show-raw-model-info)
-    ("U" "Multishot" ollama-buddy--multishot-prompt)
-    ("u" "Benchmark All" ollama-buddy-benchmark-models)]
+    ("U" "Multishot" ollama-buddy--multishot-prompt)]
 
    ["Actions"
     ("l" "Pull Model" ollama-buddy-pull-model)
@@ -179,8 +178,8 @@
     ("!" "Airplane Mode" ollama-buddy-toggle-airplane-mode)]
 
    ["Tools"
-    ("SPC" "Toggle Tools" ollama-buddy-transient--tools-toggle)
-    ("Q" "List Tools" ollama-buddy-transient--tools-info)
+    ("SPC" "Toggle" ollama-buddy-transient--tools-toggle)
+    ("Q" "List" ollama-buddy-transient--tools-info)
     ("W" "In-Buffer Replace" ollama-buddy-toggle-in-buffer-replace)
     ("c" "Completion Mode" ollama-buddy-transient--completion-toggle)]]
   
@@ -188,8 +187,7 @@
     ("H" "Toggle" ollama-buddy-toggle-history)
     ("X" "Clear" ollama-buddy-clear-history)
     ("J" "Edit" ollama-buddy-history-edit-model)
-    ("Y" "Edit Max" ollama-buddy-set-max-history-length)
-    ("$" "Context Size" ollama-buddy-set-model-context-size)]
+    ("Y" "Edit Max " ollama-buddy-set-max-history-length)]
    
    ["Sessions"
     ("N" "New" ollama-buddy-sessions-new)
@@ -199,7 +197,7 @@
 
    ["Sub-menus"
     ("+" "Settings" ollama-buddy-transient-settings-menu)
-    ("y" "System Prompts" ollama-buddy-transient-system-prompts-menu)
+    ("y" "System Prompt" ollama-buddy-transient-system-prompts-menu)
     ("p" "Parameters" ollama-buddy-transient-parameter-menu)
     ("R" "Roles" ollama-buddy-transient-roles-management-menu)]
    
