@@ -354,7 +354,7 @@ When nil, point stays in its original position regardless of visibility."
   :type 'boolean
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-full-welcome-enabled t
+(defcustom ollama-buddy-full-welcome-enabled nil
   "Showing the full welcome screen."
   :type 'boolean
   :group 'ollama-buddy)
