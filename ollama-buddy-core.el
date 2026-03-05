@@ -261,6 +261,13 @@ Has no effect when `ollama-buddy-collapse-thinking' is non-nil."
   :type 'boolean
   :group 'ollama-buddy)
 
+(defvar ollama-buddy-stream-thinking-visible nil
+  "When non-nil, show thinking tokens in the buffer as they stream in.
+Only has effect when `ollama-buddy-collapse-thinking' is non-nil.
+Tokens are still accumulated and converted; on completion the raw
+streamed text is replaced with the converted org content and the
+heading is folded as usual.  Toggle with `C-c V'.")
+
 (defcustom ollama-buddy-reasoning-markers
   '(("<think>" . "</think>")
     ("<thinking>" . "</thinking>")

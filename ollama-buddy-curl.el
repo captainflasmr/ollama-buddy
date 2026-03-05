@@ -279,10 +279,13 @@ When complete, CALLBACK is called with the status response and result."
           (unless ollama-buddy--thinking-api-active
             (setq ollama-buddy--thinking-api-active t
                   ollama-buddy--thinking-arrow-marker (ollama-buddy--insert-thinking-header)
-                  ollama-buddy--thinking-block-start  (copy-marker (point) nil)))
-          ;; Accumulate thinking tokens (not inserted into buffer)
+                  ollama-buddy--thinking-block-start  (copy-marker (point) t)))
+          ;; Accumulate thinking tokens
           (setq ollama-buddy--thinking-content-accumulator
-                (concat ollama-buddy--thinking-content-accumulator thinking-text)))
+                (concat ollama-buddy--thinking-content-accumulator thinking-text))
+          ;; Optionally also insert into buffer for live viewing
+          (when ollama-buddy-stream-thinking-visible
+            (insert thinking-text)))
          (ollama-buddy-hide-reasoning
           (setq ollama-buddy--thinking-api-active t))
          (t
@@ -354,7 +357,7 @@ When complete, CALLBACK is called with the status response and result."
                   (setq ollama-buddy--in-reasoning-section t
                         should-show-content nil
                         ollama-buddy--thinking-arrow-marker (ollama-buddy--insert-thinking-header)
-                        ollama-buddy--thinking-block-start  (copy-marker (point) nil)))
+                        ollama-buddy--thinking-block-start  (copy-marker (point) t)))
                  ((and reasoning-marker (eq (car reasoning-marker) 'end)
                        ollama-buddy--in-reasoning-section)
                   (setq ollama-buddy--in-reasoning-section nil
@@ -369,7 +372,10 @@ When complete, CALLBACK is called with the status response and result."
                  (ollama-buddy--in-reasoning-section
                   (when ollama-buddy--thinking-content-accumulator
                     (setq ollama-buddy--thinking-content-accumulator
-                          (concat ollama-buddy--thinking-content-accumulator content)))
+                          (concat ollama-buddy--thinking-content-accumulator content))
+                    ;; Optionally also insert into buffer for live viewing
+                    (when ollama-buddy-stream-thinking-visible
+                      (insert content)))
                   (setq should-show-content nil))))
                ;; --- Hide mode ---
                (ollama-buddy-hide-reasoning

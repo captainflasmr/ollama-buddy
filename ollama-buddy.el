@@ -559,6 +559,10 @@ registers the heading for toggle-all."
         (goto-char (marker-position heading-marker))
         (end-of-line)
         (forward-char 1)              ;; past the heading's \n, onto blank line
+        ;; If thinking was streamed visibly, delete the raw text first
+        (when (and ollama-buddy--thinking-block-start
+                   (marker-position ollama-buddy--thinking-block-start))
+          (delete-region (point) (marker-position ollama-buddy--thinking-block-start)))
         ;; Insert accumulated thinking content (convert md→org if enabled)
         (when (and ollama-buddy--thinking-content-accumulator
                    (not (string-empty-p ollama-buddy--thinking-content-accumulator)))
@@ -712,18 +716,17 @@ If any is folded, expand all; otherwise fold all."
               (outline-hide-subtree))))))))
 
 (defun ollama-buddy-toggle-reasoning-visibility ()
-  "Toggle thinking block visibility.
-In collapse mode (`ollama-buddy-collapse-thinking'), folds or unfolds all
-`*** Think' headings in the buffer.
-In hide mode, toggles `ollama-buddy-hide-reasoning'."
+  "Toggle live streaming of thinking tokens.
+When enabled, thinking content is displayed in the buffer as it
+streams in.  The block is still folded and converted when complete.
+Individual thinking blocks can be expanded via `TAB' on the heading."
   (interactive)
-  (if ollama-buddy-collapse-thinking
-      (ollama-buddy-toggle-all-thinking-blocks)
-    (setq ollama-buddy-hide-reasoning (not ollama-buddy-hide-reasoning))
-    (ollama-buddy--update-status
-     (if ollama-buddy-hide-reasoning "Reasoning hidden" "Reasoning shown"))
-    (message "Reasoning sections: %s"
-             (if ollama-buddy-hide-reasoning "hidden" "shown"))))
+  (setq ollama-buddy-stream-thinking-visible
+        (not ollama-buddy-stream-thinking-visible))
+  (ollama-buddy--update-status
+   (if ollama-buddy-stream-thinking-visible
+       "Thinking: visible during stream"
+     "Thinking: hidden during stream")))
 
 ;; Function to check if text contains a reasoning marker
 (defun ollama-buddy--find-reasoning-marker (text)
@@ -2462,10 +2465,13 @@ TCP packets split a JSON object across multiple filter calls."
                 (unless ollama-buddy--thinking-api-active
                   (setq ollama-buddy--thinking-api-active t
                         ollama-buddy--thinking-arrow-marker (ollama-buddy--insert-thinking-header)
-                        ollama-buddy--thinking-block-start  (copy-marker (point) nil)))
-                ;; Accumulate thinking tokens (not inserted into buffer)
+                        ollama-buddy--thinking-block-start  (copy-marker (point) t)))
+                ;; Accumulate thinking tokens
                 (setq ollama-buddy--thinking-content-accumulator
-                      (concat ollama-buddy--thinking-content-accumulator thinking-text)))
+                      (concat ollama-buddy--thinking-content-accumulator thinking-text))
+                ;; Optionally also insert into buffer for live viewing
+                (when ollama-buddy-stream-thinking-visible
+                  (insert thinking-text)))
                ;; Hide: silently discard
                (ollama-buddy-hide-reasoning
                 (setq ollama-buddy--thinking-api-active t))
@@ -2534,7 +2540,7 @@ TCP packets split a JSON object across multiple filter calls."
                        (eq (car ollama-buddy--reasoning-marker-found) 'start))
                   (setq ollama-buddy--in-reasoning-section t
                         ollama-buddy--thinking-arrow-marker (ollama-buddy--insert-thinking-header)
-                        ollama-buddy--thinking-block-start  (copy-marker (point) nil)))
+                        ollama-buddy--thinking-block-start  (copy-marker (point) t)))
                  ;; End marker: finalize the *** Think heading
                  ((and ollama-buddy--reasoning-marker-found
                        (eq (car ollama-buddy--reasoning-marker-found) 'end)
@@ -2599,12 +2605,16 @@ TCP packets split a JSON object across multiple filter calls."
                       ;; Move point past the header so text inserts after it
                       (goto-char (point-max)))))
 
-                ;; In collapse mode, accumulate thinking content (don't insert)
+                ;; In collapse mode, accumulate thinking content
                 (if (and ollama-buddy-collapse-thinking
                          ollama-buddy--in-reasoning-section
                          ollama-buddy--thinking-content-accumulator)
-                    (setq ollama-buddy--thinking-content-accumulator
-                          (concat ollama-buddy--thinking-content-accumulator text))
+                    (progn
+                      (setq ollama-buddy--thinking-content-accumulator
+                            (concat ollama-buddy--thinking-content-accumulator text))
+                      ;; Optionally also insert into buffer for live viewing
+                      (when ollama-buddy-stream-thinking-visible
+                        (insert text)))
                   ;; Skip leading newlines immediately after a thinking block ends
                   (if (and ollama-buddy--reasoning-skip-newlines
                            (not ollama-buddy--in-reasoning-section)
