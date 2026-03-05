@@ -130,7 +130,7 @@
 Set when a thinking start marker is detected; cleared when the block is folded.")
 
 (defvar-local ollama-buddy--thinking-heading-markers nil
-  "List of markers, each pointing to the start of a `*** ✦ Think' heading line.
+  "List of markers, each pointing to the start of a `*** Think' heading line.
 Used by `ollama-buddy-toggle-all-thinking-blocks' to fold/unfold all blocks.")
 
 (defvar-local ollama-buddy--thinking-api-active nil
@@ -139,15 +139,65 @@ Used by models like deepseek-r1 that use a dedicated thinking field rather than
 embedding <think>...</think> tags inside message.content.")
 
 (defvar-local ollama-buddy--thinking-arrow-marker nil
-  "Marker at the start of the `*** ✦ Think' heading for the current block.
+  "Marker at the start of the `*** Think' heading for the current block.
 Set when the heading is inserted; passed to
 `ollama-buddy--finalize-thinking-block' and then cleared.")
+
+(defvar-local ollama-buddy--current-original-model nil
+  "The original model requested for the current turn.")
+
+(defvar-local ollama-buddy--current-has-images nil
+  "Flag indicating if images were included in the current turn.")
 
 (defvar-local ollama-buddy--thinking-content-accumulator nil
   "String accumulating thinking tokens during streaming.
 Tokens are NOT inserted into the buffer during streaming; instead they are
 collected here and bulk-inserted by `ollama-buddy--finalize-thinking-block'
 which then folds the subtree with `outline-hide-subtree'.")
+
+(defvar-local ollama-buddy--header-inserted-p nil
+  "Flag to track if the response header has been inserted for the current turn.")
+
+(defvar-local ollama-buddy--turn-start-position nil
+  "Marker at the true start of the current turn, before any streaming artifacts.
+Unlike `ollama-buddy--response-start-position' (which is advanced by
+`insert-response-header' and `finalize-thinking-block'), this marker
+is set once per turn in `ollama-buddy--send' and never modified during
+streaming.  Used by `ollama-buddy--rebuild-tool-batch' to delete all
+artifacts for the turn.")
+
+(defun ollama-buddy--insert-response-header (model original-model &optional has-images)
+  "Insert the response header for MODEL in the chat buffer.
+ORIGINAL-MODEL is the requested model if different.
+HAS-IMAGES is non-nil if the request included images.
+Returns the position where the response content should start."
+  (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+    (let ((inhibit-read-only t)
+          (start-pos (if (markerp ollama-buddy--response-start-position)
+                         (marker-position ollama-buddy--response-start-position)
+                       ollama-buddy--response-start-position)))
+      (save-excursion
+        (goto-char (or start-pos (point-max)))
+        ;; Ensure we are after any previous turn's final newline but before current turn content
+        (unless (bolp) (insert "\n"))
+        (insert "\n")
+        (let ((avg-wait (ollama-buddy--model-average-wait-time model)))
+          (if has-images
+              (insert (format "** [%s: RESPONSE with %d image(s)]"
+                              model (length (or (bound-and-true-p ollama-buddy--current-attachments) nil))))
+            (insert (format "** [%s: RESPONSE]" model)))
+          ;; Insert countdown estimate before the closing ]
+          (when (and avg-wait (>= avg-wait 1))
+            (backward-char 1)  ; before ]
+            (setq ollama-buddy--response-countdown-marker (copy-marker (point)))
+            (insert (format " ~%ds" (round avg-wait)))
+            (forward-char 1)))  ; past ] only, not end-of-line
+        (insert "\n")
+        (when (and original-model model (not (string= original-model model)))
+          (insert (format "\n*[Using %s instead of %s]*\n" model original-model)))
+        (setq ollama-buddy--header-inserted-p t)
+        (point-marker)))))
+
 
 (defvar ollama-buddy-mode-line-segment nil
   "Mode line segment for Ollama Buddy.")
@@ -461,22 +511,41 @@ with an empty messages array and keep_alive set to 0."
 ;; --- Thinking block org-heading helpers ---
 
 (defun ollama-buddy--insert-thinking-header ()
-  "Insert `*** ✦ Thinking...' heading.
+  "Insert `*** Thinking...' heading.
 Thinking tokens are NOT inserted into the buffer during streaming;
 they accumulate in `ollama-buddy--thinking-content-accumulator'.
 When thinking ends, `ollama-buddy--finalize-thinking-block' inserts
-the accumulated content, the `*** ✦ Response' heading, and folds.
+the accumulated content, the `*** Response' heading, and folds.
 Must be called inside an `inhibit-read-only' block.
-Returns a marker at the start of the heading line."
+Returns a marker at the start of the heading line.
+The marker uses t insertion-type so that if a response header is
+later inserted at the same position, the marker advances past it
+and continues to point at the heading.
+If no response header has been inserted yet, inserts one first so
+the *** heading nests properly under the ** header."
+  ;; Ensure the ** response header exists so *** nests under it
+  (when (and (not ollama-buddy--header-inserted-p)
+             (boundp 'ollama-buddy--current-model)
+             ollama-buddy--current-model)
+    (ollama-buddy--insert-response-header
+     ollama-buddy--current-model
+     ollama-buddy--current-original-model
+     ollama-buddy--current-has-images)
+    ;; Move point to end of buffer (past the newly inserted header)
+    (goto-char (point-max)))
+  ;; Ensure we start on a fresh line
+  (unless (bolp) (insert "\n"))
   (let ((heading-start (point)))
-    (insert "*** ✦ Thinking...\n")
+    (insert "*** Thinking...\n")
     (setq ollama-buddy--thinking-content-accumulator "")
-    (copy-marker heading-start nil)))
+    (let ((m (copy-marker heading-start)))
+      (set-marker-insertion-type m t)
+      m)))
 
 (defun ollama-buddy--finalize-thinking-block (heading-marker)
   "Finalise the thinking block: insert content, fold, rename heading.
 Inserts the accumulated thinking content after the heading, appends
-the `*** ✦ Response' heading, folds the Think subtree via
+the `*** Response' heading, folds the Think subtree via
 `outline-hide-subtree', renames `Thinking...' to `Think', and
 registers the heading for toggle-all."
   (when (and heading-marker (marker-buffer heading-marker))
@@ -491,8 +560,8 @@ registers the heading for toggle-all."
           (insert "\n\n" ollama-buddy--thinking-content-accumulator)
           (unless (string-suffix-p "\n" ollama-buddy--thinking-content-accumulator)
             (insert "\n")))
-        ;; Insert *** ✦ Response heading after thinking content
-        (insert "\n*** ✦ Response\n\n"))
+        ;; Insert *** Response heading after thinking content
+        (insert "\n*** Response\n\n"))
       ;; Fold the Think subtree
       (save-excursion
         (goto-char (marker-position heading-marker))
@@ -500,22 +569,98 @@ registers the heading for toggle-all."
       ;; Rename "Thinking..." -> "Think"
       (save-excursion
         (goto-char (marker-position heading-marker))
-        (when (looking-at "\\*\\*\\* ✦ Thinking\\.\\.\\.")
-          (replace-match "*** ✦ Think")))
-      ;; Advance response-start-position past the *** ✦ Response heading
+        (when (looking-at "\\*\\*\\* Thinking\\.\\.\\.")
+          (replace-match "*** Think")))
+      ;; Advance response-start-position past the *** Response heading
       ;; so md-to-org conversion doesn't touch the thinking block
       (when ollama-buddy--response-start-position
         (save-excursion
           (goto-char (marker-position heading-marker))
-          (when (re-search-forward "^\\*\\*\\* ✦ Response\n+" nil t)
+          (when (re-search-forward "^\\*\\*\\* Response\n+" nil t)
             (setq ollama-buddy--response-start-position (copy-marker (point)))))))
     ;; Register for toggle-all
     (push heading-marker ollama-buddy--thinking-heading-markers))
   ;; Clean up
   (setq ollama-buddy--thinking-content-accumulator nil))
 
+(defun ollama-buddy--extract-thinking-from-response (response)
+  "Separate tag-style thinking content from RESPONSE text.
+Returns (THINKING-CONTENT . CLEAN-RESPONSE).
+THINKING-CONTENT is nil when no tags are found."
+  (let ((thinking nil)
+        (clean response))
+    (catch 'found
+      (dolist (pair ollama-buddy-reasoning-markers)
+        (let* ((open (car pair))
+               (close (cdr pair))
+               (re (concat (regexp-quote open)
+                           "\\(\\(?:.\\|\n\\)*?\\)"
+                           (regexp-quote close))))
+          (when (string-match re response)
+            (setq thinking (string-trim (match-string 1 response))
+                  clean (string-trim
+                         (replace-regexp-in-string re "" response nil nil 0)))
+            (throw 'found nil)))))
+    (cons thinking clean)))
+
+(defun ollama-buddy--rebuild-tool-batch (batch-start model tool-calls tool-results
+                                                      &optional thinking-content response-text)
+  "Delete streaming artifacts from BATCH-START and rebuild a clean tool batch.
+MODEL is the model name for the header.
+TOOL-CALLS and TOOL-RESULTS are parallel lists.
+THINKING-CONTENT (if non-nil/empty) produces a folded *** Think section.
+RESPONSE-TEXT (if non-nil/empty) is inserted before the Tools section."
+  (let ((inhibit-read-only t)
+        (think-marker nil)
+        (tool-heading-positions nil))
+    ;; 1. Nuke all streaming artifacts and overlays
+    (delete-region batch-start (point-max))
+    (goto-char (point-max))
+    ;; 2. Insert structured output
+    (insert (format "\n\n** [%s: TOOLS]\n" model))
+    ;; Optional response text before thinking
+    (when (and response-text (not (string-empty-p response-text)))
+      (insert response-text)
+      (unless (string-suffix-p "\n" response-text)
+        (insert "\n")))
+    ;; Optional thinking section
+    (when (and thinking-content (not (string-empty-p thinking-content)))
+      (setq think-marker (copy-marker (point)))
+      (insert "*** Think\n\n"
+              thinking-content)
+      (unless (string-suffix-p "\n" thinking-content)
+        (insert "\n"))
+      (insert "\n"))
+    ;; Tools section
+    (insert "*** Tools\n")
+    ;; Each tool call + result
+    (cl-mapc
+     (lambda (call result)
+       (let* ((func (alist-get 'function call))
+              (name (alist-get 'name func))
+              (args (alist-get 'arguments func))
+              (content (alist-get 'content result)))
+         (push (point-marker) tool-heading-positions)
+         (insert (format "**** %s\n***** call\n\n#+begin_src json\n%s\n#+end_src\n***** results\n\n#+begin_example\n%s\n#+end_example\n"
+                         name
+                         (json-encode args)
+                         (replace-regexp-in-string "^\\([*#]\\)" ",\\1" content)))))
+     tool-calls
+     tool-results)
+    ;; 3. Fold Think heading (bounded by *** Tools at same level)
+    (when think-marker
+      (save-excursion
+        (goto-char think-marker)
+        (outline-hide-subtree))
+      (push think-marker ollama-buddy--thinking-heading-markers))
+    ;; 4. Fold each **** tool heading in reverse order
+    (dolist (pos tool-heading-positions)
+      (save-excursion
+        (goto-char pos)
+        (outline-hide-subtree)))))
+
 (defun ollama-buddy--thinking-heading-folded-p (pos)
-  "Return non-nil if the `*** ✦ Think' heading at POS is currently folded."
+  "Return non-nil if the `*** Think' heading at POS is currently folded."
   (save-excursion
     (goto-char pos)
     (end-of-line)
@@ -523,20 +668,20 @@ registers the heading for toggle-all."
          (invisible-p (1+ (point))))))
 
 (defun ollama-buddy-toggle-thinking-at-point ()
-  "Toggle the `*** ✦ Think' heading at or above point."
+  "Toggle the `*** Think' heading at or above point."
   (interactive)
   (save-excursion
     (beginning-of-line)
-    (unless (looking-at "^\\*\\*\\* ✦ Think")
-      (re-search-backward "^\\*\\*\\* ✦ Think" nil t))
-    (if (looking-at "^\\*\\*\\* ✦ Think")
+    (unless (looking-at "^\\*\\*\\* Think")
+      (re-search-backward "^\\*\\*\\* Think" nil t))
+    (if (looking-at "^\\*\\*\\* Think")
         (if (ollama-buddy--thinking-heading-folded-p (point))
             (outline-show-subtree)
           (outline-hide-subtree))
       (message "No thinking block at or above point"))))
 
 (defun ollama-buddy-toggle-all-thinking-blocks ()
-  "Toggle all `*** ✦ Think' headings in the current buffer.
+  "Toggle all `*** Think' headings in the current buffer.
 If any is folded, expand all; otherwise fold all."
   (interactive)
   (let ((live (cl-remove-if-not #'marker-buffer
@@ -557,7 +702,7 @@ If any is folded, expand all; otherwise fold all."
 (defun ollama-buddy-toggle-reasoning-visibility ()
   "Toggle thinking block visibility.
 In collapse mode (`ollama-buddy-collapse-thinking'), folds or unfolds all
-`*** ✦ Think' headings in the buffer.
+`*** Think' headings in the buffer.
 In hide mode, toggles `ollama-buddy-hide-reasoning'."
   (interactive)
   (if ollama-buddy-collapse-thinking
@@ -1783,9 +1928,10 @@ Filters stop words and returns up to 5 key words joined by hyphens."
     (message "Started new session")))
 
 (defun ollama-buddy-exit ()
-  "Close the Ollama Buddy chat buffer."
+  "Close the Ollama Buddy chat buffer and clear conversation history."
   (interactive)
   (when-let* ((buf (get-buffer ollama-buddy--chat-buffer)))
+    (clrhash ollama-buddy--conversation-history-by-model)
     (quit-window nil (get-buffer-window buf))
     (kill-buffer buf)))
 
@@ -2145,6 +2291,7 @@ Optional MENU-COLUMNS specifies the number of columns for the menu display."
       (org-mode)
       (setq-local org-hide-emphasis-markers t)
       (setq-local org-hide-leading-stars t)
+      (setq-local org-fold-catch-invisible-edits nil)
       (visual-line-mode 1)
       (ollama-buddy-mode 1)
       (ollama-buddy--check-status)
@@ -2369,7 +2516,7 @@ TCP packets split a JSON object across multiple filter calls."
                   (setq ollama-buddy--in-reasoning-section t
                         ollama-buddy--thinking-arrow-marker (ollama-buddy--insert-thinking-header)
                         ollama-buddy--thinking-block-start  (copy-marker (point) nil)))
-                 ;; End marker: finalize the *** ✦ Think heading
+                 ;; End marker: finalize the *** Think heading
                  ((and ollama-buddy--reasoning-marker-found
                        (eq (car ollama-buddy--reasoning-marker-found) 'end)
                        ollama-buddy--in-reasoning-section)
@@ -2418,6 +2565,21 @@ TCP packets split a JSON object across multiple filter calls."
                                (not ollama-buddy-collapse-thinking)
                                ollama-buddy--in-reasoning-section)
                           ollama-buddy--reasoning-marker-found)
+
+                ;; Conditional header insertion for text content
+                (when (and (not ollama-buddy--header-inserted-p)
+                           (not (string-empty-p (string-trim text))))
+                  (let ((pos (ollama-buddy--insert-response-header
+                              ollama-buddy--current-model
+                              ollama-buddy--current-original-model
+                              ollama-buddy--current-has-images)))
+                    ;; Update response start marker if the header changed it
+                    (when pos
+                      (set-marker ollama-buddy--response-start-position pos)
+                      (set-marker pos nil)
+                      ;; Move point past the header so text inserts after it
+                      (goto-char (point-max)))))
+
                 ;; In collapse mode, accumulate thinking content (don't insert)
                 (if (and ollama-buddy-collapse-thinking
                          ollama-buddy--in-reasoning-section
@@ -2450,225 +2612,251 @@ TCP packets split a JSON object across multiple filter calls."
 
               ;; Check if this response is complete
               (when (eq (alist-get 'done json-data) t)
+                ;; Cancel the response wait timer immediately on completion
+                (ollama-buddy--cancel-response-wait-timer)
 
-                ;; Update cloud auth status on successful cloud model response
-                (when (and ollama-buddy--current-model
-                           (ollama-buddy--cloud-model-p ollama-buddy--current-model))
-                  (ollama-buddy--set-cloud-auth-status t))
+                (let ((batch-start (if (markerp ollama-buddy--turn-start-position)
+                                       (marker-position ollama-buddy--turn-start-position)
+                                     (if (markerp ollama-buddy--response-start-position)
+                                         (marker-position ollama-buddy--response-start-position)
+                                       ollama-buddy--response-start-position))))
 
-                ;; If still in thinking-API phase at stream end, finalize
-                (when ollama-buddy--thinking-api-active
-                  (setq ollama-buddy--thinking-api-active nil)
-                  (when (and ollama-buddy-collapse-thinking
-                             ollama-buddy--thinking-block-start)
-                    (ollama-buddy--finalize-thinking-block
-                     ollama-buddy--thinking-arrow-marker)
-                    (set-marker ollama-buddy--thinking-block-start nil)
-                    (setq ollama-buddy--thinking-block-start  nil
-                          ollama-buddy--thinking-arrow-marker nil)))
+                  ;; Update cloud auth status on successful cloud model response
+                  (when (and ollama-buddy--current-model
+                             (ollama-buddy--cloud-model-p ollama-buddy--current-model))
+                    (ollama-buddy--set-cloud-auth-status t))
 
-                ;; If still in a marker-based reasoning section at stream end, force exit
-                (when ollama-buddy--in-reasoning-section
-                  (setq ollama-buddy--in-reasoning-section nil)
-                  (cond
-                   ;; Collapse mode: finalize whatever arrived into the heading
-                   (ollama-buddy-collapse-thinking
-                    (when ollama-buddy--thinking-block-start
-                      (ollama-buddy--finalize-thinking-block
-                       ollama-buddy--thinking-arrow-marker)
-                      (set-marker ollama-buddy--thinking-block-start nil)
-                      (setq ollama-buddy--thinking-block-start  nil
-                            ollama-buddy--thinking-arrow-marker nil)))
-                   ;; Hide mode: delete the partial block
-                   (ollama-buddy-hide-reasoning
-                    (setq ollama-buddy--reasoning-status-message nil)
-                    (when ollama-buddy--start-point
-                      (delete-region ollama-buddy--start-point (point-max))
-                      (setq ollama-buddy--start-point nil))
-                    (insert "\n[Warning: Response ended with unclosed reasoning section]\n\n"))))
+                  ;; Add the user message to history
+                  (ollama-buddy--add-to-history "user" ollama-buddy--current-prompt)
+                  ;; Add the complete response to history
+                  (ollama-buddy--add-to-history
+                   "assistant"
+                   (or ollama-buddy--current-response "")
+                   ollama-buddy--current-tool-calls)
 
-                ;; Pulse the response region to indicate completion
-                (when (and ollama-buddy-pulse-response
-                           ollama-buddy--response-start-position)
-                  (ignore-errors
-                    (pulse-momentary-highlight-region
-                     ollama-buddy--response-start-position (point))))
+                  ;; Branch: tool calls vs normal completion
+                  (if (and (featurep 'ollama-buddy-tools)
+                           (bound-and-true-p ollama-buddy-tools-enabled)
+                           ollama-buddy--current-tool-calls
+                           (< ollama-buddy--tool-call-iteration
+                              (if (boundp 'ollama-buddy-tools-max-iterations)
+                                  ollama-buddy-tools-max-iterations 10)))
 
-                ;; Convert the response from markdown to org format if enabled
-                (when ollama-buddy-convert-markdown-to-org
-                  (let* ((converted-content (with-temp-buffer
-                                              (insert ollama-buddy--current-response)
-                                              (ollama-buddy--md-to-org-convert-region (point-min) (point-max))
-                                              (buffer-string))))
-                    (set-register ollama-buddy-default-register converted-content))
+                      ;; === TOOL BATCH PATH ===
+                      (let* ((thinking-content
+                              (cond
+                               ;; API-style thinking (deepseek-r1): accumulated in var
+                               (ollama-buddy--thinking-content-accumulator
+                                (prog1 ollama-buddy--thinking-content-accumulator
+                                  (setq ollama-buddy--thinking-content-accumulator nil)))
+                               ;; Tag-style thinking: extract from response text
+                               ((and ollama-buddy--current-response
+                                     (car (ollama-buddy--extract-thinking-from-response
+                                           ollama-buddy--current-response)))
+                                (car (ollama-buddy--extract-thinking-from-response
+                                      ollama-buddy--current-response)))
+                               (t nil)))
+                             (response-text
+                              (when ollama-buddy--current-response
+                                (let ((extracted (ollama-buddy--extract-thinking-from-response
+                                                  ollama-buddy--current-response)))
+                                  (if (car extracted) (cdr extracted) ollama-buddy--current-response))))
+                             ;; Convert response-text via md-to-org if enabled
+                             (response-text
+                              (if (and response-text
+                                       (not (string-empty-p response-text))
+                                       ollama-buddy-convert-markdown-to-org)
+                                  (with-temp-buffer
+                                    (insert response-text)
+                                    (ollama-buddy--md-to-org-convert-region (point-min) (point-max))
+                                    (buffer-string))
+                                response-text)))
 
-                  (when ollama-buddy--response-start-position
-                    (ollama-buddy--md-to-org-convert-region
-                     ollama-buddy--response-start-position
-                     (point-max))
-                    ;; Reset the marker after conversion
-                    (when (markerp ollama-buddy--response-start-position)
-                      (set-marker ollama-buddy--response-start-position nil))
-                    (setq ollama-buddy--response-start-position nil)))
+                        (setq ollama-buddy--tool-call-iteration
+                              (1+ ollama-buddy--tool-call-iteration))
 
-                (unless ollama-buddy-convert-markdown-to-org
-                  (set-register ollama-buddy-default-register ollama-buddy--current-response))
-                
-                ;; Add the user message to history
-                (ollama-buddy--add-to-history "user" ollama-buddy--current-prompt)
-                ;; Add the complete response to history
-                (ollama-buddy--add-to-history
-                 "assistant"
-                 (or ollama-buddy--current-response "")
-                 ollama-buddy--current-tool-calls)
-
-                ;; Handle tool calls if present
-                (if (and (featurep 'ollama-buddy-tools)
-                         (bound-and-true-p ollama-buddy-tools-enabled)
-                         ollama-buddy--current-tool-calls
-                         (< ollama-buddy--tool-call-iteration
-                            (if (boundp 'ollama-buddy-tools-max-iterations)
-                                ollama-buddy-tools-max-iterations 10)))
-                    (progn
-                      (setq ollama-buddy--tool-call-iteration
-                            (1+ ollama-buddy--tool-call-iteration))
-
-                      ;; Display tool calls in chat buffer
-                      ;; Trim any trailing whitespace the model streamed before the tool calls
-                      (delete-region (save-excursion (goto-char (point-max))
-                                                     (skip-chars-backward " \t\n")
-                                                     (point))
-                                     (point-max))
-                      (progn
-                        (insert "\n\n*** Tools\n\n")
-                        ;; Execute tools first so call+results can be grouped by tool name
+                        ;; Execute tool calls
                         (let ((tool-results
                                (ollama-buddy-tools--process-tool-calls
                                 ollama-buddy--current-tool-calls)))
 
-                          ;; Display each tool as **** name with ***** call and ***** results folded
-                          (cl-mapc
-                           (lambda (call result)
-                             (let* ((func (alist-get 'function call))
-                                    (name (alist-get 'name func))
-                                    (args (alist-get 'arguments func))
-                                    (content (alist-get 'content result))
-                                    (tool-heading-start (point)))
-                               (insert (format "**** %s\n***** call\n\n#+begin_src json\n%s\n#+end_src\n***** results\n\n#+begin_example\n%s\n#+end_example\n"
-                                               name
-                                               (json-encode args)
-                                               (replace-regexp-in-string "^\\([*#]\\)" ",\\1" content)))
-                               ;; Fold the **** heading — hides both ***** subtrees
-                               (save-excursion
-                                 (goto-char tool-heading-start)
-                                 (outline-hide-subtree))))
+                          ;; REBUILD: delete streaming artifacts, insert structured batch
+                          (ollama-buddy--rebuild-tool-batch
+                           batch-start
+                           ollama-buddy--current-model
                            ollama-buddy--current-tool-calls
-                           tool-results)
+                           tool-results
+                           thinking-content
+                           response-text)
 
                           ;; Add tool results to history
                           (dolist (result tool-results)
                             (ollama-buddy--add-to-history-raw result))
 
-                          ;; Reset tool call state
-                          (setq ollama-buddy--current-tool-calls nil)
+                          ;; Reset state for next turn
+                          (setq ollama-buddy--current-tool-calls nil
+                                ollama-buddy--thinking-api-active nil
+                                ollama-buddy--in-reasoning-section nil
+                                ollama-buddy--thinking-content-accumulator nil)
+                          (when ollama-buddy--thinking-block-start
+                            (set-marker ollama-buddy--thinking-block-start nil)
+                            (setq ollama-buddy--thinking-block-start nil))
+                          (when ollama-buddy--thinking-arrow-marker
+                            (setq ollama-buddy--thinking-arrow-marker nil))
                           (makunbound 'ollama-buddy--current-response)
-                          ;; A terminal tool (e.g. propose_file_changes) breaks
-                          ;; the tool-call cycle by sending "continue" as a plain
-                          ;; user message — the LLM summarises without calling
-                          ;; more tools, and the user can then reply normally.
+                          (setq ollama-buddy--header-inserted-p nil)
+                          (setq ollama-buddy--response-start-position (copy-marker (point-max)))
+
+                          ;; Send continuation
                           (if (and (boundp 'ollama-buddy-tools--stop-after-batch)
                                    ollama-buddy-tools--stop-after-batch)
                               (progn
                                 (setq ollama-buddy-tools--stop-after-batch nil)
-                                ;; Prevent the LLM from calling tools again in
-                                ;; its summary response.
                                 (setq ollama-buddy--suppress-tools-once t)
                                 (ollama-buddy--send "continue, I will manually apply the changes using ediff, please just supply a brief summary of what was changed making sure to mention that the file is available in the eregistry" ollama-buddy--current-model nil))
-                            (ollama-buddy--send nil ollama-buddy--current-model t)))))
+                            (ollama-buddy--send nil ollama-buddy--current-model t))))
 
-                  ;; No tool calls (or limit reached) - normal completion
-                  (makunbound 'ollama-buddy--current-response)
+                    ;; === NORMAL COMPLETION PATH ===
 
-                  ;; Cancel the update timer
-                  (when ollama-buddy--token-update-timer
-                    (cancel-timer ollama-buddy--token-update-timer)
-                    (setq ollama-buddy--token-update-timer nil))
+                    ;; If still in thinking-API phase at stream end, finalize
+                    (when ollama-buddy--thinking-api-active
+                      (setq ollama-buddy--thinking-api-active nil)
+                      (when (and ollama-buddy-collapse-thinking
+                                 ollama-buddy--thinking-block-start)
+                        (ollama-buddy--finalize-thinking-block
+                         ollama-buddy--thinking-arrow-marker)
+                        (set-marker ollama-buddy--thinking-block-start nil)
+                        (setq ollama-buddy--thinking-block-start  nil
+                              ollama-buddy--thinking-arrow-marker nil)))
 
-                  ;; Calculate final statistics
-                  (let* ((elapsed-time (- (float-time) ollama-buddy--current-token-start-time))
-                         (token-rate (if (> elapsed-time 0)
-                                         (/ ollama-buddy--current-token-count elapsed-time)
-                                       0))
-                         (token-info (list :model ollama-buddy--current-model
-                                           :tokens ollama-buddy--current-token-count
-                                           :elapsed elapsed-time
-                                           :rate token-rate
-                                           :wait-time ollama-buddy--response-wait-duration
-                                           :timestamp (current-time))))
+                    ;; If still in a marker-based reasoning section at stream end, force exit
+                    (when ollama-buddy--in-reasoning-section
+                      (setq ollama-buddy--in-reasoning-section nil)
+                      (cond
+                       ;; Collapse mode: finalize whatever arrived into the heading
+                       (ollama-buddy-collapse-thinking
+                        (when ollama-buddy--thinking-block-start
+                          (ollama-buddy--finalize-thinking-block
+                           ollama-buddy--thinking-arrow-marker)
+                          (set-marker ollama-buddy--thinking-block-start nil)
+                          (setq ollama-buddy--thinking-block-start  nil
+                                ollama-buddy--thinking-arrow-marker nil)))
+                       ;; Hide mode: delete the partial block
+                       (ollama-buddy-hide-reasoning
+                        (setq ollama-buddy--reasoning-status-message nil)
+                        (when ollama-buddy--start-point
+                          (delete-region ollama-buddy--start-point (point-max))
+                          (setq ollama-buddy--start-point nil))
+                        (insert "\n[Warning: Response ended with unclosed reasoning section]\n\n"))))
 
-                    ;; Add to history
-                    (push token-info ollama-buddy--token-usage-history)
-                    (ollama-buddy--trim-token-history)
+                    ;; Pulse the response region to indicate completion
+                    (when (and ollama-buddy-pulse-response
+                               ollama-buddy--response-start-position)
+                      (ignore-errors
+                        (pulse-momentary-highlight-region
+                         ollama-buddy--response-start-position (point))))
 
-                    ;; Display token info if enabled
-                    (when ollama-buddy-display-token-stats
-                      (insert (format "\n\n*** Token Stats\n[%d tokens in %.1fs, %.1f tokens/sec]"
-                                      ollama-buddy--current-token-count
-                                      elapsed-time
-                                      token-rate))
-                      ;; Add modified parameters to the display
-                      (when ollama-buddy-params-modified
-                        (insert "\n\n*** Modified Parameters: ")
-                        (let ((param-strings
-                               (mapcar
-                                (lambda (param)
-                                  (let ((value (alist-get param ollama-buddy-params-active)))
-                                    (format "%s=%s"
-                                            param
-                                            (cond
-                                             ((floatp value) (format "%.2f" value))
-                                             ((vectorp value) (format "[%s]" (mapconcat #'identity value ", ")))
-                                             (t value)))))
-                                ollama-buddy-params-modified)))
-                          (insert (mapconcat #'identity param-strings ", ")))))
+                    ;; Convert the response from markdown to org format if enabled
+                    (when ollama-buddy-convert-markdown-to-org
+                      (let* ((converted-content (with-temp-buffer
+                                                  (insert ollama-buddy--current-response)
+                                                  (ollama-buddy--md-to-org-convert-region (point-min) (point-max))
+                                                  (buffer-string))))
+                        (set-register ollama-buddy-default-register converted-content))
 
-                    ;; Reset tracking variables
-                    (setq ollama-buddy--current-token-count 0
-                          ollama-buddy--current-token-start-time nil
-                          ollama-buddy--last-token-count 0
-                          ollama-buddy--last-update-time nil
-                          ;; Reset reasoning variables
-                          ollama-buddy--in-reasoning-section nil
-                          ollama-buddy--reasoning-status-message nil
-                          ollama-buddy--reasoning-skip-newlines nil))
+                      (when ollama-buddy--response-start-position
+                        (ollama-buddy--md-to-org-convert-region
+                         ollama-buddy--response-start-position
+                         (point-max))
+                        ;; Reset the marker after conversion
+                        (when (markerp ollama-buddy--response-start-position)
+                          (set-marker ollama-buddy--response-start-position nil))
+                        (setq ollama-buddy--response-start-position nil)))
 
-                  ;; reset the current model if from external
-                  (when ollama-buddy--current-request-temporary-model
-                    (setq ollama-buddy--current-model ollama-buddy--current-request-temporary-model)
-                    (setq ollama-buddy--current-request-temporary-model nil))
+                    (unless ollama-buddy-convert-markdown-to-org
+                      (set-register ollama-buddy-default-register ollama-buddy--current-response))
 
+                    (makunbound 'ollama-buddy--current-response)
 
-                  ;; Handle multishot progression here
-                  (if ollama-buddy--multishot-sequence
-                      (progn
-                        (ollama-buddy--multishot-cancel-timer)
-                        ;; Increment progress
-                        (if (< ollama-buddy--multishot-progress
-                               (length ollama-buddy--multishot-sequence))
+                    ;; Cancel the update timer
+                    (when ollama-buddy--token-update-timer
+                      (cancel-timer ollama-buddy--token-update-timer)
+                      (setq ollama-buddy--token-update-timer nil))
+
+                    ;; Calculate final statistics
+                    (let* ((elapsed-time (- (float-time) ollama-buddy--current-token-start-time))
+                           (token-rate (if (> elapsed-time 0)
+                                           (/ ollama-buddy--current-token-count elapsed-time)
+                                         0))
+                           (token-info (list :model ollama-buddy--current-model
+                                             :tokens ollama-buddy--current-token-count
+                                             :elapsed elapsed-time
+                                             :rate token-rate
+                                             :wait-time ollama-buddy--response-wait-duration
+                                             :timestamp (current-time))))
+
+                      ;; Add to history
+                      (push token-info ollama-buddy--token-usage-history)
+                      (ollama-buddy--trim-token-history)
+
+                      ;; Display token info if enabled
+                      (when ollama-buddy-display-token-stats
+                        (insert (format "\n\n*** Token Stats\n[%d tokens in %.1fs, %.1f tokens/sec]"
+                                        ollama-buddy--current-token-count
+                                        elapsed-time
+                                        token-rate))
+                        ;; Add modified parameters to the display
+                        (when ollama-buddy-params-modified
+                          (insert "\n\n*** Modified Parameters: ")
+                          (let ((param-strings
+                                 (mapcar
+                                  (lambda (param)
+                                    (let ((value (alist-get param ollama-buddy-params-active)))
+                                      (format "%s=%s"
+                                              param
+                                              (cond
+                                               ((floatp value) (format "%.2f" value))
+                                               ((vectorp value) (format "[%s]" (mapconcat #'identity value ", ")))
+                                               (t value)))))
+                                  ollama-buddy-params-modified)))
+                            (insert (mapconcat #'identity param-strings ", ")))))
+
+                      ;; Reset tracking variables
+                      (setq ollama-buddy--current-token-count 0
+                            ollama-buddy--current-token-start-time nil
+                            ollama-buddy--last-token-count 0
+                            ollama-buddy--last-update-time nil
+                            ;; Reset reasoning variables
+                            ollama-buddy--in-reasoning-section nil
+                            ollama-buddy--reasoning-status-message nil
+                            ollama-buddy--reasoning-skip-newlines nil))
+
+                    ;; reset the current model if from external
+                    (when ollama-buddy--current-request-temporary-model
+                      (setq ollama-buddy--current-model ollama-buddy--current-request-temporary-model)
+                      (setq ollama-buddy--current-request-temporary-model nil))
+
+                    ;; Handle multishot progression here
+                    (if ollama-buddy--multishot-sequence
+                        (progn
+                          (ollama-buddy--multishot-cancel-timer)
+                          ;; Increment progress
+                          (if (< ollama-buddy--multishot-progress
+                                 (length ollama-buddy--multishot-sequence))
+                              (progn
+                                ;; Process next model after a short delay
+                                (run-with-timer 0.5 nil #'ollama-buddy--send-next-in-sequence))
                             (progn
-                              ;; Process next model after a short delay
-                              (run-with-timer 0.5 nil #'ollama-buddy--send-next-in-sequence))
-                          (progn
-                            (ollama-buddy--update-status "Multi Finished")
-                            (ollama-buddy--prepare-prompt-area))))
-                    ;; Not in multishot mode, just show the prompt
-                    (progn
-                      (ollama-buddy--prepare-prompt-area)
-                      (ollama-buddy--update-status (format "Finished [%d %.1f t/s]"
-                                                           (plist-get (car ollama-buddy--token-usage-history) :tokens)
-                                                           (plist-get (car ollama-buddy--token-usage-history) :rate)))
-                      ;; Auto-save transcript
-                      (ollama-buddy--autosave-transcript))))
+                              (ollama-buddy--update-status "Multi Finished")
+                              (ollama-buddy--prepare-prompt-area))))
+                      ;; Not in multishot mode, just show the prompt
+                      (progn
+                        (ollama-buddy--prepare-prompt-area)
+                        (ollama-buddy--update-status (format "Finished [%d %.1f t/s]"
+                                                             (plist-get (car ollama-buddy--token-usage-history) :tokens)
+                                                             (plist-get (car ollama-buddy--token-usage-history) :rate)))
+                        ;; Auto-save transcript
+                        (ollama-buddy--autosave-transcript)))))
                 (setq completed t))) ; closes when-done AND save-excursion
             ;; Window state management (must be outside save-excursion)
             (when window
@@ -2996,11 +3184,16 @@ Refreshes the model management buffer if visible."
 
 ;; Update buffer initialization to check status
 (defun ollama-buddy--open-chat ()
-  "Open chat buffer and initialize if needed."
+  "Open chat buffer and initialize if needed.
+Updates the chat buffer's `default-directory' to match the caller's
+directory so that project.el and file-relative commands reflect the
+buffer the user launched from."
   (interactive)
-  (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
-  (ollama-buddy--initialize-chat-buffer)
-  (goto-char (point-max)))
+  (let ((caller-dir default-directory))
+    (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
+    (setq default-directory caller-dir)
+    (ollama-buddy--initialize-chat-buffer)
+    (goto-char (point-max))))
 
 (defun ollama-buddy--menu-help-assistant ()
   "Show the help assistant."
@@ -3458,48 +3651,18 @@ and no new user message is added."
       (unless (> (buffer-size) 0)
         (insert (ollama-buddy--create-intro-message)))
 
-      (if tool-continuation-p
-          ;; Tool continuation - minimal header
-          (progn
-            ;; Trim trailing whitespace from tool results before the heading
-            (delete-region (save-excursion (goto-char (point-max))
-                                           (skip-chars-backward " \t\n")
-                                           (point))
-                           (point-max))
-            (insert "\n\n*** [Tool Continuation]\n\n")
-            (setq ollama-buddy--response-start-position (copy-marker (point))))
-        ;; Normal send - full header
-        ;; Show any attached files
-        (when ollama-buddy--current-attachments
-          (insert (format "\n\n[Including %d attached file(s) in context]"
-                          (length ollama-buddy--current-attachments))))
+      (setq ollama-buddy--current-original-model original-model)
+      (setq ollama-buddy--current-has-images has-images)
+      (setq ollama-buddy--response-start-position (copy-marker (point)))
+      (setq ollama-buddy--turn-start-position (copy-marker (point)))
 
-        ;; Show whether we're using vision if applicable
-        (let ((avg-wait (ollama-buddy--model-average-wait-time model)))
-          (if has-images
-              (insert (format "\n\n** [%s: RESPONSE with %d image(s)]"
-                              model (length image-files)))
-            (insert (format "\n\n** [%s: RESPONSE]" model)))
-          ;; Insert countdown estimate before the closing ]
-          (when (and avg-wait (>= avg-wait 1))
-            (backward-char 1)  ; before ]
-            (setq ollama-buddy--response-countdown-marker (copy-marker (point)))
-            (insert (format " ~%ds" (round avg-wait)))
-            (end-of-line)))
-
-        (insert "\n\n")
-
-        (setq ollama-buddy--response-start-position (copy-marker (point)))
-
-        (when (and original-model model (not (string= original-model model)))
-          (insert (format "*[Using %s instead of %s]*" model original-model)  "\n\n"))
-
-        ;; Display detected images if any
-        (when has-images
-          (insert "Detected images:\n")
-          (dolist (img image-files)
-            (insert (format "- %s\n" img)))
-          (insert "\n")))
+      ;; Insert response header eagerly so the user sees immediate feedback
+      ;; with the countdown timer, rather than a blank buffer while waiting
+      (let ((pos (ollama-buddy--insert-response-header model original-model has-images)))
+        (when pos
+          (set-marker ollama-buddy--response-start-position pos)
+          (set-marker pos nil)))
+      (setq ollama-buddy--header-inserted-p t)
 
       ;; Enable visual-line-mode for better text wrapping
       (visual-line-mode 1))

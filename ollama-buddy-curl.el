@@ -34,11 +34,16 @@
 (defvar ollama-buddy--thinking-arrow-marker)
 (defvar ollama-buddy--thinking-block-start)
 (defvar ollama-buddy--thinking-content-accumulator)
+(defvar ollama-buddy--header-inserted-p)
+(defvar ollama-buddy--turn-start-position)
+(defvar ollama-buddy--current-original-model)
+(defvar ollama-buddy--current-has-images)
 
 (declare-function ollama-buddy--start-response-wait-timer "ollama-buddy")
 (declare-function ollama-buddy--model-average-wait-time "ollama-buddy")
 (declare-function ollama-buddy--trim-token-history "ollama-buddy")
 (declare-function ollama-buddy--cancel-response-wait-timer "ollama-buddy")
+(declare-function ollama-buddy--insert-response-header "ollama-buddy")
 
 ;; Curl-specific variables
 (defvar ollama-buddy-curl--headers-processed nil
@@ -386,7 +391,15 @@ When complete, CALLBACK is called with the status response and result."
                   (setq should-show-content nil))))))
 
             ;; Insert content if not suppressed
-            (when should-show-content
+            (when (and should-show-content (not (string-empty-p (string-trim content))))
+              (unless ollama-buddy--header-inserted-p
+                (let ((pos (ollama-buddy--insert-response-header
+                            ollama-buddy--current-model
+                            ollama-buddy--current-original-model
+                            ollama-buddy--current-has-images)))
+                  (when pos
+                    (set-marker ollama-buddy--response-start-position pos)
+                    (set-marker pos nil))))
               (insert content))))
 
         ;; Window state management
@@ -434,6 +447,32 @@ When complete, CALLBACK is called with the status response and result."
                                     ollama-buddy--response-start-position))
                   (window (get-buffer-window ollama-buddy--chat-buffer t)))
               (goto-char (point-max))
+
+              ;; Update turn header if tools were called
+              (when (and (bound-and-true-p ollama-buddy--current-tool-calls)
+                         (not (string-empty-p (or ollama-buddy--current-model ""))))
+                (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+                  (let ((inhibit-read-only t))
+                    (if ollama-buddy--header-inserted-p
+                        ;; Rename existing RESPONSE -> TOOLS
+                        (save-excursion
+                          (let ((marker (if (markerp ollama-buddy--response-start-position)
+                                            (marker-position ollama-buddy--response-start-position)
+                                          ollama-buddy--response-start-position)))
+                            (when marker
+                              (goto-char marker)
+                              (when (re-search-forward ": RESPONSE\\]" (line-end-position 2) t)
+                                (replace-match ": TOOLS]")))))
+                      ;; No header yet (only tools/thinking), insert TOOLS header at start
+                      (ollama-buddy--insert-response-header
+                       ollama-buddy--current-model
+                       ollama-buddy--current-original-model
+                       ollama-buddy--current-has-images)
+                      ;; Rename that new header to TOOLS immediately
+                      (save-excursion
+                        (goto-char (point-max))
+                        (when (re-search-backward ": RESPONSE\\]" nil t)
+                          (replace-match ": TOOLS]")))))))
 
               ;; Pulse the response region to indicate completion
               (when (and ollama-buddy-pulse-response
@@ -628,34 +667,11 @@ authentication via `ollama signin'."
       (unless (> (buffer-size) 0)
         (insert (ollama-buddy--create-intro-message)))
 
-      (when ollama-buddy--current-attachments
-        (insert (format "\n\n[Including %d attached file(s) in context]"
-                        (length ollama-buddy--current-attachments))))
-      
-      (let ((avg-wait (ollama-buddy--model-average-wait-time model)))
-        (if has-images
-            (insert (format "\n\n** [%s: RESPONSE with %d image(s)]"
-                            model (length image-files)))
-          (insert (format "\n\n** [%s: RESPONSE]" model)))
-        ;; Insert countdown estimate before the closing ]
-        (when (and avg-wait (>= avg-wait 1))
-          (backward-char 1)  ; before ]
-          (setq ollama-buddy--response-countdown-marker (copy-marker (point)))
-          (insert (format " ~%ds" (round avg-wait)))
-          (end-of-line)))
-
-      (insert "\n\n")
+      (setq ollama-buddy--header-inserted-p nil)
+      (setq ollama-buddy--current-original-model original-model)
+      (setq ollama-buddy--current-has-images has-images)
       (setq ollama-buddy--response-start-position (copy-marker (point)))
-
-      (when (and original-model model (not (string= original-model model)))
-        (insert (format "*[Using %s instead of %s]*\n\n" model original-model)))
-
-      (when has-images
-        (insert "Detected images:\n")
-        (dolist (img image-files)
-          (insert (format "- %s\n" img)))
-        (insert "\n"))
-
+      
       (visual-line-mode 1))
 
     ;; Show "Loading..." message when streaming is disabled
