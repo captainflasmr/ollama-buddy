@@ -197,7 +197,7 @@ Returns the position where the response content should start."
             (setq ollama-buddy--response-countdown-marker (copy-marker (point)))
             (insert (format " ~%ds" (round avg-wait)))
             (forward-char 1)))  ; past ] only, not end-of-line
-        (insert "\n")
+        (insert "\n\n")
         (when (and original-model model (not (string= original-model model)))
           (insert (format "\n*[Using %s instead of %s]*\n" model original-model)))
         (setq ollama-buddy--header-inserted-p t)
