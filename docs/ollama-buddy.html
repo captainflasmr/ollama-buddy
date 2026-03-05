@@ -1185,8 +1185,8 @@ with <code class="code">☁</code>.
 <dd><p>Press <code class="code">C-c P</code> for the Project sub-menu. Access project-specific file attachment and context.
 </p>
 </dd>
-<dt>Toggling reasoning visibility</dt>
-<dd><p>Press <code class="code">C-c V</code> to hide or show reasoning/thinking sections in responses.
+<dt>Toggling thinking stream visibility</dt>
+<dd><p>Press <code class="code">C-c V</code> to toggle live display of thinking tokens as they stream in. A <code class="code">◐</code> indicator appears in the header line when active.
 </p>
 </dd>
 <dt>Toggling Org/Markdown conversion</dt>
@@ -4273,6 +4273,8 @@ Works with LM Studio, llama.cpp, vLLM, Jan, and any
 </li><li><code class="code">H5/10</code> - History count (when enabled via <code class="code">ollama-buddy-show-history-indicator</code>)
 </li><li><code class="code">☁</code> - Currently using an Ollama cloud model
 </li><li><code class="code">⚒</code> - Current model supports tool calling
+</li><li><code class="code">✦</code> - Current model supports thinking/reasoning
+</li><li><code class="code">◐</code> - Thinking stream visibility is on (thinking tokens shown live)
 </li><li><code class="code">≡N</code> - Number of file attachments
 </li><li><code class="code">♁N</code> - Number of web search results attached
 </li><li><code class="code">V</code> - Reasoning/thinking sections hidden
@@ -4844,7 +4846,7 @@ Next: <a href="#Project-Integration" accesskey="n" rel="next">Project Integratio
 
 <dl class="table">
 <dt><kbd class="kbd">C-c V</kbd></dt>
-<dd><p>Toggle all thinking blocks in the buffer &mdash; expands any that are folded, or folds all if they are all expanded.
+<dd><p>Toggle thinking stream visibility for the next incoming thinking block. When enabled, thinking tokens are displayed live under the <code class="code">*** ✦ Think</code> heading as they arrive, then replaced with converted org content and folded on completion. A <code class="code">◐</code> indicator appears in the header line when active.
 </p>
 </dd>
 <dt><kbd class="kbd">TAB</kbd></dt>
@@ -4867,6 +4869,10 @@ Next: <a href="#Project-Integration" accesskey="n" rel="next">Project Integratio
 </dd>
 <dt><code class="code">ollama-buddy-thinking-models</code></dt>
 <dd><p>Static list of model name substrings that are known reasoning models. Auto-detection from the Ollama <code class="code">/api/show</code> capabilities array is also performed.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-stream-thinking-visible</code></dt>
+<dd><p>When non-nil, thinking tokens are displayed in the buffer as they stream in. On completion the raw text is replaced with converted org content and the heading is folded. Toggle with <code class="code">C-c V</code>.
 </p></dd>
 </dl>
 
@@ -5957,7 +5963,7 @@ Next: <a href="#FAQ" accesskey="n" rel="next">Frequently Asked Questions</a>, Pr
 </p>
 </dd>
 <dt><code class="code">ollama-buddy-toggle-reasoning-visibility</code></dt>
-<dd><p>Toggle visibility of reasoning/thinking sections in responses.
+<dd><p>Toggle thinking stream visibility. When enabled, thinking tokens are shown live as they stream in.
 </p>
 </dd>
 <dt><code class="code">ollama-buddy-toggle-show-history-indicator</code></dt>

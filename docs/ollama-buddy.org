@@ -1105,8 +1105,9 @@ Next: [[#Core-Features][Core Features]], Previous:
 - Project Integration :: Press =C-c P= for the Project sub-menu. Access
   project-specific file attachment and context.
 
-- Toggling reasoning visibility :: Press =C-c V= to hide or show
-  reasoning/thinking sections in responses.
+- Toggling thinking stream visibility :: Press =C-c V= to toggle live
+  display of thinking tokens as they stream in. A =◐= indicator appears
+  in the header line when active.
 
 - Toggling Org/Markdown conversion :: Press =C-c C-o= to switch between
   Org-mode and Markdown output. Also available from the transient menu
@@ -4395,6 +4396,8 @@ The header line shows compact status indicators:
   =ollama-buddy-show-history-indicator=)
 - =☁= - Currently using an Ollama cloud model
 - =⚒= - Current model supports tool calling
+- =✦= - Current model supports thinking/reasoning
+- =◐= - Thinking stream visibility is on (thinking tokens shown live)
 - =≡N= - Number of file attachments
 - =♁N= - Number of web search results attached
 - =V= - Reasoning/thinking sections hidden
@@ -5013,8 +5016,11 @@ active model supports thinking/reasoning.
 :CUSTOM_ID: key-bindings
 :CLASS: section
 :END:
-- C-c V :: Toggle all thinking blocks in the buffer --- expands any that
-  are folded, or folds all if they are all expanded.
+- C-c V :: Toggle thinking stream visibility for the next incoming
+  thinking block. When enabled, thinking tokens are displayed live under
+  the =*** ✦ Think= heading as they arrive, then replaced with converted
+  org content and folded on completion. A =◐= indicator appears in the
+  header line when active.
 
 - TAB :: On a =*** ✦ Think= heading line, cycle visibility of that
   individual block (standard org-mode behavior).
@@ -5036,6 +5042,11 @@ active model supports thinking/reasoning.
 - =ollama-buddy-thinking-models= :: Static list of model name substrings
   that are known reasoning models. Auto-detection from the Ollama
   =/api/show= capabilities array is also performed.
+
+- =ollama-buddy-stream-thinking-visible= :: When non-nil, thinking
+  tokens are displayed in the buffer as they stream in. On completion
+  the raw text is replaced with converted org content and the heading is
+  folded. Toggle with =C-c V=.
 
 --------------
 
@@ -6132,8 +6143,9 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 - =ollama-buddy-toggle-streaming= :: Toggle streaming mode for
   responses.
 
-- =ollama-buddy-toggle-reasoning-visibility= :: Toggle visibility of
-  reasoning/thinking sections in responses.
+- =ollama-buddy-toggle-reasoning-visibility= :: Toggle thinking stream
+  visibility. When enabled, thinking tokens are shown live as they
+  stream in.
 
 - =ollama-buddy-toggle-show-history-indicator= :: Toggle display of
   history indicator in the header line.

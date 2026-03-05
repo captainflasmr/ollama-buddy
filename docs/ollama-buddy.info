@@ -516,9 +516,9 @@ Project Integration
      Press ‘C-c P’ for the Project sub-menu.  Access project-specific
      file attachment and context.
 
-Toggling reasoning visibility
-     Press ‘C-c V’ to hide or show reasoning/thinking sections in
-     responses.
+Toggling thinking stream visibility
+     Press ‘C-c V’ to toggle live display of thinking tokens as they
+     stream in.  A ‘◐’ indicator appears in the header line when active.
 
 Toggling Org/Markdown conversion
      Press ‘C-c C-o’ to switch between Org-mode and Markdown output.
@@ -2904,6 +2904,8 @@ The header line shows compact status indicators:
      ‘ollama-buddy-show-history-indicator’)
    • ‘☁’ - Currently using an Ollama cloud model
    • ‘⚒’ - Current model supports tool calling
+   • ‘✦’ - Current model supports thinking/reasoning
+   • ‘◐’ - Thinking stream visibility is on (thinking tokens shown live)
    • ‘≡N’ - Number of file attachments
    • ‘♁N’ - Number of web search results attached
    • ‘V’ - Reasoning/thinking sections hidden
@@ -3346,8 +3348,11 @@ the active model supports thinking/reasoning.
 =================
 
 ‘C-c V’
-     Toggle all thinking blocks in the buffer -- expands any that are
-     folded, or folds all if they are all expanded.
+     Toggle thinking stream visibility for the next incoming thinking
+     block.  When enabled, thinking tokens are displayed live under the
+     ‘*** ✦ Think’ heading as they arrive, then replaced with converted
+     org content and folded on completion.  A ‘◐’ indicator appears in
+     the header line when active.
 
 ‘TAB’
      On a ‘*** ✦ Think’ heading line, cycle visibility of that
@@ -3370,6 +3375,11 @@ the active model supports thinking/reasoning.
      Static list of model name substrings that are known reasoning
      models.  Auto-detection from the Ollama ‘/api/show’ capabilities
      array is also performed.
+
+‘ollama-buddy-stream-thinking-visible’
+     When non-nil, thinking tokens are displayed in the buffer as they
+     stream in.  On completion the raw text is replaced with converted
+     org content and the heading is folded.  Toggle with ‘C-c V’.
 
 
 File: ollama-buddy.info,  Node: Project Integration,  Next: In-Buffer Replace,  Prev: Thinking Blocks,  Up: Top
@@ -4224,7 +4234,8 @@ File: ollama-buddy.info,  Node: API Reference,  Next: FAQ,  Prev: Advanced Usage
      Toggle streaming mode for responses.
 
 ‘ollama-buddy-toggle-reasoning-visibility’
-     Toggle visibility of reasoning/thinking sections in responses.
+     Toggle thinking stream visibility.  When enabled, thinking tokens
+     are shown live as they stream in.
 
 ‘ollama-buddy-toggle-show-history-indicator’
      Toggle display of history indicator in the header line.
@@ -4696,33 +4707,33 @@ Node: Introduction2961
 Node: Installation5149
 Node: Configuration8106
 Node: Quick Start16374
-Node: Core Features18824
-Node: Chat Interface23101
-Node: Working with Models30379
-Node: Context Management35607
-Node: File Attachments41216
-Node: Web Search47138
-Node: Parameter Control54876
-Node: Session Management57288
-Node: User System Prompts60197
-Node: Roles and Commands69993
-Node: Fabric Pattern Integration87183
-Node: Awesome ChatGPT Prompts89410
-Node: Remote Providers93260
-Node: Ollama Cloud Models100720
-Node: Global System Prompt104916
-Node: Tone Selector106670
-Node: Thinking Blocks108477
-Node: Project Integration110506
-Node: In-Buffer Replace111691
-Node: Tool Calling117567
-Node: RAG125355
-Node: Advanced Usage133134
-Node: API Reference135683
-Node: FAQ141622
-Node: Troubleshooting148707
-Node: Contributing151212
-Node: Index153880
+Node: Core Features18896
+Node: Chat Interface23173
+Node: Working with Models30451
+Node: Context Management35679
+Node: File Attachments41288
+Node: Web Search47210
+Node: Parameter Control54948
+Node: Session Management57360
+Node: User System Prompts60269
+Node: Roles and Commands70065
+Node: Fabric Pattern Integration87255
+Node: Awesome ChatGPT Prompts89482
+Node: Remote Providers93332
+Node: Ollama Cloud Models100934
+Node: Global System Prompt105130
+Node: Tone Selector106884
+Node: Thinking Blocks108691
+Node: Project Integration111185
+Node: In-Buffer Replace112370
+Node: Tool Calling118246
+Node: RAG126034
+Node: Advanced Usage133813
+Node: API Reference136362
+Node: FAQ142343
+Node: Troubleshooting149428
+Node: Contributing151933
+Node: Index154601
 
 End Tag Table
 

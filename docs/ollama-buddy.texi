@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 3.4.0
+@subtitle For Ollama Buddy version 3.4.1
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -588,8 +588,8 @@ Press @code{C-c C-a} to attach a file, or use the transient menu ``Project'' sec
 @item Project Integration
 Press @code{C-c P} for the Project sub-menu. Access project-specific file attachment and context.
 
-@item Toggling reasoning visibility
-Press @code{C-c V} to hide or show reasoning/thinking sections in responses.
+@item Toggling thinking stream visibility
+Press @code{C-c V} to toggle live display of thinking tokens as they stream in. A @code{◐} indicator appears in the header line when active.
 
 @item Toggling Org/Markdown conversion
 Press @code{C-c C-o} to switch between Org-mode and Markdown output. Also available from the transient menu under ``Settings''.
@@ -2946,6 +2946,8 @@ The header line shows compact status indicators:
 @item @code{H5/10} - History count (when enabled via @code{ollama-buddy-show-history-indicator})
 @item @code{☁} - Currently using an Ollama cloud model
 @item @code{⚒} - Current model supports tool calling
+@item @code{✦} - Current model supports thinking/reasoning
+@item @code{◐} - Thinking stream visibility is on (thinking tokens shown live)
 @item @code{≡N} - Number of file attachments
 @item @code{♁N} - Number of web search results attached
 @item @code{V} - Reasoning/thinking sections hidden
@@ -3353,7 +3355,7 @@ The @code{✦} symbol appears in the header line and prompt line whenever the ac
 
 @table @kbd
 @item C-c V
-Toggle all thinking blocks in the buffer --- expands any that are folded, or folds all if they are all expanded.
+Toggle thinking stream visibility for the next incoming thinking block. When enabled, thinking tokens are displayed live under the @code{*** ✦ Think} heading as they arrive, then replaced with converted org content and folded on completion. A @code{◐} indicator appears in the header line when active.
 
 @item TAB
 On a @code{*** ✦ Think} heading line, cycle visibility of that individual block (standard org-mode behavior).
@@ -3370,6 +3372,9 @@ When non-nil and @code{ollama-buddy-collapse-thinking} is nil, the thinking bloc
 
 @item @code{ollama-buddy-thinking-models}
 Static list of model name substrings that are known reasoning models. Auto-detection from the Ollama @code{/api/show} capabilities array is also performed.
+
+@item @code{ollama-buddy-stream-thinking-visible}
+When non-nil, thinking tokens are displayed in the buffer as they stream in. On completion the raw text is replaced with converted org content and the heading is folded. Toggle with @code{C-c V}.
 @end table
 
 @node Project Integration
@@ -4188,7 +4193,7 @@ Toggle Markdown to Org conversion.
 Toggle streaming mode for responses.
 
 @item ollama-buddy-toggle-reasoning-visibility
-Toggle visibility of reasoning/thinking sections in responses.
+Toggle thinking stream visibility. When enabled, thinking tokens are shown live as they stream in.
 
 @item ollama-buddy-toggle-show-history-indicator
 Toggle display of history indicator in the header line.
