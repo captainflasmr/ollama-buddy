@@ -123,6 +123,9 @@
     ("V" "Reasoning" ollama-buddy-toggle-reasoning-visibility)
     ("<" "Global Prompt" ollama-buddy-toggle-global-system-prompt)
     ("~" "Tone" ollama-buddy-set-tone)]
+
+   ["Benchmark"
+    ("u" "Benchmark Models" ollama-buddy-benchmark-models)]
    ]
   [("q" "Quit" transient-quit-one)])
 
