@@ -2933,21 +2933,36 @@ TCP packets split a JSON object across multiple filter calls."
     (with-current-buffer ollama-buddy--chat-buffer
       (let* ((inhibit-read-only t)
              (window (get-buffer-window ollama-buddy--chat-buffer t))
-             (response-start (if (markerp ollama-buddy--response-start-position)
-                                 (marker-position ollama-buddy--response-start-position)
-                               ollama-buddy--response-start-position))
              (old-point (and window (window-point window)))
              (old-window-start (and window (window-start window))))
-        (save-excursion
-          (goto-char (point-max))
-          (insert msg)
-          (ollama-buddy--prepare-prompt-area))
-        ;; Window state management - same logic as stream filter
-        (when window
-          (unless (ollama-buddy--maybe-goto-prompt window response-start)
-            (when (not ollama-buddy-auto-scroll)
-              (set-window-point window old-point)
-              (set-window-start window old-window-start t))))))
+
+        ;; Preserve accumulated thinking content before inserting completion msg
+        (when (and ollama-buddy--thinking-arrow-marker
+                   (marker-buffer ollama-buddy--thinking-arrow-marker)
+                   ollama-buddy--thinking-content-accumulator
+                   (not (string-empty-p ollama-buddy--thinking-content-accumulator)))
+          (ollama-buddy--finalize-thinking-block
+           ollama-buddy--thinking-arrow-marker)
+          (when ollama-buddy--thinking-block-start
+            (set-marker ollama-buddy--thinking-block-start nil)
+            (setq ollama-buddy--thinking-block-start nil))
+          (setq ollama-buddy--thinking-arrow-marker nil
+                ollama-buddy--thinking-api-active nil
+                ollama-buddy--in-reasoning-section nil))
+
+        (let ((response-start (if (markerp ollama-buddy--response-start-position)
+                                  (marker-position ollama-buddy--response-start-position)
+                                ollama-buddy--response-start-position)))
+          (save-excursion
+            (goto-char (point-max))
+            (insert msg)
+            (ollama-buddy--prepare-prompt-area))
+          ;; Window state management - same logic as stream filter
+          (when window
+            (unless (ollama-buddy--maybe-goto-prompt window response-start)
+              (when (not ollama-buddy-auto-scroll)
+                (set-window-point window old-point)
+                (set-window-start window old-window-start t)))))))
     ;; Only show token stats in status if we completed successfully
     (if (string= status "Completed")
         (let ((last-info (car ollama-buddy--token-usage-history)))

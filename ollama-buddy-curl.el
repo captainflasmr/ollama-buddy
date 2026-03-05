@@ -582,6 +582,19 @@ When complete, CALLBACK is called with the status response and result."
           (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
             (with-current-buffer ollama-buddy--chat-buffer
               (let ((inhibit-read-only t))
+                ;; Preserve accumulated thinking content
+                (when (and ollama-buddy--thinking-arrow-marker
+                           (marker-buffer ollama-buddy--thinking-arrow-marker)
+                           ollama-buddy--thinking-content-accumulator
+                           (not (string-empty-p ollama-buddy--thinking-content-accumulator)))
+                  (ollama-buddy--finalize-thinking-block
+                   ollama-buddy--thinking-arrow-marker)
+                  (when ollama-buddy--thinking-block-start
+                    (set-marker ollama-buddy--thinking-block-start nil)
+                    (setq ollama-buddy--thinking-block-start nil))
+                  (setq ollama-buddy--thinking-arrow-marker nil
+                        ollama-buddy--thinking-api-active nil
+                        ollama-buddy--in-reasoning-section nil))
                 (goto-char (point-max))
                 (insert "\n\n*** CANCELLED")
                 (ollama-buddy--prepare-prompt-area)))))
