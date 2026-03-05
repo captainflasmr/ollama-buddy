@@ -84,21 +84,21 @@ Unified Skills and Prompts.
 - *Integrated Commands* -- Access skills via the `/skill` slash command or the improved `@skill(name)` inline expansion with full `completing-read` support.
 - *At-Command Improvements* -- `@skill` and `@file` now trigger interactive selection prompts for faster workflow.
 
-* What's New (v3.3.0)
+* What's New (v3.4.1)
 
-Smart Project Integration.
+Thinking Stream Visibility.
 
-- *Smart Project Integration* -- Deep context awareness using Emacs' built-in `project.el`.  Easily attach any file from the current project or automatically pull in standard files like README, TODO, and CHANGELOG.
-- *Project Slash Command* (=/project=) -- A new chat command to quickly search and attach files from the current project using completion.
-- *Project Transient Actions* -- The Attachments menu (=C-c O a=) now includes project-specific actions when working inside a project.
+- *Thinking Stream Visibility* -- Toggle live viewing of thinking tokens with =C-c V=.  When enabled, thinking content streams visibly under the =*** Think= heading, then gets converted and folded on completion.  A =◐= indicator appears in the header line when active.
+- *Fixed thinking content duplication* -- Corrected marker tracking so raw streamed text is properly replaced by converted content.
 
 * Recent Changes
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| *3.4.0* | Skills — Local Org-mode based AI personas and task-specific instructions; `/skill` slash command and `@skill(name)` inline syntax.                                                                                   |
-| *3.3.0* | Smart Project Integration — `project.el` support for contextual file attachment and `/project` slash command.                                                                                          |
-| *3.2.2* | Main transient menu reorganization (=C-c O=) — 4x2 compact grid with streamlined sub-menus and top-level History/Sessions.                                                                                                   |
+| *3.4.1* | Thinking Stream Visibility — =C-c V= toggles live display of thinking tokens; =◐= header indicator.                                                                                                                       |
+| *3.4.0* | Skills — Local Org-mode based AI personas and task-specific instructions; `/skill` slash command and `@skill(name)` inline syntax.                                                                                        |
+| *3.3.0* | Smart Project Integration — `project.el` support for contextual file attachment and `/project` slash command.                                                                                                             |
+| *3.2.2* | Main transient menu reorganization (=C-c O=) — 4x2 compact grid with streamlined sub-menus and top-level History/Sessions.                                                                                                |
 | *3.2.1* | Benchmark all models (=C-c u=) — one-command multishot across all models with per-model timeout; builds persistent token stats.                                                                                           |
 | *3.1.0* | Inline ghost-text code completions (=ollama-buddy-completion=) — simple, manual Copilot-style completions with FIM context, thinking model support, fence stripping.                                                      |
 | *3.0.0* | Generic OpenAI-compatible chat provider (=ollama-buddy-openai-compat=) — connect to LM Studio, llama.cpp, vLLM, Jan, or any OpenAI-API server.                                                                            |

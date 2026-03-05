@@ -1784,7 +1784,7 @@ Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
            "\n\n* Welcome to _OLLAMA BUDDY_\n\n"
            "#+begin_example\n"
            "┌───────────────────────────────────┐\n"
-           "│  O L L A M A B U D D Y  [v3.3.0]  │\n"
+           "│  O L L A M A B U D D Y  [v3.4.1]  │\n"
            "└───────────────────────────────────┘\n"
            (if project-info (concat project-info "\n") "")
            ;; "╔════════════════════════════════════════════════════════════╗\n"

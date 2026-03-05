@@ -11,6 +11,17 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-03-05 Wed> *3.4.1*
+
+Thinking Stream Visibility.
+
+*** New Features
+
+- *Thinking Stream Visibility* -- Toggle live viewing of thinking tokens as they
+  stream in with =C-c V=.  When enabled, thinking content is displayed under the
+  =*** Think= heading in real time, then replaced with the converted org content
+  and folded on completion.  A =◐= indicator appears in the header line when active.
+
 ** <2026-03-04 Wed> *3.4.0*
 
 Unified Skills and User Prompts.
@@ -26,8 +37,6 @@ Unified Skills and User Prompts.
   prompt for quick inline attachment.
 - *Slash Command Integration* -- The `/skill` slash command now pulls from the 
   unified user prompts library.
-- *Refactor Expert* -- Included a "Refactor Expert" sample prompt in the =skills=
-  category for Emacs Lisp development.
 
 ** <2026-03-03 Tue> *3.3.0*
 
