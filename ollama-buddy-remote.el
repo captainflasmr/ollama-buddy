@@ -212,7 +212,6 @@ TOKEN-COUNT-SYMBOL is the symbol to set with the token count."
           (insert (format "\n\n*** Token Stats\n[%d tokens in %.1fs, %.1f tokens/sec]"
                           token-count elapsed-time token-rate)))
 
-        (insert "\n\n*** FINISHED")
         (ollama-buddy--prepare-prompt-area))
 
       ;; Reset start time
@@ -488,8 +487,6 @@ Returns nil to skip the line (e.g. [DONE] or non-content events).")
             (goto-char (point-max))
             (insert (format "\n\n*** Token Stats\n[%d tokens in %.1fs, %.1f tokens/sec]"
                             token-count elapsed-time token-rate)))
-          (goto-char (point-max))
-          (insert "\n\n*** FINISHED")
           (ollama-buddy--prepare-prompt-area)
           (setq ollama-buddy-remote--request-start-time nil)
           (ollama-buddy--maybe-goto-prompt window start-point)

@@ -4259,7 +4259,7 @@ Modifies the variable in place."
            "[Unload All]"
            'action (lambda (_)
                      (ollama-buddy-unload-all-models)
-                     (sleep-for 1)
+                     (sleep-for 3)
                      (ollama-buddy-manage-models))
            'help-echo "Unload all running models to free up resources")
           (insert "\n\n"))
