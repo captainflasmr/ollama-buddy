@@ -26,6 +26,7 @@
 (declare-function ollama-buddy--send-next-in-sequence "ollama-buddy")
 (declare-function ollama-buddy--multishot-cancel-timer "ollama-buddy")
 (declare-function ollama-buddy--autosave-transcript "ollama-buddy")
+(declare-function ollama-buddy--extract-thinking-from-response "ollama-buddy")
 
 ;; Buffer-local variables defined in ollama-buddy.el and used here as free vars.
 ;; Declared to suppress byte-compile warnings; their true definitions live in
