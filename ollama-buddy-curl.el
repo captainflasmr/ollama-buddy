@@ -893,7 +893,13 @@ authentication via `ollama signin'."
         (message "Curl is available but cannot connect to Ollama"))
     (message "Curl executable not found or not working")))
 
-(advice-add 'ollama-buddy-curl--send :around #'ollama-buddy--dispatch-to-handler)
+(unless (advice-member-p #'ollama-buddy--dispatch-to-handler 'ollama-buddy-curl--send)
+  (advice-add 'ollama-buddy-curl--send :around #'ollama-buddy--dispatch-to-handler))
+
+(defun ollama-buddy-curl-unload-function ()
+  "Remove advice when `ollama-buddy-curl' is unloaded."
+  (advice-remove 'ollama-buddy-curl--send #'ollama-buddy--dispatch-to-handler)
+  nil)
 
 (provide 'ollama-buddy-curl)
 ;;; ollama-buddy-curl.el ends here

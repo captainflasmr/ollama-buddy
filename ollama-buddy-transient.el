@@ -9,11 +9,11 @@
 
 (require 'transient)
 (require 'ollama-buddy-core)  ;; Use core instead of main package
-(require 'ollama-buddy-fabric)
-(require 'ollama-buddy-awesome)
-(require 'ollama-buddy-user-prompts)
-(require 'ollama-buddy-project)
-(require 'ollama-buddy-rag)
+(require 'ollama-buddy-fabric nil t)
+(require 'ollama-buddy-awesome nil t)
+(require 'ollama-buddy-user-prompts nil t)
+(require 'ollama-buddy-project nil t)
+(require 'ollama-buddy-rag nil t)
 
 ;; Forward declarations for functions defined in ollama-buddy.el
 (declare-function ollama-buddy-history-edit-model "ollama-buddy")
@@ -139,9 +139,12 @@
 (transient-define-prefix ollama-buddy-transient-system-prompts-menu ()
   "System prompts menu for Ollama Buddy."
   ["System Prompts"
-   ("u" "User Defined" ollama-buddy-transient-user-prompts-menu)
-   ("f" "Fabric Patterns" ollama-buddy-transient-fabric-menu)
-   ("w" "Awesome Prompts" ollama-buddy-transient-awesome-menu)
+   ("u" "User Defined" ollama-buddy-transient-user-prompts-menu
+    :if (lambda () (featurep 'ollama-buddy-user-prompts)))
+   ("f" "Fabric Patterns" ollama-buddy-transient-fabric-menu
+    :if (lambda () (featurep 'ollama-buddy-fabric)))
+   ("w" "Awesome Prompts" ollama-buddy-transient-awesome-menu
+    :if (lambda () (featurep 'ollama-buddy-awesome)))
    ("s" "Show Current" ollama-buddy-show-system-prompt-info)
    ("r" "Reset Current" ollama-buddy-reset-system-prompt)
    ("q" "Quit" transient-quit-one)])
@@ -169,9 +172,11 @@
   ["|o(Y)o| Ollama Buddy"
    ["Chat"
     ("o" "Open Chat" ollama-buddy--open-chat)
-    ("r" "RAG" ollama-buddy-transient-rag-menu)
+    ("r" "RAG" ollama-buddy-transient-rag-menu
+     :if (lambda () (featurep 'ollama-buddy-rag)))
     ("P" "Project" ollama-buddy-transient-project-menu
-     :if (lambda () (ollama-buddy-project-current-root)))
+     :if (lambda () (and (featurep 'ollama-buddy-project)
+                         (ollama-buddy-project-current-root))))
     ("A" "Auth" ollama-buddy-transient-auth-menu)]
 
    ["Model"

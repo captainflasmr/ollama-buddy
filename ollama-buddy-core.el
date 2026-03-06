@@ -1633,8 +1633,14 @@ PROMPT, SPECIFIED-MODEL and TOOL-CONTINUATION-P are passed through."
         (funcall handler prompt model)
       (funcall orig-fun prompt specified-model tool-continuation-p))))
 
-;; Apply the advice to ollama-buddy--send
-(advice-add 'ollama-buddy--send :around #'ollama-buddy--dispatch-to-handler)
+;; Apply the advice to ollama-buddy--send (idempotent — safe to reload)
+(unless (advice-member-p #'ollama-buddy--dispatch-to-handler 'ollama-buddy--send)
+  (advice-add 'ollama-buddy--send :around #'ollama-buddy--dispatch-to-handler))
+
+(defun ollama-buddy-core-unload-function ()
+  "Remove advice when `ollama-buddy-core' is unloaded."
+  (advice-remove 'ollama-buddy--send #'ollama-buddy--dispatch-to-handler)
+  nil)
 
 
 (defun ollama-buddy--count-models-with-prefix (prefix)
@@ -1766,8 +1772,7 @@ Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
             (when (and (> ollama-count 0) use-prefixes)
               (push (format "o: Ollama (%d)" ollama-count) parts))
             (when external-providers
-              (princ external-providers)
-              (setq parts (append (nreverse parts) external-providers)
+              (setq parts (nconc (nreverse parts) external-providers)
                     parts (nreverse parts)))
             ;; Only show "u: Cloud" with prefix when external providers are loaded
             (when (and (> cloud-count 0) use-prefixes)
