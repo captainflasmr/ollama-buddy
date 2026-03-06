@@ -50,6 +50,9 @@
 (defvar ollama-buddy-curl--headers-processed nil
   "Flag to track if HTTP headers have been processed for current curl request.")
 
+(defvar ollama-buddy-curl--http-error-status nil
+  "Non-nil HTTP error status code from the current curl request.")
+
 ;; Backend validation
 (defun ollama-buddy-curl--validate-executable ()
   "Check if curl executable is available and working."
@@ -214,6 +217,12 @@ When complete, CALLBACK is called with the status response and result."
             (unless ollama-buddy-curl--headers-processed
               (goto-char (point-min))
               (when (re-search-forward "\r?\n\r?\n" nil t)
+                (let ((headers (buffer-substring-no-properties (point-min) (point))))
+                  ;; Check HTTP status from headers
+                  (when (string-match "HTTP/[0-9.]+ \\([0-9]+\\)" headers)
+                    (let ((status (string-to-number (match-string 1 headers))))
+                      (unless (and (>= status 200) (< status 300))
+                        (setq ollama-buddy-curl--http-error-status status)))))
                 ;; Headers found, remove them
                 (delete-region (point-min) (point))
                 (setq ollama-buddy-curl--headers-processed t)))
@@ -237,10 +246,31 @@ When complete, CALLBACK is called with the status response and result."
              (string-prefix-p "{" (string-trim json-line)))
     (condition-case err
         (let* ((json-data (json-read-from-string json-line))
+               (error-msg (alist-get 'error json-data))
+               (signin-url (alist-get 'signin_url json-data))
                (message-data (alist-get 'message json-data))
                (content (when message-data (alist-get 'content message-data)))
                (thinking-text (when message-data (alist-get 'thinking message-data)))
                (done (alist-get 'done json-data)))
+
+          ;; Handle error responses (e.g. 401 unauthorized for cloud models)
+          (when error-msg
+            (let ((is-auth-error (string-match-p "unauthorized\\|authentication\\|sign.?in" error-msg)))
+              (when is-auth-error
+                (ollama-buddy--set-cloud-auth-status nil))
+              (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+                (let ((inhibit-read-only t))
+                  (save-excursion
+                    (goto-char (point-max))
+                    (if is-auth-error
+                        (progn
+                          (insert (format "\n\n*Authentication Error:* %s" error-msg))
+                          (insert "\n\nSign in with =C-c A= or =M-x ollama-buddy-cloud-signin=")
+                          (when signin-url
+                            (insert (format "\n\nOr visit: %s" signin-url))))
+                      (insert (format "\n\n*Error:* %s" error-msg)))
+                    (ollama-buddy--prepare-prompt-area))))
+              (ollama-buddy--update-status (if is-auth-error "Auth Required" "Error"))))
 
           ;; Handle thinking-API tokens (e.g. deepseek-r1)
           (when (and thinking-text (not (string-empty-p thinking-text)))
@@ -539,7 +569,8 @@ When complete, CALLBACK is called with the status response and result."
               ollama-buddy--current-token-start-time nil
               ollama-buddy--current-response ""
               ollama-buddy--in-reasoning-section nil
-              ollama-buddy-curl--headers-processed nil)
+              ollama-buddy-curl--headers-processed nil
+              ollama-buddy-curl--http-error-status nil)
         (when ollama-buddy--thinking-block-start
           (set-marker ollama-buddy--thinking-block-start nil)
           (setq ollama-buddy--thinking-block-start nil))
@@ -629,7 +660,8 @@ authentication via `ollama signin'."
       (user-error "Context too far over limit to send")))
 
   ;; Reset curl state
-  (setq ollama-buddy-curl--headers-processed nil)
+  (setq ollama-buddy-curl--headers-processed nil
+        ollama-buddy-curl--http-error-status nil)
 
   (let* ((model-info (ollama-buddy--get-valid-model specified-model))
          (model (car model-info))

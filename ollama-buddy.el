@@ -2388,7 +2388,7 @@ TCP packets split a JSON object across multiple filter calls."
     ;; Capture the status code so non-2xx responses can be handled specially.
     (when (string-match "^HTTP/[0-9.]+ \\([0-9]+\\)" ollama-buddy--stream-pending)
       (let ((status (string-to-number (match-string 1 ollama-buddy--stream-pending))))
-        (when (string-match "^HTTP/.*?\r?\n\r?\n" ollama-buddy--stream-pending)
+        (when (string-match "\r?\n\r?\n" ollama-buddy--stream-pending)
           (setq ollama-buddy--stream-pending
                 (substring ollama-buddy--stream-pending (match-end 0)))
           (unless (and (>= status 200) (< status 300))
@@ -2405,14 +2405,25 @@ TCP packets split a JSON object across multiple filter calls."
           (let* ((error-msg (or (alist-get 'error error-json)
                                 (alist-get 'Status error-json)
                                 (format "HTTP %d" ollama-buddy--stream-http-status)))
-                 (code ollama-buddy--stream-http-status))
+                 (signin-url (alist-get 'signin_url error-json))
+                 (code ollama-buddy--stream-http-status)
+                 (is-auth-error (or (= code 401) (= code 403)
+                                    (string-match-p "unauthorized\\|authentication\\|sign.?in" error-msg))))
+            (when is-auth-error
+              (ollama-buddy--set-cloud-auth-status nil))
             (with-current-buffer ollama-buddy--chat-buffer
               (let ((inhibit-read-only t))
                 (save-excursion
                   (goto-char (point-max))
-                  (insert (format "\n\n*Error %d:* %s" code error-msg))
+                  (if is-auth-error
+                      (progn
+                        (insert (format "\n\n*Authentication Error:* %s" error-msg))
+                        (insert "\n\nSign in with =C-c A= or =M-x ollama-buddy-cloud-signin=")
+                        (when signin-url
+                          (insert (format "\n\nOr visit: %s" signin-url))))
+                    (insert (format "\n\n*Error %d:* %s" code error-msg)))
                   (ollama-buddy--prepare-prompt-area))))
-            (ollama-buddy--update-status (format "Error %d" code))
+            (ollama-buddy--update-status (if is-auth-error "Auth Required" (format "Error %d" code)))
             (setq ollama-buddy--stream-pending "")
             ;; Delete the process; sentinel fires with "deleted" and skips
             ;; inserting the normal completion/interrupted message.
