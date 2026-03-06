@@ -2651,19 +2651,22 @@ ACTUAL-MODEL is the model being used instead."
                                (propertize (format "~%c" (aref tone 0))
                                            'face '(:weight bold)))))
            (cloud-usage-indicator
-            (if (and (ollama-buddy--cloud-model-p model)
-                     (fboundp 'ollama-buddy--fetch-cloud-usage))
-                (let ((usage (ollama-buddy--fetch-cloud-usage)))
-                  (if usage
-                      (let* ((session (alist-get 'session usage))
-                             (weekly (alist-get 'weekly usage))
-                             (s-bar (if (and session (fboundp 'ollama-buddy--cloud-usage-bar))
-                                        (ollama-buddy--cloud-usage-bar session 5) ""))
-                             (w-bar (if (and weekly (fboundp 'ollama-buddy--cloud-usage-bar))
-                                        (ollama-buddy--cloud-usage-bar weekly 5) "")))
-                        (format " S:%s%s W:%s%s"
-                                s-bar (or session "?")
-                                w-bar (or weekly "?")))
+            (if (ollama-buddy--cloud-model-p model)
+                (if (eq ollama-buddy--cloud-auth-status 'not-authenticated)
+                    (propertize " [not signed in]" 'face '(:weight bold))
+                  (if (fboundp 'ollama-buddy--fetch-cloud-usage)
+                      (let ((usage (ollama-buddy--fetch-cloud-usage)))
+                        (if usage
+                            (let* ((session (alist-get 'session usage))
+                                   (weekly (alist-get 'weekly usage))
+                                   (s-bar (if (and session (fboundp 'ollama-buddy--cloud-usage-bar))
+                                              (ollama-buddy--cloud-usage-bar session 5) ""))
+                                   (w-bar (if (and weekly (fboundp 'ollama-buddy--cloud-usage-bar))
+                                              (ollama-buddy--cloud-usage-bar weekly 5) "")))
+                              (format " S:%s%s W:%s%s"
+                                      s-bar (or session "?")
+                                      w-bar (or weekly "?")))
+                          ""))
                     ""))
               "")))
       (setq header-line-format

@@ -4436,22 +4436,24 @@ Modifies the variable in place."
           (insert (format "\n** ☁ Cloud Models %s\n\n"
                           (ollama-buddy--cloud-auth-status-indicator)))
           ;; Cloud usage stats
-          (let ((usage (ollama-buddy--fetch-cloud-usage)))
-            (if usage
-                (let ((session (alist-get 'session usage))
-                      (weekly (alist-get 'weekly usage))
-                      (session-reset (alist-get 'session-reset usage))
-                      (weekly-reset (alist-get 'weekly-reset usage)))
-                  (insert (format "  Session: %s %s" (ollama-buddy--cloud-usage-bar session) session))
-                  (when session-reset
-                    (insert (format " (%s)" (ollama-buddy--cloud-reset-time-string session-reset))))
-                  (insert (format "  |  Weekly: %s %s" (ollama-buddy--cloud-usage-bar weekly) weekly))
-                  (when weekly-reset
-                    (insert (format " (%s)" (ollama-buddy--cloud-reset-time-string weekly-reset))))
-                  (insert "\n\n"))
-              (when (or (not (stringp ollama-buddy-cloud-session-token))
-                        (string-empty-p ollama-buddy-cloud-session-token))
-                (insert "  (Set ollama-buddy-cloud-session-token for usage stats)\n\n"))))
+          (if (eq ollama-buddy--cloud-auth-status 'not-authenticated)
+              (insert "  *Not signed in* — use =C-c A= or =M-x ollama-buddy-cloud-signin= to sign in\n\n")
+            (let ((usage (ollama-buddy--fetch-cloud-usage)))
+              (if usage
+                  (let ((session (alist-get 'session usage))
+                        (weekly (alist-get 'weekly usage))
+                        (session-reset (alist-get 'session-reset usage))
+                        (weekly-reset (alist-get 'weekly-reset usage)))
+                    (insert (format "  Session: %s %s" (ollama-buddy--cloud-usage-bar session) session))
+                    (when session-reset
+                      (insert (format " (%s)" (ollama-buddy--cloud-reset-time-string session-reset))))
+                    (insert (format "  |  Weekly: %s %s" (ollama-buddy--cloud-usage-bar weekly) weekly))
+                    (when weekly-reset
+                      (insert (format " (%s)" (ollama-buddy--cloud-reset-time-string weekly-reset))))
+                    (insert "\n\n"))
+                (when (or (not (stringp ollama-buddy-cloud-session-token))
+                          (string-empty-p ollama-buddy-cloud-session-token))
+                  (insert "  (Set ollama-buddy-cloud-session-token for usage stats)\n\n")))))
           (dolist (model ollama-buddy-cloud-models)
             (let* ((display-model (ollama-buddy--get-full-cloud-model-name model))
                    (letter (ollama-buddy--get-model-letter display-model))
