@@ -3580,6 +3580,11 @@ buffer the user launched from."
       ;; Return the percentage
       context-percentage)))
 
+(defun ollama-buddy-show-context-info-refresh ()
+  "Refresh the context sizes buffer."
+  (interactive)
+  (ollama-buddy-show-context-info))
+
 (defun ollama-buddy-show-context-info ()
   "Show detailed information about context sizes for all models."
   (interactive)
@@ -3593,7 +3598,8 @@ buffer the user launched from."
         (erase-buffer)
 
         (insert "#+title: Ollama Model Context Sizes\n\n")
-        
+        (insert "Press =g= to refresh\n\n")
+
         ;; Check if model-context-sizes has any entries
         (if (= (hash-table-count ollama-buddy--model-context-sizes) 0)
             (insert "No model context sizes have been retrieved yet.\n")
@@ -3632,20 +3638,56 @@ buffer the user launched from."
             
             ;; Show breakdown if available
             (when ollama-buddy--current-context-breakdown
-              (let ((breakdown ollama-buddy--current-context-breakdown))
-                (insert (format "  History          : %d tokens\n"
-                                (plist-get breakdown :history-tokens)))
-                (insert (format "  System prompt    : %d tokens\n"
-                                (plist-get breakdown :system-tokens)))
-                (insert (format "  Attachments      : %d tokens\n"
-                                (plist-get breakdown :attachment-tokens)))
-                (insert (format "  Web search       : %d tokens\n"
-                                (or (plist-get breakdown :web-search-tokens) 0)))
-                (insert (format "  Current prompt   : %d tokens\n"
-                                (plist-get breakdown :prompt-tokens)))))))
+              (let* ((breakdown ollama-buddy--current-context-breakdown)
+                     (max-size (or ollama-buddy--current-context-max-size 4096))
+                     (history-tok (plist-get breakdown :history-tokens))
+                     (system-tok (plist-get breakdown :system-tokens))
+                     (attach-tok (plist-get breakdown :attachment-tokens))
+                     (web-tok (or (plist-get breakdown :web-search-tokens) 0))
+                     (prompt-tok (plist-get breakdown :prompt-tokens))
+                     (total-tok (or ollama-buddy--current-context-tokens 0))
+                     (free-tok (max 0 (- max-size total-tok))))
+                ;; Text breakdown
+                (insert (format "  History          : %d tokens\n" history-tok))
+                (insert (format "  System prompt    : %d tokens\n" system-tok))
+                (insert (format "  Attachments      : %d tokens\n" attach-tok))
+                (insert (format "  Web search       : %d tokens\n" web-tok))
+                (insert (format "  Current prompt   : %d tokens\n" prompt-tok))
+
+                ;; Graphical bar chart
+                (let* ((bar-width 50)
+                       (segments
+                        (cl-remove-if
+                         (lambda (s) (= (nth 1 s) 0))
+                         `(("History"   ,history-tok "█")
+                           ("System"    ,system-tok  "▓")
+                           ("Attach"    ,attach-tok  "▒")
+                           ("Web"       ,web-tok     "░")
+                           ("Prompt"    ,prompt-tok  "▪")
+                           ("Free"      ,free-tok    "·"))))
+                       (total (max 1 max-size)))
+                  (insert "\n* Context breakdown\n\n")
+                  ;; Single composite bar
+                  (insert "  ")
+                  (dolist (seg segments)
+                    (let* ((chars (max (if (> (nth 1 seg) 0) 1 0)
+                                       (round (* bar-width (/ (float (nth 1 seg)) total))))))
+                      (insert (make-string chars (string-to-char (nth 2 seg))))))
+                  (insert "\n\n")
+                  ;; Legend
+                  (dolist (seg segments)
+                    (let ((pct (* 100.0 (/ (float (nth 1 seg)) total))))
+                      (insert (format "  %s %-8s %5d tokens (%4.1f%%)\n"
+                                      (nth 2 seg) (nth 0 seg)
+                                      (nth 1 seg) pct)))))))))
+
 
         (goto-char (point-min))
-        (view-mode 1)))
+        (view-mode 1)
+        (let ((map (make-sparse-keymap)))
+          (define-key map (kbd "g") #'ollama-buddy-show-context-info-refresh)
+          (setq-local minor-mode-overriding-map-alist
+                      (list (cons 'view-mode map))))))
     (display-buffer buf)))
 
 (defun ollama-buddy-toggle-context-percentage ()
