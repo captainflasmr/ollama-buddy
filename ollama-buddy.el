@@ -877,7 +877,8 @@ Cancelling with \\[keyboard-quit] does nothing; use \\[quoted-insert] @ for a li
     ("manage"     ollama-buddy-manage-models          "Open the Model Management buffer")
     ("project"    ollama-buddy-project-attach-file    "Attach a file from the current project")
     ("set"        ollama-buddy-params-edit            "Edit model generation parameters")
-    ("show"       ollama-buddy-show-raw-model-info    "Show raw JSON model information"))
+    ("show"       ollama-buddy-show-raw-model-info    "Show raw JSON model information")
+    ("benchmark"  ollama-buddy-benchmark-models       "Benchmark all models with editable selection"))
   "Alist of available `/' slash commands.
 Each entry is (NAME FUNCTION DESCRIPTION) where FUNCTION is
 called interactively."
@@ -982,12 +983,14 @@ is ever needed."
         (if (null ollama-buddy--token-usage-history)
             (insert "No token usage data available yet.")
 
-          ;; Calculate summary stats
-          (let* ((total-tokens (apply #'+ (mapcar (lambda (info) (plist-get info :tokens))
-                                                  ollama-buddy--token-usage-history)))
-                 (avg-rate (/ (apply #'+ (mapcar (lambda (info) (plist-get info :rate))
-                                                 ollama-buddy--token-usage-history))
-                              (float (length ollama-buddy--token-usage-history)))))
+          ;; Calculate summary stats in a single pass
+          (let* ((total-tokens 0)
+                 (total-rate 0.0)
+                 (count (length ollama-buddy--token-usage-history))
+                 (_ (dolist (info ollama-buddy--token-usage-history)
+                      (cl-incf total-tokens (plist-get info :tokens))
+                      (cl-incf total-rate (plist-get info :rate))))
+                 (avg-rate (/ total-rate (float count))))
 
             ;; Summary section
             (insert (format "Total tokens generated: *%d*  |  Average token rate: *%.2f* tokens/sec\n\n"
@@ -3994,32 +3997,49 @@ Kill the active process, insert a timeout notice, and advance to the next model.
         (ollama-buddy--multishot-send prompt-text valid-sequences)))))
 
 (defun ollama-buddy-benchmark-models ()
-  "Benchmark all available models by sending a prompt to each via multishot.
+  "Benchmark models by sending a prompt to each via multishot.
 Uses `ollama-buddy-benchmark-prompt' as the prompt text.  Embedding models
-are skipped.  Results are recorded in `ollama-buddy--token-usage-history'."
+are excluded by default.  Presents an editable comma-separated list of
+model letters so you can remove models (e.g. cloud models) before running.
+Results are recorded in `ollama-buddy--token-usage-history'."
   (interactive)
   (ollama-buddy--assign-model-letters (ollama-buddy--get-models))
   (let* ((model-alist ollama-buddy--model-letters)
-         (sequences
+         ;; Build default list excluding embedding models
+         (default-sequences
           (cl-remove-if
            (lambda (key)
              (let ((model (cdr (assoc key model-alist))))
                (and model (string-match-p "embed" model))))
-           (mapcar #'car model-alist))))
-    (unless sequences
-      (user-error "No models available to benchmark"))
-    ;; Ask user for confirmation
-    (when (yes-or-no-p
-           (format "Benchmark %d models?\\n\\nThis will send the prompt \\\"%s\\\" to each model.\\n\\nBenchmark now? "
-                   (length sequences)
-                   ollama-buddy-benchmark-prompt))
-      ;; Ensure chat buffer exists and insert the benchmark prompt
-      (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-        (ollama-buddy--prepare-prompt-area t t)
-        (let ((inhibit-read-only t))
-          (goto-char (point-max))
-          (insert ollama-buddy-benchmark-prompt)))
-      (ollama-buddy--multishot-send ollama-buddy-benchmark-prompt sequences))))
+           (mapcar #'car model-alist)))
+         ;; Let user edit the letter list
+         (default-input (mapconcat #'identity default-sequences ","))
+         (input (read-string "Benchmark models (edit letters, comma-separated): "
+                             default-input))
+         ;; Parse and validate
+         (chosen-parts (split-string input "," t "\\s-*"))
+         (valid-sequences
+          (cl-remove-if-not
+           (lambda (key) (assoc key model-alist))
+           (mapcar #'string-trim chosen-parts))))
+    (unless valid-sequences
+      (user-error "No valid models selected"))
+    (let ((model-names (mapcar (lambda (key) (cdr (assoc key model-alist)))
+                               valid-sequences)))
+      ;; Confirm
+      (when (yes-or-no-p
+             (format "Benchmark %d models: %s\nPrompt: \"%s\"\nProceed? "
+                     (length valid-sequences)
+                     (mapconcat #'identity model-names ", ")
+                     ollama-buddy-benchmark-prompt))
+        (message nil)
+        ;; Ensure chat buffer exists and insert the benchmark prompt
+        (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+          (ollama-buddy--prepare-prompt-area t t)
+          (let ((inhibit-read-only t))
+            (goto-char (point-max))
+            (insert ollama-buddy-benchmark-prompt)))
+        (ollama-buddy--multishot-send ollama-buddy-benchmark-prompt valid-sequences)))))
 
 (defun ollama-buddy--cycle-prompt-history (direction)
   "Cycle through prompt history in DIRECTION (1=forward, -1=backward)."

@@ -112,6 +112,10 @@ Keys are tool names (strings), values are plists with:
   :function    - Elisp function to execute
   :safe        - Whether tool is safe (read-only)")
 
+(defvar ollama-buddy-tools--schema-cache nil
+  "Cached schema vector from `ollama-buddy-tools--generate-schema'.
+Set to nil to invalidate.")
+
 (defvar ollama-buddy-tools--current-iteration 0
   "Current tool-call iteration count for the active request.")
 
@@ -171,12 +175,14 @@ Example:
                    :safe (or safe nil)
                    :terminal (or terminal nil))
              ollama-buddy-tools--registry)
+    (setq ollama-buddy-tools--schema-cache nil)
     (message "Registered tool: %s" name-str)))
 
 (defun ollama-buddy-tools-unregister (name)
   "Unregister tool NAME from the registry."
   (let ((name-str (if (symbolp name) (symbol-name name) name)))
     (remhash name-str ollama-buddy-tools--registry)
+    (setq ollama-buddy-tools--schema-cache nil)
     (message "Unregistered tool: %s" name-str)))
 
 (defun ollama-buddy-tools-list ()
@@ -195,26 +201,37 @@ Example:
   "Clear all registered tools."
   (interactive)
   (clrhash ollama-buddy-tools--registry)
+  (setq ollama-buddy-tools--schema-cache nil)
   (message "Cleared all registered tools"))
 
 ;;; Tool Schema Generation
 
+(defvar ollama-buddy-tools--schema-cache-safe-mode nil
+  "Value of `ollama-buddy-tools-safe-mode' when the schema cache was built.")
+
 (defun ollama-buddy-tools--generate-schema ()
   "Generate the tools schema for the Ollama API request.
-Returns a vector of tool definitions in the format expected by Ollama."
-  (let (tools-list)
-    (maphash
-     (lambda (name spec)
-       (when (or (not ollama-buddy-tools-safe-mode)
-                 (plist-get spec :safe))
-         (push `((type . "function")
-                 (function . ((name . ,name)
-                              (description . ,(plist-get spec :description))
-                              (parameters . ,(plist-get spec :parameters)))))
-               tools-list)))
-     ollama-buddy-tools--registry)
-    (when tools-list
-      (vconcat (nreverse tools-list)))))
+Returns a vector of tool definitions in the format expected by Ollama.
+Uses a cached result when the registry and safe-mode have not changed."
+  (if (and ollama-buddy-tools--schema-cache
+           (eq ollama-buddy-tools--schema-cache-safe-mode
+               ollama-buddy-tools-safe-mode))
+      ollama-buddy-tools--schema-cache
+    (let (tools-list)
+      (maphash
+       (lambda (name spec)
+         (when (or (not ollama-buddy-tools-safe-mode)
+                   (plist-get spec :safe))
+           (push `((type . "function")
+                   (function . ((name . ,name)
+                                (description . ,(plist-get spec :description))
+                                (parameters . ,(plist-get spec :parameters)))))
+                 tools-list)))
+       ollama-buddy-tools--registry)
+      (setq ollama-buddy-tools--schema-cache-safe-mode ollama-buddy-tools-safe-mode
+            ollama-buddy-tools--schema-cache
+            (when tools-list
+              (vconcat (nreverse tools-list)))))))
 
 ;;; Fragment Merging
 

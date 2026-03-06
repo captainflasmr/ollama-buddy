@@ -456,38 +456,51 @@ Returns the interned command symbol."
          (or (plist-get plist :description) (symbol-name name)))
     sym))
 
+(defvar ollama-buddy--role-menu-cache nil
+  "Cached transient group vectors for the role menu.")
+
+(defvar ollama-buddy--role-menu-cache-key nil
+  "The `ollama-buddy-command-definitions' value when the cache was built.")
+
 (defun ollama-buddy--role-menu-build-groups ()
-  "Build transient group vectors from `ollama-buddy-command-definitions'."
-  (let ((groups (make-hash-table :test 'equal))
-        (group-order nil)
-        (seen-keys (make-hash-table :test 'equal)))
-    (dolist (cmd-def ollama-buddy-command-definitions)
-      (let* ((name (car cmd-def))
-             (plist (cdr cmd-def))
-             (key (plist-get plist :key))
-             (key-str (when key (char-to-string key))))
-        ;; Skip quit and entries without keys, deduplicate keys
-        (when (and key-str
-                   (not (eq name 'quit))
-                   (not (gethash key-str seen-keys)))
-          (puthash key-str t seen-keys)
-          (let* ((group-name (or (plist-get plist :group) "Commands"))
-                 (desc (or (plist-get plist :description) (symbol-name name)))
-                 (model (plist-get plist :model))
-                 (in-buf (eq (plist-get plist :destination) 'in-buffer))
-                 (full-desc (concat desc
-                                    (if model (format " [%s]" model) "")
-                                    (if in-buf " ✎" "")))
-                 (sym (ollama-buddy--role-menu-ensure-command cmd-def))
-                 (spec (list key-str full-desc sym)))
-            (unless (gethash group-name groups)
-              (push group-name group-order))
-            (puthash group-name
-                     (append (gethash group-name groups) (list spec))
-                     groups)))))
-    (mapcar (lambda (gname)
-              (apply #'vector gname (gethash gname groups)))
-            (nreverse group-order))))
+  "Build transient group vectors from `ollama-buddy-command-definitions'.
+Uses a cached result when command definitions have not changed."
+  (if (and ollama-buddy--role-menu-cache
+           (eq ollama-buddy--role-menu-cache-key
+               ollama-buddy-command-definitions))
+      ollama-buddy--role-menu-cache
+    (let ((groups (make-hash-table :test 'equal))
+          (group-order nil)
+          (seen-keys (make-hash-table :test 'equal)))
+      (dolist (cmd-def ollama-buddy-command-definitions)
+        (let* ((name (car cmd-def))
+               (plist (cdr cmd-def))
+               (key (plist-get plist :key))
+               (key-str (when key (char-to-string key))))
+          ;; Skip quit and entries without keys, deduplicate keys
+          (when (and key-str
+                     (not (eq name 'quit))
+                     (not (gethash key-str seen-keys)))
+            (puthash key-str t seen-keys)
+            (let* ((group-name (or (plist-get plist :group) "Commands"))
+                   (desc (or (plist-get plist :description) (symbol-name name)))
+                   (model (plist-get plist :model))
+                   (in-buf (eq (plist-get plist :destination) 'in-buffer))
+                   (full-desc (concat desc
+                                      (if model (format " [%s]" model) "")
+                                      (if in-buf " ✎" "")))
+                   (sym (ollama-buddy--role-menu-ensure-command cmd-def))
+                   (spec (list key-str full-desc sym)))
+              (unless (gethash group-name groups)
+                (push group-name group-order))
+              (puthash group-name
+                       (append (gethash group-name groups) (list spec))
+                       groups)))))
+      (setq ollama-buddy--role-menu-cache-key ollama-buddy-command-definitions
+            ollama-buddy--role-menu-cache
+            (mapcar (lambda (gname)
+                      (apply #'vector gname (gethash gname groups)))
+                    (nreverse group-order))))))
 
 (defun ollama-buddy--selection-status ()
   "Return a string describing the current selection and active mode indicators."
