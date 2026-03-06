@@ -36,8 +36,10 @@
   :group 'ollama-buddy-codestral)
 
 (defcustom ollama-buddy-codestral-api-key ""
-  "API key for accessing Mistral Codestral services."
+  "API key for accessing Mistral Codestral services.
+Consider using `auth-source' instead of setting this directly."
   :type 'string
+  :risky t
   :group 'ollama-buddy-codestral)
 
 (defcustom ollama-buddy-codestral-default-model "codestral-latest"

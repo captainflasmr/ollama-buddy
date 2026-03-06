@@ -2457,7 +2457,11 @@ TCP packets split a JSON object across multiple filter calls."
            (text (when message-data (alist-get 'content message-data)))
            ;; thinking field: used by models like deepseek-r1 instead of <think> tags
            (thinking-text (when message-data (alist-get 'thinking message-data)))
-           (tool-calls (when message-data (alist-get 'tool_calls message-data))))
+           (tool-calls-raw (when message-data (alist-get 'tool_calls message-data)))
+           (tool-calls (when tool-calls-raw
+                         (if (vectorp tool-calls-raw)
+                             (append tool-calls-raw nil)
+                           tool-calls-raw))))
 
       ;; Check for authentication errors (cloud models)
       (when error-msg

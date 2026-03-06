@@ -36,8 +36,10 @@
 
 (defcustom ollama-buddy-deepseek-api-key ""
   "API key for accessing DeepSeek services.
-Get your key from https://platform.deepseek.com/api_keys."
+Get your key from https://platform.deepseek.com/api_keys.
+Consider using `auth-source' instead of setting this directly."
   :type 'string
+  :risky t
   :group 'ollama-buddy-deepseek)
 
 (defcustom ollama-buddy-deepseek-default-model "deepseek-chat"

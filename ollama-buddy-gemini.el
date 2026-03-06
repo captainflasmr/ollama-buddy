@@ -32,8 +32,10 @@
 
 (defcustom ollama-buddy-gemini-api-key ""
   "API key for accessing Google Gemini services.
-Get your key from https://ai.google.dev/."
+Get your key from https://ai.google.dev/.
+Consider using `auth-source' instead of setting this directly."
   :type 'string
+  :risky t
   :group 'ollama-buddy-gemini)
 
 (defcustom ollama-buddy-gemini-default-model "gemini-1.5-pro"

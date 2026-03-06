@@ -284,7 +284,7 @@ Returns a plist with :category and :title, or nil if not a valid format."
                   (let* ((title (plist-get prompt :title))
                         (file (plist-get prompt :file))
                         (content (ollama-buddy-user-prompts--read-prompt-content file)))
-                    (insert (format "** %s\n" title)"\n")
+                    (insert (format "** %s\n\n" title))
                     (insert (concat content "\n\n"))))))))
         (goto-char (point-min))
         (view-mode 1)

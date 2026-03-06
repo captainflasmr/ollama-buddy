@@ -31,8 +31,10 @@
 
 (defcustom ollama-buddy-claude-api-key ""
   "API key for accessing Anthropic Claude services.
-Get your key from https://console.anthropic.com/."
+Get your key from https://console.anthropic.com/.
+Consider using `auth-source' instead of setting this directly."
   :type 'string
+  :risky t
   :group 'ollama-buddy-claude)
 
 (defcustom ollama-buddy-claude-default-model "claude-3-7-sonnet-20250219"

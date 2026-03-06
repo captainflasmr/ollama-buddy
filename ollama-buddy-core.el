@@ -1064,8 +1064,8 @@ Strips both local Ollama prefixes (o:, u:) and remote provider prefixes
 (defvar ollama-buddy--token-usage-history nil
   "History of token usage for ollama-buddy interactions.")
 
-(eval-after-load 'savehist
-  '(add-to-list 'savehist-additional-variables 'ollama-buddy--token-usage-history))
+(with-eval-after-load 'savehist
+  (add-to-list 'savehist-additional-variables 'ollama-buddy--token-usage-history))
 
 (defcustom ollama-buddy-token-history-max-size 500
   "Maximum number of entries to keep in `ollama-buddy--token-usage-history'.

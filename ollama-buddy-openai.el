@@ -32,8 +32,10 @@
 
 (defcustom ollama-buddy-openai-api-key ""
   "API key for accessing OpenAI services.
-Get your key from https://platform.openai.com/api-keys."
+Get your key from https://platform.openai.com/api-keys.
+Consider using `auth-source' instead of setting this directly."
   :type 'string
+  :risky t
   :group 'ollama-buddy-openai)
 
 (defcustom ollama-buddy-openai-default-model "gpt-3.5-turbo"

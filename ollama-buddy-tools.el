@@ -216,6 +216,45 @@ Returns a vector of tool definitions in the format expected by Ollama."
     (when tools-list
       (vconcat (nreverse tools-list)))))
 
+;;; Fragment Merging
+
+(defun ollama-buddy-tools--merge-fragment (original fragment)
+  "Merge FRAGMENT into ORIGINAL file content, returning the full file.
+Tries to find the best overlap between the fragment and the original
+by searching for matching lines at the start and end of the fragment,
+then splicing the fragment into the corresponding region of the original."
+  (let* ((orig-lines (split-string original "\n"))
+         (frag-lines (split-string fragment "\n"))
+         ;; Strip leading/trailing blank lines from fragment for matching
+         (frag-trimmed (cl-loop for l in frag-lines
+                                unless (string-blank-p l) collect l))
+         (first-frag-line (car frag-trimmed))
+         (last-frag-line (car (last frag-trimmed)))
+         (start-idx nil)
+         (end-idx nil))
+    ;; Find where the first non-blank fragment line appears in original
+    (when first-frag-line
+      (cl-loop for i from 0
+               for line in orig-lines
+               when (string= (string-trim line) (string-trim first-frag-line))
+               do (setq start-idx i) and return nil))
+    ;; Find where the last non-blank fragment line appears in original
+    ;; Search from the end to handle repeated lines correctly
+    (when last-frag-line
+      (cl-loop for i downfrom (1- (length orig-lines)) to 0
+               when (string= (string-trim (nth i orig-lines))
+                              (string-trim last-frag-line))
+               do (setq end-idx i) and return nil))
+    (if (and start-idx end-idx (>= end-idx start-idx))
+        ;; Splice: keep original before start, insert fragment, keep original after end
+        (mapconcat #'identity
+                   (append (cl-subseq orig-lines 0 start-idx)
+                           frag-lines
+                           (cl-subseq orig-lines (1+ end-idx)))
+                   "\n")
+      ;; Could not locate fragment in original — return fragment as-is
+      fragment)))
+
 ;;; Tool Execution
 
 (defun ollama-buddy-tools--format-args-for-display (arguments)
@@ -485,13 +524,13 @@ Returns a list of tool result messages to append to the conversation."
     ;; propose_file_changes - Provide full new file content and review via Emacs ediff
     (ollama-buddy-tools-register
      'propose_file_changes
-     "Propose changes to a file by providing the COMPLETE new file content with all modifications applied. Opens Emacs ediff so the user can review every change interactively and selectively copy hunks across. Use this whenever you want to suggest edits to an existing file — provide the full updated file, not a diff or patch."
+     "Propose changes to a file by providing the COMPLETE new file content with all modifications applied. Opens Emacs ediff so the user can review every change interactively and selectively copy hunks across. IMPORTANT: You MUST provide the ENTIRE file contents including all unchanged lines — not just the changed portion. Read the file first if needed, then return the full file with your modifications applied. Providing only a snippet will result in a poor diff experience."
      '((type . "object")
        (required . ["file_path" "new_content"])
        (properties . ((file_path . ((type . "string")
                                     (description . "Absolute path to the existing file to modify.")))
                       (new_content . ((type . "string")
-                                      (description . "The complete new content for the file, with all proposed changes already applied. Must be the entire file, not just a fragment or diff."))))))
+                                      (description . "The COMPLETE new content for the entire file, with all proposed changes applied. This MUST be the full file from first line to last line, not a fragment, snippet, or diff. Include every unchanged line as-is."))))))
      (lambda (args)
        (let* ((file-path (alist-get 'file_path args))
               (new-content (alist-get 'new_content args)))
@@ -503,21 +542,42 @@ Returns a list of tool result messages to append to the conversation."
           ((not (file-exists-p file-path))
            (format "Error: file not found: %s" file-path))
           (t
-           (let* ((ext (file-name-extension file-path t))
+           (let* ((original-content (with-temp-buffer
+                                      (insert-file-contents file-path)
+                                      (buffer-string)))
+                  (original-lines (length (split-string original-content "\n")))
+                  (new-lines (length (split-string new-content "\n")))
+                  ;; Detect fragment: new content is less than 40% of original
+                  (fragment-p (and (> original-lines 10)
+                                  (< new-lines (/ (* original-lines 40) 100))))
+                  (final-content
+                   (if fragment-p
+                       (ollama-buddy-tools--merge-fragment
+                        original-content new-content)
+                     new-content))
+                  (ext (file-name-extension file-path t))
                   (proposed-tmp (make-temp-file "ob-proposed-" nil ext)))
              (with-temp-file proposed-tmp
-               (insert new-content))
+               (insert final-content))
              (require 'ediff)
              (let* ((proposed-buf (find-file-noselect proposed-tmp))
-                    (original-buf (find-file-noselect file-path)))
-               ;; save-window-excursion is synchronous: the window config is
-               ;; restored before Emacs redraws, so the ediff windows never
-               ;; appear on screen — but the session is registered in the
-               ;; ediff registry for the user to open with M-x eregistry.
-               (save-window-excursion
-                 (ediff-buffers proposed-buf original-buf)))
-             (format "Ediff session created silently for %s (left: proposed, right: original). Inform the user they can open it at any time with M-x ediff-show-registry — for example in a new frame or tab. In ediff: 'n'/'p' navigate differences, 'b' copies a hunk left-to-right into the original, then save the file."
-                     file-path))))))
+                    (original-buf (find-file-noselect file-path))
+                    (ediff-ok nil))
+               (unwind-protect
+                   (progn
+                     (save-window-excursion
+                       (ediff-buffers proposed-buf original-buf))
+                     (setq ediff-ok t))
+                 (unless ediff-ok
+                   (when (buffer-live-p proposed-buf)
+                     (kill-buffer proposed-buf))
+                   (when (file-exists-p proposed-tmp)
+                     (delete-file proposed-tmp)))))
+             (format "Ediff session created for %s%s (left: proposed, right: original). Inform the user they can open it at any time with M-x ediff-show-registry — for example in a new frame or tab. In ediff: 'n'/'p' navigate differences, 'b' copies a hunk left-to-right into the original, then save the file."
+                     file-path
+                     (if fragment-p
+                         " [fragment detected — merged into full file]"
+                       "")))))))
      nil  ; not safe — launches ediff UI
      t)   ; terminal — stop LLM auto-continuation after ediff session created
 

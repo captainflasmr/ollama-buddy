@@ -32,8 +32,10 @@
 
 (defcustom ollama-buddy-grok-api-key ""
   "API key for accessing Grok services.
-Get your key from the Grok API dashboard."
+Get your key from the Grok API dashboard.
+Consider using `auth-source' instead of setting this directly."
   :type 'string
+  :risky t
   :group 'ollama-buddy-grok)
 
 (defcustom ollama-buddy-grok-default-model "grok-1"

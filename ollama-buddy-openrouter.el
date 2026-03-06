@@ -36,8 +36,10 @@
 
 (defcustom ollama-buddy-openrouter-api-key ""
   "API key for accessing OpenRouter services.
-Get your key from https://openrouter.ai/keys."
+Get your key from https://openrouter.ai/keys.
+Consider using `auth-source' instead of setting this directly."
   :type 'string
+  :risky t
   :group 'ollama-buddy-openrouter)
 
 (defcustom ollama-buddy-openrouter-default-model "openai/gpt-4o"

@@ -42,8 +42,10 @@
 
 (defcustom ollama-buddy-web-search-api-key ""
   "API key for Ollama web search API.
-Get your key from https://ollama.com/settings/keys."
+Get your key from https://ollama.com/settings/keys.
+Consider using `auth-source' instead of setting this directly."
   :type 'string
+  :risky t
   :group 'ollama-buddy-web-search)
 
 (defcustom ollama-buddy-web-search-api-endpoint "https://ollama.com/api/web_search"

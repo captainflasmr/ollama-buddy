@@ -90,23 +90,26 @@
   "Clone the Awesome ChatGPT Prompt repository with sparse checkout."
   (let ((default-directory (file-name-directory ollama-buddy-awesome-local-dir)))
     (message "Cloning Awesome ChatGPT Prompts repository (sparse checkout)...")
-    
+
     ;; Initialize empty repo
-    (call-process "git" nil "*Awesome Prompts Clone Output*" nil
-                  "init" ollama-buddy-awesome-local-dir)
-    
+    (with-temp-buffer
+      (call-process "git" nil t nil
+                    "init" ollama-buddy-awesome-local-dir))
+
     (let ((default-directory ollama-buddy-awesome-local-dir))
       ;; Add remote
-      (call-process "git" nil "*Awesome Prompts Clone Output*" nil
-                    "remote" "add" "origin" ollama-buddy-awesome-repo-url)
-      
+      (with-temp-buffer
+        (call-process "git" nil t nil
+                      "remote" "add" "origin" ollama-buddy-awesome-repo-url))
+
       ;; Set up sparse checkout
       (ollama-buddy-awesome--setup-sparse-checkout)
-      
+
       ;; Pull the content
-      (call-process "git" nil "*Awesome Prompts Clone Output*" nil
-                    "pull" "origin" "main")
-      
+      (with-temp-buffer
+        (call-process "git" nil t nil
+                      "pull" "origin" "main"))
+
       (message "Awesome ChatGPT Prompts repository cloned successfully!")
       (setq ollama-buddy-awesome--last-sync-time (current-time)))))
 
@@ -114,9 +117,10 @@
   "Configure sparse checkout for the Awesome ChatGPT Prompt repository."
   (let ((default-directory ollama-buddy-awesome-local-dir))
     ;; Enable sparse checkout
-    (call-process "git" nil "*Awesome Prompts Sparse Output*" nil
-                  "config" "core.sparseCheckout" "true")
-    
+    (with-temp-buffer
+      (call-process "git" nil t nil
+                    "config" "core.sparseCheckout" "true"))
+
     ;; Create sparse-checkout file with just the prompts.csv and README
     (with-temp-file (expand-file-name ".git/info/sparse-checkout" ollama-buddy-awesome-local-dir)
       (insert (format "/%s\n" ollama-buddy-awesome-prompts-file))
