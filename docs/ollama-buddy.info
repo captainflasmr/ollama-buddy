@@ -79,7 +79,7 @@ directly from within Emacs for various tasks such as:
    • Using pre-built prompt templates from Fabric
    • Utilizing Awesome ChatGPT Prompts
    • Integrating with commercial APIs (OpenAI, Claude, Gemini, Grok,
-     Copilot, Codestral)
+     Copilot, Codestral, DeepSeek, OpenRouter)
    • Using Ollama cloud models
    • Including files as context in conversations
    • Real-time web search to provide current information to LLMs
@@ -114,8 +114,9 @@ Before using Ollama Buddy, you need:
    • Ollama installed and running on your system (see
      <https://ollama.ai>)
    • At least one language model pulled into Ollama
-   • (Optional) API keys for OpenAI or Claude if you want to use those
-     services
+   • (Optional) API keys for remote providers (OpenAI, Claude, Gemini,
+     Grok, Copilot, Codestral, DeepSeek, OpenRouter) if you want to use
+     those services
 
 
 File: ollama-buddy.info,  Node: Installation,  Next: Configuration,  Prev: Introduction,  Up: Top
@@ -516,9 +517,10 @@ Project Integration
      Press ‘C-c P’ for the Project sub-menu.  Access project-specific
      file attachment and context.
 
-Toggling thinking stream visibility
-     Press ‘C-c V’ to toggle live display of thinking tokens as they
-     stream in.  A ‘◐’ indicator appears in the header line when active.
+Peeking at thinking blocks
+     While a model is thinking, the ‘*** Thinking’ heading is folded.
+     Press ‘TAB’ on the heading to peek at accumulated content; press
+     ‘TAB’ again to re-fold.
 
 Toggling Org/Markdown conversion
      Press ‘C-c C-o’ to switch between Org-mode and Markdown output.
@@ -711,6 +713,7 @@ The chat interface consists of:
         − ‘☁’ when using a cloud model
         − ‘⚒’ when model supports tool calling (regardless of enabled
           state)
+        − ‘✦’ when model supports thinking/reasoning
    • Context warnings and validation
 
 6.3 Sending Prompts
@@ -838,6 +841,46 @@ to the LLM.
      Reset system prompt to default
      (‘ollama-buddy-reset-system-prompt’).
 
+‘new’
+     Start a new session (‘ollama-buddy-sessions-new’).
+
+‘exit’
+     Close the chat buffer (‘ollama-buddy-exit’).
+
+‘bye’
+     Close the chat buffer (‘ollama-buddy-exit’), alias for ‘exit’.
+
+‘unload’
+     Unload running models from memory (‘ollama-buddy-unload-model’).
+
+‘set’
+     Edit a model parameter (‘ollama-buddy-params-edit’).
+
+‘show’
+     Show current model info (‘ollama-buddy-show-raw-model-info’).
+
+‘benchmark’
+     Benchmark all models with editable selection
+     (‘ollama-buddy-benchmark-models’).
+
+‘autoexec’
+     Toggle tool auto-execute mode
+     (‘ollama-buddy-tools-toggle-auto-execute’).  Requires
+     ‘ollama-buddy-tools’.
+
+‘skill’
+     Load a skill as system prompt (‘ollama-buddy-user-prompts-load’).
+
+‘completion’
+     Toggle inline code completions (‘ollama-buddy-completion-toggle’).
+
+‘manage’
+     Open the Model Management buffer (‘ollama-buddy-manage-models’).
+
+‘project’
+     Attach a file from the current project
+     (‘ollama-buddy-project-attach-file’).
+
    • Outside the prompt area, ‘/’ inserts a literal ‘/’.
    • Press ‘C-g’ to cancel (nothing inserted); use ‘C-q /’ for a literal
      ‘/’ in the prompt.
@@ -887,13 +930,12 @@ syntax:
 Ollama Buddy can hide reasoning/thinking sections in responses, making
 the output cleaner:
 
-   • Toggle visibility with ‘C-c V’ or ‘M-x
-     ollama-buddy-toggle-reasoning-visibility’
+   • Thinking content streams under a folded ‘*** Thinking’ heading;
+     press ‘TAB’ to peek
    • Configure markers with the ‘ollama-buddy-reasoning-markers’
      variable
-   • When hidden, a status message shows the current reasoning section
-     (e.g., "Think...")
-   • Header line shows ‘V’ indicator when reasoning is hidden
+   • Header line shows ‘V’ indicator when reasoning is hidden (hide mode
+     only)
 
    This feature helps focus on final answers while preserving the option
 to view the full reasoning process.
@@ -2883,6 +2925,12 @@ GitHub Copilot (prefix: ‘p:’)
 Codestral/Mistral (prefix: ‘s:’)
      Load with ‘(require 'ollama-buddy-codestral nil t)’
 
+DeepSeek (prefix: ‘d:’)
+     Load with ‘(require 'ollama-buddy-deepseek nil t)’
+
+OpenRouter (prefix: ‘r:’)
+     Load with ‘(require 'ollama-buddy-openrouter nil t)’
+
 Generic OpenAI-compatible server (prefix: ‘l:’, configurable)
      Load with ‘(require 'ollama-buddy-openai-compat nil t)’.  Works
      with LM Studio, llama.cpp, vLLM, Jan, and any
@@ -2897,23 +2945,27 @@ available, or no prefix when only local models are present.
 
 The header line shows compact status indicators:
 
+   • ‘✈’ - Airplane mode active (local Ollama only, internet blocked)
+   • ‘☁’ - Currently using an Ollama cloud model
+   • ‘⚒’ - Tool calling enabled AND model supports tools
+   • ‘⚡’ - Tool auto-execute enabled (unsafe tools still prompt)
+   • ‘⊙’ - Current model supports vision
+   • ‘✦’ - Current model supports thinking/reasoning
+   • ‘≡N’ - Number of file attachments (e.g. ‘≡3’ means 3 files)
+   • ‘♁N’ - Number of web search results attached
    • ‘x’ - Streaming disabled
-   • Context usage bar (when enabled)
    • ‘<’ - Global system prompt disabled
    • ‘H5/10’ - History count (when enabled via
      ‘ollama-buddy-show-history-indicator’)
-   • ‘☁’ - Currently using an Ollama cloud model
-   • ‘⚒’ - Current model supports tool calling
-   • ‘✦’ - Current model supports thinking/reasoning
-   • ‘◐’ - Thinking stream visibility is on (thinking tokens shown live)
-   • ‘≡N’ - Number of file attachments
-   • ‘♁N’ - Number of web search results attached
    • ‘V’ - Reasoning/thinking sections hidden
    • ‘T’ - Token statistics display enabled
-   • ‘l’ - Generic OpenAI-compatible server provider loaded
+   • Provider letters: ‘a’ (OpenAI), ‘c’ (Claude), ‘g’ (Gemini), ‘k’
+     (Grok), ‘p’ (Copilot), ‘s’ (Codestral), ‘d’ (DeepSeek), ‘r’
+     (OpenRouter), ‘l’ (OpenAI-compat)
 
-   Example: ‘☁⚒≡2♁1’ means cloud model with tool support, 2 file
-attachments and 1 web search attached.
+   Example: ‘☁⚒⊙✦≡2♁1acgkpsdr’ means cloud model with tools enabled,
+vision support, thinking support, 2 file attachments, 1 web search, and
+all eight external providers loaded.
 
 17.3 Setting Up API Access
 ==========================
@@ -2928,6 +2980,8 @@ recommended approach is to use Emacs' built-in auth-source:
      machine ollama-buddy-grok login apikey password YOUR_GROK_API_KEY
      machine ollama-buddy-copilot login apikey password YOUR_GITHUB_TOKEN
      machine ollama-buddy-codestral login apikey password YOUR_CODESTRAL_API_KEY
+     machine ollama-buddy-deepseek login apikey password YOUR_DEEPSEEK_API_KEY
+     machine ollama-buddy-openrouter login apikey password YOUR_OPENROUTER_API_KEY
 
    Then configure with auth-source:
      (setq ollama-buddy-openai-api-key
@@ -3347,16 +3401,10 @@ the active model supports thinking/reasoning.
 21.3 Key Bindings
 =================
 
-‘C-c V’
-     Toggle thinking stream visibility for the next incoming thinking
-     block.  When enabled, thinking tokens are displayed live under the
-     ‘*** ✦ Think’ heading as they arrive, then replaced with converted
-     org content and folded on completion.  A ‘◐’ indicator appears in
-     the header line when active.
-
 ‘TAB’
-     On a ‘*** ✦ Think’ heading line, cycle visibility of that
-     individual block (standard org-mode behavior).
+     On a ‘*** Think’ heading, unfold to peek at thinking content; press
+     again to re-fold (standard org-mode behavior).  Works during
+     streaming and after completion.
 
 21.4 Configuration
 ==================
@@ -3375,11 +3423,6 @@ the active model supports thinking/reasoning.
      Static list of model name substrings that are known reasoning
      models.  Auto-detection from the Ollama ‘/api/show’ capabilities
      array is also performed.
-
-‘ollama-buddy-stream-thinking-visible’
-     When non-nil, thinking tokens are displayed in the buffer as they
-     stream in.  On completion the raw text is replaced with converted
-     org content and the heading is folded.  Toggle with ‘C-c V’.
 
 
 File: ollama-buddy.info,  Node: Project Integration,  Next: In-Buffer Replace,  Prev: Thinking Blocks,  Up: Top
@@ -3620,6 +3663,10 @@ model management buffer.
 ‘search_buffer’
      Search for a regex pattern in a buffer and return matching lines.
 
+‘get_project_info’
+     Get information about the current project (root directory, files,
+     structure).
+
 24.3.2 Unsafe Tools (require safe mode off)
 -------------------------------------------
 
@@ -3628,6 +3675,12 @@ model management buffer.
 
 ‘execute_shell’
      Execute a shell command and return its output.
+
+‘propose_file_changes’
+     Propose changes to a file via an ediff session.  Automatically
+     detects whether the LLM provided a full file or a fragment and
+     merges fragments into the complete file before presenting the
+     side-by-side comparison.
 
 24.4 Example Prompts
 ====================
@@ -4233,10 +4286,6 @@ File: ollama-buddy.info,  Node: API Reference,  Next: FAQ,  Prev: Advanced Usage
 ‘ollama-buddy-toggle-streaming’
      Toggle streaming mode for responses.
 
-‘ollama-buddy-toggle-reasoning-visibility’
-     Toggle thinking stream visibility.  When enabled, thinking tokens
-     are shown live as they stream in.
-
 ‘ollama-buddy-toggle-show-history-indicator’
      Toggle display of history indicator in the header line.
 
@@ -4704,36 +4753,36 @@ Index
 Tag Table:
 Node: Top555
 Node: Introduction2961
-Node: Installation5149
-Node: Configuration8106
-Node: Quick Start16374
-Node: Core Features18896
-Node: Chat Interface23173
-Node: Working with Models30451
-Node: Context Management35679
-Node: File Attachments41288
-Node: Web Search47210
-Node: Parameter Control54948
-Node: Session Management57360
-Node: User System Prompts60269
-Node: Roles and Commands70065
-Node: Fabric Pattern Integration87255
-Node: Awesome ChatGPT Prompts89482
-Node: Remote Providers93332
-Node: Ollama Cloud Models100934
-Node: Global System Prompt105130
-Node: Tone Selector106884
-Node: Thinking Blocks108691
-Node: Project Integration111185
-Node: In-Buffer Replace112370
-Node: Tool Calling118246
-Node: RAG126034
-Node: Advanced Usage133813
-Node: API Reference136362
-Node: FAQ142343
-Node: Troubleshooting149428
-Node: Contributing151933
-Node: Index154601
+Node: Installation5249
+Node: Configuration8206
+Node: Quick Start16474
+Node: Core Features19016
+Node: Chat Interface23293
+Node: Working with Models31660
+Node: Context Management36888
+Node: File Attachments42497
+Node: Web Search48419
+Node: Parameter Control56157
+Node: Session Management58569
+Node: User System Prompts61478
+Node: Roles and Commands71274
+Node: Fabric Pattern Integration88464
+Node: Awesome ChatGPT Prompts90691
+Node: Remote Providers94541
+Node: Ollama Cloud Models102831
+Node: Global System Prompt107027
+Node: Tone Selector108781
+Node: Thinking Blocks110588
+Node: Project Integration112541
+Node: In-Buffer Replace113726
+Node: Tool Calling119602
+Node: RAG127763
+Node: Advanced Usage135542
+Node: API Reference138091
+Node: FAQ143914
+Node: Troubleshooting150999
+Node: Contributing153504
+Node: Index156172
 
 End Tag Table
 

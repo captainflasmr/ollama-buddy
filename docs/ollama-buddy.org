@@ -1106,9 +1106,9 @@ Next: [[#Core-Features][Core Features]], Previous:
 - Project Integration :: Press =C-c P= for the Project sub-menu. Access
   project-specific file attachment and context.
 
-- Toggling thinking stream visibility :: Press =C-c V= to toggle live
-  display of thinking tokens as they stream in. A =◐= indicator appears
-  in the header line when active.
+- Peeking at thinking blocks :: While a model is thinking, the
+  =*** Thinking= heading is folded. Press =TAB= on the heading to peek
+  at accumulated content; press =TAB= again to re-fold.
 
 - Toggling Org/Markdown conversion :: Press =C-c C-o= to switch between
   Org-mode and Markdown output. Also available from the transient menu
@@ -1586,12 +1586,11 @@ or press =C-c C-o= in the chat buffer.
 Ollama Buddy can hide reasoning/thinking sections in responses, making
 the output cleaner:
 
-- Toggle visibility with =C-c V= or
-  =M-x ollama-buddy-toggle-reasoning-visibility=
+- Thinking content streams under a folded =*** Thinking= heading; press
+  =TAB= to peek
 - Configure markers with the =ollama-buddy-reasoning-markers= variable
-- When hidden, a status message shows the current reasoning section
-  (e.g., "Think...")
-- Header line shows =V= indicator when reasoning is hidden
+- Header line shows =V= indicator when reasoning is hidden (hide mode
+  only)
 
 This feature helps focus on final answers while preserving the option to
 view the full reasoning process.
@@ -4437,7 +4436,6 @@ The header line shows compact status indicators:
 - =⚡= - Tool auto-execute enabled (unsafe tools still prompt)
 - =⊙= - Current model supports vision
 - =✦= - Current model supports thinking/reasoning
-- =◐= - Thinking stream visibility is on (thinking tokens shown live)
 - =≡N= - Number of file attachments (e.g. =≡3= means 3 files)
 - =♁N= - Number of web search results attached
 - =x= - Streaming disabled
@@ -4450,9 +4448,9 @@ The header line shows compact status indicators:
   (Grok), =p= (Copilot), =s= (Codestral), =d= (DeepSeek), =r=
   (OpenRouter), =l= (OpenAI-compat)
 
-Example: =☁⚒⊙✦◐≡2♁1acgkpsdr= means cloud model with tools enabled,
-vision support, thinking support with visible streaming, 2 file
-attachments, 1 web search, and all eight external providers loaded.
+Example: =☁⚒⊙✦≡2♁1acgkpsdr= means cloud model with tools enabled, vision
+support, thinking support, 2 file attachments, 1 web search, and all
+eight external providers loaded.
 
 <<Setting-Up-API-Access>>
 *** 17.3 Setting Up API Access [[#Setting-Up-API-Access][¶]]
@@ -5065,14 +5063,9 @@ active model supports thinking/reasoning.
 :CUSTOM_ID: key-bindings
 :CLASS: section
 :END:
-- C-c V :: Toggle thinking stream visibility for the next incoming
-  thinking block. When enabled, thinking tokens are displayed live under
-  the =*** ✦ Think= heading as they arrive, then replaced with converted
-  org content and folded on completion. A =◐= indicator appears in the
-  header line when active.
-
-- TAB :: On a =*** ✦ Think= heading line, cycle visibility of that
-  individual block (standard org-mode behavior).
+- TAB :: On a =*** Think= heading, unfold to peek at thinking content;
+  press again to re-fold (standard org-mode behavior). Works during
+  streaming and after completion.
 
 <<Configuration-6>>
 *** 21.4 Configuration [[#Configuration-6][¶]]
@@ -5091,11 +5084,6 @@ active model supports thinking/reasoning.
 - =ollama-buddy-thinking-models= :: Static list of model name substrings
   that are known reasoning models. Auto-detection from the Ollama
   =/api/show= capabilities array is also performed.
-
-- =ollama-buddy-stream-thinking-visible= :: When non-nil, thinking
-  tokens are displayed in the buffer as they stream in. On completion
-  the raw text is replaced with converted org content and the heading is
-  folded. Toggle with =C-c V=.
 
 --------------
 
@@ -6199,10 +6187,6 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 
 - =ollama-buddy-toggle-streaming= :: Toggle streaming mode for
   responses.
-
-- =ollama-buddy-toggle-reasoning-visibility= :: Toggle thinking stream
-  visibility. When enabled, thinking tokens are shown live as they
-  stream in.
 
 - =ollama-buddy-toggle-show-history-indicator= :: Toggle display of
   history indicator in the header line.

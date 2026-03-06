@@ -65,7 +65,7 @@ Submit queries, swap models, view token usage and statistics:
 - *Interactive Menus* -- Transient popup menus with role-based command grouping
 - *Roles & Presets* -- Switchable command configurations (developer, writer, tutor, documenter, custom); each command carries a =:destination= hint (=chat= or =in-buffer=) so rewrites go to the right place automatically
 - *Sessions & History* -- Save/load conversations, prompt history navigation
-- *Thinking Block Folding* -- Reasoning model output (=<think>= tags, DeepSeek API) rendered as collapsible org headings; =C-c V= toggles all blocks
+- *Thinking Block Folding* -- Reasoning model output (=<think>= tags, DeepSeek API) rendered as collapsible org headings; =TAB= on the heading to peek mid-stream
 - *File Attachments* -- Attach files and images (vision models) to conversations
 - *Model Management* -- Pull, delete, copy models; categorized recommendations; cloud model support
 - *Multishot & Benchmark* -- Send the same prompt to multiple models simultaneously; benchmark all models in one command with per-model timeout
@@ -88,14 +88,13 @@ Unified Skills and Prompts.
 
 Thinking Stream Visibility.
 
-- *Thinking Stream Visibility* -- Toggle live viewing of thinking tokens with =C-c V=.  When enabled, thinking content streams visibly under the =*** Think= heading, then gets converted and folded on completion.  A =◐= indicator appears in the header line when active.
-- *Fixed thinking content duplication* -- Corrected marker tracking so raw streamed text is properly replaced by converted content.
+- *Thinking Peek* -- Thinking tokens stream into a folded =*** Thinking= heading; press =TAB= to peek at accumulated content mid-stream, =TAB= again to re-fold.
 
 * Recent Changes
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| *3.4.1* | Thinking Stream Visibility — =C-c V= toggles live display of thinking tokens; =◐= header indicator.                                                                                                                       |
+| *3.4.1* | Thinking Peek — =TAB= on folded =*** Thinking= heading to peek at content mid-stream.                                                                                                                                     |
 | *3.4.0* | Skills — Local Org-mode based AI personas and task-specific instructions; `/skill` slash command and `@skill(name)` inline syntax.                                                                                        |
 | *3.3.0* | Smart Project Integration — `project.el` support for contextual file attachment and `/project` slash command.                                                                                                             |
 | *3.2.2* | Main transient menu reorganization (=C-c O=) — 4x2 compact grid with streamlined sub-menus and top-level History/Sessions.                                                                                                |
@@ -305,7 +304,6 @@ curl -sL https://api.github.com/repos/captainflasmr/ollama-buddy/tarball/main | 
 | C-c !     | Toggle airplane mode          |
 | C-c e     | Switch backend (network/curl) |
 | C-c W     | Toggle in-buffer replace mode |
-| C-c V     | Toggle thinking visibility    |
 | C-c SPC   | Toggle tool calling           |
 | C-c / s   | Web search and display        |
 | C-c / a   | Web search and attach         |

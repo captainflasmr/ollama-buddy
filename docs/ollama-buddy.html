@@ -1185,8 +1185,8 @@ with <code class="code">☁</code>.
 <dd><p>Press <code class="code">C-c P</code> for the Project sub-menu. Access project-specific file attachment and context.
 </p>
 </dd>
-<dt>Toggling thinking stream visibility</dt>
-<dd><p>Press <code class="code">C-c V</code> to toggle live display of thinking tokens as they stream in. A <code class="code">◐</code> indicator appears in the header line when active.
+<dt>Peeking at thinking blocks</dt>
+<dd><p>While a model is thinking, the <code class="code">*** Thinking</code> heading is folded.  Press <code class="code">TAB</code> on the heading to peek at accumulated content; press <code class="code">TAB</code> again to re-fold.
 </p>
 </dd>
 <dt>Toggling Org/Markdown conversion</dt>
@@ -1714,10 +1714,9 @@ Provide concise, efficient solutions with explanations.
 <p>Ollama Buddy can hide reasoning/thinking sections in responses, making the output cleaner:
 </p>
 <ul class="itemize mark-bullet">
-<li>Toggle visibility with <code class="code">C-c V</code> or <code class="code">M-x ollama-buddy-toggle-reasoning-visibility</code>
+<li>Thinking content streams under a folded <code class="code">*** Thinking</code> heading; press <code class="code">TAB</code> to peek
 </li><li>Configure markers with the <code class="code">ollama-buddy-reasoning-markers</code> variable
-</li><li>When hidden, a status message shows the current reasoning section (e.g., &quot;Think...&quot;)
-</li><li>Header line shows <code class="code">V</code> indicator when reasoning is hidden
+</li><li>Header line shows <code class="code">V</code> indicator when reasoning is hidden (hide mode only)
 </li></ul>
 
 <p>This feature helps focus on final answers while preserving the option to view the full reasoning process.
@@ -4331,7 +4330,6 @@ Works with LM Studio, llama.cpp, vLLM, Jan, and any
 </li><li><code class="code">⚡</code> - Tool auto-execute enabled (unsafe tools still prompt)
 </li><li><code class="code">⊙</code> - Current model supports vision
 </li><li><code class="code">✦</code> - Current model supports thinking/reasoning
-</li><li><code class="code">◐</code> - Thinking stream visibility is on (thinking tokens shown live)
 </li><li><code class="code">≡N</code> - Number of file attachments (e.g. <code class="code">≡3</code> means 3 files)
 </li><li><code class="code">♁N</code> - Number of web search results attached
 </li><li><code class="code">x</code> - Streaming disabled
@@ -4342,7 +4340,7 @@ Works with LM Studio, llama.cpp, vLLM, Jan, and any
 </li><li>Provider letters: <code class="code">a</code> (OpenAI), <code class="code">c</code> (Claude), <code class="code">g</code> (Gemini), <code class="code">k</code> (Grok), <code class="code">p</code> (Copilot), <code class="code">s</code> (Codestral), <code class="code">d</code> (DeepSeek), <code class="code">r</code> (OpenRouter), <code class="code">l</code> (OpenAI-compat)
 </li></ul>
 
-<p>Example: <code class="code">☁⚒⊙✦◐≡2♁1acgkpsdr</code> means cloud model with tools enabled, vision support, thinking support with visible streaming, 2 file attachments, 1 web search, and all eight external providers loaded.
+<p>Example: <code class="code">☁⚒⊙✦≡2♁1acgkpsdr</code> means cloud model with tools enabled, vision support, thinking support, 2 file attachments, 1 web search, and all eight external providers loaded.
 </p>
 </div>
 <div class="section-level-extent" id="Setting-Up-API-Access">
@@ -4907,12 +4905,8 @@ Next: <a href="#Project-Integration" accesskey="n" rel="next">Project Integratio
 <h3 class="section"><span>21.3 Key Bindings<a class="copiable-link" href="#Key-Bindings"> &para;</a></span></h3>
 
 <dl class="table">
-<dt><kbd class="kbd">C-c V</kbd></dt>
-<dd><p>Toggle thinking stream visibility for the next incoming thinking block. When enabled, thinking tokens are displayed live under the <code class="code">*** ✦ Think</code> heading as they arrive, then replaced with converted org content and folded on completion. A <code class="code">◐</code> indicator appears in the header line when active.
-</p>
-</dd>
 <dt><kbd class="kbd">TAB</kbd></dt>
-<dd><p>On a <code class="code">*** ✦ Think</code> heading line, cycle visibility of that individual block (standard org-mode behavior).
+<dd><p>On a <code class="code">*** Think</code> heading, unfold to peek at thinking content; press again to re-fold (standard org-mode behavior).  Works during streaming and after completion.
 </p></dd>
 </dl>
 
@@ -4933,9 +4927,6 @@ Next: <a href="#Project-Integration" accesskey="n" rel="next">Project Integratio
 <dd><p>Static list of model name substrings that are known reasoning models. Auto-detection from the Ollama <code class="code">/api/show</code> capabilities array is also performed.
 </p>
 </dd>
-<dt><code class="code">ollama-buddy-stream-thinking-visible</code></dt>
-<dd><p>When non-nil, thinking tokens are displayed in the buffer as they stream in. On completion the raw text is replaced with converted org content and the heading is folded. Toggle with <code class="code">C-c V</code>.
-</p></dd>
 </dl>
 
 <hr>
@@ -6032,10 +6023,6 @@ Next: <a href="#FAQ" accesskey="n" rel="next">Frequently Asked Questions</a>, Pr
 </dd>
 <dt><code class="code">ollama-buddy-toggle-streaming</code></dt>
 <dd><p>Toggle streaming mode for responses.
-</p>
-</dd>
-<dt><code class="code">ollama-buddy-toggle-reasoning-visibility</code></dt>
-<dd><p>Toggle thinking stream visibility. When enabled, thinking tokens are shown live as they stream in.
 </p>
 </dd>
 <dt><code class="code">ollama-buddy-toggle-show-history-indicator</code></dt>

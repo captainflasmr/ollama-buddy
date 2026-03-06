@@ -588,8 +588,8 @@ Press @code{C-c C-a} to attach a file, or use the transient menu ``Project'' sec
 @item Project Integration
 Press @code{C-c P} for the Project sub-menu. Access project-specific file attachment and context.
 
-@item Toggling thinking stream visibility
-Press @code{C-c V} to toggle live display of thinking tokens as they stream in. A @code{◐} indicator appears in the header line when active.
+@item Peeking at thinking blocks
+While a model is thinking, the @code{*** Thinking} heading is folded.  Press @code{TAB} on the heading to peek at accumulated content; press @code{TAB} again to re-fold.
 
 @item Toggling Org/Markdown conversion
 Press @code{C-c C-o} to switch between Org-mode and Markdown output. Also available from the transient menu under ``Settings''.
@@ -994,10 +994,9 @@ or press @code{C-c C-o} in the chat buffer.
 Ollama Buddy can hide reasoning/thinking sections in responses, making the output cleaner:
 
 @itemize @bullet
-@item Toggle visibility with @code{C-c V} or @code{M-x ollama-buddy-toggle-reasoning-visibility}
+@item Thinking content streams under a folded @code{*** Thinking} heading; press @code{TAB} to peek
 @item Configure markers with the @code{ollama-buddy-reasoning-markers} variable
-@item When hidden, a status message shows the current reasoning section (e.g., "Think...")
-@item Header line shows @code{V} indicator when reasoning is hidden
+@item Header line shows @code{V} indicator when reasoning is hidden (hide mode only)
 @end itemize
 
 This feature helps focus on final answers while preserving the option to view the full reasoning process.
@@ -2990,7 +2989,6 @@ The header line shows compact status indicators:
 @item @code{⚡} - Tool auto-execute enabled (unsafe tools still prompt)
 @item @code{⊙} - Current model supports vision
 @item @code{✦} - Current model supports thinking/reasoning
-@item @code{◐} - Thinking stream visibility is on (thinking tokens shown live)
 @item @code{≡N} - Number of file attachments (e.g.@: @code{≡3} means 3 files)
 @item @code{♁N} - Number of web search results attached
 @item @code{x} - Streaming disabled
@@ -3001,7 +2999,7 @@ The header line shows compact status indicators:
 @item Provider letters: @code{a} (OpenAI), @code{c} (Claude), @code{g} (Gemini), @code{k} (Grok), @code{p} (Copilot), @code{s} (Codestral), @code{d} (DeepSeek), @code{r} (OpenRouter), @code{l} (OpenAI-compat)
 @end itemize
 
-Example: @code{☁⚒⊙✦◐≡2♁1acgkpsdr} means cloud model with tools enabled, vision support, thinking support with visible streaming, 2 file attachments, 1 web search, and all eight external providers loaded.
+Example: @code{☁⚒⊙✦≡2♁1acgkpsdr} means cloud model with tools enabled, vision support, thinking support, 2 file attachments, 1 web search, and all eight external providers loaded.
 
 @section Setting Up API Access
 
@@ -3402,11 +3400,8 @@ The @code{✦} symbol appears in the header line and prompt line whenever the ac
 @section Key Bindings
 
 @table @kbd
-@item C-c V
-Toggle thinking stream visibility for the next incoming thinking block. When enabled, thinking tokens are displayed live under the @code{*** ✦ Think} heading as they arrive, then replaced with converted org content and folded on completion. A @code{◐} indicator appears in the header line when active.
-
 @item TAB
-On a @code{*** ✦ Think} heading line, cycle visibility of that individual block (standard org-mode behavior).
+On a @code{*** Think} heading, unfold to peek at thinking content; press again to re-fold (standard org-mode behavior).  Works during streaming and after completion.
 @end table
 
 @section Configuration
@@ -3421,8 +3416,6 @@ When non-nil and @code{ollama-buddy-collapse-thinking} is nil, the thinking bloc
 @item @code{ollama-buddy-thinking-models}
 Static list of model name substrings that are known reasoning models. Auto-detection from the Ollama @code{/api/show} capabilities array is also performed.
 
-@item @code{ollama-buddy-stream-thinking-visible}
-When non-nil, thinking tokens are displayed in the buffer as they stream in. On completion the raw text is replaced with converted org content and the heading is folded. Toggle with @code{C-c V}.
 @end table
 
 @node Project Integration
@@ -4247,9 +4240,6 @@ Toggle Markdown to Org conversion.
 
 @item ollama-buddy-toggle-streaming
 Toggle streaming mode for responses.
-
-@item ollama-buddy-toggle-reasoning-visibility
-Toggle thinking stream visibility. When enabled, thinking tokens are shown live as they stream in.
 
 @item ollama-buddy-toggle-show-history-indicator
 Toggle display of history indicator in the header line.
