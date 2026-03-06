@@ -314,9 +314,10 @@ When complete, CALLBACK is called with the status response and result."
           ;; Accumulate thinking tokens
           (setq ollama-buddy--thinking-content-accumulator
                 (concat ollama-buddy--thinking-content-accumulator thinking-text))
-          ;; Optionally also insert into buffer for live viewing
-          (when ollama-buddy-stream-thinking-visible
-            (insert thinking-text)))
+          ;; Always insert into buffer; extend fold so text stays hidden
+          (insert thinking-text)
+          (ollama-buddy--extend-thinking-fold
+           ollama-buddy--thinking-arrow-marker))
          (ollama-buddy-hide-reasoning
           (setq ollama-buddy--thinking-api-active t))
          (t
@@ -399,14 +400,15 @@ When complete, CALLBACK is called with the status response and result."
                     (set-marker ollama-buddy--thinking-block-start nil)
                     (setq ollama-buddy--thinking-block-start  nil
                           ollama-buddy--thinking-arrow-marker nil)))
-                 ;; Inside block: accumulate (don't insert into buffer)
+                 ;; Inside block: accumulate + insert folded (peekable via TAB)
                  (ollama-buddy--in-reasoning-section
                   (when ollama-buddy--thinking-content-accumulator
                     (setq ollama-buddy--thinking-content-accumulator
                           (concat ollama-buddy--thinking-content-accumulator content))
-                    ;; Optionally also insert into buffer for live viewing
-                    (when ollama-buddy-stream-thinking-visible
-                      (insert content)))
+                    ;; Always insert into buffer; extend fold so text stays hidden
+                    (insert content)
+                    (ollama-buddy--extend-thinking-fold
+                     ollama-buddy--thinking-arrow-marker))
                   (setq should-show-content nil))))
                ;; --- Hide mode ---
                (ollama-buddy-hide-reasoning

@@ -120,7 +120,6 @@
     ("&" "Context Type" ollama-buddy-toggle-context-display-type)
     (">" "History Display" ollama-buddy-toggle-show-history-indicator)
     ("T" "Token Display" ollama-buddy-toggle-token-display)
-    ("V" "Reasoning" ollama-buddy-toggle-reasoning-visibility)
     ("<" "Global Prompt" ollama-buddy-toggle-global-system-prompt)
     ("~" "Tone" ollama-buddy-set-tone)]
 

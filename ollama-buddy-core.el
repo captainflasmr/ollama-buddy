@@ -265,14 +265,6 @@ Has no effect when `ollama-buddy-collapse-thinking' is non-nil."
   :type 'boolean
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-stream-thinking-visible nil
-  "When non-nil, show thinking tokens in the buffer as they stream in.
-Only has effect when `ollama-buddy-collapse-thinking' is non-nil.
-Tokens are still accumulated and converted; on completion the raw
-streamed text is replaced with the converted org content and the
-heading is folded as usual.  Toggle with `C-c V'."
-  :type 'boolean
-  :group 'ollama-buddy)
 
 (defcustom ollama-buddy-reasoning-markers
   '(("<think>" . "</think>")
@@ -2640,7 +2632,6 @@ ACTUAL-MODEL is the model being used instead."
                                     "⚡" ""))
            (vision-indicator (if (ollama-buddy--model-supports-vision model) "⊙" ""))
            (thinking-indicator (if (ollama-buddy--model-supports-thinking model) "✦" ""))
-           (thinking-visible-indicator (if ollama-buddy-stream-thinking-visible "◐" ""))
            (attachment-indicator (if ollama-buddy--current-attachments
                                      (propertize (format "≡%d" (length ollama-buddy--current-attachments))
                                                  'face '(:weight bold))
@@ -2685,7 +2676,7 @@ ACTUAL-MODEL is the model being used instead."
             (replace-regexp-in-string
              "%" "%%"
             (concat
-             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s%s %s%s%s"
+             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s%s %s%s%s"
                      airplane-indicator
                      (if ollama-buddy-streaming-enabled "" "x")
                      (ollama-buddy--add-context-to-status-format)
@@ -2696,7 +2687,6 @@ ACTUAL-MODEL is the model being used instead."
                      auto-exec-indicator
                      vision-indicator
                      thinking-indicator
-                     thinking-visible-indicator
                      in-buffer-indicator
                      attachment-indicator
                      web-search-indicator

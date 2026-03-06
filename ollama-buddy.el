@@ -131,9 +131,6 @@
   "Marker for the start of the currently-streaming thinking block content.
 Set when a thinking start marker is detected; cleared when the block is folded.")
 
-(defvar-local ollama-buddy--thinking-heading-markers nil
-  "List of markers, each pointing to the start of a `*** Think' heading line.
-Used by `ollama-buddy-toggle-all-thinking-blocks' to fold/unfold all blocks.")
 
 (defvar-local ollama-buddy--thinking-api-active nil
   "Non-nil while thinking tokens are arriving via `message.thinking' API field.
@@ -153,9 +150,9 @@ Set when the heading is inserted; passed to
 
 (defvar-local ollama-buddy--thinking-content-accumulator nil
   "String accumulating thinking tokens during streaming.
-Tokens are NOT inserted into the buffer during streaming; instead they are
-collected here and bulk-inserted by `ollama-buddy--finalize-thinking-block'
-which then folds the subtree with `outline-hide-subtree'.")
+Tokens are also inserted into the buffer under a folded heading so the
+user can peek with TAB.  On completion, `ollama-buddy--finalize-thinking-block'
+replaces the raw text with md-to-org converted content and re-folds.")
 
 (defvar-local ollama-buddy--header-inserted-p nil
   "Flag to track if the response header has been inserted for the current turn.")
@@ -520,7 +517,7 @@ with an empty messages array and keep_alive set to 0."
 ;; --- Thinking block org-heading helpers ---
 
 (defun ollama-buddy--insert-thinking-header ()
-  "Insert `*** Thinking...' heading.
+  "Insert `*** Thinking' heading.
 Thinking tokens are NOT inserted into the buffer during streaming;
 they accumulate in `ollama-buddy--thinking-content-accumulator'.
 When thinking ends, `ollama-buddy--finalize-thinking-block' inserts
@@ -545,17 +542,22 @@ the *** heading nests properly under the ** header."
   ;; Ensure we start on a fresh line
   (unless (bolp) (insert "\n"))
   (let ((heading-start (point)))
-    (insert "*** Thinking...\n")
+    (insert "*** Thinking\n\n")
     (setq ollama-buddy--thinking-content-accumulator "")
     (let ((m (copy-marker heading-start)))
       (set-marker-insertion-type m t)
+      ;; Fold heading immediately so streamed tokens are hidden by default;
+      ;; user can TAB on the heading to peek at accumulated content.
+      (save-excursion
+        (goto-char heading-start)
+        (outline-hide-subtree))
       m)))
 
 (defun ollama-buddy--finalize-thinking-block (heading-marker)
   "Finalise the thinking block: insert content, fold, rename heading.
 Inserts the accumulated thinking content after the heading, appends
 the `*** Response' heading, folds the Think subtree via
-`outline-hide-subtree', renames `Thinking...' to `Think', and
+`outline-hide-subtree', renames `Thinking' to `Think', and
 registers the heading for toggle-all."
   (when (and heading-marker (marker-buffer heading-marker))
     (let ((inhibit-read-only t))
@@ -586,10 +588,10 @@ registers the heading for toggle-all."
       (save-excursion
         (goto-char (marker-position heading-marker))
         (outline-hide-subtree))
-      ;; Rename "Thinking..." -> "Think"
+      ;; Rename "Thinking" -> "Think"
       (save-excursion
         (goto-char (marker-position heading-marker))
-        (when (looking-at "\\*\\*\\* Thinking\\.\\.\\.")
+        (when (looking-at "\\*\\*\\* Thinking")
           (replace-match "*** Think")))
       ;; Advance response-start-position past the *** Response heading
       ;; so md-to-org conversion doesn't touch the thinking block
@@ -597,9 +599,7 @@ registers the heading for toggle-all."
         (save-excursion
           (goto-char (marker-position heading-marker))
           (when (re-search-forward "^\\*\\*\\* Response\n+" nil t)
-            (setq ollama-buddy--response-start-position (copy-marker (point)))))))
-    ;; Register for toggle-all
-    (push heading-marker ollama-buddy--thinking-heading-markers))
+            (setq ollama-buddy--response-start-position (copy-marker (point))))))))
   ;; Clean up
   (setq ollama-buddy--thinking-content-accumulator nil))
 
@@ -671,66 +671,24 @@ RESPONSE-TEXT (if non-nil/empty) is inserted before the Tools section."
     (when think-marker
       (save-excursion
         (goto-char think-marker)
-        (outline-hide-subtree))
-      (push think-marker ollama-buddy--thinking-heading-markers))
+        (outline-hide-subtree)))
     ;; 4. Fold each **** tool heading in reverse order
     (dolist (pos tool-heading-positions)
       (save-excursion
         (goto-char pos)
         (outline-hide-subtree)))))
 
-(defun ollama-buddy--thinking-heading-folded-p (pos)
-  "Return non-nil if the `*** Think' heading at POS is currently folded."
-  (save-excursion
-    (goto-char pos)
-    (end-of-line)
-    (and (not (eobp))
-         (invisible-p (1+ (point))))))
-
-(defun ollama-buddy-toggle-thinking-at-point ()
-  "Toggle the `*** Think' heading at or above point."
-  (interactive)
-  (save-excursion
-    (beginning-of-line)
-    (unless (looking-at "^\\*\\*\\* Think")
-      (re-search-backward "^\\*\\*\\* Think" nil t))
-    (if (looking-at "^\\*\\*\\* Think")
-        (if (ollama-buddy--thinking-heading-folded-p (point))
-            (outline-show-subtree)
-          (outline-hide-subtree))
-      (message "No thinking block at or above point"))))
-
-(defun ollama-buddy-toggle-all-thinking-blocks ()
-  "Toggle all `*** Think' headings in the current buffer.
-If any is folded, expand all; otherwise fold all."
-  (interactive)
-  (let ((live (cl-remove-if-not #'marker-buffer
-                                ollama-buddy--thinking-heading-markers)))
-    (if (null live)
-        (message "No thinking blocks in this buffer")
-      (let ((any-folded (cl-some (lambda (m)
-                                   (ollama-buddy--thinking-heading-folded-p
-                                    (marker-position m)))
-                                 live)))
-        (dolist (m live)
-          (save-excursion
-            (goto-char (marker-position m))
-            (if any-folded
-                (outline-show-subtree)
-              (outline-hide-subtree))))))))
-
-(defun ollama-buddy-toggle-reasoning-visibility ()
-  "Toggle live streaming of thinking tokens.
-When enabled, thinking content is displayed in the buffer as it
-streams in.  The block is still folded and converted when complete.
-Individual thinking blocks can be expanded via `TAB' on the heading."
-  (interactive)
-  (setq ollama-buddy-stream-thinking-visible
-        (not ollama-buddy-stream-thinking-visible))
-  (ollama-buddy--update-status
-   (if ollama-buddy-stream-thinking-visible
-       "Thinking: visible during stream"
-     "Thinking: hidden during stream")))
+(defun ollama-buddy--extend-thinking-fold (heading-marker)
+  "Extend the outline fold overlay at HEADING-MARKER to cover new text at point-max.
+Called after inserting thinking tokens so freshly appended text stays hidden."
+  (when (and heading-marker (marker-buffer heading-marker))
+    (save-excursion
+      (goto-char (marker-position heading-marker))
+      (end-of-line)
+      (let ((eol (1+ (point))))
+        (dolist (ov (overlays-at eol))
+          (when (eq (overlay-get ov 'invisible) 'outline)
+            (move-overlay ov (overlay-start ov) (point-max))))))))
 
 ;; Function to check if text contains a reasoning marker
 (defun ollama-buddy--find-reasoning-marker (text)
@@ -2502,7 +2460,7 @@ TCP packets split a JSON object across multiple filter calls."
             (save-excursion
               (goto-char (point-max))
               (cond
-               ;; Collapse: accumulate content invisibly, fold when done
+               ;; Collapse: accumulate + insert folded (peekable via TAB)
                (ollama-buddy-collapse-thinking
                 (unless ollama-buddy--thinking-api-active
                   (setq ollama-buddy--thinking-api-active t
@@ -2511,9 +2469,10 @@ TCP packets split a JSON object across multiple filter calls."
                 ;; Accumulate thinking tokens
                 (setq ollama-buddy--thinking-content-accumulator
                       (concat ollama-buddy--thinking-content-accumulator thinking-text))
-                ;; Optionally also insert into buffer for live viewing
-                (when ollama-buddy-stream-thinking-visible
-                  (insert thinking-text)))
+                ;; Always insert into buffer; extend fold so text stays hidden
+                (insert thinking-text)
+                (ollama-buddy--extend-thinking-fold
+                 ollama-buddy--thinking-arrow-marker))
                ;; Hide: silently discard
                (ollama-buddy-hide-reasoning
                 (setq ollama-buddy--thinking-api-active t))
@@ -2647,16 +2606,17 @@ TCP packets split a JSON object across multiple filter calls."
                       ;; Move point past the header so text inserts after it
                       (goto-char (point-max)))))
 
-                ;; In collapse mode, accumulate thinking content
+                ;; In collapse mode, accumulate thinking content (peekable via TAB)
                 (if (and ollama-buddy-collapse-thinking
                          ollama-buddy--in-reasoning-section
                          ollama-buddy--thinking-content-accumulator)
                     (progn
                       (setq ollama-buddy--thinking-content-accumulator
                             (concat ollama-buddy--thinking-content-accumulator text))
-                      ;; Optionally also insert into buffer for live viewing
-                      (when ollama-buddy-stream-thinking-visible
-                        (insert text)))
+                      ;; Always insert into buffer; extend fold so text stays hidden
+                      (insert text)
+                      (ollama-buddy--extend-thinking-fold
+                       ollama-buddy--thinking-arrow-marker))
                   ;; Skip leading newlines immediately after a thinking block ends
                   (if (and ollama-buddy--reasoning-skip-newlines
                            (not ollama-buddy--in-reasoning-section)
@@ -5242,7 +5202,6 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c T") #'ollama-buddy-toggle-token-display)
     (define-key map (kbd "C-c #") #'ollama-buddy-display-token-stats)
     (define-key map (kbd "C-c C-o") #'ollama-buddy-toggle-markdown-conversion)
-    (define-key map (kbd "C-c V") #'ollama-buddy-toggle-reasoning-visibility)
     (define-key map (kbd "C-c <") #'ollama-buddy-toggle-global-system-prompt)
     (define-key map (kbd "C-c ~") #'ollama-buddy-set-tone)
 
