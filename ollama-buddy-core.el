@@ -2359,6 +2359,13 @@ manifest is already present."
           (user-error "Failed to pull cloud model manifest for %s (exit code %d)"
                       raw exit-code))))))
 
+(defun ollama-buddy--round-pct (pct-string)
+  "Round a percentage string like \"45.2%\" to an integer string like \"45%\".
+Returns \"?\" if PCT-STRING is nil."
+  (if pct-string
+      (format "%d%%" (round (string-to-number (replace-regexp-in-string "%" "" pct-string))))
+    "?"))
+
 (defun ollama-buddy--cloud-model-p (model)
   "Return non-nil if MODEL is a cloud model.
 Cloud models have a `-cloud' or `:cloud' suffix, `u:' prefix,
@@ -2661,14 +2668,10 @@ ACTUAL-MODEL is the model being used instead."
                       (let ((usage (ollama-buddy--fetch-cloud-usage)))
                         (if usage
                             (let* ((session (alist-get 'session usage))
-                                   (weekly (alist-get 'weekly usage))
-                                   (s-bar (if (and session (fboundp 'ollama-buddy--cloud-usage-bar))
-                                              (ollama-buddy--cloud-usage-bar session 5) ""))
-                                   (w-bar (if (and weekly (fboundp 'ollama-buddy--cloud-usage-bar))
-                                              (ollama-buddy--cloud-usage-bar weekly 5) "")))
-                              (format " S:%s%s W:%s%s"
-                                      s-bar (or session "?")
-                                      w-bar (or weekly "?")))
+                                   (weekly (alist-get 'weekly usage)))
+                              (format " %s %s"
+                                      (ollama-buddy--round-pct session)
+                                      (ollama-buddy--round-pct weekly)))
                           ""))
                     ""))
               "")))
