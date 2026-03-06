@@ -255,9 +255,9 @@ Returns the result as a string, or an error message if execution fails."
                                  name-str
                                  (ollama-buddy-tools--format-args-for-display arguments))
                          '(?y ?n ?a))))
+            (message nil)
             (pcase answer
-              (?a (setq ollama-buddy-tools-auto-execute t)
-                  (message "Tool auto-execute enabled for this session"))
+              (?a (setq ollama-buddy-tools-auto-execute t))
               (?n (error "Tool execution cancelled by user")))))
         ;; If this tool is marked terminal, flag that auto-continuation should
         ;; stop after this batch — set before calling in case of error.
