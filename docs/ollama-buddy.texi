@@ -3234,8 +3234,10 @@ When using a cloud model, the header line displays a @code{☁} symbol to indica
 
 @section Cloud Usage Stats
 
-The Model Management page (@code{C-c M}) can display your Ollama cloud usage
-(session and weekly percentages) as visual progress bars in the Cloud Models section.
+The Model Management page (@code{C-c M}) displays your Ollama cloud usage
+(session and weekly percentages) in the Cloud Models section.  The header line
+also shows compact usage percentages (e.g.@: @code{45% 32%} for session and weekly)
+when a cloud model is selected.
 
 To enable this, set @code{ollama-buddy-cloud-session-token} to the value of the
 @code{__Secure-session} cookie from ollama.com:

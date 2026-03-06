@@ -4782,9 +4782,10 @@ indicate cloud model usage.
 :CUSTOM_ID: cloud-usage-stats
 :CLASS: section
 :END:
-The Model Management page (=C-c M=) can display your Ollama cloud usage
-(session and weekly percentages) as visual progress bars in the Cloud
-Models section.
+The Model Management page (=C-c M=) displays your Ollama cloud usage
+(session and weekly percentages) in the Cloud Models section. The header
+line also shows compact usage percentages (e.g. =45% 32%= for session
+and weekly) when a cloud model is selected.
 
 To enable this, set =ollama-buddy-cloud-session-token= to the value of
 the =__Secure-session= cookie from ollama.com:

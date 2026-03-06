@@ -13,14 +13,14 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 ** <2026-03-05 Wed> *3.4.1*
 
-Thinking Stream Visibility.
+Thinking Peek.
 
 *** New Features
 
-- *Thinking Stream Visibility* -- Toggle live viewing of thinking tokens as they
-  stream in with =C-c V=.  When enabled, thinking content is displayed under the
-  =*** Think= heading in real time, then replaced with the converted org content
-  and folded on completion.  A =◐= indicator appears in the header line when active.
+- *Thinking Peek* -- Thinking tokens now stream into the buffer under a folded
+  =*** Thinking= heading.  Press =TAB= on the heading to peek at accumulated
+  content mid-stream; press =TAB= again to re-fold.  On completion the raw text
+  is replaced with converted org content and the heading is renamed to =*** Think=.
 
 ** <2026-03-04 Wed> *3.4.0*
 

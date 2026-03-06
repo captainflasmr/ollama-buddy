@@ -4663,8 +4663,10 @@ and the request is not sent.
 <div class="section-level-extent" id="Cloud-Usage-Stats">
 <h3 class="section"><span>18.7 Cloud Usage Stats<a class="copiable-link" href="#Cloud-Usage-Stats"> &para;</a></span></h3>
 
-<p>The Model Management page (<code class="code">C-c M</code>) can display your Ollama cloud usage
-(session and weekly percentages) as visual progress bars in the Cloud Models section.
+<p>The Model Management page (<code class="code">C-c M</code>) displays your Ollama cloud usage
+(session and weekly percentages) in the Cloud Models section.  The header line
+also shows compact usage percentages (e.g. <code class="code">45% 32%</code> for session and weekly)
+when a cloud model is selected.
 </p>
 <p>To enable this, set <code class="code">ollama-buddy-cloud-session-token</code> to the value of the
 <code class="code">__Secure-session</code> cookie from ollama.com:

@@ -3212,9 +3212,10 @@ indicate cloud model usage.
 18.7 Cloud Usage Stats
 ======================
 
-The Model Management page (‘C-c M’) can display your Ollama cloud usage
-(session and weekly percentages) as visual progress bars in the Cloud
-Models section.
+The Model Management page (‘C-c M’) displays your Ollama cloud usage
+(session and weekly percentages) in the Cloud Models section.  The
+header line also shows compact usage percentages (e.g. ‘45% 32%’ for
+session and weekly) when a cloud model is selected.
 
    To enable this, set ‘ollama-buddy-cloud-session-token’ to the value
 of the ‘__Secure-session’ cookie from ollama.com:
@@ -4770,19 +4771,19 @@ Node: Fabric Pattern Integration88464
 Node: Awesome ChatGPT Prompts90691
 Node: Remote Providers94541
 Node: Ollama Cloud Models102831
-Node: Global System Prompt107027
-Node: Tone Selector108781
-Node: Thinking Blocks110588
-Node: Project Integration112541
-Node: In-Buffer Replace113726
-Node: Tool Calling119602
-Node: RAG127763
-Node: Advanced Usage135542
-Node: API Reference138091
-Node: FAQ143914
-Node: Troubleshooting150999
-Node: Contributing153504
-Node: Index156172
+Node: Global System Prompt107130
+Node: Tone Selector108884
+Node: Thinking Blocks110691
+Node: Project Integration112644
+Node: In-Buffer Replace113829
+Node: Tool Calling119705
+Node: RAG127866
+Node: Advanced Usage135645
+Node: API Reference138194
+Node: FAQ144017
+Node: Troubleshooting151102
+Node: Contributing153607
+Node: Index156275
 
 End Tag Table
 
