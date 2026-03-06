@@ -4343,6 +4343,7 @@ Modifies the variable in place."
         (org-mode)
         (setq-local org-hide-emphasis-markers t)
         (setq-local org-hide-leading-stars t)
+        (setq truncate-lines t)
         (erase-buffer)
 
         (insert "#+title: Model Management")
