@@ -46,7 +46,7 @@
     "The =⚒= indicator in the header means tool calling is *enabled* for a model that supports it.  Toggle with =C-c SPC= or =/tools=."
 
     ;; Thinking models
-    "Press =C-c V= to toggle all =*** ✦ Think= reasoning blocks in the buffer at once — expand them all or collapse them all."
+    "Thinking tokens stream under a folded =*** Thinking= heading — press =TAB= mid-stream to peek at the reasoning so far, =TAB= again to re-fold."
     "Press =TAB= on any =*** ✦ Think= heading to fold or unfold just that one reasoning block."
 
     ;; In-buffer replace
@@ -59,6 +59,8 @@
     "History is per-model: switching models with =C-c m= gives you a fresh context for the new model, while the old model remembers where you left off."
     "Use =/retry= to instantly resend the last prompt — handy when a response was cut short or went wrong."
     "Use =/copy= to copy the last response to the kill ring without selecting it manually."
+    "Press =C-u C-u C-c C-c= on a prompt heading to rewind the conversation to that point — history is truncated and the prompt is pre-filled for resending."
+    "Use =S-TAB= to fold the buffer to just prompt headings, navigate to the one you want, then =C-u C-u C-c C-c= to rewind."
 
     ;; System prompts & tone
     "Use =/system= to load any of your saved user prompts as the system prompt for the current session."

@@ -86,15 +86,16 @@ Unified Skills and Prompts.
 
 * What's New (v3.4.1)
 
-Thinking Stream Visibility.
+Thinking Peek and Conversation Rewind.
 
 - *Thinking Peek* -- Thinking tokens stream into a folded =*** Thinking= heading; press =TAB= to peek at accumulated content mid-stream, =TAB= again to re-fold.
+- *Rewind* -- Navigate to a prompt heading and press =C-u C-u C-c C-c= to rewind the conversation to that point; falls back to =completing-read= when not on a heading; the prompt text is pre-filled for editing and resending.
 
 * Recent Changes
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| *3.4.1* | Thinking Peek — =TAB= on folded =*** Thinking= heading to peek at content mid-stream.                                                                                                                                     |
+| *3.4.1* | Thinking Peek and Rewind — =TAB= peek at thinking mid-stream; =C-u C-u C-c C-c= to rewind conversation from any prompt heading.                                                                                          |
 | *3.4.0* | Skills — Local Org-mode based AI personas and task-specific instructions; `/skill` slash command and `@skill(name)` inline syntax.                                                                                        |
 | *3.3.0* | Smart Project Integration — `project.el` support for contextual file attachment and `/project` slash command.                                                                                                             |
 | *3.2.2* | Main transient menu reorganization (=C-c O=) — 4x2 compact grid with streamlined sub-menus and top-level History/Sessions.                                                                                                |

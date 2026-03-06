@@ -1897,6 +1897,25 @@ Sessions save the conversation history for each model separately.
      M-x ollama-buddy-toggle-history
    or press ‘C-c H’ in the chat buffer.
 
+12.9 Rewinding a Conversation
+=============================
+
+To rewind a conversation to a previous prompt, navigate to the desired
+prompt heading in the chat buffer and press ‘C-u C-u C-c C-c’.  You can
+use standard Org navigation to get there:
+
+   • Fold the buffer to show only prompt headings (‘S-TAB’ to cycle
+     global visibility).
+   • Use ‘imenu’ to jump to a specific prompt.
+   • Simply scroll up and place point on a ‘>> PROMPT:’ heading.
+
+   If point is not on a prompt heading, a ‘completing-read’ fallback
+presents all prompts for selection.
+
+   After confirmation, everything from that prompt onward is removed and
+the conversation history is truncated to match.  The prompt text is
+pre-filled in a fresh prompt area so you can edit and resend it.
+
 
 File: ollama-buddy.info,  Node: User System Prompts,  Next: Roles and Commands,  Prev: Session Management,  Up: Top
 
@@ -4765,25 +4784,25 @@ Node: File Attachments42497
 Node: Web Search48419
 Node: Parameter Control56157
 Node: Session Management58569
-Node: User System Prompts61478
-Node: Roles and Commands71274
-Node: Fabric Pattern Integration88464
-Node: Awesome ChatGPT Prompts90691
-Node: Remote Providers94541
-Node: Ollama Cloud Models102831
-Node: Global System Prompt107130
-Node: Tone Selector108884
-Node: Thinking Blocks110691
-Node: Project Integration112644
-Node: In-Buffer Replace113829
-Node: Tool Calling119705
-Node: RAG127866
-Node: Advanced Usage135645
-Node: API Reference138194
-Node: FAQ144017
-Node: Troubleshooting151102
-Node: Contributing153607
-Node: Index156275
+Node: User System Prompts62270
+Node: Roles and Commands72066
+Node: Fabric Pattern Integration89256
+Node: Awesome ChatGPT Prompts91483
+Node: Remote Providers95333
+Node: Ollama Cloud Models103623
+Node: Global System Prompt107922
+Node: Tone Selector109676
+Node: Thinking Blocks111483
+Node: Project Integration113436
+Node: In-Buffer Replace114621
+Node: Tool Calling120497
+Node: RAG128658
+Node: Advanced Usage136437
+Node: API Reference138986
+Node: FAQ144809
+Node: Troubleshooting151894
+Node: Contributing154399
+Node: Index157067
 
 End Tag Table
 

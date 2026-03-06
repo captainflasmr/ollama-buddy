@@ -809,6 +809,100 @@ Cancelling with \\[keyboard-quit] does nothing; use \\[quoted-insert] @ for a li
         (ollama-buddy--send-backend last-prompt model))
     (message "No prompt history to retry")))
 
+(defun ollama-buddy-rewind ()
+  "Rewind the conversation to a previous prompt.
+When point is on or after a prompt heading, rewind to that prompt.
+Otherwise, offer all prompts via `completing-read'.
+Everything from the selected prompt onward is removed, the
+conversation history is truncated, and the prompt text is
+pre-filled so you can edit and resend.
+
+Typically invoked via `C-u C-u C-c C-c'."
+  (interactive)
+  (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+    (let ((prompt-text nil)
+          (prompt-pos nil))
+      ;; Try to find prompt heading at or before point
+      (save-excursion
+        (beginning-of-line)
+        (unless (looking-at "^\\* \\*.*\\*.*>> PROMPT: \\(.*\\)")
+          (re-search-backward "^\\* \\*.*\\*.*>> PROMPT: " nil t))
+        (when (looking-at "^\\* \\*.*\\*.*>> PROMPT: \\(.*\\)")
+          (setq prompt-text (string-trim (match-string 1))
+                prompt-pos (match-beginning 0))))
+      ;; Fall back to completing-read if not on a prompt heading
+      (unless prompt-pos
+        (let ((prompts nil))
+          (save-excursion
+            (goto-char (point-min))
+            (while (re-search-forward
+                    "^\\* \\*.*\\*.*>> PROMPT: \\(.*\\)" nil t)
+              (let ((text (string-trim (match-string 1)))
+                    (pos (match-beginning 0)))
+                (when (and text (not (string-empty-p text)))
+                  (push (cons text pos) prompts)))))
+          (setq prompts (nreverse prompts))
+          (when prompts
+            (let* ((numbered
+                    (cl-loop for (text . pos) in prompts
+                             for i from 1
+                             collect (cons (format "%d: %s"
+                                                  i (truncate-string-to-width text 80))
+                                           pos)))
+                   (choice (completing-read "Rewind to: "
+                                            (mapcar #'car numbered) nil t))
+                   (pos (cdr (assoc choice numbered))))
+              (when pos
+                (save-excursion
+                  (goto-char pos)
+                  (when (looking-at "^\\* \\*.*\\*.*>> PROMPT: \\(.*\\)")
+                    (setq prompt-text (string-trim (match-string 1))
+                          prompt-pos pos))))))))
+      (if (not prompt-pos)
+          (message "No prompts found to rewind to")
+        (when (y-or-n-p (format "Rewind to: %s? "
+                                (truncate-string-to-width prompt-text 60)))
+          ;; Count prompt headings before the selected one
+          (let ((prompt-index 0))
+            (save-excursion
+              (goto-char (point-min))
+              (while (and (re-search-forward
+                           "^\\* \\*.*\\*.*>> PROMPT: " nil t)
+                          (< (match-beginning 0) prompt-pos))
+                (cl-incf prompt-index)))
+            ;; Truncate conversation history
+            (let* ((model (or ollama-buddy--current-model
+                              ollama-buddy-default-model))
+                   (history (gethash model
+                                     ollama-buddy--conversation-history-by-model nil))
+                   (keep-count (* 2 prompt-index)))
+              (when history
+                (puthash model (seq-take history keep-count)
+                         ollama-buddy--conversation-history-by-model)))
+            ;; Truncate prompt history
+            (let* ((all-prompts 0))
+              (save-excursion
+                (goto-char (point-min))
+                (while (re-search-forward "^\\* \\*.*\\*.*>> PROMPT: " nil t)
+                  (cl-incf all-prompts)))
+              (let ((prompts-to-remove (- all-prompts prompt-index)))
+                (setq ollama-buddy--prompt-history
+                      (nthcdr prompts-to-remove ollama-buddy--prompt-history))))
+            ;; Delete buffer content from this prompt onward
+            (let ((inhibit-read-only t))
+              (goto-char prompt-pos)
+              (skip-chars-backward "\n")
+              (delete-region (point) (point-max))
+              ;; Re-insert prompt area with old text pre-filled
+              (ollama-buddy--prepare-prompt-area)
+              (goto-char (point-max))
+              (insert prompt-text))
+            ;; Refresh header line, status, and imenu cache
+            (setq imenu--index-alist nil)
+            (ollama-buddy--update-status "Rewound")
+            (ollama-buddy-update-mode-line)))))))
+
+
 (defcustom ollama-buddy-slash-commands
   '(("model"      ollama-buddy--swap-model            "Switch the current LLM model")
     ("system"     ollama-buddy-user-prompts-load      "Load a saved system prompt")
@@ -4137,9 +4231,9 @@ Modifies the variable in place."
          ((= current-prefix-arg-val 4)
           (ollama-buddy-set-system-prompt))
 
-         ;; C-u C-u (16) - Reset both system prompt
+         ;; C-u C-u (16) - Rewind conversation
          ((= current-prefix-arg-val 16)
-          (ollama-buddy-reset-all-prompts))
+          (ollama-buddy-rewind))
 
          ;; No prefix - Regular prompt
          (t
