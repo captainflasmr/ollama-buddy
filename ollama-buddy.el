@@ -968,6 +968,14 @@ is ever needed."
         (erase-buffer)
 
         (insert "#+title: Ollama Token Stats\n\n")
+        (insert "Press =g= to refresh\n\n")
+        (insert-text-button
+         "[Reset Stats]"
+         'action (lambda (_)
+                   (ollama-buddy-reset-token-stats)
+                   (ollama-buddy-display-token-stats))
+         'help-echo "Clear all token usage history")
+        (insert "\n\n")
 
         (if (null ollama-buddy--token-usage-history)
             (insert "No token usage data available yet.")
@@ -988,7 +996,7 @@ is ever needed."
                 (wait-data (make-hash-table :test 'equal))
                 (model-ranks (make-hash-table :test 'equal)))
             (dolist (info ollama-buddy--token-usage-history)
-              (let* ((model (plist-get info :model))
+              (let* ((model (ollama-buddy--get-real-model-name (plist-get info :model)))
                      (tokens (plist-get info :tokens))
                      (rate (plist-get info :rate))
                      (model-stats (gethash model model-data nil)))
@@ -1003,7 +1011,7 @@ is ever needed."
             ;; Gather wait times per model (used for rankings and TTFT chart)
             (dolist (info ollama-buddy--token-usage-history)
               (when-let* ((wt (plist-get info :wait-time)))
-                (let* ((model (plist-get info :model))
+                (let* ((model (ollama-buddy--get-real-model-name (plist-get info :model)))
                        (entry (gethash model wait-data)))
                   (unless entry
                     (setq entry (list :waits nil))
@@ -1186,7 +1194,7 @@ is ever needed."
             (insert "\n* Recent Interactions\n\n")
             (let ((recent (seq-take ollama-buddy--token-usage-history 10)))
               (dolist (info recent)
-                (let ((model (plist-get info :model))
+                (let ((model (ollama-buddy--get-real-model-name (plist-get info :model)))
                       (tokens (plist-get info :tokens))
                       (rate (plist-get info :rate))
                       (wait (plist-get info :wait-time))
@@ -1199,7 +1207,11 @@ is ever needed."
       (goto-char (point-min))
       (visual-line-mode -1)
       (setq truncate-lines t)
-      (view-mode 1))
+      (view-mode 1)
+      (let ((map (make-sparse-keymap)))
+        (define-key map (kbd "g") #'ollama-buddy-display-token-stats)
+        (setq-local minor-mode-overriding-map-alist
+                    (list (cons 'view-mode map)))))
     (display-buffer buf)))
 
 (defun ollama-buddy-history-save ()
@@ -2069,6 +2081,13 @@ Compares model names after stripping provider prefixes for consistency."
     (setcdr (nthcdr (1- ollama-buddy-token-history-max-size)
                     ollama-buddy--token-usage-history)
             nil)))
+
+(defun ollama-buddy-reset-token-stats ()
+  "Clear all token usage history."
+  (interactive)
+  (when (yes-or-no-p "Reset all token stats? ")
+    (setq ollama-buddy--token-usage-history nil)
+    (message "Token stats reset")))
 
 (defun ollama-buddy--start-response-wait-timer (&optional model)
   "Start the response-wait elapsed timer if threshold is configured.
