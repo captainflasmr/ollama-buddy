@@ -133,9 +133,11 @@ Set this to point at a separate OpenAI-compatible embedding server"
 (defcustom ollama-buddy-rag-embedding-api-key nil
   "API key sent as a Bearer token to the embedding service.
 Only needed when `ollama-buddy-rag-embedding-api-style' is `openai'
-and the service requires authentication.  Leave nil for local servers."
+and the service requires authentication.  Leave nil for local servers.
+Consider using `auth-source' instead of setting this directly."
   :type '(choice (const :tag "None" nil)
                  (string :tag "API key"))
+  :risky t
   :group 'ollama-buddy-rag)
 
 (defcustom ollama-buddy-rag-exclude-patterns

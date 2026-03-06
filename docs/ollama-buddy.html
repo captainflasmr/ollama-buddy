@@ -551,7 +551,7 @@ interact with AI models directly from within Emacs for various tasks such as:
 </li><li>Custom AI-powered workflows via roles
 </li><li>Using pre-built prompt templates from Fabric
 </li><li>Utilizing Awesome ChatGPT Prompts
-</li><li>Integrating with commercial APIs (OpenAI, Claude, Gemini, Grok, Copilot, Codestral)
+</li><li>Integrating with commercial APIs (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter)
 </li><li>Using Ollama cloud models
 </li><li>Including files as context in conversations
 </li><li>Real-time web search to provide current information to LLMs
@@ -584,7 +584,7 @@ the power of local LLMs right into your Emacs workflow.
 <li>Emacs 28.1 or later
 </li><li>Ollama installed and running on your system (see <a class="url" href="https://ollama.ai">https://ollama.ai</a>)
 </li><li>At least one language model pulled into Ollama
-</li><li>(Optional) API keys for OpenAI or Claude if you want to use those services
+</li><li>(Optional) API keys for remote providers (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter) if you want to use those services
 </li></ul>
 
 <hr>
@@ -1443,6 +1443,7 @@ Next: <a href="#Working-with-Models" accesskey="n" rel="next">Working with Model
   <ul class="itemize mark-minus">
 <li><code class="code">☁</code> when using a cloud model
   </li><li><code class="code">⚒</code> when model supports tool calling (regardless of enabled state)
+  </li><li><code class="code">✦</code> when model supports thinking/reasoning
   </li></ul>
 </li><li>Context warnings and validation
 </li></ul>
@@ -1599,6 +1600,55 @@ Requires <code class="code">ollama-buddy-awesome</code>.
 </dd>
 <dt><code class="code">reset</code></dt>
 <dd><p>Reset system prompt to default (<code class="code">ollama-buddy-reset-system-prompt</code>).
+</p>
+</dd>
+<dt><code class="code">new</code></dt>
+<dd><p>Start a new session (<code class="code">ollama-buddy-sessions-new</code>).
+</p>
+</dd>
+<dt><code class="code">exit</code></dt>
+<dd><p>Close the chat buffer (<code class="code">ollama-buddy-exit</code>).
+</p>
+</dd>
+<dt><code class="code">bye</code></dt>
+<dd><p>Close the chat buffer (<code class="code">ollama-buddy-exit</code>), alias for <code class="code">exit</code>.
+</p>
+</dd>
+<dt><code class="code">unload</code></dt>
+<dd><p>Unload running models from memory (<code class="code">ollama-buddy-unload-model</code>).
+</p>
+</dd>
+<dt><code class="code">set</code></dt>
+<dd><p>Edit a model parameter (<code class="code">ollama-buddy-params-edit</code>).
+</p>
+</dd>
+<dt><code class="code">show</code></dt>
+<dd><p>Show current model info (<code class="code">ollama-buddy-show-raw-model-info</code>).
+</p>
+</dd>
+<dt><code class="code">benchmark</code></dt>
+<dd><p>Benchmark all models with editable selection (<code class="code">ollama-buddy-benchmark-models</code>).
+</p>
+</dd>
+<dt><code class="code">autoexec</code></dt>
+<dd><p>Toggle tool auto-execute mode (<code class="code">ollama-buddy-tools-toggle-auto-execute</code>).
+Requires <code class="code">ollama-buddy-tools</code>.
+</p>
+</dd>
+<dt><code class="code">skill</code></dt>
+<dd><p>Load a skill as system prompt (<code class="code">ollama-buddy-user-prompts-load</code>).
+</p>
+</dd>
+<dt><code class="code">completion</code></dt>
+<dd><p>Toggle inline code completions (<code class="code">ollama-buddy-completion-toggle</code>).
+</p>
+</dd>
+<dt><code class="code">manage</code></dt>
+<dd><p>Open the Model Management buffer (<code class="code">ollama-buddy-manage-models</code>).
+</p>
+</dd>
+<dt><code class="code">project</code></dt>
+<dd><p>Attach a file from the current project (<code class="code">ollama-buddy-project-attach-file</code>).
 </p></dd>
 </dl>
 
@@ -4251,6 +4301,14 @@ Next: <a href="#Ollama-Cloud-Models" accesskey="n" rel="next">Ollama Cloud Model
 <dd><p>Load with <code class="code">(require 'ollama-buddy-codestral nil t)</code>
 </p>
 </dd>
+<dt>DeepSeek (prefix: <code class="code">d:</code>)</dt>
+<dd><p>Load with <code class="code">(require 'ollama-buddy-deepseek nil t)</code>
+</p>
+</dd>
+<dt>OpenRouter (prefix: <code class="code">r:</code>)</dt>
+<dd><p>Load with <code class="code">(require 'ollama-buddy-openrouter nil t)</code>
+</p>
+</dd>
 <dt>Generic OpenAI-compatible server (prefix: <code class="code">l:</code>, configurable)</dt>
 <dd><p>Load with <code class="code">(require 'ollama-buddy-openai-compat nil t)</code>.
 Works with LM Studio, llama.cpp, vLLM, Jan, and any
@@ -4267,22 +4325,24 @@ Works with LM Studio, llama.cpp, vLLM, Jan, and any
 <p>The header line shows compact status indicators:
 </p>
 <ul class="itemize mark-bullet">
-<li><code class="code">x</code> - Streaming disabled
-</li><li>Context usage bar (when enabled)
-</li><li><code class="code">&lt;</code> - Global system prompt disabled
-</li><li><code class="code">H5/10</code> - History count (when enabled via <code class="code">ollama-buddy-show-history-indicator</code>)
+<li><code class="code">✈</code> - Airplane mode active (local Ollama only, internet blocked)
 </li><li><code class="code">☁</code> - Currently using an Ollama cloud model
-</li><li><code class="code">⚒</code> - Current model supports tool calling
+</li><li><code class="code">⚒</code> - Tool calling enabled AND model supports tools
+</li><li><code class="code">⚡</code> - Tool auto-execute enabled (unsafe tools still prompt)
+</li><li><code class="code">⊙</code> - Current model supports vision
 </li><li><code class="code">✦</code> - Current model supports thinking/reasoning
 </li><li><code class="code">◐</code> - Thinking stream visibility is on (thinking tokens shown live)
-</li><li><code class="code">≡N</code> - Number of file attachments
+</li><li><code class="code">≡N</code> - Number of file attachments (e.g. <code class="code">≡3</code> means 3 files)
 </li><li><code class="code">♁N</code> - Number of web search results attached
+</li><li><code class="code">x</code> - Streaming disabled
+</li><li><code class="code">&lt;</code> - Global system prompt disabled
+</li><li><code class="code">H5/10</code> - History count (when enabled via <code class="code">ollama-buddy-show-history-indicator</code>)
 </li><li><code class="code">V</code> - Reasoning/thinking sections hidden
 </li><li><code class="code">T</code> - Token statistics display enabled
-</li><li><code class="code">l</code> - Generic OpenAI-compatible server provider loaded
+</li><li>Provider letters: <code class="code">a</code> (OpenAI), <code class="code">c</code> (Claude), <code class="code">g</code> (Gemini), <code class="code">k</code> (Grok), <code class="code">p</code> (Copilot), <code class="code">s</code> (Codestral), <code class="code">d</code> (DeepSeek), <code class="code">r</code> (OpenRouter), <code class="code">l</code> (OpenAI-compat)
 </li></ul>
 
-<p>Example: <code class="code">☁⚒≡2♁1</code> means cloud model with tool support, 2 file attachments and 1 web search attached.
+<p>Example: <code class="code">☁⚒⊙✦◐≡2♁1acgkpsdr</code> means cloud model with tools enabled, vision support, thinking support with visible streaming, 2 file attachments, 1 web search, and all eight external providers loaded.
 </p>
 </div>
 <div class="section-level-extent" id="Setting-Up-API-Access">
@@ -4298,6 +4358,8 @@ machine ollama-buddy-gemini login apikey password YOUR_GEMINI_API_KEY
 machine ollama-buddy-grok login apikey password YOUR_GROK_API_KEY
 machine ollama-buddy-copilot login apikey password YOUR_GITHUB_TOKEN
 machine ollama-buddy-codestral login apikey password YOUR_CODESTRAL_API_KEY
+machine ollama-buddy-deepseek login apikey password YOUR_DEEPSEEK_API_KEY
+machine ollama-buddy-openrouter login apikey password YOUR_OPENROUTER_API_KEY
 </pre></div>
 
 <p>Then configure with auth-source:
@@ -5173,6 +5235,10 @@ Next: <a href="#RAG" accesskey="n" rel="next">RAG (Retrieval-Augmented Generatio
 </dd>
 <dt><code class="code">search_buffer</code></dt>
 <dd><p>Search for a regex pattern in a buffer and return matching lines.
+</p>
+</dd>
+<dt><code class="code">get_project_info</code></dt>
+<dd><p>Get information about the current project (root directory, files, structure).
 </p></dd>
 </dl>
 
@@ -5187,6 +5253,12 @@ Next: <a href="#RAG" accesskey="n" rel="next">RAG (Retrieval-Augmented Generatio
 </dd>
 <dt><code class="code">execute_shell</code></dt>
 <dd><p>Execute a shell command and return its output.
+</p>
+</dd>
+<dt><code class="code">propose_file_changes</code></dt>
+<dd><p>Propose changes to a file via an ediff session.  Automatically detects
+whether the LLM provided a full file or a fragment and merges fragments
+into the complete file before presenting the side-by-side comparison.
 </p></dd>
 </dl>
 

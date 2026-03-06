@@ -304,6 +304,12 @@ curl -sL https://api.github.com/repos/captainflasmr/ollama-buddy/tarball/main | 
 | C-c v     | Set keep-alive duration       |
 | C-c !     | Toggle airplane mode          |
 | C-c e     | Switch backend (network/curl) |
+| C-c W     | Toggle in-buffer replace mode |
+| C-c V     | Toggle thinking visibility    |
+| C-c SPC   | Toggle tool calling           |
+| C-c / s   | Web search and display        |
+| C-c / a   | Web search and attach         |
+| C-c d     | Inline diff view              |
 
 * Screenshots & Demos
 

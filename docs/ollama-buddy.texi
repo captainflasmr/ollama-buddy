@@ -95,7 +95,7 @@ interact with AI models directly from within Emacs for various tasks such as:
 @item Custom AI-powered workflows via roles
 @item Using pre-built prompt templates from Fabric
 @item Utilizing Awesome ChatGPT Prompts
-@item Integrating with commercial APIs (OpenAI, Claude, Gemini, Grok, Copilot, Codestral)
+@item Integrating with commercial APIs (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter)
 @item Using Ollama cloud models
 @item Including files as context in conversations
 @item Real-time web search to provide current information to LLMs
@@ -124,7 +124,7 @@ Before using Ollama Buddy, you need:
 @item Emacs 28.1 or later
 @item Ollama installed and running on your system (see @url{https://ollama.ai})
 @item At least one language model pulled into Ollama
-@item (Optional) API keys for OpenAI or Claude if you want to use those services
+@item (Optional) API keys for remote providers (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter) if you want to use those services
 @end itemize
 
 @node Installation
@@ -776,6 +776,7 @@ The chat interface consists of:
   @itemize @minus
   @item @code{☁} when using a cloud model
   @item @code{⚒} when model supports tool calling (regardless of enabled state)
+  @item @code{✦} when model supports thinking/reasoning
   @end itemize
 @item Context warnings and validation
 @end itemize
@@ -902,6 +903,43 @@ Toggle streaming mode on/off (@code{ollama-buddy-toggle-streaming}).
 
 @item reset
 Reset system prompt to default (@code{ollama-buddy-reset-system-prompt}).
+
+@item new
+Start a new session (@code{ollama-buddy-sessions-new}).
+
+@item exit
+Close the chat buffer (@code{ollama-buddy-exit}).
+
+@item bye
+Close the chat buffer (@code{ollama-buddy-exit}), alias for @code{exit}.
+
+@item unload
+Unload running models from memory (@code{ollama-buddy-unload-model}).
+
+@item set
+Edit a model parameter (@code{ollama-buddy-params-edit}).
+
+@item show
+Show current model info (@code{ollama-buddy-show-raw-model-info}).
+
+@item benchmark
+Benchmark all models with editable selection (@code{ollama-buddy-benchmark-models}).
+
+@item autoexec
+Toggle tool auto-execute mode (@code{ollama-buddy-tools-toggle-auto-execute}).
+Requires @code{ollama-buddy-tools}.
+
+@item skill
+Load a skill as system prompt (@code{ollama-buddy-user-prompts-load}).
+
+@item completion
+Toggle inline code completions (@code{ollama-buddy-completion-toggle}).
+
+@item manage
+Open the Model Management buffer (@code{ollama-buddy-manage-models}).
+
+@item project
+Attach a file from the current project (@code{ollama-buddy-project-attach-file}).
 @end table
 
 @itemize @bullet
@@ -2927,6 +2965,12 @@ Load with @code{(require 'ollama-buddy-copilot nil t)}
 @item Codestral/Mistral (prefix: @code{s:})
 Load with @code{(require 'ollama-buddy-codestral nil t)}
 
+@item DeepSeek (prefix: @code{d:})
+Load with @code{(require 'ollama-buddy-deepseek nil t)}
+
+@item OpenRouter (prefix: @code{r:})
+Load with @code{(require 'ollama-buddy-openrouter nil t)}
+
 @item Generic OpenAI-compatible server (prefix: @code{l:}, configurable)
 Load with @code{(require 'ollama-buddy-openai-compat nil t)}.
 Works with LM Studio, llama.cpp, vLLM, Jan, and any
@@ -2940,22 +2984,24 @@ Local Ollama models use the @code{o:} prefix when remote models are available, o
 The header line shows compact status indicators:
 
 @itemize @bullet
-@item @code{x} - Streaming disabled
-@item Context usage bar (when enabled)
-@item @code{<} - Global system prompt disabled
-@item @code{H5/10} - History count (when enabled via @code{ollama-buddy-show-history-indicator})
+@item @code{✈} - Airplane mode active (local Ollama only, internet blocked)
 @item @code{☁} - Currently using an Ollama cloud model
-@item @code{⚒} - Current model supports tool calling
+@item @code{⚒} - Tool calling enabled AND model supports tools
+@item @code{⚡} - Tool auto-execute enabled (unsafe tools still prompt)
+@item @code{⊙} - Current model supports vision
 @item @code{✦} - Current model supports thinking/reasoning
 @item @code{◐} - Thinking stream visibility is on (thinking tokens shown live)
-@item @code{≡N} - Number of file attachments
+@item @code{≡N} - Number of file attachments (e.g.@: @code{≡3} means 3 files)
 @item @code{♁N} - Number of web search results attached
+@item @code{x} - Streaming disabled
+@item @code{<} - Global system prompt disabled
+@item @code{H5/10} - History count (when enabled via @code{ollama-buddy-show-history-indicator})
 @item @code{V} - Reasoning/thinking sections hidden
 @item @code{T} - Token statistics display enabled
-@item @code{l} - Generic OpenAI-compatible server provider loaded
+@item Provider letters: @code{a} (OpenAI), @code{c} (Claude), @code{g} (Gemini), @code{k} (Grok), @code{p} (Copilot), @code{s} (Codestral), @code{d} (DeepSeek), @code{r} (OpenRouter), @code{l} (OpenAI-compat)
 @end itemize
 
-Example: @code{☁⚒≡2♁1} means cloud model with tool support, 2 file attachments and 1 web search attached.
+Example: @code{☁⚒⊙✦◐≡2♁1acgkpsdr} means cloud model with tools enabled, vision support, thinking support with visible streaming, 2 file attachments, 1 web search, and all eight external providers loaded.
 
 @section Setting Up API Access
 
@@ -2969,6 +3015,8 @@ machine ollama-buddy-gemini login apikey password YOUR_GEMINI_API_KEY
 machine ollama-buddy-grok login apikey password YOUR_GROK_API_KEY
 machine ollama-buddy-copilot login apikey password YOUR_GITHUB_TOKEN
 machine ollama-buddy-codestral login apikey password YOUR_CODESTRAL_API_KEY
+machine ollama-buddy-deepseek login apikey password YOUR_DEEPSEEK_API_KEY
+machine ollama-buddy-openrouter login apikey password YOUR_OPENROUTER_API_KEY
 @end example
 
 Then configure with auth-source:
@@ -3586,6 +3634,9 @@ Evaluate a mathematical expression using Emacs @code{calc-eval}.
 
 @item search_buffer
 Search for a regex pattern in a buffer and return matching lines.
+
+@item get_project_info
+Get information about the current project (root directory, files, structure).
 @end table
 
 @subsection Unsafe Tools (require safe mode off)
@@ -3596,6 +3647,11 @@ Write content to a file on the filesystem.
 
 @item execute_shell
 Execute a shell command and return its output.
+
+@item propose_file_changes
+Propose changes to a file via an ediff session.  Automatically detects
+whether the LLM provided a full file or a fragment and merges fragments
+into the complete file before presenting the side-by-side comparison.
 @end table
 
 @section Example Prompts

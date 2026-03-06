@@ -57,8 +57,10 @@ model discovery.  Examples:
 
 (defcustom ollama-buddy-openai-compat-api-key ""
   "API key sent as a Bearer token to the server.
-Leave empty for local servers that do not require authentication."
+Leave empty for local servers that do not require authentication.
+Consider using `auth-source' instead of setting this directly."
   :type 'string
+  :risky t
   :group 'ollama-buddy-openai-compat)
 
 (defcustom ollama-buddy-openai-compat-models nil

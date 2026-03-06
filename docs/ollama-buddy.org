@@ -447,7 +447,7 @@ directly from within Emacs for various tasks such as:
 - Using pre-built prompt templates from Fabric
 - Utilizing Awesome ChatGPT Prompts
 - Integrating with commercial APIs (OpenAI, Claude, Gemini, Grok,
-  Copilot, Codestral)
+  Copilot, Codestral, DeepSeek, OpenRouter)
 - Using Ollama cloud models
 - Including files as context in conversations
 - Real-time web search to provide current information to LLMs
@@ -488,8 +488,9 @@ Before using Ollama Buddy, you need:
 - Ollama installed and running on your system (see
   [[https://ollama.ai]])
 - At least one language model pulled into Ollama
-- (Optional) API keys for OpenAI or Claude if you want to use those
-  services
+- (Optional) API keys for remote providers (OpenAI, Claude, Gemini,
+  Grok, Copilot, Codestral, DeepSeek, OpenRouter) if you want to use
+  those services
 
 --------------
 
@@ -1359,6 +1360,7 @@ The chat interface consists of:
 - A prompt line showing model capabilities:
   - =☁= when using a cloud model
   - =⚒= when model supports tool calling (regardless of enabled state)
+  - =✦= when model supports thinking/reasoning
 - Context warnings and validation
 
 <<Sending-Prompts>>
@@ -1488,6 +1490,40 @@ Available =/= commands (filtered by loaded modules):
 
 - =reset= :: Reset system prompt to default
   (=ollama-buddy-reset-system-prompt=).
+
+- =new= :: Start a new session (=ollama-buddy-sessions-new=).
+
+- =exit= :: Close the chat buffer (=ollama-buddy-exit=).
+
+- =bye= :: Close the chat buffer (=ollama-buddy-exit=), alias for
+  =exit=.
+
+- =unload= :: Unload running models from memory
+  (=ollama-buddy-unload-model=).
+
+- =set= :: Edit a model parameter (=ollama-buddy-params-edit=).
+
+- =show= :: Show current model info
+  (=ollama-buddy-show-raw-model-info=).
+
+- =benchmark= :: Benchmark all models with editable selection
+  (=ollama-buddy-benchmark-models=).
+
+- =autoexec= :: Toggle tool auto-execute mode
+  (=ollama-buddy-tools-toggle-auto-execute=). Requires
+  =ollama-buddy-tools=.
+
+- =skill= :: Load a skill as system prompt
+  (=ollama-buddy-user-prompts-load=).
+
+- =completion= :: Toggle inline code completions
+  (=ollama-buddy-completion-toggle=).
+
+- =manage= :: Open the Model Management buffer
+  (=ollama-buddy-manage-models=).
+
+- =project= :: Attach a file from the current project
+  (=ollama-buddy-project-attach-file=).
 
 - Outside the prompt area, =/= inserts a literal ‘=/='.
 - Press =C-g= to cancel (nothing inserted); use =C-q /= for a literal
@@ -4372,6 +4408,12 @@ loaded on-demand:
 - Codestral/Mistral (prefix: =s:=) :: Load with
   =(require 'ollama-buddy-codestral nil t)=
 
+- DeepSeek (prefix: =d:=) :: Load with
+  =(require 'ollama-buddy-deepseek nil t)=
+
+- OpenRouter (prefix: =r:=) :: Load with
+  =(require 'ollama-buddy-openrouter nil t)=
+
 - Generic OpenAI-compatible server (prefix: =l:=, configurable) :: Load
   with =(require 'ollama-buddy-openai-compat nil t)=. Works with LM
   Studio, llama.cpp, vLLM, Jan, and any
@@ -4389,23 +4431,28 @@ available, or no prefix when only local models are present.
 :END:
 The header line shows compact status indicators:
 
+- =✈= - Airplane mode active (local Ollama only, internet blocked)
+- =☁= - Currently using an Ollama cloud model
+- =⚒= - Tool calling enabled AND model supports tools
+- =⚡= - Tool auto-execute enabled (unsafe tools still prompt)
+- =⊙= - Current model supports vision
+- =✦= - Current model supports thinking/reasoning
+- =◐= - Thinking stream visibility is on (thinking tokens shown live)
+- =≡N= - Number of file attachments (e.g. =≡3= means 3 files)
+- =♁N= - Number of web search results attached
 - =x= - Streaming disabled
-- Context usage bar (when enabled)
 - =<= - Global system prompt disabled
 - =H5/10= - History count (when enabled via
   =ollama-buddy-show-history-indicator=)
-- =☁= - Currently using an Ollama cloud model
-- =⚒= - Current model supports tool calling
-- =✦= - Current model supports thinking/reasoning
-- =◐= - Thinking stream visibility is on (thinking tokens shown live)
-- =≡N= - Number of file attachments
-- =♁N= - Number of web search results attached
 - =V= - Reasoning/thinking sections hidden
 - =T= - Token statistics display enabled
-- =l= - Generic OpenAI-compatible server provider loaded
+- Provider letters: =a= (OpenAI), =c= (Claude), =g= (Gemini), =k=
+  (Grok), =p= (Copilot), =s= (Codestral), =d= (DeepSeek), =r=
+  (OpenRouter), =l= (OpenAI-compat)
 
-Example: =☁⚒≡2♁1= means cloud model with tool support, 2 file
-attachments and 1 web search attached.
+Example: =☁⚒⊙✦◐≡2♁1acgkpsdr= means cloud model with tools enabled,
+vision support, thinking support with visible streaming, 2 file
+attachments, 1 web search, and all eight external providers loaded.
 
 <<Setting-Up-API-Access>>
 *** 17.3 Setting Up API Access [[#Setting-Up-API-Access][¶]]
@@ -4424,6 +4471,8 @@ machine ollama-buddy-gemini login apikey password YOUR_GEMINI_API_KEY
 machine ollama-buddy-grok login apikey password YOUR_GROK_API_KEY
 machine ollama-buddy-copilot login apikey password YOUR_GITHUB_TOKEN
 machine ollama-buddy-codestral login apikey password YOUR_CODESTRAL_API_KEY
+machine ollama-buddy-deepseek login apikey password YOUR_DEEPSEEK_API_KEY
+machine ollama-buddy-openrouter login apikey password YOUR_OPENROUTER_API_KEY
 #+end_src
 
 Then configure with auth-source:
@@ -5381,6 +5430,9 @@ model management buffer.
 - =search_buffer= :: Search for a regex pattern in a buffer and return
   matching lines.
 
+- =get_project_info= :: Get information about the current project (root
+  directory, files, structure).
+
 <<Unsafe-Tools-_0028require-safe-mode-off_0029>>
 **** 24.3.2 Unsafe Tools (require safe mode off) [[#Unsafe-Tools-_0028require-safe-mode-off_0029][¶]]
 :PROPERTIES:
@@ -5390,6 +5442,11 @@ model management buffer.
 - =write_file= :: Write content to a file on the filesystem.
 
 - =execute_shell= :: Execute a shell command and return its output.
+
+- =propose_file_changes= :: Propose changes to a file via an ediff
+  session. Automatically detects whether the LLM provided a full file or
+  a fragment and merges fragments into the complete file before
+  presenting the side-by-side comparison.
 
 <<Example-Prompts>>
 *** 24.4 Example Prompts [[#Example-Prompts][¶]]
