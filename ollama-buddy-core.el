@@ -231,16 +231,20 @@ Takes effect before the /api/show capabilities cache is populated."
   :type '(repeat string)
   :group 'ollama-buddy)
 
-(defvar ollama-buddy-airplane-mode nil
+(defcustom ollama-buddy-airplane-mode nil
   "When non-nil, restrict ollama-buddy to local Ollama models only.
 All cloud models, external providers (OpenAI, Claude, Gemini, etc.) and
 web search are blocked to prevent unintended internet access and token usage.
-Use `ollama-buddy-toggle-airplane-mode' to toggle.")
+Use `ollama-buddy-toggle-airplane-mode' to toggle."
+  :type 'boolean
+  :group 'ollama-buddy)
 
-(defvar ollama-buddy-in-buffer-replace nil
+(defcustom ollama-buddy-in-buffer-replace nil
   "When non-nil, commands that operate on a region stream their response
 back into the source buffer instead of the chat buffer.
-Toggle with `ollama-buddy-toggle-in-buffer-replace' or the transient menu.")
+Toggle with `ollama-buddy-toggle-in-buffer-replace' or the transient menu."
+  :type 'boolean
+  :group 'ollama-buddy)
 
 (defcustom ollama-buddy-image-formats '("\\.png$" "\\.jpg$" "\\.jpeg$" "\\.webp$" "\\.gif$")
   "List of regular expressions matching supported image file formats."
@@ -261,12 +265,14 @@ Has no effect when `ollama-buddy-collapse-thinking' is non-nil."
   :type 'boolean
   :group 'ollama-buddy)
 
-(defvar ollama-buddy-stream-thinking-visible nil
+(defcustom ollama-buddy-stream-thinking-visible nil
   "When non-nil, show thinking tokens in the buffer as they stream in.
 Only has effect when `ollama-buddy-collapse-thinking' is non-nil.
 Tokens are still accumulated and converted; on completion the raw
 streamed text is replaced with the converted org content and the
-heading is folded as usual.  Toggle with `C-c V'.")
+heading is folded as usual.  Toggle with `C-c V'."
+  :type 'boolean
+  :group 'ollama-buddy)
 
 (defcustom ollama-buddy-reasoning-markers
   '(("<think>" . "</think>")
@@ -1763,7 +1769,8 @@ Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
   (setq-local org-hide-emphasis-markers t)
   (setq-local org-hide-leading-stars t)
   (let* ((external-providers (ollama-buddy--get-enabled-external-providers))
-         (ollama-count (length (ollama-buddy--get-models)))
+         (ollama-count (length (or ollama-buddy--models-cache
+                                   (ollama-buddy--get-models))))
          (cloud-count (length ollama-buddy-cloud-models))
          (use-prefixes (ollama-buddy--should-use-marker-prefix))
          (provider-summary

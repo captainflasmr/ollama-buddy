@@ -409,13 +409,15 @@ is selected."
       ;; Skip models that already have capabilities cached.
       (let ((meta (gethash model ollama-buddy--models-metadata-cache)))
         (unless (alist-get 'capabilities-fetched meta)
-          (condition-case nil
+          (condition-case err
               (let* ((real-model (ollama-buddy--get-real-model-name model))
                      (payload (json-encode `((model . ,real-model))))
                      (response (ollama-buddy--make-request "/api/show" "POST" payload)))
                 (when response
                   (ollama-buddy--store-model-capabilities model response)))
-            (error nil)))))))
+            (error
+             (message "ollama-buddy: failed to fetch capabilities for %s: %s"
+                      model (error-message-string err)))))))))
 
 (defun ollama-buddy--store-model-capabilities (model response)
   "Store capabilities from /api/show RESPONSE into cache for MODEL.
@@ -2669,8 +2671,8 @@ TCP packets split a JSON object across multiple filter calls."
               ;; Accumulate tool calls from streaming chunks
               (when tool-calls
                 (setq ollama-buddy--current-tool-calls
-                      (append ollama-buddy--current-tool-calls
-                              (append tool-calls nil))))
+                      (nconc ollama-buddy--current-tool-calls
+                             (copy-sequence tool-calls))))
 
               ;; Check if this response is complete
               (when (eq (alist-get 'done json-data) t)
@@ -4332,8 +4334,7 @@ Modifies the variable in place."
            "[Unload All]"
            'action (lambda (_)
                      (ollama-buddy-unload-all-models)
-                     (sleep-for 3)
-                     (ollama-buddy-manage-models))
+                     (run-with-timer 3 nil #'ollama-buddy-manage-models))
            'help-echo "Unload all running models to free up resources")
           (insert "\n\n"))
 

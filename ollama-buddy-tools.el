@@ -61,6 +61,7 @@
 
 (require 'json)
 (require 'cl-lib)
+(require 'calc)
 (require 'project)
 (require 'ollama-buddy-core)
 
@@ -248,8 +249,9 @@ Returns the result as a string, or an error message if execution fails."
         (when (and ollama-buddy-tools-safe-mode
                    (not (plist-get spec :safe)))
           (error "Tool %s is not safe for execution in safe mode" name-str))
-        ;; Confirmation check
-        (unless ollama-buddy-tools-auto-execute
+        ;; Confirmation check — unsafe tools always require confirmation
+        (when (or (not ollama-buddy-tools-auto-execute)
+                  (not (plist-get spec :safe)))
           (let ((answer (read-char-choice
                          (format "Execute tool %s(%s)? (y)es (n)o (a)ccept all: "
                                  name-str
