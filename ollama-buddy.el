@@ -73,6 +73,7 @@
 (require 'dired)
 (require 'org)
 (require 'savehist)
+(require 'iso8601)
 (require 'ollama-buddy-core)
 (require 'ollama-buddy-project) ;; Added by user instruction
 (require 'ollama-buddy-transient nil t)
@@ -3195,20 +3196,28 @@ Results are cached for `ollama-buddy-cloud-usage-cache-seconds'."
                         "https://ollama.com/settings")))
                   (when (zerop exit-code)
                     (let ((html (with-current-buffer buf (buffer-string)))
-                          session-pct weekly-pct)
+                          session-pct weekly-pct session-reset weekly-reset)
                       ;; Extract session usage - look for width style after "Session usage"
                       (when (string-match "Session usage" html)
                         (let ((start (match-end 0)))
                           (when (string-match "width:\\s-*\\([0-9]+\\(?:\\.[0-9]+\\)?\\)%" html start)
-                            (setq session-pct (concat (match-string 1 html) "%")))))
+                            (setq session-pct (concat (match-string 1 html) "%")))
+                          (when (string-match "data-time=\"\\([^\"]+\\)\"" html start)
+                            (setq session-reset (match-string 1 html)))))
                       ;; Extract weekly usage - look for width style after "Weekly usage"
                       (when (string-match "Weekly usage" html)
                         (let ((start (match-end 0)))
                           (when (string-match "width:\\s-*\\([0-9]+\\(?:\\.[0-9]+\\)?\\)%" html start)
-                            (setq weekly-pct (concat (match-string 1 html) "%")))))
+                            (setq weekly-pct (concat (match-string 1 html) "%")))
+                          (when (string-match "data-time=\"\\([^\"]+\\)\"" html start)
+                            (setq weekly-reset (match-string 1 html)))))
                       (when (or session-pct weekly-pct)
                         (let ((result `((session . ,(or session-pct "N/A"))
-                                        (weekly . ,(or weekly-pct "N/A")))))
+                                        (weekly . ,(or weekly-pct "N/A"))
+                                        ,@(when session-reset
+                                            `((session-reset . ,session-reset)))
+                                        ,@(when weekly-reset
+                                            `((weekly-reset . ,weekly-reset))))))
                           (setq ollama-buddy--cloud-usage-cache result
                                 ollama-buddy--cloud-usage-cache-time (current-time))
                           result)))))
@@ -3226,6 +3235,23 @@ WIDTH is the total bar width in characters (default 10)."
          (empty (- w filled)))
     (concat (make-string filled ?█)
             (make-string empty ?░))))
+
+(defun ollama-buddy--cloud-reset-time-string (iso-time)
+  "Format ISO-TIME string as a human-readable \"resets in\" string.
+ISO-TIME should be an ISO 8601 timestamp like \"2026-03-06T08:00:00Z\"."
+  (condition-case nil
+      (let* ((reset-time (encode-time (iso8601-parse iso-time)))
+             (diff (float-time (time-subtract reset-time (current-time)))))
+        (if (<= diff 0)
+            "resetting now"
+          (let ((minutes (floor (/ diff 60)))
+                (hours (floor (/ diff 3600)))
+                (days (floor (/ diff 86400))))
+            (cond
+             ((< minutes 60) (format "resets in %dm" minutes))
+             ((< hours 24) (format "resets in %dh %dm" hours (% minutes 60)))
+             (t (format "resets in %dd %dh" days (% hours 24)))))))
+    (error "?")))
 
 (defun ollama-buddy-cloud-refresh-usage ()
   "Clear cached cloud usage and re-fetch.
@@ -4383,12 +4409,16 @@ Modifies the variable in place."
           (let ((usage (ollama-buddy--fetch-cloud-usage)))
             (if usage
                 (let ((session (alist-get 'session usage))
-                      (weekly (alist-get 'weekly usage)))
-                  (insert (format "  Session: %s %s  |  Weekly: %s %s\n\n"
-                                  (ollama-buddy--cloud-usage-bar session)
-                                  session
-                                  (ollama-buddy--cloud-usage-bar weekly)
-                                  weekly)))
+                      (weekly (alist-get 'weekly usage))
+                      (session-reset (alist-get 'session-reset usage))
+                      (weekly-reset (alist-get 'weekly-reset usage)))
+                  (insert (format "  Session: %s %s" (ollama-buddy--cloud-usage-bar session) session))
+                  (when session-reset
+                    (insert (format " (%s)" (ollama-buddy--cloud-reset-time-string session-reset))))
+                  (insert (format "  |  Weekly: %s %s" (ollama-buddy--cloud-usage-bar weekly) weekly))
+                  (when weekly-reset
+                    (insert (format " (%s)" (ollama-buddy--cloud-reset-time-string weekly-reset))))
+                  (insert "\n\n"))
               (when (or (not (stringp ollama-buddy-cloud-session-token))
                         (string-empty-p ollama-buddy-cloud-session-token))
                 (insert "  (Set ollama-buddy-cloud-session-token for usage stats)\n\n"))))
