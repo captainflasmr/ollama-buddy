@@ -90,6 +90,9 @@ Project Init (experimental) — a step towards a more code-oriented LLM workflow
 
 - *Project Init* -- =/init= generates and caches a project summary (=.ollama-buddy-project.org=) that auto-loads as context in future sessions, giving the model immediate awareness of your codebase structure without manual attachment.
 - *Auto-load project context* -- When opening a chat buffer inside a project that has a cached summary, it is attached automatically.
+- *Session directory persistence* -- Sessions now save and restore =default-directory=, so loading a project session restores the correct project context.
+- *Session rename* -- =/rename= sets a display name for the current session; =/save= uses it as the description suffix while always prepending a fresh timestamp.
+- *New slash commands* -- =/login= and =/logout= for Ollama cloud auth, =/manual= to open the Info manual, =/export= for org-export-dispatch.
 - *Exit clears attachments* -- =/exit= now clears all attachments so switching projects starts with a clean slate.
 
 * Recent Changes

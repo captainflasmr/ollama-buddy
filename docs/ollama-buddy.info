@@ -881,6 +881,31 @@ to the LLM.
      Attach a file from the current project
      (‘ollama-buddy-project-attach-file’).
 
+‘init’
+     Generate or load a cached project summary
+     (‘ollama-buddy-project-init’).  When no summary exists, one is
+     generated and automatically saved to the project root.  On
+     subsequent uses, the existing summary is attached as context.
+     *Note Project Integration::.
+
+‘rename’
+     Rename the current session (‘ollama-buddy-sessions-rename’).
+     Pre-fills with the existing name or an auto-generated one from the
+     first prompt.
+
+‘login’
+     Sign in to Ollama cloud (‘ollama-buddy-cloud-signin’).
+
+‘logout’
+     Sign out from Ollama cloud (‘ollama-buddy-cloud-signout’).
+
+‘manual’
+     Open the Ollama Buddy Info manual (‘ollama-buddy-open-info’).
+
+‘export’
+     Open the org-export dispatcher (‘org-export-dispatch’) for the chat
+     buffer.
+
    • Outside the prompt area, ‘/’ inserts a literal ‘/’.
    • Press ‘C-g’ to cancel (nothing inserted); use ‘C-q /’ for a literal
      ‘/’ in the prompt.
@@ -1861,13 +1886,37 @@ session files using standard Emacs file operations.
 When saving a session, Ollama Buddy generates a default name from the
 first user message.  The name is created by filtering out common English
 stop words ("the", "a", "is", etc.)  and short words (less than 3
-characters), then joining up to 5 remaining key terms with hyphens.
+characters), then joining up to 5 remaining key terms with hyphens.  A
+timestamp prefix is always prepended for uniqueness and chronological
+sorting.
 
    For example, a conversation starting with "Tell me about the history
 of space exploration" would generate the session name
-‘tell-history-space-exploration’.
+‘2026-03-07-170800-history-space-exploration’.
 
-12.7 Autosave Transcript
+12.7 Renaming a Session
+=======================
+
+Use ‘/rename’ in the prompt area to set a display name for the current
+session.  If no name has been set, an auto-generated one from the first
+prompt is offered for editing.  If a name already exists, it is shown
+for editing.
+
+   The display name is used as the descriptive suffix when
+saving--‘/save’ always prepends a fresh timestamp, so renaming and
+saving multiple times produces distinct files without duplicate
+timestamps.
+
+12.8 Session Directory Persistence
+==================================
+
+Sessions save the chat buffer's ‘default-directory’.  When a session is
+loaded, the directory is restored (provided it still exists on disk).
+This means loading a session that was started in a project automatically
+restores the project context, so ‘project.el’ integration, project
+summary auto-loading, and file-relative commands all work correctly.
+
+12.9 Autosave Transcript
 ========================
 
 Ollama Buddy automatically saves the chat buffer to a recovery file
@@ -1880,8 +1929,8 @@ can recover the conversation from the autosave file.
    The autosave file is automatically deleted when you perform a proper
 session save with ‘C-c S’.
 
-12.8 Conversation History
-=========================
+12.10 Conversation History
+==========================
 
 Sessions save the conversation history for each model separately.
 
@@ -1897,8 +1946,8 @@ Sessions save the conversation history for each model separately.
      M-x ollama-buddy-toggle-history
    or press ‘C-c H’ in the chat buffer.
 
-12.9 Rewinding a Conversation
-=============================
+12.11 Rewinding a Conversation
+==============================
 
 To rewind a conversation to a previous prompt, navigate to the desired
 prompt heading in the chat buffer and press ‘C-u C-u C-c C-c’.  You can
@@ -3483,6 +3532,58 @@ Project Info (‘i’)
 You can also use the inline ‘@project’ command in the prompt area to
 quickly search and attach a file without leaving the prompt.
 
+22.4 Project Init (experimental)
+================================
+
+The ‘/init’ slash command generates and caches a project summary that
+auto-loads in future sessions.  This is an experimental feature
+exploring tighter integration between project context and LLM
+conversations--a step towards a more code-oriented workflow where the
+model has immediate awareness of your codebase structure.
+
+22.4.1 Generating a summary
+---------------------------
+
+Type ‘/init’ in the prompt area.  If no cached summary exists, Ollama
+Buddy gathers the project's directory tree and key files (README,
+Makefile, package.json, etc.), sends them to the current model, and
+streams back an org-mode summary.  When the response completes, the
+summary is automatically saved to ‘.ollama-buddy-project.org’ at the
+project root.
+
+   If a cached summary already exists, ‘/init’ simply attaches it as
+context--no regeneration is needed.
+
+22.4.2 Auto-loading
+-------------------
+
+When you open a chat buffer while inside a project that contains a
+‘.ollama-buddy-project.org’ file, the summary is automatically attached
+as context.  This means the model already knows your project structure
+from the very first prompt, without any manual steps.
+
+22.4.3 Clean project switching
+------------------------------
+
+Using ‘/exit’ (or ‘/bye’) clears all attachments--files, web searches,
+and RAG context.  When you then open a chat in a different project, only
+that project's summary is loaded, preventing cross-project
+contamination.
+
+22.4.4 Regenerating
+-------------------
+
+To regenerate an existing summary, delete the
+‘.ollama-buddy-project.org’ file from the project root and run ‘/init’
+again.
+
+22.4.5 Customization
+--------------------
+
+‘ollama-buddy-project-summary-file’
+     The filename for the cached summary, relative to the project root.
+     Default: ‘.ollama-buddy-project.org’.
+
 
 File: ollama-buddy.info,  Node: In-Buffer Replace,  Next: Tool Calling,  Prev: Project Integration,  Up: Top
 
@@ -4778,31 +4879,31 @@ Node: Configuration8206
 Node: Quick Start16474
 Node: Core Features19016
 Node: Chat Interface23293
-Node: Working with Models31660
-Node: Context Management36888
-Node: File Attachments42497
-Node: Web Search48419
-Node: Parameter Control56157
-Node: Session Management58569
-Node: User System Prompts62270
-Node: Roles and Commands72066
-Node: Fabric Pattern Integration89256
-Node: Awesome ChatGPT Prompts91483
-Node: Remote Providers95333
-Node: Ollama Cloud Models103623
-Node: Global System Prompt107922
-Node: Tone Selector109676
-Node: Thinking Blocks111483
-Node: Project Integration113436
-Node: In-Buffer Replace114621
-Node: Tool Calling120497
-Node: RAG128658
-Node: Advanced Usage136437
-Node: API Reference138986
-Node: FAQ144809
-Node: Troubleshooting151894
-Node: Contributing154399
-Node: Index157067
+Node: Working with Models32479
+Node: Context Management37707
+Node: File Attachments43316
+Node: Web Search49238
+Node: Parameter Control56976
+Node: Session Management59388
+Node: User System Prompts64106
+Node: Roles and Commands73902
+Node: Fabric Pattern Integration91092
+Node: Awesome ChatGPT Prompts93319
+Node: Remote Providers97169
+Node: Ollama Cloud Models105459
+Node: Global System Prompt109758
+Node: Tone Selector111512
+Node: Thinking Blocks113319
+Node: Project Integration115272
+Node: In-Buffer Replace118361
+Node: Tool Calling124237
+Node: RAG132398
+Node: Advanced Usage140177
+Node: API Reference142726
+Node: FAQ148549
+Node: Troubleshooting155634
+Node: Contributing158139
+Node: Index160807
 
 End Tag Table
 

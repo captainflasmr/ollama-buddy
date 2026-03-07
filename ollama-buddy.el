@@ -933,6 +933,8 @@ Typically invoked via `C-u C-u C-c C-c'."
     ("benchmark"  ollama-buddy-benchmark-models       "Benchmark all models with editable selection")
     ("init"       ollama-buddy-project-init           "Generate or load project summary")
     ("rename"     ollama-buddy-sessions-rename        "Rename the current session")
+    ("login"      ollama-buddy-cloud-signin            "Sign in to Ollama cloud")
+    ("logout"     ollama-buddy-cloud-signout           "Sign out from Ollama cloud")
     ("manual"     ollama-buddy-open-info              "Open the Ollama Buddy Info manual")
     ("export"     org-export-dispatch                 "Open org-export dispatcher for the chat buffer"))
   "Alist of available `/' slash commands.
@@ -1859,7 +1861,9 @@ Filters stop words and returns up to 5 key words joined by hyphens."
                      :params-active ,ollama-buddy-params-active
                      :params-modified ,ollama-buddy-params-modified
                      :created-time ,(current-time)
-                     :session-name ,session-name)))
+                     :session-name ,session-name
+                     :default-directory ,(with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+                                           default-directory))))
 
     (ollama-buddy--ensure-sessions-directory)
     
@@ -1963,6 +1967,10 @@ Filters stop words and returns up to 5 key words joined by hyphens."
       ;; Load org file contents
       (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
         (let ((inhibit-read-only t))
+          ;; Restore default-directory if saved and still exists
+          (let ((saved-dir (plist-get session-data :default-directory)))
+            (when (and saved-dir (file-directory-p saved-dir))
+              (setq default-directory saved-dir)))
           (pop-to-buffer (current-buffer))
           (erase-buffer)
           (when (file-exists-p org-file)
@@ -1971,7 +1979,7 @@ Filters stop words and returns up to 5 key words joined by hyphens."
           (visual-line-mode 1)
           (ollama-buddy-mode 1)
           (goto-char (point-max))))
-      
+
       (setq ollama-buddy-current-session-name chosen-session)
       (ollama-buddy-update-mode-line)
       (ollama-buddy--update-status (format "Session '%s' loaded" chosen-session))

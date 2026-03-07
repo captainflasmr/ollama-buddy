@@ -947,6 +947,22 @@ When no summary exists, one is generated and automatically saved to the project
 root.  On subsequent uses, the existing summary is attached as context.
 @xref{Project Integration}.
 
+@item rename
+Rename the current session (@code{ollama-buddy-sessions-rename}).  Pre-fills
+with the existing name or an auto-generated one from the first prompt.
+
+@item login
+Sign in to Ollama cloud (@code{ollama-buddy-cloud-signin}).
+
+@item logout
+Sign out from Ollama cloud (@code{ollama-buddy-cloud-signout}).
+
+@item manual
+Open the Ollama Buddy Info manual (@code{ollama-buddy-open-info}).
+
+@item export
+Open the org-export dispatcher (@code{org-export-dispatch}) for the chat buffer.
+
 @end table
 
 @itemize @bullet
@@ -1922,9 +1938,33 @@ From Dired, you can browse, rename, delete, or otherwise manage your session fil
 
 @section Session Naming
 
-When saving a session, Ollama Buddy generates a default name from the first user message. The name is created by filtering out common English stop words (``the'', ``a'', ``is'', etc.) and short words (less than 3 characters), then joining up to 5 remaining key terms with hyphens.
+When saving a session, Ollama Buddy generates a default name from the first
+user message.  The name is created by filtering out common English stop words
+(``the'', ``a'', ``is'', etc.) and short words (less than 3 characters), then
+joining up to 5 remaining key terms with hyphens.  A timestamp prefix is always
+prepended for uniqueness and chronological sorting.
 
-For example, a conversation starting with ``Tell me about the history of space exploration'' would generate the session name @code{tell-history-space-exploration}.
+For example, a conversation starting with ``Tell me about the history of space
+exploration'' would generate the session name
+@code{2026-03-07-170800-history-space-exploration}.
+
+@section Renaming a Session
+
+Use @code{/rename} in the prompt area to set a display name for the current
+session.  If no name has been set, an auto-generated one from the first prompt
+is offered for editing.  If a name already exists, it is shown for editing.
+
+The display name is used as the descriptive suffix when saving---@code{/save}
+always prepends a fresh timestamp, so renaming and saving multiple times
+produces distinct files without duplicate timestamps.
+
+@section Session Directory Persistence
+
+Sessions save the chat buffer's @code{default-directory}.  When a session is
+loaded, the directory is restored (provided it still exists on disk).  This
+means loading a session that was started in a project automatically restores
+the project context, so @code{project.el} integration, project summary
+auto-loading, and file-relative commands all work correctly.
 
 @section Autosave Transcript
 
