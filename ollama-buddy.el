@@ -931,7 +931,9 @@ Typically invoked via `C-u C-u C-c C-c'."
     ("set"        ollama-buddy-params-edit            "Edit model generation parameters")
     ("show"       ollama-buddy-show-raw-model-info    "Show raw JSON model information")
     ("benchmark"  ollama-buddy-benchmark-models       "Benchmark all models with editable selection")
-    ("init"       ollama-buddy-project-init           "Generate or load project summary"))
+    ("init"       ollama-buddy-project-init           "Generate or load project summary")
+    ("manual"     ollama-buddy-open-info              "Open the Ollama Buddy Info manual")
+    ("export"     org-export-dispatch                 "Open org-export dispatcher for the chat buffer"))
   "Alist of available `/' slash commands.
 Each entry is (NAME FUNCTION DESCRIPTION) where FUNCTION is
 called interactively."
@@ -2410,11 +2412,11 @@ Optional MENU-COLUMNS specifies the number of columns for the menu display."
       (when (and ollama-buddy--current-model
                  (ollama-buddy--ollama-running))
         (ollama-buddy--fetch-model-context-size-sync ollama-buddy--current-model))
-      (ollama-buddy--prepare-prompt-area)
-      (put 'ollama-buddy--cycle-prompt-history 'history-position -1)
-      ;; Auto-load project summary if available
+      ;; Auto-load project summary if available (before prompt area setup)
       (when (featurep 'ollama-buddy-project)
-        (ollama-buddy-project-auto-load-summary)))
+        (ollama-buddy-project-auto-load-summary))
+      (ollama-buddy--prepare-prompt-area)
+      (put 'ollama-buddy--cycle-prompt-history 'history-position -1))
     (ollama-buddy--update-status "Idle")
     (ollama-buddy-update-mode-line)))
 
@@ -5044,7 +5046,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
       (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
         (let ((inhibit-read-only t))
           (goto-char (point-max))
-          (insert (format "\n\n- Attached: %s (%d bytes)\n"
+          (insert (format "\n\n- Attached: %s (%d bytes)"
                           (file-name-nondirectory file)
                           (plist-get attachment :size)))
           (goto-char start)
