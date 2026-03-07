@@ -932,6 +932,7 @@ Typically invoked via `C-u C-u C-c C-c'."
     ("show"       ollama-buddy-show-raw-model-info    "Show raw JSON model information")
     ("benchmark"  ollama-buddy-benchmark-models       "Benchmark all models with editable selection")
     ("init"       ollama-buddy-project-init           "Generate or load project summary")
+    ("rename"     ollama-buddy-sessions-rename        "Rename the current session")
     ("manual"     ollama-buddy-open-info              "Open the Ollama Buddy Info manual")
     ("export"     org-export-dispatch                 "Open org-export dispatcher for the chat buffer"))
   "Alist of available `/' slash commands.
@@ -1835,10 +1836,11 @@ Filters stop words and returns up to 5 key words joined by hyphens."
 (defun ollama-buddy-sessions-save ()
   "Save the current Ollama Buddy session including attachments."
   (interactive)
-  (let* ((generated (ollama-buddy--generate-session-name))
+  (let* ((description (or ollama-buddy-current-session-name
+                          (ollama-buddy--generate-session-name)))
          (default-name (concat (format-time-string "%F-%H%M%S")
-                               (if (and generated (not (string-empty-p generated)))
-                                   (concat "-" generated)
+                               (if (and description (not (string-empty-p description)))
+                                   (concat "-" description)
                                  "")))
          (session-name (read-string "Session name/description: " default-name))
          (session-file (expand-file-name (concat session-name ".el") 
@@ -1880,7 +1882,7 @@ Filters stop words and returns up to 5 key words joined by hyphens."
       (when (file-exists-p recovery-file)
         (delete-file recovery-file)))
 
-    (setq ollama-buddy-current-session-name session-name)
+    (setq ollama-buddy-current-session-name description)
     (ollama-buddy-update-mode-line)
     (message "Session saved as %s" session-name)))
 
@@ -1981,6 +1983,18 @@ Filters stop words and returns up to 5 key words joined by hyphens."
                    (format " (%d attachments)" (length ollama-buddy--current-attachments)) 
                  "")
                (if ollama-buddy--current-system-prompt " [system prompt]" "")))))
+
+(defun ollama-buddy-sessions-rename ()
+  "Rename the current session."
+  (interactive)
+  (let* ((default (or ollama-buddy-current-session-name
+                      (ollama-buddy--generate-session-name)
+                      ""))
+         (new-name (read-string "Session name: " default)))
+    (when (and new-name (not (string-empty-p new-name)))
+      (setq ollama-buddy-current-session-name new-name)
+      (ollama-buddy-update-mode-line)
+      (message "Session renamed to: %s" new-name))))
 
 (defun ollama-buddy-sessions-new ()
   "Start a new session by clearing history and buffer."
