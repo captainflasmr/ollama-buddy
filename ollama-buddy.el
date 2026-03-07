@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 3.4.1
+;; Version: 3.5.0
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -930,7 +930,8 @@ Typically invoked via `C-u C-u C-c C-c'."
     ("project"    ollama-buddy-project-attach-file    "Attach a file from the current project")
     ("set"        ollama-buddy-params-edit            "Edit model generation parameters")
     ("show"       ollama-buddy-show-raw-model-info    "Show raw JSON model information")
-    ("benchmark"  ollama-buddy-benchmark-models       "Benchmark all models with editable selection"))
+    ("benchmark"  ollama-buddy-benchmark-models       "Benchmark all models with editable selection")
+    ("init"       ollama-buddy-project-init           "Generate or load project summary"))
   "Alist of available `/' slash commands.
 Each entry is (NAME FUNCTION DESCRIPTION) where FUNCTION is
 called interactively."
@@ -2022,6 +2023,10 @@ Filters stop words and returns up to 5 key words joined by hyphens."
   (interactive)
   (when-let* ((buf (get-buffer ollama-buddy--chat-buffer)))
     (clrhash ollama-buddy--conversation-history-by-model)
+    (setq ollama-buddy--current-attachments nil)
+    (when (boundp 'ollama-buddy-web-search--current-results)
+      (setq ollama-buddy-web-search--current-results nil))
+    (ollama-buddy-rag-clear-attached)
     (quit-window nil (get-buffer-window buf))
     (kill-buffer buf)))
 
@@ -2406,7 +2411,10 @@ Optional MENU-COLUMNS specifies the number of columns for the menu display."
                  (ollama-buddy--ollama-running))
         (ollama-buddy--fetch-model-context-size-sync ollama-buddy--current-model))
       (ollama-buddy--prepare-prompt-area)
-      (put 'ollama-buddy--cycle-prompt-history 'history-position -1))
+      (put 'ollama-buddy--cycle-prompt-history 'history-position -1)
+      ;; Auto-load project summary if available
+      (when (featurep 'ollama-buddy-project)
+        (ollama-buddy-project-auto-load-summary)))
     (ollama-buddy--update-status "Idle")
     (ollama-buddy-update-mode-line)))
 
@@ -2991,7 +2999,16 @@ TCP packets split a JSON object across multiple filter calls."
                                                              (plist-get (car ollama-buddy--token-usage-history) :tokens)
                                                              (plist-get (car ollama-buddy--token-usage-history) :rate)))
                         ;; Auto-save transcript
-                        (ollama-buddy--autosave-transcript)))))
+                        (ollama-buddy--autosave-transcript)
+                        ;; Check for pending project summary save
+                        (when (bound-and-true-p ollama-buddy-project--pending-save-path)
+                          (run-with-timer
+                           0.5 nil
+                           (let ((buf (current-buffer)))
+                             (lambda ()
+                               (when (buffer-live-p buf)
+                                 (with-current-buffer buf
+                                   (ollama-buddy-project--maybe-save-summary)))))))))))
                 (setq completed t))) ; closes when-done AND save-excursion
             ;; Window state management (must be outside save-excursion)
             (when window
@@ -3749,16 +3766,17 @@ and no new user message is added."
       (user-error "Context too far over limit to send")))
 
   ;; Process inline web search delimiters if web-search module is loaded
-  (when (and (featurep 'ollama-buddy-web-search)
-             (fboundp 'ollama-buddy-web-search-process-inline))
-    (setq prompt (ollama-buddy-web-search-process-inline prompt)))
+  (unless ollama-buddy--skip-inline-processing
+    (when (and (featurep 'ollama-buddy-web-search)
+               (fboundp 'ollama-buddy-web-search-process-inline))
+      (setq prompt (ollama-buddy-web-search-process-inline prompt)))
 
-  ;; Process inline @rag() queries
-  (setq prompt (ollama-buddy-rag-process-inline prompt))
+    ;; Process inline @rag() queries
+    (setq prompt (ollama-buddy-rag-process-inline prompt))
 
-  ;; Process inline @file() paths
-  (setq prompt (ollama-buddy--file-process-inline prompt))
-  (setq prompt (ollama-buddy--skills-process-inline prompt))
+    ;; Process inline @file() paths
+    (setq prompt (ollama-buddy--file-process-inline prompt))
+    (setq prompt (ollama-buddy--skills-process-inline prompt)))
 
   ;; Original Ollama send code with vision additions
   (let* ((model-info (ollama-buddy--get-valid-model specified-model))

@@ -84,17 +84,19 @@ Unified Skills and Prompts.
 - *Integrated Commands* -- Access skills via the `/skill` slash command or the improved `@skill(name)` inline expansion with full `completing-read` support.
 - *At-Command Improvements* -- `@skill` and `@file` now trigger interactive selection prompts for faster workflow.
 
-* What's New (v3.4.1)
+* What's New (v3.5.0)
 
-Thinking Peek and Conversation Rewind.
+Project Init (experimental) — a step towards a more code-oriented LLM workflow.
 
-- *Thinking Peek* -- Thinking tokens stream into a folded =*** Thinking= heading; press =TAB= to peek at accumulated content mid-stream, =TAB= again to re-fold.
-- *Rewind* -- Navigate to a prompt heading and press =C-u C-u C-c C-c= to rewind the conversation to that point; falls back to =completing-read= when not on a heading; the prompt text is pre-filled for editing and resending.
+- *Project Init* -- =/init= generates and caches a project summary (=.ollama-buddy-project.org=) that auto-loads as context in future sessions, giving the model immediate awareness of your codebase structure without manual attachment.
+- *Auto-load project context* -- When opening a chat buffer inside a project that has a cached summary, it is attached automatically.
+- *Exit clears attachments* -- =/exit= now clears all attachments so switching projects starts with a clean slate.
 
 * Recent Changes
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *3.5.0* | Project Init (experimental) — =/init= generates a cached project summary that auto-loads in future sessions; a step towards code-oriented LLM workflows.                                                                 |
 | *3.4.1* | Thinking Peek and Rewind — =TAB= peek at thinking mid-stream; =C-u C-u C-c C-c= to rewind conversation from any prompt heading.                                                                                          |
 | *3.4.0* | Skills — Local Org-mode based AI personas and task-specific instructions; `/skill` slash command and `@skill(name)` inline syntax.                                                                                        |
 | *3.3.0* | Smart Project Integration — `project.el` support for contextual file attachment and `/project` slash command.                                                                                                             |

@@ -91,5 +91,124 @@ the current project root."
         (format "Project: %s (%d files)" (abbreviate-file-name root) (length files)))
     "Not in a project"))
 
+(defcustom ollama-buddy-project-summary-file ".ollama-buddy-project.org"
+  "File name for the cached project summary, relative to project root."
+  :type 'string
+  :group 'ollama-buddy-project)
+
+(declare-function ollama-buddy--open-chat "ollama-buddy")
+(declare-function ollama-buddy--send-backend "ollama-buddy-core")
+
+(defvar-local ollama-buddy-project--pending-save-path nil
+  "When non-nil, the path where the project summary should be saved.
+Set by `ollama-buddy-project-init' when generating a new summary,
+cleared after the save prompt.")
+
+;;;###autoload
+(defun ollama-buddy-project-init ()
+  "Generate or load a project summary for the current project.
+If a cached summary exists in the project root (see
+`ollama-buddy-project-summary-file'), attach it as context.
+Otherwise, gather the project structure and key files, send them
+to the current model for summarisation, and save the result."
+  (interactive)
+  (unless (featurep 'ollama-buddy-project)
+    (user-error "ollama-buddy-project module not loaded"))
+  (let ((root (ollama-buddy-project-current-root)))
+    (unless root
+      (user-error "Not in a project"))
+    (let ((summary-path (expand-file-name ollama-buddy-project-summary-file root)))
+      (if (file-exists-p summary-path)
+          ;; Load existing summary as attachment
+          (progn
+            (ollama-buddy-attach-file summary-path)
+            (message "Project summary loaded from %s" (abbreviate-file-name summary-path)))
+        ;; Generate new summary
+        (ollama-buddy-project--generate-summary root summary-path)))))
+
+(defun ollama-buddy-project--generate-summary (root summary-path)
+  "Generate a project summary for ROOT and save to SUMMARY-PATH.
+The summary streams into the chat buffer.  When the response
+completes, the user is prompted to save the result."
+  (let* ((proj (project-current))
+         (all-files (project-files proj))
+         ;; Build tree of top-level entries
+         (top-entries (directory-files root nil "^[^.]"))
+         (tree-lines
+          (mapcar (lambda (f)
+                    (if (file-directory-p (expand-file-name f root))
+                        (format "  %s/" f)
+                      (format "  %s" f)))
+                  top-entries))
+         ;; Collect content of key files (README, Makefile, etc.)
+         (key-file-contents
+          (let ((parts nil))
+            (dolist (name ollama-buddy-project-standard-files)
+              (let ((path (expand-file-name name root)))
+                (when (file-exists-p path)
+                  (condition-case nil
+                      (let ((content (with-temp-buffer
+                                       (insert-file-contents path nil nil 8192)
+                                       (buffer-string))))
+                        (push (format "### %s\n\n%s" name content) parts))
+                    (error nil)))))
+            (nreverse parts)))
+         ;; Build the prompt
+         (prompt
+          (concat
+           "Analyse the following project and produce a concise org-mode summary "
+           "covering: project name and purpose, key technologies, directory structure, "
+           "main entry points, and build/test commands. Use org headings. "
+           "This summary will be reused as context in future AI sessions.\n\n"
+           (format "Project root: %s\nTotal files: %d\n\n"
+                   (abbreviate-file-name root) (length all-files))
+           "## Directory structure\n\n"
+           (mapconcat #'identity tree-lines "\n")
+           "\n\n"
+           (when key-file-contents
+             (concat "## Key files\n\n"
+                     (mapconcat #'identity key-file-contents "\n\n"))))))
+    ;; Open chat and send (skip inline @file/@search/@rag processing
+    ;; since the prompt embeds raw file contents that may contain those patterns)
+    (ollama-buddy--open-chat)
+    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+      (let ((inhibit-read-only t))
+        (setq ollama-buddy-project--pending-save-path summary-path)
+        (goto-char (point-max))
+        (insert prompt)))
+    (let ((ollama-buddy--skip-inline-processing t))
+      (ollama-buddy--send-backend prompt))))
+
+(defun ollama-buddy-project--maybe-save-summary ()
+  "Save the project summary if a generation is pending.
+Called automatically from the stream sentinel after a response
+completes.  Checks `ollama-buddy-project--pending-save-path'."
+  (when-let ((summary-path ollama-buddy-project--pending-save-path))
+    (setq ollama-buddy-project--pending-save-path nil)
+    (let* ((model (or ollama-buddy--current-model ollama-buddy-default-model))
+           (history (gethash model ollama-buddy--conversation-history-by-model nil))
+           (last-assistant
+            (cl-find-if (lambda (msg) (equal (alist-get 'role msg) "assistant"))
+                        (reverse history))))
+      (when last-assistant
+        (let ((content (alist-get 'content last-assistant)))
+          (when (and content (not (string-empty-p content)))
+            (with-temp-file summary-path
+              (insert content))
+            (message "Project summary saved to %s"
+                     (abbreviate-file-name summary-path))))))))
+
+;;;###autoload
+(defun ollama-buddy-project-auto-load-summary ()
+  "Attach the cached project summary if it exists.
+Called during chat buffer initialization to automatically provide
+project context."
+  (when-let ((root (ollama-buddy-project-current-root)))
+    (let ((summary-path (expand-file-name ollama-buddy-project-summary-file root)))
+      (when (file-exists-p summary-path)
+        (ollama-buddy-attach-file summary-path)
+        (message "Project summary loaded from %s"
+                 (abbreviate-file-name summary-path))))))
+
 (provide 'ollama-buddy-project)
 ;;; ollama-buddy-project.el ends here

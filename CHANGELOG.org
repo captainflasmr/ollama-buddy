@@ -11,6 +11,20 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-03-07 Fri> *3.5.0*
+
+Project Init (experimental) — a step towards a more code-oriented LLM workflow.
+
+*** New Features
+
+- *Project Init* -- =/init= generates and caches a project summary file
+  (=.ollama-buddy-project.org=) at the project root.  On future sessions the
+  summary auto-loads as context, giving the model immediate awareness of your
+  codebase without manual attachment.  This is an experimental feature exploring
+  tighter integration between project context and LLM conversations.
+- *Auto-load project context* -- Opening a chat buffer inside a project that
+  has a cached summary automatically attaches it.
+
 ** <2026-03-05 Wed> *3.4.1*
 
 Thinking Peek and Conversation Rewind.

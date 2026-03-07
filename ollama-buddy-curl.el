@@ -601,7 +601,18 @@ When complete, CALLBACK is called with the status response and result."
               (ollama-buddy--update-status "Curl Finished"))))
 
         ;; Auto-save transcript after every response
-        (ollama-buddy--autosave-transcript))
+        (ollama-buddy--autosave-transcript)
+
+        ;; Check for pending project summary save
+        (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
+          (let ((buf (get-buffer ollama-buddy--chat-buffer)))
+            (when (buffer-local-value 'ollama-buddy-project--pending-save-path buf)
+              (run-with-timer
+               0.5 nil
+               (lambda ()
+                 (when (buffer-live-p buf)
+                   (with-current-buffer buf
+                     (ollama-buddy-project--maybe-save-summary)))))))))
     (error
      (message "Error in curl completion: %s" (error-message-string err)))))
 

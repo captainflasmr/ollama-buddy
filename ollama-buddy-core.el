@@ -1047,6 +1047,10 @@ Strips both local Ollama prefixes (o:, u:) and remote provider prefixes
 (defvar ollama-buddy--current-prompt nil
   "The current prompt.")
 
+(defvar ollama-buddy--skip-inline-processing nil
+  "When non-nil, skip @file/@search/@rag inline processing in `ollama-buddy--send'.
+Bound dynamically by callers that embed raw file contents in prompts.")
+
 (defvar ollama-buddy--current-session nil
   "Name of the currently active session, or nil if none.")
 
@@ -1788,7 +1792,7 @@ Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
            "\n\n* Welcome\n\n"
            "#+begin_example\n"
            "┌───────────────────────────────────┐\n"
-           "│  O L L A M A B U D D Y  [v3.4.1]  │\n"
+           "│  O L L A M A B U D D Y  [v3.5.0]  │\n"
            "└───────────────────────────────────┘\n"
            (if project-info (concat project-info "\n") "")
            ;; "╔════════════════════════════════════════════════════════════╗\n"
@@ -1798,7 +1802,7 @@ Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
            ;; "╚════════════════════════════════════════════════════════════╝\n"
            ;; " ___ _ _      n _ n      ___       _   _ _ _\n"
            ;; "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |\n"
-           ;; "| | | | | .  |3.4.1| .  | . | | | . | . |__ |\n"
+           ;; "| | | | | .  |3.5.0| .  | . | | | . | . |__ |\n"
            ;; "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n"
            "#+end_example\n\n"
            (when (not (ollama-buddy--check-status))

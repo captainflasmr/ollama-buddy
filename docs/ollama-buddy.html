@@ -240,6 +240,7 @@ allowing you to leverage powerful large language models (LLMs) directly within y
     <li><a id="toc-Session-Naming" href="#Session-Naming">12.6 Session Naming</a></li>
     <li><a id="toc-Autosave-Transcript" href="#Autosave-Transcript">12.7 Autosave Transcript</a></li>
     <li><a id="toc-Conversation-History" href="#Conversation-History">12.8 Conversation History</a></li>
+    <li><a id="toc-Rewinding-a-Conversation" href="#Rewinding-a-Conversation">12.9 Rewinding a Conversation</a></li>
   </ul></li>
   <li><a id="toc-User-System-Prompts" href="#User-System-Prompts">13 User System Prompts</a>
   <ul class="toc-numbered-mark">
@@ -386,6 +387,14 @@ allowing you to leverage powerful large language models (LLMs) directly within y
     <li><a id="toc-Project-Awareness" href="#Project-Awareness">22.1 Project Awareness</a></li>
     <li><a id="toc-Project-Commands" href="#Project-Commands">22.2 Project Commands</a></li>
     <li><a id="toc-Inline-Project-Command" href="#Inline-Project-Command">22.3 Inline Project Command</a></li>
+    <li><a id="toc-Project-Init-_0028experimental_0029" href="#Project-Init-_0028experimental_0029">22.4 Project Init (experimental)</a>
+    <ul class="toc-numbered-mark">
+      <li><a id="toc-Generating-a-summary" href="#Generating-a-summary">22.4.1 Generating a summary</a></li>
+      <li><a id="toc-Auto_002dloading" href="#Auto_002dloading">22.4.2 Auto-loading</a></li>
+      <li><a id="toc-Clean-project-switching" href="#Clean-project-switching">22.4.3 Clean project switching</a></li>
+      <li><a id="toc-Regenerating" href="#Regenerating">22.4.4 Regenerating</a></li>
+      <li><a id="toc-Customization" href="#Customization">22.4.5 Customization</a></li>
+    </ul></li>
   </ul></li>
   <li><a id="toc-In_002dBuffer-Replace" href="#In_002dBuffer-Replace">23 In-Buffer Replace</a>
   <ul class="toc-numbered-mark">
@@ -1649,7 +1658,15 @@ Requires <code class="code">ollama-buddy-tools</code>.
 </dd>
 <dt><code class="code">project</code></dt>
 <dd><p>Attach a file from the current project (<code class="code">ollama-buddy-project-attach-file</code>).
-</p></dd>
+</p>
+</dd>
+<dt><code class="code">init</code></dt>
+<dd><p>Generate or load a cached project summary (<code class="code">ollama-buddy-project-init</code>).
+When no summary exists, one is generated and automatically saved to the project
+root.  On subsequent uses, the existing summary is attached as context.
+See <a class="xref" href="#Project-Integration">Project Integration</a>.
+</p>
+</dd>
 </dl>
 
 <ul class="itemize mark-bullet">
@@ -2898,6 +2915,7 @@ Next: <a href="#User-System-Prompts" accesskey="n" rel="next">User System Prompt
 <li><a href="#Session-Naming" accesskey="6">Session Naming</a></li>
 <li><a href="#Autosave-Transcript" accesskey="7">Autosave Transcript</a></li>
 <li><a href="#Conversation-History" accesskey="8">Conversation History</a></li>
+<li><a href="#Rewinding-a-Conversation" accesskey="9">Rewinding a Conversation</a></li>
 </ul>
 <div class="section-level-extent" id="Understanding-Sessions">
 <h3 class="section"><span>12.1 Understanding Sessions<a class="copiable-link" href="#Understanding-Sessions"> &para;</a></span></h3>
@@ -2999,6 +3017,27 @@ Next: <a href="#User-System-Prompts" accesskey="n" rel="next">User System Prompt
 <pre class="example-preformatted">M-x ollama-buddy-toggle-history
 </pre></div>
 <p>or press <code class="code">C-c H</code> in the chat buffer.
+</p>
+</div>
+<div class="section-level-extent" id="Rewinding-a-Conversation">
+<h3 class="section"><span>12.9 Rewinding a Conversation<a class="copiable-link" href="#Rewinding-a-Conversation"> &para;</a></span></h3>
+
+<p>To rewind a conversation to a previous prompt, navigate to the desired
+prompt heading in the chat buffer and press <code class="code">C-u C-u C-c C-c</code>.
+You can use standard Org navigation to get there:
+</p>
+<ul class="itemize mark-bullet">
+<li>Fold the buffer to show only prompt headings (<code class="code">S-TAB</code> to cycle global visibility).
+</li><li>Use <code class="code">imenu</code> to jump to a specific prompt.
+</li><li>Simply scroll up and place point on a &lsquo;<samp class="samp">&gt;&gt; PROMPT:</samp>&rsquo; heading.
+</li></ul>
+
+<p>If point is not on a prompt heading, a <code class="code">completing-read</code> fallback
+presents all prompts for selection.
+</p>
+<p>After confirmation, everything from that prompt onward is removed and the
+conversation history is truncated to match.  The prompt text is pre-filled
+in a fresh prompt area so you can edit and resend it.
 </p>
 <hr>
 </div>
@@ -4941,18 +4980,19 @@ Next: <a href="#In_002dBuffer-Replace" accesskey="n" rel="next">In-Buffer Replac
 </div>
 <h2 class="chapter" id="Project-Integration-1"><span>22 Project Integration<a class="copiable-link" href="#Project-Integration-1"> &para;</a></span></h2>
 
-<p>Ollama Buddy provides deep integration with Emacs&rsquo; built-in <code class="code">project.el</code> to 
+<p>Ollama Buddy provides deep integration with Emacs&rsquo; built-in <code class="code">project.el</code> to
 provide context-aware assistance when working within a coding project.
 </p>
 <ul class="mini-toc">
 <li><a href="#Project-Awareness" accesskey="1">Project Awareness</a></li>
 <li><a href="#Project-Commands" accesskey="2">Project Commands</a></li>
 <li><a href="#Inline-Project-Command" accesskey="3">Inline Project Command</a></li>
+<li><a href="#Project-Init-_0028experimental_0029" accesskey="4">Project Init (experimental)</a></li>
 </ul>
 <div class="section-level-extent" id="Project-Awareness">
 <h3 class="section"><span>22.1 Project Awareness<a class="copiable-link" href="#Project-Awareness"> &para;</a></span></h3>
-<p>When you open a chat buffer from a file that is part of a project, Ollama Buddy 
-automatically detects the project root. The welcome screen will display 
+<p>When you open a chat buffer from a file that is part of a project, Ollama Buddy
+automatically detects the project root.  The welcome screen will display
 the project root and the number of indexed files.
 </p>
 </div>
@@ -4977,10 +5017,75 @@ the project root and the number of indexed files.
 </div>
 <div class="section-level-extent" id="Inline-Project-Command">
 <h3 class="section"><span>22.3 Inline Project Command<a class="copiable-link" href="#Inline-Project-Command"> &para;</a></span></h3>
-<p>You can also use the inline <code class="code">@project</code> command in the prompt area to 
+<p>You can also use the inline <code class="code">@project</code> command in the prompt area to
 quickly search and attach a file without leaving the prompt.
 </p>
+</div>
+<div class="section-level-extent" id="Project-Init-_0028experimental_0029">
+<h3 class="section"><span>22.4 Project Init (experimental)<a class="copiable-link" href="#Project-Init-_0028experimental_0029"> &para;</a></span></h3>
+
+<p>The <code class="code">/init</code> slash command generates and caches a project summary that
+auto-loads in future sessions.  This is an experimental feature exploring
+tighter integration between project context and LLM conversations&mdash;a step
+towards a more code-oriented workflow where the model has immediate awareness
+of your codebase structure.
+</p>
+<ul class="mini-toc">
+<li><a href="#Generating-a-summary" accesskey="1">Generating a summary</a></li>
+<li><a href="#Auto_002dloading" accesskey="2">Auto-loading</a></li>
+<li><a href="#Clean-project-switching" accesskey="3">Clean project switching</a></li>
+<li><a href="#Regenerating" accesskey="4">Regenerating</a></li>
+<li><a href="#Customization" accesskey="5">Customization</a></li>
+</ul>
+<div class="subsection-level-extent" id="Generating-a-summary">
+<h4 class="subsection"><span>22.4.1 Generating a summary<a class="copiable-link" href="#Generating-a-summary"> &para;</a></span></h4>
+
+<p>Type <code class="code">/init</code> in the prompt area.  If no cached summary exists, Ollama
+Buddy gathers the project&rsquo;s directory tree and key files (README, Makefile,
+package.json, etc.), sends them to the current model, and streams back an
+org-mode summary.  When the response completes, the summary is automatically
+saved to <samp class="file">.ollama-buddy-project.org</samp> at the project root.
+</p>
+<p>If a cached summary already exists, <code class="code">/init</code> simply attaches it as
+context&mdash;no regeneration is needed.
+</p>
+</div>
+<div class="subsection-level-extent" id="Auto_002dloading">
+<h4 class="subsection"><span>22.4.2 Auto-loading<a class="copiable-link" href="#Auto_002dloading"> &para;</a></span></h4>
+
+<p>When you open a chat buffer while inside a project that contains a
+<samp class="file">.ollama-buddy-project.org</samp> file, the summary is automatically attached
+as context.  This means the model already knows your project structure from
+the very first prompt, without any manual steps.
+</p>
+</div>
+<div class="subsection-level-extent" id="Clean-project-switching">
+<h4 class="subsection"><span>22.4.3 Clean project switching<a class="copiable-link" href="#Clean-project-switching"> &para;</a></span></h4>
+
+<p>Using <code class="code">/exit</code> (or <code class="code">/bye</code>) clears all attachments&mdash;files, web
+searches, and RAG context.  When you then open a chat in a different project,
+only that project&rsquo;s summary is loaded, preventing cross-project contamination.
+</p>
+</div>
+<div class="subsection-level-extent" id="Regenerating">
+<h4 class="subsection"><span>22.4.4 Regenerating<a class="copiable-link" href="#Regenerating"> &para;</a></span></h4>
+
+<p>To regenerate an existing summary, delete the <samp class="file">.ollama-buddy-project.org</samp>
+file from the project root and run <code class="code">/init</code> again.
+</p>
+</div>
+<div class="subsection-level-extent" id="Customization">
+<h4 class="subsection"><span>22.4.5 Customization<a class="copiable-link" href="#Customization"> &para;</a></span></h4>
+
+<dl class="table">
+<dt><code class="code">ollama-buddy-project-summary-file</code></dt>
+<dd><p>The filename for the cached summary, relative to the project root.
+Default: <samp class="file">.ollama-buddy-project.org</samp>.
+</p></dd>
+</dl>
+
 <hr>
+</div>
 </div>
 </div>
 <div class="chapter-level-extent" id="In_002dBuffer-Replace">

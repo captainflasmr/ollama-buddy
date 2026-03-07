@@ -167,6 +167,7 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Session-Naming][12.6 Session Naming]]
   - [[#Autosave-Transcript][12.7 Autosave Transcript]]
   - [[#Conversation-History][12.8 Conversation History]]
+  - [[#Rewinding-a-Conversation][12.9 Rewinding a Conversation]]
 - [[#User-System-Prompts][13 User System Prompts]]
   - [[#Overview-2][13.1 Overview]]
   - [[#Accessing-the-System-Prompts-Menu][13.2 Accessing the System
@@ -288,6 +289,13 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Project-Awareness][22.1 Project Awareness]]
   - [[#Project-Commands][22.2 Project Commands]]
   - [[#Inline-Project-Command][22.3 Inline Project Command]]
+  - [[#Project-Init-_0028experimental_0029][22.4 Project Init
+    (experimental)]]
+    - [[#Generating-a-summary][22.4.1 Generating a summary]]
+    - [[#Auto_002dloading][22.4.2 Auto-loading]]
+    - [[#Clean-project-switching][22.4.3 Clean project switching]]
+    - [[#Regenerating][22.4.4 Regenerating]]
+    - [[#Customization][22.4.5 Customization]]
 - [[#In_002dBuffer-Replace][23 In-Buffer Replace]]
   - [[#Overview-8][23.1 Overview]]
   - [[#Enabling-In_002dBuffer-Replace][23.2 Enabling In-Buffer Replace]]
@@ -1524,6 +1532,12 @@ Available =/= commands (filtered by loaded modules):
 
 - =project= :: Attach a file from the current project
   (=ollama-buddy-project-attach-file=).
+
+- =init= :: Generate or load a cached project summary
+  (=ollama-buddy-project-init=). When no summary exists, one is
+  generated and automatically saved to the project root. On subsequent
+  uses, the existing summary is attached as context. See
+  [[#Project-Integration][Project Integration]].
 
 - Outside the prompt area, =/= inserts a literal ‘=/='.
 - Press =C-g= to cancel (nothing inserted); use =C-q /= for a literal
@@ -2826,6 +2840,7 @@ Next: [[#User-System-Prompts][User System Prompts]], Previous:
 - [[#Session-Naming][Session Naming]]
 - [[#Autosave-Transcript][Autosave Transcript]]
 - [[#Conversation-History][Conversation History]]
+- [[#Rewinding-a-Conversation][Rewinding a Conversation]]
 
 <<Understanding-Sessions>>
 *** 12.1 Understanding Sessions [[#Understanding-Sessions][¶]]
@@ -2968,6 +2983,28 @@ M-x ollama-buddy-toggle-history
 #+end_src
 
 or press =C-c H= in the chat buffer.
+
+<<Rewinding-a-Conversation>>
+*** 12.9 Rewinding a Conversation [[#Rewinding-a-Conversation][¶]]
+:PROPERTIES:
+:CUSTOM_ID: rewinding-a-conversation
+:CLASS: section
+:END:
+To rewind a conversation to a previous prompt, navigate to the desired
+prompt heading in the chat buffer and press =C-u C-u C-c C-c=. You can
+use standard Org navigation to get there:
+
+- Fold the buffer to show only prompt headings (=S-TAB= to cycle global
+  visibility).
+- Use =imenu= to jump to a specific prompt.
+- Simply scroll up and place point on a ‘=>> PROMPT:=' heading.
+
+If point is not on a prompt heading, a =completing-read= fallback
+presents all prompts for selection.
+
+After confirmation, everything from that prompt onward is removed and
+the conversation history is truncated to match. The prompt text is
+pre-filled in a fresh prompt area so you can edit and resend it.
 
 --------------
 
@@ -5106,6 +5143,7 @@ project.
 - [[#Project-Awareness][Project Awareness]]
 - [[#Project-Commands][Project Commands]]
 - [[#Inline-Project-Command][Inline Project Command]]
+- [[#Project-Init-_0028experimental_0029][Project Init (experimental)]]
 
 <<Project-Awareness>>
 *** 22.1 Project Awareness [[#Project-Awareness][¶]]
@@ -5142,6 +5180,82 @@ The Project sub-menu (C-c P) provides the following commands:
 :END:
 You can also use the inline =@project= command in the prompt area to
 quickly search and attach a file without leaving the prompt.
+
+<<Project-Init-_0028experimental_0029>>
+*** 22.4 Project Init (experimental) [[#Project-Init-_0028experimental_0029][¶]]
+:PROPERTIES:
+:CUSTOM_ID: project-init-experimental
+:CLASS: section
+:END:
+The =/init= slash command generates and caches a project summary that
+auto-loads in future sessions. This is an experimental feature exploring
+tighter integration between project context and LLM conversations---a
+step towards a more code-oriented workflow where the model has immediate
+awareness of your codebase structure.
+
+- [[#Generating-a-summary][Generating a summary]]
+- [[#Auto_002dloading][Auto-loading]]
+- [[#Clean-project-switching][Clean project switching]]
+- [[#Regenerating][Regenerating]]
+- [[#Customization][Customization]]
+
+<<Generating-a-summary>>
+**** 22.4.1 Generating a summary [[#Generating-a-summary][¶]]
+:PROPERTIES:
+:CUSTOM_ID: generating-a-summary
+:CLASS: subsection
+:END:
+Type =/init= in the prompt area. If no cached summary exists, Ollama
+Buddy gathers the project's directory tree and key files (README,
+Makefile, package.json, etc.), sends them to the current model, and
+streams back an org-mode summary. When the response completes, the
+summary is automatically saved to =.ollama-buddy-project.org= at the
+project root.
+
+If a cached summary already exists, =/init= simply attaches it as
+context---no regeneration is needed.
+
+<<Auto_002dloading>>
+**** 22.4.2 Auto-loading [[#Auto_002dloading][¶]]
+:PROPERTIES:
+:CUSTOM_ID: auto-loading
+:CLASS: subsection
+:END:
+When you open a chat buffer while inside a project that contains a
+=.ollama-buddy-project.org= file, the summary is automatically attached
+as context. This means the model already knows your project structure
+from the very first prompt, without any manual steps.
+
+<<Clean-project-switching>>
+**** 22.4.3 Clean project switching [[#Clean-project-switching][¶]]
+:PROPERTIES:
+:CUSTOM_ID: clean-project-switching
+:CLASS: subsection
+:END:
+Using =/exit= (or =/bye=) clears all attachments---files, web searches,
+and RAG context. When you then open a chat in a different project, only
+that project's summary is loaded, preventing cross-project
+contamination.
+
+<<Regenerating>>
+**** 22.4.4 Regenerating [[#Regenerating][¶]]
+:PROPERTIES:
+:CUSTOM_ID: regenerating
+:CLASS: subsection
+:END:
+To regenerate an existing summary, delete the
+=.ollama-buddy-project.org= file from the project root and run =/init=
+again.
+
+<<Customization>>
+**** 22.4.5 Customization [[#Customization][¶]]
+:PROPERTIES:
+:CUSTOM_ID: customization
+:CLASS: subsection
+:END:
+- =ollama-buddy-project-summary-file= :: The filename for the cached
+  summary, relative to the project root. Default:
+  =.ollama-buddy-project.org=.
 
 --------------
 

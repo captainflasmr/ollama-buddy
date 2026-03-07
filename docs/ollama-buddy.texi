@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 3.4.1
+@subtitle For Ollama Buddy version 3.5.0
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -940,6 +940,12 @@ Open the Model Management buffer (@code{ollama-buddy-manage-models}).
 
 @item project
 Attach a file from the current project (@code{ollama-buddy-project-attach-file}).
+
+@item init
+Generate or load a cached project summary (@code{ollama-buddy-project-init}).
+When no summary exists, one is generated and automatically saved to the project
+root.  On subsequent uses, the existing summary is attached as context.
+@xref{Project Integration}.
 
 @end table
 
@@ -3443,12 +3449,12 @@ Static list of model name substrings that are known reasoning models. Auto-detec
 @node Project Integration
 @chapter Project Integration
 
-Ollama Buddy provides deep integration with Emacs' built-in @code{project.el} to 
+Ollama Buddy provides deep integration with Emacs' built-in @code{project.el} to
 provide context-aware assistance when working within a coding project.
 
 @section Project Awareness
-When you open a chat buffer from a file that is part of a project, Ollama Buddy 
-automatically detects the project root. The welcome screen will display 
+When you open a chat buffer from a file that is part of a project, Ollama Buddy
+automatically detects the project root.  The welcome screen will display
 the project root and the number of indexed files.
 
 @section Project Commands
@@ -3466,8 +3472,53 @@ Display information about the current project status.
 @end table
 
 @section Inline Project Command
-You can also use the inline @code{@@project} command in the prompt area to 
+You can also use the inline @code{@@project} command in the prompt area to
 quickly search and attach a file without leaving the prompt.
+
+@section Project Init (experimental)
+
+The @code{/init} slash command generates and caches a project summary that
+auto-loads in future sessions.  This is an experimental feature exploring
+tighter integration between project context and LLM conversations---a step
+towards a more code-oriented workflow where the model has immediate awareness
+of your codebase structure.
+
+@subsection Generating a summary
+
+Type @code{/init} in the prompt area.  If no cached summary exists, Ollama
+Buddy gathers the project's directory tree and key files (README, Makefile,
+package.json, etc.), sends them to the current model, and streams back an
+org-mode summary.  When the response completes, the summary is automatically
+saved to @file{.ollama-buddy-project.org} at the project root.
+
+If a cached summary already exists, @code{/init} simply attaches it as
+context---no regeneration is needed.
+
+@subsection Auto-loading
+
+When you open a chat buffer while inside a project that contains a
+@file{.ollama-buddy-project.org} file, the summary is automatically attached
+as context.  This means the model already knows your project structure from
+the very first prompt, without any manual steps.
+
+@subsection Clean project switching
+
+Using @code{/exit} (or @code{/bye}) clears all attachments---files, web
+searches, and RAG context.  When you then open a chat in a different project,
+only that project's summary is loaded, preventing cross-project contamination.
+
+@subsection Regenerating
+
+To regenerate an existing summary, delete the @file{.ollama-buddy-project.org}
+file from the project root and run @code{/init} again.
+
+@subsection Customization
+
+@table @code
+@item ollama-buddy-project-summary-file
+The filename for the cached summary, relative to the project root.
+Default: @file{.ollama-buddy-project.org}.
+@end table
 
 @node In-Buffer Replace
 @chapter In-Buffer Replace
