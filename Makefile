@@ -29,7 +29,7 @@ ELISP_FILES = ollama-buddy.el \
 TEST_DIR = tests
 TEST_FILES = $(wildcard $(TEST_DIR)/*-test.el)
 
-.PHONY: all test test-core test-rag lint checkdoc byte-compile clean ci help
+.PHONY: all test test-core test-rag test-backend lint checkdoc byte-compile clean ci help
 
 all: ci
 
@@ -50,6 +50,15 @@ test-rag:
 		-l $(TEST_DIR)/test-helper.el \
 		-l $(TEST_DIR)/ollama-buddy-rag-test.el \
 		--eval "(ert-run-tests-batch-and-exit '(tag rag))"
+
+## Run only backend parity tests (tagged :backend)
+test-backend:
+	$(BATCH) \
+		-L . \
+		-L $(TEST_DIR) \
+		-l $(TEST_DIR)/test-helper.el \
+		-l $(TEST_DIR)/ollama-buddy-backend-test.el \
+		--eval "(ert-run-tests-batch-and-exit '(tag backend))"
 
 ## Run only core tests (tagged :core)
 test-core:
@@ -106,6 +115,7 @@ help:
 	@echo "Available targets:"
 	@echo "  test         - Run all ERT tests"
 	@echo "  test-core    - Run tests tagged :core"
+	@echo "  test-backend - Run tests tagged :backend"
 	@echo "  lint         - Run package-lint"
 	@echo "  checkdoc     - Run checkdoc"
 	@echo "  byte-compile - Byte-compile all files"

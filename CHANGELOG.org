@@ -11,6 +11,34 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-03-08 Sat> *3.5.1*
+
+Curl backend refactor — unified request pipeline and HTTP error handling.
+
+*** Improvements
+
+- *Shared request pipeline* -- Extracted four shared functions
+  (=validate-send-request=, =process-inline-prompt=, =build-chat-payload=,
+  =setup-chat-send=) used by both network-process and curl backends.  The curl
+  backend now has full feature parity: tool calling, =@search()=, =@file()=,
+  =@rag()= inline processing, web search context, RAG context, effective system
+  prompts, and eager response headers.
+- *Shared stream processor* -- Both backends now use
+  =ollama-buddy--stream-process-json= for all response handling, eliminating
+  duplicated thinking block, content insertion, tool call, and completion logic.
+  The curl backend shrank from 918 to ~500 lines (46% reduction).
+- *Curl header indicator* -- =⇄= shown in the header line when the curl backend
+  is active.
+- *CANCELLED heading* -- Both backends now insert =*** CANCELLED= in the chat
+  buffer when a request is cancelled (curl already did; network-process
+  previously showed =[Stream Interrupted]=).
+
+*** Tests
+
+- Added 25 backend parity tests covering dispatcher routing, effective backend
+  fallback, request validation, inline processing, JSON delegation, cancellation
+  flag behaviour, function signature parity, and HTTP error handling (429/401).
+
 ** <2026-03-07 Fri> *3.5.0*
 
 Project Init (experimental) — a step towards a more code-oriented LLM workflow.

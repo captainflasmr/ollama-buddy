@@ -220,7 +220,7 @@ are loaded, so the real model name is returned without the prefix."
   "Test provider detection when no providers loaded."
   :tags '(core)
   ;; When no provider features are present
-  (cl-letf (((symbol-function 'featurep) (lambda (_) nil)))
+  (cl-letf (((symbol-function 'featurep) (lambda (_feature &optional _subfeature) nil)))
     (should (equal '() (ollama-buddy--get-enabled-external-providers)))))
 
 ;;; Cloud Model Auto-Pull Tests

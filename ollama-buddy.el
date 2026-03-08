@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 3.5.0
+;; Version: 3.5.1
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -3055,14 +3055,18 @@ TCP packets split a JSON object across multiple filter calls."
   ;; written; no need for the usual "[Stream …]" completion notice.
   (if ollama-buddy--stream-http-status
       (setq ollama-buddy--stream-http-status nil)
-  (when-let* ((status (cond ((string-match-p "finished" event) "Completed")
+  (let ((cancelled ollama-buddy--request-cancelled))
+    (setq ollama-buddy--request-cancelled nil)
+  (when-let* ((status (cond (cancelled "Cancelled")
+                            ((string-match-p "finished" event) "Completed")
                             ((string-match-p "\\(?:deleted\\|connection broken\\)" event) "Interrupted")))
-              (msg (format "\n\n[Stream %s]" status)))
+              (msg (if cancelled "\n\n*** CANCELLED" (format "\n\n[Stream %s]" status))))
     ;; Clean up multishot variables but ensure we don't create out-of-range conditions
     (setq ollama-buddy--multishot-prompt nil)
 
     ;; Only set sequence to nil if we're done with it or interrupted
     (when (or (string= status "Interrupted")
+              (string= status "Cancelled")
               (not ollama-buddy--multishot-sequence)
               (>= ollama-buddy--multishot-progress (length ollama-buddy--multishot-sequence)))
       (setq ollama-buddy--multishot-sequence nil
@@ -3144,7 +3148,7 @@ TCP packets split a JSON object across multiple filter calls."
         (ollama-buddy--update-status (concat "Stream " status))))
 
     ;; Auto-save transcript (for sentinel-based completions)
-    (ollama-buddy--autosave-transcript))))
+    (ollama-buddy--autosave-transcript)))))
 
 (defun ollama-buddy--format-model-size (bytes)
   "Format BYTES as a human-readable size string."
@@ -3757,75 +3761,71 @@ Returns nil if user cancels, t otherwise."
       ;; Context is within limits
       t)))
 
-(defun ollama-buddy--send (&optional prompt specified-model tool-continuation-p)
-  "Send PROMPT with optional SPECIFIED-MODEL.
-When PROMPT contains image file paths and the model supports vision,
-those images will be included in the request.
-Cloud models are proxied through the local Ollama server which handles
-authentication via `ollama signin'.
-When TOOL-CONTINUATION-P is non-nil, this is a follow-up after tool execution
-and no new user message is added."
+;; ---------------------------------------------------------------------------
+;; Shared request helpers (used by both network-process and curl backends)
+;; ---------------------------------------------------------------------------
 
-  ;; Default prompt to empty string for tool continuations
-  (when (and tool-continuation-p (not prompt))
-    (setq prompt ""))
-
-  ;; If the user is sending a new (non-continuation) message, clear any
-  ;; paused-session state left by an interactive tool (e.g. ediff).
-  (unless tool-continuation-p
-    (when (and (boundp 'ollama-buddy-tools--session-paused)
-               ollama-buddy-tools--session-paused)
-      (setq ollama-buddy-tools--session-paused nil)))
-
-  ;; Check status and update UI if offline
+(defun ollama-buddy--validate-send-request (prompt tool-continuation-p)
+  "Validate that a send request can proceed.
+PROMPT is the user text, TOOL-CONTINUATION-P is non-nil for tool follow-ups.
+Signals `user-error' if validation fails."
   (unless (ollama-buddy--check-status)
     (ollama-buddy--update-status "OFFLINE")
     (user-error "Ensure Ollama is running"))
-
   (unless (or tool-continuation-p (> (length prompt) 0))
     (user-error "Ensure prompt is defined"))
-
   (when ollama-buddy-show-context-percentage
     (unless (ollama-buddy--check-context-before-send)
-      (user-error "Context too far over limit to send")))
+      (user-error "Context too far over limit to send"))))
 
-  ;; Process inline web search delimiters if web-search module is loaded
+(defun ollama-buddy--process-inline-prompt (prompt)
+  "Process inline delimiters in PROMPT and return the modified text.
+Handles @search(), @rag(), @file(), and @skills() syntax."
   (unless ollama-buddy--skip-inline-processing
     (when (and (featurep 'ollama-buddy-web-search)
                (fboundp 'ollama-buddy-web-search-process-inline))
       (setq prompt (ollama-buddy-web-search-process-inline prompt)))
-
-    ;; Process inline @rag() queries
     (setq prompt (ollama-buddy-rag-process-inline prompt))
-
-    ;; Process inline @file() paths
     (setq prompt (ollama-buddy--file-process-inline prompt))
     (setq prompt (ollama-buddy--skills-process-inline prompt)))
+  prompt)
 
-  ;; Original Ollama send code with vision additions
+(defun ollama-buddy--build-chat-payload (prompt specified-model tool-continuation-p)
+  "Build the JSON payload and metadata for a chat API request.
+PROMPT is the user message text (may be nil for TOOL-CONTINUATION-P).
+SPECIFIED-MODEL overrides the default model.
+TOOL-CONTINUATION-P non-nil means this follows tool execution.
+
+Returns a plist with keys:
+  :payload        - JSON string ready to send
+  :model          - resolved model name
+  :original-model - display model name (before real-name resolution)
+  :has-images     - non-nil when vision images are attached
+  :prompt         - the final prompt string"
+  ;; Default prompt for tool continuations
+  (when (and tool-continuation-p (not prompt))
+    (setq prompt ""))
+
   (let* ((model-info (ollama-buddy--get-valid-model specified-model))
          (model (car model-info))
          (original-model (cdr model-info))
          (_ (ollama-buddy--ensure-cloud-model-available model))
-         ;; Check if this model supports vision
+         ;; Vision
          (supports-vision (and ollama-buddy-vision-enabled
                                (ollama-buddy--model-supports-vision model)))
-         ;; Check for image files in the prompt
          (image-files (when supports-vision
                         (ollama-buddy--detect-image-files prompt)))
-         ;; Flag indicating whether we have images to process
          (has-images (and supports-vision image-files (not (null image-files))))
-         ;; Get history for the request
+         ;; History & system prompt
          (history (ollama-buddy--get-history-for-request))
-         ;; Get effective system prompt (combines global + session prompts)
          (effective-system-prompt (ollama-buddy--effective-system-prompt))
-         ;; If we have a system prompt, add it to the request
          (messages-with-system
           (if effective-system-prompt
               (append `(((role . "system")
                          (content . ,effective-system-prompt)))
                       history)
             history))
+         ;; Context: file attachments
          (attachment-context
           (when ollama-buddy--current-attachments
             (concat "\n\n## Attached Files Context:\n\n"
@@ -3840,39 +3840,39 @@ and no new user message is added."
                                  content)))
                      ollama-buddy--current-attachments
                      ""))))
-         ;; Get web search context if available
+         ;; Context: web search
          (web-search-context
           (when (and (featurep 'ollama-buddy-web-search)
                      (fboundp 'ollama-buddy-web-search-get-context))
             (ollama-buddy-web-search-get-context)))
-         ;; Get RAG context if available
+         ;; Context: RAG
          (rag-context (ollama-buddy-rag-get-context))
-         ;; Combine all context
+         ;; Combined context
          (combined-context
           (let ((contexts (delq nil (list attachment-context web-search-context rag-context))))
             (when contexts
               (concat "\n\n" (mapconcat #'identity contexts "\n\n")))))
-         ;; Create the current message, handling vision content if needed
+         ;; Current message
          (current-message (if has-images
                               (ollama-buddy--create-vision-message prompt image-files)
                             `((role . "user")
                               (content . ,(if combined-context
                                               (concat prompt combined-context)
                                             prompt)))))
-         ;; Add the current message to the messages (skip for tool continuations)
+         ;; All messages (skip user message for tool continuations)
          (messages-all (if tool-continuation-p
                            messages-with-system
                          (append messages-with-system (list current-message))))
-         ;; Get only the modified parameters
+         ;; Parameters
          (modified-options (ollama-buddy-params-get-for-request))
-         ;; Build the base payload
+         ;; Base payload
          (base-payload (append
                         `((model . ,(ollama-buddy--get-real-model-name model))
                           (messages . ,(vconcat [] messages-all))
                           (stream . ,(if ollama-buddy-streaming-enabled t :json-false)))
                         (when ollama-buddy-keepalive
                           `((keep_alive . ,ollama-buddy-keepalive)))))
-         ;; Add tools schema if enabled and model supports tools
+         ;; Add tools schema if applicable
          (with-tools (let* ((suppress (and (boundp 'ollama-buddy--suppress-tools-once)
                                            ollama-buddy--suppress-tools-once))
                             (_ (when suppress
@@ -3885,32 +3885,51 @@ and no new user message is added."
                        (if schema
                            (append base-payload `((tools . ,schema)))
                          base-payload)))
-         ;; Add system prompt if present
+         ;; Add system prompt
          (with-system (if effective-system-prompt
                           (append with-tools `((system . ,effective-system-prompt)))
                         with-tools))
-         ;; Add modified parameters if present
+         ;; Add modified parameters
          (final-payload (if modified-options
                             (append with-system `((options . ,modified-options)))
                           with-system))
          (payload (json-encode final-payload)))
 
+    (list :payload payload
+          :model model
+          :original-model original-model
+          :has-images has-images
+          :prompt (or prompt ""))))
+
+(defun ollama-buddy--setup-chat-send (request-plist tool-continuation-p)
+  "Set up chat buffer state and shared pre-send work.
+REQUEST-PLIST is the result of `ollama-buddy--build-chat-payload'.
+TOOL-CONTINUATION-P non-nil means this follows tool execution."
+  (let ((model (plist-get request-plist :model))
+        (original-model (plist-get request-plist :original-model))
+        (has-images (plist-get request-plist :has-images))
+        (prompt (plist-get request-plist :prompt)))
+
+    ;; Clear any stale cancellation flag
+    (setq ollama-buddy--request-cancelled nil)
+
+    ;; Reset register
     (unless ollama-buddy--multishot-sequence
       (set-register ollama-buddy-default-register ""))
-    
+
+    ;; Set current state
     (setq ollama-buddy--current-model model)
-    (setq ollama-buddy--current-prompt (or prompt ""))
+    (setq ollama-buddy--current-prompt prompt)
     (setq ollama-buddy--current-tool-calls nil)
     (unless tool-continuation-p
       (setq ollama-buddy--tool-call-iteration 0))
 
+    ;; Setup chat buffer
     (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-      ;; Only pop to chat buffer for normal sends — tool continuations run in
-      ;; the background so tool-launched UIs (e.g. ediff) keep focus.
       (unless tool-continuation-p
         (pop-to-buffer (current-buffer)))
       (goto-char (point-max))
-      
+
       (unless (> (buffer-size) 0)
         (insert (ollama-buddy--create-intro-message)))
 
@@ -3919,38 +3938,67 @@ and no new user message is added."
       (setq ollama-buddy--response-start-position (copy-marker (point)))
       (setq ollama-buddy--turn-start-position (copy-marker (point)))
 
-      ;; Insert response header eagerly so the user sees immediate feedback
-      ;; with the countdown timer, rather than a blank buffer while waiting
+      ;; Insert response header eagerly for immediate feedback with countdown
       (let ((pos (ollama-buddy--insert-response-header model original-model has-images)))
         (when pos
           (set-marker ollama-buddy--response-start-position pos)
           (set-marker pos nil)))
       (setq ollama-buddy--header-inserted-p t)
 
-      ;; Enable visual-line-mode for better text wrapping
       (visual-line-mode 1))
 
+    ;; Loading message for non-streaming mode
     (when (not ollama-buddy-streaming-enabled)
-      (setq ollama-buddy--start-point (point))
-      (insert "Loading response..."))
+      (with-current-buffer ollama-buddy--chat-buffer
+        (let ((inhibit-read-only t))
+          (goto-char (point-max))
+          (setq ollama-buddy--start-point (point))
+          (insert "Loading response..."))))
 
+    ;; Status + response wait timer
     (ollama-buddy--update-status (if has-images
                                      "Working... [vision]"
                                    "Working...")
                                  original-model model)
-
     (ollama-buddy--start-response-wait-timer model)
 
+    ;; Kill existing process cleanly
     (when (and ollama-buddy--active-process
                (process-live-p ollama-buddy--active-process))
       (set-process-sentinel ollama-buddy--active-process nil)
       (delete-process ollama-buddy--active-process)
-      (setq ollama-buddy--active-process nil))
+      (setq ollama-buddy--active-process nil))))
 
-    ;; Reset stream buffer for new request
+(defun ollama-buddy--send (&optional prompt specified-model tool-continuation-p)
+  "Send PROMPT with optional SPECIFIED-MODEL.
+When PROMPT contains image file paths and the model supports vision,
+those images will be included in the request.
+Cloud models are proxied through the local Ollama server which handles
+authentication via `ollama signin'.
+When TOOL-CONTINUATION-P is non-nil, this is a follow-up after tool execution
+and no new user message is added."
+
+  ;; If the user is sending a new (non-continuation) message, clear any
+  ;; paused-session state left by an interactive tool (e.g. ediff).
+  (unless tool-continuation-p
+    (when (and (boundp 'ollama-buddy-tools--session-paused)
+               ollama-buddy-tools--session-paused)
+      (setq ollama-buddy-tools--session-paused nil)))
+
+  ;; Validate request
+  (ollama-buddy--validate-send-request prompt tool-continuation-p)
+
+  ;; Process inline delimiters
+  (setq prompt (ollama-buddy--process-inline-prompt prompt))
+
+  ;; Build payload and setup shared state
+  (let* ((request (ollama-buddy--build-chat-payload prompt specified-model tool-continuation-p))
+         (payload (plist-get request :payload)))
+    (ollama-buddy--setup-chat-send request tool-continuation-p)
+
+    ;; --- Network-process transport ---
     (setq ollama-buddy--stream-pending "")
 
-    ;; Add error handling for network process creation
     (condition-case err
         (setq ollama-buddy--active-process
               (make-network-process
@@ -4338,9 +4386,10 @@ Modifies the variable in place."
   (interactive)
   (if ollama-buddy--active-process
       (progn
+        (setq ollama-buddy--request-cancelled t)
         (delete-process ollama-buddy--active-process)
         (setq ollama-buddy--active-process nil)
-        
+
         ;; Clean up token tracking
         (when ollama-buddy--token-update-timer
           (cancel-timer ollama-buddy--token-update-timer)

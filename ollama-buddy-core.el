@@ -1140,6 +1140,9 @@ Set to 0 to always show the timer, or nil to disable it."
 (defvar ollama-buddy--stream-pending ""
   "Pending partial data from the stream not yet forming a complete JSON line.")
 
+(defvar ollama-buddy--request-cancelled nil
+  "Non-nil when the current request was explicitly cancelled by the user.")
+
 (defvar ollama-buddy--stream-http-status nil
   "Non-nil when the current stream received a non-2xx HTTP response.
 Holds the integer status code (e.g. 429).  The filter accumulates the full
@@ -1195,13 +1198,20 @@ the next model in the sequence is tried.  Set to nil to disable."
   (cond
    ;; If explicitly set to curl, validate it's available
    ((eq ollama-buddy-communication-backend 'curl)
-    (if (and (featurep 'ollama-buddy-curl)
-             (fboundp 'ollama-buddy-curl--validate-executable)
-             (ollama-buddy-curl--validate-executable))
-        'curl
-      (progn
-        (message "Warning: curl backend not available, falling back to network-process")
-        'network-process)))
+    (cond
+     ((not (featurep 'ollama-buddy-curl))
+      (message "Curl backend: ollama-buddy-curl not loaded (use C-c e to switch properly), falling back to network-process")
+      (setq ollama-buddy-communication-backend 'network-process)
+      'network-process)
+     ((not (and (fboundp 'ollama-buddy-curl--validate-executable)
+                (ollama-buddy-curl--validate-executable)))
+      (message "Curl backend: '%s' executable not found, falling back to network-process"
+               (if (boundp 'ollama-buddy-curl-executable)
+                   ollama-buddy-curl-executable
+                 "curl"))
+      (setq ollama-buddy-communication-backend 'network-process)
+      'network-process)
+     (t 'curl)))
    ;; Default to network-process
    (t 'network-process)))
 
@@ -1224,7 +1234,7 @@ the next model in the sequence is tried.  Set to nil to disable."
      (t
       (ollama-buddy--make-request-async endpoint method payload callback)))))
 
-(defun ollama-buddy--send-backend (prompt &optional specified-model)
+(defun ollama-buddy--send-backend (prompt &optional specified-model tool-continuation-p)
   "Send prompt using the configured backend."
   (let* ((model (or specified-model
                     (bound-and-true-p ollama-buddy--current-model)
@@ -1235,9 +1245,9 @@ the next model in the sequence is tried.  Set to nil to disable."
         (message "✈ Airplane mode is active — %s requires internet access" model)
       (cond
        ((eq backend 'curl)
-        (ollama-buddy-curl--send prompt specified-model))
+        (ollama-buddy-curl--send prompt specified-model tool-continuation-p))
        (t
-        (ollama-buddy--send prompt specified-model))))))
+        (ollama-buddy--send prompt specified-model tool-continuation-p))))))
 
 ;; Function to test communication backend
 (defun ollama-buddy-test-communication-backend ()
@@ -1255,14 +1265,25 @@ the next model in the sequence is tried.  Set to nil to disable."
 
 ;; Function to switch backend interactively
 (defun ollama-buddy-switch-communication-backend ()
-  "Interactively switch communication backend."
+  "Interactively switch communication backend.
+When selecting curl, automatically loads `ollama-buddy-curl' and
+validates the curl executable is available."
   (interactive)
   (let ((current-backend ollama-buddy-communication-backend)
-        (new-backend (intern (completing-read 
+        (new-backend (intern (completing-read
                               "Select communication backend: "
                               '("network-process" "curl") nil t))))
+    (when (eq new-backend 'curl)
+      (unless (require 'ollama-buddy-curl nil t)
+        (user-error "Cannot switch to curl: ollama-buddy-curl.el not found in load-path"))
+      (unless (and (fboundp 'ollama-buddy-curl--validate-executable)
+                   (ollama-buddy-curl--validate-executable))
+        (user-error "Cannot switch to curl: '%s' executable not found"
+                    (if (boundp 'ollama-buddy-curl-executable)
+                        ollama-buddy-curl-executable
+                      "curl"))))
     (setq ollama-buddy-communication-backend new-backend)
-    (message "Switched from %s to %s backend" 
+    (message "Switched from %s to %s backend"
              current-backend new-backend)
     (ollama-buddy--update-status new-backend)
     (ollama-buddy-test-communication-backend)))
@@ -2658,6 +2679,7 @@ ACTUAL-MODEL is the model being used instead."
                               (propertize (format "⊕%d " (ollama-buddy-rag-count))
                                           'face '(:weight bold))
                             ""))
+           (curl-indicator (if (eq ollama-buddy-communication-backend 'curl) "⇄" ""))
            (in-buffer-indicator (if (bound-and-true-p ollama-buddy-in-buffer-replace) "✎" ""))
            (tone-indicator (let ((tone ollama-buddy--current-tone))
                              (if (or (null tone) (string= tone "Normal"))
@@ -2683,8 +2705,9 @@ ACTUAL-MODEL is the model being used instead."
             (replace-regexp-in-string
              "%" "%%"
             (concat
-             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s%s %s%s%s"
+             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s%s %s%s%s"
                      airplane-indicator
+                     curl-indicator
                      (if ollama-buddy-streaming-enabled "" "x")
                      (ollama-buddy--add-context-to-status-format)
                      (if ollama-buddy-global-system-prompt-enabled "" "<")
