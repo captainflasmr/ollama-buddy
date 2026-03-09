@@ -3881,7 +3881,7 @@ Signals `user-error' if validation fails."
 (defun ollama-buddy--process-inline-prompt (prompt)
   "Process inline delimiters in PROMPT and return the modified text.
 Handles @search(), @rag(), @file(), and @skills() syntax."
-  (unless ollama-buddy--skip-inline-processing
+  (when (and prompt (not ollama-buddy--skip-inline-processing))
     (when (and (featurep 'ollama-buddy-web-search)
                (fboundp 'ollama-buddy-web-search-process-inline))
       (setq prompt (ollama-buddy-web-search-process-inline prompt)))
