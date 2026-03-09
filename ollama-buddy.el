@@ -2062,8 +2062,18 @@ Filters stop words and returns up to 5 key words joined by hyphens."
     ;; Clear all model histories
     (clrhash ollama-buddy--conversation-history-by-model)
 
-    (ollama-buddy-clear-attachments)
-    
+    ;; Clear all attachments directly (no extra confirmation)
+    (setq ollama-buddy--current-attachments nil)
+    (when (boundp 'ollama-buddy-web-search--current-results)
+      (setq ollama-buddy-web-search--current-results nil))
+    (when (featurep 'ollama-buddy-rag)
+      (ollama-buddy-rag-clear-attached))
+
+    ;; Reset tools to disabled
+    (when (featurep 'ollama-buddy-tools)
+      (setq ollama-buddy-tools-enabled nil)
+      (setq ollama-buddy-tools-auto-execute nil))
+
     ;; Clear the chat buffer
     (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
       (let ((inhibit-read-only t))
@@ -2086,7 +2096,11 @@ Filters stop words and returns up to 5 key words joined by hyphens."
     (setq ollama-buddy--current-attachments nil)
     (when (boundp 'ollama-buddy-web-search--current-results)
       (setq ollama-buddy-web-search--current-results nil))
-    (ollama-buddy-rag-clear-attached)
+    (when (featurep 'ollama-buddy-rag)
+      (ollama-buddy-rag-clear-attached))
+    (when (featurep 'ollama-buddy-tools)
+      (setq ollama-buddy-tools-enabled nil)
+      (setq ollama-buddy-tools-auto-execute nil))
     (quit-window nil (get-buffer-window buf))
     (kill-buffer buf)))
 
