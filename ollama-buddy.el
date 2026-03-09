@@ -516,6 +516,16 @@ with an empty messages array and keep_alive set to 0."
 
 ;; --- Thinking block org-heading helpers ---
 
+(defun ollama-buddy--fold-all-thinking-blocks ()
+  "Fold all `*** Think' headings in the current buffer.
+Called after loading a session to restore collapsed thinking blocks."
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward "^\\*\\*\\* Think$" nil t)
+      (beginning-of-line)
+      (outline-hide-subtree)
+      (forward-line 1))))
+
 (defun ollama-buddy--insert-thinking-header ()
   "Insert `*** Thinking' heading.
 Thinking tokens are NOT inserted into the buffer during streaming;
@@ -1978,6 +1988,7 @@ Filters stop words and returns up to 5 key words joined by hyphens."
           (org-mode)
           (visual-line-mode 1)
           (ollama-buddy-mode 1)
+          (ollama-buddy--fold-all-thinking-blocks)
           (goto-char (point-max))))
 
       (setq ollama-buddy-current-session-name chosen-session)
@@ -2928,8 +2939,7 @@ TCP packets split a JSON object across multiple filter calls."
                       (when ollama-buddy--response-start-position
                         (let ((offset (if (save-excursion
                                             (goto-char ollama-buddy--response-start-position)
-                                            (forward-line -1)
-                                            (looking-at-p "\\*\\*\\* Response"))
+                                            (re-search-backward "^\\*\\*\\* Response$" nil t))
                                           3 2)))
                           (ollama-buddy--md-to-org-convert-region
                            ollama-buddy--response-start-position
@@ -3566,6 +3576,12 @@ buffer the user launched from."
                    (fboundp 'ollama-buddy-web-search-total-tokens))
               (ollama-buddy-web-search-total-tokens)
             0))
+         ;; RAG tokens
+         (rag-tokens
+          (if (and (featurep 'ollama-buddy-rag)
+                   (fboundp 'ollama-buddy-rag-total-tokens))
+              (ollama-buddy-rag-total-tokens)
+            0))
          (prompt-tokens
           (ollama-buddy--estimate-token-count
            (car (ollama-buddy--get-prompt-content))))
@@ -3599,6 +3615,10 @@ buffer the user launched from."
     (when (> web-search-tokens 0)
       (setq total-tokens (+ total-tokens web-search-tokens)))
 
+    ;; and RAG context
+    (when (> rag-tokens 0)
+      (setq total-tokens (+ total-tokens rag-tokens)))
+
     (setq total-tokens (+ total-tokens prompt-tokens))
 
     ;; Calculate total tokens and percentage
@@ -3620,6 +3640,7 @@ buffer the user launched from."
                   :system-tokens system-prompt-tokens
                   :attachment-tokens attachment-tokens
                   :web-search-tokens web-search-tokens
+                  :rag-tokens rag-tokens
                   :total-tokens total-tokens))
 
       ;; Return the percentage
@@ -3689,6 +3710,7 @@ buffer the user launched from."
                      (system-tok (plist-get breakdown :system-tokens))
                      (attach-tok (plist-get breakdown :attachment-tokens))
                      (web-tok (or (plist-get breakdown :web-search-tokens) 0))
+                     (rag-tok (or (plist-get breakdown :rag-tokens) 0))
                      (prompt-tok (plist-get breakdown :prompt-tokens))
                      (total-tok (or ollama-buddy--current-context-tokens 0))
                      (free-tok (max 0 (- max-size total-tok))))
@@ -3697,6 +3719,7 @@ buffer the user launched from."
                 (insert (format "  System prompt    : %d tokens\n" system-tok))
                 (insert (format "  Attachments      : %d tokens\n" attach-tok))
                 (insert (format "  Web search       : %d tokens\n" web-tok))
+                (insert (format "  RAG context      : %d tokens\n" rag-tok))
                 (insert (format "  Current prompt   : %d tokens\n" prompt-tok))
 
                 ;; Graphical bar chart
@@ -3708,6 +3731,7 @@ buffer the user launched from."
                            ("System"    ,system-tok  "▓")
                            ("Attach"    ,attach-tok  "▒")
                            ("Web"       ,web-tok     "░")
+                           ("RAG"       ,rag-tok     "▫")
                            ("Prompt"    ,prompt-tok  "▪")
                            ("Free"      ,free-tok    "·"))))
                        (total (max 1 max-size)))

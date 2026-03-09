@@ -102,6 +102,14 @@ When nil, only custom user-registered tools are available."
   :type 'boolean
   :group 'ollama-buddy-tools)
 
+(defcustom ollama-buddy-tools-large-result-threshold 2000
+  "Token count threshold for warning about large tool results.
+When a tool result exceeds this many estimated tokens, the user is
+prompted even when `ollama-buddy-tools-auto-execute' is active.
+Set to 0 to disable the warning."
+  :type 'integer
+  :group 'ollama-buddy-tools)
+
 ;;; Internal Variables
 
 (defvar ollama-buddy-tools--registry (make-hash-table :test 'equal)
@@ -290,6 +298,39 @@ then splicing the fragment into the corresponding region of the original."
    arguments
    ", "))
 
+(defun ollama-buddy-tools--check-result-size (result tool-name)
+  "Check RESULT size from TOOL-NAME and warn if it exceeds the threshold.
+Returns the result string, possibly truncated, or signals an error if cancelled."
+  (let ((threshold ollama-buddy-tools-large-result-threshold))
+    (if (or (<= threshold 0) (not (stringp result)))
+        result
+      (let ((token-estimate (ollama-buddy--estimate-token-count result)))
+        (if (<= token-estimate threshold)
+            result
+          ;; Large result — always prompt, even during auto-execute
+          (let ((answer (read-char-choice
+                         (format "%s returned ~%d tokens (%d chars). (p)roceed (t)runcate to %d tokens (c)ancel: "
+                                 tool-name token-estimate (length result) threshold)
+                         '(?p ?t ?c))))
+            (message nil)
+            (pcase answer
+              (?p result)
+              (?t (ollama-buddy-tools--truncate-to-tokens result threshold))
+              (?c (error "Tool result too large, cancelled by user")))))))))
+
+(defun ollama-buddy-tools--truncate-to-tokens (text max-tokens)
+  "Truncate TEXT to approximately MAX-TOKENS tokens.
+Cuts at a word boundary and appends a truncation notice."
+  (let* ((words (split-string text))
+         ;; ~1.3 tokens per word, so max-tokens / 1.3 words
+         (max-words (max 1 (round (/ max-tokens 1.3))))
+         (kept (seq-take words max-words))
+         (truncated (mapconcat #'identity kept " ")))
+    (format "%s\n\n[TRUNCATED: result was ~%d tokens, showing first ~%d]"
+            truncated
+            (ollama-buddy--estimate-token-count text)
+            max-tokens)))
+
 (defun ollama-buddy-tools--execute (name arguments)
   "Execute tool NAME with ARGUMENTS.
 Returns the result as a string, or an error message if execution fails."
@@ -328,10 +369,10 @@ Returns the result as a string, or an error message if execution fails."
                                     (json-read-from-string arguments)
                                   (error arguments))
                               arguments))
-               (result (funcall func parsed-args)))
-          (if (stringp result)
-              result
-            (format "%S" result))))
+               (result (funcall func parsed-args))
+               (result-str (if (stringp result) result (format "%S" result))))
+          ;; Guard: warn on large results that could consume significant context
+          (ollama-buddy-tools--check-result-size result-str name-str)))
     (error
      (format "Error executing tool %s: %s" name (error-message-string err)))))
 
