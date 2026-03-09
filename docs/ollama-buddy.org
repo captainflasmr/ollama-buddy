@@ -163,14 +163,15 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Creating-a-New-Session][12.2 Creating a New Session]]
   - [[#Saving-a-Session][12.3 Saving a Session]]
   - [[#Loading-a-Session][12.4 Loading a Session]]
-  - [[#Managing-Sessions][12.5 Managing Sessions]]
-  - [[#Session-Naming][12.6 Session Naming]]
-  - [[#Renaming-a-Session][12.7 Renaming a Session]]
-  - [[#Session-Directory-Persistence][12.8 Session Directory
+  - [[#Exiting-a-Session][12.5 Exiting a Session]]
+  - [[#Managing-Sessions][12.6 Managing Sessions]]
+  - [[#Session-Naming][12.7 Session Naming]]
+  - [[#Renaming-a-Session][12.8 Renaming a Session]]
+  - [[#Session-Directory-Persistence][12.9 Session Directory
     Persistence]]
-  - [[#Autosave-Transcript][12.9 Autosave Transcript]]
-  - [[#Conversation-History][12.10 Conversation History]]
-  - [[#Rewinding-a-Conversation][12.11 Rewinding a Conversation]]
+  - [[#Autosave-Transcript][12.10 Autosave Transcript]]
+  - [[#Conversation-History][12.11 Conversation History]]
+  - [[#Rewinding-a-Conversation][12.12 Rewinding a Conversation]]
 - [[#User-System-Prompts][13 User System Prompts]]
   - [[#Overview-2][13.1 Overview]]
   - [[#Accessing-the-System-Prompts-Menu][13.2 Accessing the System
@@ -1365,7 +1366,7 @@ The chat interface consists of:
   - Vision indicator (=⊙=) - model supports vision
   - Attachment indicators (=≡N=)
   - Web search indicators (=♁N=)
-  - Context usage bar (when enabled)
+  - Context usage pie chart (GUI) or bar (terminal), when enabled
   - Global system prompt disabled indicator (=<=)
   - History count (=H5/10=, off by default)
   - Current model name
@@ -1958,13 +1959,11 @@ File attachments are included in context calculations:
 :CLASS: section
 :END:
 - Show Context Information (C-c C) :: Displays a breakdown of current
-  context usage, including:
-
-  - Conversation history token count
-  - System prompt token count
-  - Attachment token count
-  - Current prompt token count
-  - Total usage percentage
+  context usage with a pie chart (GUI Emacs) or a composite text bar
+  (terminal Emacs). Each segment represents a context category (history,
+  system prompt, attachments, web search, RAG, current prompt, free
+  space) with a colour-coded legend showing token counts and
+  percentages.
 
 - Set Model Context Size (C-c $) :: Manually configure the context size
   for a specific model.
@@ -2827,7 +2826,7 @@ To reset all parameters to default values:
 M-x ollama-buddy-params-reset
 #+end_src
 
-or press =C-c K= in the chat buffer.
+or press =C-c V= in the chat buffer.
 
 <<Displaying-Parameters-in-Header>>
 *** 11.7 Displaying Parameters in Header [[#Displaying-Parameters-in-Header][¶]]
@@ -2860,6 +2859,7 @@ Next: [[#User-System-Prompts][User System Prompts]], Previous:
 - [[#Creating-a-New-Session][Creating a New Session]]
 - [[#Saving-a-Session][Saving a Session]]
 - [[#Loading-a-Session][Loading a Session]]
+- [[#Exiting-a-Session][Exiting a Session]]
 - [[#Managing-Sessions][Managing Sessions]]
 - [[#Session-Naming][Session Naming]]
 - [[#Renaming-a-Session][Renaming a Session]]
@@ -2933,8 +2933,25 @@ You'll be presented with a list of saved sessions to choose from. When
 the session is loaded, any =*** Think= headings are automatically folded
 and any saved RAG attachments are restored.
 
+<<Exiting-a-Session>>
+*** 12.5 Exiting a Session [[#Exiting-a-Session][¶]]
+:PROPERTIES:
+:CUSTOM_ID: exiting-a-session
+:CLASS: section
+:END:
+To close the chat buffer and clear the session:
+
+#+begin_src example-preformatted
+M-x ollama-buddy-exit
+#+end_src
+
+or press =C-c K= in the chat buffer, or use =/exit= or =/bye= in the
+prompt area. You will be prompted for confirmation before closing.
+Exiting clears conversation history, attachments, RAG context, and
+resets tool calling to disabled.
+
 <<Managing-Sessions>>
-*** 12.5 Managing Sessions [[#Managing-Sessions][¶]]
+*** 12.6 Managing Sessions [[#Managing-Sessions][¶]]
 :PROPERTIES:
 :CUSTOM_ID: managing-sessions
 :CLASS: section
@@ -2951,7 +2968,7 @@ From Dired, you can browse, rename, delete, or otherwise manage your
 session files using standard Emacs file operations.
 
 <<Session-Naming>>
-*** 12.6 Session Naming [[#Session-Naming][¶]]
+*** 12.7 Session Naming [[#Session-Naming][¶]]
 :PROPERTIES:
 :CUSTOM_ID: session-naming
 :CLASS: section
@@ -2968,7 +2985,7 @@ space exploration” would generate the session name
 =2026-03-07-170800-history-space-exploration=.
 
 <<Renaming-a-Session>>
-*** 12.7 Renaming a Session [[#Renaming-a-Session][¶]]
+*** 12.8 Renaming a Session [[#Renaming-a-Session][¶]]
 :PROPERTIES:
 :CUSTOM_ID: renaming-a-session
 :CLASS: section
@@ -2983,7 +3000,7 @@ always prepends a fresh timestamp, so renaming and saving multiple times
 produces distinct files without duplicate timestamps.
 
 <<Session-Directory-Persistence>>
-*** 12.8 Session Directory Persistence [[#Session-Directory-Persistence][¶]]
+*** 12.9 Session Directory Persistence [[#Session-Directory-Persistence][¶]]
 :PROPERTIES:
 :CUSTOM_ID: session-directory-persistence
 :CLASS: section
@@ -2995,7 +3012,7 @@ restores the project context, so =project.el= integration, project
 summary auto-loading, and file-relative commands all work correctly.
 
 <<Autosave-Transcript>>
-*** 12.9 Autosave Transcript [[#Autosave-Transcript][¶]]
+*** 12.10 Autosave Transcript [[#Autosave-Transcript][¶]]
 :PROPERTIES:
 :CUSTOM_ID: autosave-transcript
 :CLASS: section
@@ -3011,7 +3028,7 @@ The autosave file is automatically deleted when you perform a proper
 session save with =C-c S=.
 
 <<Conversation-History>>
-*** 12.10 Conversation History [[#Conversation-History][¶]]
+*** 12.11 Conversation History [[#Conversation-History][¶]]
 :PROPERTIES:
 :CUSTOM_ID: conversation-history
 :CLASS: section
@@ -3043,7 +3060,7 @@ M-x ollama-buddy-toggle-history
 or press =C-c H= in the chat buffer.
 
 <<Rewinding-a-Conversation>>
-*** 12.11 Rewinding a Conversation [[#Rewinding-a-Conversation][¶]]
+*** 12.12 Rewinding a Conversation [[#Rewinding-a-Conversation][¶]]
 :PROPERTIES:
 :CUSTOM_ID: rewinding-a-conversation
 :CLASS: section
@@ -4878,9 +4895,10 @@ indicate cloud model usage.
 :CLASS: section
 :END:
 The Model Management page (=C-c M=) displays your Ollama cloud usage
-(session and weekly percentages) in the Cloud Models section. The header
-line also shows compact usage percentages (e.g. =45% 32%= for session
-and weekly) when a cloud model is selected.
+(session and weekly percentages) as pie charts in the Cloud Models
+section (falling back to text bars in terminal Emacs). The header line
+also shows compact pie chart indicators (e.g. session and weekly) when a
+cloud model is selected.
 
 To enable this, set =ollama-buddy-cloud-session-token= to the value of
 the =__Secure-session= cookie from ollama.com:

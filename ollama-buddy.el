@@ -3742,26 +3742,9 @@ buffer the user launched from."
         (insert "#+title: Ollama Model Context Sizes\n\n")
         (insert "Press =g= to refresh\n\n")
 
-        ;; Check if model-context-sizes has any entries
-        (if (= (hash-table-count ollama-buddy--model-context-sizes) 0)
-            (insert "No model context sizes have been retrieved yet.\n")
-
-          (insert "* Models\n\n")
-          
-          ;; Display context sizes for each model in model-context-sizes
-          (maphash (lambda (model size)
-                     (let* ((source (ollama-buddy--get-model-context-source model))
-                            (source-indicator
-                             (pcase source
-                               ('api " [API]")
-                               ('fallback " [fallback]")
-                               ('manual " [manual]")
-                               (_ ""))))
-                       (insert (format "- *%s*: %d tokens%s\n" model size source-indicator))))
-                   ollama-buddy--model-context-sizes))
-        
         ;; Show current context info if available
-        (when ollama-buddy--current-context-percentage
+        (if (not ollama-buddy--current-context-percentage)
+            (insert "No context usage data yet — send a prompt first.\n")
           (let* ((current-model (or ollama-buddy--current-model "unknown"))
                  (source (ollama-buddy--get-model-context-source current-model))
                  (source-desc (pcase source
@@ -3769,7 +3752,7 @@ buffer the user launched from."
                                 ('fallback "from fallback mappings (estimate)")
                                 ('manual "manually set")
                                 (_ "unknown"))))
-            (insert "\n* Current context usage:\n\n")
+            (insert "* Current context usage:\n\n")
             (insert (format "  Model            : *%s*\n" current-model))
             (insert (format "  Context max size : %d tokens (%s)\n" 
                             (or ollama-buddy--current-context-max-size 4096)
@@ -3790,42 +3773,82 @@ buffer the user launched from."
                      (prompt-tok (plist-get breakdown :prompt-tokens))
                      (total-tok (or ollama-buddy--current-context-tokens 0))
                      (free-tok (max 0 (- max-size total-tok))))
-                ;; Text breakdown
-                (insert (format "  History          : %d tokens\n" history-tok))
-                (insert (format "  System prompt    : %d tokens\n" system-tok))
-                (insert (format "  Attachments      : %d tokens\n" attach-tok))
-                (insert (format "  Web search       : %d tokens\n" web-tok))
-                (insert (format "  RAG context      : %d tokens\n" rag-tok))
-                (insert (format "  Current prompt   : %d tokens\n" prompt-tok))
-
-                ;; Graphical bar chart
+                ;; Context breakdown chart
                 (let* ((bar-width 50)
                        (segments
                         (cl-remove-if
                          (lambda (s) (= (nth 1 s) 0))
-                         `(("History"   ,history-tok "█")
-                           ("System"    ,system-tok  "▓")
-                           ("Attach"    ,attach-tok  "▒")
-                           ("Web"       ,web-tok     "░")
-                           ("RAG"       ,rag-tok     "▫")
-                           ("Prompt"    ,prompt-tok  "▪")
-                           ("Free"      ,free-tok    "·"))))
+                         `(("History"   ,history-tok "#4CAF50" "█")
+                           ("System"    ,system-tok  "#2196F3" "▓")
+                           ("Attach"    ,attach-tok  "#FF9800" "▒")
+                           ("Web"       ,web-tok     "#9C27B0" "░")
+                           ("RAG"       ,rag-tok     "#00BCD4" "▫")
+                           ("Prompt"    ,prompt-tok  "#F44336" "▪")
+                           ("Free"      ,free-tok    "#E0E0E0" "·"))))
                        (total (max 1 max-size)))
                   (insert "\n* Context breakdown\n\n")
-                  ;; Single composite bar
-                  (insert "  ")
-                  (dolist (seg segments)
-                    (let* ((chars (max (if (> (nth 1 seg) 0) 1 0)
-                                       (round (* bar-width (/ (float (nth 1 seg)) total))))))
-                      (insert (make-string chars (string-to-char (nth 2 seg))))))
-                  (insert "\n\n")
-                  ;; Legend
+                  (if (display-graphic-p)
+                      ;; SVG pie chart for GUI Emacs
+                      (let* ((sz 120)
+                             (cx (/ sz 2.0))
+                             (cy (/ sz 2.0))
+                             (r (* cx 0.9))
+                             (svg (svg-create sz sz))
+                             (angle (- (/ float-pi 2)))) ; start at 12 o'clock
+                        (require 'svg)
+                        ;; Background ring (unfilled, stroke only)
+                        (svg-circle svg cx cy r :fill "none" :stroke "#c0c0c0" :stroke-width 1)
+                        ;; Draw pie slices (skip "Free" — it's the background)
+                        (dolist (seg segments)
+                          (let* ((tokens (nth 1 seg))
+                                 (colour (nth 2 seg))
+                                 (frac (/ (float tokens) total)))
+                            (when (and (> frac 0.001)
+                                       (not (string= (nth 0 seg) "Free")))
+                              (let* ((sweep (* 2 float-pi frac))
+                                     (end-angle (+ angle sweep))
+                                     (x1 (+ cx (* r (cos angle))))
+                                     (y1 (+ cy (* r (sin angle))))
+                                     (x2 (+ cx (* r (cos end-angle))))
+                                     (y2 (+ cy (* r (sin end-angle))))
+                                     (large-arc (if (> frac 0.5) 1 0)))
+                                (if (>= frac 0.995)
+                                    (svg-circle svg cx cy r :fill colour)
+                                  (dom-append-child
+                                   svg
+                                   (dom-node 'path
+                                             `((d . ,(format "M %f,%f L %f,%f A %f,%f 0 %d 1 %f,%f Z"
+                                                             cx cy x1 y1 r r large-arc x2 y2))
+                                               (fill . ,colour)))))
+                                (setq angle end-angle)))))
+                        (insert "  ")
+                        (insert (propertize " "
+                                           'display (svg-image svg :ascent 'center :scale 1.0)))
+                        (insert "\n\n"))
+                    ;; Terminal fallback: text bar chart
+                    (insert "  ")
+                    (dolist (seg segments)
+                      (let ((chars (max (if (> (nth 1 seg) 0) 1 0)
+                                        (round (* bar-width (/ (float (nth 1 seg)) total))))))
+                        (insert (make-string chars (string-to-char (nth 3 seg))))))
+                    (insert "\n\n"))
+                  ;; Legend (shown in both modes)
                   (dolist (seg segments)
                     (let ((pct (* 100.0 (/ (float (nth 1 seg)) total))))
-                      (insert (format "  %s %-8s %5d tokens (%4.1f%%)\n"
-                                      (nth 2 seg) (nth 0 seg)
-                                      (nth 1 seg) pct)))))))))
-
+                      (if (display-graphic-p)
+                          (let* ((swatch-sz 10)
+                                 (swatch (svg-create swatch-sz swatch-sz)))
+                            (require 'svg)
+                            (svg-rectangle swatch 0 0 swatch-sz swatch-sz
+                                           :fill (nth 2 seg) :rx 2 :ry 2)
+                            (insert "  ")
+                            (insert (propertize " "
+                                               'display (svg-image swatch :ascent 'center)))
+                            (insert (format " %-8s %5d tokens (%4.1f%%)\n"
+                                            (nth 0 seg) (nth 1 seg) pct)))
+                        (insert (format "  %s %-8s %5d tokens (%4.1f%%)\n"
+                                        (nth 3 seg) (nth 0 seg)
+                                        (nth 1 seg) pct))))))))))
 
         (goto-char (point-min))
         (view-mode 1)
@@ -4757,10 +4780,10 @@ Modifies the variable in place."
                         (weekly (alist-get 'weekly usage))
                         (session-reset (alist-get 'session-reset usage))
                         (weekly-reset (alist-get 'weekly-reset usage)))
-                    (insert (format "  Session: %s %s" (ollama-buddy--cloud-usage-bar session) session))
+                    (insert (format "  Session: %s %s" (ollama-buddy--cloud-usage-pie session 36) session))
                     (when session-reset
                       (insert (format " (%s)" (ollama-buddy--cloud-reset-time-string session-reset))))
-                    (insert (format "  |  Weekly: %s %s" (ollama-buddy--cloud-usage-bar weekly) weekly))
+                    (insert (format "  |  Weekly: %s %s" (ollama-buddy--cloud-usage-pie weekly 36) weekly))
                     (when weekly-reset
                       (insert (format " (%s)" (ollama-buddy--cloud-reset-time-string weekly-reset))))
                     (insert "\n\n"))

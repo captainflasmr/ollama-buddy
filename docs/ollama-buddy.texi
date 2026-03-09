@@ -768,7 +768,7 @@ The chat interface consists of:
   @item Vision indicator (@code{⊙}) - model supports vision
   @item Attachment indicators (@code{≡N})
   @item Web search indicators (@code{♁N})
-  @item Context usage bar (when enabled)
+  @item Context usage pie chart (GUI) or bar (terminal), when enabled
   @item Global system prompt disabled indicator (@code{<})
   @item History count (@code{H5/10}, off by default)
   @item Current model name
@@ -1248,14 +1248,11 @@ File attachments are included in context calculations:
 
 @table @asis
 @item Show Context Information (@kbd{C-c C})
-Displays a breakdown of current context usage, including:
-@itemize @bullet
-@item Conversation history token count
-@item System prompt token count
-@item Attachment token count
-@item Current prompt token count
-@item Total usage percentage
-@end itemize
+Displays a breakdown of current context usage with a pie chart
+(GUI Emacs) or a composite text bar (terminal Emacs).  Each segment
+represents a context category (history, system prompt, attachments,
+web search, RAG, current prompt, free space) with a colour-coded
+legend showing token counts and percentages.
 
 @item Set Model Context Size (@kbd{C-c $})
 Manually configure the context size for a specific model.
@@ -3323,9 +3320,10 @@ When using a cloud model, the header line displays a @code{☁} symbol to indica
 @section Cloud Usage Stats
 
 The Model Management page (@code{C-c M}) displays your Ollama cloud usage
-(session and weekly percentages) in the Cloud Models section.  The header line
-also shows compact usage percentages (e.g.@: @code{45% 32%} for session and weekly)
-when a cloud model is selected.
+(session and weekly percentages) as pie charts in the Cloud Models section
+(falling back to text bars in terminal Emacs).  The header line also shows
+compact pie chart indicators (e.g.@: session and weekly) when a cloud model
+is selected.
 
 To enable this, set @code{ollama-buddy-cloud-session-token} to the value of the
 @code{__Secure-session} cookie from ollama.com:

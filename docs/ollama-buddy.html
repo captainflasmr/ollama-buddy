@@ -236,13 +236,14 @@ allowing you to leverage powerful large language models (LLMs) directly within y
     <li><a id="toc-Creating-a-New-Session" href="#Creating-a-New-Session">12.2 Creating a New Session</a></li>
     <li><a id="toc-Saving-a-Session" href="#Saving-a-Session">12.3 Saving a Session</a></li>
     <li><a id="toc-Loading-a-Session" href="#Loading-a-Session">12.4 Loading a Session</a></li>
-    <li><a id="toc-Managing-Sessions" href="#Managing-Sessions">12.5 Managing Sessions</a></li>
-    <li><a id="toc-Session-Naming" href="#Session-Naming">12.6 Session Naming</a></li>
-    <li><a id="toc-Renaming-a-Session" href="#Renaming-a-Session">12.7 Renaming a Session</a></li>
-    <li><a id="toc-Session-Directory-Persistence" href="#Session-Directory-Persistence">12.8 Session Directory Persistence</a></li>
-    <li><a id="toc-Autosave-Transcript" href="#Autosave-Transcript">12.9 Autosave Transcript</a></li>
-    <li><a id="toc-Conversation-History" href="#Conversation-History">12.10 Conversation History</a></li>
-    <li><a id="toc-Rewinding-a-Conversation" href="#Rewinding-a-Conversation">12.11 Rewinding a Conversation</a></li>
+    <li><a id="toc-Exiting-a-Session" href="#Exiting-a-Session">12.5 Exiting a Session</a></li>
+    <li><a id="toc-Managing-Sessions" href="#Managing-Sessions">12.6 Managing Sessions</a></li>
+    <li><a id="toc-Session-Naming" href="#Session-Naming">12.7 Session Naming</a></li>
+    <li><a id="toc-Renaming-a-Session" href="#Renaming-a-Session">12.8 Renaming a Session</a></li>
+    <li><a id="toc-Session-Directory-Persistence" href="#Session-Directory-Persistence">12.9 Session Directory Persistence</a></li>
+    <li><a id="toc-Autosave-Transcript" href="#Autosave-Transcript">12.10 Autosave Transcript</a></li>
+    <li><a id="toc-Conversation-History" href="#Conversation-History">12.11 Conversation History</a></li>
+    <li><a id="toc-Rewinding-a-Conversation" href="#Rewinding-a-Conversation">12.12 Rewinding a Conversation</a></li>
   </ul></li>
   <li><a id="toc-User-System-Prompts" href="#User-System-Prompts">13 User System Prompts</a>
   <ul class="toc-numbered-mark">
@@ -1446,7 +1447,7 @@ Next: <a href="#Working-with-Models" accesskey="n" rel="next">Working with Model
   </li><li>Vision indicator (<code class="code">⊙</code>) - model supports vision
   </li><li>Attachment indicators (<code class="code">≡N</code>)
   </li><li>Web search indicators (<code class="code">♁N</code>)
-  </li><li>Context usage bar (when enabled)
+  </li><li>Context usage pie chart (GUI) or bar (terminal), when enabled
   </li><li>Global system prompt disabled indicator (<code class="code">&lt;</code>)
   </li><li>History count (<code class="code">H5/10</code>, off by default)
   </li><li>Current model name
@@ -2062,15 +2063,12 @@ Next: <a href="#File-Attachments" accesskey="n" rel="next">File Attachments</a>,
 
 <dl class="table">
 <dt>Show Context Information (<kbd class="kbd">C-c C</kbd>)</dt>
-<dd><p>Displays a breakdown of current context usage, including:
-</p><ul class="itemize mark-bullet">
-<li>Conversation history token count
-</li><li>System prompt token count
-</li><li>Attachment token count
-</li><li>Current prompt token count
-</li><li>Total usage percentage
-</li></ul>
-
+<dd><p>Displays a breakdown of current context usage with a pie chart
+(GUI Emacs) or a composite text bar (terminal Emacs).  Each segment
+represents a context category (history, system prompt, attachments,
+web search, RAG, current prompt, free space) with a colour-coded
+legend showing token counts and percentages.
+</p>
 </dd>
 <dt>Set Model Context Size (<kbd class="kbd">C-c $</kbd>)</dt>
 <dd><p>Manually configure the context size for a specific model.
@@ -2915,7 +2913,7 @@ Next: <a href="#Session-Management" accesskey="n" rel="next">Session Management<
 </p><div class="example">
 <pre class="example-preformatted">M-x ollama-buddy-params-reset
 </pre></div>
-<p>or press <code class="code">C-c K</code> in the chat buffer.
+<p>or press <code class="code">C-c V</code> in the chat buffer.
 </p>
 </div>
 <div class="section-level-extent" id="Displaying-Parameters-in-Header">
@@ -2942,11 +2940,12 @@ Next: <a href="#User-System-Prompts" accesskey="n" rel="next">User System Prompt
 <li><a href="#Creating-a-New-Session" accesskey="2">Creating a New Session</a></li>
 <li><a href="#Saving-a-Session" accesskey="3">Saving a Session</a></li>
 <li><a href="#Loading-a-Session" accesskey="4">Loading a Session</a></li>
-<li><a href="#Managing-Sessions" accesskey="5">Managing Sessions</a></li>
-<li><a href="#Session-Naming" accesskey="6">Session Naming</a></li>
-<li><a href="#Renaming-a-Session" accesskey="7">Renaming a Session</a></li>
-<li><a href="#Session-Directory-Persistence" accesskey="8">Session Directory Persistence</a></li>
-<li><a href="#Autosave-Transcript" accesskey="9">Autosave Transcript</a></li>
+<li><a href="#Exiting-a-Session" accesskey="5">Exiting a Session</a></li>
+<li><a href="#Managing-Sessions" accesskey="6">Managing Sessions</a></li>
+<li><a href="#Session-Naming" accesskey="7">Session Naming</a></li>
+<li><a href="#Renaming-a-Session" accesskey="8">Renaming a Session</a></li>
+<li><a href="#Session-Directory-Persistence" accesskey="9">Session Directory Persistence</a></li>
+<li><a href="#Autosave-Transcript">Autosave Transcript</a></li>
 <li><a href="#Conversation-History">Conversation History</a></li>
 <li><a href="#Rewinding-a-Conversation">Rewinding a Conversation</a></li>
 </ul>
@@ -3002,8 +3001,21 @@ session is loaded, any <code class="code">*** Think</code> headings are automati
 any saved RAG attachments are restored.
 </p>
 </div>
+<div class="section-level-extent" id="Exiting-a-Session">
+<h3 class="section"><span>12.5 Exiting a Session<a class="copiable-link" href="#Exiting-a-Session"> &para;</a></span></h3>
+
+<p>To close the chat buffer and clear the session:
+</p><div class="example">
+<pre class="example-preformatted">M-x ollama-buddy-exit
+</pre></div>
+<p>or press <code class="code">C-c K</code> in the chat buffer, or use <code class="code">/exit</code> or <code class="code">/bye</code>
+in the prompt area.  You will be prompted for confirmation before closing.
+Exiting clears conversation history, attachments, RAG context, and resets
+tool calling to disabled.
+</p>
+</div>
 <div class="section-level-extent" id="Managing-Sessions">
-<h3 class="section"><span>12.5 Managing Sessions<a class="copiable-link" href="#Managing-Sessions"> &para;</a></span></h3>
+<h3 class="section"><span>12.6 Managing Sessions<a class="copiable-link" href="#Managing-Sessions"> &para;</a></span></h3>
 
 <p>To open the sessions directory in Dired for direct file management:
 </p><div class="example">
@@ -3015,7 +3027,7 @@ any saved RAG attachments are restored.
 </p>
 </div>
 <div class="section-level-extent" id="Session-Naming">
-<h3 class="section"><span>12.6 Session Naming<a class="copiable-link" href="#Session-Naming"> &para;</a></span></h3>
+<h3 class="section"><span>12.7 Session Naming<a class="copiable-link" href="#Session-Naming"> &para;</a></span></h3>
 
 <p>When saving a session, Ollama Buddy generates a default name from the first
 user message.  The name is created by filtering out common English stop words
@@ -3029,7 +3041,7 @@ exploration&rdquo; would generate the session name
 </p>
 </div>
 <div class="section-level-extent" id="Renaming-a-Session">
-<h3 class="section"><span>12.7 Renaming a Session<a class="copiable-link" href="#Renaming-a-Session"> &para;</a></span></h3>
+<h3 class="section"><span>12.8 Renaming a Session<a class="copiable-link" href="#Renaming-a-Session"> &para;</a></span></h3>
 
 <p>Use <code class="code">/rename</code> in the prompt area to set a display name for the current
 session.  If no name has been set, an auto-generated one from the first prompt
@@ -3041,7 +3053,7 @@ produces distinct files without duplicate timestamps.
 </p>
 </div>
 <div class="section-level-extent" id="Session-Directory-Persistence">
-<h3 class="section"><span>12.8 Session Directory Persistence<a class="copiable-link" href="#Session-Directory-Persistence"> &para;</a></span></h3>
+<h3 class="section"><span>12.9 Session Directory Persistence<a class="copiable-link" href="#Session-Directory-Persistence"> &para;</a></span></h3>
 
 <p>Sessions save the chat buffer&rsquo;s <code class="code">default-directory</code>.  When a session is
 loaded, the directory is restored (provided it still exists on disk).  This
@@ -3051,7 +3063,7 @@ auto-loading, and file-relative commands all work correctly.
 </p>
 </div>
 <div class="section-level-extent" id="Autosave-Transcript">
-<h3 class="section"><span>12.9 Autosave Transcript<a class="copiable-link" href="#Autosave-Transcript"> &para;</a></span></h3>
+<h3 class="section"><span>12.10 Autosave Transcript<a class="copiable-link" href="#Autosave-Transcript"> &para;</a></span></h3>
 
 <p>Ollama Buddy automatically saves the chat buffer to a recovery file after each completed response. The file is saved as <samp class="file">~autosave.org</samp> in the sessions directory (<code class="code">ollama-buddy-sessions-directory</code>).
 </p>
@@ -3061,7 +3073,7 @@ auto-loading, and file-relative commands all work correctly.
 </p>
 </div>
 <div class="section-level-extent" id="Conversation-History">
-<h3 class="section"><span>12.10 Conversation History<a class="copiable-link" href="#Conversation-History"> &para;</a></span></h3>
+<h3 class="section"><span>12.11 Conversation History<a class="copiable-link" href="#Conversation-History"> &para;</a></span></h3>
 
 <p>Sessions save the conversation history for each model separately.
 </p>
@@ -3085,7 +3097,7 @@ auto-loading, and file-relative commands all work correctly.
 </p>
 </div>
 <div class="section-level-extent" id="Rewinding-a-Conversation">
-<h3 class="section"><span>12.11 Rewinding a Conversation<a class="copiable-link" href="#Rewinding-a-Conversation"> &para;</a></span></h3>
+<h3 class="section"><span>12.12 Rewinding a Conversation<a class="copiable-link" href="#Rewinding-a-Conversation"> &para;</a></span></h3>
 
 <p>To rewind a conversation to a previous prompt, navigate to the desired
 prompt heading in the chat buffer and press <code class="code">C-u C-u C-c C-c</code>.
@@ -4768,9 +4780,10 @@ and the request is not sent.
 <h3 class="section"><span>18.7 Cloud Usage Stats<a class="copiable-link" href="#Cloud-Usage-Stats"> &para;</a></span></h3>
 
 <p>The Model Management page (<code class="code">C-c M</code>) displays your Ollama cloud usage
-(session and weekly percentages) in the Cloud Models section.  The header line
-also shows compact usage percentages (e.g. <code class="code">45% 32%</code> for session and weekly)
-when a cloud model is selected.
+(session and weekly percentages) as pie charts in the Cloud Models section
+(falling back to text bars in terminal Emacs).  The header line also shows
+compact pie chart indicators (e.g. session and weekly) when a cloud model
+is selected.
 </p>
 <p>To enable this, set <code class="code">ollama-buddy-cloud-session-token</code> to the value of the
 <code class="code">__Secure-session</code> cookie from ollama.com:
