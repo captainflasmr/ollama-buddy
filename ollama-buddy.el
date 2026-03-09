@@ -2541,34 +2541,15 @@ TCP packets split a JSON object across multiple filter calls."
       (let ((error-json (ignore-errors
                           (json-read-from-string ollama-buddy--stream-pending))))
         (when error-json
-          (let* ((error-msg (or (alist-get 'error error-json)
-                                (alist-get 'Status error-json)
-                                (format "HTTP %d" ollama-buddy--stream-http-status)))
-                 (signin-url (alist-get 'signin_url error-json))
-                 (code ollama-buddy--stream-http-status)
-                 (is-auth-error (or (= code 401) (= code 403)
-                                    (string-match-p "unauthorized\\|authentication\\|sign.?in" error-msg))))
-            (when is-auth-error
-              (ollama-buddy--set-cloud-auth-status nil))
-            (with-current-buffer ollama-buddy--chat-buffer
-              (let ((inhibit-read-only t))
-                (save-excursion
-                  (goto-char (point-max))
-                  (if is-auth-error
-                      (progn
-                        (insert (format "\n\n*Authentication Error:* %s" error-msg))
-                        (insert "\n\nSign in with =C-c A= or =M-x ollama-buddy-cloud-signin=")
-                        (when signin-url
-                          (insert (format "\n\nOr visit: %s" signin-url))))
-                    (insert (format "\n\n*Error %d:* %s" code error-msg)))
-                  (ollama-buddy--prepare-prompt-area))))
-            (ollama-buddy--update-status (if is-auth-error "Auth Required" (format "Error %d" code)))
-            (setq ollama-buddy--stream-pending "")
-            ;; Delete the process; sentinel fires with "deleted" and skips
-            ;; inserting the normal completion/interrupted message.
-            (when (and ollama-buddy--active-process
-                       (process-live-p ollama-buddy--active-process))
-              (delete-process ollama-buddy--active-process))))))
+          (let ((status-str (ollama-buddy--handle-http-error
+                             ollama-buddy--stream-http-status error-json)))
+            (ollama-buddy--update-status status-str))
+          (setq ollama-buddy--stream-pending "")
+          ;; Delete the process; sentinel fires with "deleted" and skips
+          ;; inserting the normal completion/interrupted message.
+          (when (and ollama-buddy--active-process
+                     (process-live-p ollama-buddy--active-process))
+            (delete-process ollama-buddy--active-process)))))
 
     ;; Process all complete newline-delimited JSON lines.
     ;; Skipped when we are in HTTP-error mode to avoid spurious parse attempts.
@@ -3144,18 +3125,7 @@ TCP packets split a JSON object across multiple filter calls."
              (old-window-start (and window (window-start window))))
 
         ;; Preserve accumulated thinking content before inserting completion msg
-        (when (and ollama-buddy--thinking-arrow-marker
-                   (marker-buffer ollama-buddy--thinking-arrow-marker)
-                   ollama-buddy--thinking-content-accumulator
-                   (not (string-empty-p ollama-buddy--thinking-content-accumulator)))
-          (ollama-buddy--finalize-thinking-block
-           ollama-buddy--thinking-arrow-marker)
-          (when ollama-buddy--thinking-block-start
-            (set-marker ollama-buddy--thinking-block-start nil)
-            (setq ollama-buddy--thinking-block-start nil))
-          (setq ollama-buddy--thinking-arrow-marker nil
-                ollama-buddy--thinking-api-active nil
-                ollama-buddy--in-reasoning-section nil))
+        (ollama-buddy--finalize-pending-thinking)
 
         (let ((response-start (if (markerp ollama-buddy--response-start-position)
                                   (marker-position ollama-buddy--response-start-position)

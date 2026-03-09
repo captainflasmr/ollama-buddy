@@ -23,8 +23,8 @@
 ;; Shared streaming processor (used by both backends)
 (declare-function ollama-buddy--stream-process-json "ollama-buddy")
 ;; Helpers still referenced directly from curl sentinel / non-streaming
-(declare-function ollama-buddy--finalize-thinking-block "ollama-buddy")
 (declare-function ollama-buddy--cancel-response-wait-timer "ollama-buddy")
+(declare-function ollama-buddy--autosave-transcript "ollama-buddy")
 
 ;; Buffer-local variables defined in ollama-buddy.el and used here as free vars.
 ;; Declared to suppress byte-compile warnings; their true definitions live in
@@ -226,40 +226,14 @@ When complete, CALLBACK is called with the status response and result."
                                    (ignore-errors
                                      (json-read-from-string body)))))
                 (when error-json
-                  (let* ((error-msg (or (alist-get 'error error-json)
-                                        (alist-get 'Status error-json)
-                                        (format "HTTP %d"
-                                                ollama-buddy-curl--http-error-status)))
-                         (signin-url (alist-get 'signin_url error-json))
-                         (code ollama-buddy-curl--http-error-status)
-                         (is-auth-error
-                          (or (= code 401) (= code 403)
-                              (string-match-p
-                               "unauthorized\\|authentication\\|sign.?in"
-                               error-msg))))
-                    (when is-auth-error
-                      (ollama-buddy--set-cloud-auth-status nil))
-                    (with-current-buffer ollama-buddy--chat-buffer
-                      (let ((inhibit-read-only t))
-                        (save-excursion
-                          (goto-char (point-max))
-                          (if is-auth-error
-                              (progn
-                                (insert (format "\n\n*Authentication Error:* %s"
-                                                error-msg))
-                                (insert "\n\nSign in with =C-c A= or =M-x ollama-buddy-cloud-signin=")
-                                (when signin-url
-                                  (insert (format "\n\nOr visit: %s" signin-url))))
-                            (insert (format "\n\n*Error %d:* %s" code error-msg)))
-                          (ollama-buddy--prepare-prompt-area))))
-                    (ollama-buddy--update-status
-                     (if is-auth-error "Auth Required"
-                       (format "Error %d" code)))
-                    ;; Clear buffer so we don't re-process
-                    (erase-buffer)
-                    ;; Kill the process to trigger sentinel cleanup
-                    (when (process-live-p proc)
-                      (delete-process proc))))))
+                  (let ((status-str (ollama-buddy--handle-http-error
+                                     ollama-buddy-curl--http-error-status error-json)))
+                    (ollama-buddy--update-status status-str))
+                  ;; Clear buffer so we don't re-process
+                  (erase-buffer)
+                  ;; Kill the process to trigger sentinel cleanup
+                  (when (process-live-p proc)
+                    (delete-process proc)))))
 
             ;; Process all complete newline-delimited JSON lines.
             ;; Skipped when in HTTP-error mode.
@@ -326,19 +300,7 @@ handles cancellation/failure."
           (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
             (with-current-buffer ollama-buddy--chat-buffer
               (let ((inhibit-read-only t))
-                ;; Preserve accumulated thinking content
-                (when (and ollama-buddy--thinking-arrow-marker
-                           (marker-buffer ollama-buddy--thinking-arrow-marker)
-                           ollama-buddy--thinking-content-accumulator
-                           (not (string-empty-p ollama-buddy--thinking-content-accumulator)))
-                  (ollama-buddy--finalize-thinking-block
-                   ollama-buddy--thinking-arrow-marker)
-                  (when ollama-buddy--thinking-block-start
-                    (set-marker ollama-buddy--thinking-block-start nil)
-                    (setq ollama-buddy--thinking-block-start nil))
-                  (setq ollama-buddy--thinking-arrow-marker nil
-                        ollama-buddy--thinking-api-active nil
-                        ollama-buddy--in-reasoning-section nil))
+                (ollama-buddy--finalize-pending-thinking)
                 (goto-char (point-max))
                 (insert "\n\n*** CANCELLED")
                 (ollama-buddy--prepare-prompt-area))))
@@ -353,7 +315,10 @@ handles cancellation/failure."
           (ollama-buddy--update-status "Request failed")
           (setq ollama-buddy-curl--headers-processed nil
                 ollama-buddy-curl--http-error-status nil)
-          (message "Curl request failed: %s" event))))
+          (message "Curl request failed: %s" event)))
+
+        ;; Auto-save transcript
+        (ollama-buddy--autosave-transcript))
     (error
      (message "Error in curl sentinel: %s" (error-message-string err)))))
 

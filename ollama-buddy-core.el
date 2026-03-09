@@ -2525,6 +2525,56 @@ Cloud models are always considered valid if Ollama is running."
           (add-to-list 'ollama-buddy-params-modified param)))
       (ollama-buddy--update-status "Profile Applied"))))
 
+;;; Shared stream helpers (used by both network-process and curl backends)
+
+(defun ollama-buddy--handle-http-error (status-code error-json)
+  "Handle an HTTP error with STATUS-CODE and parsed ERROR-JSON.
+Inserts the error into the chat buffer, updates cloud auth status
+if needed, and prepares the prompt area.  Returns the status string
+for `ollama-buddy--update-status'."
+  (let* ((error-msg (or (alist-get 'error error-json)
+                        (alist-get 'Status error-json)
+                        (format "HTTP %d" status-code)))
+         (signin-url (alist-get 'signin_url error-json))
+         (is-auth-error (or (= status-code 401) (= status-code 403)
+                            (string-match-p
+                             "unauthorized\\|authentication\\|sign.?in"
+                             error-msg))))
+    (when is-auth-error
+      (ollama-buddy--set-cloud-auth-status nil))
+    (with-current-buffer ollama-buddy--chat-buffer
+      (let ((inhibit-read-only t))
+        (save-excursion
+          (goto-char (point-max))
+          (if is-auth-error
+              (progn
+                (insert (format "\n\n*Authentication Error:* %s" error-msg))
+                (insert "\n\nSign in with =C-c A= or =M-x ollama-buddy-cloud-signin=")
+                (when signin-url
+                  (insert (format "\n\nOr visit: %s" signin-url))))
+            (insert (format "\n\n*Error %d:* %s" status-code error-msg)))
+          (ollama-buddy--prepare-prompt-area))))
+    (if is-auth-error "Auth Required" (format "Error %d" status-code))))
+
+(declare-function ollama-buddy--finalize-thinking-block "ollama-buddy")
+
+(defun ollama-buddy--finalize-pending-thinking ()
+  "Finalize any in-progress thinking block.
+Called from sentinels when a stream ends (completion or cancellation)
+to ensure accumulated thinking content is preserved and folded."
+  (when (and ollama-buddy--thinking-arrow-marker
+             (marker-buffer ollama-buddy--thinking-arrow-marker)
+             ollama-buddy--thinking-content-accumulator
+             (not (string-empty-p ollama-buddy--thinking-content-accumulator)))
+    (ollama-buddy--finalize-thinking-block
+     ollama-buddy--thinking-arrow-marker)
+    (when ollama-buddy--thinking-block-start
+      (set-marker ollama-buddy--thinking-block-start nil)
+      (setq ollama-buddy--thinking-block-start nil))
+    (setq ollama-buddy--thinking-arrow-marker nil
+          ollama-buddy--thinking-api-active nil
+          ollama-buddy--in-reasoning-section nil)))
+
 ;; History-related functions
 
 (defun ollama-buddy--add-to-history (role content &optional tool-calls)
