@@ -1802,9 +1802,10 @@ Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
             (when (and (> cloud-count 0) use-prefixes)
               (push (format "u: Cloud (%d)" cloud-count) parts))
             (nreverse parts)))
-         (project-info (when (and (featurep 'ollama-buddy-project)
-                                  (fboundp 'ollama-buddy-project-current-root)
-                                  (ollama-buddy-project-current-root))
+         (project-root (when (and (featurep 'ollama-buddy-project)
+                                  (fboundp 'ollama-buddy-project-current-root))
+                         (ollama-buddy-project-current-root)))
+         (project-info (when project-root
                          (ollama-buddy-project-get-status-string)))
          (message-text
           (concat
@@ -1856,6 +1857,12 @@ please run =ollama serve=\n\n")
 - /ollama-buddy Manual/    *C-c ?*")
            (when-let ((tip (ollama-buddy--get-random-tip)))
              (concat "\n\n" tip))
+           (when (and project-root
+                      (not (file-exists-p
+                            (expand-file-name
+                             ollama-buddy-project-summary-file
+                             project-root))))
+             "\n\nType =/init= to generate a project summary — it will be auto-loaded as context in future sessions.")
            )))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
