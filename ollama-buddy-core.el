@@ -1797,45 +1797,74 @@ SIZE is the pixel diameter (default 80).  Returns nil in terminal Emacs."
     (require 'svg)
     (let* ((sz (or size 80))
            (svg (svg-create sz sz))
-           ;; Scale factors from 200x200 viewBox
            (s (/ sz 200.0)))
       ;; Background rounded rect
       (svg-rectangle svg (* 20 s) (* 20 s) (* 160 s) (* 160 s)
                      :rx (* 30 s) :ry (* 30 s) :fill "#2d2d2d")
-      ;; Left paren bracket
+      ;; Left bracket
       (dom-append-child
        svg (dom-node 'path
                      `((d . ,(format "M %f,%f L %f,%f L %f,%f L %f,%f"
                                      (* 50 s) (* 60 s) (* 35 s) (* 60 s)
                                      (* 35 s) (* 140 s) (* 50 s) (* 140 s)))
                        (stroke . "#7B5294") (stroke-width . ,(format "%f" (* 8 s)))
-                       (fill . "none") (stroke-linecap . "round")
-                       (stroke-linejoin . "round"))))
-      ;; Right paren bracket
+                       (fill . "none"))))
+      ;; Right bracket
       (dom-append-child
        svg (dom-node 'path
                      `((d . ,(format "M %f,%f L %f,%f L %f,%f L %f,%f"
                                      (* 150 s) (* 60 s) (* 165 s) (* 60 s)
                                      (* 165 s) (* 140 s) (* 150 s) (* 140 s)))
                        (stroke . "#7B5294") (stroke-width . ,(format "%f" (* 8 s)))
-                       (fill . "none") (stroke-linecap . "round")
-                       (stroke-linejoin . "round"))))
-      ;; Llama body
+                       (fill . "none"))))
+      ;; Left ear
+      (dom-append-child
+       svg (dom-node 'path
+                     `((d . ,(format "M %f,%f Q %f,%f %f,%f Q %f,%f %f,%f Q %f,%f %f,%f Z"
+                                     (* 88 s) (* 76 s) (* 86 s) (* 64 s) (* 88 s) (* 56 s)
+                                     (* 92 s) (* 52 s) (* 96 s) (* 60 s) (* 96 s) (* 68 s)
+                                     (* 93 s) (* 76 s)))
+                       (fill . "#eeeeee"))))
+      ;; Right ear
+      (dom-append-child
+       svg (dom-node 'path
+                     `((d . ,(format "M %f,%f Q %f,%f %f,%f Q %f,%f %f,%f Q %f,%f %f,%f Z"
+                                     (* 112 s) (* 76 s) (* 114 s) (* 64 s) (* 112 s) (* 56 s)
+                                     (* 108 s) (* 52 s) (* 104 s) (* 60 s) (* 104 s) (* 68 s)
+                                     (* 107 s) (* 76 s)))
+                       (fill . "#eeeeee"))))
+      ;; Head
       (dom-append-child
        svg (dom-node 'path
                      `((d . ,(format "M %f,%f Q %f,%f %f,%f L %f,%f Q %f,%f %f,%f Q %f,%f %f,%f Z"
-                                     (* 85 s) (* 70 s) (* 100 s) (* 50 s) (* 115 s) (* 70 s)
-                                     (* 115 s) (* 110 s) (* 115 s) (* 130 s) (* 100 s) (* 130 s)
-                                     (* 85 s) (* 130 s) (* 85 s) (* 110 s)))
+                                     (* 85 s) (* 75 s) (* 100 s) (* 55 s) (* 115 s) (* 75 s)
+                                     (* 115 s) (* 110 s) (* 115 s) (* 140 s) (* 100 s) (* 140 s)
+                                     (* 85 s) (* 140 s) (* 85 s) (* 110 s)))
                        (fill . "#eeeeee"))))
+      ;; Muzzle
+      (dom-append-child
+       svg (dom-node 'ellipse
+                     `((cx . ,(format "%f" (* 100 s)))
+                       (cy . ,(format "%f" (* 112 s)))
+                       (rx . ,(format "%f" (* 12 s)))
+                       (ry . ,(format "%f" (* 10 s)))
+                       (fill . "#cccccc"))))
       ;; Eyes
-      (svg-circle svg (* 93 s) (* 85 s) (* 3 s) :fill "#2d2d2d")
-      (svg-circle svg (* 107 s) (* 85 s) (* 3 s) :fill "#2d2d2d")
-      ;; Smile
+      (svg-circle svg (* 92 s) (* 92 s) (* 3 s) :fill "#2d2d2d")
+      (svg-circle svg (* 108 s) (* 92 s) (* 3 s) :fill "#2d2d2d")
+      ;; Nose
+      (dom-append-child
+       svg (dom-node 'ellipse
+                     `((cx . ,(format "%f" (* 100 s)))
+                       (cy . ,(format "%f" (* 110 s)))
+                       (rx . ,(format "%f" (* 3 s)))
+                       (ry . ,(format "%f" (* 2 s)))
+                       (fill . "#2d2d2d"))))
+      ;; Mouth
       (dom-append-child
        svg (dom-node 'path
                      `((d . ,(format "M %f,%f Q %f,%f %f,%f"
-                                     (* 96 s) (* 100 s) (* 100 s) (* 105 s) (* 104 s) (* 100 s)))
+                                     (* 94 s) (* 118 s) (* 100 s) (* 124 s) (* 106 s) (* 118 s)))
                        (stroke . "#2d2d2d") (stroke-width . ,(format "%f" (* 2 s)))
                        (fill . "none") (stroke-linecap . "round"))))
       (propertize " " 'display (svg-image svg :ascent 'center :scale 1.0)))))
