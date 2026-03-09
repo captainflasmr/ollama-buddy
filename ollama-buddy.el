@@ -1862,6 +1862,18 @@ Filters stop words and returns up to 5 key words joined by hyphens."
          ;; Convert hash table to alist for serialization
          (history-alist (ollama-buddy--hash-table-to-alist 
                          ollama-buddy--conversation-history-by-model))
+         ;; Strip :results (embedding vectors) from RAG attachments for serialization
+         (rag-attachments
+          (when (and (featurep 'ollama-buddy-rag)
+                     (boundp 'ollama-buddy-rag--current-results)
+                     ollama-buddy-rag--current-results)
+            (mapcar (lambda (r)
+                      (list :query (plist-get r :query)
+                            :index-name (plist-get r :index-name)
+                            :content (plist-get r :content)
+                            :tokens (plist-get r :tokens)
+                            :timestamp (plist-get r :timestamp)))
+                    ollama-buddy-rag--current-results)))
          (session-data
           `(:version "1.0"
                      :model ,(or ollama-buddy--current-model ollama-buddy-default-model)
@@ -1870,6 +1882,7 @@ Filters stop words and returns up to 5 key words joined by hyphens."
                      :system-prompt ,ollama-buddy--current-system-prompt
                      :params-active ,ollama-buddy-params-active
                      :params-modified ,ollama-buddy-params-modified
+                     :rag-attachments ,rag-attachments
                      :created-time ,(current-time)
                      :session-name ,session-name
                      :default-directory ,(with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
@@ -1973,7 +1986,14 @@ Filters stop words and returns up to 5 key words joined by hyphens."
         (setq ollama-buddy-params-active (plist-get session-data :params-active)))
       (when (plist-get session-data :params-modified)
         (setq ollama-buddy-params-modified (plist-get session-data :params-modified)))
-      
+
+      ;; Restore RAG attachments if available
+      (when (and (featurep 'ollama-buddy-rag)
+                 (boundp 'ollama-buddy-rag--current-results)
+                 (plist-get session-data :rag-attachments))
+        (setq ollama-buddy-rag--current-results
+              (plist-get session-data :rag-attachments)))
+
       ;; Load org file contents
       (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
         (let ((inhibit-read-only t))
@@ -1996,10 +2016,15 @@ Filters stop words and returns up to 5 key words joined by hyphens."
       (ollama-buddy--update-status (format "Session '%s' loaded" chosen-session))
       
       ;; Show information about loaded session
-      (message "Session loaded: %s%s%s" 
+      (message "Session loaded: %s%s%s%s"
                chosen-session
-               (if ollama-buddy--current-attachments 
-                   (format " (%d attachments)" (length ollama-buddy--current-attachments)) 
+               (if ollama-buddy--current-attachments
+                   (format " (%d attachments)" (length ollama-buddy--current-attachments))
+                 "")
+               (if (and (featurep 'ollama-buddy-rag)
+                        (boundp 'ollama-buddy-rag--current-results)
+                        ollama-buddy-rag--current-results)
+                   (format " (%d RAG)" (length ollama-buddy-rag--current-results))
                  "")
                (if ollama-buddy--current-system-prompt " [system prompt]" "")))))
 

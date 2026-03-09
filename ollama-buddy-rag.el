@@ -68,7 +68,7 @@ Overlap helps preserve context across chunk boundaries."
   :type 'integer
   :group 'ollama-buddy-rag)
 
-(defcustom ollama-buddy-rag-top-k 5
+(defcustom ollama-buddy-rag-top-k 10
   "Number of results to return from similarity search."
   :type 'integer
   :group 'ollama-buddy-rag)

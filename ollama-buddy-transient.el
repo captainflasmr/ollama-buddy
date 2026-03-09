@@ -402,13 +402,13 @@
    (lambda () (concat "RAG - " (ollama-buddy--rag-status)))
    ["Index"
     ("i" "Index Directory" ollama-buddy-rag-index-directory)
-    ("l" "List Indexes" ollama-buddy-rag-list-indexes)
+    ("w" "List Indexes" ollama-buddy-rag-list-indexes)
     ("d" "Delete Index" ollama-buddy-rag-delete-index)]
    ["Search"
     ("s" "Search & Display" ollama-buddy-rag-search)
     ("a" "Search & Attach" ollama-buddy-rag-attach)]
    ["Manage"
-    ("w" "Show Attachments" ollama-buddy-show-attachments)
+    ("l" "Show Attachments" ollama-buddy-show-attachments)
     ("0" "Clear RAG Context" ollama-buddy-rag-clear-attached)]
    ["Navigation"
     ("q" "Quit" transient-quit-one)]])

@@ -2020,7 +2020,17 @@ will sit under a *** Response sub-heading."
           (let ((offset (or heading-offset 2)))
             (goto-char (point-min))
             (while (re-search-forward "^\\(#\\{2,\\}\\) " nil t)
-              (replace-match (make-string (+ offset (length (match-string 1))) ?*) nil nil nil 1)))
+              (replace-match (make-string (+ offset (length (match-string 1))) ?*) nil nil nil 1))
+
+            ;; Also offset org-style headings that the LLM emitted directly.
+            ;; Match 2+ stars (single * is likely a markdown list item,
+            ;; handled by the list conversion below).
+            (goto-char (point-min))
+            (while (re-search-forward "^\\(\\*\\*+\\) " nil t)
+              (let ((stars (match-string 1)))
+                ;; Skip headings already deeper than offset (converted above)
+                (when (< (length stars) (+ offset 2))
+                  (replace-match (make-string (+ offset (length stars)) ?*) nil nil nil 1)))))
 
           ;; Lists: -, *, + -> -
           (goto-char (point-min))
