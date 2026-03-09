@@ -118,6 +118,8 @@
 (declare-function ollama-buddy-web-search-count "ollama-buddy-web-search")
 (declare-function ollama-buddy-web-search--org-escape "ollama-buddy-web-search")
 
+(defvar imenu--index-alist)
+
 (defvar ollama-buddy--reasoning-skip-newlines nil
   "Whether to skip leading newlines after reasoning section ends.")
 
@@ -689,8 +691,8 @@ RESPONSE-TEXT (if non-nil/empty) is inserted before the Tools section."
         (outline-hide-subtree)))))
 
 (defun ollama-buddy--extend-thinking-fold (heading-marker)
-  "Extend the outline fold overlay at HEADING-MARKER to cover new text at point-max.
-Called after inserting thinking tokens so freshly appended text stays hidden."
+  "Extend the fold overlay at HEADING-MARKER to cover new text.
+Called after inserting thinking tokens so appended text stays hidden."
   (when (and heading-marker (marker-buffer heading-marker))
     (save-excursion
       (goto-char (marker-position heading-marker))

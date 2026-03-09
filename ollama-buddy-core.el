@@ -70,6 +70,15 @@
 (declare-function ollama-buddy-project-get-status-string "ollama-buddy-project")
 (declare-function ollama-buddy-project-current-root "ollama-buddy-project")
 
+;; Buffer-local variables defined in ollama-buddy.el / ollama-buddy-project.el;
+;; declared here to suppress byte-compile warnings.
+(defvar ollama-buddy--thinking-arrow-marker)
+(defvar ollama-buddy--thinking-block-start)
+(defvar ollama-buddy--thinking-content-accumulator)
+(defvar ollama-buddy--thinking-api-active)
+(defvar ollama-buddy--in-reasoning-section)
+(defvar ollama-buddy-project-summary-file)
+
 (defgroup ollama-buddy-params nil
   "Customization group for Ollama API parameters."
   :group 'ollama-buddy
