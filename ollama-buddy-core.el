@@ -1790,6 +1790,56 @@ Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
   (when (and ollama-buddy-show-tips ollama-buddy-tips)
     (nth (random (length ollama-buddy-tips)) ollama-buddy-tips)))
 
+(defun ollama-buddy--create-logo-image (&optional size)
+  "Return a propertized string displaying the Ollama Buddy SVG logo.
+SIZE is the pixel diameter (default 80).  Returns nil in terminal Emacs."
+  (when (display-graphic-p)
+    (require 'svg)
+    (let* ((sz (or size 80))
+           (svg (svg-create sz sz))
+           ;; Scale factors from 200x200 viewBox
+           (s (/ sz 200.0)))
+      ;; Background rounded rect
+      (svg-rectangle svg (* 20 s) (* 20 s) (* 160 s) (* 160 s)
+                     :rx (* 30 s) :ry (* 30 s) :fill "#2d2d2d")
+      ;; Left paren bracket
+      (dom-append-child
+       svg (dom-node 'path
+                     `((d . ,(format "M %f,%f L %f,%f L %f,%f L %f,%f"
+                                     (* 50 s) (* 60 s) (* 35 s) (* 60 s)
+                                     (* 35 s) (* 140 s) (* 50 s) (* 140 s)))
+                       (stroke . "#7B5294") (stroke-width . ,(format "%f" (* 8 s)))
+                       (fill . "none") (stroke-linecap . "round")
+                       (stroke-linejoin . "round"))))
+      ;; Right paren bracket
+      (dom-append-child
+       svg (dom-node 'path
+                     `((d . ,(format "M %f,%f L %f,%f L %f,%f L %f,%f"
+                                     (* 150 s) (* 60 s) (* 165 s) (* 60 s)
+                                     (* 165 s) (* 140 s) (* 150 s) (* 140 s)))
+                       (stroke . "#7B5294") (stroke-width . ,(format "%f" (* 8 s)))
+                       (fill . "none") (stroke-linecap . "round")
+                       (stroke-linejoin . "round"))))
+      ;; Llama body
+      (dom-append-child
+       svg (dom-node 'path
+                     `((d . ,(format "M %f,%f Q %f,%f %f,%f L %f,%f Q %f,%f %f,%f Q %f,%f %f,%f Z"
+                                     (* 85 s) (* 70 s) (* 100 s) (* 50 s) (* 115 s) (* 70 s)
+                                     (* 115 s) (* 110 s) (* 115 s) (* 130 s) (* 100 s) (* 130 s)
+                                     (* 85 s) (* 130 s) (* 85 s) (* 110 s)))
+                       (fill . "#eeeeee"))))
+      ;; Eyes
+      (svg-circle svg (* 93 s) (* 85 s) (* 3 s) :fill "#2d2d2d")
+      (svg-circle svg (* 107 s) (* 85 s) (* 3 s) :fill "#2d2d2d")
+      ;; Smile
+      (dom-append-child
+       svg (dom-node 'path
+                     `((d . ,(format "M %f,%f Q %f,%f %f,%f"
+                                     (* 96 s) (* 100 s) (* 100 s) (* 105 s) (* 104 s) (* 100 s)))
+                       (stroke . "#2d2d2d") (stroke-width . ,(format "%f" (* 2 s)))
+                       (fill . "none") (stroke-linecap . "round"))))
+      (propertize " " 'display (svg-image svg :ascent 'center :scale 1.0)))))
+
 (defun ollama-buddy--create-intro-message ()
   "Create minimal welcome message with essential commands in org format."
   (setq-local org-hide-emphasis-markers t)
@@ -1820,22 +1870,16 @@ Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
           (concat
            (when (= (buffer-size) 0)
              (concat "#+TITLE: Ollama Buddy Chat"))
-           "\n\n* Welcome\n\n"
-           "#+begin_example\n"
-           "┌───────────────────────────────────┐\n"
-           "│  O L L A M A B U D D Y  [v3.5.0]  │\n"
-           "└───────────────────────────────────┘\n"
-           (if project-info (concat project-info "\n") "")
-           ;; "╔════════════════════════════════════════════════════════════╗\n"
-           ;; "║  ▄▀▀▀▄ █   █   ▄▀▀▀▄ █▀▄▀█ ▄▀▀▀▄ █▀▀▄ █  █ █▀▀▄ █▀▀▄ █  █  ║\n"
-           ;; "║  █   █ █   █   █▀▀▀█ █ █ █ █▀▀▀█ █▀▀▄ █  █ █  █ █  █ ▀█▀   ║\n"
-           ;; "║   ▀▀▀  ▀▀▀ ▀▀▀ ▀   ▀ ▀   ▀ ▀   ▀ ▀▀▀  ▀▀▀▀ ▀▀▀  ▀▀▀   ▀    ║\n"
-           ;; "╚════════════════════════════════════════════════════════════╝\n"
-           ;; " ___ _ _      n _ n      ___       _   _ _ _\n"
-           ;; "|   | | |__._|o(Y)o|__._| . |_ _ _| |_| | | |\n"
-           ;; "| | | | | .  |3.5.0| .  | . | | | . | . |__ |\n"
-           ;; "|___|_|_|__/_|_|_|_|__/_|___|___|___|___|___|\n"
-           "#+end_example\n\n"
+           "\n\n* Welcome\n"
+           (if-let ((logo (ollama-buddy--create-logo-image 160)))
+               (concat logo " *Ollama Buddy* [v3.5.1]\n")
+             (concat
+              "#+begin_example\n"
+              "┌───────────────────────────────────┐\n"
+              "│  O L L A M A B U D D Y  [v3.5.1]  │\n"
+              "└───────────────────────────────────┘\n"
+              "#+end_example\n\n"))
+           (if project-info (concat project-info "\n\n") "")
            (when (not (ollama-buddy--check-status))
              "** *THERE IS NO OLLAMA RUNNING*\n
 please run =ollama serve=\n\n")
