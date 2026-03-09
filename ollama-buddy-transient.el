@@ -165,6 +165,7 @@
   ["|o(Y)o| Ollama Buddy"
    ["Chat"
     ("o" "Open Chat" ollama-buddy--open-chat)
+    ("K" "Exit" ollama-buddy-exit)
     ("r" "RAG" ollama-buddy-transient-rag-menu
      :if (lambda () (featurep 'ollama-buddy-rag)))
     ("P" "Project" ollama-buddy-transient-project-menu
@@ -310,7 +311,7 @@
    
    ["Actions"
     ("D" "Display All" ollama-buddy-params-display)
-    ("R" "Reset All" ollama-buddy-params-reset)
+    ("V" "Reset All" ollama-buddy-params-reset)
     ("H" "Help" ollama-buddy-params-help)
     ("F" "Toggle Display in Header" ollama-buddy-toggle-params-in-header)
     ("q" "Quit" transient-quit-one)]

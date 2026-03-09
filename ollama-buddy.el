@@ -2090,20 +2090,22 @@ Filters stop words and returns up to 5 key words joined by hyphens."
     (message "Started new session")))
 
 (defun ollama-buddy-exit ()
-  "Close the Ollama Buddy chat buffer and clear conversation history."
+  "Close the Ollama Buddy chat buffer and clear conversation history.
+Prompts for confirmation before closing."
   (interactive)
-  (when-let* ((buf (get-buffer ollama-buddy--chat-buffer)))
-    (clrhash ollama-buddy--conversation-history-by-model)
-    (setq ollama-buddy--current-attachments nil)
-    (when (boundp 'ollama-buddy-web-search--current-results)
-      (setq ollama-buddy-web-search--current-results nil))
-    (when (featurep 'ollama-buddy-rag)
-      (ollama-buddy-rag-clear-attached))
-    (when (featurep 'ollama-buddy-tools)
-      (setq ollama-buddy-tools-enabled nil)
-      (setq ollama-buddy-tools-auto-execute nil))
-    (quit-window nil (get-buffer-window buf))
-    (kill-buffer buf)))
+  (when (yes-or-no-p "Close Ollama Buddy session? ")
+    (when-let* ((buf (get-buffer ollama-buddy--chat-buffer)))
+      (clrhash ollama-buddy--conversation-history-by-model)
+      (setq ollama-buddy--current-attachments nil)
+      (when (boundp 'ollama-buddy-web-search--current-results)
+        (setq ollama-buddy-web-search--current-results nil))
+      (when (featurep 'ollama-buddy-rag)
+        (ollama-buddy-rag-clear-attached))
+      (when (featurep 'ollama-buddy-tools)
+        (setq ollama-buddy-tools-enabled nil)
+        (setq ollama-buddy-tools-auto-execute nil))
+      (quit-window nil (get-buffer-window buf))
+      (kill-buffer buf))))
 
 (defun ollama-buddy-unload-model ()
   "Unload running models from memory.
@@ -3393,6 +3395,70 @@ WIDTH is the total bar width in characters (default 10)."
          (empty (- w filled)))
     (concat (make-string filled ?█)
             (make-string empty ?░))))
+
+(defun ollama-buddy--cloud-usage-pie (percentage &optional size)
+  "Generate an SVG pie chart image for PERCENTAGE string like \"45.2%\".
+SIZE is the diameter in pixels (default 16).  Returns a propertized
+string with the SVG image displayed inline, or a text fallback for
+terminal Emacs."
+  (let* ((sz (or size 16))
+         (pct (/ (string-to-number
+                  (replace-regexp-in-string "%" "" percentage))
+                 100.0))
+         (pct (max 0.0 (min 1.0 pct))))
+    (if (not (display-graphic-p))
+        ;; Terminal fallback: use the text bar
+        (ollama-buddy--cloud-usage-bar percentage 5)
+      (require 'svg)
+      (let* ((cx (/ sz 2.0))
+             (cy (/ sz 2.0))
+             (r (* cx 0.875))
+             ;; Colour based on usage level
+             (fill-colour (cond
+                           ((< pct 0.5) "#4CAF50")   ; green
+                           ((< pct 0.75) "#FF9800")  ; amber
+                           (t "#F44336")))            ; red
+             (svg (svg-create sz sz)))
+        ;; Background ring (unfilled, stroke only)
+        (svg-circle svg cx cy r :fill "none" :stroke "#c0c0c0" :stroke-width 1)
+        ;; Pie slice (skip if 0%, full circle if ~100%)
+        (cond
+         ((<= pct 0.0) nil)
+         ((>= pct 0.995)
+          (svg-circle svg cx cy r :fill fill-colour))
+         (t
+          (let* ((start-angle (- (/ float-pi 2))) ; 12 o'clock
+                 (end-angle (+ start-angle (* 2 float-pi pct)))
+                 (x1 (+ cx (* r (cos start-angle))))
+                 (y1 (+ cy (* r (sin start-angle))))
+                 (x2 (+ cx (* r (cos end-angle))))
+                 (y2 (+ cy (* r (sin end-angle))))
+                 (large-arc (if (> pct 0.5) 1 0)))
+            (dom-append-child
+             svg
+             (dom-node 'path
+                       `((d . ,(format "M %f,%f L %f,%f A %f %f 0 %d 1 %f,%f Z"
+                                       cx cy x1 y1 r r large-arc x2 y2))
+                         (fill . ,fill-colour)))))))
+        (propertize " "
+                    'display (svg-image svg :ascent 'center :scale 1.0))))))
+
+(defun ollama-buddy--cloud-usage-pie-indicator (usage)
+  "Build a header-line cloud usage indicator with pie charts from USAGE alist.
+Returns a propertized string with two pie charts (session, weekly) and
+percentage labels, or a text fallback for terminal Emacs."
+  (let* ((session-pct (alist-get 'session usage))
+         (weekly-pct (alist-get 'weekly usage))
+         (session-str (ollama-buddy--round-pct session-pct))
+         (weekly-str (ollama-buddy--round-pct weekly-pct)))
+    (if (display-graphic-p)
+        (concat " "
+                (ollama-buddy--cloud-usage-pie session-pct)
+                (propertize session-str 'face '(:height 0.9))
+                " "
+                (ollama-buddy--cloud-usage-pie weekly-pct)
+                (propertize weekly-str 'face '(:height 0.9)))
+      (format " %s %s" session-str weekly-str))))
 
 (defun ollama-buddy--cloud-reset-time-string (iso-time)
   "Format ISO-TIME string as a human-readable \"resets in\" string.
@@ -5485,7 +5551,7 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c p") #'ollama-buddy-transient-parameter-menu)
     (define-key map (kbd "C-c G") #'ollama-buddy-params-display)
     (define-key map (kbd "C-c I") #'ollama-buddy-params-help)
-    (define-key map (kbd "C-c K") #'ollama-buddy-params-reset)
+    (define-key map (kbd "C-c V") #'ollama-buddy-params-reset)
     (define-key map (kbd "C-c F") #'ollama-buddy-toggle-params-in-header)
 
     ;; Context keybindings
@@ -5504,7 +5570,8 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c /") #'ollama-buddy-transient-web-search-menu)
 
     (define-key map (kbd "C-c e") #'ollama-buddy-switch-communication-backend)
-    
+    (define-key map (kbd "C-c K") #'ollama-buddy-exit)
+
     (define-key map [remap move-beginning-of-line] #'ollama-buddy-beginning-of-prompt)
     (define-key map "@" #'ollama-buddy--at-complete)
     (define-key map "/" #'ollama-buddy--slash-complete)

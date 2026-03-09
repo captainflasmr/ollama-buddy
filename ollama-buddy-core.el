@@ -2760,11 +2760,13 @@ ACTUAL-MODEL is the model being used instead."
                   (if (fboundp 'ollama-buddy--fetch-cloud-usage)
                       (let ((usage (ollama-buddy--fetch-cloud-usage)))
                         (if usage
-                            (let* ((session (alist-get 'session usage))
-                                   (weekly (alist-get 'weekly usage)))
-                              (format " %s %s"
-                                      (ollama-buddy--round-pct session)
-                                      (ollama-buddy--round-pct weekly)))
+                            (if (fboundp 'ollama-buddy--cloud-usage-pie-indicator)
+                                (ollama-buddy--cloud-usage-pie-indicator usage)
+                              (let* ((session (alist-get 'session usage))
+                                     (weekly (alist-get 'weekly usage)))
+                                (format " %s %s"
+                                        (ollama-buddy--round-pct session)
+                                        (ollama-buddy--round-pct weekly))))
                           ""))
                     ""))
               "")))

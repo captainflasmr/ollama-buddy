@@ -1827,7 +1827,7 @@ commands and restored afterward.
 
 To reset all parameters to default values:
      M-x ollama-buddy-params-reset
-   or press ‘C-c K’ in the chat buffer.
+   or press ‘C-c V’ in the chat buffer.
 
 11.7 Displaying Parameters in Header
 ====================================
@@ -1884,7 +1884,17 @@ To load a previously saved session:
 When the session is loaded, any ‘*** Think’ headings are automatically
 folded and any saved RAG attachments are restored.
 
-12.5 Managing Sessions
+12.5 Exiting a Session
+======================
+
+To close the chat buffer and clear the session:
+     M-x ollama-buddy-exit
+   or press ‘C-c K’ in the chat buffer, or use ‘/exit’ or ‘/bye’ in the
+prompt area.  You will be prompted for confirmation before closing.
+Exiting clears conversation history, attachments, RAG context, and
+resets tool calling to disabled.
+
+12.6 Managing Sessions
 ======================
 
 To open the sessions directory in Dired for direct file management:
@@ -1894,7 +1904,7 @@ To open the sessions directory in Dired for direct file management:
    From Dired, you can browse, rename, delete, or otherwise manage your
 session files using standard Emacs file operations.
 
-12.6 Session Naming
+12.7 Session Naming
 ===================
 
 When saving a session, Ollama Buddy generates a default name from the
@@ -1908,7 +1918,7 @@ sorting.
 of space exploration" would generate the session name
 ‘2026-03-07-170800-history-space-exploration’.
 
-12.7 Renaming a Session
+12.8 Renaming a Session
 =======================
 
 Use ‘/rename’ in the prompt area to set a display name for the current
@@ -1921,7 +1931,7 @@ saving--‘/save’ always prepends a fresh timestamp, so renaming and
 saving multiple times produces distinct files without duplicate
 timestamps.
 
-12.8 Session Directory Persistence
+12.9 Session Directory Persistence
 ==================================
 
 Sessions save the chat buffer's ‘default-directory’.  When a session is
@@ -1930,8 +1940,8 @@ This means loading a session that was started in a project automatically
 restores the project context, so ‘project.el’ integration, project
 summary auto-loading, and file-relative commands all work correctly.
 
-12.9 Autosave Transcript
-========================
+12.10 Autosave Transcript
+=========================
 
 Ollama Buddy automatically saves the chat buffer to a recovery file
 after each completed response.  The file is saved as ‘~autosave.org’ in
@@ -1943,7 +1953,7 @@ can recover the conversation from the autosave file.
    The autosave file is automatically deleted when you perform a proper
 session save with ‘C-c S’.
 
-12.10 Conversation History
+12.11 Conversation History
 ==========================
 
 Sessions save the conversation history for each model separately.
@@ -1960,7 +1970,7 @@ Sessions save the conversation history for each model separately.
      M-x ollama-buddy-toggle-history
    or press ‘C-c H’ in the chat buffer.
 
-12.11 Rewinding a Conversation
+12.12 Rewinding a Conversation
 ==============================
 
 To rewind a conversation to a previous prompt, navigate to the desired
@@ -4906,25 +4916,25 @@ Node: File Attachments43677
 Node: Web Search49599
 Node: Parameter Control57337
 Node: Session Management59749
-Node: User System Prompts64739
-Node: Roles and Commands74535
-Node: Fabric Pattern Integration91725
-Node: Awesome ChatGPT Prompts93952
-Node: Remote Providers97802
-Node: Ollama Cloud Models106092
-Node: Global System Prompt110391
-Node: Tone Selector112145
-Node: Thinking Blocks113952
-Node: Project Integration115905
-Node: In-Buffer Replace118994
-Node: Tool Calling124870
-Node: RAG133426
-Node: Advanced Usage141205
-Node: API Reference143754
-Node: FAQ149577
-Node: Troubleshooting156662
-Node: Contributing159167
-Node: Index161835
+Node: User System Prompts65116
+Node: Roles and Commands74912
+Node: Fabric Pattern Integration92102
+Node: Awesome ChatGPT Prompts94329
+Node: Remote Providers98179
+Node: Ollama Cloud Models106469
+Node: Global System Prompt110768
+Node: Tone Selector112522
+Node: Thinking Blocks114329
+Node: Project Integration116282
+Node: In-Buffer Replace119371
+Node: Tool Calling125247
+Node: RAG133803
+Node: Advanced Usage141582
+Node: API Reference144131
+Node: FAQ149954
+Node: Troubleshooting157039
+Node: Contributing159544
+Node: Index162212
 
 End Tag Table
 

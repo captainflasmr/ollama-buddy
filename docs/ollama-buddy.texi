@@ -1880,7 +1880,7 @@ To reset all parameters to default values:
 @example
 M-x ollama-buddy-params-reset
 @end example
-or press @code{C-c K} in the chat buffer.
+or press @code{C-c V} in the chat buffer.
 
 @section Displaying Parameters in Header
 
@@ -1936,6 +1936,17 @@ or press @code{C-c L} in the chat buffer.
 You'll be presented with a list of saved sessions to choose from.  When the
 session is loaded, any @code{*** Think} headings are automatically folded and
 any saved RAG attachments are restored.
+
+@section Exiting a Session
+
+To close the chat buffer and clear the session:
+@example
+M-x ollama-buddy-exit
+@end example
+or press @code{C-c K} in the chat buffer, or use @code{/exit} or @code{/bye}
+in the prompt area.  You will be prompted for confirmation before closing.
+Exiting clears conversation history, attachments, RAG context, and resets
+tool calling to disabled.
 
 @section Managing Sessions
 
