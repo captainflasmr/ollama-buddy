@@ -238,9 +238,11 @@ allowing you to leverage powerful large language models (LLMs) directly within y
     <li><a id="toc-Loading-a-Session" href="#Loading-a-Session">12.4 Loading a Session</a></li>
     <li><a id="toc-Managing-Sessions" href="#Managing-Sessions">12.5 Managing Sessions</a></li>
     <li><a id="toc-Session-Naming" href="#Session-Naming">12.6 Session Naming</a></li>
-    <li><a id="toc-Autosave-Transcript" href="#Autosave-Transcript">12.7 Autosave Transcript</a></li>
-    <li><a id="toc-Conversation-History" href="#Conversation-History">12.8 Conversation History</a></li>
-    <li><a id="toc-Rewinding-a-Conversation" href="#Rewinding-a-Conversation">12.9 Rewinding a Conversation</a></li>
+    <li><a id="toc-Renaming-a-Session" href="#Renaming-a-Session">12.7 Renaming a Session</a></li>
+    <li><a id="toc-Session-Directory-Persistence" href="#Session-Directory-Persistence">12.8 Session Directory Persistence</a></li>
+    <li><a id="toc-Autosave-Transcript" href="#Autosave-Transcript">12.9 Autosave Transcript</a></li>
+    <li><a id="toc-Conversation-History" href="#Conversation-History">12.10 Conversation History</a></li>
+    <li><a id="toc-Rewinding-a-Conversation" href="#Rewinding-a-Conversation">12.11 Rewinding a Conversation</a></li>
   </ul></li>
   <li><a id="toc-User-System-Prompts" href="#User-System-Prompts">13 User System Prompts</a>
   <ul class="toc-numbered-mark">
@@ -717,7 +719,10 @@ Next: <a href="#Configuration" accesskey="n" rel="next">Configuration</a>, Previ
 </p><div class="example">
 <pre class="example-preformatted">M-x ollama-buddy-switch-communication-backend
 </pre></div>
-<p>or press <code class="code">C-c e</code> in the chat buffer.
+<p>or press <code class="code">C-c e</code> in the chat buffer.  Also available from the transient
+menu (<kbd class="kbd">C-c O</kbd>, <kbd class="kbd">e</kbd>) and via the <code class="code">/backend</code> slash command.
+</p>
+<p>When the curl backend is active, the header line shows a <code class="code">⇄</code> indicator.
 </p>
 <p>To configure curl backend:
 </p><div class="example">
@@ -1665,6 +1670,32 @@ Requires <code class="code">ollama-buddy-tools</code>.
 When no summary exists, one is generated and automatically saved to the project
 root.  On subsequent uses, the existing summary is attached as context.
 See <a class="xref" href="#Project-Integration">Project Integration</a>.
+</p>
+</dd>
+<dt><code class="code">rename</code></dt>
+<dd><p>Rename the current session (<code class="code">ollama-buddy-sessions-rename</code>).  Pre-fills
+with the existing name or an auto-generated one from the first prompt.
+</p>
+</dd>
+<dt><code class="code">login</code></dt>
+<dd><p>Sign in to Ollama cloud (<code class="code">ollama-buddy-cloud-signin</code>).
+</p>
+</dd>
+<dt><code class="code">logout</code></dt>
+<dd><p>Sign out from Ollama cloud (<code class="code">ollama-buddy-cloud-signout</code>).
+</p>
+</dd>
+<dt><code class="code">manual</code></dt>
+<dd><p>Open the Ollama Buddy Info manual (<code class="code">ollama-buddy-open-info</code>).
+</p>
+</dd>
+<dt><code class="code">export</code></dt>
+<dd><p>Open the org-export dispatcher (<code class="code">org-export-dispatch</code>) for the chat buffer.
+</p>
+</dd>
+<dt><code class="code">backend</code></dt>
+<dd><p>Switch between communication backends (<code class="code">ollama-buddy-switch-communication-backend</code>).
+Toggles between <code class="code">network-process</code> and <code class="code">curl</code>.
 </p>
 </dd>
 </dl>
@@ -2913,9 +2944,11 @@ Next: <a href="#User-System-Prompts" accesskey="n" rel="next">User System Prompt
 <li><a href="#Loading-a-Session" accesskey="4">Loading a Session</a></li>
 <li><a href="#Managing-Sessions" accesskey="5">Managing Sessions</a></li>
 <li><a href="#Session-Naming" accesskey="6">Session Naming</a></li>
-<li><a href="#Autosave-Transcript" accesskey="7">Autosave Transcript</a></li>
-<li><a href="#Conversation-History" accesskey="8">Conversation History</a></li>
-<li><a href="#Rewinding-a-Conversation" accesskey="9">Rewinding a Conversation</a></li>
+<li><a href="#Renaming-a-Session" accesskey="7">Renaming a Session</a></li>
+<li><a href="#Session-Directory-Persistence" accesskey="8">Session Directory Persistence</a></li>
+<li><a href="#Autosave-Transcript" accesskey="9">Autosave Transcript</a></li>
+<li><a href="#Conversation-History">Conversation History</a></li>
+<li><a href="#Rewinding-a-Conversation">Rewinding a Conversation</a></li>
 </ul>
 <div class="section-level-extent" id="Understanding-Sessions">
 <h3 class="section"><span>12.1 Understanding Sessions<a class="copiable-link" href="#Understanding-Sessions"> &para;</a></span></h3>
@@ -2924,6 +2957,7 @@ Next: <a href="#User-System-Prompts" accesskey="n" rel="next">User System Prompt
 </p><ul class="itemize mark-bullet">
 <li>Save the entire conversation history
 </li><li>Save the current model selection
+</li><li>Save RAG attachments (embedding vectors are stripped for compactness)
 </li><li>Restore previous conversations later
 </li><li>Switch between different conversation contexts
 </li></ul>
@@ -2938,7 +2972,8 @@ Next: <a href="#User-System-Prompts" accesskey="n" rel="next">User System Prompt
 </pre></div>
 <p>or press <code class="code">C-c N</code> in the chat buffer.
 </p>
-<p>This will clear the current conversation history and let you start fresh.
+<p>This clears the conversation history, file and web search attachments, RAG
+context, and resets tool calling and auto-execute to disabled.
 </p>
 </div>
 <div class="section-level-extent" id="Saving-a-Session">
@@ -2962,7 +2997,9 @@ Next: <a href="#User-System-Prompts" accesskey="n" rel="next">User System Prompt
 </pre></div>
 <p>or press <code class="code">C-c L</code> in the chat buffer.
 </p>
-<p>You&rsquo;ll be presented with a list of saved sessions to choose from.
+<p>You&rsquo;ll be presented with a list of saved sessions to choose from.  When the
+session is loaded, any <code class="code">*** Think</code> headings are automatically folded and
+any saved RAG attachments are restored.
 </p>
 </div>
 <div class="section-level-extent" id="Managing-Sessions">
@@ -2980,13 +3017,41 @@ Next: <a href="#User-System-Prompts" accesskey="n" rel="next">User System Prompt
 <div class="section-level-extent" id="Session-Naming">
 <h3 class="section"><span>12.6 Session Naming<a class="copiable-link" href="#Session-Naming"> &para;</a></span></h3>
 
-<p>When saving a session, Ollama Buddy generates a default name from the first user message. The name is created by filtering out common English stop words (&ldquo;the&rdquo;, &ldquo;a&rdquo;, &ldquo;is&rdquo;, etc.) and short words (less than 3 characters), then joining up to 5 remaining key terms with hyphens.
+<p>When saving a session, Ollama Buddy generates a default name from the first
+user message.  The name is created by filtering out common English stop words
+(&ldquo;the&rdquo;, &ldquo;a&rdquo;, &ldquo;is&rdquo;, etc.) and short words (less than 3 characters), then
+joining up to 5 remaining key terms with hyphens.  A timestamp prefix is always
+prepended for uniqueness and chronological sorting.
 </p>
-<p>For example, a conversation starting with &ldquo;Tell me about the history of space exploration&rdquo; would generate the session name <code class="code">tell-history-space-exploration</code>.
+<p>For example, a conversation starting with &ldquo;Tell me about the history of space
+exploration&rdquo; would generate the session name
+<code class="code">2026-03-07-170800-history-space-exploration</code>.
+</p>
+</div>
+<div class="section-level-extent" id="Renaming-a-Session">
+<h3 class="section"><span>12.7 Renaming a Session<a class="copiable-link" href="#Renaming-a-Session"> &para;</a></span></h3>
+
+<p>Use <code class="code">/rename</code> in the prompt area to set a display name for the current
+session.  If no name has been set, an auto-generated one from the first prompt
+is offered for editing.  If a name already exists, it is shown for editing.
+</p>
+<p>The display name is used as the descriptive suffix when saving&mdash;<code class="code">/save</code>
+always prepends a fresh timestamp, so renaming and saving multiple times
+produces distinct files without duplicate timestamps.
+</p>
+</div>
+<div class="section-level-extent" id="Session-Directory-Persistence">
+<h3 class="section"><span>12.8 Session Directory Persistence<a class="copiable-link" href="#Session-Directory-Persistence"> &para;</a></span></h3>
+
+<p>Sessions save the chat buffer&rsquo;s <code class="code">default-directory</code>.  When a session is
+loaded, the directory is restored (provided it still exists on disk).  This
+means loading a session that was started in a project automatically restores
+the project context, so <code class="code">project.el</code> integration, project summary
+auto-loading, and file-relative commands all work correctly.
 </p>
 </div>
 <div class="section-level-extent" id="Autosave-Transcript">
-<h3 class="section"><span>12.7 Autosave Transcript<a class="copiable-link" href="#Autosave-Transcript"> &para;</a></span></h3>
+<h3 class="section"><span>12.9 Autosave Transcript<a class="copiable-link" href="#Autosave-Transcript"> &para;</a></span></h3>
 
 <p>Ollama Buddy automatically saves the chat buffer to a recovery file after each completed response. The file is saved as <samp class="file">~autosave.org</samp> in the sessions directory (<code class="code">ollama-buddy-sessions-directory</code>).
 </p>
@@ -2996,7 +3061,7 @@ Next: <a href="#User-System-Prompts" accesskey="n" rel="next">User System Prompt
 </p>
 </div>
 <div class="section-level-extent" id="Conversation-History">
-<h3 class="section"><span>12.8 Conversation History<a class="copiable-link" href="#Conversation-History"> &para;</a></span></h3>
+<h3 class="section"><span>12.10 Conversation History<a class="copiable-link" href="#Conversation-History"> &para;</a></span></h3>
 
 <p>Sessions save the conversation history for each model separately.
 </p>
@@ -3020,7 +3085,7 @@ Next: <a href="#User-System-Prompts" accesskey="n" rel="next">User System Prompt
 </p>
 </div>
 <div class="section-level-extent" id="Rewinding-a-Conversation">
-<h3 class="section"><span>12.9 Rewinding a Conversation<a class="copiable-link" href="#Rewinding-a-Conversation"> &para;</a></span></h3>
+<h3 class="section"><span>12.11 Rewinding a Conversation<a class="copiable-link" href="#Rewinding-a-Conversation"> &para;</a></span></h3>
 
 <p>To rewind a conversation to a previous prompt, navigate to the desired
 prompt heading in the chat buffer and press <code class="code">C-u C-u C-c C-c</code>.
@@ -5457,7 +5522,14 @@ When nil, only custom user-registered tools are available.
   '(&quot;qwen3&quot; &quot;qwen3-coder&quot; &quot;llama3.1&quot; &quot;llama3.3&quot;
     &quot;mistral&quot; &quot;gpt-oss&quot; &quot;command-r&quot;))
 </pre></div>
+
 </dd>
+<dt><code class="code">ollama-buddy-tools-large-result-threshold</code></dt>
+<dd><p>Token count threshold for warning about large tool results (default: <code class="code">2000</code>).
+When a tool returns a result exceeding this threshold, the user is prompted with
+options to <code class="code">(p)roceed</code>, <code class="code">(t)runcate</code> to the threshold, or <code class="code">(c)ancel</code>
+&mdash; even when auto-execute is enabled.  Set to <code class="code">0</code> to disable the guard.
+</p></dd>
 </dl>
 
 </div>
@@ -5761,7 +5833,7 @@ buffer showing similarity scores, file paths, and content excerpts.
 Attached RAG context appears when you use Show Attachments.
 </p>
 </dd>
-<dt><code class="code">ollama-buddy-rag-list-indices (<kbd class="kbd">l</kbd>)</code></dt>
+<dt><code class="code">ollama-buddy-rag-list-indices (<kbd class="kbd">w</kbd>)</code></dt>
 <dd><p>List all saved RAG indices with their chunk counts and file counts.
 </p>
 </dd>

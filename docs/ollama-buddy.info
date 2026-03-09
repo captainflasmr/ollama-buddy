@@ -199,7 +199,11 @@ Ollama Buddy supports two communication backends:
 
    To switch backends:
      M-x ollama-buddy-switch-communication-backend
-   or press ‘C-c e’ in the chat buffer.
+   or press ‘C-c e’ in the chat buffer.  Also available from the
+transient menu (‘C-c O’, ‘e’) and via the ‘/backend’ slash command.
+
+   When the curl backend is active, the header line shows a ‘⇄’
+indicator.
 
    To configure curl backend:
      (require 'ollama-buddy-curl)
@@ -905,6 +909,11 @@ to the LLM.
 ‘export’
      Open the org-export dispatcher (‘org-export-dispatch’) for the chat
      buffer.
+
+‘backend’
+     Switch between communication backends
+     (‘ollama-buddy-switch-communication-backend’).  Toggles between
+     ‘network-process’ and ‘curl’.
 
    • Outside the prompt area, ‘/’ inserts a literal ‘/’.
    • Press ‘C-g’ to cancel (nothing inserted); use ‘C-q /’ for a literal
@@ -1839,6 +1848,8 @@ File: ollama-buddy.info,  Node: Session Management,  Next: User System Prompts, 
 Sessions in Ollama Buddy allow you to:
    • Save the entire conversation history
    • Save the current model selection
+   • Save RAG attachments (embedding vectors are stripped for
+     compactness)
    • Restore previous conversations later
    • Switch between different conversation contexts
 
@@ -1849,8 +1860,9 @@ To start a fresh session:
      M-x ollama-buddy-sessions-new
    or press ‘C-c N’ in the chat buffer.
 
-   This will clear the current conversation history and let you start
-fresh.
+   This clears the conversation history, file and web search
+attachments, RAG context, and resets tool calling and auto-execute to
+disabled.
 
 12.3 Saving a Session
 =====================
@@ -1869,6 +1881,8 @@ To load a previously saved session:
    or press ‘C-c L’ in the chat buffer.
 
    You'll be presented with a list of saved sessions to choose from.
+When the session is loaded, any ‘*** Think’ headings are automatically
+folded and any saved RAG attachments are restored.
 
 12.5 Managing Sessions
 ======================
@@ -3893,6 +3907,13 @@ switching between models.
             '("qwen3" "qwen3-coder" "llama3.1" "llama3.3"
               "mistral" "gpt-oss" "command-r"))
 
+‘ollama-buddy-tools-large-result-threshold’
+     Token count threshold for warning about large tool results
+     (default: ‘2000’).  When a tool returns a result exceeding this
+     threshold, the user is prompted with options to ‘(p)roceed’,
+     ‘(t)runcate’ to the threshold, or ‘(c)ancel’ -- even when
+     auto-execute is enabled.  Set to ‘0’ to disable the guard.
+
 24.7 Registering Custom Tools
 =============================
 
@@ -4139,7 +4160,7 @@ These commands are available from the RAG transient menu (‘C-c O’ then
      conversation.  Attached RAG context appears when you use Show
      Attachments.
 
-‘ollama-buddy-rag-list-indices (l)’
+‘ollama-buddy-rag-list-indices (w)’
      List all saved RAG indices with their chunk counts and file counts.
 
 ‘ollama-buddy-rag-delete-index (d)’
@@ -4875,35 +4896,35 @@ Tag Table:
 Node: Top555
 Node: Introduction2961
 Node: Installation5249
-Node: Configuration8206
-Node: Quick Start16474
-Node: Core Features19016
-Node: Chat Interface23293
-Node: Working with Models32479
-Node: Context Management37707
-Node: File Attachments43316
-Node: Web Search49238
-Node: Parameter Control56976
-Node: Session Management59388
-Node: User System Prompts64106
-Node: Roles and Commands73902
-Node: Fabric Pattern Integration91092
-Node: Awesome ChatGPT Prompts93319
-Node: Remote Providers97169
-Node: Ollama Cloud Models105459
-Node: Global System Prompt109758
-Node: Tone Selector111512
-Node: Thinking Blocks113319
-Node: Project Integration115272
-Node: In-Buffer Replace118361
-Node: Tool Calling124237
-Node: RAG132398
-Node: Advanced Usage140177
-Node: API Reference142726
-Node: FAQ148549
-Node: Troubleshooting155634
-Node: Contributing158139
-Node: Index160807
+Node: Configuration8393
+Node: Quick Start16661
+Node: Core Features19203
+Node: Chat Interface23480
+Node: Working with Models32840
+Node: Context Management38068
+Node: File Attachments43677
+Node: Web Search49599
+Node: Parameter Control57337
+Node: Session Management59749
+Node: User System Prompts64739
+Node: Roles and Commands74535
+Node: Fabric Pattern Integration91725
+Node: Awesome ChatGPT Prompts93952
+Node: Remote Providers97802
+Node: Ollama Cloud Models106092
+Node: Global System Prompt110391
+Node: Tone Selector112145
+Node: Thinking Blocks113952
+Node: Project Integration115905
+Node: In-Buffer Replace118994
+Node: Tool Calling124870
+Node: RAG133426
+Node: Advanced Usage141205
+Node: API Reference143754
+Node: FAQ149577
+Node: Troubleshooting156662
+Node: Contributing159167
+Node: Index161835
 
 End Tag Table
 

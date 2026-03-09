@@ -165,9 +165,12 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Loading-a-Session][12.4 Loading a Session]]
   - [[#Managing-Sessions][12.5 Managing Sessions]]
   - [[#Session-Naming][12.6 Session Naming]]
-  - [[#Autosave-Transcript][12.7 Autosave Transcript]]
-  - [[#Conversation-History][12.8 Conversation History]]
-  - [[#Rewinding-a-Conversation][12.9 Rewinding a Conversation]]
+  - [[#Renaming-a-Session][12.7 Renaming a Session]]
+  - [[#Session-Directory-Persistence][12.8 Session Directory
+    Persistence]]
+  - [[#Autosave-Transcript][12.9 Autosave Transcript]]
+  - [[#Conversation-History][12.10 Conversation History]]
+  - [[#Rewinding-a-Conversation][12.11 Rewinding a Conversation]]
 - [[#User-System-Prompts][13 User System Prompts]]
   - [[#Overview-2][13.1 Overview]]
   - [[#Accessing-the-System-Prompts-Menu][13.2 Accessing the System
@@ -632,7 +635,10 @@ To switch backends:
 M-x ollama-buddy-switch-communication-backend
 #+end_src
 
-or press =C-c e= in the chat buffer.
+or press =C-c e= in the chat buffer. Also available from the transient
+menu (C-c O, e) and via the =/backend= slash command.
+
+When the curl backend is active, the header line shows a =⇄= indicator.
 
 To configure curl backend:
 
@@ -1538,6 +1544,24 @@ Available =/= commands (filtered by loaded modules):
   generated and automatically saved to the project root. On subsequent
   uses, the existing summary is attached as context. See
   [[#Project-Integration][Project Integration]].
+
+- =rename= :: Rename the current session
+  (=ollama-buddy-sessions-rename=). Pre-fills with the existing name or
+  an auto-generated one from the first prompt.
+
+- =login= :: Sign in to Ollama cloud (=ollama-buddy-cloud-signin=).
+
+- =logout= :: Sign out from Ollama cloud (=ollama-buddy-cloud-signout=).
+
+- =manual= :: Open the Ollama Buddy Info manual
+  (=ollama-buddy-open-info=).
+
+- =export= :: Open the org-export dispatcher (=org-export-dispatch=) for
+  the chat buffer.
+
+- =backend= :: Switch between communication backends
+  (=ollama-buddy-switch-communication-backend=). Toggles between
+  =network-process= and =curl=.
 
 - Outside the prompt area, =/= inserts a literal ‘=/='.
 - Press =C-g= to cancel (nothing inserted); use =C-q /= for a literal
@@ -2838,6 +2862,8 @@ Next: [[#User-System-Prompts][User System Prompts]], Previous:
 - [[#Loading-a-Session][Loading a Session]]
 - [[#Managing-Sessions][Managing Sessions]]
 - [[#Session-Naming][Session Naming]]
+- [[#Renaming-a-Session][Renaming a Session]]
+- [[#Session-Directory-Persistence][Session Directory Persistence]]
 - [[#Autosave-Transcript][Autosave Transcript]]
 - [[#Conversation-History][Conversation History]]
 - [[#Rewinding-a-Conversation][Rewinding a Conversation]]
@@ -2852,6 +2878,7 @@ Sessions in Ollama Buddy allow you to:
 
 - Save the entire conversation history
 - Save the current model selection
+- Save RAG attachments (embedding vectors are stripped for compactness)
 - Restore previous conversations later
 - Switch between different conversation contexts
 
@@ -2869,8 +2896,8 @@ M-x ollama-buddy-sessions-new
 
 or press =C-c N= in the chat buffer.
 
-This will clear the current conversation history and let you start
-fresh.
+This clears the conversation history, file and web search attachments,
+RAG context, and resets tool calling and auto-execute to disabled.
 
 <<Saving-a-Session>>
 *** 12.3 Saving a Session [[#Saving-a-Session][¶]]
@@ -2902,7 +2929,9 @@ M-x ollama-buddy-sessions-load
 
 or press =C-c L= in the chat buffer.
 
-You'll be presented with a list of saved sessions to choose from.
+You'll be presented with a list of saved sessions to choose from. When
+the session is loaded, any =*** Think= headings are automatically folded
+and any saved RAG attachments are restored.
 
 <<Managing-Sessions>>
 *** 12.5 Managing Sessions [[#Managing-Sessions][¶]]
@@ -2930,14 +2959,43 @@ session files using standard Emacs file operations.
 When saving a session, Ollama Buddy generates a default name from the
 first user message. The name is created by filtering out common English
 stop words (“the”, “a”, “is”, etc.) and short words (less than 3
-characters), then joining up to 5 remaining key terms with hyphens.
+characters), then joining up to 5 remaining key terms with hyphens. A
+timestamp prefix is always prepended for uniqueness and chronological
+sorting.
 
 For example, a conversation starting with “Tell me about the history of
 space exploration” would generate the session name
-=tell-history-space-exploration=.
+=2026-03-07-170800-history-space-exploration=.
+
+<<Renaming-a-Session>>
+*** 12.7 Renaming a Session [[#Renaming-a-Session][¶]]
+:PROPERTIES:
+:CUSTOM_ID: renaming-a-session
+:CLASS: section
+:END:
+Use =/rename= in the prompt area to set a display name for the current
+session. If no name has been set, an auto-generated one from the first
+prompt is offered for editing. If a name already exists, it is shown for
+editing.
+
+The display name is used as the descriptive suffix when saving---=/save=
+always prepends a fresh timestamp, so renaming and saving multiple times
+produces distinct files without duplicate timestamps.
+
+<<Session-Directory-Persistence>>
+*** 12.8 Session Directory Persistence [[#Session-Directory-Persistence][¶]]
+:PROPERTIES:
+:CUSTOM_ID: session-directory-persistence
+:CLASS: section
+:END:
+Sessions save the chat buffer's =default-directory=. When a session is
+loaded, the directory is restored (provided it still exists on disk).
+This means loading a session that was started in a project automatically
+restores the project context, so =project.el= integration, project
+summary auto-loading, and file-relative commands all work correctly.
 
 <<Autosave-Transcript>>
-*** 12.7 Autosave Transcript [[#Autosave-Transcript][¶]]
+*** 12.9 Autosave Transcript [[#Autosave-Transcript][¶]]
 :PROPERTIES:
 :CUSTOM_ID: autosave-transcript
 :CLASS: section
@@ -2953,7 +3011,7 @@ The autosave file is automatically deleted when you perform a proper
 session save with =C-c S=.
 
 <<Conversation-History>>
-*** 12.8 Conversation History [[#Conversation-History][¶]]
+*** 12.10 Conversation History [[#Conversation-History][¶]]
 :PROPERTIES:
 :CUSTOM_ID: conversation-history
 :CLASS: section
@@ -2985,7 +3043,7 @@ M-x ollama-buddy-toggle-history
 or press =C-c H= in the chat buffer.
 
 <<Rewinding-a-Conversation>>
-*** 12.9 Rewinding a Conversation [[#Rewinding-a-Conversation][¶]]
+*** 12.11 Rewinding a Conversation [[#Rewinding-a-Conversation][¶]]
 :PROPERTIES:
 :CUSTOM_ID: rewinding-a-conversation
 :CLASS: section
@@ -5658,6 +5716,13 @@ between models.
       "mistral" "gpt-oss" "command-r"))
   #+end_src
 
+- =ollama-buddy-tools-large-result-threshold= :: Token count threshold
+  for warning about large tool results (default: =2000=). When a tool
+  returns a result exceeding this threshold, the user is prompted with
+  options to =(p)roceed=, =(t)runcate= to the threshold, or =(c)ancel=
+  --- even when auto-execute is enabled. Set to =0= to disable the
+  guard.
+
 <<Registering-Custom-Tools>>
 *** 24.7 Registering Custom Tools [[#Registering-Custom-Tools][¶]]
 :PROPERTIES:
@@ -5951,7 +6016,7 @@ These commands are available from the RAG transient menu (C-c O then r):
   results as context for the next conversation. Attached RAG context
   appears when you use Show Attachments.
 
-- =ollama-buddy-rag-list-indices (==l==)= :: List all saved RAG indices
+- =ollama-buddy-rag-list-indices (==w==)= :: List all saved RAG indices
   with their chunk counts and file counts.
 
 - =ollama-buddy-rag-delete-index (==d==)= :: Delete a saved RAG index.

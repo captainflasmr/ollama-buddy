@@ -123,8 +123,9 @@
     ("<" "Global Prompt" ollama-buddy-toggle-global-system-prompt)
     ("~" "Tone" ollama-buddy-set-tone)]
 
-   ["Benchmark"
-    ("u" "Benchmark Models" ollama-buddy-benchmark-models)]
+   ["Other"
+    ("u" "Benchmark Models" ollama-buddy-benchmark-models)
+    ("v" "Keep Alive" ollama-buddy-set-keepalive)]
    ]
   [("q" "Quit" transient-quit-one)])
 
@@ -179,9 +180,8 @@
 
    ["Actions"
     ("l" "Pull Model" ollama-buddy-pull-model)
-    ("k" "Cancel" ollama-buddy--cancel-request)
     ("x" "Toggle Stream" ollama-buddy-toggle-streaming)
-    ("v" "Keep Alive" ollama-buddy-set-keepalive)
+    ("e" "Switch Backend" ollama-buddy-switch-communication-backend)
     ("!" "Airplane Mode" ollama-buddy-toggle-airplane-mode)]
 
    ["Tools"

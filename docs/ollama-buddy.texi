@@ -214,7 +214,10 @@ To switch backends:
 @example
 M-x ollama-buddy-switch-communication-backend
 @end example
-or press @code{C-c e} in the chat buffer.
+or press @code{C-c e} in the chat buffer.  Also available from the transient
+menu (@kbd{C-c O}, @kbd{e}) and via the @code{/backend} slash command.
+
+When the curl backend is active, the header line shows a @code{⇄} indicator.
 
 To configure curl backend:
 @example
@@ -962,6 +965,10 @@ Open the Ollama Buddy Info manual (@code{ollama-buddy-open-info}).
 
 @item export
 Open the org-export dispatcher (@code{org-export-dispatch}) for the chat buffer.
+
+@item backend
+Switch between communication backends (@code{ollama-buddy-switch-communication-backend}).
+Toggles between @code{network-process} and @code{curl}.
 
 @end table
 
@@ -1892,6 +1899,7 @@ Sessions in Ollama Buddy allow you to:
 @itemize @bullet
 @item Save the entire conversation history
 @item Save the current model selection
+@item Save RAG attachments (embedding vectors are stripped for compactness)
 @item Restore previous conversations later
 @item Switch between different conversation contexts
 @end itemize
@@ -1904,7 +1912,8 @@ M-x ollama-buddy-sessions-new
 @end example
 or press @code{C-c N} in the chat buffer.
 
-This will clear the current conversation history and let you start fresh.
+This clears the conversation history, file and web search attachments, RAG
+context, and resets tool calling and auto-execute to disabled.
 
 @section Saving a Session
 
@@ -1924,7 +1933,9 @@ M-x ollama-buddy-sessions-load
 @end example
 or press @code{C-c L} in the chat buffer.
 
-You'll be presented with a list of saved sessions to choose from.
+You'll be presented with a list of saved sessions to choose from.  When the
+session is loaded, any @code{*** Think} headings are automatically folded and
+any saved RAG attachments are restored.
 
 @section Managing Sessions
 
@@ -3840,6 +3851,12 @@ List of model names known to support tool calling. Used for the @code{⚒} indic
   '("qwen3" "qwen3-coder" "llama3.1" "llama3.3"
     "mistral" "gpt-oss" "command-r"))
 @end example
+
+@item ollama-buddy-tools-large-result-threshold
+Token count threshold for warning about large tool results (default: @code{2000}).
+When a tool returns a result exceeding this threshold, the user is prompted with
+options to @code{(p)roceed}, @code{(t)runcate} to the threshold, or @code{(c)ancel}
+--- even when auto-execute is enabled.  Set to @code{0} to disable the guard.
 @end table
 
 @section Registering Custom Tools
@@ -4082,7 +4099,7 @@ buffer showing similarity scores, file paths, and content excerpts.
 Search and attach the top results as context for the next conversation.
 Attached RAG context appears when you use Show Attachments.
 
-@item ollama-buddy-rag-list-indices (@kbd{l})
+@item ollama-buddy-rag-list-indices (@kbd{w})
 List all saved RAG indices with their chunk counts and file counts.
 
 @item ollama-buddy-rag-delete-index (@kbd{d})

@@ -946,7 +946,8 @@ Typically invoked via `C-u C-u C-c C-c'."
     ("login"      ollama-buddy-cloud-signin            "Sign in to Ollama cloud")
     ("logout"     ollama-buddy-cloud-signout           "Sign out from Ollama cloud")
     ("manual"     ollama-buddy-open-info              "Open the Ollama Buddy Info manual")
-    ("export"     org-export-dispatch                 "Open org-export dispatcher for the chat buffer"))
+    ("export"     org-export-dispatch                 "Open org-export dispatcher for the chat buffer")
+    ("backend"    ollama-buddy-switch-communication-backend "Switch between network-process and curl backends"))
   "Alist of available `/' slash commands.
 Each entry is (NAME FUNCTION DESCRIPTION) where FUNCTION is
 called interactively."
