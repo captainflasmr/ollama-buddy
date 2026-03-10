@@ -3033,6 +3033,22 @@ TCP packets split a JSON object across multiple filter calls."
                             ollama-buddy--reasoning-status-message nil
                             ollama-buddy--reasoning-skip-newlines nil))
 
+                    ;; Warn if tool calls were present but iteration limit reached
+                    (when (and (featurep 'ollama-buddy-tools)
+                               (bound-and-true-p ollama-buddy-tools-enabled)
+                               ollama-buddy--current-tool-calls
+                               (>= ollama-buddy--tool-call-iteration
+                                   (if (boundp 'ollama-buddy-tools-max-iterations)
+                                       ollama-buddy-tools-max-iterations 10)))
+                      (save-excursion
+                        (goto-char (point-max))
+                        (insert (format "\n\n*** ⚠ Tool Limit Reached\nStopped after %d iterations (max: =ollama-buddy-tools-max-iterations=).\n"
+                                        (if (boundp 'ollama-buddy-tools-max-iterations)
+                                            ollama-buddy-tools-max-iterations 10))))
+                      (message "Tool calling stopped: reached maximum of %d iterations"
+                               (if (boundp 'ollama-buddy-tools-max-iterations)
+                                   ollama-buddy-tools-max-iterations 10)))
+
                     ;; reset the current model if from external
                     (when ollama-buddy--current-request-temporary-model
                       (setq ollama-buddy--current-model ollama-buddy--current-request-temporary-model)
