@@ -1792,39 +1792,40 @@ Returns nil when `ollama-buddy-show-tips' is nil or the list is empty."
 
 (defun ollama-buddy--create-logo-image (&optional size)
   "Return a propertized string displaying the Ollama Buddy SVG logo.
-SIZE is the pixel diameter (default 80).  Returns nil in terminal Emacs."
+SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
   (when (display-graphic-p)
     (require 'svg)
-    (let* ((sz (or size 80))
-           (svg (svg-create sz sz))
-           (s (/ sz 200.0)))
+    (let* ((sw (or size 80))
+           (s (/ sw 160.0))
+           (sh (round (* 116.07 s)))
+           (svg (svg-create sw sh)))
       ;; Background rounded rect
-      (svg-rectangle svg (* 20 s) (* 43.75 s) (* 160 s) (* 116.07 s)
+      (svg-rectangle svg 0 0 (* 160 s) (* 116.07 s)
                      :rx (* 30 s) :ry (* 30 s) :fill "#2d2d2d")
       ;; White muzzle patch (behind head)
-      (svg-rectangle svg (* 87.46 s) (* 118.73 s) (* 25.72 s) (* 26.52 s)
+      (svg-rectangle svg (* 67.46 s) (* 74.98 s) (* 25.72 s) (* 26.52 s)
                      :fill "#ffffff")
       ;; Left bracket
       (dom-append-child
        svg (dom-node 'path
-                     `((d . ,(format "M %f,%f L %f,%f L %f,%f L %f,%f"
-                                     (* 50 s) (* 60 s) (* 35 s) (* 60 s)
-                                     (* 35 s) (* 140 s) (* 50 s) (* 140 s)))
-                       (stroke . "#7B5294") (stroke-width . ,(format "%f" (* 8 s)))
+                     `((d . ,(format "M %f,%f H %f v %f h %f"
+                                     (* 30 s) (* 16.25 s) (* 15 s)
+                                     (* 80 s) (* 15 s)))
+                       (stroke . "#7b5294") (stroke-width . ,(format "%f" (* 8 s)))
                        (fill . "none"))))
       ;; Right bracket
       (dom-append-child
        svg (dom-node 'path
-                     `((d . ,(format "M %f,%f L %f,%f L %f,%f L %f,%f"
-                                     (* 150 s) (* 60 s) (* 165 s) (* 60 s)
-                                     (* 165 s) (* 140 s) (* 150 s) (* 140 s)))
-                       (stroke . "#7B5294") (stroke-width . ,(format "%f" (* 8 s)))
+                     `((d . ,(format "M %f,%f h %f v %f h %f"
+                                     (* 130 s) (* 16.25 s) (* 15 s)
+                                     (* 80 s) (* -15 s)))
+                       (stroke . "#7b5294") (stroke-width . ,(format "%f" (* 8 s)))
                        (fill . "none"))))
       ;; Left ear
       (dom-append-child
        svg (dom-node 'path
                      `((d . ,(format "M %f,%f q %f,%f %f,%f %f,%f %f,%f %f,%f %f,%f z"
-                                     (* 88 s) (* 84 s)
+                                     (* 68 s) (* 40.25 s)
                                      (* -2 s) (* -12 s) (* 0 s) (* -20 s)
                                      (* 4 s) (* -4 s) (* 8 s) (* 4 s)
                                      (* 0 s) (* 8 s) (* -3 s) (* 16 s)))
@@ -1833,7 +1834,7 @@ SIZE is the pixel diameter (default 80).  Returns nil in terminal Emacs."
       (dom-append-child
        svg (dom-node 'path
                      `((d . ,(format "M %f,%f q %f,%f %f,%f %f,%f %f,%f %f,%f %f,%f z"
-                                     (* 112 s) (* 84 s)
+                                     (* 92 s) (* 40.25 s)
                                      (* 2 s) (* -12 s) (* 0 s) (* -20 s)
                                      (* -4 s) (* -4 s) (* -8 s) (* 4 s)
                                      (* 0 s) (* 8 s) (* 3 s) (* 16 s)))
@@ -1842,7 +1843,7 @@ SIZE is the pixel diameter (default 80).  Returns nil in terminal Emacs."
       (dom-append-child
        svg (dom-node 'path
                      `((d . ,(format "M %f,%f q %f,%f %f,%f v %f q %f,%f %f,%f %f,%f %f,%f z"
-                                     (* 85 s) (* 89.21 s)
+                                     (* 65 s) (* 45.47 s)
                                      (* 15 s) (* -16.60 s) (* 30 s) (* 0 s)
                                      (* 29.05 s)
                                      (* 0 s) (* 24.90 s) (* -15 s) (* 24.90 s)
@@ -1851,27 +1852,28 @@ SIZE is the pixel diameter (default 80).  Returns nil in terminal Emacs."
       ;; Muzzle
       (dom-append-child
        svg (dom-node 'ellipse
-                     `((cx . ,(format "%f" (* 100 s)))
-                       (cy . ,(format "%f" (* 112 s)))
+                     `((cx . ,(format "%f" (* 80 s)))
+                       (cy . ,(format "%f" (* 68.25 s)))
                        (rx . ,(format "%f" (* 12 s)))
                        (ry . ,(format "%f" (* 10 s)))
                        (fill . "#cccccc"))))
       ;; Eyes
-      (svg-circle svg (* 92 s) (* 106 s) (* 3 s) :fill "#2d2d2d")
-      (svg-circle svg (* 108 s) (* 106 s) (* 3 s) :fill "#2d2d2d")
+      (svg-circle svg (* 72 s) (* 62.25 s) (* 3 s) :fill "#2d2d2d")
+      (svg-circle svg (* 88 s) (* 62.25 s) (* 3 s) :fill "#2d2d2d")
       ;; Nose
       (dom-append-child
        svg (dom-node 'ellipse
-                     `((cx . ,(format "%f" (* 100 s)))
-                       (cy . ,(format "%f" (* 110 s)))
+                     `((cx . ,(format "%f" (* 80 s)))
+                       (cy . ,(format "%f" (* 66.25 s)))
                        (rx . ,(format "%f" (* 3 s)))
                        (ry . ,(format "%f" (* 2 s)))
                        (fill . "#2d2d2d"))))
       ;; Mouth
       (dom-append-child
        svg (dom-node 'path
-                     `((d . ,(format "M %f,%f Q %f,%f %f,%f"
-                                     (* 94 s) (* 118 s) (* 100 s) (* 124 s) (* 106 s) (* 118 s)))
+                     `((d . ,(format "M %f,%f q %f,%f %f,%f"
+                                     (* 74 s) (* 74.25 s)
+                                     (* 6 s) (* 6 s) (* 12 s) (* 0 s)))
                        (stroke . "#2d2d2d") (stroke-width . ,(format "%f" (* 2 s)))
                        (fill . "none") (stroke-linecap . "round"))))
       (propertize " " 'display (svg-image svg :ascent 'center :scale 1.0)))))
@@ -1907,7 +1909,7 @@ SIZE is the pixel diameter (default 80).  Returns nil in terminal Emacs."
            (when (= (buffer-size) 0)
              (concat "#+TITLE: Ollama Buddy Chat"))
            "\n\n* Welcome\n"
-           (if-let ((logo (ollama-buddy--create-logo-image 160)))
+           (if-let ((logo (ollama-buddy--create-logo-image 200)))
                (concat logo " *Ollama Buddy* [v3.5.1]\n")
              (concat
               "#+begin_example\n"
