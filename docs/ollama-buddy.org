@@ -436,6 +436,7 @@ Up: [[#Top][Ollama Buddy]]  
 :CUSTOM_ID: Introduction-1
 :CLASS: chapter
 :END:
+[[../img/ollama-buddy-logo.svg]]
 - [[#What-is-Ollama-Buddy_003f][What is Ollama Buddy?]]
 - [[#Why-Use-Ollama-Buddy_003f][Why Use Ollama Buddy?]]
 - [[#Prerequisites][Prerequisites]]

@@ -81,6 +81,8 @@ allowing you to leverage powerful large language models (LLMs) directly within y
 @node Introduction
 @chapter Introduction
 
+@image{../img/ollama-buddy-logo,200px,,Ollama Buddy Logo,svg}
+
 @section What is Ollama Buddy?
 
 Ollama Buddy is an Emacs package that provides a friendly AI assistant interface to Ollama, 
