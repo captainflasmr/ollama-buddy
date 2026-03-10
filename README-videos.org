@@ -28,12 +28,15 @@ https://github.com/captainflasmr/ollama-buddy
 *** Display setup
 
 #+begin_src elisp
+(use-package doom-themes
+  :ensure t
+  :config
+  (load-theme 'doom-oceanic-next t))
+
 (set-face-attribute 'default nil
                     :family "Monospace"
                     :height 140)
 #+end_src
-
- theme : doom-oceanic-next
 
 ** 001 Ollama Buddy - First Steps #emacs #ollama
 
@@ -637,3 +640,34 @@ https://github.com/captainflasmr/ollama-buddy
 #+attr_org: :width 300px
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-screen-recording_037.gif]]
+
+** 038 Tool Calling and modifying files with an ediff session #emacs #ollama
+
+Demonstrating ollama-buddy's tool calling capabilities for editing configuration files through Emacs built-in ediff
+
+- Open chat with a model that supports tool calling: glm-4.7:cloud
+- Turn on tooling
+- "I would like to assign the brightness and volume to have a prefix of the Super key, so it is not just the function key + brightness and volume function keys I press. Note that the current keybindings should be preserved"
+- Watch read_file tool read the Sway configuration files
+- Watch the LLM understand the existing keybindings structure
+- Watch propose_file_changes tool create modified configuration with Super key bindings
+- Show Ediff session being created for interactive review
+- Demonstrate the eregistry availability for accessing the diff session
+- Explain that this integrates LLM intelligence directly into the Emacs workflow for configuration management
+
+This demonstrates how ollama-buddy can intelligently edit configuration files by:
+1. Reading existing configuration to understand context
+2. Making informed changes based on user requirements
+3. Using Emacs' powerful diff tools (ediff) for safe, reviewable modifications
+4. Maintaining the complete workflow within the familiar Emacs environment
+
+The proposed changes add Super+F6/F7 for brightness control and Super+F9/F10/F11 for volume control, preserving the existing XF86 function key bindings.
+
+https://melpa.org/#/ollama-buddy
+https://github.com/captainflasmr/ollama-buddy
+
+#emacs #ollama
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-screen-recording_038.gif]]
