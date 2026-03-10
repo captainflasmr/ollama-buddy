@@ -23,10 +23,10 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:zoom="2.5267579"
-     inkscape:cx="76.976113"
-     inkscape:cy="110.2203"
-     inkscape:window-width="1232"
-     inkscape:window-height="1013"
+     inkscape:cx="77.173994"
+     inkscape:cy="110.22029"
+     inkscape:window-width="1884"
+     inkscape:window-height="1019"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="0"
@@ -34,12 +34,13 @@
   <!-- Background -->
   <rect
      x="20"
-     y="20"
+     y="43.745846"
      width="160"
-     height="160"
+     height="116.07018"
      rx="30"
      fill="#2d2d2d"
-     id="rect1" />
+     id="rect1"
+     style="stroke-width:0.851728" />
   <!-- Side brackets -->
   <rect
      style="fill:#ffffff;fill-opacity:1"

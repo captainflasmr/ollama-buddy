@@ -1799,7 +1799,7 @@ SIZE is the pixel diameter (default 80).  Returns nil in terminal Emacs."
            (svg (svg-create sz sz))
            (s (/ sz 200.0)))
       ;; Background rounded rect
-      (svg-rectangle svg (* 20 s) (* 20 s) (* 160 s) (* 160 s)
+      (svg-rectangle svg (* 20 s) (* 43.75 s) (* 160 s) (* 116.07 s)
                      :rx (* 30 s) :ry (* 30 s) :fill "#2d2d2d")
       ;; White muzzle patch (behind head)
       (svg-rectangle svg (* 87.46 s) (* 118.73 s) (* 25.72 s) (* 26.52 s)
