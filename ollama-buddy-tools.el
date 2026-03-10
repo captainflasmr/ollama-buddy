@@ -84,7 +84,7 @@ When nil, prompt the user before executing each tool call."
   :type 'boolean
   :group 'ollama-buddy-tools)
 
-(defcustom ollama-buddy-tools-max-iterations 10
+(defcustom ollama-buddy-tools-max-iterations 15
   "Maximum number of tool-call iterations per user prompt.
 This prevents infinite loops if the LLM keeps calling tools."
   :type 'integer
