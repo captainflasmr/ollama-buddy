@@ -1801,6 +1801,9 @@ SIZE is the pixel diameter (default 80).  Returns nil in terminal Emacs."
       ;; Background rounded rect
       (svg-rectangle svg (* 20 s) (* 20 s) (* 160 s) (* 160 s)
                      :rx (* 30 s) :ry (* 30 s) :fill "#2d2d2d")
+      ;; White muzzle patch (behind head)
+      (svg-rectangle svg (* 87.46 s) (* 118.73 s) (* 25.72 s) (* 26.52 s)
+                     :fill "#ffffff")
       ;; Left bracket
       (dom-append-child
        svg (dom-node 'path
@@ -1820,26 +1823,30 @@ SIZE is the pixel diameter (default 80).  Returns nil in terminal Emacs."
       ;; Left ear
       (dom-append-child
        svg (dom-node 'path
-                     `((d . ,(format "M %f,%f Q %f,%f %f,%f Q %f,%f %f,%f Q %f,%f %f,%f Z"
-                                     (* 88 s) (* 76 s) (* 86 s) (* 64 s) (* 88 s) (* 56 s)
-                                     (* 92 s) (* 52 s) (* 96 s) (* 60 s) (* 96 s) (* 68 s)
-                                     (* 93 s) (* 76 s)))
+                     `((d . ,(format "M %f,%f q %f,%f %f,%f %f,%f %f,%f %f,%f %f,%f z"
+                                     (* 88 s) (* 84 s)
+                                     (* -2 s) (* -12 s) (* 0 s) (* -20 s)
+                                     (* 4 s) (* -4 s) (* 8 s) (* 4 s)
+                                     (* 0 s) (* 8 s) (* -3 s) (* 16 s)))
                        (fill . "#eeeeee"))))
       ;; Right ear
       (dom-append-child
        svg (dom-node 'path
-                     `((d . ,(format "M %f,%f Q %f,%f %f,%f Q %f,%f %f,%f Q %f,%f %f,%f Z"
-                                     (* 112 s) (* 76 s) (* 114 s) (* 64 s) (* 112 s) (* 56 s)
-                                     (* 108 s) (* 52 s) (* 104 s) (* 60 s) (* 104 s) (* 68 s)
-                                     (* 107 s) (* 76 s)))
+                     `((d . ,(format "M %f,%f q %f,%f %f,%f %f,%f %f,%f %f,%f %f,%f z"
+                                     (* 112 s) (* 84 s)
+                                     (* 2 s) (* -12 s) (* 0 s) (* -20 s)
+                                     (* -4 s) (* -4 s) (* -8 s) (* 4 s)
+                                     (* 0 s) (* 8 s) (* 3 s) (* 16 s)))
                        (fill . "#eeeeee"))))
       ;; Head
       (dom-append-child
        svg (dom-node 'path
-                     `((d . ,(format "M %f,%f Q %f,%f %f,%f L %f,%f Q %f,%f %f,%f Q %f,%f %f,%f Z"
-                                     (* 85 s) (* 75 s) (* 100 s) (* 55 s) (* 115 s) (* 75 s)
-                                     (* 115 s) (* 110 s) (* 115 s) (* 140 s) (* 100 s) (* 140 s)
-                                     (* 85 s) (* 140 s) (* 85 s) (* 110 s)))
+                     `((d . ,(format "M %f,%f q %f,%f %f,%f v %f q %f,%f %f,%f %f,%f %f,%f z"
+                                     (* 85 s) (* 89.21 s)
+                                     (* 15 s) (* -16.60 s) (* 30 s) (* 0 s)
+                                     (* 29.05 s)
+                                     (* 0 s) (* 24.90 s) (* -15 s) (* 24.90 s)
+                                     (* -15 s) (* 0 s) (* -15 s) (* -24.90 s)))
                        (fill . "#eeeeee"))))
       ;; Muzzle
       (dom-append-child
@@ -1850,8 +1857,8 @@ SIZE is the pixel diameter (default 80).  Returns nil in terminal Emacs."
                        (ry . ,(format "%f" (* 10 s)))
                        (fill . "#cccccc"))))
       ;; Eyes
-      (svg-circle svg (* 92 s) (* 92 s) (* 3 s) :fill "#2d2d2d")
-      (svg-circle svg (* 108 s) (* 92 s) (* 3 s) :fill "#2d2d2d")
+      (svg-circle svg (* 92 s) (* 106 s) (* 3 s) :fill "#2d2d2d")
+      (svg-circle svg (* 108 s) (* 106 s) (* 3 s) :fill "#2d2d2d")
       ;; Nose
       (dom-append-child
        svg (dom-node 'ellipse

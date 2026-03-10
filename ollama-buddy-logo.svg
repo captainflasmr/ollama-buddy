@@ -1,44 +1,115 @@
-<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="200"
+   height="200"
+   viewBox="0 0 200 200"
+   version="1.1"
+   id="svg6"
+   sodipodi:docname="ollama-buddy-logo.svg"
+   inkscape:version="1.4.3 (0d15f75042, 2025-12-25)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs6" />
+  <sodipodi:namedview
+     id="namedview6"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="2.5267579"
+     inkscape:cx="76.976113"
+     inkscape:cy="110.2203"
+     inkscape:window-width="1232"
+     inkscape:window-height="1013"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg6" />
   <!-- Background -->
-  <rect x="20" y="20" width="160" height="160" rx="30" fill="#2d2d2d"></rect>
-
+  <rect
+     x="20"
+     y="20"
+     width="160"
+     height="160"
+     rx="30"
+     fill="#2d2d2d"
+     id="rect1" />
   <!-- Side brackets -->
-  <path d="M50 60 L35 60 L35 140 L50 140" stroke="#7B5294" stroke-width="8" fill="none"></path>
-  <path d="M150 60 L165 60 L165 140 L150 140" stroke="#7B5294" stroke-width="8" fill="none"></path>
-
+  <rect
+     style="fill:#ffffff;fill-opacity:1"
+     id="rect6"
+     width="25.724665"
+     height="26.516193"
+     x="87.46386"
+     y="118.72923" />
+  <path
+     d="M50 60 L35 60 L35 140 L50 140"
+     stroke="#7B5294"
+     stroke-width="8"
+     fill="none"
+     id="path1" />
+  <path
+     d="M150 60 L165 60 L165 140 L150 140"
+     stroke="#7B5294"
+     stroke-width="8"
+     fill="none"
+     id="path2" />
   <!-- Smaller rounded ears (closer together) -->
-  <path d="M88 76
-           Q86 64 88 56
-           Q92 52 96 60
-           Q96 68 93 76 Z" fill="#eee"></path>
-
-  <path d="M112 76
-           Q114 64 112 56
-           Q108 52 104 60
-           Q104 68 107 76 Z" fill="#eee"></path>
-
+  <path
+     d="m 88,84 q -2,-12 0,-20 4,-4 8,4 0,8 -3,16 z"
+     fill="#eeeeee"
+     id="path3" />
+  <path
+     d="m 112,84 q 2,-12 0,-20 -4,-4 -8,4 0,8 3,16 z"
+     fill="#eeeeee"
+     id="path4" />
   <!-- Head -->
-  <path d="
-    M85 75
-    Q100 55 115 75
-    L115 110
-    Q115 140 100 140
-    Q85 140 85 110
-    Z
-  " fill="#eee"></path>
-
+  <path
+     d="m 85,89.213732 q 15,-16.600733 30,0 v 29.051278 q 0,24.9011 -15,24.9011 -15,0 -15,-24.9011 z"
+     fill="#eeeeee"
+     id="path5"
+     style="stroke-width:0.911063" />
   <!-- Darker muzzle -->
-  <ellipse cx="100" cy="112" rx="12" ry="10" fill="#ccc"></ellipse>
-
+  <ellipse
+     cx="100"
+     cy="112"
+     rx="12"
+     ry="10"
+     fill="#ccc"
+     id="ellipse5" />
   <!-- Eyes -->
-  <circle cx="92" cy="92" r="3" fill="#2d2d2d"></circle>
-  <circle cx="108" cy="92" r="3" fill="#2d2d2d"></circle>
-
+  <circle
+     cx="92"
+     cy="106"
+     r="3"
+     fill="#2d2d2d"
+     id="circle5" />
+  <circle
+     cx="108"
+     cy="106"
+     r="3"
+     fill="#2d2d2d"
+     id="circle6" />
   <!-- Nose -->
-  <ellipse cx="100" cy="110" rx="3" ry="2" fill="#2d2d2d"></ellipse>
-
+  <ellipse
+     cx="100"
+     cy="110"
+     rx="3"
+     ry="2"
+     fill="#2d2d2d"
+     id="ellipse6" />
   <!-- Mouth -->
-  <path d="M94 118 Q100 124 106 118" stroke="#2d2d2d" stroke-width="2" fill="none" stroke-linecap="round"></path>
-
+  <path
+     d="M94 118 Q100 124 106 118"
+     stroke="#2d2d2d"
+     stroke-width="2"
+     fill="none"
+     stroke-linecap="round"
+     id="path6" />
 </svg>
