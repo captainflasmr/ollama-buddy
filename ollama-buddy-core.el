@@ -53,6 +53,14 @@
 (declare-function ollama-buddy-curl--non-streaming-sentinel "ollama-buddy-curl")
 (declare-function ollama-buddy-curl-test "ollama-buddy-curl")
 
+;; SVG/DOM forward declarations (loaded at runtime via `require 'svg')
+(declare-function svg-create "svg")
+(declare-function svg-rectangle "svg")
+(declare-function svg-circle "svg")
+(declare-function svg-image "svg")
+(declare-function dom-node "dom")
+(declare-function dom-append-child "dom")
+
 ;; Web search forward declarations
 (declare-function ollama-buddy-web-search-count "ollama-buddy-web-search")
 (declare-function ollama-buddy-web-search-get-context "ollama-buddy-web-search")
