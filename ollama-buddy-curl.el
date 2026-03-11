@@ -18,6 +18,7 @@
 ;; Shared request helpers
 (declare-function ollama-buddy--validate-send-request "ollama-buddy")
 (declare-function ollama-buddy--process-inline-prompt "ollama-buddy")
+(declare-function ollama-buddy--process-inline-prompt-async "ollama-buddy")
 (declare-function ollama-buddy--build-chat-payload "ollama-buddy")
 (declare-function ollama-buddy--setup-chat-send "ollama-buddy")
 ;; Shared streaming processor (used by both backends)
@@ -336,9 +337,15 @@ authentication via `ollama signin'."
   ;; Validate request
   (ollama-buddy--validate-send-request prompt tool-continuation-p)
 
-  ;; Process inline delimiters
-  (setq prompt (ollama-buddy--process-inline-prompt prompt))
+  ;; Process inline delimiters asynchronously, then send
+  (ollama-buddy--process-inline-prompt-async
+   prompt
+   (lambda (processed-prompt)
+     (ollama-buddy-curl--send-payload processed-prompt specified-model tool-continuation-p))))
 
+(defun ollama-buddy-curl--send-payload (prompt specified-model tool-continuation-p)
+  "Build and send the curl payload for PROMPT.
+SPECIFIED-MODEL and TOOL-CONTINUATION-P are passed through from `ollama-buddy-curl--send'."
   ;; Build payload and setup shared state
   (let* ((request (ollama-buddy--build-chat-payload prompt specified-model tool-continuation-p))
          (payload (plist-get request :payload))

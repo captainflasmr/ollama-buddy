@@ -21,9 +21,11 @@
 
 ;; Web search forward declarations
 (declare-function ollama-buddy-web-search-process-inline "ollama-buddy-web-search")
+(declare-function ollama-buddy-web-search-process-inline-async "ollama-buddy-web-search")
 (declare-function ollama-buddy-web-search-get-context "ollama-buddy-web-search")
 ;; RAG forward declarations
 (declare-function ollama-buddy-rag-process-inline "ollama-buddy-rag")
+(declare-function ollama-buddy-rag-process-inline-async "ollama-buddy-rag")
 ;; Main module forward declarations
 (declare-function ollama-buddy--trim-token-history "ollama-buddy")
 
@@ -120,6 +122,23 @@ Returns the possibly-modified prompt string."
              (fboundp 'ollama-buddy-rag-process-inline))
     (setq prompt (ollama-buddy-rag-process-inline prompt)))
   prompt)
+
+(defun ollama-buddy-remote--process-inline-features-async (prompt callback)
+  "Process inline web search and RAG features in PROMPT asynchronously.
+Calls CALLBACK with the modified prompt when done."
+  ;; Web search (async) → RAG (async) → callback
+  (let ((web-search-next
+         (lambda (p)
+           ;; Process inline @rag() queries asynchronously if RAG module is loaded
+           (if (and (featurep 'ollama-buddy-rag)
+                    (fboundp 'ollama-buddy-rag-process-inline-async))
+               (ollama-buddy-rag-process-inline-async p callback)
+             (funcall callback p)))))
+    ;; Process inline web search asynchronously if module is loaded
+    (if (and (featurep 'ollama-buddy-web-search)
+             (fboundp 'ollama-buddy-web-search-process-inline-async))
+        (ollama-buddy-web-search-process-inline-async prompt web-search-next)
+      (funcall web-search-next prompt))))
 
 ;;; Chat buffer preparation
 ;; ============================================================================
@@ -715,6 +734,16 @@ CONFIG is a plist with the following keys:
   :provider-name - display name (\"OpenAI\", \"Grok\", etc.)
   :extra-headers - additional HTTP headers alist (optional)
   :token-count-var - symbol for the token count variable"
+  ;; Process inline features asynchronously, then send
+  (ollama-buddy-remote--process-inline-features-async
+   prompt
+   (lambda (processed-prompt)
+     (ollama-buddy-remote--openai-send-payload
+      processed-prompt model config))))
+
+(defun ollama-buddy-remote--openai-send-payload (prompt model config)
+  "Build and send the OpenAI-compatible payload for PROMPT.
+MODEL and CONFIG are passed through from `ollama-buddy-remote--openai-send'."
   (let* ((prefix (plist-get config :prefix))
          (api-key (plist-get config :api-key))
          (endpoint (plist-get config :endpoint))
@@ -724,9 +753,6 @@ CONFIG is a plist with the following keys:
          (provider-name (plist-get config :provider-name))
          (extra-headers (plist-get config :extra-headers))
          (token-count-var (plist-get config :token-count-var)))
-
-    ;; Process inline features
-    (setq prompt (ollama-buddy-remote--process-inline-features prompt))
 
     ;; Set up the current model
     (setq ollama-buddy--current-model

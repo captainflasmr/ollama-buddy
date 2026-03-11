@@ -288,24 +288,44 @@ If SINGLE-P, return just the first vector; otherwise return all."
 
 ;;; Embedding Model Validation
 
+(defvar ollama-buddy-rag--embedding-model-cache nil
+  "Cache for embedding model availability.
+A cons cell (MODEL . TIMESTAMP) or nil.")
+
+(defvar ollama-buddy-rag--embedding-model-cache-ttl 300
+  "Seconds before re-checking embedding model availability.")
+
 (defun ollama-buddy-rag--embedding-model-available-p ()
   "Check if the configured embedding model is available in Ollama.
-Returns non-nil if the model is pulled and ready."
-  (condition-case nil
-      (let* ((url-request-method "GET")
-             (url (format "http://%s:%d/api/tags" ollama-buddy-host ollama-buddy-port)))
-        (with-temp-buffer
-          (url-insert-file-contents url)
-          (goto-char (point-min))
-          (let* ((json-object-type 'alist)
-                 (json-array-type 'list)
-                 (response (json-read))
-                 (models (alist-get 'models response)))
-            (cl-some (lambda (m)
-                       (string-prefix-p ollama-buddy-rag-embedding-model
-                                        (alist-get 'name m)))
-                     models))))
-    (error nil)))
+Returns non-nil if the model is pulled and ready.
+Results are cached for `ollama-buddy-rag--embedding-model-cache-ttl' seconds."
+  (let ((cached ollama-buddy-rag--embedding-model-cache))
+    (if (and cached
+             (string= (car cached) ollama-buddy-rag-embedding-model)
+             (< (- (float-time) (cdr cached))
+                ollama-buddy-rag--embedding-model-cache-ttl))
+        t
+      (let ((result
+             (condition-case nil
+                 (let* ((url-request-method "GET")
+                        (url (format "http://%s:%d/api/tags"
+                                     ollama-buddy-host ollama-buddy-port)))
+                   (with-temp-buffer
+                     (url-insert-file-contents url)
+                     (goto-char (point-min))
+                     (let* ((json-object-type 'alist)
+                            (json-array-type 'list)
+                            (response (json-read))
+                            (models (alist-get 'models response)))
+                       (cl-some (lambda (m)
+                                  (string-prefix-p ollama-buddy-rag-embedding-model
+                                                   (alist-get 'name m)))
+                                models))))
+               (error nil))))
+        (when result
+          (setq ollama-buddy-rag--embedding-model-cache
+                (cons ollama-buddy-rag-embedding-model (float-time))))
+        result))))
 
 (defun ollama-buddy-rag--ensure-embedding-model ()
   "Signal an error if the embedding model is not available.
@@ -973,6 +993,76 @@ Returns the text with @rag() delimiters removed."
                                query (length results) token-estimate)))))))))))
   ;; Return text with delimiters removed
   (ollama-buddy-rag-remove-inline-delimiters text))
+
+;;; Async Inline @rag() Processing
+
+(defun ollama-buddy-rag--process-inline-queries-async (queries index index-name callback)
+  "Process QUERIES asynchronously against INDEX from INDEX-NAME.
+Attaches results to `ollama-buddy-rag--current-results' as each query
+completes, then calls CALLBACK (no args) when all queries are done."
+  (if (null queries)
+      (funcall callback)
+    (let ((query (car queries))
+          (remaining (cdr queries)))
+      (message "Inline RAG search: %s" query)
+      (ollama-buddy-rag--get-embedding-async
+       query
+       (lambda (query-embedding)
+         (if (null query-embedding)
+             (message "RAG embedding failed for: %s" query)
+           (let* ((chunks (plist-get index :chunks))
+                  (results (ollama-buddy-rag--search-chunks
+                            query-embedding chunks
+                            ollama-buddy-rag-top-k
+                            ollama-buddy-rag-similarity-threshold)))
+             (if (null results)
+                 (message "No RAG results for: %s" query)
+               (let* ((formatted-content
+                       (ollama-buddy-rag--format-results-for-context
+                        results query index-name))
+                      (token-estimate
+                       (ollama-buddy-rag--estimate-tokens formatted-content))
+                      (attachment (list :query query
+                                        :index-name index-name
+                                        :results results
+                                        :content formatted-content
+                                        :tokens token-estimate
+                                        :timestamp (current-time))))
+                 ;; Remove existing attachment for same query
+                 (setq ollama-buddy-rag--current-results
+                       (cl-remove-if
+                        (lambda (r) (string= query (plist-get r :query)))
+                        ollama-buddy-rag--current-results))
+                 (push attachment ollama-buddy-rag--current-results)
+                 (message "RAG attached: \"%s\" (%d chunks, ~%d tokens)"
+                          query (length results) token-estimate)))))
+         ;; Process next query
+         (ollama-buddy-rag--process-inline-queries-async
+          remaining index index-name callback))))))
+
+(defun ollama-buddy-rag-process-inline-async (text callback)
+  "Process TEXT for inline @rag(query) patterns asynchronously.
+Calls CALLBACK with the modified text (delimiters removed) when done.
+If there are no @rag() patterns, calls CALLBACK immediately."
+  (let ((queries (ollama-buddy-rag-extract-inline-queries text)))
+    (if (null queries)
+        (funcall callback text)
+      (ollama-buddy-rag--ensure-embedding-model)
+      (let ((index-names (ollama-buddy-rag--list-index-names)))
+        (unless index-names
+          (user-error "No RAG indexes found.  Index a directory first with M-x ollama-buddy-rag-index-directory"))
+        (let* ((index-name (if (= 1 (length index-names))
+                               (car index-names)
+                             (completing-read "RAG index for inline search: "
+                                              index-names nil t)))
+               (index (ollama-buddy-rag--load-index index-name)))
+          (unless index
+            (user-error "Index '%s' not found or could not be loaded" index-name))
+          (ollama-buddy-rag--process-inline-queries-async
+           queries index index-name
+           (lambda ()
+             (funcall callback
+                      (ollama-buddy-rag-remove-inline-delimiters text)))))))))
 
 (provide 'ollama-buddy-rag)
 ;;; ollama-buddy-rag.el ends here

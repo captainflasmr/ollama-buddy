@@ -97,9 +97,14 @@ Use nil for API default behavior (adaptive)."
          ollama-buddy-gemini-api-key
          'ollama-buddy-gemini-api-key
          "Google Gemini")
-    ;; Process inline features
-    (setq prompt (ollama-buddy-remote--process-inline-features prompt))
+    ;; Process inline features asynchronously, then send
+    (ollama-buddy-remote--process-inline-features-async
+     prompt
+     (lambda (processed-prompt)
+       (ollama-buddy-gemini--send-payload processed-prompt model)))))
 
+(defun ollama-buddy-gemini--send-payload (prompt model)
+  "Build and send the Gemini payload for PROMPT with MODEL."
     ;; Set up the current model
     (setq ollama-buddy--current-model
           (or model
@@ -227,7 +232,7 @@ Use nil for API default behavior (adaptive)."
                        (error
                         (ollama-buddy-remote--handle-error
                          start-point "Gemini"
-                         (error-message-string err)))))))))))))))
+                         (error-message-string err))))))))))))))
 
 (defun ollama-buddy-gemini--fetch-models ()
   "Fetch available models from Google Gemini API."

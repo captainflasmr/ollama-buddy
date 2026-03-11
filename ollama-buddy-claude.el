@@ -100,9 +100,14 @@ Use nil for API default behavior (adaptive)."
          ollama-buddy-claude-api-key
          'ollama-buddy-claude-api-key
          "Anthropic Claude")
-    ;; Process inline features
-    (setq prompt (ollama-buddy-remote--process-inline-features prompt))
+    ;; Process inline features asynchronously, then send
+    (ollama-buddy-remote--process-inline-features-async
+     prompt
+     (lambda (processed-prompt)
+       (ollama-buddy-claude--send-payload processed-prompt model)))))
 
+(defun ollama-buddy-claude--send-payload (prompt model)
+  "Build and send the Claude payload for PROMPT with MODEL."
     ;; Set up the current model
     (setq ollama-buddy--current-model
           (or model
@@ -206,7 +211,7 @@ Use nil for API default behavior (adaptive)."
                        (error
                         (ollama-buddy-remote--handle-error
                          start-point "Claude"
-                         (error-message-string err)))))))))))))))
+                         (error-message-string err))))))))))))))
 
 (defun ollama-buddy-claude--fetch-models ()
   "Fetch available models from Anthropic's Claude API."

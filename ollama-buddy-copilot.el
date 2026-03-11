@@ -415,24 +415,25 @@ The token is cached until expiry."
 
 (defun ollama-buddy-copilot--send (prompt &optional model)
   "Send PROMPT to GitHub Copilot API using MODEL or default model asynchronously."
-  ;; Process inline features before async token fetch
-  (setq prompt (ollama-buddy-remote--process-inline-features prompt))
+  ;; Process inline features asynchronously, then send
+  (ollama-buddy-remote--process-inline-features-async
+   prompt
+   (lambda (processed-prompt)
+     ;; Set up the current model
+     (setq ollama-buddy--current-model
+           (or model
+               ollama-buddy--current-model
+               (ollama-buddy-remote--get-full-model-name
+                ollama-buddy-copilot-marker-prefix
+                ollama-buddy-copilot-default-model)))
 
-  ;; Set up the current model
-  (setq ollama-buddy--current-model
-        (or model
-            ollama-buddy--current-model
-            (ollama-buddy-remote--get-full-model-name
-             ollama-buddy-copilot-marker-prefix
-             ollama-buddy-copilot-default-model)))
+     ;; Initialize token counter
+     (setq ollama-buddy-copilot--current-token-count 0)
 
-  ;; Initialize token counter
-  (setq ollama-buddy-copilot--current-token-count 0)
-
-  ;; Get access token and then send request
-  (ollama-buddy-copilot--get-access-token
-   (lambda (access-token)
-     (ollama-buddy-copilot--send-with-token prompt access-token))))
+     ;; Get access token and then send request
+     (ollama-buddy-copilot--get-access-token
+      (lambda (access-token)
+        (ollama-buddy-copilot--send-with-token processed-prompt access-token))))))
 
 (defun ollama-buddy-copilot--send-with-token (prompt access-token)
   "Send PROMPT to Copilot API using ACCESS-TOKEN."

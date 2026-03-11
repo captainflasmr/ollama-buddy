@@ -3931,6 +3931,42 @@ Handles @search(), @rag(), @file(), and @skills() syntax."
     (setq prompt (ollama-buddy--skills-process-inline prompt)))
   prompt)
 
+(defun ollama-buddy--process-inline-prompt-async (prompt callback)
+  "Process inline delimiters in PROMPT asynchronously.
+Handles @search() and @rag() asynchronously to avoid blocking Emacs.
+Handles @file() and @skills() synchronously (local operations).
+Calls CALLBACK with the modified prompt when all processing is complete."
+  (if (not (and prompt (not ollama-buddy--skip-inline-processing)))
+      (funcall callback prompt)
+    ;; Web search (async) → RAG (async) → file/skills (sync) → callback
+    (ollama-buddy--process-inline-web-search-async
+     prompt
+     (lambda (p)
+       (ollama-buddy--process-inline-rag-async
+        p
+        (lambda (p2)
+          (setq p2 (ollama-buddy--file-process-inline p2))
+          (setq p2 (ollama-buddy--skills-process-inline p2))
+          (funcall callback p2)))))))
+
+(defun ollama-buddy--process-inline-web-search-async (prompt callback)
+  "Process @search() patterns in PROMPT asynchronously.
+Calls CALLBACK with modified prompt."
+  (if (and (featurep 'ollama-buddy-web-search)
+           (fboundp 'ollama-buddy-web-search-process-inline-async))
+      (ollama-buddy-web-search-process-inline-async prompt callback)
+    ;; Module not loaded — pass through
+    (funcall callback prompt)))
+
+(defun ollama-buddy--process-inline-rag-async (prompt callback)
+  "Process @rag() patterns in PROMPT asynchronously.
+Calls CALLBACK with modified prompt."
+  (if (and (featurep 'ollama-buddy-rag)
+           (fboundp 'ollama-buddy-rag-process-inline-async))
+      (ollama-buddy-rag-process-inline-async prompt callback)
+    ;; Module not loaded — pass through
+    (funcall callback prompt)))
+
 (defun ollama-buddy--build-chat-payload (prompt specified-model tool-continuation-p)
   "Build the JSON payload and metadata for a chat API request.
 PROMPT is the user message text (may be nil for TOOL-CONTINUATION-P).
@@ -4129,9 +4165,15 @@ and no new user message is added."
   ;; Validate request
   (ollama-buddy--validate-send-request prompt tool-continuation-p)
 
-  ;; Process inline delimiters
-  (setq prompt (ollama-buddy--process-inline-prompt prompt))
+  ;; Process inline delimiters asynchronously, then send
+  (ollama-buddy--process-inline-prompt-async
+   prompt
+   (lambda (processed-prompt)
+     (ollama-buddy--send-payload processed-prompt specified-model tool-continuation-p))))
 
+(defun ollama-buddy--send-payload (prompt specified-model tool-continuation-p)
+  "Build and send the chat payload for PROMPT.
+SPECIFIED-MODEL and TOOL-CONTINUATION-P are passed through from `ollama-buddy--send'."
   ;; Build payload and setup shared state
   (let* ((request (ollama-buddy--build-chat-payload prompt specified-model tool-continuation-p))
          (payload (plist-get request :payload)))

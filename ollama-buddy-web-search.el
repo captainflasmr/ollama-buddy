@@ -573,5 +573,79 @@ Returns the text with search delimiters removed."
     ;; Return text with delimiters removed
     (ollama-buddy-web-search-remove-inline-delimiters text)))
 
+;;; Async Inline @search() Processing
+
+(defun ollama-buddy-web-search--process-inline-query-async (query callback)
+  "Process a single inline web search QUERY asynchronously.
+Fetches results, optionally fetches URL content, attaches to context.
+Calls CALLBACK (no args) when done."
+  (message "Inline web search: %s" query)
+  (ollama-buddy-web-search--fetch
+   query
+   (lambda (success result)
+     (if (not success)
+         (progn
+           (message "Search failed for: %s" query)
+           (funcall callback))
+       (let ((limited-results (seq-take result ollama-buddy-web-search-max-results)))
+         (if (eq ollama-buddy-web-search-content-source 'api)
+             ;; API content — no URL fetching needed
+             (progn
+               (ollama-buddy-web-search--inline-attach-results
+                limited-results query nil)
+               (funcall callback))
+           ;; Fetch URLs asynchronously, then attach
+           (ollama-buddy-web-search--fetch-all-urls-async
+            limited-results
+            (lambda (content-map)
+              (ollama-buddy-web-search--inline-attach-results
+               limited-results query content-map)
+              (funcall callback)))))))))
+
+(defun ollama-buddy-web-search--inline-attach-results (results query content-map)
+  "Attach inline search RESULTS for QUERY with optional CONTENT-MAP."
+  (let* ((formatted-content (ollama-buddy-web-search--format-results
+                             results query content-map))
+         (token-estimate (ollama-buddy-web-search--estimate-tokens formatted-content))
+         (content-alist (when content-map
+                          (let (pairs)
+                            (maphash (lambda (k v) (push (cons k v) pairs)) content-map)
+                            pairs)))
+         (search-attachment
+          (list :query query
+                :content formatted-content
+                :results results
+                :content-map content-alist
+                :size (length formatted-content)
+                :tokens token-estimate
+                :timestamp (current-time))))
+    (push search-attachment ollama-buddy-web-search--current-results)
+    (message "Attached: \"%s\" (%d results, ~%d tokens)"
+             query (length results) token-estimate)))
+
+(defun ollama-buddy-web-search--process-inline-queries-async (queries callback)
+  "Process QUERIES list asynchronously, one at a time.
+Calls CALLBACK (no args) when all queries are done."
+  (if (null queries)
+      (funcall callback)
+    (ollama-buddy-web-search--process-inline-query-async
+     (car queries)
+     (lambda ()
+       (ollama-buddy-web-search--process-inline-queries-async
+        (cdr queries) callback)))))
+
+(defun ollama-buddy-web-search-process-inline-async (text callback)
+  "Process TEXT for inline @search(query) patterns asynchronously.
+Calls CALLBACK with the modified text (delimiters removed) when done.
+If there are no @search() patterns, calls CALLBACK immediately."
+  (let ((queries (ollama-buddy-web-search-extract-inline-queries text)))
+    (if (null queries)
+        (funcall callback text)
+      (ollama-buddy-web-search--process-inline-queries-async
+       queries
+       (lambda ()
+         (funcall callback
+                  (ollama-buddy-web-search-remove-inline-delimiters text)))))))
+
 (provide 'ollama-buddy-web-search)
 ;;; ollama-buddy-web-search.el ends here
