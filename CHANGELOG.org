@@ -11,6 +11,22 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-03-12 Wed> *3.6.0*
+
+RAG incremental updates and cancellation.
+
+*** New Features
+
+- *Incremental RAG updates* -- =M-x ollama-buddy-rag-update-directory= (or
+  =u= in the RAG transient menu) re-indexes only files that have been added or
+  modified since the last indexing, and removes chunks for deleted files.  File
+  modification times are now stored in the index to enable change detection.
+  Falls back to a full re-index when no prior metadata exists or when the
+  embedding model has changed.
+- *Cancel RAG indexing* -- =M-x ollama-buddy-rag-cancel= (or =c= in the RAG
+  transient menu) stops an in-progress indexing or update operation.  The
+  cancellation takes effect cleanly before the next embedding batch.
+
 ** <2026-03-08 Sat> *3.5.1*
 
 Curl backend refactor — unified request pipeline and HTTP error handling.

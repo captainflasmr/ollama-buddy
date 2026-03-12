@@ -37,6 +37,7 @@
 (declare-function ollama-buddy--register-background-operation "ollama-buddy-core")
 (declare-function ollama-buddy--complete-background-operation "ollama-buddy-core")
 (declare-function ollama-buddy--update-background-operation "ollama-buddy-core")
+(declare-function ollama-buddy--update-status "ollama-buddy-core")
 
 ;;; Customization
 
@@ -563,6 +564,40 @@ Returns index plist or nil if not found."
       (remhash index-name ollama-buddy-rag--indexes)
       t)))
 
+;;; Incremental Update Helpers
+
+(defun ollama-buddy-rag--collect-files-metadata (files)
+  "Collect modification times for FILES.
+Returns alist of (filepath . mtime-float) for change tracking."
+  (mapcar (lambda (file)
+            (cons file (float-time
+                        (file-attribute-modification-time
+                         (file-attributes file)))))
+          files))
+
+(defun ollama-buddy-rag--detect-changes (index current-files)
+  "Compare INDEX file metadata against CURRENT-FILES.
+Returns plist with :added :modified :deleted :unchanged file lists."
+  (let* ((stored-metadata (plist-get index :files-metadata))
+         (stored-files (mapcar #'car stored-metadata))
+         (added (cl-set-difference current-files stored-files :test #'string=))
+         (deleted (cl-set-difference stored-files current-files :test #'string=))
+         (common (cl-intersection current-files stored-files :test #'string=))
+         (modified nil)
+         (unchanged nil))
+    (dolist (file common)
+      (let* ((stored-mtime (cdr (assoc file stored-metadata)))
+             (current-mtime (float-time
+                             (file-attribute-modification-time
+                              (file-attributes file)))))
+        (if (> current-mtime stored-mtime)
+            (push file modified)
+          (push file unchanged))))
+    (list :added added
+          :modified modified
+          :deleted deleted
+          :unchanged unchanged)))
+
 ;;; Formatting Functions
 
 (defun ollama-buddy-rag--format-chunk-for-display (chunk &optional index)
@@ -603,50 +638,73 @@ Returns index plist or nil if not found."
 ;;; Async Batch Processing
 
 (defvar ollama-buddy-rag--indexing-in-progress nil
-  "Non-nil when an indexing operation is in progress.")
+  "Non-nil when an indexing operation is in progress.
+Holds the operation-id symbol for the current operation, or nil.")
+
+(defvar ollama-buddy-rag--cancel-requested nil
+  "Non-nil when the user has requested cancellation of the current indexing.")
 
 (defun ollama-buddy-rag--process-batches (all-chunks batch-size batch-num total-batches
                                                      index-name dir file-count chunk-count
-                                                     operation-id)
+                                                     operation-id
+                                                     &optional retained-chunks files-metadata)
   "Process embedding batches asynchronously.
 Embeds chunks in ALL-CHUNKS starting from BATCH-NUM of TOTAL-BATCHES.
 INDEX-NAME, DIR, FILE-COUNT, CHUNK-COUNT are used for the final index.
-OPERATION-ID tracks this in the status line."
-  (let* ((i (* batch-num batch-size))
-         (batch-end (min (+ i batch-size) chunk-count))
-         (batch-chunks (cl-subseq all-chunks i batch-end))
-         (texts (mapcar (lambda (c) (plist-get c :content)) batch-chunks)))
-    (ollama-buddy--update-background-operation
-     operation-id
-     (format "RAG indexing %d/%d" (1+ batch-num) total-batches))
-    (ollama-buddy-rag--get-embeddings-batch-async
-     texts
-     (lambda (embeddings)
-       (when embeddings
-         (cl-loop for chunk in batch-chunks
-                  for emb in embeddings
-                  do (nconc chunk (list :embedding emb))))
-       (let ((next-batch (1+ batch-num)))
-         (if (< next-batch total-batches)
-             ;; Process next batch
-             (ollama-buddy-rag--process-batches
-              all-chunks batch-size next-batch total-batches
-              index-name dir file-count chunk-count operation-id)
-           ;; All batches done - save index
-           (let ((index (list :version ollama-buddy-rag--version
-                              :name index-name
-                              :source-path dir
-                              :embedding-model ollama-buddy-rag-embedding-model
-                              :created (format-time-string "%Y-%m-%dT%H:%M:%S")
-                              :file-count file-count
-                              :chunk-count chunk-count
-                              :chunks all-chunks)))
-             (ollama-buddy-rag--save-index index)
-             (puthash index-name index ollama-buddy-rag--indexes)
-             (setq ollama-buddy-rag--indexing-in-progress nil)
-             (ollama-buddy--complete-background-operation
-              operation-id
-              (format "RAG indexed: %d files, %d chunks" file-count chunk-count)))))))))
+OPERATION-ID tracks this in the status line.
+RETAINED-CHUNKS are pre-embedded chunks to merge into the final index.
+FILES-METADATA is an alist of (filepath . mtime) for change tracking."
+  ;; Check for cancellation before processing next batch
+  (if ollama-buddy-rag--cancel-requested
+      (progn
+        (setq ollama-buddy-rag--indexing-in-progress nil
+              ollama-buddy-rag--cancel-requested nil)
+        (ollama-buddy--complete-background-operation
+         operation-id
+         (format "RAG cancelled at batch %d/%d" (1+ batch-num) total-batches))
+        (message "RAG indexing cancelled at batch %d/%d" (1+ batch-num) total-batches))
+    (let* ((i (* batch-num batch-size))
+           (batch-end (min (+ i batch-size) chunk-count))
+           (batch-chunks (cl-subseq all-chunks i batch-end))
+           (texts (mapcar (lambda (c) (plist-get c :content)) batch-chunks)))
+      (ollama-buddy--update-background-operation
+       operation-id
+       (format "RAG indexing %d/%d" (1+ batch-num) total-batches))
+      (ollama-buddy-rag--get-embeddings-batch-async
+       texts
+       (lambda (embeddings)
+         (when embeddings
+           (cl-loop for chunk in batch-chunks
+                    for emb in embeddings
+                    do (nconc chunk (list :embedding emb))))
+         (let ((next-batch (1+ batch-num)))
+           (if (< next-batch total-batches)
+               ;; Process next batch
+               (ollama-buddy-rag--process-batches
+                all-chunks batch-size next-batch total-batches
+                index-name dir file-count chunk-count operation-id
+                retained-chunks files-metadata)
+             ;; All batches done - save index
+             (let* ((final-chunks (if retained-chunks
+                                      (append retained-chunks all-chunks)
+                                    all-chunks))
+                    (final-chunk-count (length final-chunks))
+                    (index (list :version ollama-buddy-rag--version
+                                 :name index-name
+                                 :source-path dir
+                                 :embedding-model ollama-buddy-rag-embedding-model
+                                 :created (format-time-string "%Y-%m-%dT%H:%M:%S")
+                                 :file-count file-count
+                                 :chunk-count final-chunk-count
+                                 :files-metadata files-metadata
+                                 :chunks final-chunks)))
+               (ollama-buddy-rag--save-index index)
+               (puthash index-name index ollama-buddy-rag--indexes)
+               (setq ollama-buddy-rag--indexing-in-progress nil)
+               (ollama-buddy--complete-background-operation
+                operation-id
+                (format "RAG indexed: %d files, %d chunks"
+                        file-count final-chunk-count))))))))))
 
 ;;; Public Commands
 
@@ -687,16 +745,130 @@ Files are chunked, then embedded asynchronously via Ollama."
 
     (setq all-chunks (nreverse all-chunks))
     (let ((total-batches (ceiling (/ (float chunk-count) ollama-buddy-rag-batch-size)))
-          (operation-id (gensym "rag-index-")))
+          (operation-id (gensym "rag-index-"))
+          (files-metadata (ollama-buddy-rag--collect-files-metadata filtered-files)))
       (message "Created %d chunks from %d files. Generating embeddings (%d batches)..."
                chunk-count file-count total-batches)
-      (setq ollama-buddy-rag--indexing-in-progress t)
+      (setq ollama-buddy-rag--cancel-requested nil
+            ollama-buddy-rag--indexing-in-progress operation-id)
       (ollama-buddy--register-background-operation
        operation-id
        (format "RAG indexing 1/%d" total-batches))
       (ollama-buddy-rag--process-batches
        all-chunks ollama-buddy-rag-batch-size 0 total-batches
-       index-name dir file-count chunk-count operation-id))))
+       index-name dir file-count chunk-count operation-id
+       nil files-metadata))))
+
+;;;###autoload
+(defun ollama-buddy-rag-update-directory (directory)
+  "Incrementally update the RAG index for DIRECTORY.
+Only re-indexes files that have been added or modified since the last
+indexing.  Removes chunks for deleted files.  Falls back to a full
+re-index if no existing index with metadata is found or if the
+embedding model has changed."
+  (interactive "DDirectory to update: ")
+  (ollama-buddy-rag--ensure-embedding-model)
+  (when ollama-buddy-rag--indexing-in-progress
+    (user-error "An indexing operation is already in progress"))
+  (let* ((dir (expand-file-name directory))
+         (index-name (ollama-buddy-rag--index-name-from-path dir))
+         (existing-index (ollama-buddy-rag--load-index index-name)))
+    (cond
+     ;; No existing index or no metadata -> full index
+     ((or (null existing-index)
+          (null (plist-get existing-index :files-metadata)))
+      (message "No existing index with file metadata. Performing full index...")
+      (ollama-buddy-rag-index-directory directory))
+
+     ;; Embedding model changed -> need full re-index
+     ((and (plist-get existing-index :embedding-model)
+           (not (string= (plist-get existing-index :embedding-model)
+                          ollama-buddy-rag-embedding-model)))
+      (if (y-or-n-p
+           (format "Embedding model changed (%s -> %s). Full re-index needed. Proceed? "
+                   (plist-get existing-index :embedding-model)
+                   ollama-buddy-rag-embedding-model))
+          (ollama-buddy-rag-index-directory directory)
+        (user-error "Update cancelled")))
+
+     ;; Normal incremental update
+     (t
+      (let* ((files (directory-files-recursively
+                     dir
+                     (concat "\\." (regexp-opt ollama-buddy-rag-file-extensions) "$")))
+             (filtered-files (cl-remove-if #'ollama-buddy-rag--excluded-p files))
+             (changes (ollama-buddy-rag--detect-changes existing-index filtered-files))
+             (added (plist-get changes :added))
+             (modified (plist-get changes :modified))
+             (deleted (plist-get changes :deleted))
+             (unchanged (plist-get changes :unchanged))
+             (files-to-process (append added modified)))
+
+        (message "Changes: %d added, %d modified, %d deleted, %d unchanged"
+                 (length added) (length modified) (length deleted) (length unchanged))
+
+        (if (and (null files-to-process) (null deleted))
+            (message "Index is up to date. No changes needed.")
+
+          ;; Retain chunks from unchanged files
+          (let* ((existing-chunks (plist-get existing-index :chunks))
+                 (unchanged-set (let ((ht (make-hash-table :test 'equal)))
+                                  (dolist (f unchanged) (puthash f t ht))
+                                  ht))
+                 (retained-chunks
+                  (cl-remove-if-not
+                   (lambda (chunk)
+                     (gethash (plist-get chunk :file) unchanged-set))
+                   existing-chunks))
+                 (all-new-chunks nil)
+                 (new-chunk-count 0)
+                 (files-metadata (ollama-buddy-rag--collect-files-metadata filtered-files))
+                 (total-files (length filtered-files)))
+
+            ;; Chunk new/modified files
+            (dolist (file files-to-process)
+              (let ((chunks (ollama-buddy-rag--chunk-file file)))
+                (when chunks
+                  (let ((relative-file (file-relative-name file dir)))
+                    (dolist (chunk chunks)
+                      (setq chunk (plist-put chunk :relative-file relative-file))
+                      (push chunk all-new-chunks)
+                      (cl-incf new-chunk-count))))))
+
+            (setq all-new-chunks (nreverse all-new-chunks))
+
+            (if (zerop new-chunk-count)
+                ;; Only deletions, no new chunks to embed
+                (let ((index (list :version ollama-buddy-rag--version
+                                   :name index-name
+                                   :source-path dir
+                                   :embedding-model ollama-buddy-rag-embedding-model
+                                   :created (format-time-string "%Y-%m-%dT%H:%M:%S")
+                                   :file-count total-files
+                                   :chunk-count (length retained-chunks)
+                                   :files-metadata files-metadata
+                                   :chunks retained-chunks)))
+                  (ollama-buddy-rag--save-index index)
+                  (puthash index-name index ollama-buddy-rag--indexes)
+                  (message "Index updated: %d file(s) removed, %d chunks retained"
+                           (length deleted) (length retained-chunks)))
+
+              ;; Embed new chunks async
+              (let ((total-batches (ceiling (/ (float new-chunk-count)
+                                               ollama-buddy-rag-batch-size)))
+                    (operation-id (gensym "rag-update-")))
+                (message "Updating: %d file(s) to process (%d chunks, %d batches). Retaining %d chunks."
+                         (length files-to-process) new-chunk-count total-batches
+                         (length retained-chunks))
+                (setq ollama-buddy-rag--cancel-requested nil
+                      ollama-buddy-rag--indexing-in-progress operation-id)
+                (ollama-buddy--register-background-operation
+                 operation-id
+                 (format "RAG updating 1/%d" total-batches))
+                (ollama-buddy-rag--process-batches
+                 all-new-chunks ollama-buddy-rag-batch-size 0 total-batches
+                 index-name dir total-files new-chunk-count operation-id
+                 retained-chunks files-metadata))))))))))
 
 ;;;###autoload
 (defun ollama-buddy-rag-search (query)
@@ -846,7 +1018,9 @@ Files are chunked, then embedded asynchronously via Ollama."
                   (insert (format "  - Files: %d\n" (plist-get index :file-count)))
                   (insert (format "  - Chunks: %d\n" (plist-get index :chunk-count)))
                   (insert (format "  - Model: %s\n" (plist-get index :embedding-model)))
-                  (insert (format "  - Created: %s\n" (plist-get index :created))))
+                  (insert (format "  - Created: %s\n" (plist-get index :created)))
+                  (insert (format "  - Incremental: %s\n"
+                                  (if (plist-get index :files-metadata) "yes" "no (re-index to enable)"))))
                 (insert "\n")))
             (goto-char (point-min))
             (org-mode)
@@ -867,11 +1041,24 @@ Files are chunked, then embedded asynchronously via Ollama."
       (message "Index '%s' not found" index-name))))
 
 ;;;###autoload
+(defun ollama-buddy-rag-cancel ()
+  "Cancel the current RAG indexing or update operation.
+The cancellation takes effect before the next embedding batch is sent."
+  (interactive)
+  (if ollama-buddy-rag--indexing-in-progress
+      (progn
+        (setq ollama-buddy-rag--cancel-requested t)
+        (message "RAG cancellation requested (will stop after current batch)..."))
+    (message "No RAG indexing operation in progress")))
+
+;;;###autoload
 (defun ollama-buddy-rag-clear-attached ()
   "Clear all attached RAG context."
   (interactive)
   (let ((count (length ollama-buddy-rag--current-results)))
     (setq ollama-buddy-rag--current-results nil)
+    (when (get-buffer ollama-buddy--chat-buffer)
+      (ollama-buddy--update-status ollama-buddy--status))
     (message "Cleared %d RAG attachment(s)" count)))
 
 ;;; Context Integration Functions

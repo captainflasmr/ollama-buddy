@@ -333,8 +333,9 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Configuration-8][25.5 Configuration]]
   - [[#PDF-Support][25.6 PDF Support]]
   - [[#Interactive-Commands-1][25.7 Interactive Commands]]
-  - [[#Inline-_0040rag_0028_0029-Syntax][25.8 Inline @rag() Syntax]]
-  - [[#Example-Workflow][25.9 Example Workflow]]
+  - [[#Incremental-Updates][25.8 Incremental Updates]]
+  - [[#Inline-_0040rag_0028_0029-Syntax][25.9 Inline @rag() Syntax]]
+  - [[#Example-Workflow][25.10 Example Workflow]]
 - [[#Advanced-Usage][26 Advanced Usage]]
   - [[#Managing-Token-Usage][26.1 Managing Token Usage]]
   - [[#Customizing-the-Interface][26.2 Customizing the Interface]]
@@ -5854,6 +5855,7 @@ Next: [[#Advanced-Usage][Advanced Usage]], Previous:
 - [[#Configuration-8][Configuration]]
 - [[#PDF-Support][PDF Support]]
 - [[#Interactive-Commands-1][Interactive Commands]]
+- [[#Incremental-Updates][Incremental Updates]]
 - [[#Inline-_0040rag_0028_0029-Syntax][Inline @rag() Syntax]]
 - [[#Example-Workflow][Example Workflow]]
 
@@ -5906,6 +5908,8 @@ model is needed.
 5. Search your index: select s and enter a query
 6. Or attach context to a conversation: select a, enter a query, then
    chat normally
+7. After editing files, update the index incrementally: select u and
+   choose the same directory
 
 <<How-It-Works-5>>
 *** 25.4 How It Works [[#How-It-Works-5][¶]]
@@ -6022,26 +6026,71 @@ brew install poppler
 :END:
 These commands are available from the RAG transient menu (C-c O then r):
 
-- =ollama-buddy-rag-index-directory-interactive (==i==)= :: Index a
-  directory. Prompts for the directory path, reads and chunks all
-  matching files, then asynchronously generates embeddings. Progress is
-  shown in the status line.
+- =ollama-buddy-rag-index-directory (==i==)= :: Index a directory.
+  Prompts for the directory path, reads and chunks all matching files,
+  then asynchronously generates embeddings. Progress is shown in the
+  status line. File modification times are recorded so that future
+  incremental updates can detect changes.
 
-- =ollama-buddy-rag-search-interactive (==s==)= :: Search the index with
-  a text query. Results are displayed in an org-mode buffer showing
-  similarity scores, file paths, and content excerpts.
+- =ollama-buddy-rag-update-directory (==u==)= :: Incrementally update an
+  existing index. Only files that have been added or modified since the
+  last indexing are re-chunked and re-embedded; chunks from unchanged
+  files are retained. Chunks for deleted files are removed. If no
+  existing index with metadata is found, a full re-index is performed
+  automatically. If the embedding model has changed since the index was
+  created, a full re-index is required and the user is prompted before
+  proceeding.
 
-- =ollama-buddy-rag-attach-context (==a==)= :: Search and attach the top
-  results as context for the next conversation. Attached RAG context
-  appears when you use Show Attachments.
+- =ollama-buddy-rag-cancel (==c==)= :: Cancel an in-progress indexing or
+  update operation. The cancellation takes effect before the next
+  embedding batch is sent, so the current in-flight batch completes but
+  no further batches are processed. The previous index (if any) is left
+  unchanged.
 
-- =ollama-buddy-rag-list-indices (==w==)= :: List all saved RAG indices
-  with their chunk counts and file counts.
+- =ollama-buddy-rag-search (==s==)= :: Search the index with a text
+  query. Results are displayed in an org-mode buffer showing similarity
+  scores, file paths, and content excerpts.
+
+- =ollama-buddy-rag-attach (==a==)= :: Search and attach the top results
+  as context for the next conversation. Attached RAG context appears
+  when you use Show Attachments.
+
+- =ollama-buddy-rag-list-indexes (==w==)= :: List all saved RAG indexes
+  with their chunk counts, file counts, and whether the index supports
+  incremental updates.
 
 - =ollama-buddy-rag-delete-index (==d==)= :: Delete a saved RAG index.
 
+<<Incremental-Updates>>
+*** 25.8 Incremental Updates [[#Incremental-Updates][¶]]
+:PROPERTIES:
+:CUSTOM_ID: incremental-updates
+:CLASS: section
+:END:
+When you first index a directory with i, the index records modification
+times for every file. On subsequent runs you can use u (Update
+Directory) instead of re-indexing from scratch:
+
+1. Files whose modification time has changed are re-chunked and
+   re-embedded.
+2. New files are chunked and embedded.
+3. Chunks belonging to deleted files are removed.
+4. Chunks for unchanged files are kept as-is --- no embedding calls are
+   made for them.
+
+This makes updates significantly faster for large directories where only
+a few files have changed.
+
+Incremental updates require the same embedding model that was used to
+create the index. If you change =ollama-buddy-rag-embedding-model=, a
+full re-index is needed (you will be prompted).
+
+Indexes created before version 3.6.0 do not contain file metadata.
+Running Update Directory on such an index automatically falls back to a
+full re-index and saves the metadata for future incremental updates.
+
 <<Inline-_0040rag_0028_0029-Syntax>>
-*** 25.8 Inline @rag() Syntax [[#Inline-_0040rag_0028_0029-Syntax][¶]]
+*** 25.9 Inline @rag() Syntax [[#Inline-_0040rag_0028_0029-Syntax][¶]]
 :PROPERTIES:
 :CUSTOM_ID: inline-rag-syntax
 :CLASS: section
@@ -6072,7 +6121,7 @@ If you have multiple indexes, you will be prompted to select one. If
 only one index exists, it is used automatically.
 
 <<Example-Workflow>>
-*** 25.9 Example Workflow [[#Example-Workflow][¶]]
+*** 25.10 Example Workflow [[#Example-Workflow][¶]]
 :PROPERTIES:
 :CUSTOM_ID: example-workflow
 :CLASS: section

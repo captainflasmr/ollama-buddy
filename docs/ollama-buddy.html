@@ -438,8 +438,9 @@ allowing you to leverage powerful large language models (LLMs) directly within y
     <li><a id="toc-Configuration-7" href="#Configuration-8">25.5 Configuration</a></li>
     <li><a id="toc-PDF-Support" href="#PDF-Support">25.6 PDF Support</a></li>
     <li><a id="toc-Interactive-Commands-1" href="#Interactive-Commands-1">25.7 Interactive Commands</a></li>
-    <li><a id="toc-Inline-_0040rag_0028_0029-Syntax" href="#Inline-_0040rag_0028_0029-Syntax">25.8 Inline @rag() Syntax</a></li>
-    <li><a id="toc-Example-Workflow" href="#Example-Workflow">25.9 Example Workflow</a></li>
+    <li><a id="toc-Incremental-Updates" href="#Incremental-Updates">25.8 Incremental Updates</a></li>
+    <li><a id="toc-Inline-_0040rag_0028_0029-Syntax" href="#Inline-_0040rag_0028_0029-Syntax">25.9 Inline @rag() Syntax</a></li>
+    <li><a id="toc-Example-Workflow" href="#Example-Workflow">25.10 Example Workflow</a></li>
   </ul></li>
   <li><a id="toc-Advanced-Usage" href="#Advanced-Usage">26 Advanced Usage</a>
   <ul class="toc-numbered-mark">
@@ -5654,8 +5655,9 @@ Next: <a href="#Advanced-Usage" accesskey="n" rel="next">Advanced Usage</a>, Pre
 <li><a href="#Configuration-8" accesskey="5">Configuration</a></li>
 <li><a href="#PDF-Support" accesskey="6">PDF Support</a></li>
 <li><a href="#Interactive-Commands-1" accesskey="7">Interactive Commands</a></li>
-<li><a href="#Inline-_0040rag_0028_0029-Syntax" accesskey="8">Inline @rag() Syntax</a></li>
-<li><a href="#Example-Workflow" accesskey="9">Example Workflow</a></li>
+<li><a href="#Incremental-Updates" accesskey="8">Incremental Updates</a></li>
+<li><a href="#Inline-_0040rag_0028_0029-Syntax" accesskey="9">Inline @rag() Syntax</a></li>
+<li><a href="#Example-Workflow">Example Workflow</a></li>
 </ul>
 <div class="section-level-extent" id="Overview-10">
 <h3 class="section"><span>25.1 Overview<a class="copiable-link" href="#Overview-10"> &para;</a></span></h3>
@@ -5699,6 +5701,7 @@ model is needed.
 </li><li> Wait for indexing to complete (progress shown in status line)
 </li><li> Search your index: select <kbd class="kbd">s</kbd> and enter a query
 </li><li> Or attach context to a conversation: select <kbd class="kbd">a</kbd>, enter a query, then chat normally
+</li><li> After editing files, update the index incrementally: select <kbd class="kbd">u</kbd> and choose the same directory
 </li></ol>
 
 </div>
@@ -5832,24 +5835,42 @@ brew install poppler
 <p>These commands are available from the RAG transient menu (<kbd class="kbd">C-c O</kbd> then <kbd class="kbd">r</kbd>):
 </p>
 <dl class="table">
-<dt><code class="code">ollama-buddy-rag-index-directory-interactive (<kbd class="kbd">i</kbd>)</code></dt>
+<dt><code class="code">ollama-buddy-rag-index-directory (<kbd class="kbd">i</kbd>)</code></dt>
 <dd><p>Index a directory.  Prompts for the directory path, reads and chunks all
 matching files, then asynchronously generates embeddings.  Progress is shown in
-the status line.
+the status line.  File modification times are recorded so that future
+incremental updates can detect changes.
 </p>
 </dd>
-<dt><code class="code">ollama-buddy-rag-search-interactive (<kbd class="kbd">s</kbd>)</code></dt>
+<dt><code class="code">ollama-buddy-rag-update-directory (<kbd class="kbd">u</kbd>)</code></dt>
+<dd><p>Incrementally update an existing index.  Only files that have been added or
+modified since the last indexing are re-chunked and re-embedded; chunks from
+unchanged files are retained.  Chunks for deleted files are removed.  If no
+existing index with metadata is found, a full re-index is performed
+automatically.  If the embedding model has changed since the index was created,
+a full re-index is required and the user is prompted before proceeding.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-rag-cancel (<kbd class="kbd">c</kbd>)</code></dt>
+<dd><p>Cancel an in-progress indexing or update operation.  The cancellation takes
+effect before the next embedding batch is sent, so the current in-flight batch
+completes but no further batches are processed.  The previous index (if any) is
+left unchanged.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-rag-search (<kbd class="kbd">s</kbd>)</code></dt>
 <dd><p>Search the index with a text query.  Results are displayed in an org-mode
 buffer showing similarity scores, file paths, and content excerpts.
 </p>
 </dd>
-<dt><code class="code">ollama-buddy-rag-attach-context (<kbd class="kbd">a</kbd>)</code></dt>
+<dt><code class="code">ollama-buddy-rag-attach (<kbd class="kbd">a</kbd>)</code></dt>
 <dd><p>Search and attach the top results as context for the next conversation.
 Attached RAG context appears when you use Show Attachments.
 </p>
 </dd>
-<dt><code class="code">ollama-buddy-rag-list-indices (<kbd class="kbd">w</kbd>)</code></dt>
-<dd><p>List all saved RAG indices with their chunk counts and file counts.
+<dt><code class="code">ollama-buddy-rag-list-indexes (<kbd class="kbd">w</kbd>)</code></dt>
+<dd><p>List all saved RAG indexes with their chunk counts, file counts, and whether
+the index supports incremental updates.
 </p>
 </dd>
 <dt><code class="code">ollama-buddy-rag-delete-index (<kbd class="kbd">d</kbd>)</code></dt>
@@ -5858,8 +5879,36 @@ Attached RAG context appears when you use Show Attachments.
 </dl>
 
 </div>
+<div class="section-level-extent" id="Incremental-Updates">
+<h3 class="section"><span>25.8 Incremental Updates<a class="copiable-link" href="#Incremental-Updates"> &para;</a></span></h3>
+
+<p>When you first index a directory with <kbd class="kbd">i</kbd>, the index records modification
+times for every file.  On subsequent runs you can use <kbd class="kbd">u</kbd> (Update
+Directory) instead of re-indexing from scratch:
+</p>
+<ol class="enumerate">
+<li> Files whose modification time has changed are re-chunked and
+re-embedded.
+</li><li> New files are chunked and embedded.
+</li><li> Chunks belonging to deleted files are removed.
+</li><li> Chunks for unchanged files are kept as-is &mdash; no embedding calls are
+made for them.
+</li></ol>
+
+<p>This makes updates significantly faster for large directories where only a few
+files have changed.
+</p>
+<p>Incremental updates require the same embedding model that was used to create
+the index.  If you change <code class="code">ollama-buddy-rag-embedding-model</code>, a full
+re-index is needed (you will be prompted).
+</p>
+<p>Indexes created before version 3.6.0 do not contain file metadata.  Running
+Update Directory on such an index automatically falls back to a full re-index
+and saves the metadata for future incremental updates.
+</p>
+</div>
 <div class="section-level-extent" id="Inline-_0040rag_0028_0029-Syntax">
-<h3 class="section"><span>25.8 Inline @rag() Syntax<a class="copiable-link" href="#Inline-_0040rag_0028_0029-Syntax"> &para;</a></span></h3>
+<h3 class="section"><span>25.9 Inline @rag() Syntax<a class="copiable-link" href="#Inline-_0040rag_0028_0029-Syntax"> &para;</a></span></h3>
 
 <p>You can use <code class="code">@rag(query)</code> directly in prompts to automatically search your
 RAG index and attach results as context &mdash; no separate attach step needed.
@@ -5890,7 +5939,7 @@ index exists, it is used automatically.
 </p>
 </div>
 <div class="section-level-extent" id="Example-Workflow">
-<h3 class="section"><span>25.9 Example Workflow<a class="copiable-link" href="#Example-Workflow"> &para;</a></span></h3>
+<h3 class="section"><span>25.10 Example Workflow<a class="copiable-link" href="#Example-Workflow"> &para;</a></span></h3>
 
 <p>Suppose you have the text of &ldquo;Twenty Thousand Leagues Under the Sea&rdquo; in
 <samp class="file">~/books/leagues.txt</samp>:
