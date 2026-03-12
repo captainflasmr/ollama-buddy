@@ -435,3 +435,4 @@ Ollama v0.14+ supports local image generation with models like Z-Image Turbo (6B
 - [[file:README-full.org][Full README]] -- Detailed README with all demos, tutorials, transient menu guide, and role setup
 - [[file:README-features.org][Feature History]] -- Detailed feature descriptions as they were added
 - [[file:CHANGELOG.org][Changelog]] -- Version-by-version changes
+- [[https://www.emacs.dyerdwelling.family/tags/ollama-buddy/][Ollama Buddy Blog]] -- Blog articles for Ollama Buddy
