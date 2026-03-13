@@ -1076,15 +1076,15 @@ embedding model has changed."
                       (insert (format "* %s [partial: %d/%d chunks]\n" name emb (+ emb pend))))
                   (insert (format "* %s\n" name)))
                 (when index
-                  (insert (format "  - Source: %s\n" (plist-get index :source-path)))
-                  (insert (format "  - Files: %d\n" (plist-get index :file-count)))
-                  (insert (format "  - Chunks: %d\n" (plist-get index :chunk-count)))
+                  (insert (format "- Source: %s\n" (plist-get index :source-path)))
+                  (insert (format "- Files: %d\n" (plist-get index :file-count)))
+                  (insert (format "- Chunks: %d\n" (plist-get index :chunk-count)))
                   (when (plist-get index :partial)
-                    (insert (format "  - Pending: %d chunks remaining\n"
+                    (insert (format "- Pending: %d chunks remaining\n"
                                     (length (plist-get index :pending-chunks)))))
-                  (insert (format "  - Model: %s\n" (plist-get index :embedding-model)))
-                  (insert (format "  - Created: %s\n" (plist-get index :created)))
-                  (insert (format "  - Incremental: %s\n"
+                  (insert (format "- Model: %s\n" (plist-get index :embedding-model)))
+                  (insert (format "- Created: %s\n" (plist-get index :created)))
+                  (insert (format "- Incremental: %s\n"
                                   (if (plist-get index :files-metadata) "yes" "no (re-index to enable)"))))
                 (insert "\n")))
             (goto-char (point-min))

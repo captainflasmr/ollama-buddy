@@ -345,7 +345,8 @@ authentication via `ollama signin'."
 
 (defun ollama-buddy-curl--send-payload (prompt specified-model tool-continuation-p)
   "Build and send the curl payload for PROMPT.
-SPECIFIED-MODEL and TOOL-CONTINUATION-P are passed through from `ollama-buddy-curl--send'."
+SPECIFIED-MODEL and TOOL-CONTINUATION-P are passed through
+from `ollama-buddy-curl--send'."
   ;; Build payload and setup shared state
   (let* ((request (ollama-buddy--build-chat-payload prompt specified-model tool-continuation-p))
          (payload (plist-get request :payload))

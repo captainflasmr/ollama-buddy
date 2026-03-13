@@ -4173,7 +4173,8 @@ and no new user message is added."
 
 (defun ollama-buddy--send-payload (prompt specified-model tool-continuation-p)
   "Build and send the chat payload for PROMPT.
-SPECIFIED-MODEL and TOOL-CONTINUATION-P are passed through from `ollama-buddy--send'."
+SPECIFIED-MODEL and TOOL-CONTINUATION-P are passed through
+from `ollama-buddy--send'."
   ;; Build payload and setup shared state
   (let* ((request (ollama-buddy--build-chat-payload prompt specified-model tool-continuation-p))
          (payload (plist-get request :payload)))
