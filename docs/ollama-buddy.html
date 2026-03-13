@@ -1584,6 +1584,12 @@ root.  On subsequent uses, the existing summary is attached as context.
 See <a class="xref" href="#Project-Integration">Project Integration</a>.
 </p>
 </dd>
+<dt><code class="code">cd</code></dt>
+<dd><p>Switch the chat buffer&rsquo;s working directory (<code class="code">ollama-buddy-project-switch-directory</code>).
+Clears file attachments, re-displays the welcome screen with the new project info,
+and auto-loads the project summary if one exists.  Conversation history is preserved.
+</p>
+</dd>
 <dt><code class="code">rename</code></dt>
 <dd><p>Rename the current session (<code class="code">ollama-buddy-sessions-rename</code>).  Pre-fills
 with the existing name or an auto-generated one from the first prompt.

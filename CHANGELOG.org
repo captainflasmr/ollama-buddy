@@ -11,6 +11,34 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-03-13 Thu> *3.7.1*
+
+Code quality, error handling, non-blocking async, and project directory switching.
+
+*** New Features
+
+- *Switch directory from chat* -- =/cd= slash command (or =C-c O= → =P= → =d=)
+  switches the chat buffer's working directory without leaving the chat.  If the
+  new directory is a project, the welcome screen is re-displayed with project
+  info and the cached project summary is automatically attached as context.
+
+*** Improvements
+
+- *Non-blocking model info* -- Fetching model capabilities (=/api/show=) is now
+  fully asynchronous.  Switching models or opening the chat no longer freezes
+  Emacs, especially with cloud models like =qwen3-coder-next:cloud=.
+- *Tool call heading shows arguments* -- The =****= org heading for each tool
+  call now includes the JSON arguments inline (e.g.
+  =**** execute_shell {"command":"git status"}=), visible at a glance when the
+  subtree is folded.
+
+*** Removed
+
+- *Fabric and Awesome ChatGPT Prompts* -- Removed =ollama-buddy-fabric.el= and
+  =ollama-buddy-awesome.el= modules, along with all transient menu entries,
+  keybindings, slash commands, texinfo chapters, and configuration variables.
+  These external prompt collections were too maintenance-heavy.
+
 ** <2026-03-13 Thu> *3.7.0*
 
 RAG pause/resume, periodic checkpointing, and new built-in tools.
@@ -35,13 +63,6 @@ RAG pause/resume, periodic checkpointing, and new built-in tools.
   tree), =get_region= (active selection text), =get_buffer_info= (buffer
   metadata without full contents), =describe_symbol= (Emacs Lisp
   documentation lookup), =eval_elisp= (evaluate arbitrary elisp expressions).
-
-*** Changes
-
-- =ollama-buddy-rag-cancel= is now an alias for =ollama-buddy-rag-pause=.
-  Cancelling saves partial progress instead of discarding it.
-- Cloud Models section now appears before Local models in the Model Management
-  buffer.
 
 ** <2026-03-12 Wed> *3.6.0*
 

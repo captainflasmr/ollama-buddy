@@ -84,21 +84,21 @@ Unified Skills and Prompts.
 - *Integrated Commands* -- Access skills via the `/skill` slash command or the improved `@skill(name)` inline expansion with full `completing-read` support.
 - *At-Command Improvements* -- `@skill` and `@file` now trigger interactive selection prompts for faster workflow.
 
-* What's New (v3.5.0)
+* What's New (v3.7.1)
 
-Project Init (experimental) — a step towards a more code-oriented LLM workflow.
+Code quality, error handling, non-blocking async, and project directory switching.
 
-- *Project Init* -- =/init= generates and caches a project summary (=.ollama-buddy-project.org=) that auto-loads as context in future sessions, giving the model immediate awareness of your codebase structure without manual attachment.
-- *Auto-load project context* -- When opening a chat buffer inside a project that has a cached summary, it is attached automatically.
-- *Session directory persistence* -- Sessions now save and restore =default-directory=, so loading a project session restores the correct project context.
-- *Session rename* -- =/rename= sets a display name for the current session; =/save= uses it as the description suffix while always prepending a fresh timestamp.
-- *New slash commands* -- =/login= and =/logout= for Ollama cloud auth, =/manual= to open the Info manual, =/export= for org-export-dispatch.
-- *Exit clears attachments* -- =/exit= now clears all attachments so switching projects starts with a clean slate.
+- *Switch directory from chat* -- =/cd= slash command switches the working directory without leaving the chat; auto-loads project summary if available.
+- *Non-blocking model info* -- Model capability fetching is now fully asynchronous; no more Emacs freezes with cloud models.
+- *Error cleanup* -- "Working..." status is properly cleared on errors like "prompt too long", with prompt area restored.
+- *Tool call arguments in headings* -- Folded tool call headings now show the JSON arguments inline for quick reference.
+- *Removed Fabric and Awesome* -- Removed =ollama-buddy-fabric.el= and =ollama-buddy-awesome.el= modules to reduce maintenance burden.
 
 * Recent Changes
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *3.7.1* | Code quality, async model info, error cleanup, =/cd= directory switching, removed Fabric/Awesome.                                                                                                                         |
 | *3.5.0* | Project Init (experimental) — =/init= generates a cached project summary that auto-loads in future sessions; a step towards code-oriented LLM workflows.                                                                 |
 | *3.4.1* | Thinking Peek and Rewind — =TAB= peek at thinking mid-stream; =C-u C-u C-c C-c= to rewind conversation from any prompt heading.                                                                                          |
 | *3.4.0* | Skills — Local Org-mode based AI personas and task-specific instructions; `/skill` slash command and `@skill(name)` inline syntax.                                                                                        |

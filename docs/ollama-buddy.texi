@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 3.7.0
+@subtitle For Ollama Buddy version 3.7.1
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -895,6 +895,11 @@ Generate or load a cached project summary (@code{ollama-buddy-project-init}).
 When no summary exists, one is generated and automatically saved to the project
 root.  On subsequent uses, the existing summary is attached as context.
 @xref{Project Integration}.
+
+@item cd
+Switch the chat buffer's working directory (@code{ollama-buddy-project-switch-directory}).
+Clears file attachments, re-displays the welcome screen with the new project info,
+and auto-loads the project summary if one exists.  Conversation history is preserved.
 
 @item rename
 Rename the current session (@code{ollama-buddy-sessions-rename}).  Pre-fills

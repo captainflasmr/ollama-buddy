@@ -17,6 +17,8 @@
 
 ;; Forward declarations
 (declare-function ollama-buddy-attach-file "ollama-buddy")
+(declare-function ollama-buddy-update-mode-line "ollama-buddy")
+(declare-function ollama-buddy-rag-clear-attached "ollama-buddy-rag")
 
 (defgroup ollama-buddy-project nil
   "Project integration for Ollama Buddy."
@@ -209,6 +211,40 @@ project context."
         (ollama-buddy-attach-file summary-path)
         (message "Project summary loaded from %s"
                  (abbreviate-file-name summary-path))))))
+
+;;;###autoload
+(defun ollama-buddy-project-switch-directory ()
+  "Switch the chat buffer's working directory and load project context.
+Prompts for a new directory, updates `default-directory', clears
+existing file attachments, and auto-loads the new project summary
+if one exists.  Re-displays the welcome screen showing the new
+project.  Conversation history is preserved."
+  (interactive)
+  (let ((new-dir (read-directory-name "Switch to directory: " nil nil t)))
+    (unless (file-directory-p new-dir)
+      (user-error "Not a directory: %s" new-dir))
+    (setq new-dir (file-name-as-directory (expand-file-name new-dir)))
+    ;; Switch to the chat buffer so all buffer-local state is visible
+    (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
+    (setq default-directory new-dir)
+    ;; Clear file attachments (silently, no confirmation)
+    (setq ollama-buddy--current-attachments nil)
+    (when (boundp 'ollama-buddy-web-search--current-results)
+      (setq ollama-buddy-web-search--current-results nil))
+    (when (featurep 'ollama-buddy-rag)
+      (ollama-buddy-rag-clear-attached))
+    ;; Auto-load project summary if available in new directory
+    (ollama-buddy-project-auto-load-summary)
+    ;; Re-display welcome screen so the user sees the new project
+    (let ((inhibit-read-only t))
+      (erase-buffer)
+      (ollama-buddy-mode 1)
+      (insert (ollama-buddy--create-intro-message))
+      (ollama-buddy--prepare-prompt-area))
+    (goto-char (point-max))
+    (ollama-buddy-update-mode-line)
+    (ollama-buddy--update-status
+     (format "Switched to %s" (abbreviate-file-name new-dir)))))
 
 (provide 'ollama-buddy-project)
 ;;; ollama-buddy-project.el ends here

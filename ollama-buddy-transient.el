@@ -143,6 +143,7 @@
   ["Project"
    ("p" "Attach File" ollama-buddy-project-attach-file)
    ("c" "Attach Context" ollama-buddy-project-attach-context)
+   ("d" "Switch Directory" ollama-buddy-project-switch-directory)
    ("i" "Project Info" ollama-buddy-project-info)]
   [("q" "Quit" transient-quit-one)])
 

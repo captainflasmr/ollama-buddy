@@ -1455,6 +1455,12 @@ Available =/= commands (filtered by loaded modules):
   uses, the existing summary is attached as context. See
   [[#Project-Integration][Project Integration]].
 
+- =cd= :: Switch the chat buffer's working directory
+  (=ollama-buddy-project-switch-directory=). Clears file attachments,
+  re-displays the welcome screen with the new project info, and
+  auto-loads the project summary if one exists. Conversation history is
+  preserved.
+
 - =rename= :: Rename the current session
   (=ollama-buddy-sessions-rename=). Pre-fills with the existing name or
   an auto-generated one from the first prompt.

@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 3.6.0
+;; Version: 3.7.1
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -938,6 +938,7 @@ Typically invoked via `C-u C-u C-c C-c'."
     ("unload"     ollama-buddy-unload-model           "Unload model from Ollama memory")
     ("manage"     ollama-buddy-manage-models          "Open the Model Management buffer")
     ("project"    ollama-buddy-project-attach-file    "Attach a file from the current project")
+    ("cd"         ollama-buddy-project-switch-directory "Switch working directory and load project context")
     ("set"        ollama-buddy-params-edit            "Edit model generation parameters")
     ("show"       ollama-buddy-show-raw-model-info    "Show raw JSON model information")
     ("benchmark"  ollama-buddy-benchmark-models       "Benchmark all models with editable selection")
