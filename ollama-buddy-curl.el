@@ -300,8 +300,14 @@ temp file, and handles cancellation/failure."
 
         (cond
          ;; Normal completion — stream-process-json handled done=true already.
+         ;; If an HTTP error was handled in the filter, clean up timers here
+         ;; since the filter already displayed the error and prepared prompt.
          ((string-match-p "finished" event)
-          nil)
+          (when (ollama-buddy-curl--get proc :http-error-status)
+            (when ollama-buddy--token-update-timer
+              (cancel-timer ollama-buddy--token-update-timer)
+              (setq ollama-buddy--token-update-timer nil))
+            (ollama-buddy--cancel-response-wait-timer)))
 
          ;; Cancellation (user killed the process)
          ((string-match-p "\\(?:killed\\|terminated\\)" event)
@@ -319,9 +325,13 @@ temp file, and handles cancellation/failure."
             (setq ollama-buddy--token-update-timer nil))
           (ollama-buddy--cancel-response-wait-timer))
 
-         ;; Unexpected failure
+         ;; Unexpected failure — also clean up timers
          (t
           (ollama-buddy--update-status "Request failed")
+          (when ollama-buddy--token-update-timer
+            (cancel-timer ollama-buddy--token-update-timer)
+            (setq ollama-buddy--token-update-timer nil))
+          (ollama-buddy--cancel-response-wait-timer)
           (message "Curl request failed: %s" event)))
 
         ;; Auto-save transcript

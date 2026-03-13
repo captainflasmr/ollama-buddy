@@ -1571,6 +1571,41 @@ As a side effect, caches all capabilities (thinking, tools, vision) in
               model (error-message-string err))
      nil)))
 
+(defun ollama-buddy--fetch-model-context-size-async (model callback)
+  "Asynchronously fetch context size for MODEL from Ollama API.
+Calls CALLBACK with no arguments when complete (or on error).
+Caches context size and capabilities as a side effect, just like
+the synchronous variant."
+  (let* ((real-model (ollama-buddy--get-real-model-name model))
+         (payload (json-encode `((model . ,real-model)))))
+    (condition-case nil
+        (ollama-buddy--make-request-async-backend
+         "/api/show" "POST" payload
+         (lambda (_status response)
+           (when response
+             ;; Cache capabilities
+             (let ((capabilities (append (alist-get 'capabilities response) nil)))
+               (when capabilities
+                 (let ((cached-meta (or (gethash model ollama-buddy--models-metadata-cache) '())))
+                   (unless (alist-get 'capabilities-fetched cached-meta)
+                     (push '(capabilities-fetched . t) cached-meta)
+                     (when (member "thinking" capabilities)
+                       (push '(thinking . t) cached-meta))
+                     (when (member "tools" capabilities)
+                       (push '(tools . t) cached-meta))
+                     (when (member "vision" capabilities)
+                       (push '(vision . t) cached-meta))
+                     (puthash model cached-meta
+                              ollama-buddy--models-metadata-cache)))))
+             ;; Cache context size
+             (let* ((model-info (alist-get 'model_info response))
+                    (ctx-size (ollama-buddy--extract-context-length-from-model-info model-info)))
+               (when ctx-size
+                 (puthash model ctx-size ollama-buddy--model-context-sizes)
+                 (puthash model 'api ollama-buddy--model-context-sources))))
+           (funcall callback)))
+      (error (funcall callback)))))
+
 (defun ollama-buddy--get-fallback-context-size (model)
   "Get fallback context size for MODEL from static mappings.
 Returns the size from `ollama-buddy-fallback-context-sizes' or 4096 as default."
@@ -1592,22 +1627,16 @@ Returns the size from `ollama-buddy-fallback-context-sizes' or 4096 as default."
 
 (defun ollama-buddy--get-model-context-size (model)
   "Get the context window size for MODEL.
-Checks cache first, then Ollama API, then static fallback mappings.
+Checks cache first, then static fallback mappings.
+The cache is populated asynchronously by `ollama-buddy--fetch-model-context-size-async'
+when a model is selected; this function never blocks on network I/O.
 Source is recorded in `ollama-buddy--model-context-sources'."
-  (let* (;; Get base context size from cache, API, or fallback
+  (let* (;; Get base context size from cache or fallback (never blocks)
          (base-size
           (or
-           ;; First check if we have it cached
+           ;; Check if we have it cached (from async fetch or manual set)
            (gethash model ollama-buddy--model-context-sizes)
-           
-           ;; If not cached, try to fetch from Ollama API
-           (let ((api-size (ollama-buddy--fetch-model-context-size-sync model)))
-             (when api-size
-               ;; Cache the API result and record source
-               (puthash model api-size ollama-buddy--model-context-sizes)
-               (puthash model 'api ollama-buddy--model-context-sources)
-               api-size))
-           
+
            ;; Fall back to static mappings
            (let ((fallback-size (ollama-buddy--get-fallback-context-size model)))
              ;; Cache the fallback size and record source

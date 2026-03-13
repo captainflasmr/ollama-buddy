@@ -2481,17 +2481,22 @@ Optional MENU-COLUMNS specifies the number of columns for the menu display."
           (setq ollama-buddy--current-model model)
           (setq ollama-buddy-default-model model)
           (insert (format "\n\n* NO DEFAULT MODEL : Using best guess : %s" model))))
-      ;; Fetch capabilities so thinking/vision/tools indicators are correct
-      (when (and ollama-buddy--current-model
-                 (ollama-buddy--ollama-running))
-        (ollama-buddy--fetch-model-context-size-sync ollama-buddy--current-model))
       ;; Auto-load project summary if available (before prompt area setup)
       (when (featurep 'ollama-buddy-project)
         (ollama-buddy-project-auto-load-summary))
       (ollama-buddy--prepare-prompt-area)
       (put 'ollama-buddy--cycle-prompt-history 'history-position -1))
     (ollama-buddy--update-status "Idle")
-    (ollama-buddy-update-mode-line)))
+    (ollama-buddy-update-mode-line)
+    ;; Fetch capabilities asynchronously so Emacs doesn't block
+    (when (and ollama-buddy--current-model
+               (ollama-buddy--ollama-running))
+      (ollama-buddy--fetch-model-context-size-async
+       ollama-buddy--current-model
+       (lambda ()
+         (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
+           (with-current-buffer ollama-buddy--chat-buffer
+             (ollama-buddy--prepare-prompt-area t t))))))))
 
 (defun ollama-buddy--stream-filter (_proc output)
   "Process stream OUTPUT while preserving cursor position.
@@ -2582,7 +2587,7 @@ TCP packets split a JSON object across multiple filter calls."
                              (append tool-calls-raw nil)
                            tool-calls-raw))))
 
-      ;; Check for authentication errors (cloud models)
+      ;; Check for errors in JSON response (e.g. "prompt too long", auth errors)
       (when error-msg
         (let ((is-auth-error (or (string-match-p "unauthorized\\|authentication\\|sign.?in\\|not.?logged" error-msg)
                                  (string-match-p "401\\|403" error-msg))))
@@ -2591,10 +2596,17 @@ TCP packets split a JSON object across multiple filter calls."
             (ollama-buddy--set-cloud-auth-status nil))
           (with-current-buffer ollama-buddy--chat-buffer
             (let ((inhibit-read-only t))
-              (goto-char (point-max))
-              (if is-auth-error
-                  (insert (format "\n\n*Authentication Error:* %s\n\nPlease sign in using =C-c A= or =M-x ollama-buddy-cloud-signin=" error-msg))
-                (insert (format "\n\n*Error:* %s" error-msg)))))
+              (save-excursion
+                (goto-char (point-max))
+                (if is-auth-error
+                    (insert (format "\n\n*Authentication Error:* %s\n\nPlease sign in using =C-c A= or =M-x ollama-buddy-cloud-signin=" error-msg))
+                  (insert (format "\n\n*Error:* %s" error-msg)))
+                (ollama-buddy--prepare-prompt-area))))
+          ;; Clean up timers — the request is over
+          (when ollama-buddy--token-update-timer
+            (cancel-timer ollama-buddy--token-update-timer)
+            (setq ollama-buddy--token-update-timer nil))
+          (ollama-buddy--cancel-response-wait-timer)
           (ollama-buddy--update-status (if is-auth-error "Auth Required" "Error"))))
 
       ;; Handle thinking tokens from the dedicated API field (e.g. deepseek-r1).
@@ -3098,10 +3110,16 @@ TCP packets split a JSON object across multiple filter calls."
 (defun ollama-buddy--stream-sentinel (_proc event)
   "Handle stream completion EVENT."
   ;; If we already handled an HTTP error in the filter, just reset the
-  ;; status flag and return — the error message and prompt area were already
-  ;; written; no need for the usual "[Stream …]" completion notice.
+  ;; status flag and clean up timers — the error message and prompt area
+  ;; were already written; no need for the usual "[Stream …]" completion notice.
   (if ollama-buddy--stream-http-status
-      (setq ollama-buddy--stream-http-status nil)
+      (progn
+        (setq ollama-buddy--stream-http-status nil)
+        (when ollama-buddy--token-update-timer
+          (cancel-timer ollama-buddy--token-update-timer)
+          (setq ollama-buddy--token-update-timer nil))
+        (ollama-buddy--cancel-response-wait-timer)
+        (setq ollama-buddy--stream-pending ""))
   (let ((cancelled ollama-buddy--request-cancelled))
     (setq ollama-buddy--request-cancelled nil)
   (when-let* ((status (cond (cancelled "Cancelled")
@@ -3258,16 +3276,19 @@ When airplane mode is active, only local Ollama models are offered."
                                      nil t)))
     (setq ollama-buddy-default-model new-model)
     (setq ollama-buddy--current-model new-model)
-    ;; Fetch capabilities now so thinking/vision indicators are correct immediately.
-    ;; This populates the metadata cache (including the `thinking' flag from
-    ;; /api/show capabilities) before prepare-prompt-area reads it.
-    (when (ollama-buddy--ollama-running)
-      (ollama-buddy--fetch-model-context-size-sync new-model))
     (message "Switched to model: %s" new-model)
     (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
     (ollama-buddy--prepare-prompt-area t t)
     (goto-char (point-max))
-    (ollama-buddy--update-status "Idle")))
+    (ollama-buddy--update-status "Idle")
+    ;; Fetch capabilities asynchronously — update prompt area when done
+    (when (ollama-buddy--ollama-running)
+      (ollama-buddy--fetch-model-context-size-async
+       new-model
+       (lambda ()
+         (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
+           (with-current-buffer ollama-buddy--chat-buffer
+             (ollama-buddy--prepare-prompt-area t t))))))))
 
 (defvar ollama-buddy--signin-url-opened nil
   "Flag to track whether we've already opened the signin URL.")
@@ -4949,13 +4970,19 @@ Modifies the variable in place."
   "Set MODEL as the current model."
   (setq ollama-buddy-default-model model)
   (setq ollama-buddy--current-model model)
-  (when (ollama-buddy--ollama-running)
-    (ollama-buddy--fetch-model-context-size-sync model))
   (message "Selected model: %s" model)
   (pop-to-buffer (get-buffer-create ollama-buddy--chat-buffer))
   (ollama-buddy--prepare-prompt-area)
   (goto-char (point-max))
-  (ollama-buddy--update-status "Idle"))
+  (ollama-buddy--update-status "Idle")
+  ;; Fetch capabilities asynchronously — update prompt area when done
+  (when (ollama-buddy--ollama-running)
+    (ollama-buddy--fetch-model-context-size-async
+     model
+     (lambda ()
+       (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
+         (with-current-buffer ollama-buddy--chat-buffer
+           (ollama-buddy--prepare-prompt-area t t)))))))
 
 (defun ollama-buddy-pull-model (model)
   "Pull or update MODEL from Ollama Hub asynchronously.
