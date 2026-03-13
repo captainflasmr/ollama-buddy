@@ -2388,20 +2388,25 @@ When complete, CALLBACK is called with the status response and result."
                        ollama-buddy-host ollama-buddy-port endpoint)))
       (url-retrieve url
                     (lambda (status)
-                      (let ((result nil))
-                        (unless (plist-get status :error)
-                          ;; Only try to parse JSON if there was no error and we have content
-                          (goto-char (point-min))
-                          (re-search-forward "^$" nil t) ;; Skip headers
-                          (when (and (not (= (point) (point-max)))
-                                     (not (string-empty-p (buffer-substring-no-properties (point) (point-max)))))
-                            (condition-case err
-                                (setq result (json-read-from-string
-                                              (buffer-substring-no-properties (point) (point-max))))
-                              (error
-                               ;; If JSON parsing fails, just return the raw response
-                               (message "Warning: Failed to parse JSON response: %s" (error-message-string err))))))
-                        (funcall callback status result)))
+                      (let ((url-buf (current-buffer))
+                            (result nil))
+                        (unwind-protect
+                            (progn
+                              (unless (plist-get status :error)
+                                ;; Only try to parse JSON if there was no error and we have content
+                                (goto-char (point-min))
+                                (re-search-forward "^$" nil t) ;; Skip headers
+                                (when (and (not (= (point) (point-max)))
+                                           (not (string-empty-p (buffer-substring-no-properties (point) (point-max)))))
+                                  (condition-case err
+                                      (setq result (json-read-from-string
+                                                    (buffer-substring-no-properties (point) (point-max))))
+                                    (error
+                                     ;; If JSON parsing fails, just return the raw response
+                                     (message "Warning: Failed to parse JSON response: %s" (error-message-string err))))))
+                              (funcall callback status result))
+                          (when (buffer-live-p url-buf)
+                            (kill-buffer url-buf)))))
                     nil t t))))
 
 (defun ollama-buddy--ollama-running ()
@@ -2414,11 +2419,12 @@ When complete, CALLBACK is called with the status response and result."
       (ollama-buddy-curl--test-connection))
      (t
       (condition-case nil
-          (progn
-            (let ((url-show-status nil))
-              (url-retrieve-synchronously
-               (format "http://%s:%s/api/tags" ollama-buddy-host ollama-buddy-port)
-               nil nil 2))
+          (let* ((url-show-status nil)
+                 (buf (url-retrieve-synchronously
+                       (format "http://%s:%s/api/tags" ollama-buddy-host ollama-buddy-port)
+                       nil nil 2)))
+            (when (buffer-live-p buf)
+              (kill-buffer buf))
             t)
         (error nil))))))
 

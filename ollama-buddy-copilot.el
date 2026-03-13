@@ -123,10 +123,14 @@ Use nil for API default behavior (adaptive)."
 
 (defun ollama-buddy-copilot--save-oauth-token (token)
   "Save OAuth TOKEN to file for persistence."
-  (let ((data (json-encode `((oauth_token . ,token)))))
-    (with-temp-file ollama-buddy-copilot-token-file
-      (insert data))
-    (set-file-modes ollama-buddy-copilot-token-file #o600)))
+  (let ((data (json-encode `((oauth_token . ,token))))
+        (saved-modes (default-file-modes)))
+    (unwind-protect
+        (progn
+          (set-default-file-modes #o600)
+          (with-temp-file ollama-buddy-copilot-token-file
+            (insert data)))
+      (set-default-file-modes saved-modes))))
 
 (defun ollama-buddy-copilot--load-oauth-token ()
   "Load OAuth token from file if it exists."
@@ -191,42 +195,46 @@ Use nil for API default behavior (adaptive)."
 (defun ollama-buddy-copilot--handle-device-code-response (status)
   "Handle the device code response from GitHub.
 STATUS is the URL retrieval status."
-  (if (plist-get status :error)
-      (message "Failed to start authentication: %s"
-               (prin1-to-string (plist-get status :error)))
-    (let* ((response (ollama-buddy-copilot--parse-response))
-           (device-code (alist-get 'device_code response))
-           (user-code (alist-get 'user_code response))
-           (verification-uri (alist-get 'verification_uri response))
-           (interval-raw (alist-get 'interval response))
-           (interval (if (stringp interval-raw)
-                         (string-to-number interval-raw)
-                       (or interval-raw 5))))
+  (let ((url-buf (current-buffer)))
+    (unwind-protect
+        (if (plist-get status :error)
+            (message "Failed to start authentication: %s"
+                     (prin1-to-string (plist-get status :error)))
+          (let* ((response (ollama-buddy-copilot--parse-response))
+                 (device-code (alist-get 'device_code response))
+                 (user-code (alist-get 'user_code response))
+                 (verification-uri (alist-get 'verification_uri response))
+                 (interval-raw (alist-get 'interval response))
+                 (interval (if (stringp interval-raw)
+                               (string-to-number interval-raw)
+                             (or interval-raw 5))))
 
-        (setq ollama-buddy-copilot--device-code device-code)
+            (setq ollama-buddy-copilot--device-code device-code)
 
-        ;; Show instructions to user
-        (message "GitHub Copilot Authentication")
-        (let ((buf (get-buffer-create "*Copilot Auth*")))
-          (with-current-buffer buf
-            (erase-buffer)
-            (insert "GitHub Copilot Authentication\n")
-            (insert "==============================\n\n")
-            (insert (format "1. Open: %s\n" verification-uri))
-            (insert (format "2. Enter code: %s\n\n" user-code))
-            (insert "Waiting for authentication...\n")
-            (insert "(This buffer will close automatically when done)"))
-          (pop-to-buffer buf))
+            ;; Show instructions to user
+            (message "GitHub Copilot Authentication")
+            (let ((buf (get-buffer-create "*Copilot Auth*")))
+              (with-current-buffer buf
+                (erase-buffer)
+                (insert "GitHub Copilot Authentication\n")
+                (insert "==============================\n\n")
+                (insert (format "1. Open: %s\n" verification-uri))
+                (insert (format "2. Enter code: %s\n\n" user-code))
+                (insert "Waiting for authentication...\n")
+                (insert "(This buffer will close automatically when done)"))
+              (pop-to-buffer buf))
 
-        ;; Copy code to clipboard
-        (kill-new user-code)
-        (message "Code %s copied to clipboard. Opening browser..." user-code)
+            ;; Copy code to clipboard
+            (kill-new user-code)
+            (message "Code %s copied to clipboard. Opening browser..." user-code)
 
-        ;; Try to open browser
-        (browse-url verification-uri)
+            ;; Try to open browser
+            (browse-url verification-uri)
 
-      ;; Start polling for token
-      (ollama-buddy-copilot--start-polling interval))))
+            ;; Start polling for token
+            (ollama-buddy-copilot--start-polling interval)))
+      (when (buffer-live-p url-buf)
+        (kill-buffer url-buf)))))
 
 (defvar ollama-buddy-copilot--poll-interval 5
   "Polling interval in seconds.")
@@ -280,57 +288,61 @@ STATUS is the URL retrieval status."
 (defun ollama-buddy-copilot--handle-poll-response (status)
   "Handle the polling response from GitHub.
 STATUS is the URL retrieval status."
-  (condition-case err
-      (progn
-        (if (plist-get status :error)
+  (let ((url-buf (current-buffer)))
+    (unwind-protect
+        (condition-case err
             (progn
-              (ollama-buddy-copilot--stop-polling)
-              (message "Authentication failed: %s"
-                       (prin1-to-string (plist-get status :error))))
-          (let* ((response (ollama-buddy-copilot--parse-response))
-                 (error-code (alist-get 'error response))
-                 (error-desc (alist-get 'error_description response))
-                 (access-token (alist-get 'access_token response)))
+              (if (plist-get status :error)
+                  (progn
+                    (ollama-buddy-copilot--stop-polling)
+                    (message "Authentication failed: %s"
+                             (prin1-to-string (plist-get status :error))))
+                (let* ((response (ollama-buddy-copilot--parse-response))
+                       (error-code (alist-get 'error response))
+                       (error-desc (alist-get 'error_description response))
+                       (access-token (alist-get 'access_token response)))
 
-            (cond
-             ;; Still waiting for user
-             ((equal error-code "authorization_pending")
-              (ollama-buddy-copilot--schedule-next-poll))
+                  (cond
+                   ;; Still waiting for user
+                   ((equal error-code "authorization_pending")
+                    (ollama-buddy-copilot--schedule-next-poll))
 
-             ;; Rate limited - increase interval
-             ((equal error-code "slow_down")
-              (ollama-buddy-copilot--slow-down))
+                   ;; Rate limited - increase interval
+                   ((equal error-code "slow_down")
+                    (ollama-buddy-copilot--slow-down))
 
-             ;; Token expired
-             ((equal error-code "expired_token")
-              (ollama-buddy-copilot--stop-polling)
-              (message "Authentication expired. Please run M-x ollama-buddy-copilot-login again."))
+                   ;; Token expired
+                   ((equal error-code "expired_token")
+                    (ollama-buddy-copilot--stop-polling)
+                    (message "Authentication expired. Please run M-x ollama-buddy-copilot-login again."))
 
-             ;; User denied access
-             ((equal error-code "access_denied")
-              (ollama-buddy-copilot--stop-polling)
-              (message "Authentication denied by user."))
+                   ;; User denied access
+                   ((equal error-code "access_denied")
+                    (ollama-buddy-copilot--stop-polling)
+                    (message "Authentication denied by user."))
 
-             ;; Got the token!
-             (access-token
-              (ollama-buddy-copilot--stop-polling)
-              (setq ollama-buddy-copilot--oauth-token access-token)
-              (ollama-buddy-copilot--save-oauth-token access-token)
-              (when (get-buffer "*Copilot Auth*")
-                (kill-buffer "*Copilot Auth*"))
-              (message "GitHub Copilot authentication successful! Token saved."))
+                   ;; Got the token!
+                   (access-token
+                    (ollama-buddy-copilot--stop-polling)
+                    (setq ollama-buddy-copilot--oauth-token access-token)
+                    (ollama-buddy-copilot--save-oauth-token access-token)
+                    (when (get-buffer "*Copilot Auth*")
+                      (kill-buffer "*Copilot Auth*"))
+                    (message "GitHub Copilot authentication successful! Token saved."))
 
-             ;; Unknown error
-             (error-code
-              (ollama-buddy-copilot--stop-polling)
-              (message "Authentication error: %s - %s" error-code (or error-desc "")))
+                   ;; Unknown error
+                   (error-code
+                    (ollama-buddy-copilot--stop-polling)
+                    (message "Authentication error: %s - %s" error-code (or error-desc "")))
 
-             ;; No token and no error - unexpected response
-             (t
-              (ollama-buddy-copilot--stop-polling)
-              (message "Unexpected response from GitHub: %S" response))))))
-    (error
-     (message "Error in poll response handler: %s" (error-message-string err)))))
+                   ;; No token and no error - unexpected response
+                   (t
+                    (ollama-buddy-copilot--stop-polling)
+                    (message "Unexpected response from GitHub: %S" response))))))
+          (error
+           (message "Error in poll response handler: %s" (error-message-string err))))
+      (when (buffer-live-p url-buf)
+        (kill-buffer url-buf)))))
 
 (defun ollama-buddy-copilot--stop-polling ()
   "Stop polling for OAuth token."
@@ -395,23 +407,27 @@ The token is cached until expiry."
         (url-retrieve
          "https://api.github.com/copilot_internal/v2/token"
          (lambda (status)
-           (if (plist-get status :error)
-               (progn
-                 ;; Token might be invalid, clear it
-                 (setq ollama-buddy-copilot--oauth-token nil)
-                 (ollama-buddy-copilot--show-auth-error "Failed to get Copilot access token"))
-             (goto-char (point-min))
-             (when (re-search-forward "\n\n" nil t)
-               (let* ((json-object-type 'alist)
-                      (json-array-type 'vector)
-                      (json-key-type 'symbol)
-                      (response (json-read)))
-                 (setq ollama-buddy-copilot--access-token (alist-get 'token response))
-                 (let ((expires-at (alist-get 'expires_at response)))
-                   (when expires-at
-                     (setq ollama-buddy-copilot--token-expiry
-                           (seconds-to-time expires-at))))
-                 (funcall callback ollama-buddy-copilot--access-token)))))))))))
+           (let ((url-buf (current-buffer)))
+             (unwind-protect
+                 (if (plist-get status :error)
+                     (progn
+                       ;; Token might be invalid, clear it
+                       (setq ollama-buddy-copilot--oauth-token nil)
+                       (ollama-buddy-copilot--show-auth-error "Failed to get Copilot access token"))
+                   (goto-char (point-min))
+                   (when (re-search-forward "\n\n" nil t)
+                     (let* ((json-object-type 'alist)
+                            (json-array-type 'vector)
+                            (json-key-type 'symbol)
+                            (response (json-read)))
+                       (setq ollama-buddy-copilot--access-token (alist-get 'token response))
+                       (let ((expires-at (alist-get 'expires_at response)))
+                         (when expires-at
+                           (setq ollama-buddy-copilot--token-expiry
+                                 (seconds-to-time expires-at))))
+                       (funcall callback ollama-buddy-copilot--access-token))))
+               (when (buffer-live-p url-buf)
+                 (kill-buffer url-buf)))))))))))
 
 (defun ollama-buddy-copilot--send (prompt &optional model)
   "Send PROMPT to GitHub Copilot API using MODEL or default model asynchronously."
@@ -476,7 +492,11 @@ The token is cached until expiry."
       (url-retrieve
        ollama-buddy-copilot-api-endpoint
        (lambda (status)
-         (ollama-buddy-copilot--handle-response status start-point prompt))))))
+         (let ((url-buf (current-buffer)))
+           (unwind-protect
+               (ollama-buddy-copilot--handle-response status start-point prompt)
+             (when (buffer-live-p url-buf)
+               (kill-buffer url-buf)))))))))
 
 (defun ollama-buddy-copilot--handle-response (status start-point prompt)
   "Handle the Copilot API response.

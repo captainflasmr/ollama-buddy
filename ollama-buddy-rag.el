@@ -358,21 +358,25 @@ Calls CALLBACK with the embedding vector or nil on error."
     (url-retrieve
      url
      (lambda (status cb)
-       (if (plist-get status :error)
-           (progn
-             (message "Embedding error: %s" (plist-get status :error))
-             (funcall cb nil))
-         (condition-case err
-             (progn
-               (goto-char (point-min))
-               (re-search-forward "\n\n")
-               (let* ((json-object-type 'alist)
-                      (json-array-type 'list)
-                      (response (json-read)))
-                 (funcall cb (ollama-buddy-rag--parse-embeddings response t))))
-           (error
-            (message "Embedding parse error: %s" (error-message-string err))
-            (funcall cb nil)))))
+       (let ((buf (current-buffer)))
+         (unwind-protect
+             (if (plist-get status :error)
+                 (progn
+                   (message "Embedding error: %s" (plist-get status :error))
+                   (funcall cb nil))
+               (condition-case err
+                   (progn
+                     (goto-char (point-min))
+                     (re-search-forward "\n\n")
+                     (let* ((json-object-type 'alist)
+                            (json-array-type 'list)
+                            (response (json-read)))
+                       (funcall cb (ollama-buddy-rag--parse-embeddings response t))))
+                 (error
+                  (message "Embedding parse error: %s" (error-message-string err))
+                  (funcall cb nil))))
+           (when (buffer-live-p buf)
+             (kill-buffer buf)))))
      (list callback)
      t)))
 
@@ -390,21 +394,25 @@ Calls CALLBACK with list of embedding vectors or nil on error."
       (url-retrieve
        url
        (lambda (status cb)
-         (if (plist-get status :error)
-             (progn
-               (message "Batch embedding error: %s" (plist-get status :error))
-               (funcall cb nil))
-           (condition-case err
-               (progn
-                 (goto-char (point-min))
-                 (re-search-forward "\n\n")
-                 (let* ((json-object-type 'alist)
-                        (json-array-type 'list)
-                        (response (json-read)))
-                   (funcall cb (ollama-buddy-rag--parse-embeddings response nil))))
-             (error
-              (message "Batch embedding parse error: %s" (error-message-string err))
-              (funcall cb nil)))))
+         (let ((buf (current-buffer)))
+           (unwind-protect
+               (if (plist-get status :error)
+                   (progn
+                     (message "Batch embedding error: %s" (plist-get status :error))
+                     (funcall cb nil))
+                 (condition-case err
+                     (progn
+                       (goto-char (point-min))
+                       (re-search-forward "\n\n")
+                       (let* ((json-object-type 'alist)
+                              (json-array-type 'list)
+                              (response (json-read)))
+                         (funcall cb (ollama-buddy-rag--parse-embeddings response nil))))
+                   (error
+                    (message "Batch embedding parse error: %s" (error-message-string err))
+                    (funcall cb nil))))
+             (when (buffer-live-p buf)
+               (kill-buffer buf)))))
        (list callback)
        t))))
 
@@ -1242,13 +1250,17 @@ Returns the embedding vector or nil on error."
          (url-request-data (encode-coding-string payload 'utf-8))
          (url (ollama-buddy-rag--embedding-url)))
     (condition-case err
-        (with-current-buffer (url-retrieve-synchronously url t)
-          (goto-char (point-min))
-          (re-search-forward "\n\n")
-          (let* ((json-object-type 'alist)
-                 (json-array-type 'list)
-                 (response (json-read)))
-            (ollama-buddy-rag--parse-embeddings response t)))
+        (let ((buf (url-retrieve-synchronously url t)))
+          (unwind-protect
+              (with-current-buffer buf
+                (goto-char (point-min))
+                (re-search-forward "\n\n")
+                (let* ((json-object-type 'alist)
+                       (json-array-type 'list)
+                       (response (json-read)))
+                  (ollama-buddy-rag--parse-embeddings response t)))
+            (when (buffer-live-p buf)
+              (kill-buffer buf))))
       (error
        (message "Embedding sync error: %s" (error-message-string err))
        nil))))

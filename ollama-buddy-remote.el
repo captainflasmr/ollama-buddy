@@ -557,6 +557,11 @@ PROC is the curl process, EVENT is the status event string."
         ;; Clean up process buffer
         (when (and proc-buffer (buffer-live-p proc-buffer))
           (kill-buffer proc-buffer))
+        ;; Clean up temp file
+        (when (and ollama-buddy-remote--streaming-temp-file
+                   (file-exists-p ollama-buddy-remote--streaming-temp-file))
+          (ignore-errors (delete-file ollama-buddy-remote--streaming-temp-file))
+          (setq ollama-buddy-remote--streaming-temp-file nil))
         (cond
          ((string-match-p "finished" event)
           ;; Process complete - finalize the response
@@ -628,10 +633,8 @@ START-POINT is the buffer position where content should be inserted."
                            endpoint))))
     (with-temp-file temp-file
       (insert json-str))
-    ;; Schedule temp file cleanup
-    (run-with-timer 2.0 nil (lambda ()
-                              (when (file-exists-p temp-file)
-                                (delete-file temp-file))))
+    ;; Store temp file path for sentinel cleanup
+    (setq ollama-buddy-remote--streaming-temp-file temp-file)
     ;; Remove "Loading response..." placeholder
     (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
       (with-current-buffer ollama-buddy--chat-buffer
