@@ -671,10 +671,12 @@ RESPONSE-TEXT (if non-nil/empty) is inserted before the Tools section."
               (args (alist-get 'arguments func))
               (content (alist-get 'content result)))
          (push (point-marker) tool-heading-positions)
-         (insert (format "**** %s\n***** call\n\n#+begin_src json\n%s\n#+end_src\n***** results\n\n#+begin_example\n%s\n#+end_example\n"
-                         name
-                         (json-encode args)
-                         (replace-regexp-in-string "^\\([*#]\\)" ",\\1" content)))))
+         (let ((args-json (json-encode args)))
+           (insert (format "**** %s %s\n***** call\n\n#+begin_src json\n%s\n#+end_src\n***** results\n\n#+begin_example\n%s\n#+end_example\n"
+                           name
+                           args-json
+                           args-json
+                           (replace-regexp-in-string "^\\([*#]\\)" ",\\1" content))))))
      tool-calls
      tool-results)
     ;; 3. Fold Think heading (bounded by *** Tools at same level)
