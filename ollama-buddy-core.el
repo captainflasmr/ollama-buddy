@@ -1628,8 +1628,9 @@ Returns the size from `ollama-buddy-fallback-context-sizes' or 4096 as default."
 (defun ollama-buddy--get-model-context-size (model)
   "Get the context window size for MODEL.
 Checks cache first, then static fallback mappings.
-The cache is populated asynchronously by `ollama-buddy--fetch-model-context-size-async'
-when a model is selected; this function never blocks on network I/O.
+The cache is populated asynchronously by
+`ollama-buddy--fetch-model-context-size-async' when a model is
+selected; this function never blocks on network I/O.
 Source is recorded in `ollama-buddy--model-context-sources'."
   (let* (;; Get base context size from cache or fallback (never blocks)
          (base-size

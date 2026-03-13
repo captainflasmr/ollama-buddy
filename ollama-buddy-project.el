@@ -18,6 +18,7 @@
 ;; Forward declarations
 (declare-function ollama-buddy-attach-file "ollama-buddy")
 (declare-function ollama-buddy-update-mode-line "ollama-buddy")
+(declare-function ollama-buddy-mode "ollama-buddy")
 (declare-function ollama-buddy-rag-clear-attached "ollama-buddy-rag")
 
 (defgroup ollama-buddy-project nil

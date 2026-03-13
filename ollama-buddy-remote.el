@@ -442,7 +442,7 @@ Returns nil to skip the line (e.g. [DONE] or non-content events).")
   "Display name of the provider for the current streaming request.")
 
 (defvar ollama-buddy-remote--streaming-temp-file nil
-  "Path to the temp file holding the JSON payload for the current streaming request.")
+  "Path to the temp file for the current streaming request.")
 
 (defun ollama-buddy-remote--streaming-insert-content (content)
   "Insert CONTENT token into the chat buffer during streaming."
