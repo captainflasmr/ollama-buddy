@@ -114,6 +114,13 @@ Larger batches are faster but use more memory."
   :type 'integer
   :group 'ollama-buddy-rag)
 
+(defcustom ollama-buddy-rag-checkpoint-interval 5
+  "Save partial progress every N batches during indexing.
+Set to 1 to save after every batch, or 0 to disable checkpointing
+\(progress is still saved on pause)."
+  :type 'integer
+  :group 'ollama-buddy-rag)
+
 (defcustom ollama-buddy-rag-embedding-base-url nil
   "Base URL for the embedding service.
 When nil, uses the main Ollama host and port
@@ -642,7 +649,39 @@ Returns plist with :added :modified :deleted :unchanged file lists."
 Holds the operation-id symbol for the current operation, or nil.")
 
 (defvar ollama-buddy-rag--cancel-requested nil
-  "Non-nil when the user has requested cancellation of the current indexing.")
+  "Non-nil when the user has requested pause/cancellation of the current indexing.")
+
+(defun ollama-buddy-rag--save-partial-index (all-chunks retained-chunks
+                                                        index-name dir file-count
+                                                        files-metadata)
+  "Save a partial index with embedded and pending chunks.
+ALL-CHUNKS is the full list (some may have :embedding, some not).
+RETAINED-CHUNKS are already-embedded chunks from a prior index.
+INDEX-NAME, DIR, FILE-COUNT identify the index.
+FILES-METADATA is the alist of (filepath . mtime) for change tracking."
+  (let* ((embedded (cl-remove-if-not
+                    (lambda (c) (plist-get c :embedding))
+                    all-chunks))
+         (pending (cl-remove-if
+                   (lambda (c) (plist-get c :embedding))
+                   all-chunks))
+         (all-embedded (if retained-chunks
+                           (append retained-chunks embedded)
+                         embedded))
+         (index (list :version ollama-buddy-rag--version
+                      :name index-name
+                      :source-path dir
+                      :embedding-model ollama-buddy-rag-embedding-model
+                      :created (format-time-string "%Y-%m-%dT%H:%M:%S")
+                      :file-count file-count
+                      :chunk-count (length all-embedded)
+                      :files-metadata files-metadata
+                      :chunks all-embedded
+                      :partial t
+                      :pending-chunks pending)))
+    (ollama-buddy-rag--save-index index)
+    (puthash index-name index ollama-buddy-rag--indexes)
+    index))
 
 (defun ollama-buddy-rag--process-batches (all-chunks batch-size batch-num total-batches
                                                      index-name dir file-count chunk-count
@@ -654,15 +693,21 @@ INDEX-NAME, DIR, FILE-COUNT, CHUNK-COUNT are used for the final index.
 OPERATION-ID tracks this in the status line.
 RETAINED-CHUNKS are pre-embedded chunks to merge into the final index.
 FILES-METADATA is an alist of (filepath . mtime) for change tracking."
-  ;; Check for cancellation before processing next batch
+  ;; Check for pause/cancellation before processing next batch
   (if ollama-buddy-rag--cancel-requested
-      (progn
-        (setq ollama-buddy-rag--indexing-in-progress nil
-              ollama-buddy-rag--cancel-requested nil)
-        (ollama-buddy--complete-background-operation
-         operation-id
-         (format "RAG cancelled at batch %d/%d" (1+ batch-num) total-batches))
-        (message "RAG indexing cancelled at batch %d/%d" (1+ batch-num) total-batches))
+      (let ((partial (ollama-buddy-rag--save-partial-index
+                      all-chunks retained-chunks
+                      index-name dir file-count files-metadata)))
+        (let ((embedded-count (plist-get partial :chunk-count))
+              (pending-count (length (plist-get partial :pending-chunks))))
+          (setq ollama-buddy-rag--indexing-in-progress nil
+                ollama-buddy-rag--cancel-requested nil)
+          (ollama-buddy--complete-background-operation
+           operation-id
+           (format "RAG paused: %d/%d chunks embedded"
+                   embedded-count (+ embedded-count pending-count)))
+          (message "RAG indexing paused. %d chunks embedded, %d pending. Use M-x ollama-buddy-rag-resume to continue."
+                   embedded-count pending-count)))
     (let* ((i (* batch-num batch-size))
            (batch-end (min (+ i batch-size) chunk-count))
            (batch-chunks (cl-subseq all-chunks i batch-end))
@@ -679,12 +724,19 @@ FILES-METADATA is an alist of (filepath . mtime) for change tracking."
                     do (nconc chunk (list :embedding emb))))
          (let ((next-batch (1+ batch-num)))
            (if (< next-batch total-batches)
-               ;; Process next batch
-               (ollama-buddy-rag--process-batches
-                all-chunks batch-size next-batch total-batches
-                index-name dir file-count chunk-count operation-id
-                retained-chunks files-metadata)
-             ;; All batches done - save index
+               (progn
+                 ;; Checkpoint: save partial progress every N batches
+                 (when (and (> ollama-buddy-rag-checkpoint-interval 0)
+                            (zerop (mod next-batch ollama-buddy-rag-checkpoint-interval)))
+                   (ollama-buddy-rag--save-partial-index
+                    all-chunks retained-chunks
+                    index-name dir file-count files-metadata))
+                 ;; Process next batch
+                 (ollama-buddy-rag--process-batches
+                  all-chunks batch-size next-batch total-batches
+                  index-name dir file-count chunk-count operation-id
+                  retained-chunks files-metadata))
+             ;; All batches done - save final (complete) index
              (let* ((final-chunks (if retained-chunks
                                       (append retained-chunks all-chunks)
                                     all-chunks))
@@ -779,6 +831,12 @@ embedding model has changed."
           (null (plist-get existing-index :files-metadata)))
       (message "No existing index with file metadata. Performing full index...")
       (ollama-buddy-rag-index-directory directory))
+
+     ;; Partial index -> offer resume or fresh start
+     ((plist-get existing-index :partial)
+      (if (y-or-n-p "Existing index is partial (paused). Resume it? ")
+          (ollama-buddy-rag-resume)
+        (ollama-buddy-rag-index-directory directory)))
 
      ;; Embedding model changed -> need full re-index
      ((and (plist-get existing-index :embedding-model)
@@ -1012,11 +1070,18 @@ embedding model has changed."
             (insert "#+TITLE: RAG Indexes\n\n")
             (dolist (name index-names)
               (let ((index (ollama-buddy-rag--load-index name)))
-                (insert (format "* %s\n" name))
+                (if (plist-get index :partial)
+                    (let ((emb (plist-get index :chunk-count))
+                          (pend (length (plist-get index :pending-chunks))))
+                      (insert (format "* %s [partial: %d/%d chunks]\n" name emb (+ emb pend))))
+                  (insert (format "* %s\n" name)))
                 (when index
                   (insert (format "  - Source: %s\n" (plist-get index :source-path)))
                   (insert (format "  - Files: %d\n" (plist-get index :file-count)))
                   (insert (format "  - Chunks: %d\n" (plist-get index :chunk-count)))
+                  (when (plist-get index :partial)
+                    (insert (format "  - Pending: %d chunks remaining\n"
+                                    (length (plist-get index :pending-chunks)))))
                   (insert (format "  - Model: %s\n" (plist-get index :embedding-model)))
                   (insert (format "  - Created: %s\n" (plist-get index :created)))
                   (insert (format "  - Incremental: %s\n"
@@ -1041,15 +1106,71 @@ embedding model has changed."
       (message "Index '%s' not found" index-name))))
 
 ;;;###autoload
-(defun ollama-buddy-rag-cancel ()
-  "Cancel the current RAG indexing or update operation.
-The cancellation takes effect before the next embedding batch is sent."
+(defun ollama-buddy-rag-pause ()
+  "Pause the current RAG indexing operation and save partial progress.
+The pause takes effect before the next embedding batch is sent.
+Use `ollama-buddy-rag-resume' to continue from where it stopped."
   (interactive)
   (if ollama-buddy-rag--indexing-in-progress
       (progn
         (setq ollama-buddy-rag--cancel-requested t)
-        (message "RAG cancellation requested (will stop after current batch)..."))
+        (message "RAG pause requested (will save progress after current batch)..."))
     (message "No RAG indexing operation in progress")))
+
+;;;###autoload
+(defalias 'ollama-buddy-rag-cancel #'ollama-buddy-rag-pause
+  "Alias for `ollama-buddy-rag-pause'.
+Saves partial progress instead of discarding.")
+
+;;;###autoload
+(defun ollama-buddy-rag-resume ()
+  "Resume a previously paused RAG indexing operation.
+Loads the partial index and continues embedding remaining chunks."
+  (interactive)
+  (ollama-buddy-rag--ensure-embedding-model)
+  (when ollama-buddy-rag--indexing-in-progress
+    (user-error "An indexing operation is already in progress"))
+  (let* ((index-names (ollama-buddy-rag--list-index-names))
+         (partial-names
+          (cl-remove-if-not
+           (lambda (name)
+             (let ((idx (ollama-buddy-rag--load-index name)))
+               (and idx (plist-get idx :partial))))
+           index-names)))
+    (when (null partial-names)
+      (user-error "No paused RAG indexes found"))
+    (let* ((index-name (if (= 1 (length partial-names))
+                           (car partial-names)
+                         (completing-read "Resume index: " partial-names nil t)))
+           (index (ollama-buddy-rag--load-index index-name))
+           (pending (plist-get index :pending-chunks))
+           (embedded-chunks (plist-get index :chunks))
+           (dir (plist-get index :source-path))
+           (file-count (or (plist-get index :file-count) 0))
+           (files-metadata (plist-get index :files-metadata))
+           (chunk-count (length pending))
+           (total-batches (ceiling (/ (float chunk-count) ollama-buddy-rag-batch-size)))
+           (operation-id (gensym "rag-resume-")))
+      ;; Check embedding model matches
+      (when (and (plist-get index :embedding-model)
+                 (not (string= (plist-get index :embedding-model)
+                                ollama-buddy-rag-embedding-model)))
+        (user-error "Embedding model changed (%s -> %s). Cannot resume; delete and re-index"
+                    (plist-get index :embedding-model)
+                    ollama-buddy-rag-embedding-model))
+      (when (zerop chunk-count)
+        (user-error "No pending chunks to resume for index '%s'" index-name))
+      (message "Resuming: %d pending chunks (%d batches). %d chunks already embedded."
+               chunk-count total-batches (length embedded-chunks))
+      (setq ollama-buddy-rag--cancel-requested nil
+            ollama-buddy-rag--indexing-in-progress operation-id)
+      (ollama-buddy--register-background-operation
+       operation-id
+       (format "RAG resuming 1/%d" total-batches))
+      (ollama-buddy-rag--process-batches
+       pending ollama-buddy-rag-batch-size 0 total-batches
+       index-name dir file-count chunk-count operation-id
+       embedded-chunks files-metadata))))
 
 ;;;###autoload
 (defun ollama-buddy-rag-clear-attached ()

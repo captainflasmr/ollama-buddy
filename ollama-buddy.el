@@ -4752,84 +4752,11 @@ Modifies the variable in place."
         
         ;; List of models with status and actions
         (insert "\n\n* Available Models\n\n")
-        (insert "** Local\n\n")
-        
-        (dolist (model available-models)
-          (let* ((is-running (member model running-models))
-                 (letter (ollama-buddy--get-model-letter model)))
-
-            (insert (format "- (%s) [%s] "
-                            (or letter " ")
-                            (if is-running "x" " ")))
-            
-            ;; Select button
-            (insert-text-button
-             model
-             'action `(lambda (_)
-                        (ollama-buddy-select-model ,model))
-             'help-echo "Select this model")
-            (when (ollama-buddy--model-supports-tools model)
-              (insert " ⚒"))
-            (when (ollama-buddy--model-supports-vision model)
-              (insert " ⊙"))
-            (when (ollama-buddy--model-supports-thinking model)
-              (insert " ✦"))
-
-            (insert "  ")
-
-            ;; Info button
-            (insert-text-button
-             "Info"
-             'action `(lambda (_)
-                        (ollama-buddy-show-raw-model-info ,model))
-             'help-echo "Show model information")
-            
-            (insert "  ")
-            
-            ;; Add Unload button for running models
-            (if is-running
-                (progn
-                  (insert-text-button
-                   "Unload"
-                   'action `(lambda (_)
-                              (ollama-buddy--unload-single-model ,model)
-                              (run-with-timer 1 nil #'ollama-buddy-manage-models))
-                   'help-echo "Unload this model to free up resources")
-                  (insert "  "))
-              ;; Pull button for non-running models
-              (progn
-                (insert-text-button
-                 "Pull"
-                 'action `(lambda (_)
-                            (ollama-buddy-pull-model ,model))
-                 'help-echo "Pull/update this model")
-                (insert "  ")))
-
-            ;; Copy
-            (insert-text-button
-             "Copy"
-             'action `(lambda (_)
-                        (ollama-buddy-copy-model ,model)
-                        (ollama-buddy-manage-models))
-             'help-echo "Copy this model")
-            
-            (insert "  ")
-
-            ;; Delete button with proper capture
-            (insert-text-button
-             "Delete"
-             'action `(lambda (_)
-                        (when (yes-or-no-p (format "Really delete model '%s'? " ,model))
-                          (ollama-buddy-delete-model ,model)
-                          (ollama-buddy-manage-models)))
-             'help-echo "Delete this model")
-            
-            (insert "\n")))
 
         ;; Cloud models section (hidden in airplane mode)
         (when (and ollama-buddy-cloud-models
                    (not ollama-buddy-airplane-mode))
-          (insert (format "\n** ☁ Cloud Models %s\n\n"
+          (insert (format "** ☁ Cloud Models %s\n\n"
                           (ollama-buddy--cloud-auth-status-indicator)))
           ;; Cloud usage stats
           (if (eq ollama-buddy--cloud-auth-status 'not-authenticated)
@@ -4882,6 +4809,80 @@ Modifies the variable in place."
                           (ollama-buddy-manage-models))
                'help-echo (format "Pull manifest for %s (required before first use)" model))
               (insert "\n"))))
+
+        (insert "\n** Local\n\n")
+
+        (dolist (model available-models)
+          (let* ((is-running (member model running-models))
+                 (letter (ollama-buddy--get-model-letter model)))
+
+            (insert (format "- (%s) [%s] "
+                            (or letter " ")
+                            (if is-running "x" " ")))
+
+            ;; Select button
+            (insert-text-button
+             model
+             'action `(lambda (_)
+                        (ollama-buddy-select-model ,model))
+             'help-echo "Select this model")
+            (when (ollama-buddy--model-supports-tools model)
+              (insert " ⚒"))
+            (when (ollama-buddy--model-supports-vision model)
+              (insert " ⊙"))
+            (when (ollama-buddy--model-supports-thinking model)
+              (insert " ✦"))
+
+            (insert "  ")
+
+            ;; Info button
+            (insert-text-button
+             "Info"
+             'action `(lambda (_)
+                        (ollama-buddy-show-raw-model-info ,model))
+             'help-echo "Show model information")
+
+            (insert "  ")
+
+            ;; Add Unload button for running models
+            (if is-running
+                (progn
+                  (insert-text-button
+                   "Unload"
+                   'action `(lambda (_)
+                              (ollama-buddy--unload-single-model ,model)
+                              (run-with-timer 1 nil #'ollama-buddy-manage-models))
+                   'help-echo "Unload this model to free up resources")
+                  (insert "  "))
+              ;; Pull button for non-running models
+              (progn
+                (insert-text-button
+                 "Pull"
+                 'action `(lambda (_)
+                            (ollama-buddy-pull-model ,model))
+                 'help-echo "Pull/update this model")
+                (insert "  ")))
+
+            ;; Copy
+            (insert-text-button
+             "Copy"
+             'action `(lambda (_)
+                        (ollama-buddy-copy-model ,model)
+                        (ollama-buddy-manage-models))
+             'help-echo "Copy this model")
+
+            (insert "  ")
+
+            ;; Delete button with proper capture
+            (insert-text-button
+             "Delete"
+             'action `(lambda (_)
+                        (when (yes-or-no-p (format "Really delete model '%s'? " ,model))
+                          (ollama-buddy-delete-model ,model)
+                          (ollama-buddy-manage-models)))
+             'help-echo "Delete this model")
+
+            (insert "\n")))
 
         ;; Categorized recommended models section
         (when models-to-pull

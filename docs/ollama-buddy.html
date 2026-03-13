@@ -439,8 +439,9 @@ allowing you to leverage powerful large language models (LLMs) directly within y
     <li><a id="toc-PDF-Support" href="#PDF-Support">25.6 PDF Support</a></li>
     <li><a id="toc-Interactive-Commands-1" href="#Interactive-Commands-1">25.7 Interactive Commands</a></li>
     <li><a id="toc-Incremental-Updates" href="#Incremental-Updates">25.8 Incremental Updates</a></li>
-    <li><a id="toc-Inline-_0040rag_0028_0029-Syntax" href="#Inline-_0040rag_0028_0029-Syntax">25.9 Inline @rag() Syntax</a></li>
-    <li><a id="toc-Example-Workflow" href="#Example-Workflow">25.10 Example Workflow</a></li>
+    <li><a id="toc-Pause-and-Resume" href="#Pause-and-Resume">25.9 Pause and Resume</a></li>
+    <li><a id="toc-Inline-_0040rag_0028_0029-Syntax" href="#Inline-_0040rag_0028_0029-Syntax">25.10 Inline @rag() Syntax</a></li>
+    <li><a id="toc-Example-Workflow" href="#Example-Workflow">25.11 Example Workflow</a></li>
   </ul></li>
   <li><a id="toc-Advanced-Usage" href="#Advanced-Usage">26 Advanced Usage</a>
   <ul class="toc-numbered-mark">
@@ -5416,6 +5417,28 @@ Next: <a href="#RAG" accesskey="n" rel="next">RAG (Retrieval-Augmented Generatio
 <dd><p>Search for a regex pattern in a buffer and return matching lines.
 </p>
 </dd>
+<dt><code class="code">search_files</code></dt>
+<dd><p>Grep for a regex pattern across files in a directory tree.  Supports an
+optional file name glob filter (e.g. <code class="code">&quot;*.el&quot;</code>) and a configurable
+result limit.  Skips binary files and hidden directories.
+</p>
+</dd>
+<dt><code class="code">get_region</code></dt>
+<dd><p>Get the currently selected text (active region) along with the buffer name
+and line range.
+</p>
+</dd>
+<dt><code class="code">get_buffer_info</code></dt>
+<dd><p>Get metadata about an Emacs buffer (file path, major mode, point position,
+line count, modified and read-only state, narrowing) without returning the
+full buffer contents.
+</p>
+</dd>
+<dt><code class="code">describe_symbol</code></dt>
+<dd><p>Look up the documentation for an Emacs Lisp symbol (function, variable, or
+face) using Emacs&rsquo;s built-in documentation system.
+</p>
+</dd>
 <dt><code class="code">get_project_info</code></dt>
 <dd><p>Get information about the current project (root directory, files, structure).
 </p></dd>
@@ -5432,6 +5455,12 @@ Next: <a href="#RAG" accesskey="n" rel="next">RAG (Retrieval-Augmented Generatio
 </dd>
 <dt><code class="code">execute_shell</code></dt>
 <dd><p>Execute a shell command and return its output.
+</p>
+</dd>
+<dt><code class="code">eval_elisp</code></dt>
+<dd><p>Evaluate an arbitrary Emacs Lisp expression and return the result.  This is a
+powerful escape hatch that can do almost anything in Emacs: navigate buffers,
+modify settings, run commands, query state, etc.
 </p>
 </dd>
 <dt><code class="code">propose_file_changes</code></dt>
@@ -5453,9 +5482,15 @@ into the complete file before presenting the side-by-side comparison.
 
 Read the file ~/.emacs.d/init.el and summarize what packages I'm using.
 
+Search for all TODO comments in my project under ~/src/myapp/
+
 What is 2^64 - 1?
 
-What buffers do I have open?
+What buffers do I have open?  Which ones are modified?
+
+Explain the selected code.
+
+What does the function `mapcar' do in Emacs Lisp?
 
 Search for all defun definitions in the buffer ollama-buddy-tools.el
 </pre></div>
@@ -5466,6 +5501,8 @@ Search for all defun definitions in the buffer ollama-buddy-tools.el
 <pre class="example-preformatted">Run df -h and tell me how much disk space I have.
 
 Create a file at /tmp/hello.txt with Hello World.
+
+Evaluate (length (buffer-list)) and tell me how many buffers I have.
 </pre></div>
 
 </div>
@@ -5656,7 +5693,8 @@ Next: <a href="#Advanced-Usage" accesskey="n" rel="next">Advanced Usage</a>, Pre
 <li><a href="#PDF-Support" accesskey="6">PDF Support</a></li>
 <li><a href="#Interactive-Commands-1" accesskey="7">Interactive Commands</a></li>
 <li><a href="#Incremental-Updates" accesskey="8">Incremental Updates</a></li>
-<li><a href="#Inline-_0040rag_0028_0029-Syntax" accesskey="9">Inline @rag() Syntax</a></li>
+<li><a href="#Pause-and-Resume" accesskey="9">Pause and Resume</a></li>
+<li><a href="#Inline-_0040rag_0028_0029-Syntax">Inline @rag() Syntax</a></li>
 <li><a href="#Example-Workflow">Example Workflow</a></li>
 </ul>
 <div class="section-level-extent" id="Overview-10">
@@ -5698,7 +5736,7 @@ model is needed.
 <li> Pull an embedding model: <code class="code">ollama pull nomic-embed-text</code>
 </li><li> Open the RAG menu: <kbd class="kbd">C-c O</kbd> then <kbd class="kbd">r</kbd>
 </li><li> Index a directory: select <kbd class="kbd">i</kbd> and choose a directory
-</li><li> Wait for indexing to complete (progress shown in status line)
+</li><li> Wait for indexing to complete (progress shown in status line); press <kbd class="kbd">c</kbd> to pause if needed, <kbd class="kbd">r</kbd> to resume later
 </li><li> Search your index: select <kbd class="kbd">s</kbd> and enter a query
 </li><li> Or attach context to a conversation: select <kbd class="kbd">a</kbd>, enter a query, then chat normally
 </li><li> After editing files, update the index incrementally: select <kbd class="kbd">u</kbd> and choose the same directory
@@ -5762,7 +5800,13 @@ generating a response.
 </p>
 </dd>
 <dt><code class="code">ollama-buddy-rag-batch-size</code></dt>
-<dd><p>Number of chunks to embed per API call (default: <code class="code">20</code>).
+<dd><p>Number of chunks to embed per API call (default: <code class="code">10</code>).
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-rag-checkpoint-interval</code></dt>
+<dd><p>Save partial progress every N batches during indexing (default: <code class="code">5</code>).
+Set to <code class="code">1</code> to save after every batch, or <code class="code">0</code> to disable automatic
+checkpointing (progress is still saved on pause).
 </p>
 </dd>
 <dt><code class="code">ollama-buddy-rag-embedding-base-url</code></dt>
@@ -5851,11 +5895,20 @@ automatically.  If the embedding model has changed since the index was created,
 a full re-index is required and the user is prompted before proceeding.
 </p>
 </dd>
-<dt><code class="code">ollama-buddy-rag-cancel (<kbd class="kbd">c</kbd>)</code></dt>
-<dd><p>Cancel an in-progress indexing or update operation.  The cancellation takes
-effect before the next embedding batch is sent, so the current in-flight batch
-completes but no further batches are processed.  The previous index (if any) is
-left unchanged.
+<dt><code class="code">ollama-buddy-rag-pause (<kbd class="kbd">c</kbd>)</code></dt>
+<dd><p>Pause an in-progress indexing or update operation and save partial progress to
+disk.  The pause takes effect before the next embedding batch is sent, so the
+current in-flight batch completes but no further batches are processed.  The
+partial index is saved with all already-embedded chunks and can be resumed
+later.  <code class="code">ollama-buddy-rag-cancel</code> is an alias for this command.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-rag-resume (<kbd class="kbd">r</kbd>)</code></dt>
+<dd><p>Resume a previously paused indexing operation.  Loads the partial index,
+retains all already-embedded chunks, and continues embedding the remaining
+pending chunks.  If only one partial index exists it is selected automatically;
+otherwise you are prompted to choose.  The embedding model must match the one
+used when the index was created.
 </p>
 </dd>
 <dt><code class="code">ollama-buddy-rag-search (<kbd class="kbd">s</kbd>)</code></dt>
@@ -5907,8 +5960,49 @@ Update Directory on such an index automatically falls back to a full re-index
 and saves the metadata for future incremental updates.
 </p>
 </div>
+<div class="section-level-extent" id="Pause-and-Resume">
+<h3 class="section"><span>25.9 Pause and Resume<a class="copiable-link" href="#Pause-and-Resume"> &para;</a></span></h3>
+
+<p>Indexing large directories can take a long time.  If you need to close Emacs or
+stop the process, you can pause and resume later.
+</p>
+<dl class="table">
+<dt><strong class="strong">Pause</strong></dt>
+<dd><p>Press <kbd class="kbd">c</kbd> in the RAG transient menu (or run <code class="code">M-x
+ollama-buddy-rag-pause</code>).  The current batch completes, then all progress is
+saved to disk as a partial index.  The partial index is immediately searchable
+for any chunks that have already been embedded.
+</p>
+</dd>
+<dt><strong class="strong">Resume</strong></dt>
+<dd><p>Press <kbd class="kbd">r</kbd> in the RAG transient menu (or run <code class="code">M-x
+ollama-buddy-rag-resume</code>).  The partial index is loaded and embedding continues
+from where it stopped.  When all remaining chunks are processed, the index is
+saved as a complete index.
+</p>
+</dd>
+<dt><strong class="strong">Automatic checkpointing</strong></dt>
+<dd><p>Progress is also saved periodically during indexing (every 5 batches by
+default, controlled by <code class="code">ollama-buddy-rag-checkpoint-interval</code>).  This
+means even an unexpected Emacs crash preserves most of the work done so far.
+The next <code class="code">ollama-buddy-rag-resume</code> picks up from the last checkpoint.
+</p>
+</dd>
+<dt><strong class="strong">Partial index visibility</strong></dt>
+<dd><p><code class="code">M-x ollama-buddy-rag-list-indexes</code> marks partial indexes with
+<code class="code">[partial: N/M chunks]</code> in the heading and shows a count of pending
+chunks.
+</p>
+</dd>
+<dt><strong class="strong">Update directory</strong></dt>
+<dd><p>Running <code class="code">M-x ollama-buddy-rag-update-directory</code> on a directory with a
+partial index will offer to resume it or start a fresh full re-index.
+</p></dd>
+</dl>
+
+</div>
 <div class="section-level-extent" id="Inline-_0040rag_0028_0029-Syntax">
-<h3 class="section"><span>25.9 Inline @rag() Syntax<a class="copiable-link" href="#Inline-_0040rag_0028_0029-Syntax"> &para;</a></span></h3>
+<h3 class="section"><span>25.10 Inline @rag() Syntax<a class="copiable-link" href="#Inline-_0040rag_0028_0029-Syntax"> &para;</a></span></h3>
 
 <p>You can use <code class="code">@rag(query)</code> directly in prompts to automatically search your
 RAG index and attach results as context &mdash; no separate attach step needed.
@@ -5939,7 +6033,7 @@ index exists, it is used automatically.
 </p>
 </div>
 <div class="section-level-extent" id="Example-Workflow">
-<h3 class="section"><span>25.10 Example Workflow<a class="copiable-link" href="#Example-Workflow"> &para;</a></span></h3>
+<h3 class="section"><span>25.11 Example Workflow<a class="copiable-link" href="#Example-Workflow"> &para;</a></span></h3>
 
 <p>Suppose you have the text of &ldquo;Twenty Thousand Leagues Under the Sea&rdquo; in
 <samp class="file">~/books/leagues.txt</samp>:

@@ -11,6 +11,38 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-03-13 Thu> *3.7.0*
+
+RAG pause/resume, periodic checkpointing, and new built-in tools.
+
+*** New Features
+
+- *RAG pause/resume* -- =M-x ollama-buddy-rag-pause= (or =c= in the RAG
+  transient menu) pauses an in-progress indexing operation and saves all
+  progress to disk.  =M-x ollama-buddy-rag-resume= (or =r= in the RAG
+  transient menu) continues from where it left off.  Partial indexes are
+  searchable immediately for already-embedded chunks.
+- *RAG periodic checkpointing* -- Progress is automatically saved every N
+  batches (controlled by =ollama-buddy-rag-checkpoint-interval=, default 5).
+  Even if Emacs crashes mid-indexing, partial progress is preserved and can be
+  resumed.
+- *Partial index display* -- =M-x ollama-buddy-rag-list-indexes= shows partial
+  indexes with a =[partial: N/M chunks]= indicator and pending chunk count.
+- *Update directory handles partial indexes* -- =M-x
+  ollama-buddy-rag-update-directory= detects partial indexes and offers to
+  resume or start fresh.
+- *New built-in tools* -- =search_files= (grep across files in a directory
+  tree), =get_region= (active selection text), =get_buffer_info= (buffer
+  metadata without full contents), =describe_symbol= (Emacs Lisp
+  documentation lookup), =eval_elisp= (evaluate arbitrary elisp expressions).
+
+*** Changes
+
+- =ollama-buddy-rag-cancel= is now an alias for =ollama-buddy-rag-pause=.
+  Cancelling saves partial progress instead of discarding it.
+- Cloud Models section now appears before Local models in the Model Management
+  buffer.
+
 ** <2026-03-12 Wed> *3.6.0*
 
 RAG incremental updates and cancellation.

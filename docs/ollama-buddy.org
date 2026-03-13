@@ -334,8 +334,9 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#PDF-Support][25.6 PDF Support]]
   - [[#Interactive-Commands-1][25.7 Interactive Commands]]
   - [[#Incremental-Updates][25.8 Incremental Updates]]
-  - [[#Inline-_0040rag_0028_0029-Syntax][25.9 Inline @rag() Syntax]]
-  - [[#Example-Workflow][25.10 Example Workflow]]
+  - [[#Pause-and-Resume][25.9 Pause and Resume]]
+  - [[#Inline-_0040rag_0028_0029-Syntax][25.10 Inline @rag() Syntax]]
+  - [[#Example-Workflow][25.11 Example Workflow]]
 - [[#Advanced-Usage][26 Advanced Usage]]
   - [[#Managing-Token-Usage][26.1 Managing Token Usage]]
   - [[#Customizing-the-Interface][26.2 Customizing the Interface]]
@@ -5611,6 +5612,21 @@ model management buffer.
 - =search_buffer= :: Search for a regex pattern in a buffer and return
   matching lines.
 
+- =search_files= :: Grep for a regex pattern across files in a directory
+  tree. Supports an optional file name glob filter (e.g. ="*.el"=) and a
+  configurable result limit. Skips binary files and hidden directories.
+
+- =get_region= :: Get the currently selected text (active region) along
+  with the buffer name and line range.
+
+- =get_buffer_info= :: Get metadata about an Emacs buffer (file path,
+  major mode, point position, line count, modified and read-only state,
+  narrowing) without returning the full buffer contents.
+
+- =describe_symbol= :: Look up the documentation for an Emacs Lisp
+  symbol (function, variable, or face) using Emacs's built-in
+  documentation system.
+
 - =get_project_info= :: Get information about the current project (root
   directory, files, structure).
 
@@ -5623,6 +5639,11 @@ model management buffer.
 - =write_file= :: Write content to a file on the filesystem.
 
 - =execute_shell= :: Execute a shell command and return its output.
+
+- =eval_elisp= :: Evaluate an arbitrary Emacs Lisp expression and return
+  the result. This is a powerful escape hatch that can do almost
+  anything in Emacs: navigate buffers, modify settings, run commands,
+  query state, etc.
 
 - =propose_file_changes= :: Propose changes to a file via an ediff
   session. Automatically detects whether the LLM provided a full file or
@@ -5642,9 +5663,15 @@ What files are in my ~/Documents directory?
 
 Read the file ~/.emacs.d/init.el and summarize what packages I'm using.
 
+Search for all TODO comments in my project under ~/src/myapp/
+
 What is 2^64 - 1?
 
-What buffers do I have open?
+What buffers do I have open?  Which ones are modified?
+
+Explain the selected code.
+
+What does the function `mapcar' do in Emacs Lisp?
 
 Search for all defun definitions in the buffer ollama-buddy-tools.el
 #+end_src
@@ -5655,6 +5682,8 @@ For unsafe tools (with safe mode disabled):
 Run df -h and tell me how much disk space I have.
 
 Create a file at /tmp/hello.txt with Hello World.
+
+Evaluate (length (buffer-list)) and tell me how many buffers I have.
 #+end_src
 
 <<How-It-Works-4>>
@@ -5856,6 +5885,7 @@ Next: [[#Advanced-Usage][Advanced Usage]], Previous:
 - [[#PDF-Support][PDF Support]]
 - [[#Interactive-Commands-1][Interactive Commands]]
 - [[#Incremental-Updates][Incremental Updates]]
+- [[#Pause-and-Resume][Pause and Resume]]
 - [[#Inline-_0040rag_0028_0029-Syntax][Inline @rag() Syntax]]
 - [[#Example-Workflow][Example Workflow]]
 
@@ -5904,7 +5934,8 @@ model is needed.
 1. Pull an embedding model: =ollama pull nomic-embed-text=
 2. Open the RAG menu: C-c O then r
 3. Index a directory: select i and choose a directory
-4. Wait for indexing to complete (progress shown in status line)
+4. Wait for indexing to complete (progress shown in status line); press
+   c to pause if needed, r to resume later
 5. Search your index: select s and enter a query
 6. Or attach context to a conversation: select a, enter a query, then
    chat normally
@@ -5961,7 +5992,12 @@ model is needed.
   =("node_modules" ".git" "__pycache__" ".elc")=).
 
 - =ollama-buddy-rag-batch-size= :: Number of chunks to embed per API
-  call (default: =20=).
+  call (default: =10=).
+
+- =ollama-buddy-rag-checkpoint-interval= :: Save partial progress every
+  N batches during indexing (default: =5=). Set to =1= to save after
+  every batch, or =0= to disable automatic checkpointing (progress is
+  still saved on pause).
 
 - =ollama-buddy-rag-embedding-base-url= :: Base URL for the embedding
   service. When =nil= (the default), the main Ollama host and port are
@@ -6041,11 +6077,19 @@ These commands are available from the RAG transient menu (C-c O then r):
   created, a full re-index is required and the user is prompted before
   proceeding.
 
-- =ollama-buddy-rag-cancel (==c==)= :: Cancel an in-progress indexing or
-  update operation. The cancellation takes effect before the next
-  embedding batch is sent, so the current in-flight batch completes but
-  no further batches are processed. The previous index (if any) is left
-  unchanged.
+- =ollama-buddy-rag-pause (==c==)= :: Pause an in-progress indexing or
+  update operation and save partial progress to disk. The pause takes
+  effect before the next embedding batch is sent, so the current
+  in-flight batch completes but no further batches are processed. The
+  partial index is saved with all already-embedded chunks and can be
+  resumed later. =ollama-buddy-rag-cancel= is an alias for this command.
+
+- =ollama-buddy-rag-resume (==r==)= :: Resume a previously paused
+  indexing operation. Loads the partial index, retains all
+  already-embedded chunks, and continues embedding the remaining pending
+  chunks. If only one partial index exists it is selected automatically;
+  otherwise you are prompted to choose. The embedding model must match
+  the one used when the index was created.
 
 - =ollama-buddy-rag-search (==s==)= :: Search the index with a text
   query. Results are displayed in an org-mode buffer showing similarity
@@ -6089,8 +6133,41 @@ Indexes created before version 3.6.0 do not contain file metadata.
 Running Update Directory on such an index automatically falls back to a
 full re-index and saves the metadata for future incremental updates.
 
+<<Pause-and-Resume>>
+*** 25.9 Pause and Resume [[#Pause-and-Resume][¶]]
+:PROPERTIES:
+:CUSTOM_ID: pause-and-resume
+:CLASS: section
+:END:
+Indexing large directories can take a long time. If you need to close
+Emacs or stop the process, you can pause and resume later.
+
+- *Pause* :: Press c in the RAG transient menu (or run
+  =M-x ollama-buddy-rag-pause=). The current batch completes, then all
+  progress is saved to disk as a partial index. The partial index is
+  immediately searchable for any chunks that have already been embedded.
+
+- *Resume* :: Press r in the RAG transient menu (or run
+  =M-x ollama-buddy-rag-resume=). The partial index is loaded and
+  embedding continues from where it stopped. When all remaining chunks
+  are processed, the index is saved as a complete index.
+
+- *Automatic checkpointing* :: Progress is also saved periodically
+  during indexing (every 5 batches by default, controlled by
+  =ollama-buddy-rag-checkpoint-interval=). This means even an unexpected
+  Emacs crash preserves most of the work done so far. The next
+  =ollama-buddy-rag-resume= picks up from the last checkpoint.
+
+- *Partial index visibility* :: =M-x ollama-buddy-rag-list-indexes=
+  marks partial indexes with =[partial: N/M chunks]= in the heading and
+  shows a count of pending chunks.
+
+- *Update directory* :: Running =M-x ollama-buddy-rag-update-directory=
+  on a directory with a partial index will offer to resume it or start a
+  fresh full re-index.
+
 <<Inline-_0040rag_0028_0029-Syntax>>
-*** 25.9 Inline @rag() Syntax [[#Inline-_0040rag_0028_0029-Syntax][¶]]
+*** 25.10 Inline @rag() Syntax [[#Inline-_0040rag_0028_0029-Syntax][¶]]
 :PROPERTIES:
 :CUSTOM_ID: inline-rag-syntax
 :CLASS: section
@@ -6121,7 +6198,7 @@ If you have multiple indexes, you will be prompted to select one. If
 only one index exists, it is used automatically.
 
 <<Example-Workflow>>
-*** 25.10 Example Workflow [[#Example-Workflow][¶]]
+*** 25.11 Example Workflow [[#Example-Workflow][¶]]
 :PROPERTIES:
 :CUSTOM_ID: example-workflow
 :CLASS: section

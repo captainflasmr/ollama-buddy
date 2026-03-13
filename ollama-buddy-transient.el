@@ -104,7 +104,8 @@
 (declare-function ollama-buddy-rag-list-indexes "ollama-buddy-rag")
 (declare-function ollama-buddy-rag-delete-index "ollama-buddy-rag")
 (declare-function ollama-buddy-rag-update-directory "ollama-buddy-rag")
-(declare-function ollama-buddy-rag-cancel "ollama-buddy-rag")
+(declare-function ollama-buddy-rag-pause "ollama-buddy-rag")
+(declare-function ollama-buddy-rag-resume "ollama-buddy-rag")
 (declare-function ollama-buddy-rag-clear-attached "ollama-buddy-rag")
 (declare-function ollama-buddy-rag-count "ollama-buddy-rag")
 
@@ -406,9 +407,10 @@
    ["Index"
     ("i" "Index Directory" ollama-buddy-rag-index-directory)
     ("u" "Update Directory" ollama-buddy-rag-update-directory)
+    ("r" "Resume Paused" ollama-buddy-rag-resume)
     ("w" "List Indexes" ollama-buddy-rag-list-indexes)
     ("d" "Delete Index" ollama-buddy-rag-delete-index)
-    ("c" "Cancel Indexing" ollama-buddy-rag-cancel)]
+    ("c" "Pause/Cancel" ollama-buddy-rag-pause)]
    ["Search"
     ("s" "Search & Display" ollama-buddy-rag-search)
     ("a" "Search & Attach" ollama-buddy-rag-attach)]

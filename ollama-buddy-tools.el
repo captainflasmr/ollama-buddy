@@ -578,7 +578,71 @@ Returns a list of tool result messages to append to the conversation."
              (mapconcat #'identity (nreverse matches) "\n")
            "No matches found")))
      t) ; safe
-    
+
+    ;; search_files - Grep for a pattern across files in a directory
+    (ollama-buddy-tools-register
+     'search_files
+     "Search for a regex pattern across files in a directory tree. Returns matching lines with file paths and line numbers. Skips binary files and hidden directories (e.g. .git). Use the glob parameter to restrict to specific file types."
+     '((type . "object")
+       (required . ["pattern" "directory"])
+       (properties . ((pattern . ((type . "string")
+                                  (description . "Regex pattern to search for in file contents")))
+                      (directory . ((type . "string")
+                                    (description . "Root directory to search in")))
+                      (glob . ((type . "string")
+                               (description . "Optional file name glob to filter files (e.g. \"*.el\", \"*.py\")")))
+                      (max_results . ((type . "integer")
+                                      (description . "Maximum number of matching lines to return (default 100, max 500)"))))))
+     (lambda (args)
+       (let* ((pattern (alist-get 'pattern args))
+              (directory (expand-file-name (alist-get 'directory args)))
+              (glob (alist-get 'glob args))
+              (max-results (max 1 (min (or (alist-get 'max_results args) 100) 500)))
+              (file-regexp (if glob
+                              (wildcard-to-regexp glob)
+                            ""))
+              (results nil)
+              (count 0))
+         (if (not (file-directory-p directory))
+             (format "Error: Directory %s not found" directory)
+           (let ((files (directory-files-recursively directory file-regexp)))
+             ;; Filter out hidden directories (.git, etc.)
+             (setq files (seq-remove
+                          (lambda (f)
+                            (string-match-p
+                             "/\\."
+                             (file-relative-name f directory)))
+                          files))
+             (catch 'max-reached
+               (dolist (file files)
+                 (when (and (file-readable-p file)
+                            (not (file-directory-p file)))
+                   (condition-case nil
+                       (with-temp-buffer
+                         (insert-file-contents file nil nil 1048576) ; 1MB limit per file
+                         (goto-char (point-min))
+                         ;; Skip binary files (null bytes in first 512 chars)
+                         (unless (re-search-forward "\0" (min (point-max) 512) t)
+                           (goto-char (point-min))
+                           (while (re-search-forward pattern nil t)
+                             (push (format "%s:%d: %s"
+                                           (file-relative-name file directory)
+                                           (line-number-at-pos)
+                                           (string-trim (thing-at-point 'line t)))
+                                   results)
+                             (setq count (1+ count))
+                             (when (>= count max-results)
+                               (throw 'max-reached nil))
+                             (forward-line 1))))
+                     (error nil)))))
+           (if results
+               (concat (mapconcat #'identity (nreverse results) "\n")
+                       (if (>= count max-results)
+                           (format "\n\n[Results truncated at %d matches]" max-results)
+                         ""))
+             "No matches found")))))
+     t) ; safe
+
     ;; propose_file_changes - Provide full new file content and review via Emacs ediff
     (ollama-buddy-tools-register
      'propose_file_changes
@@ -663,6 +727,122 @@ Returns a list of tool result messages to append to the conversation."
          "No project found for the current buffer. Try opening a file inside a project first."))
      t) ; safe
 
+    ;; get_region - Get the active region/selection
+    (ollama-buddy-tools-register
+     'get_region
+     "Get the currently selected text (active region) in Emacs. Returns the selected text along with the buffer name and line range. Useful when the user says \"explain this\", \"refactor this\", etc."
+     '((type . "object")
+       (properties . ()))
+     (lambda (_args)
+       (let ((buf (or (and (bound-and-true-p ollama-buddy--caller-buffer)
+                           (buffer-live-p ollama-buddy--caller-buffer)
+                           ollama-buddy--caller-buffer)
+                      (window-buffer (selected-window)))))
+         (with-current-buffer buf
+           (if (use-region-p)
+               (let ((start (region-beginning))
+                     (end (region-end)))
+                 (format "Buffer: %s\nLines %d-%d:\n%s"
+                         (buffer-name)
+                         (line-number-at-pos start)
+                         (line-number-at-pos end)
+                         (buffer-substring-no-properties start end)))
+             "No active region/selection"))))
+     t) ; safe
+
+    ;; get_buffer_info - Get buffer metadata without full contents
+    (ollama-buddy-tools-register
+     'get_buffer_info
+     "Get metadata about an Emacs buffer without returning its full contents. Returns: file path, major mode, point position, line count, modified state, read-only state, and narrowing info. Cheaper than get_buffer_content when you just need context about what the user is working on."
+     '((type . "object")
+       (properties . ((buffer . ((type . "string")
+                                 (description . "Buffer name. If omitted, uses the buffer the user was in when they started the chat."))))))
+     (lambda (args)
+       (let* ((buffer-name (alist-get 'buffer args))
+              (buf (or (and buffer-name (get-buffer buffer-name))
+                       (and (bound-and-true-p ollama-buddy--caller-buffer)
+                            (buffer-live-p ollama-buddy--caller-buffer)
+                            ollama-buddy--caller-buffer)
+                       (current-buffer))))
+         (if (buffer-live-p buf)
+             (with-current-buffer buf
+               (format "Buffer: %s\nFile: %s\nMajor mode: %s\nPoint: %d (line %d, column %d)\nLines: %d\nSize: %d bytes\nModified: %s\nRead-only: %s\nNarrowed: %s"
+                       (buffer-name)
+                       (or (buffer-file-name) "(no file)")
+                       major-mode
+                       (point) (line-number-at-pos) (current-column)
+                       (count-lines (point-min) (point-max))
+                       (buffer-size)
+                       (if (buffer-modified-p) "yes" "no")
+                       (if buffer-read-only "yes" "no")
+                       (if (buffer-narrowed-p)
+                           (format "yes (lines %d-%d of %d)"
+                                   (line-number-at-pos (point-min))
+                                   (line-number-at-pos (point-max))
+                                   (count-lines 1 (1+ (buffer-size))))
+                         "no")))
+           (format "Error: Buffer %s not found" (or buffer-name "(default)")))))
+     t) ; safe
+
+    ;; describe_symbol - Look up Emacs documentation for a symbol
+    (ollama-buddy-tools-register
+     'describe_symbol
+     "Look up the documentation for an Emacs Lisp symbol (function or variable). Uses Emacs's built-in describe-function and describe-variable to return the docstring, signature, and source location."
+     '((type . "object")
+       (required . ["symbol"])
+       (properties . ((symbol . ((type . "string")
+                                 (description . "The Emacs Lisp symbol name to look up (e.g. \"mapcar\", \"buffer-file-name\")"))))))
+     (lambda (args)
+       (let* ((sym-name (alist-get 'symbol args))
+              (sym (intern-soft sym-name)))
+         (if (not sym)
+             (format "Symbol '%s' not found" sym-name)
+           (let ((parts nil))
+             (when (fboundp sym)
+               (push (format "=== Function: %s ===\n\nSignature: %s\n\n%s"
+                             sym-name
+                             (or (elisp-get-fnsym-args-string sym) "(unknown)")
+                             (or (documentation sym t) "(no documentation)"))
+                     parts))
+             (when (boundp sym)
+               (let ((val (symbol-value sym)))
+                 (push (format "=== Variable: %s ===\n\nValue: %s\n\n%s"
+                               sym-name
+                               (let ((printed (format "%S" val)))
+                                 (if (> (length printed) 200)
+                                     (concat (substring printed 0 200) "...")
+                                   printed))
+                               (or (documentation-property sym 'variable-documentation t)
+                                   "(no documentation)"))
+                       parts)))
+             (when (facep sym)
+               (push (format "=== Face: %s ===\n\n%s"
+                             sym-name
+                             (or (documentation-property sym 'face-documentation t)
+                                 "(no documentation)"))
+                     parts))
+             (if parts
+                 (mapconcat #'identity (nreverse parts) "\n\n")
+               (format "Symbol '%s' exists but is not a function, variable, or face" sym-name))))))
+     t) ; safe
+
+    ;; eval_elisp - Evaluate an Emacs Lisp expression
+    (ollama-buddy-tools-register
+     'eval_elisp
+     "Evaluate an Emacs Lisp expression and return the result. This is a powerful tool that can do almost anything in Emacs: navigate buffers, modify settings, run commands, query state, etc. The expression is evaluated in the context of the current Emacs session."
+     '((type . "object")
+       (required . ["expression"])
+       (properties . ((expression . ((type . "string")
+                                     (description . "Emacs Lisp expression to evaluate (e.g. \"(+ 1 2)\", \"(buffer-list)\", \"(message \\\"hello\\\")\" )"))))))
+     (lambda (args)
+       (let ((expr-str (alist-get 'expression args)))
+         (condition-case err
+             (let* ((expr (car (read-from-string expr-str)))
+                    (result (eval expr t)))
+               (format "%S" result))
+           (error (format "Error: %s" (error-message-string err))))))
+     nil) ; not safe
+
     (message "Initialized %d built-in tools" (hash-table-count ollama-buddy-tools--registry))))
 
 ;;; Interactive Commands
@@ -719,13 +899,13 @@ When enabling, warns if the current model does not support tool calling."
                  (safe (plist-get spec :safe))
                  (params (plist-get spec :parameters)))
             (insert (format "** %s  [%s]\n\n" name (if safe "safe" "unsafe")))
-            (insert (format "   %s\n\n" (or desc "")))
+            (insert (format "%s\n\n" (or desc "")))
             (when params
               (let ((props (alist-get 'properties params)))
                 (dolist (prop props)
                   (let ((prop-name (car prop))
                         (prop-spec (cdr prop)))
-                    (insert (format "   - *%s* (%s) :: %s\n"
+                    (insert (format "- *%s* (%s) :: %s\n"
                                     prop-name
                                     (or (alist-get 'type prop-spec) "any")
                                     (or (alist-get 'description prop-spec) ""))))))

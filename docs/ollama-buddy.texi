@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 3.6.0
+@subtitle For Ollama Buddy version 3.7.0
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -3763,6 +3763,24 @@ Evaluate a mathematical expression using Emacs @code{calc-eval}.
 @item search_buffer
 Search for a regex pattern in a buffer and return matching lines.
 
+@item search_files
+Grep for a regex pattern across files in a directory tree.  Supports an
+optional file name glob filter (e.g.@: @code{"*.el"}) and a configurable
+result limit.  Skips binary files and hidden directories.
+
+@item get_region
+Get the currently selected text (active region) along with the buffer name
+and line range.
+
+@item get_buffer_info
+Get metadata about an Emacs buffer (file path, major mode, point position,
+line count, modified and read-only state, narrowing) without returning the
+full buffer contents.
+
+@item describe_symbol
+Look up the documentation for an Emacs Lisp symbol (function, variable, or
+face) using Emacs's built-in documentation system.
+
 @item get_project_info
 Get information about the current project (root directory, files, structure).
 @end table
@@ -3775,6 +3793,11 @@ Write content to a file on the filesystem.
 
 @item execute_shell
 Execute a shell command and return its output.
+
+@item eval_elisp
+Evaluate an arbitrary Emacs Lisp expression and return the result.  This is a
+powerful escape hatch that can do almost anything in Emacs: navigate buffers,
+modify settings, run commands, query state, etc.
 
 @item propose_file_changes
 Propose changes to a file via an ediff session.  Automatically detects
@@ -3791,9 +3814,15 @@ What files are in my ~/Documents directory?
 
 Read the file ~/.emacs.d/init.el and summarize what packages I'm using.
 
+Search for all TODO comments in my project under ~/src/myapp/
+
 What is 2^64 - 1?
 
-What buffers do I have open?
+What buffers do I have open?  Which ones are modified?
+
+Explain the selected code.
+
+What does the function `mapcar' do in Emacs Lisp?
 
 Search for all defun definitions in the buffer ollama-buddy-tools.el
 @end example
@@ -3804,6 +3833,8 @@ For unsafe tools (with safe mode disabled):
 Run df -h and tell me how much disk space I have.
 
 Create a file at /tmp/hello.txt with Hello World.
+
+Evaluate (length (buffer-list)) and tell me how many buffers I have.
 @end example
 
 @section How It Works
@@ -3983,7 +4014,7 @@ model is needed.
 @item Pull an embedding model: @code{ollama pull nomic-embed-text}
 @item Open the RAG menu: @kbd{C-c O} then @kbd{r}
 @item Index a directory: select @kbd{i} and choose a directory
-@item Wait for indexing to complete (progress shown in status line)
+@item Wait for indexing to complete (progress shown in status line); press @kbd{c} to pause if needed, @kbd{r} to resume later
 @item Search your index: select @kbd{s} and enter a query
 @item Or attach context to a conversation: select @kbd{a}, enter a query, then chat normally
 @item After editing files, update the index incrementally: select @kbd{u} and choose the same directory
@@ -4035,7 +4066,12 @@ List of glob patterns to exclude from indexing
 (default: @code{("node_modules" ".git" "__pycache__" ".elc")}).
 
 @item ollama-buddy-rag-batch-size
-Number of chunks to embed per API call (default: @code{20}).
+Number of chunks to embed per API call (default: @code{10}).
+
+@item ollama-buddy-rag-checkpoint-interval
+Save partial progress every N batches during indexing (default: @code{5}).
+Set to @code{1} to save after every batch, or @code{0} to disable automatic
+checkpointing (progress is still saved on pause).
 
 @item ollama-buddy-rag-embedding-base-url
 Base URL for the embedding service.  When @code{nil} (the default), the main
@@ -4112,11 +4148,19 @@ existing index with metadata is found, a full re-index is performed
 automatically.  If the embedding model has changed since the index was created,
 a full re-index is required and the user is prompted before proceeding.
 
-@item ollama-buddy-rag-cancel (@kbd{c})
-Cancel an in-progress indexing or update operation.  The cancellation takes
-effect before the next embedding batch is sent, so the current in-flight batch
-completes but no further batches are processed.  The previous index (if any) is
-left unchanged.
+@item ollama-buddy-rag-pause (@kbd{c})
+Pause an in-progress indexing or update operation and save partial progress to
+disk.  The pause takes effect before the next embedding batch is sent, so the
+current in-flight batch completes but no further batches are processed.  The
+partial index is saved with all already-embedded chunks and can be resumed
+later.  @code{ollama-buddy-rag-cancel} is an alias for this command.
+
+@item ollama-buddy-rag-resume (@kbd{r})
+Resume a previously paused indexing operation.  Loads the partial index,
+retains all already-embedded chunks, and continues embedding the remaining
+pending chunks.  If only one partial index exists it is selected automatically;
+otherwise you are prompted to choose.  The embedding model must match the one
+used when the index was created.
 
 @item ollama-buddy-rag-search (@kbd{s})
 Search the index with a text query.  Results are displayed in an org-mode
@@ -4161,6 +4205,40 @@ re-index is needed (you will be prompted).
 Indexes created before version 3.6.0 do not contain file metadata.  Running
 Update Directory on such an index automatically falls back to a full re-index
 and saves the metadata for future incremental updates.
+
+@section Pause and Resume
+
+Indexing large directories can take a long time.  If you need to close Emacs or
+stop the process, you can pause and resume later.
+
+@table @strong
+@item Pause
+Press @kbd{c} in the RAG transient menu (or run @code{M-x
+ollama-buddy-rag-pause}).  The current batch completes, then all progress is
+saved to disk as a partial index.  The partial index is immediately searchable
+for any chunks that have already been embedded.
+
+@item Resume
+Press @kbd{r} in the RAG transient menu (or run @code{M-x
+ollama-buddy-rag-resume}).  The partial index is loaded and embedding continues
+from where it stopped.  When all remaining chunks are processed, the index is
+saved as a complete index.
+
+@item Automatic checkpointing
+Progress is also saved periodically during indexing (every 5 batches by
+default, controlled by @code{ollama-buddy-rag-checkpoint-interval}).  This
+means even an unexpected Emacs crash preserves most of the work done so far.
+The next @code{ollama-buddy-rag-resume} picks up from the last checkpoint.
+
+@item Partial index visibility
+@code{M-x ollama-buddy-rag-list-indexes} marks partial indexes with
+@code{[partial: N/M chunks]} in the heading and shows a count of pending
+chunks.
+
+@item Update directory
+Running @code{M-x ollama-buddy-rag-update-directory} on a directory with a
+partial index will offer to resume it or start a fresh full re-index.
+@end table
 
 @section Inline @@rag() Syntax
 
