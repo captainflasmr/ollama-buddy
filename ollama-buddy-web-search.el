@@ -165,19 +165,20 @@ CALLBACK is called with (url content) where content may be nil on error."
       (url-retrieve
        url
        (lambda (status url callback)
-         (if (plist-get status :error)
-             (progn
-               (message "Failed to fetch %s: %s" url (plist-get status :error))
-               (funcall callback url nil))
-           (goto-char (point-min))
-           (if (re-search-forward "\r?\n\r?\n" nil t)
-               (let* ((html (buffer-substring-no-properties (point) (point-max)))
-                      (content (condition-case nil
-                                   (ollama-buddy-web-search--render-html-to-text html)
-                                 (error nil))))
-                 (funcall callback url content))
-             (funcall callback url nil)))
-         (kill-buffer))
+         (unwind-protect
+             (if (plist-get status :error)
+                 (progn
+                   (message "Failed to fetch %s: %s" url (plist-get status :error))
+                   (funcall callback url nil))
+               (goto-char (point-min))
+               (if (re-search-forward "\r?\n\r?\n" nil t)
+                   (let* ((html (buffer-substring-no-properties (point) (point-max)))
+                          (content (condition-case nil
+                                       (ollama-buddy-web-search--render-html-to-text html)
+                                     (error nil))))
+                     (funcall callback url content))
+                 (funcall callback url nil)))
+           (kill-buffer)))
        (list url callback)
        t t)
     (error

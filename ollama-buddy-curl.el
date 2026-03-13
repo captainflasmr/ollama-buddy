@@ -4,6 +4,7 @@
 ;; Package-Requires: ((emacs "28.1"))
 ;; URL: https://github.com/captainflasmr/ollama-buddy
 ;;
+;;; Commentary:
 ;; This file contains the curl backend implementation for ollama-buddy.
 ;; It provides an alternative communication method to the built-in network
 ;; process, useful for systems where network processes might not work properly.
@@ -35,12 +36,17 @@
 (defvar ollama-buddy--thinking-block-start)
 (defvar ollama-buddy--thinking-content-accumulator)
 
-;; Curl-specific variables
-(defvar ollama-buddy-curl--headers-processed nil
-  "Flag to track if HTTP headers have been processed for current curl request.")
+;; Curl-specific per-process state helpers
+;; State is stored on each process object via process-put/process-get
+;; to avoid races when multiple curl requests overlap.
 
-(defvar ollama-buddy-curl--http-error-status nil
-  "Non-nil HTTP error status code from the current curl request.")
+(defsubst ollama-buddy-curl--get (proc key)
+  "Get KEY from PROC's property list."
+  (process-get proc key))
+
+(defsubst ollama-buddy-curl--put (proc key val)
+  "Set KEY to VAL on PROC's property list."
+  (process-put proc key val))
 
 ;; Backend validation
 (defun ollama-buddy-curl--validate-executable ()
@@ -203,7 +209,7 @@ When complete, CALLBACK is called with the status response and result."
             (insert output)
 
             ;; Process headers if not already done
-            (unless ollama-buddy-curl--headers-processed
+            (unless (ollama-buddy-curl--get proc :headers-processed)
               (goto-char (point-min))
               (when (re-search-forward "\r?\n\r?\n" nil t)
                 (let ((headers (buffer-substring-no-properties (point-min) (point))))
@@ -211,16 +217,16 @@ When complete, CALLBACK is called with the status response and result."
                   (when (string-match "HTTP/[0-9.]+ \\([0-9]+\\)" headers)
                     (let ((status (string-to-number (match-string 1 headers))))
                       (unless (and (>= status 200) (< status 300))
-                        (setq ollama-buddy-curl--http-error-status status)))))
+                        (ollama-buddy-curl--put proc :http-error-status status)))))
                 ;; Headers found, remove them
                 (delete-region (point-min) (point))
-                (setq ollama-buddy-curl--headers-processed t)))
+                (ollama-buddy-curl--put proc :headers-processed t)))
 
             ;; Non-2xx: try to parse the error body as a single JSON object.
             ;; The body may arrive across multiple chunks so ignore-errors
             ;; lets us retry on the next chunk.  On success, display the
             ;; error and kill the process (matching network-process behaviour).
-            (when ollama-buddy-curl--http-error-status
+            (when (ollama-buddy-curl--get proc :http-error-status)
               (let* ((body (string-trim
                             (buffer-substring-no-properties (point-min) (point-max))))
                      (error-json (when (> (length body) 0)
@@ -228,7 +234,8 @@ When complete, CALLBACK is called with the status response and result."
                                      (json-read-from-string body)))))
                 (when error-json
                   (let ((status-str (ollama-buddy--handle-http-error
-                                     ollama-buddy-curl--http-error-status error-json)))
+                                     (ollama-buddy-curl--get proc :http-error-status)
+                                     error-json)))
                     (ollama-buddy--update-status status-str))
                   ;; Clear buffer so we don't re-process
                   (erase-buffer)
@@ -238,8 +245,8 @@ When complete, CALLBACK is called with the status response and result."
 
             ;; Process all complete newline-delimited JSON lines.
             ;; Skipped when in HTTP-error mode.
-            (unless ollama-buddy-curl--http-error-status
-              (when ollama-buddy-curl--headers-processed
+            (unless (ollama-buddy-curl--get proc :http-error-status)
+              (when (ollama-buddy-curl--get proc :headers-processed)
                 (goto-char (point-min))
                 (while (re-search-forward "^\\(.+\\)\n" nil t)
                   (let ((json-line (match-string 1)))
@@ -266,14 +273,15 @@ feature parity (tool calls, thinking blocks, md-to-org, etc.)."
 (defun ollama-buddy-curl--sentinel (proc event)
   "Sentinel for curl streaming processes.
 For normal completion, `ollama-buddy--stream-process-json' already handled
-the done=true response.  This sentinel cleans up the process buffer and
-handles cancellation/failure."
+the done=true response.  This sentinel cleans up the process buffer,
+temp file, and handles cancellation/failure."
   (condition-case err
-      (let ((proc-buffer (process-buffer proc)))
+      (let ((proc-buffer (process-buffer proc))
+            (temp-file (ollama-buddy-curl--get proc :temp-file)))
         ;; Process any remaining data in the buffer before cleanup.
         ;; This catches JSON lines that lack a trailing newline.
         (when (and proc-buffer (buffer-live-p proc-buffer)
-                   (not ollama-buddy-curl--http-error-status))
+                   (not (ollama-buddy-curl--get proc :http-error-status)))
           (with-current-buffer proc-buffer
             (let ((remaining (string-trim
                               (buffer-substring-no-properties
@@ -286,18 +294,18 @@ handles cancellation/failure."
         (when (and proc-buffer (buffer-live-p proc-buffer))
           (kill-buffer proc-buffer))
 
+        ;; Clean up temp file
+        (when (and temp-file (file-exists-p temp-file))
+          (ignore-errors (delete-file temp-file)))
+
         (cond
          ;; Normal completion — stream-process-json handled done=true already.
-         ;; Just clean up curl-specific state.
          ((string-match-p "finished" event)
-          (setq ollama-buddy-curl--headers-processed nil
-                ollama-buddy-curl--http-error-status nil))
+          nil)
 
          ;; Cancellation (user killed the process)
          ((string-match-p "\\(?:killed\\|terminated\\)" event)
           (ollama-buddy--update-status "Request cancelled")
-          (setq ollama-buddy-curl--headers-processed nil
-                ollama-buddy-curl--http-error-status nil)
           (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
             (with-current-buffer ollama-buddy--chat-buffer
               (let ((inhibit-read-only t))
@@ -314,8 +322,6 @@ handles cancellation/failure."
          ;; Unexpected failure
          (t
           (ollama-buddy--update-status "Request failed")
-          (setq ollama-buddy-curl--headers-processed nil
-                ollama-buddy-curl--http-error-status nil)
           (message "Curl request failed: %s" event)))
 
         ;; Auto-save transcript
@@ -357,10 +363,6 @@ from `ollama-buddy-curl--send'."
 
     (ollama-buddy--setup-chat-send request tool-continuation-p)
 
-    ;; --- Curl transport ---
-    (setq ollama-buddy-curl--headers-processed nil
-          ollama-buddy-curl--http-error-status nil)
-
     ;; Write payload to temp file
     (with-temp-file temp-file
       (insert payload))
@@ -383,6 +385,9 @@ from `ollama-buddy-curl--send'."
                 (apply #'start-process process-name process-buffer
                        ollama-buddy-curl-executable args))
 
+          ;; Store temp file path on process for sentinel cleanup
+          (ollama-buddy-curl--put ollama-buddy--active-process :temp-file temp-file)
+
           ;; Set different filter and sentinel based on streaming mode
           (if ollama-buddy-streaming-enabled
               (progn
@@ -391,12 +396,7 @@ from `ollama-buddy-curl--send'."
                 (set-process-sentinel ollama-buddy--active-process
                                       #'ollama-buddy-curl--sentinel))
             (set-process-sentinel ollama-buddy--active-process
-                                  #'ollama-buddy-curl--non-streaming-sentinel))
-
-          ;; Clean up temp file after a delay
-          (run-with-timer 1.0 nil (lambda ()
-                                    (when (file-exists-p temp-file)
-                                      (delete-file temp-file)))))
+                                  #'ollama-buddy-curl--non-streaming-sentinel)))
 
       (error
        (when (file-exists-p temp-file)
@@ -411,17 +411,22 @@ from `ollama-buddy-curl--send'."
   "Sentinel for non-streaming curl processes."
   (condition-case err
       (let ((proc-buffer (process-buffer proc))
+            (temp-file (ollama-buddy-curl--get proc :temp-file))
             (result-content ""))
-        
+
         ;; Get the complete response
         (when (and proc-buffer (buffer-live-p proc-buffer))
           (with-current-buffer proc-buffer
             (setq result-content (buffer-string))))
-        
+
         ;; Clean up process buffer
         (when (and proc-buffer (buffer-live-p proc-buffer))
           (kill-buffer proc-buffer))
-        
+
+        ;; Clean up temp file
+        (when (and temp-file (file-exists-p temp-file))
+          (ignore-errors (delete-file temp-file)))
+
         ;; Handle different exit conditions
         (cond
          ((string-match-p "finished" event)

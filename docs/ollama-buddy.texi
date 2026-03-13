@@ -58,8 +58,6 @@ allowing you to leverage powerful large language models (LLMs) directly within y
 * Session Management::          Saving and loading conversations
 * User System Prompts::         Saving and managing system prompts
 * Roles and Commands::          Creating custom commands and roles
-* Fabric Pattern Integration::  Using predefined prompt patterns
-* Awesome ChatGPT Prompts::     Using the Awesome ChatGPT Prompts collection
 * Remote Providers::            Using commercial LLM APIs (OpenAI, Claude, Gemini, Grok, Codestral)
 * Ollama Cloud Models::         Using Ollama's cloud-hosted models
 * Global System Prompt::        Configuring a persistent global system prompt
@@ -95,8 +93,6 @@ interact with AI models directly from within Emacs for various tasks such as:
 @item Generating Git commit messages
 @item Dictionary lookups and language assistance
 @item Custom AI-powered workflows via roles
-@item Using pre-built prompt templates from Fabric
-@item Utilizing Awesome ChatGPT Prompts
 @item Integrating with commercial APIs (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter)
 @item Using Ollama cloud models
 @item Including files as context in conversations
@@ -362,12 +358,6 @@ Directory for storing temporary Modelfiles.
       (expand-file-name "ollama-buddy-modelfiles" user-emacs-directory))
 @end example
 
-@item ollama-buddy-awesome-local-dir
-Directory for storing Awesome ChatGPT Prompts.
-@example
-(setq ollama-buddy-awesome-local-dir
-      (expand-file-name "awesome-chatgpt-prompts" user-emacs-directory))
-@end example
 @end table
 
 @section History and Session Configuration
@@ -519,29 +509,6 @@ List of available cloud models.
 Path to the ollama CLI (default: "ollama").
 @end table
 
-@section Awesome ChatGPT Prompts Configuration
-
-Configure the Awesome ChatGPT Prompts integration:
-
-@table @code
-@item ollama-buddy-awesome-repo-url
-URL of the Awesome ChatGPT Prompts GitHub repository.
-@example
-(setq ollama-buddy-awesome-repo-url "https://github.com/f/awesome-chatgpt-prompts.git")
-@end example
-
-@item ollama-buddy-awesome-update-on-startup
-Whether to automatically update prompts when Emacs starts.
-@example
-(setq ollama-buddy-awesome-update-on-startup nil)
-@end example
-
-@item ollama-buddy-awesome-categorize-prompts
-Whether to categorize prompts based on common keywords.
-@example
-(setq ollama-buddy-awesome-categorize-prompts t)
-@end example
-@end table
 
 @node Quick Start
 @chapter Quick Start
@@ -601,12 +568,6 @@ Press @code{C-c C-o} to switch between Org-mode and Markdown output. Also availa
 
 @item Toggling Global System Prompt
 Press @code{C-c <} to toggle the global system prompt on or off. The header line shows @code{<} when disabled.
-
-@item Using Awesome ChatGPT Prompts
-Select text, press @code{C-c O}, then @code{a} for the Awesome prompts menu, then @code{s} to send with a prompt.
-
-@item Using Fabric patterns
-Select text, press @code{C-c O}, then @code{y} for the System Prompts menu, then @code{f} for Fabric.
 
 @item Getting help
 In the chat buffer, press @code{C-c h} to display the help screen with available commands and models.
@@ -698,15 +659,6 @@ The role menu (@code{ollama-buddy-role-transient-menu}) provides a dynamic trans
 @item Design specialized AI assistants with custom system prompts
 @item Save and switch between different roles
 @item Share role configurations across your team
-@end itemize
-
-@section Prompt Template Collections
-
-@itemize @bullet
-@item Use pre-built prompt patterns from Fabric project
-@item Utilize the Awesome ChatGPT Prompts collection
-@item Apply specialized prompts to your content with one command
-@item Browse prompts by category
 @end itemize
 
 @section External API Integration
@@ -895,14 +847,6 @@ Resend the last user prompt to the current model (@code{ollama-buddy-retry-last-
 @item tone
 Set the response tone/style (@code{ollama-buddy-set-tone}).
 
-@item fabric
-Load a Fabric pattern as system prompt (@code{ollama-buddy-fabric-set-system-prompt}).
-Requires @code{ollama-buddy-fabric}.
-
-@item awesome
-Load an Awesome ChatGPT prompt as system prompt (@code{ollama-buddy-awesome-set-system-prompt}).
-Requires @code{ollama-buddy-awesome}.
-
 @item streaming
 Toggle streaming mode on/off (@code{ollama-buddy-toggle-streaming}).
 
@@ -994,8 +938,6 @@ Press @code{C-c C-s}
 @item Resetting the system prompt
 Press @code{C-c C-r}, or use the main transient menu (@kbd{C-c O}) under System Prompts @code{p} then @code{r}
 
-@item Using a pre-built prompt
-Use Fabric patterns (@code{C-c O f}) or Awesome ChatGPT prompts (@code{C-c O a})
 @end table
 
 Example system prompt:
@@ -1706,7 +1648,7 @@ Access the main transient menu via @code{C-c O}, which is organized into a compa
 @item @strong{Chat Operations}: Open chat, manage attachments, web search, RAG, and authentication.
 @item @strong{Model Management}: Switch models, manage installed models, view info, and multishot/benchmark.
 @item @strong{AI Actions}: Quick access to refactoring, describing code, git commits, and proofreading.
-@item @strong{Tools}: Fabric patterns, Awesome prompts, and Ollama tool-calling.
+@item @strong{Tools}: Ollama tool-calling.
 @item @strong{History & Sessions}: Toggle/clear history and save/load sessions.
 @item @strong{Sub-menus}: Specialized menus for Settings, System Prompts, Parameters, and Roles.
 @item @strong{General}: Help, intro screen, and version information.
@@ -2812,218 +2754,6 @@ Diplomatic and thoughtful responses inspired by Captain Janeway.
 @end table
 
 To switch between these presets, use @code{M-x ollama-buddy-roles-switch-role} or press @code{R} in the Ollama Buddy menu.
-
-@node Fabric Pattern Integration
-@chapter Fabric Pattern Integration
-
-@section What are Fabric Patterns?
-
-Fabric patterns are pre-defined prompt templates from Daniel Miessler's Fabric project (@url{https://github.com/danielmiessler/fabric}). They provide optimized prompts for various tasks, categorized as:
-
-@itemize @bullet
-@item universal - General-purpose patterns
-@item code - Programming and development
-@item writing - Content creation and editing
-@item analysis - Data and concept examination
-@end itemize
-
-@section Setting Up Fabric Integration
-
-To set up Fabric integration:
-@example
-M-x ollama-buddy-fabric-setup
-@end example
-
-This will:
-@enumerate
-@item Clone the Fabric repository (or set up sparse checkout)
-@item Populate available patterns
-@item Make patterns available for use
-@end enumerate
-
-@section Using Fabric Patterns
-
-To use a Fabric pattern:
-@example
-M-x ollama-buddy-fabric-send
-@end example
-or press @code{C-c f} and then @code{s}.
-
-You'll be prompted to:
-@enumerate
-@item Select a pattern
-@item Enter text to process (or use selected text)
-@end enumerate
-
-The pattern will be used as a system prompt for your request.
-
-@section Browsing Available Patterns
-
-To see all available patterns:
-@example
-M-x ollama-buddy-fabric-list-patterns
-@end example
-or press @code{C-c f} and then @code{l}.
-
-This shows:
-@itemize @bullet
-@item Pattern names
-@item Categories
-@item Descriptions
-@end itemize
-
-@section Viewing Pattern Details
-
-To see the full content of a specific pattern:
-@example
-M-x ollama-buddy-fabric-show-pattern
-@end example
-or press @code{C-c f} and then @code{v}.
-
-Select a pattern to see:
-@itemize @bullet
-@item The system prompt content
-@item Full description
-@end itemize
-
-@section Updating Patterns
-
-To sync with the latest patterns from GitHub:
-@example
-M-x ollama-buddy-fabric-sync-patterns
-@end example
-or press @code{C-c f} and then @code{S}.
-
-@section Using Patterns by Category
-
-You can quickly access patterns by category:
-@itemize @bullet
-@item @code{C-c f u} - Universal patterns
-@item @code{C-c f c} - Code patterns
-@item @code{C-c f w} - Writing patterns
-@item @code{C-c f a} - Analysis patterns
-@end itemize
-
-@node Awesome ChatGPT Prompts
-@chapter Awesome ChatGPT Prompts
-
-@section What is Awesome ChatGPT Prompts?
-
-Awesome ChatGPT Prompts is a curated collection of prompt templates created by the community and maintained in the GitHub repository at @url{https://github.com/f/awesome-chatgpt-prompts}. These prompts are designed to make ChatGPT (and other LLMs) act as various specialized personas or experts, such as:
-
-@itemize @bullet
-@item Writing professionals (poets, storytellers, copywriters)
-@item Technical experts (programmers, researchers, scientists)
-@item Creative professionals (artists, designers, photographers)
-@item Business experts (marketers, consultants, strategists)
-@item And many more specialized roles
-@end itemize
-
-@section Setting Up Awesome ChatGPT Prompts
-
-To set up the Awesome ChatGPT Prompts integration:
-@example
-M-x ollama-buddy-awesome-setup
-@end example
-
-This will:
-@enumerate
-@item Create a sparse checkout of the Awesome ChatGPT Prompts repository
-@item Download only the necessary files (prompts.csv and README)
-@item Populate and categorize the available prompts
-@end enumerate
-
-@section Using Awesome ChatGPT Prompts
-
-To use an Awesome ChatGPT Prompt:
-@example
-M-x ollama-buddy-awesome-send
-@end example
-or press @code{C-c w} and then @code{s}.
-
-You'll be prompted to:
-@enumerate
-@item Select a prompt from the categorized list
-@item Enter text to process (or use selected text)
-@end enumerate
-
-The selected prompt will be used as a system prompt for your request, transforming how the AI responds to your text.
-
-@section Browsing Available Prompts
-
-To see all available prompts:
-@example
-M-x ollama-buddy-awesome-list-prompts
-@end example
-or press @code{C-c w} and then @code{l}.
-
-This shows:
-@itemize @bullet
-@item Prompt titles
-@item Categories
-@item Preview of prompt content
-@end itemize
-
-@section Categorized Browsing
-
-Ollama Buddy automatically categorizes the Awesome ChatGPT Prompts into useful groups:
-@itemize @bullet
-@item writing - For writing, poetry, and creative content
-@item code - For programming and development
-@item business - For marketing, entrepreneurship, and business strategy
-@item academic - For educational and research content
-@item creative - For artistic and design-related prompts
-@item philosophy - For philosophical reasoning and ethics
-@item health - For medical, fitness, and wellness
-@item legal - For law-related prompts
-@item finance - For financial advice and analysis
-@item other - Miscellaneous prompts
-@end itemize
-
-To browse by category:
-@example
-M-x ollama-buddy-awesome-show-prompts-menu
-@end example
-or press @code{C-c w} and then @code{c}.
-
-@section Viewing Prompt Details
-
-To see the full content of a specific prompt:
-@example
-M-x ollama-buddy-awesome-show-prompt
-@end example
-or press @code{C-c w} and then @code{v}.
-
-Select a prompt to see its complete template.
-
-@section Updating Prompts
-
-To sync with the latest prompts from GitHub:
-@example
-M-x ollama-buddy-awesome-sync-prompts
-@end example
-or press @code{C-c w} and then @code{S}.
-
-@section Setting Without Sending
-
-To set a prompt as the system prompt without sending text:
-@example
-M-x ollama-buddy-awesome-set-system-prompt
-@end example
-or press @code{C-c w} and then @code{p}.
-
-This is useful when you want to set up a specific persona before starting a conversation.
-
-@section Example Usage
-
-Some popular prompts include:
-@itemize @bullet
-@item "Act as a poet" - Transforms your text into poetry
-@item "Act as a Linux terminal" - Simulates a Linux terminal interface
-@item "Act as a gaslighter" - Responds in a deliberately confusing manner
-@item "Act as a javascript console" - Simulates a JavaScript console
-@item "Act as an English translator" - Translates text to proper English
-@end itemize
 
 @node Remote Providers
 @chapter Remote Providers
@@ -4364,12 +4094,6 @@ For more control over system prompts:
 @end example
 Enter your system prompt, then press @code{C-c s}.
 
-@subsection Using a system prompt from Fabric
-@example
-M-x ollama-buddy-fabric-set-system-prompt
-@end example
-or press @code{C-c f p}.
-
 @section Using Direct API Access
 
 For direct programmatic access to Ollama:
@@ -4487,18 +4211,6 @@ Toggle display of token statistics.
 @item ollama-buddy-display-token-stats
 Display token usage statistics with graphs and recent interactions.
 
-@item ollama-buddy-fabric-setup
-Set up Fabric pattern integration.
-
-@item ollama-buddy-fabric-sync-patterns
-Sync with the latest Fabric patterns.
-
-@item ollama-buddy-fabric-list-patterns
-List available Fabric patterns.
-
-@item ollama-buddy-fabric-send
-Apply a Fabric pattern to selected text.
-
 @item ollama-buddy-toggle-markdown-conversion
 Toggle Markdown to Org conversion.
 
@@ -4610,7 +4322,7 @@ For local Ollama models, no internet connection is required after pulling them. 
 @item Pulling new models from Ollama
 @item Using Ollama cloud models
 @item Using remote providers (OpenAI, Claude, Gemini, Grok, Codestral)
-@item Syncing Fabric patterns or Awesome ChatGPT Prompts
+@item Syncing with remote providers
 @end itemize
 
 @subsection How do I use Ollama cloud models?
@@ -4894,7 +4606,6 @@ The package includes comprehensive tests:
 @example
 M-x ollama-buddy-run-tests
 M-x ollama-buddy-integration-run-tests
-M-x ollama-buddy-fabric-run-tests
 M-x ollama-buddy-parameter-run-tests
 @end example
 

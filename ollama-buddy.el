@@ -105,8 +105,6 @@
 (declare-function ollama-buddy-transient-menu "ollama-buddy-transient")
 (declare-function ollama-buddy-transient-auth-menu "ollama-buddy-transient")
 (declare-function ollama-buddy-transient-user-prompts-menu "ollama-buddy-transient")
-(declare-function ollama-buddy-transient-fabric-menu "ollama-buddy-transient")
-(declare-function ollama-buddy-transient-awesome-menu "ollama-buddy-transient")
 (declare-function ollama-buddy-transient-attachment-menu "ollama-buddy-transient")
 (declare-function ollama-buddy-transient-parameter-menu "ollama-buddy-transient")
 (declare-function ollama-buddy-transient-profile-menu "ollama-buddy-transient")
@@ -928,8 +926,6 @@ Typically invoked via `C-u C-u C-c C-c'."
     ("copy"       ollama-buddy-copy-last-response     "Copy the last AI response to kill ring")
     ("retry"      ollama-buddy-retry-last-prompt      "Resend the last prompt to the model")
     ("tone"       ollama-buddy-set-tone               "Set the response tone/style")
-    ("fabric"     ollama-buddy-fabric-set-system-prompt "Set system prompt from Fabric pattern")
-    ("awesome"    ollama-buddy-awesome-set-system-prompt "Set system prompt from Awesome library")
     ("streaming"  ollama-buddy-toggle-streaming       "Toggle real-time response streaming")
     ("skill"      ollama-buddy-user-prompts-load      "Load a skill as system prompt")
     ("reset"      ollama-buddy-reset-system-prompt    "Clear the current system prompt")
@@ -984,8 +980,6 @@ is ever needed."
                  (pcase (car entry)
                    ("system" (featurep 'ollama-buddy-user-prompts))
                    ("tools" (featurep 'ollama-buddy-tools))
-                   ("fabric" (featurep 'ollama-buddy-fabric))
-                   ("awesome" (featurep 'ollama-buddy-awesome))
                    (_ t)))
                ollama-buddy-slash-commands))
              (names (mapcar #'car candidates))
@@ -5577,8 +5571,6 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c v") #'ollama-buddy-set-keepalive)
     (define-key map (kbd "C-c !") #'ollama-buddy-toggle-airplane-mode)
     (define-key map (kbd "C-c W") #'ollama-buddy-toggle-in-buffer-replace)
-    (define-key map (kbd "C-c w") #'ollama-buddy-transient-awesome-menu)
-
     ;; Prompts section keybindings
     (define-key map (kbd "C-c l") #'ollama-buddy-pull-model)
     (define-key map (kbd "C-c s") #'ollama-buddy-transient-user-prompts-menu)
@@ -5598,8 +5590,6 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c R") #'ollama-buddy-roles-switch-role)
     (define-key map (kbd "C-c E") #'ollama-buddy-role-creator-create-new-role)
     (define-key map (kbd "C-c D") #'ollama-buddy-roles-open-directory)
-    (define-key map (kbd "C-c f") #'ollama-buddy-transient-fabric-menu)
-    
     ;; Tools keybindings
     (define-key map (kbd "C-c SPC") #'ollama-buddy-tools-toggle)
     (define-key map (kbd "C-c Q") #'ollama-buddy-tools-info)
@@ -5670,6 +5660,12 @@ Returns the text with @file() delimiters removed."
   :keymap ollama-buddy-mode-map)
 
 (push 'ollama-buddy--prompt-history savehist-additional-variables)
+
+(defun ollama-buddy-unload-function ()
+  "Clean up when `ollama-buddy' is unloaded."
+  (setq savehist-additional-variables
+        (delq 'ollama-buddy--prompt-history savehist-additional-variables))
+  nil)
 
 (provide 'ollama-buddy)
 ;;; ollama-buddy.el ends here

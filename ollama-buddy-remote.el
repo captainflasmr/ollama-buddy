@@ -441,6 +441,9 @@ Returns nil to skip the line (e.g. [DONE] or non-content events).")
 (defvar ollama-buddy-remote--streaming-provider-name nil
   "Display name of the provider for the current streaming request.")
 
+(defvar ollama-buddy-remote--streaming-temp-file nil
+  "Path to the temp file holding the JSON payload for the current streaming request.")
+
 (defun ollama-buddy-remote--streaming-insert-content (content)
   "Insert CONTENT token into the chat buffer during streaming."
   (when (and content (not (string-empty-p content)))
@@ -553,15 +556,14 @@ PROC is the curl process, OUTPUT is the new chunk of text."
   "Sentinel for SSE streaming curl processes.
 PROC is the curl process, EVENT is the status event string."
   (condition-case err
-      (let ((proc-buffer (process-buffer proc)))
+      (let ((proc-buffer (process-buffer proc))
+            (temp-file (process-get proc :temp-file)))
         ;; Clean up process buffer
         (when (and proc-buffer (buffer-live-p proc-buffer))
           (kill-buffer proc-buffer))
         ;; Clean up temp file
-        (when (and ollama-buddy-remote--streaming-temp-file
-                   (file-exists-p ollama-buddy-remote--streaming-temp-file))
-          (ignore-errors (delete-file ollama-buddy-remote--streaming-temp-file))
-          (setq ollama-buddy-remote--streaming-temp-file nil))
+        (when (and temp-file (file-exists-p temp-file))
+          (ignore-errors (delete-file temp-file)))
         (cond
          ((string-match-p "finished" event)
           ;; Process complete - finalize the response
@@ -633,8 +635,6 @@ START-POINT is the buffer position where content should be inserted."
                            endpoint))))
     (with-temp-file temp-file
       (insert json-str))
-    ;; Store temp file path for sentinel cleanup
-    (setq ollama-buddy-remote--streaming-temp-file temp-file)
     ;; Remove "Loading response..." placeholder
     (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
       (with-current-buffer ollama-buddy--chat-buffer
@@ -647,6 +647,7 @@ START-POINT is the buffer position where content should be inserted."
     (condition-case err
         (let ((proc (apply #'start-process process-name process-buffer
                            ollama-buddy-curl-executable curl-args)))
+          (process-put proc :temp-file temp-file)
           (set-process-filter proc #'ollama-buddy-remote--streaming-process-filter)
           (set-process-sentinel proc #'ollama-buddy-remote--streaming-sentinel)
           (setq ollama-buddy--active-process proc)

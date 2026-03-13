@@ -1,16 +1,12 @@
-;; ollama-buddy-transient.el --- Transient menus for Ollama Buddy -*- lexical-binding: t; -*-
+;;; ollama-buddy-transient.el --- Transient menus for Ollama Buddy -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; This extension provides a transient-based menu system for ollama-buddy.
 ;; It organizes the commands into logical groups with descriptive prefixes.
-;; Now includes Fabric pattern integration.
-
 ;;; Code:
 
 (require 'transient)
 (require 'ollama-buddy-core)  ;; Use core instead of main package
-(require 'ollama-buddy-fabric nil t)
-(require 'ollama-buddy-awesome nil t)
 (require 'ollama-buddy-user-prompts nil t)
 (require 'ollama-buddy-project nil t)
 (require 'ollama-buddy-rag nil t)
@@ -57,13 +53,6 @@
 (declare-function ollama-buddy-params-help "ollama-buddy")
 (declare-function ollama-buddy-params-reset "ollama-buddy")
 (declare-function ollama-buddy-toggle-params-in-header "ollama-buddy")
-(declare-function ollama-buddy-fabric-send "ollama-buddy-fabric")
-(declare-function ollama-buddy-fabric-set-system-prompt "ollama-buddy-fabric")
-(declare-function ollama-buddy-fabric-list-patterns "ollama-buddy-fabric")
-(declare-function ollama-buddy-fabric-show-pattern "ollama-buddy-fabric")
-(declare-function ollama-buddy-fabric-sync-patterns "ollama-buddy-fabric")
-(declare-function ollama-buddy-fabric-populate-patterns "ollama-buddy-fabric")
-(declare-function ollama-buddy-fabric-setup "ollama-buddy-fabric")
 (declare-function ollama-buddy-copilot-login "ollama-buddy-copilot")
 (declare-function ollama-buddy-copilot-logout "ollama-buddy-copilot")
 (declare-function ollama-buddy-copilot-status "ollama-buddy-copilot")
@@ -137,10 +126,6 @@
   ["System Prompts"
    ("u" "User Defined" ollama-buddy-transient-user-prompts-menu
     :if (lambda () (featurep 'ollama-buddy-user-prompts)))
-   ("f" "Fabric Patterns" ollama-buddy-transient-fabric-menu
-    :if (lambda () (featurep 'ollama-buddy-fabric)))
-   ("w" "Awesome Prompts" ollama-buddy-transient-awesome-menu
-    :if (lambda () (featurep 'ollama-buddy-awesome)))
    ("s" "Show Current" ollama-buddy-show-system-prompt-info)
    ("r" "Reset Current" ollama-buddy-reset-system-prompt)
    ("q" "Quit" transient-quit-one)])
@@ -217,21 +202,6 @@
     ("b" "Dynamic Roles" ollama-buddy-role-transient-menu)
     ("q" "Quit" transient-quit-one)]]
   )
-
-(transient-define-prefix ollama-buddy-transient-fabric-menu ()
-  "Fabric patterns menu for Ollama Buddy."
-  [["Fabric Prompts"
-    ("s" "Send with Prompt" ollama-buddy-fabric-send)
-    ("j" "Set as System Prompt" ollama-buddy-fabric-set-system-prompt)
-    ("l" "List All Prompts" ollama-buddy-fabric-list-patterns)
-    ("v" "View Prompt Details" ollama-buddy-fabric-show-pattern)
-    ("S" "Sync Latest Prompts" ollama-buddy-fabric-sync-patterns)
-    ("q" "Quit" transient-quit-one)]]
-  (interactive)
-  (unless ollama-buddy-fabric--patterns
-    (message "Loading Fabric patterns...")
-    (ollama-buddy-fabric-populate-patterns))
-  (transient-setup 'ollama-buddy-transient-fabric-menu))
 
 (transient-define-prefix ollama-buddy-transient-profile-menu ()
   "Parameter profiles menu for Ollama Buddy."
@@ -319,17 +289,6 @@
     ("F" "Toggle Display in Header" ollama-buddy-toggle-params-in-header)
     ("q" "Quit" transient-quit-one)]
    ])
-
-(transient-define-prefix ollama-buddy-transient-awesome-menu ()
-  "Awesome ChatGPT Prompts for ollama-buddy."
-  :info-manual "(ollama-buddy)Awesome ChatGPT Prompts"
-  :man-page "ollama-buddy-awesome"
-  [["Awesome Prompts"
-    ("s" "Send with Prompt" ollama-buddy-awesome-send)
-    ("j" "Set as System Prompt" ollama-buddy-awesome-set-system-prompt)
-    ("l" "List All Prompts" ollama-buddy-awesome-list-prompts)
-    ("S" "Sync Latest Prompts" ollama-buddy-awesome-sync-prompts)
-    ("q" "Quit" transient-quit-one)]])
 
 (defun ollama-buddy--auth-cloud-description ()
   "Return description for Ollama Cloud auth with status indicator."

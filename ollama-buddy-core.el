@@ -845,7 +845,7 @@ Updates `ollama-buddy--model-letters'."
   "Title/name of the current system prompt for display purposes.")
 
 (defvar ollama-buddy--current-system-prompt-source nil
-  "Source of the current system prompt (user, fabric, awesome, manual).")
+  "Source of the current system prompt (user, manual).")
 
 (defvar ollama-buddy--system-prompt-registry (make-hash-table :test 'equal)
   "Registry mapping system prompt content to metadata (title, source).")
@@ -1426,8 +1426,6 @@ Returns a cons cell (TEXT . POINT) with the prompt text and point position."
    ((and ollama-buddy--current-system-prompt
          ollama-buddy--current-system-prompt-title)
     (let* ((source-indicator (cond
-                              ((string= ollama-buddy--current-system-prompt-source "fabric") "F:")
-                              ((string= ollama-buddy--current-system-prompt-source "awesome") "A:")
                               ((string= ollama-buddy--current-system-prompt-source "user") "U:")
                               (t "")))
            (title ollama-buddy--current-system-prompt-title))
@@ -1545,7 +1543,7 @@ The context length is stored in keys like `llama.context_length' or
 Returns the context size or nil if the API call fails.
 As a side effect, caches all capabilities (thinking, tools, vision) in
 `ollama-buddy--models-metadata-cache' from the /api/show capabilities array."
-  (condition-case nil
+  (condition-case err
       (let* ((real-model (ollama-buddy--get-real-model-name model))
              (endpoint "/api/show")
              (payload (json-encode `((model . ,real-model))))
@@ -1568,7 +1566,10 @@ As a side effect, caches all capabilities (thinking, tools, vision) in
           ;; Return context size
           (let ((model-info (alist-get 'model_info response)))
             (ollama-buddy--extract-context-length-from-model-info model-info))))
-    (error nil)))
+    (error
+     (message "Warning: Failed to fetch model info for %s: %s"
+              model (error-message-string err))
+     nil)))
 
 (defun ollama-buddy--get-fallback-context-size (model)
   "Get fallback context size for MODEL from static mappings.
