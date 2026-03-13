@@ -1085,7 +1085,29 @@ embedding model has changed."
                   (insert (format "- Model: %s\n" (plist-get index :embedding-model)))
                   (insert (format "- Created: %s\n" (plist-get index :created)))
                   (insert (format "- Incremental: %s\n"
-                                  (if (plist-get index :files-metadata) "yes" "no (re-index to enable)"))))
+                                  (if (plist-get index :files-metadata) "yes" "no (re-index to enable)")))
+                  (let ((source (plist-get index :source-path)))
+                    (when source
+                      (insert "\n")
+                      (if (plist-get index :partial)
+                          (insert-text-button
+                           "[Resume]"
+                           'action (lambda (_) (ollama-buddy-rag-resume))
+                           'help-echo "Resume indexing this partial index")
+                        (insert-text-button
+                         "[Update]"
+                         'action `(lambda (_)
+                                    (ollama-buddy-rag-update-directory ,source))
+                         'help-echo (format "Incrementally update index from %s" source)))
+                      (insert "  ")
+                      (insert-text-button
+                       "[Delete]"
+                       'action `(lambda (_)
+                                  (when (yes-or-no-p ,(format "Really delete index '%s'? " name))
+                                    (ollama-buddy-rag-delete-index ,name)
+                                    (ollama-buddy-rag-list-indexes)))
+                       'help-echo (format "Delete index %s" name))
+                      (insert "\n"))))
                 (insert "\n")))
             (goto-char (point-min))
             (org-mode)
