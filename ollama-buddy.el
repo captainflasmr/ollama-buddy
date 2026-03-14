@@ -50,17 +50,30 @@
 ;;
 ;;; Remote Providers (optional)
 ;;
-;; Load any provider module to access its models alongside Ollama:
+;; Register any OpenAI/Claude/Gemini-compatible provider with a single call:
 ;;
-;;   (require 'ollama-buddy-openai)      ; a: OpenAI
-;;   (require 'ollama-buddy-claude)      ; c: Anthropic Claude
-;;   (require 'ollama-buddy-gemini)      ; g: Google Gemini
-;;   (require 'ollama-buddy-grok)        ; k: xAI Grok
-;;   (require 'ollama-buddy-copilot)     ; p: GitHub Copilot
-;;   (require 'ollama-buddy-codestral)   ; s: Mistral Codestral
-;;   (require 'ollama-buddy-deepseek)    ; d: DeepSeek
-;;   (require 'ollama-buddy-openrouter)  ; r: OpenRouter (400+ models)
-;;   (require 'ollama-buddy-openai-compat) ; l: any OpenAI-compatible server (LM Studio, llama.cpp, vLLM…)
+;;   (require 'ollama-buddy-provider)
+;;   (ollama-buddy-provider-create
+;;    :name "OpenAI" :prefix "a:"
+;;    :api-key (lambda () (auth-source-pick-first-password
+;;                         :host "ollama-buddy-openai" :user "apikey"))
+;;    :endpoint "https://api.openai.com/v1/chat/completions"
+;;    :models-endpoint "https://api.openai.com/v1/models"
+;;    :models-filter (lambda (id) (string-match-p "gpt" id)))
+;;
+;; Supported :api-type values: openai (default), claude, gemini.
+;; See CHANGELOG.org for migration examples from the legacy require system.
+;;
+;; Legacy per-provider require files still work but are deprecated:
+;;   (require 'ollama-buddy-openai)        ; a: OpenAI
+;;   (require 'ollama-buddy-claude)        ; c: Anthropic Claude
+;;   (require 'ollama-buddy-gemini)        ; g: Google Gemini
+;;   (require 'ollama-buddy-grok)          ; k: xAI Grok
+;;   (require 'ollama-buddy-copilot)       ; p: GitHub Copilot
+;;   (require 'ollama-buddy-codestral)     ; s: Mistral Codestral
+;;   (require 'ollama-buddy-deepseek)      ; d: DeepSeek
+;;   (require 'ollama-buddy-openrouter)    ; r: OpenRouter (400+ models)
+;;   (require 'ollama-buddy-openai-compat) ; l: any OpenAI-compatible server
 ;;
 ;; Each provider needs an API key (see PROVIDERS.org for setup details).
 ;;
