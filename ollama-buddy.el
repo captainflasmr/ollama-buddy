@@ -64,6 +64,16 @@
 ;;
 ;; Each provider needs an API key (see PROVIDERS.org for setup details).
 ;;
+;;; Presets and User Prompts
+;;
+;; On first launch, install the bundled presets and user prompts:
+;;
+;;   C-c O → I   (or M-x ollama-buddy-install-extras)
+;;
+;; This copies role presets and system prompt templates into your Emacs
+;; configuration directory.  The chat welcome screen will remind you if
+;; they are not yet installed.
+;;
 ;;; Code:
 
 (require 'json)

@@ -76,14 +76,6 @@ Submit queries, swap models, view token usage and statistics:
 - *RAG* -- Index local documents and source code; retrieve relevant context via semantic search; inline =@rag(query)= syntax; configurable embedding backend (Ollama =/api/embed= or any OpenAI-compatible =/v1/embeddings= service, e.g. LM Studio)
 - *In-Buffer Replace* -- Stream LLM output directly into the source buffer, replacing the selected region in-place; accept/reject confirmation; inline diff view (=C-c d=) with word-level smerge highlighting; automatic code-fence stripping
 
-* What's New (v3.4.0)
-
-Unified Skills and Prompts.
-
-- *Unified Skills* -- Task-specific AI personas are now integrated into the User Prompts library under the `skills` category.
-- *Integrated Commands* -- Access skills via the `/skill` slash command or the improved `@skill(name)` inline expansion with full `completing-read` support.
-- *At-Command Improvements* -- `@skill` and `@file` now trigger interactive selection prompts for faster workflow.
-
 * What's New (v3.7.1)
 
 Code quality, error handling, non-blocking async, and project directory switching.
@@ -99,6 +91,9 @@ Code quality, error handling, non-blocking async, and project directory switchin
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | *3.7.1* | Code quality, async model info, error cleanup, =/cd= directory switching, removed Fabric/Awesome.                                                                                                                         |
+| *3.7.0* | RAG pause/resume with periodic checkpointing; new built-in tools (=search_files=, =get_region=, =get_buffer_info=, =describe_symbol=, =eval_elisp=).                                                                     |
+| *3.6.0* | RAG incremental updates (re-index only changed files) and cancellation support.                                                                                                                                           |
+| *3.5.1* | Curl backend refactor — unified request pipeline, shared stream processor, full feature parity with network-process backend (46% code reduction).                                                                         |
 | *3.5.0* | Project Init (experimental) — =/init= generates a cached project summary that auto-loads in future sessions; a step towards code-oriented LLM workflows.                                                                 |
 | *3.4.1* | Thinking Peek and Rewind — =TAB= peek at thinking mid-stream; =C-u C-u C-c C-c= to rewind conversation from any prompt heading.                                                                                          |
 | *3.4.0* | Skills — Local Org-mode based AI personas and task-specific instructions; `/skill` slash command and `@skill(name)` inline syntax.                                                                                        |
@@ -126,6 +121,8 @@ See [[file:CHANGELOG.org]] for full history.
   ("C-c o" . ollama-buddy-role-transient-menu)
   ("C-c O" . ollama-buddy-transient-menu))
 #+end_src
+
+On first launch, press =C-c O= → =I= to install the bundled presets and user prompts for the full experience (see [[*Installing Presets and User Prompts][Installing Presets and User Prompts]]).
 
 ** With Remote Providers
 
@@ -183,27 +180,31 @@ git clone https://github.com/captainflasmr/ollama-buddy.git
 (global-set-key (kbd "C-c O") #'ollama-buddy-transient-menu)
 #+end_src
 
-** Manual Setup with Presets and User Prompts
+** Installing Presets and User Prompts
 
-To fully utilize role-based presets and custom system prompts, you’ll need to copy two important directories into your local Emacs configuration:
+Role presets and user prompts ship with the package but need to be copied into your Emacs configuration directory to be editable.  If they are missing, the chat welcome screen will show a reminder and the transient menu will offer an *Install Extras* entry.
 
-1. *=ollama-buddy-presets=* – Contains pre-defined role presets (e.g., developer, writer, tutor) as =.el= files.
-2. *=ollama-buddy-user-prompts=* – Where your *saved* system prompts are stored (created automatically when using =M-x ollama-buddy-user-prompts-save=).
+*** From Emacs (recommended)
 
-*** Step-by-Step Setup
+Press =C-c O= → =I= (or =M-x ollama-buddy-install-extras=).  This copies the bundled directories from the installed package, or downloads them from GitHub if the package was installed without them.
 
-Run the following shell commands in your terminal:
+*** Manual (shell)
 
 #+begin_src bash
 cd ~/.emacs.d
 
 # extract out the ollama-buddy-presets and ollama-buddy-user-prompts
 curl -sL https://api.github.com/repos/captainflasmr/ollama-buddy/tarball/main | \
-    tar -xzf - --transform='s|[^/]*/||' \
+    tar -xzf - --transform=’s|[^/]*/||’ \
         --wildcards \
-        '*/ollama-buddy-presets/*' \
-        '*/ollama-buddy-user-prompts/*'
+        ‘*/ollama-buddy-presets/*’ \
+        ‘*/ollama-buddy-user-prompts/*’
 #+end_src
+
+The two directories installed are:
+
+1. *=ollama-buddy-presets=* – Pre-defined role presets (developer, writer, tutor, etc.) as =.el= files.
+2. *=ollama-buddy-user-prompts=* – Bundled system prompts organized by category (coding, writing, emacs, skills, etc.).
 
 * My current configuration
 
@@ -320,12 +321,13 @@ curl -sL https://api.github.com/repos/captainflasmr/ollama-buddy/tarball/main | 
 See the [[file:README-full.org][full README]] for all 30+ demos with descriptions, or browse the [[https://www.youtube.com/@OllamaBuddyforEmacs][YouTube channel]].
 
 * ollama API Support Tables
+
 ** Core API Endpoints
 
 | API Endpoint              | Method | Purpose                            | Supported | Notes                                          |
 |---------------------------+--------+------------------------------------+-----------+------------------------------------------------|
 | =/api/chat=               | POST   | Send chat messages to a model      | Yes       | Core feature with streaming, tools, vision     |
-| =/api/generate=           | POST   | Generate text without chat context | No        | Not planned - chat covers all use cases        |
+| =/api/generate=           | POST   | Generate text without chat context | Partial   | Used for inline completions and model unloading |
 | =/api/tags=               | GET    | List available local models        | Yes       | Used for model management                      |
 | =/api/show=               | POST   | Show model information             | Yes       | Model info display                             |
 | =/api/pull=               | POST   | Pull a model from Ollama library   | Yes       | Async pull with progress                       |
@@ -355,20 +357,22 @@ See the [[file:README-full.org][full README]] for all 30+ demos with description
 
 ** Generate API Parameters (=/api/generate=)
 
-| Parameter    | Supported | Notes                                                   |
-|--------------+-----------+---------------------------------------------------------|
-| =model=      | N/A       | Generate endpoint not used                              |
-| =prompt=     | N/A       | Chat endpoint used instead                              |
-| =suffix=     | N/A       | Could be added via =ollama-buddy-set-suffix=            |
-| =images=     | Yes*      | Vision supported via chat endpoint                      |
-| =format=     | No        | Not currently exposed                                   |
-| =options=    | Yes       | Full parameter support                                  |
-| =system=     | Yes       | =ollama-buddy-set-system-prompt=                        |
-| =template=   | No        | Uses model defaults                                     |
-| =stream=     | Yes       | Streaming enabled by default                            |
-| =raw=        | No        | Not currently needed                                    |
-| =keep_alive= | N/A       | Generate endpoint not used (chat endpoint used instead) |
-| =context=    | N/A       | Deprecated - using messages array instead               |
+Used by =ollama-buddy-completion.el= for inline ghost-text completions and for model unloading.
+
+| Parameter    | Supported | Notes                                                       |
+|--------------+-----------+-------------------------------------------------------------|
+| =model=      | Yes       | Set via =ollama-buddy-completion-model= or current model    |
+| =prompt=     | Yes       | Buffer content before point (FIM prefix)                    |
+| =suffix=     | Yes       | Buffer content after point (FIM suffix)                     |
+| =images=     | No        | Vision uses chat endpoint instead                           |
+| =format=     | No        | Not currently exposed                                       |
+| =options=    | Yes       | =num_predict= and =temperature= for completions            |
+| =system=     | Yes       | Completion system prompt (code-only output)                 |
+| =template=   | No        | Uses model defaults                                         |
+| =stream=     | Yes       | Streaming enabled by default                                |
+| =raw=        | No        | Not currently needed                                        |
+| =keep_alive= | Yes       | Used for model unloading (=keep_alive: 0=)                  |
+| =context=    | N/A       | Deprecated - using messages array instead                   |
 
 ** Model Options Parameters
 
