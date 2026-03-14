@@ -694,10 +694,17 @@ RESPONSE-TEXT (if non-nil/empty) is inserted before the Tools section."
               (args (alist-get 'arguments func))
               (content (alist-get 'content result)))
          (push (point-marker) tool-heading-positions)
-         (let ((args-json (json-encode args)))
-           (insert (format "**** %s %s\n***** call\n\n#+begin_src json\n%s\n#+end_src\n***** results\n\n#+begin_example\n%s\n#+end_example\n"
+         (let* ((args-json (json-encode args))
+                (args-summary (if (and (featurep 'ollama-buddy-tools)
+                                       (fboundp 'ollama-buddy-tools--format-args-for-display))
+                                  (ollama-buddy-tools--format-args-for-display args)
+                                args-json))
+                (args-heading (if (> (length args-summary) 60)
+                                  (concat (substring args-summary 0 57) "…")
+                                args-summary)))
+           (insert (format "**** %s(%s)\n***** call\n\n#+begin_src json\n%s\n#+end_src\n***** results\n\n#+begin_example\n%s\n#+end_example\n"
                            name
-                           args-json
+                           args-heading
                            args-json
                            (replace-regexp-in-string "^\\([*#]\\)" ",\\1" content))))))
      tool-calls
