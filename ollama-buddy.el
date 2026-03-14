@@ -2340,7 +2340,7 @@ Captures the elapsed wait duration before clearing."
   (interactive)
   (let ((roles (ollama-buddy-roles--get-available-roles)))
     (if (null roles)
-        (message "No role presets available. Create some files in %s first."
+        (message "No role presets available. Use C-c O → I to install extras, or create files in %s"
                  ollama-buddy-roles-directory)
       (let ((role (completing-read
                    (format "Select role (current: %s): " ollama-buddy-roles--current-role)
@@ -2461,6 +2461,83 @@ Optional MENU-COLUMNS specifies the number of columns for the menu display."
             (dired ollama-buddy-roles-directory))
         (message "Directory not created."))
     (dired-other-window ollama-buddy-roles-directory)))
+
+(defun ollama-buddy--extras-missing-p ()
+  "Return non-nil if presets or user prompts directories are missing."
+  (or (not (file-directory-p ollama-buddy-roles-directory))
+      (not (file-directory-p ollama-buddy-user-prompts-directory))))
+
+(defun ollama-buddy--install-extras-from-dir (src-dir presets-needed prompts-needed)
+  "Install extras from SRC-DIR.
+PRESETS-NEEDED and PROMPTS-NEEDED control which directories to copy."
+  (when presets-needed
+    (let ((src (expand-file-name "ollama-buddy-presets" src-dir)))
+      (when (file-directory-p src)
+        (copy-directory src ollama-buddy-roles-directory nil t t)
+        (message "Installed presets to %s"
+                 (abbreviate-file-name ollama-buddy-roles-directory)))))
+  (when prompts-needed
+    (let ((src (expand-file-name "ollama-buddy-user-prompts" src-dir)))
+      (when (file-directory-p src)
+        (copy-directory src ollama-buddy-user-prompts-directory nil t t)
+        (message "Installed user prompts to %s"
+                 (abbreviate-file-name ollama-buddy-user-prompts-directory)))))
+  (message "Ollama Buddy extras installed successfully!"))
+
+(defun ollama-buddy--install-extras-from-github (presets-needed prompts-needed)
+  "Download extras from GitHub and install.
+PRESETS-NEEDED and PROMPTS-NEEDED control which directories to install."
+  (unless (executable-find "tar")
+    (error "tar command not found; cannot extract downloaded archive"))
+  (let ((tmp-tar (make-temp-file "ollama-buddy-" nil ".tar.gz"))
+        (tmp-dir (make-temp-file "ollama-buddy-extract-" t))
+        (url "https://github.com/captainflasmr/ollama-buddy/archive/refs/heads/main.tar.gz"))
+    (unwind-protect
+        (progn
+          (message "Downloading ollama-buddy extras from GitHub...")
+          (url-copy-file url tmp-tar t)
+          (message "Extracting...")
+          (unless (zerop (call-process "tar" nil nil nil "xzf" tmp-tar "-C" tmp-dir))
+            (error "Failed to extract archive"))
+          (let ((extracted (car (directory-files tmp-dir t "^[^.]"))))
+            (unless extracted
+              (error "No directory found in extracted archive"))
+            (ollama-buddy--install-extras-from-dir
+             extracted presets-needed prompts-needed)))
+      (ignore-errors (delete-file tmp-tar))
+      (ignore-errors (delete-directory tmp-dir t)))))
+
+(defun ollama-buddy-install-extras ()
+  "Install presets and user prompts to Emacs directory.
+Copies from the local package directory if the bundled directories
+are present, otherwise downloads from GitHub."
+  (interactive)
+  (let* ((presets-needed (not (file-directory-p ollama-buddy-roles-directory)))
+         (prompts-needed (not (file-directory-p ollama-buddy-user-prompts-directory)))
+         (items (delq nil
+                      (list (when presets-needed "presets")
+                            (when prompts-needed "user prompts")))))
+    (if (null items)
+        (message "Presets and user prompts are already installed.")
+      (let* ((pkg-dir (file-name-directory (locate-library "ollama-buddy")))
+             (local-available
+              (and pkg-dir
+                   (or (and presets-needed
+                            (file-directory-p
+                             (expand-file-name "ollama-buddy-presets" pkg-dir)))
+                       (and prompts-needed
+                            (file-directory-p
+                             (expand-file-name "ollama-buddy-user-prompts" pkg-dir)))))))
+        (when (yes-or-no-p
+               (format "%s %s to %s? "
+                       (if local-available "Install" "Download and install")
+                       (string-join items " and ")
+                       (abbreviate-file-name user-emacs-directory)))
+          (if local-available
+              (ollama-buddy--install-extras-from-dir
+               pkg-dir presets-needed prompts-needed)
+            (ollama-buddy--install-extras-from-github
+             presets-needed prompts-needed)))))))
 
 (defun ollama-buddy--initialize-chat-buffer ()
   "Initialize the chat buffer and check Ollama status."

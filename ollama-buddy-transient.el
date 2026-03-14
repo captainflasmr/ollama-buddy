@@ -37,6 +37,8 @@
 (declare-function ollama-buddy-roles-switch-role "ollama-buddy")
 (declare-function ollama-buddy-role-creator-create-new-role "ollama-buddy")
 (declare-function ollama-buddy-roles-open-directory "ollama-buddy")
+(declare-function ollama-buddy-install-extras "ollama-buddy")
+(declare-function ollama-buddy--extras-missing-p "ollama-buddy")
 (declare-function ollama-buddy-toggle-debug-mode "ollama-buddy")
 (declare-function ollama-buddy-toggle-token-display "ollama-buddy")
 (declare-function ollama-buddy-toggle-show-history-indicator "ollama-buddy")
@@ -201,6 +203,8 @@
    ["General"
     ("h" "Help/Menu" ollama-buddy--menu-help-assistant)
     ("b" "Dynamic Roles" ollama-buddy-role-transient-menu)
+    ("I" "Install Extras" ollama-buddy-install-extras
+     :if (lambda () (ollama-buddy--extras-missing-p)))
     ("q" "Quit" transient-quit-one)]]
   )
 

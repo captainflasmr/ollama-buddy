@@ -172,7 +172,7 @@ Returns a plist with :category and :title, or nil if not a valid format."
   (interactive)
   (let ((prompts (ollama-buddy-user-prompts--get-prompts)))
     (unless prompts
-      (user-error "No user system prompts found.  Create one with `ollama-buddy-user-prompts-save'"))
+      (user-error "No user system prompts found.  Use C-c O → I to install extras, or create one with `ollama-buddy-user-prompts-save'"))
     
     (let* ((formatted-prompts (mapcar #'ollama-buddy-user-prompts--format-for-completion prompts))
            (prompt-alist (cl-mapcar #'cons formatted-prompts prompts))
@@ -266,7 +266,7 @@ Returns a plist with :category and :title, or nil if not a valid format."
         (insert "# RET on a prompt heading to set as current system prompt\n\n")
         
         (if (null prompts)
-            (insert "No user system prompts found.\n\n")
+            (insert "No user system prompts found.\n\nUse C-c O → I to install extras, or create one with `ollama-buddy-user-prompts-save'.\n\n")
           (let ((categories (cl-remove-duplicates
                              (mapcar (lambda (p) (plist-get p :category)) prompts)
                              :test #'string=)))
@@ -298,7 +298,7 @@ Returns a plist with :category and :title, or nil if not a valid format."
   (interactive
    (let ((prompts (ollama-buddy-user-prompts--get-prompts)))
      (unless prompts
-       (user-error "No user system prompts found"))
+       (user-error "No user system prompts found.  Use C-c O → I to install extras"))
      (let* ((formatted-prompts (mapcar #'ollama-buddy-user-prompts--format-for-completion prompts))
             (prompt-alist (cl-mapcar #'cons formatted-prompts prompts))
             (selected-formatted (completing-read "Edit system prompt: " formatted-prompts nil t))
@@ -314,7 +314,7 @@ Returns a plist with :category and :title, or nil if not a valid format."
   (interactive
    (let ((prompts (ollama-buddy-user-prompts--get-prompts)))
      (unless prompts
-       (user-error "No user system prompts found"))
+       (user-error "No user system prompts found.  Use C-c O → I to install extras"))
      (let* ((formatted-prompts (mapcar #'ollama-buddy-user-prompts--format-for-completion prompts))
             (prompt-alist (cl-mapcar #'cons formatted-prompts prompts))
             (selected-formatted (completing-read "Delete system prompt: " formatted-prompts nil t))

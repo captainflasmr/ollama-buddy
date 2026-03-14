@@ -2058,6 +2058,11 @@ please run =ollama serve=\n\n")
                              ollama-buddy-project-summary-file
                              project-root))))
              "\n\nType =/init= to generate a project summary — it will be auto-loaded as context in future sessions.")
+           (when (or (not (file-directory-p ollama-buddy-roles-directory))
+                     (and (boundp 'ollama-buddy-user-prompts-directory)
+                          (not (file-directory-p
+                                (symbol-value 'ollama-buddy-user-prompts-directory)))))
+             "\n\nPresets/prompts not installed. Use *C-c O* → *I* to install extras for the full experience.")
            )))
     (add-face-text-property 0 (length message-text) '(:inherit bold) nil message-text)
     message-text))
