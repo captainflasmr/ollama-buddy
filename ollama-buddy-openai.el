@@ -11,14 +11,14 @@
 ;; It allows users to interact with OpenAI's language models using the same interface
 ;; as ollama-buddy, providing seamless switching between local Ollama models and
 ;; cloud-based OpenAI models.
+;;
+;; This is a thin wrapper around `ollama-buddy-provider-create'.  The
+;; defcustom variables below are preserved for backward compatibility so
+;; existing configurations continue to work.
 
 ;;; Code:
 
-(require 'json)
-(require 'url)
-(require 'cl-lib)
-(require 'ollama-buddy-core)
-(require 'ollama-buddy-remote)
+(require 'ollama-buddy-provider)
 
 (defgroup ollama-buddy-openai nil
   "OpenAI integration for Ollama Buddy."
@@ -60,75 +60,17 @@ Use nil for API default behavior (adaptive)."
   :type '(choice integer (const nil))
   :group 'ollama-buddy-openai)
 
-;; Internal variables
-
-(defvar ollama-buddy-openai--current-token-count 0
-  "Counter for tokens in the current OpenAI response.")
-
-;; API interaction functions
-
-(defun ollama-buddy-openai--send (prompt &optional model)
-  "Send PROMPT to OpenAI's API using MODEL or default model asynchronously."
-  (when (ollama-buddy-remote--verify-api-key
-         ollama-buddy-openai-api-key
-         'ollama-buddy-openai-api-key
-         "OpenAI")
-    (ollama-buddy-remote--openai-send
-     prompt model
-     (list :prefix ollama-buddy-openai-marker-prefix
-           :api-key ollama-buddy-openai-api-key
-           :endpoint ollama-buddy-openai-api-endpoint
-           :temperature ollama-buddy-openai-temperature
-           :max-tokens ollama-buddy-openai-max-tokens
-           :default-model ollama-buddy-openai-default-model
-           :provider-name "OpenAI"
-           :token-count-var 'ollama-buddy-openai--current-token-count))))
-
-(defun ollama-buddy-openai--fetch-models ()
-  "Fetch available models from OpenAI API."
-  (when (ollama-buddy-remote--verify-api-key
-         ollama-buddy-openai-api-key
-         'ollama-buddy-openai-api-key
-         "OpenAI")
-    (ollama-buddy--update-status "Fetching OpenAI models...")
-    (let* ((url-request-method "GET")
-           (url-request-extra-headers
-            `(("Authorization" . ,(concat "Bearer " ollama-buddy-openai-api-key)))))
-
-      (url-retrieve
-       "https://api.openai.com/v1/models"
-       (lambda (status)
-         (if (plist-get status :error)
-             (ollama-buddy-remote--friendly-fetch-error status "OpenAI")
-
-           ;; Success - process the response
-           (progn
-             (goto-char (point-min))
-           (when (re-search-forward "\n\n" nil t)
-             (let* ((json-response-raw (buffer-substring (point) (point-max)))
-                    (json-object-type 'alist)
-                    (json-array-type 'vector)
-                    (json-key-type 'symbol))
-
-               (condition-case err
-                   (let* ((json-response (json-read-from-string json-response-raw))
-                          (models-data (alist-get 'data json-response))
-                          (models (mapcar (lambda (model-info)
-                                            (alist-get 'id model-info))
-                                          (append models-data nil)))
-                          (chat-models (cl-remove-if-not
-                                        (lambda (model)
-                                          (string-match-p "\\(gpt\\|claude\\)" model))
-                                        models)))
-                     (ollama-buddy-remote--register-models
-                      ollama-buddy-openai-marker-prefix
-                      chat-models
-                      #'ollama-buddy-openai--send))
-                 (error
-                  (message "Error parsing OpenAI models response: %s" (error-message-string err))
-                  (ollama-buddy--update-status "Failed to parse OpenAI models response"))))))))))))
-
-(ollama-buddy-openai--fetch-models)
+;; Register via the generic provider system
+(ollama-buddy-provider-create
+ :name "OpenAI"
+ :prefix ollama-buddy-openai-marker-prefix
+ :api-key (lambda () ollama-buddy-openai-api-key)
+ :endpoint ollama-buddy-openai-api-endpoint
+ :default-model ollama-buddy-openai-default-model
+ :temperature ollama-buddy-openai-temperature
+ :max-tokens ollama-buddy-openai-max-tokens
+ :models-endpoint "https://api.openai.com/v1/models"
+ :models-filter (lambda (id) (string-match-p "\\(gpt\\|claude\\)" id)))
 
 (provide 'ollama-buddy-openai)
 ;;; ollama-buddy-openai.el ends here

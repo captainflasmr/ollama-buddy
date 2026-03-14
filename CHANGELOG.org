@@ -11,6 +11,76 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-03-14 Fri> *4.0.0*
+
+Generic provider registration system for external LLMs.
+
+*** Breaking Changes
+
+- *External LLM providers now use a generic registration system* -- A new
+  =ollama-buddy-provider.el= module provides =ollama-buddy-provider-create=, a
+  single factory function for registering any external LLM provider.  Three API
+  types are supported: =openai= (default), =claude=, and =gemini=.
+
+  *Migration:* The existing individual provider files (=ollama-buddy-openai.el=,
+  =ollama-buddy-claude.el=, etc.) have been rewritten as thin wrappers around
+  the new system.  *Your current configuration with =(require
+  'ollama-buddy-openai)= and =(setq ollama-buddy-openai-api-key ...)= will
+  continue to work unchanged.*  However, these wrapper files are deprecated and
+  will be removed in a future release.
+
+  *New approach (recommended):*
+
+  #+begin_src elisp
+  (require 'ollama-buddy-provider)
+
+  (ollama-buddy-provider-create
+   :name "OpenAI" :prefix "a:"
+   :api-key (lambda () (auth-source-pick-first-password
+                        :host "ollama-buddy-openai" :user "apikey"))
+   :endpoint "https://api.openai.com/v1/chat/completions"
+   :models-endpoint "https://api.openai.com/v1/models"
+   :models-filter (lambda (id) (string-match-p "gpt" id)))
+
+  (ollama-buddy-provider-create
+   :name "Claude" :prefix "c:" :api-type 'claude
+   :api-key (lambda () (auth-source-pick-first-password
+                        :host "ollama-buddy-claude" :user "apikey"))
+   :endpoint "https://api.anthropic.com/v1/messages"
+   :models-endpoint "https://api.anthropic.com/v1/models")
+
+  (ollama-buddy-provider-create
+   :name "Gemini" :prefix "g:" :api-type 'gemini
+   :api-key (lambda () (auth-source-pick-first-password
+                        :host "ollama-buddy-gemini" :user "apikey"))
+   :endpoint "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent"
+   :models-endpoint "https://generativelanguage.googleapis.com/v1/models"
+   :models-filter (lambda (id) (string-match-p "gemini" id)))
+  #+end_src
+
+  Any OpenAI-compatible server (LM Studio, llama.cpp, vLLM) can be registered
+  with a single call -- no new file required.
+
+*** New Features
+
+- *=ollama-buddy-provider-create=* -- Register any LLM provider with one
+  function call.  Supports static model lists, dynamic model discovery with
+  optional filters, and lazy API key resolution via function values.
+- *=ollama-buddy-provider-remove=* / *=ollama-buddy-provider-refresh=* /
+  *=ollama-buddy-provider-list=* -- Manage registered providers at runtime.
+- *Welcome screen shows generic providers* -- Providers registered via
+  =ollama-buddy-provider-create= now appear in the welcome screen alongside
+  those loaded via the legacy =require= approach.
+
+*** Deprecated
+
+- *Individual provider files* -- =ollama-buddy-openai.el=,
+  =ollama-buddy-claude.el=, =ollama-buddy-gemini.el=, =ollama-buddy-grok.el=,
+  =ollama-buddy-codestral.el=, =ollama-buddy-openrouter.el=, and
+  =ollama-buddy-deepseek.el= are now thin wrappers.  They still work but will
+  be removed in a future release.  =ollama-buddy-copilot.el= and
+  =ollama-buddy-openai-compat.el= are unaffected.
+
 ** <2026-03-13 Thu> *3.7.1*
 
 Code quality, error handling, non-blocking async, and project directory switching.

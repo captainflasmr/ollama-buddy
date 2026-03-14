@@ -8,9 +8,13 @@
 ;;; Commentary:
 ;;
 ;; This extension provides Mistral Codestral integration for the ollama-buddy package.
-;; It allows users to interact with Mistral's Codestral language models using the same interface
-;; as ollama-buddy, providing seamless switching between local Ollama models and
-;; cloud-based Mistral Codestral model.
+;; It allows users to interact with Mistral's Codestral language models using the same
+;; interface as ollama-buddy, providing seamless switching between local Ollama models
+;; and cloud-based Mistral Codestral model.
+;;
+;; This is a thin wrapper around `ollama-buddy-provider-create'.  The
+;; defcustom variables below are preserved for backward compatibility so
+;; existing configurations continue to work.
 
 ;;; Usage:
 ;;
@@ -19,11 +23,7 @@
 
 ;;; Code:
 
-(require 'json)
-(require 'url)
-(require 'cl-lib)
-(require 'ollama-buddy-core)
-(require 'ollama-buddy-remote)
+(require 'ollama-buddy-provider)
 
 (defgroup ollama-buddy-codestral nil
   "Mistral Codestral integration for Ollama Buddy."
@@ -64,38 +64,16 @@ Use nil for API default behavior (adaptive)."
   :type '(choice integer (const nil))
   :group 'ollama-buddy-codestral)
 
-;; Internal variables
-
-(defvar ollama-buddy-codestral--current-token-count 0
-  "Counter for tokens in the current Mistral Codestral response.")
-
-;; API interaction functions
-
-(defun ollama-buddy-codestral--send (prompt &optional model)
-  "Send PROMPT to Codestral API using MODEL asynchronously."
-  (when (ollama-buddy-remote--verify-api-key
-         ollama-buddy-codestral-api-key
-         'ollama-buddy-codestral-api-key
-         "Mistral Codestral")
-    (ollama-buddy-remote--openai-send
-     prompt model
-     (list :prefix ollama-buddy-codestral-marker-prefix
-           :api-key ollama-buddy-codestral-api-key
-           :endpoint ollama-buddy-codestral-api-endpoint
-           :temperature ollama-buddy-codestral-temperature
-           :max-tokens ollama-buddy-codestral-max-tokens
-           :default-model ollama-buddy-codestral-default-model
-           :provider-name "Mistral Codestral"
-           :token-count-var 'ollama-buddy-codestral--current-token-count))))
-
-(defun ollama-buddy-codestral--fetch-models ()
-  "Fetch available Codestral models and register them."
-  (ollama-buddy-remote--register-models
-   ollama-buddy-codestral-marker-prefix
-   '("codestral-latest")
-   #'ollama-buddy-codestral--send))
-
-(ollama-buddy-codestral--fetch-models)
+;; Register via the generic provider system
+(ollama-buddy-provider-create
+ :name "Codestral"
+ :prefix ollama-buddy-codestral-marker-prefix
+ :api-key (lambda () ollama-buddy-codestral-api-key)
+ :endpoint ollama-buddy-codestral-api-endpoint
+ :default-model ollama-buddy-codestral-default-model
+ :temperature ollama-buddy-codestral-temperature
+ :max-tokens ollama-buddy-codestral-max-tokens
+ :models '("codestral-latest"))
 
 (provide 'ollama-buddy-codestral)
 ;;; ollama-buddy-codestral.el ends here

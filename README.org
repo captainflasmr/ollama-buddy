@@ -75,20 +75,21 @@ Submit queries, swap models, view token usage and statistics:
 - *RAG* -- Index local documents and source code; retrieve relevant context via semantic search; inline =@rag(query)= syntax; configurable embedding backend (Ollama =/api/embed= or any OpenAI-compatible =/v1/embeddings= service, e.g. LM Studio)
 - *In-Buffer Replace* -- Stream LLM output directly into the source buffer, replacing the selected region in-place; accept/reject confirmation; inline diff view (=C-c d=) with word-level smerge highlighting; automatic code-fence stripping
 
-* What's New (v3.7.1)
+* What's New (v4.0.0)
 
-Code quality, error handling, non-blocking async, and project directory switching.
+Generic provider system — register any OpenAI/Claude/Gemini-compatible API with a single function call.
 
-- *Switch directory from chat* -- =/cd= slash command switches the working directory without leaving the chat; auto-loads project summary if available.
-- *Non-blocking model info* -- Model capability fetching is now fully asynchronous; no more Emacs freezes with cloud models.
-- *Error cleanup* -- "Working..." status is properly cleared on errors like "prompt too long", with prompt area restored.
-- *Tool call arguments in headings* -- Folded tool call headings now show the JSON arguments inline for quick reference.
-- *Removed Fabric and Awesome* -- Removed =ollama-buddy-fabric.el= and =ollama-buddy-awesome.el= modules to reduce maintenance burden.
+- *Generic Provider Registration* -- =ollama-buddy-provider-create= is a single factory function for registering any external LLM provider. Supports three API types: =openai= (OpenAI-compatible), =claude= (Anthropic Messages API), and =gemini= (Google generateContent API). No separate elisp file needed per provider.
+- *Backward Compatible* -- Existing =(require 'ollama-buddy-openai)= etc. still work. Each provider file is now a thin wrapper around =ollama-buddy-provider-create=, preserving all =defcustom= variables. These wrappers will be removed in a future release.
+- *Migration Path* -- Replace per-provider =require= calls with =ollama-buddy-provider-create= in your config. See =CHANGELOG.org= for full migration examples.
+- *Dynamic Model Discovery* -- Providers with a =:models-endpoint= automatically fetch available models on registration, with optional =:models-filter= predicates.
+- *~550 lines saved* -- The eight provider files dropped from ~1,346 lines to ~615 lines total, with all shared logic consolidated in =ollama-buddy-provider.el= (~779 lines).
 
 * Recent Changes
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *4.0.0* | Generic provider system (=ollama-buddy-provider-create=) — register any OpenAI/Claude/Gemini-compatible API with one call. Existing =require= wrappers still work but are deprecated.                                     |
 | *3.7.1* | Code quality, async model info, error cleanup, =/cd= directory switching, removed Fabric/Awesome.                                                                                                                         |
 | *3.7.0* | RAG pause/resume with periodic checkpointing; new built-in tools (=search_files=, =get_region=, =get_buffer_info=, =describe_symbol=, =eval_elisp=).                                                                     |
 | *3.6.0* | RAG incremental updates (re-index only changed files) and cancellation support.                                                                                                                                           |
@@ -123,7 +124,29 @@ See [[file:CHANGELOG.org]] for full history.
 
 On first launch, press =C-c O= → =I= to install the bundled presets and user prompts for the full experience (see [[*Installing Presets and User Prompts][Installing Presets and User Prompts]]).
 
-** With Remote Providers
+** With Remote Providers (v4.0+ recommended)
+
+#+begin_src elisp
+(use-package ollama-buddy
+  :ensure t
+  :bind
+  ("C-c o" . ollama-buddy-role-transient-menu)
+  ("C-c O" . ollama-buddy-transient-menu)
+  :config
+  (require 'ollama-buddy-provider)
+  (ollama-buddy-provider-create
+   :name "OpenAI"
+   :prefix "a:"
+   :api-key (lambda () (auth-source-pick-first-password :host "ollama-buddy-openai" :user "apikey"))
+   :endpoint "https://api.openai.com/v1/chat/completions"
+   :default-model "gpt-4o"
+   :models-endpoint "https://api.openai.com/v1/models"
+   :models-filter (lambda (id) (string-match-p "gpt" id)))
+  ;; add other providers similarly …
+  )
+#+end_src
+
+** With Remote Providers (legacy, still works)
 
 #+begin_src elisp
 (use-package ollama-buddy
@@ -209,61 +232,105 @@ The two directories installed are:
 
 #+begin_src elisp
 (use-package ollama-buddy
-  :load-path "~/source/repos/ollama-buddy"
   :demand t
   :bind
-  ;; ("C-c o" . ollama-buddy-menu)
   ("C-c o" . ollama-buddy-role-transient-menu)
   ("C-c O" . ollama-buddy-transient-menu)
   :config
-  
   ;; overall default model
   (setq ollama-buddy-default-model "glm-4.7:cloud")
+
+  ;; ;; deprecated external LLM
+  ;; (setq ollama-buddy-openai-api-key
+  ;;       (auth-source-pick-first-password :host "ollama-buddy-openai" :user "apikey"))
+  ;; (setq ollama-buddy-claude-api-key
+  ;;       (auth-source-pick-first-password :host "ollama-buddy-claude" :user "apikey"))
+  ;; (setq ollama-buddy-gemini-api-key
+  ;;       (auth-source-pick-first-password :host "ollama-buddy-gemini" :user "apikey"))
+  ;; (setq ollama-buddy-grok-api-key
+  ;;       (auth-source-pick-first-password :host "ollama-buddy-grok" :user "apikey"))
+  ;; (setq ollama-buddy-codestral-api-key
+  ;;       (auth-source-pick-first-password :host "ollama-buddy-codestral" :user "apikey"))
+  ;; (setq ollama-buddy-openrouter-api-key
+  ;;       (auth-source-pick-first-password :host "ollama-buddy-openrouter" :user "apikey"))
+  ;; (setq ollama-buddy-deepseek-api-key
+  ;;       (auth-source-pick-first-password :host "ollama-buddy-deepseek" :user "apikey"))
+  ;; (require 'ollama-buddy-openai nil t)
+  ;; (require 'ollama-buddy-claude nil t)
+  ;; (require 'ollama-buddy-gemini nil t)
+  ;; (require 'ollama-buddy-grok nil t)
+  ;; (require 'ollama-buddy-codestral nil t)
+  ;; (require 'ollama-buddy-copilot nil t)
+  ;; (require 'ollama-buddy-openrouter nil t)
+  ;; (require 'ollama-buddy-deepseek nil t)
   
-  ;; key setup
-  (setq ollama-buddy-openai-api-key
-        (auth-source-pick-first-password :host "ollama-buddy-openai" :user "apikey"))
-  (setq ollama-buddy-claude-api-key
-        (auth-source-pick-first-password :host "ollama-buddy-claude" :user "apikey"))
-  (setq ollama-buddy-gemini-api-key
-        (auth-source-pick-first-password :host "ollama-buddy-gemini" :user "apikey"))
-  (setq ollama-buddy-grok-api-key
-        (auth-source-pick-first-password :host "ollama-buddy-grok" :user "apikey"))
-  (setq ollama-buddy-codestral-api-key
-        (auth-source-pick-first-password :host "ollama-buddy-codestral" :user "apikey"))
-  (setq ollama-buddy-openrouter-api-key
-        (auth-source-pick-first-password :host "ollama-buddy-openrouter" :user "apikey"))
-  (setq ollama-buddy-deepseek-api-key
-        (auth-source-pick-first-password :host "ollama-buddy-deepseek" :user "apikey"))
-  (setq ollama-buddy-cloud-session-token
-        (auth-source-pick-first-password :host "ollama-buddy-cloud" :user "session"))
+  ;; cloud / web-search keys (not provider-managed)
+  (setq ollama-buddy-cloud-api-key
+        (auth-source-pick-first-password :host "ollama-buddy-cloud" :user "apikey"))
   (setq ollama-buddy-web-search-api-key
         (auth-source-pick-first-password :host "ollama-buddy-web-search" :user "apikey"))
+  (setq ollama-buddy-cloud-session-token "<session-token>"
 
-  (require 'ollama-buddy-openai nil t)
-  (require 'ollama-buddy-claude nil t)
-  (require 'ollama-buddy-gemini nil t)
-  (require 'ollama-buddy-grok nil t)
-  (require 'ollama-buddy-codestral nil t)
-  (require 'ollama-buddy-copilot nil t)
-  (require 'ollama-buddy-openrouter nil t)
-  (require 'ollama-buddy-deepseek nil t)
+  ;; Generic provider registration (replaces individual require files)
+  (require 'ollama-buddy-provider)
 
-  ;; other
-  (setq ollama-buddy-full-welcome-enabled nil)
+  (ollama-buddy-provider-create
+   :name "OpenAI" :prefix "a:"
+   :api-key (lambda () (auth-source-pick-first-password
+                        :host "ollama-buddy-openai" :user "apikey"))
+   :endpoint "https://api.openai.com/v1/chat/completions"
+   :models-endpoint "https://api.openai.com/v1/models"
+   :models-filter (lambda (id) (string-match-p "\\(gpt\\|o[0-9]\\)" id)))
 
-  (require 'ollama-buddy-openai-compat)
-  ;; LM Studio default — this is the built-in default so no change needed
-  (setq ollama-buddy-openai-compat-base-url "http://localhost:1234")
-  (setq ollama-buddy-openai-compat-provider-name "LM Studio")
-  ;; No API key needed for LM Studio
-  (setq ollama-buddy-openai-compat-api-key "")
-  
-  ;; Use LM Studio's /v1/embeddings endpoint instead of Ollama's /api/embed
-  (setq ollama-buddy-rag-embedding-base-url "http://localhost:1234")
-  (setq ollama-buddy-rag-embedding-api-style 'openai)
-  (setq ollama-buddy-rag-embedding-model "text-embedding-nomic-embed-text-v1.5")
-  
+  (ollama-buddy-provider-create
+   :name "Claude" :prefix "c:" :api-type 'claude
+   :api-key (lambda () (auth-source-pick-first-password
+                        :host "ollama-buddy-claude" :user "apikey"))
+   :endpoint "https://api.anthropic.com/v1/messages"
+   :models-endpoint "https://api.anthropic.com/v1/models")
+
+  (ollama-buddy-provider-create
+   :name "Gemini" :prefix "g:" :api-type 'gemini
+   :api-key (lambda () (auth-source-pick-first-password
+                        :host "ollama-buddy-gemini" :user "apikey"))
+   :endpoint "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent"
+   :models-endpoint "https://generativelanguage.googleapis.com/v1/models"
+   :models-filter (lambda (id) (string-match-p "gemini" id)))
+
+  (ollama-buddy-provider-create
+   :name "Grok" :prefix "k:"
+   :api-key (lambda () (auth-source-pick-first-password
+                        :host "ollama-buddy-grok" :user "apikey"))
+   :endpoint "https://api.x.ai/v1/chat/completions"
+   :models-endpoint "https://api.x.ai/v1/models")
+
+  (ollama-buddy-provider-create
+   :name "Codestral" :prefix "s:"
+   :api-key (lambda () (auth-source-pick-first-password
+                        :host "ollama-buddy-codestral" :user "apikey"))
+   :endpoint "https://api.mistral.ai/v1/chat/completions"
+   :models '("codestral-latest"))
+
+  (ollama-buddy-provider-create
+   :name "OpenRouter" :prefix "r:"
+   :api-key (lambda () (auth-source-pick-first-password
+                        :host "ollama-buddy-openrouter" :user "apikey"))
+   :endpoint "https://openrouter.ai/api/v1/chat/completions"
+   :models-endpoint "https://openrouter.ai/api/v1/models"
+   :extra-headers '(("HTTP-Referer" . "https://github.com/captainflasmr/ollama-buddy")
+                    ("X-Title" . "ollama-buddy")))
+
+  (ollama-buddy-provider-create
+   :name "DeepSeek" :prefix "d:"
+   :api-key (lambda () (auth-source-pick-first-password
+                        :host "ollama-buddy-deepseek" :user "apikey"))
+   :endpoint "https://api.deepseek.com/chat/completions"
+   :models '("deepseek-chat" "deepseek-reasoner"))
+
+  (require 'ollama-buddy-completion)
+
+  (setq ollama-buddy-completion-model "qwen3-coder-next:cloud")
+
   ;; setup default custom menu for preferred models
   (ollama-buddy-update-menu-entry 'refactor-code     :model "minimax-m2.1:cloud")
   (ollama-buddy-update-menu-entry 'git-commit        :model "glm-4.7:cloud")
@@ -271,12 +338,6 @@ The two directories installed are:
   (ollama-buddy-update-menu-entry 'dictionary-lookup :model "minimax-m2.1:cloud")
   (ollama-buddy-update-menu-entry 'synonym           :model "minimax-m2.1:cloud")
   (ollama-buddy-update-menu-entry 'proofread         :model "minimax-m2.1:cloud")
-  ;; (ollama-buddy-update-menu-entry 'refactor-code     :model "tinyllama:1.1b")
-  ;; (ollama-buddy-update-menu-entry 'git-commit        :model "tinyllama:1.1b")
-  ;; (ollama-buddy-update-menu-entry 'describe-code     :model "tinyllama:1.1b")
-  ;; (ollama-buddy-update-menu-entry 'dictionary-lookup :model "tinyllama:1.1b")
-  ;; (ollama-buddy-update-menu-entry 'synonym           :model "tinyllama:1.1b")
-  ;; (ollama-buddy-update-menu-entry 'proofread         :model "tinyllama:1.1b")
 
   ;; dired integration
   (with-eval-after-load 'dired

@@ -47,6 +47,7 @@
 (declare-function ollama-buddy-curl--process-filter "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--process-json-line "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--handle-content "ollama-buddy-curl")
+(declare-function ollama-buddy-provider-name "ollama-buddy-provider")
 (declare-function ollama-buddy-curl--handle-completion "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--sentinel "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--send "ollama-buddy-curl")
@@ -1723,33 +1724,54 @@ PROMPT, SPECIFIED-MODEL and TOOL-CONTINUATION-P are passed through."
 
 (defun ollama-buddy--get-enabled-external-providers ()
   "Return a list of enabled external LLM provider names with info."
-  (let (providers)
+  (let (providers seen-prefixes)
     (when (featurep 'ollama-buddy-openai)
+      (push "a:" seen-prefixes)
       (push (format "a: OpenAI (%d)" (ollama-buddy--count-models-with-prefix "a:")) providers))
     (when (featurep 'ollama-buddy-claude)
+      (push "c:" seen-prefixes)
       (push (format "c: Claude (%d)" (ollama-buddy--count-models-with-prefix "c:")) providers))
     (when (featurep 'ollama-buddy-gemini)
+      (push "g:" seen-prefixes)
       (push (format "g: Gemini (%d)" (ollama-buddy--count-models-with-prefix "g:")) providers))
     (when (featurep 'ollama-buddy-grok)
+      (push "k:" seen-prefixes)
       (push (format "k: Grok (%d)" (ollama-buddy--count-models-with-prefix "k:")) providers))
     (when (featurep 'ollama-buddy-copilot)
+      (push "p:" seen-prefixes)
       (push (format "p: Copilot (%d)" (ollama-buddy--count-models-with-prefix "p:")) providers))
     (when (featurep 'ollama-buddy-codestral)
+      (push "s:" seen-prefixes)
       (push (format "s: Codestral (%d)" (ollama-buddy--count-models-with-prefix "s:")) providers))
     (when (featurep 'ollama-buddy-deepseek)
+      (push "d:" seen-prefixes)
       (push (format "d: DeepSeek (%d)" (ollama-buddy--count-models-with-prefix "d:")) providers))
     (when (featurep 'ollama-buddy-openrouter)
+      (push "r:" seen-prefixes)
       (push (format "r: OpenRouter (%d)" (ollama-buddy--count-models-with-prefix "r:")) providers))
     (when (featurep 'ollama-buddy-openai-compat)
-      (push (format "l: %s (%d)"
-                    (if (boundp 'ollama-buddy-openai-compat-provider-name)
-                        ollama-buddy-openai-compat-provider-name
-                      "LocalAI")
-                    (ollama-buddy--count-models-with-prefix
-                     (if (boundp 'ollama-buddy-openai-compat-marker-prefix)
-                         ollama-buddy-openai-compat-marker-prefix
-                       "l:")))
-            providers))
+      (let ((prefix (if (boundp 'ollama-buddy-openai-compat-marker-prefix)
+                        ollama-buddy-openai-compat-marker-prefix
+                      "l:")))
+        (push prefix seen-prefixes)
+        (push (format "l: %s (%d)"
+                      (if (boundp 'ollama-buddy-openai-compat-provider-name)
+                          ollama-buddy-openai-compat-provider-name
+                        "LocalAI")
+                      (ollama-buddy--count-models-with-prefix prefix))
+              providers)))
+    ;; Include providers registered via the generic provider system
+    (when (and (featurep 'ollama-buddy-provider)
+               (boundp 'ollama-buddy-provider--registry))
+      (maphash
+       (lambda (prefix provider)
+         (unless (member prefix seen-prefixes)
+           (push (format "%s %s (%d)"
+                         prefix
+                         (ollama-buddy-provider-name provider)
+                         (ollama-buddy--count-models-with-prefix prefix))
+                 providers)))
+       ollama-buddy-provider--registry))
     (nreverse providers)))
 
 (defvar ollama-buddy--cloud-auth-status 'unknown
@@ -2014,11 +2036,11 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
              (concat "#+TITLE: Ollama Buddy Chat"))
            "\n\n* Welcome\n\n"
            (if-let ((logo (ollama-buddy--create-logo-image 140)))
-               (concat logo "\n\n*Ollama Buddy* [v3.7.1]\n\n")
+               (concat logo "\n\n*Ollama Buddy* [v4.0.0]\n\n")
              (concat
               "#+begin_example\n"
               "┌───────────────────────────────────┐\n"
-              "│  O L L A M A B U D D Y  [v3.7.1]  │\n"
+              "│  O L L A M A B U D D Y  [v4.0.0]  │\n"
               "└───────────────────────────────────┘\n"
               "#+end_example\n\n"))
            (if project-info (concat project-info "\n\n") "")

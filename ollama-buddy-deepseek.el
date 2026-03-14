@@ -12,17 +12,17 @@
 ;; interface as ollama-buddy, providing seamless switching between local Ollama
 ;; models and cloud-based DeepSeek models.
 ;;
+;; This is a thin wrapper around `ollama-buddy-provider-create'.  The
+;; defcustom variables below are preserved for backward compatibility so
+;; existing configurations continue to work.
+;;
 ;; Usage:
 ;; (require 'ollama-buddy-deepseek)
 ;; (setq ollama-buddy-deepseek-api-key (getenv "DEEPSEEK_API_KEY"))
 
 ;;; Code:
 
-(require 'json)
-(require 'url)
-(require 'cl-lib)
-(require 'ollama-buddy-core)
-(require 'ollama-buddy-remote)
+(require 'ollama-buddy-provider)
 
 (defgroup ollama-buddy-deepseek nil
   "DeepSeek integration for Ollama Buddy."
@@ -64,38 +64,16 @@ Use nil for API default behavior (adaptive)."
   :type '(choice integer (const nil))
   :group 'ollama-buddy-deepseek)
 
-;; Internal variables
-
-(defvar ollama-buddy-deepseek--current-token-count 0
-  "Counter for tokens in the current DeepSeek response.")
-
-;; API interaction functions
-
-(defun ollama-buddy-deepseek--send (prompt &optional model)
-  "Send PROMPT to DeepSeek's API using MODEL or default model asynchronously."
-  (when (ollama-buddy-remote--verify-api-key
-         ollama-buddy-deepseek-api-key
-         'ollama-buddy-deepseek-api-key
-         "DeepSeek")
-    (ollama-buddy-remote--openai-send
-     prompt model
-     (list :prefix ollama-buddy-deepseek-marker-prefix
-           :api-key ollama-buddy-deepseek-api-key
-           :endpoint ollama-buddy-deepseek-api-endpoint
-           :temperature ollama-buddy-deepseek-temperature
-           :max-tokens ollama-buddy-deepseek-max-tokens
-           :default-model ollama-buddy-deepseek-default-model
-           :provider-name "DeepSeek"
-           :token-count-var 'ollama-buddy-deepseek--current-token-count))))
-
-(defun ollama-buddy-deepseek--fetch-models ()
-  "Register available DeepSeek models."
-  (ollama-buddy-remote--register-models
-   ollama-buddy-deepseek-marker-prefix
-   '("deepseek-chat" "deepseek-reasoner")
-   #'ollama-buddy-deepseek--send))
-
-(ollama-buddy-deepseek--fetch-models)
+;; Register via the generic provider system
+(ollama-buddy-provider-create
+ :name "DeepSeek"
+ :prefix ollama-buddy-deepseek-marker-prefix
+ :api-key (lambda () ollama-buddy-deepseek-api-key)
+ :endpoint ollama-buddy-deepseek-api-endpoint
+ :default-model ollama-buddy-deepseek-default-model
+ :temperature ollama-buddy-deepseek-temperature
+ :max-tokens ollama-buddy-deepseek-max-tokens
+ :models '("deepseek-chat" "deepseek-reasoner"))
 
 (provide 'ollama-buddy-deepseek)
 ;;; ollama-buddy-deepseek.el ends here
