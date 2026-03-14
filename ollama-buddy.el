@@ -2275,7 +2275,8 @@ When MODEL is provided, compute the average wait time for countdown display."
   (when (and model (not ollama-buddy--response-avg-wait))
     (setq ollama-buddy--response-avg-wait
           (ollama-buddy--model-average-wait-time model)))
-  (when ollama-buddy-response-wait-threshold
+  (when (or ollama-buddy-response-wait-threshold
+            ollama-buddy--response-countdown-marker)
     (setq ollama-buddy--response-wait-timer
           (run-with-timer 1 1 #'ollama-buddy--update-response-wait-display))))
 
@@ -2297,7 +2298,8 @@ Captures the elapsed wait duration before clearing."
       ;; First token already arrived — cancel ourselves
       (ollama-buddy--cancel-response-wait-timer)
     (let ((elapsed (round (- (float-time) ollama-buddy--response-wait-start))))
-      (when (>= elapsed ollama-buddy-response-wait-threshold)
+      (when (and ollama-buddy-response-wait-threshold
+                 (>= elapsed ollama-buddy-response-wait-threshold))
         (ollama-buddy--update-status (format "Working... [%ds]" elapsed)))
       ;; Update in-buffer countdown
       (when (and ollama-buddy--response-countdown-marker
