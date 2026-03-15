@@ -2054,13 +2054,13 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
           (concat
            (when (= (buffer-size) 0)
              (concat "#+TITLE: Ollama Buddy Chat"))
-           "\n\n* Welcome\n\n"
+           "\n\n* Ollama Buddy [v4.0.0]\n"
            (if-let ((logo (ollama-buddy--create-logo-image 140)))
-               (concat logo "\n\n*Ollama Buddy* [v4.0.0]\n\n")
+               (concat logo "\n")
              (concat
               "#+begin_example\n"
               "┌───────────────────────────────────┐\n"
-              "│  O L L A M A B U D D Y  [v4.0.0]  │\n"
+              "│  O L L A M A   B U D D Y          │\n"
               "└───────────────────────────────────┘\n"
               "#+end_example\n\n"))
            (if project-info (concat project-info "\n\n") "")
