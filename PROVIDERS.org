@@ -7,11 +7,13 @@
 
 * External LLM Provider Guide
 
-Overview of all external LLM providers supported by Ollama Buddy, including pricing, free tiers, and recommendations.
+Overview of all external LLM providers supported by Ollama Buddy.  This covers cloud APIs, local inference servers, pricing, free tiers, and recommendations.
+
+The same =ollama-buddy-provider-create= system works for both remote cloud APIs and local OpenAI-compatible servers (LM Studio, llama.cpp, vLLM, etc.).
 
 ** How Provider Registration Works
 
-Ollama Buddy uses a generic provider system built on =ollama-buddy-provider-create=.  There are two ways to add a provider:
+Ollama Buddy uses a generic provider system built on =ollama-buddy-provider-create=.  There are three ways to add a provider:
 
 *** Dedicated module (existing providers)
 
@@ -23,9 +25,9 @@ These have their own =.el= file with =defcustom= variables:
       (auth-source-pick-first-password :host "ollama-buddy-openai" :user "apikey"))
 #+end_src
 
-*** Direct registration (any OpenAI-compatible provider)
+*** Direct registration -- cloud API
 
-Add any provider with a single call in your init file -- no extra files needed:
+Add any cloud provider with a single call in your init file -- no extra files needed:
 
 #+begin_src elisp
 (ollama-buddy-provider-create
@@ -36,6 +38,21 @@ Add any provider with a single call in your init file -- no extra files needed:
  :models '("llama-3.3-70b-versatile" "gemma2-9b-it")
  :default-model "llama-3.3-70b-versatile")
 #+end_src
+
+*** Direct registration -- local server
+
+Point at any local OpenAI-compatible server the same way (no API key needed):
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "LM Studio"
+ :prefix "l:"
+ :endpoint "http://localhost:1234/v1/chat/completions"
+ :models-endpoint "http://localhost:1234/v1/models"
+ :default-model "llama-3.2-3b-instruct")
+#+end_src
+
+There is also a dedicated module =ollama-buddy-openai-compat= that wraps this pattern with =defcustom= variables (see [[*Local OpenAI-Compatible Servers][Local OpenAI-Compatible Servers]]).
 
 *** Provider create parameters
 
@@ -83,6 +100,20 @@ Add any provider with a single call in your init file -- no extra files needed:
 | Cohere     | =h:=   | openai   | $0.30 (Command R)     | Free trial keys         | RAG, enterprise             |
 | NVIDIA NIM | =v:=   | openai   | Free (1K req/day)     | 1K requests/day free    | NVIDIA-optimised models     |
 | HuggingFace| =e:=   | openai   | Free (rate-limited)   | Serverless free tier    | Any HF-hosted model         |
+
+*** Local OpenAI-compatible servers (add with =ollama-buddy-provider-create=)
+
+| Server    | Prefix | Default Port | Auto-Discovery | Best For                         |
+|-----------+--------+--------------+----------------+----------------------------------|
+| LM Studio | =l:=   | 1234         | yes            | GUI model management, easy setup |
+| llama.cpp | =l:=   | 8080         | yes            | Lightweight, CLI-native          |
+| vLLM      | =l:=   | 8000         | yes            | Production serving, batching     |
+| Jan       | =l:=   | 1337         | yes            | Desktop app, GUI                 |
+| LocalAI   | =l:=   | 8080         | yes            | Docker, GPU sharing              |
+| text-gen  | =l:=   | 5000         | yes            | oobabooga web UI                 |
+| Tabby     | =l:=   | 8080         | yes            | Code completion focused          |
+
+These all speak the same OpenAI-compatible API, so you only need one at a time. The =l:= prefix is the default -- change it if running multiple local servers simultaneously.
 
 * Dedicated Providers
 
@@ -1012,6 +1043,171 @@ Any chat model hosted on HuggingFace Hub, including:
 - Same API format for all models
 - Good for evaluating niche or fine-tuned models
 
+* Local OpenAI-Compatible Servers
+
+Any server that implements the OpenAI chat completions API can be used as a provider.  This gives you a second local inference path alongside Ollama -- useful for running models via different backends (GGUF via llama.cpp, GPTQ/AWQ via vLLM, etc.) or accessing models not available through Ollama.
+
+** Quick setup with =ollama-buddy-provider-create=
+
+The simplest approach -- one call in your init file:
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "LM Studio"
+ :prefix "l:"
+ :endpoint "http://localhost:1234/v1/chat/completions"
+ :models-endpoint "http://localhost:1234/v1/models"
+ :default-model "llama-3.2-3b-instruct")
+#+end_src
+
+No API key is needed for local servers.  Models are auto-discovered via the =/v1/models= endpoint.
+
+** Using the dedicated compat module
+
+If you prefer =defcustom= variables (for easier customisation via =M-x customize=):
+
+#+begin_src elisp
+(require 'ollama-buddy-openai-compat)
+(setq ollama-buddy-openai-compat-base-url "http://localhost:1234")
+(setq ollama-buddy-openai-compat-provider-name "LM Studio")
+#+end_src
+
+The module appends =/v1/chat/completions= and =/v1/models= to the base URL automatically.
+
+Available customisation variables:
+
+| Variable                                    | Default              | Description                          |
+|---------------------------------------------+----------------------+--------------------------------------|
+| =ollama-buddy-openai-compat-base-url=       | =http://localhost:1234= | Server base URL (no trailing slash)  |
+| =ollama-buddy-openai-compat-provider-name=  | ="LocalAI"=          | Display name in status/headers       |
+| =ollama-buddy-openai-compat-marker-prefix=  | ="l:"=               | Prefix for model names               |
+| =ollama-buddy-openai-compat-api-key=        | =""=                 | Bearer token (empty for local)       |
+| =ollama-buddy-openai-compat-models=         | =nil=                | Fallback model list                  |
+| =ollama-buddy-openai-compat-default-model=  | =""=                 | Default model (empty = first found)  |
+| =ollama-buddy-openai-compat-temperature=    | =0.7=                | Temperature (0.0-2.0)                |
+| =ollama-buddy-openai-compat-max-tokens=     | =nil=                | Max tokens (nil = server default)    |
+| =ollama-buddy-openai-compat-fetch-models=   | =t=                  | Auto-discover models on load         |
+
+Use =M-x ollama-buddy-openai-compat-refresh-models= after changing the base URL at runtime.
+
+** Server-specific examples
+
+*** LM Studio
+
+Desktop app with a built-in model manager.  Download models from the GUI, then enable the local server.
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "LM Studio"
+ :prefix "l:"
+ :endpoint "http://localhost:1234/v1/chat/completions"
+ :models-endpoint "http://localhost:1234/v1/models")
+#+end_src
+
+*** llama.cpp (server mode)
+
+Lightweight C++ inference.  Start with =llama-server -m model.gguf --port 8080=.
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "llama.cpp"
+ :prefix "l:"
+ :endpoint "http://localhost:8080/v1/chat/completions"
+ :models-endpoint "http://localhost:8080/v1/models")
+#+end_src
+
+*** vLLM
+
+Production-grade serving with PagedAttention.  Start with =vllm serve model-name --port 8000=.
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "vLLM"
+ :prefix "l:"
+ :endpoint "http://localhost:8000/v1/chat/completions"
+ :models-endpoint "http://localhost:8000/v1/models")
+#+end_src
+
+*** Jan
+
+Desktop app similar to LM Studio.  Enable the local API server from Settings.
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "Jan"
+ :prefix "l:"
+ :endpoint "http://localhost:1337/v1/chat/completions"
+ :models-endpoint "http://localhost:1337/v1/models")
+#+end_src
+
+*** LocalAI
+
+Docker-based, supports multiple model backends.  Run with =docker run -p 8080:8080 localai/localai=.
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "LocalAI"
+ :prefix "l:"
+ :endpoint "http://localhost:8080/v1/chat/completions"
+ :models-endpoint "http://localhost:8080/v1/models")
+#+end_src
+
+*** text-generation-webui (oobabooga)
+
+Web UI for text generation with OpenAI-compatible API extension.
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "TextGen"
+ :prefix "l:"
+ :endpoint "http://localhost:5000/v1/chat/completions"
+ :models-endpoint "http://localhost:5000/v1/models")
+#+end_src
+
+** Running multiple local servers
+
+If you run more than one local server simultaneously, give each a different prefix:
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "LM Studio"
+ :prefix "l:"
+ :endpoint "http://localhost:1234/v1/chat/completions"
+ :models-endpoint "http://localhost:1234/v1/models")
+
+(ollama-buddy-provider-create
+ :name "vLLM"
+ :prefix "w:"
+ :endpoint "http://localhost:8000/v1/chat/completions"
+ :models-endpoint "http://localhost:8000/v1/models")
+#+end_src
+
+** When to use local servers vs Ollama
+
+Ollama is the default backend and is ideal for most local use cases.  Reasons you might add a second local server:
+
+- *Different quantisation formats* -- llama.cpp/LM Studio for GGUF, vLLM for GPTQ/AWQ/FP16
+- *Production serving* -- vLLM offers batching, continuous batching, and PagedAttention
+- *Models not in Ollama's registry* -- load arbitrary HuggingFace models directly
+- *GPU sharing* -- run Ollama on one GPU and vLLM on another
+- *A/B testing* -- compare the same model across different inference engines
+
+** Server offline handling
+
+If the local server is not running when Emacs starts, model discovery will fail silently and fall back to the =:models= list.  Provide a static fallback list for servers that may not always be running:
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "LM Studio"
+ :prefix "l:"
+ :endpoint "http://localhost:1234/v1/chat/completions"
+ :models-endpoint "http://localhost:1234/v1/models"
+ :models '("llama-3.2-3b-instruct" "mistral-7b-instruct-v0.3")
+ :default-model "llama-3.2-3b-instruct")
+#+end_src
+
+When the server comes online later, use =M-x ollama-buddy-provider-refresh= to re-discover models.
+
 * Recommendations
 
 ** For Free Usage
@@ -1062,25 +1258,26 @@ Any chat model hosted on HuggingFace Hub, including:
 
 For reference, here is the complete prefix allocation:
 
-| Prefix | Provider     | Type      |
-|--------+--------------+-----------|
-| =o:=   | Ollama local | dedicated |
-| =u:=   | Ollama cloud | dedicated |
-| =a:=   | OpenAI       | dedicated |
-| =c:=   | Claude       | dedicated |
-| =g:=   | Gemini       | dedicated |
-| =k:=   | Grok         | dedicated |
-| =p:=   | Copilot      | dedicated |
-| =s:=   | Codestral    | dedicated |
-| =d:=   | DeepSeek     | dedicated |
-| =r:=   | OpenRouter   | dedicated |
-| =q:=   | Groq         | generic   |
-| =m:=   | Mistral      | generic   |
-| =b:=   | Cerebras     | generic   |
-| =x:=   | Perplexity   | generic   |
-| =t:=   | Together AI  | generic   |
-| =f:=   | Fireworks AI | generic   |
-| =n:=   | SambaNova    | generic   |
-| =h:=   | Cohere       | generic   |
-| =v:=   | NVIDIA NIM   | generic   |
-| =e:=   | HuggingFace  | generic   |
+| Prefix | Provider      | Type      |
+|--------+---------------+-----------|
+| =o:=   | Ollama local  | dedicated |
+| =u:=   | Ollama cloud  | dedicated |
+| =a:=   | OpenAI        | dedicated |
+| =c:=   | Claude        | dedicated |
+| =g:=   | Gemini        | dedicated |
+| =k:=   | Grok          | dedicated |
+| =p:=   | Copilot       | dedicated |
+| =s:=   | Codestral     | dedicated |
+| =d:=   | DeepSeek      | dedicated |
+| =r:=   | OpenRouter    | dedicated |
+| =l:=   | Local server  | dedicated |
+| =q:=   | Groq          | generic   |
+| =m:=   | Mistral       | generic   |
+| =b:=   | Cerebras      | generic   |
+| =x:=   | Perplexity    | generic   |
+| =t:=   | Together AI   | generic   |
+| =f:=   | Fireworks AI  | generic   |
+| =n:=   | SambaNova     | generic   |
+| =h:=   | Cohere        | generic   |
+| =v:=   | NVIDIA NIM    | generic   |
+| =e:=   | HuggingFace   | generic   |
