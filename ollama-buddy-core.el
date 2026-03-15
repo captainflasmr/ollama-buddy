@@ -1858,12 +1858,31 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
     (require 'svg)
     (let* ((sw (or size 80))
            (s (/ sw 400.0))
-           (svg (svg-create sw sw)))
-      ;; Background
-      (svg-rectangle svg 0 0 (* 400 s) (* 400 s) :fill "#121212")
+           (svg (svg-create sw sw))
+           (defs (dom-node 'defs '((id . "defs10"))))
+           (grp (dom-node 'g '((id . "g1")
+                               (style . "filter:url(#filter68)")))))
+      ;; -- Drop shadow filter (bilateral horizontal) --
+      (let ((f (dom-node 'filter '((id . "filter68")
+                                   (style . "color-interpolation-filters:sRGB;")
+                                   (x . "-0.03125") (y . "-0.0055195325")
+                                   (width . "1.0625") (height . "1.0245614")))))
+        (dom-append-child f (dom-node 'feFlood '((result . "flood") (in . "SourceGraphic") (flood-opacity . "0.498039") (flood-color . "rgb(0,0,0)"))))
+        (dom-append-child f (dom-node 'feGaussianBlur '((result . "blur") (in . "SourceGraphic") (stdDeviation . "0.000000"))))
+        (dom-append-child f (dom-node 'feOffset '((result . "offset") (in . "blur") (dx . "-4.000000") (dy . "0.000000"))))
+        (dom-append-child f (dom-node 'feComposite '((result . "comp1") (operator . "in") (in . "flood") (in2 . "offset"))))
+        (dom-append-child f (dom-node 'feComposite '((result . "fbSourceGraphic") (operator . "over") (in . "SourceGraphic") (in2 . "comp1"))))
+        (dom-append-child f (dom-node 'feColorMatrix '((result . "fbSourceGraphicAlpha") (in . "fbSourceGraphic") (values . "0 0 0 -1 0 0 0 0 -1 0 0 0 0 -1 0 0 0 0 1 0"))))
+        (dom-append-child f (dom-node 'feFlood '((result . "flood") (in . "fbSourceGraphic") (flood-opacity . "0.498039") (flood-color . "rgb(0,0,0)"))))
+        (dom-append-child f (dom-node 'feGaussianBlur '((result . "blur") (in . "fbSourceGraphic") (stdDeviation . "0.000000"))))
+        (dom-append-child f (dom-node 'feOffset '((result . "offset") (in . "blur") (dx . "4.000000") (dy . "0.000000"))))
+        (dom-append-child f (dom-node 'feComposite '((result . "comp1") (operator . "in") (in . "flood") (in2 . "offset"))))
+        (dom-append-child f (dom-node 'feComposite '((result . "comp2") (operator . "over") (in . "fbSourceGraphic") (in2 . "comp1"))))
+        (dom-append-child defs f))
+      (dom-append-child svg defs)
       ;; Left bracket
       (dom-append-child
-       svg (dom-node 'path
+       grp (dom-node 'path
                      `((d . ,(format "M %f,%f H %f C %f,%f %f,%f %f,%f V %f C %f,%f %f,%f %f,%f H %f"
                                      (* 80 s) (* 60 s) (* 50 s)
                                      (* 44 s) (* 60 s) (* 40 s) (* 64 s) (* 40 s) (* 70 s)
@@ -1874,7 +1893,7 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
                        (fill . "none") (stroke-linecap . "square"))))
       ;; Right bracket
       (dom-append-child
-       svg (dom-node 'path
+       grp (dom-node 'path
                      `((d . ,(format "M %f,%f H %f C %f,%f %f,%f %f,%f V %f C %f,%f %f,%f %f,%f H %f"
                                      (* 320 s) (* 60 s) (* 350 s)
                                      (* 356 s) (* 60 s) (* 360 s) (* 64 s) (* 360 s) (* 70 s)
@@ -1885,14 +1904,14 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
                        (fill . "none") (stroke-linecap . "square"))))
       ;; Muzzle patch (behind head)
       (dom-append-child
-       svg (dom-node 'path
+       grp (dom-node 'path
                      `((d . ,(format "M %f,%f V %f H %f V %f"
                                      (* 136.72 s) (* 250.57 s)
                                      (* 340.57 s) (* 266.72 s) (* 250.57 s)))
                        (fill . "#c5c5c5"))))
       ;; Head body
       (dom-append-child
-       svg (dom-node 'path
+       grp (dom-node 'path
                      `((d . ,(format "M %f,%f C %f,%f %f,%f %f,%f C %f,%f %f,%f %f,%f C %f,%f %f,%f %f,%f C %f,%f %f,%f %f,%f L %f,%f Z"
                                      (* 131.72 s) (* 150 s)
                                      (* 131.72 s) (* 150 s)
@@ -1911,7 +1930,7 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
                        (fill . "#ffffff"))))
       ;; Left ear outer
       (dom-append-child
-       svg (dom-node 'ellipse
+       grp (dom-node 'ellipse
                      `((cx . ,(format "%f" (* 166.72 s)))
                        (cy . ,(format "%f" (* 100.57 s)))
                        (rx . ,(format "%f" (* 18 s)))
@@ -1919,7 +1938,7 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
                        (fill . "#ffffff"))))
       ;; Crown/top tuft
       (dom-append-child
-       svg (dom-node 'path
+       grp (dom-node 'path
                      `((d . ,(format "M %f,%f L %f,%f L %f,%f"
                                      (* 163.57 s) (* 130.61 s)
                                      (* 188.34 s) (* 116.33 s)
@@ -1929,7 +1948,7 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
                        (stroke-linejoin . "round"))))
       ;; Left ear inner
       (dom-append-child
-       svg (dom-node 'ellipse
+       grp (dom-node 'ellipse
                      `((cx . ,(format "%f" (* 166.72 s)))
                        (cy . ,(format "%f" (* 105.57 s)))
                        (rx . ,(format "%f" (* 10 s)))
@@ -1937,7 +1956,7 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
                        (fill . "#C0C4C8"))))
       ;; Right ear outer
       (dom-append-child
-       svg (dom-node 'ellipse
+       grp (dom-node 'ellipse
                      `((cx . ,(format "%f" (* 236.72 s)))
                        (cy . ,(format "%f" (* 100.57 s)))
                        (rx . ,(format "%f" (* 18 s)))
@@ -1945,7 +1964,7 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
                        (fill . "#ffffff"))))
       ;; Right ear inner
       (dom-append-child
-       svg (dom-node 'ellipse
+       grp (dom-node 'ellipse
                      `((cx . ,(format "%f" (* 236.72 s)))
                        (cy . ,(format "%f" (* 105.57 s)))
                        (rx . ,(format "%f" (* 10 s)))
@@ -1953,7 +1972,7 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
                        (fill . "#C0C4C8"))))
       ;; Upper muzzle
       (dom-append-child
-       svg (dom-node 'ellipse
+       grp (dom-node 'ellipse
                      `((cx . ,(format "%f" (* 202.29 s)))
                        (cy . ,(format "%f" (* 249.58 s)))
                        (rx . ,(format "%f" (* 60 s)))
@@ -1961,19 +1980,19 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
                        (fill . "#CACDD0"))))
       ;; Lower muzzle
       (dom-append-child
-       svg (dom-node 'ellipse
+       grp (dom-node 'ellipse
                      `((cx . ,(format "%f" (* 203.29 s)))
                        (cy . ,(format "%f" (* 261.75 s)))
                        (rx . ,(format "%f" (* 42.81 s)))
                        (ry . ,(format "%f" (* 33.67 s)))
                        (fill . "#8D959B"))))
       ;; Right eye
-      (svg-circle svg (* 236.72 s) (* 222.28 s) (* 11.71 s) :fill "#1A1A1A")
+      (svg-circle grp (* 236.72 s) (* 222.28 s) (* 11.71 s) :fill "#1A1A1A")
       ;; Left eye
-      (svg-circle svg (* 166.61 s) (* 222.28 s) (* 11.71 s) :fill "#1A1A1A")
+      (svg-circle grp (* 166.61 s) (* 222.28 s) (* 11.71 s) :fill "#1A1A1A")
       ;; Nose
       (dom-append-child
-       svg (dom-node 'ellipse
+       grp (dom-node 'ellipse
                      `((cx . ,(format "%f" (* 201.72 s)))
                        (cy . ,(format "%f" (* 245.57 s)))
                        (rx . ,(format "%f" (* 12 s)))
@@ -1981,7 +2000,7 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
                        (fill . "#1A1A1A"))))
       ;; Mouth
       (dom-append-child
-       svg (dom-node 'path
+       grp (dom-node 'path
                      `((d . ,(format "M %f,%f Q %f,%f %f,%f"
                                      (* 171.72 s) (* 275.57 s)
                                      (* 201.72 s) (* 300.57 s)
@@ -1990,7 +2009,7 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
                        (fill . "none") (stroke-linecap . "round"))))
       ;; Hair curl
       (dom-append-child
-       svg (dom-node 'path
+       grp (dom-node 'path
                      `((d . ,(format "M %f,%f C %f,%f %f,%f %f,%f C %f,%f %f,%f %f,%f"
                                      (* 192.97 s) (* 106.79 s)
                                      (* 192.97 s) (* 106.79 s)
@@ -2002,6 +2021,7 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
                        (fill . "#ffffff") (stroke . "#ffffff")
                        (stroke-width . ,(format "%f" (* 2 s)))
                        (stroke-linejoin . "round"))))
+      (dom-append-child svg grp)
       (propertize " " 'display (svg-image svg :ascent 'center :scale 1.0)))))
 
 (defun ollama-buddy--create-intro-message ()

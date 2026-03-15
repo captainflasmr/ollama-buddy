@@ -12,7 +12,80 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
   <defs
-     id="defs10" />
+     id="defs10">
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Drop Shadow"
+       id="filter68"
+       x="-0.03125"
+       y="-0.0055195325"
+       width="1.0625"
+       height="1.0245614">
+      <feFlood
+         result="flood"
+         in="SourceGraphic"
+         flood-opacity="0.498039"
+         flood-color="rgb(0,0,0)"
+         id="feFlood67" />
+      <feGaussianBlur
+         result="blur"
+         in="SourceGraphic"
+         stdDeviation="0.000000"
+         id="feGaussianBlur67" />
+      <feOffset
+         result="offset"
+         in="blur"
+         dx="-4.000000"
+         dy="0.000000"
+         id="feOffset67" />
+      <feComposite
+         result="comp1"
+         operator="in"
+         in="flood"
+         in2="offset"
+         id="feComposite67" />
+      <feComposite
+         result="fbSourceGraphic"
+         operator="over"
+         in="SourceGraphic"
+         in2="comp1"
+         id="feComposite68" />
+      <feColorMatrix
+         result="fbSourceGraphicAlpha"
+         in="fbSourceGraphic"
+         values="0 0 0 -1 0 0 0 0 -1 0 0 0 0 -1 0 0 0 0 1 0"
+         id="feColorMatrix70" />
+      <feFlood
+         id="feFlood70"
+         result="flood"
+         in="fbSourceGraphic"
+         flood-opacity="0.498039"
+         flood-color="rgb(0,0,0)" />
+      <feGaussianBlur
+         id="feGaussianBlur70"
+         result="blur"
+         in="fbSourceGraphic"
+         stdDeviation="0.000000" />
+      <feOffset
+         id="feOffset70"
+         result="offset"
+         in="blur"
+         dx="4.000000"
+         dy="0.000000" />
+      <feComposite
+         id="feComposite70"
+         result="comp1"
+         operator="in"
+         in="flood"
+         in2="offset" />
+      <feComposite
+         id="feComposite71"
+         result="comp2"
+         operator="over"
+         in="fbSourceGraphic"
+         in2="comp1" />
+    </filter>
+  </defs>
   <sodipodi:namedview
      id="namedview10"
      pagecolor="#ffffff"
@@ -24,130 +97,129 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:zoom="1.7450063"
      inkscape:cx="132.09121"
-     inkscape:cy="233.52351"
+     inkscape:cy="232.95045"
      inkscape:window-width="1884"
      inkscape:window-height="1019"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="0"
      inkscape:current-layer="svg10" />
-  <rect
-     width="400"
-     height="400"
-     fill="#121212"
-     id="rect1" />
-  <path
-     d="M80 60 H50 C44 60 40 64 40 70 V330 C40 336 44 340 50 340 H80"
-     stroke="#7e4db1"
-     stroke-width="12"
-     fill="none"
-     stroke-linecap="round"
-     id="path1"
-     style="stroke-linecap:square" />
-  <path
-     d="M320 60 H350 C356 60 360 64 360 70 V330 C360 336 356 340 350 340 H320"
-     stroke="#7e4db1"
-     stroke-width="12"
-     fill="none"
-     stroke-linecap="round"
-     id="path2"
-     style="stroke-linecap:square" />
-  <path
-     d="m 136.71919,250.57306 v 90 h 130 v -90"
-     fill="#FFFFFF"
-     id="path3"
-     style="fill:#d1d1d1;fill-opacity:1" />
-  <path
-     d="m 131.719,150 c 0,0 -0.57287,118.48149 -0.57287,135.10034 0,15.0821 38.24951,47.22362 73.44003,47.14107 34.80738,-0.0817 64.74511,-34.70779 67.13303,-49.43333 C 275.15758,261.60472 271.719,150 271.719,150 l -69.99981,-29.42694 z"
-     fill="#ffffff"
-     id="path5"
-     sodipodi:nodetypes="csssccc" />
-  <ellipse
-     cx="166.71919"
-     cy="100.57307"
-     rx="18"
-     ry="45"
-     fill="#ffffff"
-     id="ellipse5" />
-  <path
-     d="m 163.57416,130.60664 24.76971,-14.2729 24.76971,11.41833"
-     fill="#ffffff"
-     stroke="#ffffff"
-     stroke-width="2.45992"
-     stroke-linejoin="round"
-     id="path4" />
-  <ellipse
-     cx="166.71919"
-     cy="105.57307"
-     rx="10"
-     ry="30"
-     fill="#c0c4c8"
-     id="ellipse6" />
-  <ellipse
-     cx="236.71919"
-     cy="100.57307"
-     rx="18"
-     ry="45"
-     fill="#ffffff"
-     id="ellipse7" />
-  <ellipse
-     cx="236.71919"
-     cy="105.57307"
-     rx="10"
-     ry="30"
-     fill="#c0c4c8"
-     id="ellipse8" />
-  <ellipse
-     cx="202.29225"
-     cy="249.5845"
-     rx="60"
-     ry="44.269363"
-     fill="#b0b5b9"
-     id="ellipse9"
-     style="fill:#cacdd0;fill-opacity:1" />
-  <ellipse
-     cx="203.29227"
-     cy="261.75049"
-     rx="42.808086"
-     ry="33.667679"
-     fill="#b0b5b9"
-     id="ellipse9-5"
-     style="fill:#8d959b;fill-opacity:1;stroke-width:0.693121" />
-  <circle
-     cx="236.71918"
-     cy="222.28081"
-     fill="#1a1a1a"
-     id="circle10"
-     style="stroke-width:0.471812;stroke-dasharray:none"
-     r="11.707745" />
-  <circle
-     cx="166.60999"
-     cy="222.28081"
-     fill="#1a1a1a"
-     id="circle10-5"
-     style="stroke-width:0.471812;stroke-dasharray:none"
-     r="11.707745" />
-  <ellipse
-     cx="201.71919"
-     cy="245.57306"
-     rx="12"
-     ry="9"
-     fill="#1a1a1a"
-     id="ellipse10" />
-  <path
-     d="m 171.71919,275.57306 q 30,25 60,0"
-     stroke="#1a1a1a"
-     stroke-width="5"
-     fill="none"
-     stroke-linecap="round"
-     id="path10"
-     style="stroke-width:7;stroke-dasharray:none" />
-  <path
-     d="m 192.97353,106.78822 c 0,0 13.45057,1.26071 17.95645,5.62389 5.80849,5.62454 7.99062,22.90232 7.99062,22.90232"
-     fill="#ffffff"
-     stroke="#ffffff"
-     stroke-width="2"
-     stroke-linejoin="round"
-     id="path4-6"
-     sodipodi:nodetypes="csc" />
+  <g
+     id="g1"
+     style="filter:url(#filter68)">
+    <path
+       d="M80 60 H50 C44 60 40 64 40 70 V330 C40 336 44 340 50 340 H80"
+       stroke="#7e4db1"
+       stroke-width="12"
+       fill="none"
+       stroke-linecap="round"
+       id="path1"
+       style="stroke-linecap:square" />
+    <path
+       d="M320 60 H350 C356 60 360 64 360 70 V330 C360 336 356 340 350 340 H320"
+       stroke="#7e4db1"
+       stroke-width="12"
+       fill="none"
+       stroke-linecap="round"
+       id="path2"
+       style="stroke-linecap:square" />
+    <path
+       d="m 136.71919,250.57306 v 90 h 130 v -90"
+       fill="#FFFFFF"
+       id="path3"
+       style="fill:#d1d1d1;fill-opacity:1" />
+    <path
+       d="m 131.719,150 c 0,0 -0.57287,118.48149 -0.57287,135.10034 0,15.0821 38.24951,47.22362 73.44003,47.14107 34.80738,-0.0817 64.74511,-34.70779 67.13303,-49.43333 C 275.15758,261.60472 271.719,150 271.719,150 l -69.99981,-29.42694 z"
+       fill="#ffffff"
+       id="path5"
+       sodipodi:nodetypes="csssccc" />
+    <ellipse
+       cx="166.71919"
+       cy="100.57307"
+       rx="18"
+       ry="45"
+       fill="#ffffff"
+       id="ellipse5" />
+    <path
+       d="m 163.57416,130.60664 24.76971,-14.2729 24.76971,11.41833"
+       fill="#ffffff"
+       stroke="#ffffff"
+       stroke-width="2.45992"
+       stroke-linejoin="round"
+       id="path4" />
+    <ellipse
+       cx="166.71919"
+       cy="105.57307"
+       rx="10"
+       ry="30"
+       fill="#c0c4c8"
+       id="ellipse6" />
+    <ellipse
+       cx="236.71919"
+       cy="100.57307"
+       rx="18"
+       ry="45"
+       fill="#ffffff"
+       id="ellipse7" />
+    <ellipse
+       cx="236.71919"
+       cy="105.57307"
+       rx="10"
+       ry="30"
+       fill="#c0c4c8"
+       id="ellipse8" />
+    <ellipse
+       cx="202.29225"
+       cy="249.5845"
+       rx="60"
+       ry="44.269363"
+       fill="#b0b5b9"
+       id="ellipse9"
+       style="fill:#cacdd0;fill-opacity:1" />
+    <ellipse
+       cx="203.29227"
+       cy="261.75049"
+       rx="42.808086"
+       ry="33.667679"
+       fill="#b0b5b9"
+       id="ellipse9-5"
+       style="fill:#8d959b;fill-opacity:1;stroke-width:0.693121" />
+    <circle
+       cx="236.71918"
+       cy="222.28081"
+       fill="#1a1a1a"
+       id="circle10"
+       style="stroke-width:0.471812;stroke-dasharray:none"
+       r="11.707745" />
+    <circle
+       cx="166.60999"
+       cy="222.28081"
+       fill="#1a1a1a"
+       id="circle10-5"
+       style="stroke-width:0.471812;stroke-dasharray:none"
+       r="11.707745" />
+    <ellipse
+       cx="201.71919"
+       cy="245.57306"
+       rx="12"
+       ry="9"
+       fill="#1a1a1a"
+       id="ellipse10" />
+    <path
+       d="m 171.71919,275.57306 q 30,25 60,0"
+       stroke="#1a1a1a"
+       stroke-width="5"
+       fill="none"
+       stroke-linecap="round"
+       id="path10"
+       style="stroke-width:7;stroke-dasharray:none" />
+    <path
+       d="m 192.97353,106.78822 c 0,0 13.45057,1.26071 17.95645,5.62389 5.80849,5.62454 7.99062,22.90232 7.99062,22.90232"
+       fill="#ffffff"
+       stroke="#ffffff"
+       stroke-width="2"
+       stroke-linejoin="round"
+       id="path4-6"
+       sodipodi:nodetypes="csc" />
+  </g>
 </svg>
