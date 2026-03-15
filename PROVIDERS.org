@@ -9,18 +9,84 @@
 
 Overview of all external LLM providers supported by Ollama Buddy, including pricing, free tiers, and recommendations.
 
+** How Provider Registration Works
+
+Ollama Buddy uses a generic provider system built on =ollama-buddy-provider-create=.  There are two ways to add a provider:
+
+*** Dedicated module (existing providers)
+
+These have their own =.el= file with =defcustom= variables:
+
+#+begin_src elisp
+(require 'ollama-buddy-openai)
+(setq ollama-buddy-openai-api-key
+      (auth-source-pick-first-password :host "ollama-buddy-openai" :user "apikey"))
+#+end_src
+
+*** Direct registration (any OpenAI-compatible provider)
+
+Add any provider with a single call in your init file -- no extra files needed:
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "Groq"
+ :prefix "q:"
+ :api-key (lambda () (auth-source-pick-first-password :host "ollama-buddy-groq" :user "apikey"))
+ :endpoint "https://api.groq.com/openai/v1/chat/completions"
+ :models '("llama-3.3-70b-versatile" "gemma2-9b-it")
+ :default-model "llama-3.3-70b-versatile")
+#+end_src
+
+*** Provider create parameters
+
+| Parameter          | Required | Description                                              |
+|--------------------+----------+----------------------------------------------------------|
+| =:name=            | yes      | Display name (e.g. "Groq")                               |
+| =:prefix=          | yes      | Model prefix (e.g. "q:")                                 |
+| =:endpoint=        | yes      | Chat completions API URL                                 |
+| =:api-key=         | no       | String, function returning string, or nil                |
+| =:api-type=        | no       | ='openai= (default), ='claude=, or ='gemini=             |
+| =:models=          | no       | Static list of model names                               |
+| =:models-endpoint= | no      | URL for dynamic model discovery                          |
+| =:models-filter=   | no      | Predicate to filter discovered model IDs                 |
+| =:default-model=   | no      | Default model name (without prefix)                      |
+| =:temperature=     | no      | Float, default 0.7                                       |
+| =:max-tokens=      | no      | Integer or nil                                           |
+| =:extra-headers=   | no      | Additional HTTP headers alist                            |
+
 ** Quick Comparison
 
-| Provider   | Prefix | Cheapest Input/1M   | Free Tier                   | Best For                |
-|------------+--------+---------------------+-----------------------------+-------------------------|
-| OpenAI     | =a:=   | $0.15 (GPT-4o Mini) | $5 one-time credits         | Broadest ecosystem      |
-| Claude     | =c:=   | $1.00 (Haiku 4.5)   | $5-10 one-time credits      | Long context, coding    |
-| Gemini     | =g:=   | $0.10 (Flash-Lite)  | 1K req/day ongoing free     | Free experimentation    |
-| Grok       | =k:=   | $0.20 (4.1 Fast)    | $25 credits + $150/mo*      | 2M context, live search |
-| Copilot    | =p:=   | $0/mo (Free plan)   | 50 premium req/mo           | IDE coding, multi-model |
-| Codestral  | =s:=   | $0.30 (Codestral)   | Free experiment (1B tok/mo) | Code-specific tasks     |
-| DeepSeek   | =d:=   | $0.07 (V3 off-peak) | 5M free tokens              | Cheapest capable model  |
-| OpenRouter | =r:=   | Free (many models)  | Free models available       | Access 400+ models      |
+*** Dedicated providers (have =.el= modules)
+
+| Provider   | Prefix | API Type | Cheapest Input/1M   | Free Tier                   | Best For                |
+|------------+--------+----------+---------------------+-----------------------------+-------------------------|
+| OpenAI     | =a:=   | openai   | $0.15 (GPT-4o Mini) | $5 one-time credits         | Broadest ecosystem      |
+| Claude     | =c:=   | claude   | $1.00 (Haiku 4.5)   | $5-10 one-time credits      | Long context, coding    |
+| Gemini     | =g:=   | gemini   | $0.10 (Flash-Lite)  | 1K req/day ongoing free     | Free experimentation    |
+| Grok       | =k:=   | openai   | $0.20 (4.1 Fast)    | $25 credits + $150/mo*      | 2M context, live search |
+| Copilot    | =p:=   | openai   | $0/mo (Free plan)   | 50 premium req/mo           | IDE coding, multi-model |
+| Codestral  | =s:=   | openai   | $0.30 (Codestral)   | Free experiment (1B tok/mo) | Code-specific tasks     |
+| DeepSeek   | =d:=   | openai   | $0.07 (V3 off-peak) | 5M free tokens              | Cheapest capable model  |
+| OpenRouter | =r:=   | openai   | Free (many models)  | Free models available       | Access 400+ models      |
+
+*** Generic providers (add with =ollama-buddy-provider-create=)
+
+| Provider   | Prefix | API Type | Cheapest Input/1M     | Free Tier               | Best For                    |
+|------------+--------+----------+-----------------------+-------------------------+-----------------------------|
+| Groq       | =q:=   | openai   | Free (open models)    | Generous ongoing free   | Fastest free inference      |
+| Mistral    | =m:=   | openai   | $0.10 (Small 3.2)     | Free experiment plan    | European, open-weight       |
+| Cerebras   | =b:=   | openai   | Free (open models)    | Ongoing free tier       | Fastest inference (~2K t/s) |
+| Perplexity | =x:=   | openai   | $1.00 (Sonar)         | None (paid only)        | Search-augmented answers    |
+| Together   | =t:=   | openai   | $0.05 (small models)  | $1 free credits         | Largest open model catalog  |
+| Fireworks  | =f:=   | openai   | $0.10 (small models)  | $1 free credits         | Fast open model hosting     |
+| SambaNova  | =n:=   | openai   | Free (open models)    | Ongoing free tier       | Fast free inference         |
+| Cohere     | =h:=   | openai   | $0.30 (Command R)     | Free trial keys         | RAG, enterprise             |
+| NVIDIA NIM | =v:=   | openai   | Free (1K req/day)     | 1K requests/day free    | NVIDIA-optimised models     |
+| HuggingFace| =e:=   | openai   | Free (rate-limited)   | Serverless free tier    | Any HF-hosted model         |
+
+* Dedicated Providers
+
+These providers have their own =.el= module with =defcustom= variables for full customisation.  Each section shows both the traditional =require= setup and the equivalent =ollama-buddy-provider-create= call.
 
 ** OpenAI (=a:=)
 
@@ -30,6 +96,20 @@ Overview of all external LLM providers supported by Ollama Buddy, including pric
 (require 'ollama-buddy-openai)
 (setq ollama-buddy-openai-api-key
       (auth-source-pick-first-password :host "ollama-buddy-openai" :user "apikey"))
+#+end_src
+
+Equivalent =ollama-buddy-provider-create= call (used internally):
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "OpenAI"
+ :prefix "a:"
+ :api-key (lambda () (auth-source-pick-first-password :host "ollama-buddy-openai" :user "apikey"))
+ :endpoint "https://api.openai.com/v1/chat/completions"
+ :models-endpoint "https://api.openai.com/v1/models"
+ :models-filter (lambda (id) (string-match-p "\\(gpt\\|o[0-9]\\)" id))
+ :default-model "gpt-4o"
+ :temperature 0.7)
 #+end_src
 
 *** Models
@@ -70,6 +150,20 @@ Overview of all external LLM providers supported by Ollama Buddy, including pric
       (auth-source-pick-first-password :host "ollama-buddy-claude" :user "apikey"))
 #+end_src
 
+Equivalent =ollama-buddy-provider-create= call:
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "Claude"
+ :prefix "c:"
+ :api-type 'claude
+ :api-key (lambda () (auth-source-pick-first-password :host "ollama-buddy-claude" :user "apikey"))
+ :endpoint "https://api.anthropic.com/v1/messages"
+ :models-endpoint "https://api.anthropic.com/v1/models"
+ :default-model "claude-sonnet-4-6"
+ :temperature 0.7)
+#+end_src
+
 *** Models
 
 - Claude Opus 4.6 (most capable, 1M context)
@@ -104,6 +198,21 @@ Overview of all external LLM providers supported by Ollama Buddy, including pric
 (require 'ollama-buddy-gemini)
 (setq ollama-buddy-gemini-api-key
       (auth-source-pick-first-password :host "ollama-buddy-gemini" :user "apikey"))
+#+end_src
+
+Equivalent =ollama-buddy-provider-create= call:
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "Gemini"
+ :prefix "g:"
+ :api-type 'gemini
+ :api-key (lambda () (auth-source-pick-first-password :host "ollama-buddy-gemini" :user "apikey"))
+ :endpoint "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent"
+ :models-endpoint "https://generativelanguage.googleapis.com/v1/models"
+ :models-filter (lambda (id) (string-match-p "gemini" id))
+ :default-model "gemini-2.5-flash"
+ :temperature 0.7)
 #+end_src
 
 *** Models
@@ -153,6 +262,19 @@ Overview of all external LLM providers supported by Ollama Buddy, including pric
       (auth-source-pick-first-password :host "ollama-buddy-grok" :user "apikey"))
 #+end_src
 
+Equivalent =ollama-buddy-provider-create= call:
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "Grok"
+ :prefix "k:"
+ :api-key (lambda () (auth-source-pick-first-password :host "ollama-buddy-grok" :user "apikey"))
+ :endpoint "https://api.x.ai/v1/chat/completions"
+ :models-endpoint "https://api.x.ai/v1/models"
+ :default-model "grok-3"
+ :temperature 0.7)
+#+end_src
+
 *** Models
 
 - Grok 4 (flagship)
@@ -190,6 +312,8 @@ Tool invocations (web search, code execution) cost an additional $2.50-$5.00 per
 ;; No API key needed -- uses OAuth device flow
 ;; Run M-x ollama-buddy-copilot-login to authenticate
 #+end_src
+
+Note: Copilot uses OAuth authentication rather than =ollama-buddy-provider-create=.  It cannot be registered as a generic provider.
 
 *** How It Works
 
@@ -239,6 +363,19 @@ Extra premium requests cost $0.04 each.
       (auth-source-pick-first-password :host "ollama-buddy-codestral" :user "apikey"))
 #+end_src
 
+Equivalent =ollama-buddy-provider-create= call:
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "Codestral"
+ :prefix "s:"
+ :api-key (lambda () (auth-source-pick-first-password :host "ollama-buddy-codestral" :user "apikey"))
+ :endpoint "https://api.mistral.ai/v1/chat/completions"
+ :models '("codestral-latest")
+ :default-model "codestral-latest"
+ :temperature 0.7)
+#+end_src
+
 *** Models
 
 - Codestral 2508 (code-specialised, 256K context)
@@ -276,6 +413,19 @@ Extra premium requests cost $0.04 each.
 (require 'ollama-buddy-deepseek)
 (setq ollama-buddy-deepseek-api-key
       (auth-source-pick-first-password :host "ollama-buddy-deepseek" :user "apikey"))
+#+end_src
+
+Equivalent =ollama-buddy-provider-create= call:
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "DeepSeek"
+ :prefix "d:"
+ :api-key (lambda () (auth-source-pick-first-password :host "ollama-buddy-deepseek" :user "apikey"))
+ :endpoint "https://api.deepseek.com/chat/completions"
+ :models '("deepseek-chat" "deepseek-reasoner")
+ :default-model "deepseek-chat"
+ :temperature 0.7)
 #+end_src
 
 *** Models
@@ -327,6 +477,22 @@ During 16:30-00:30 GMT:
       "openai\\|anthropic\\|google\\|deepseek")
 #+end_src
 
+Equivalent =ollama-buddy-provider-create= call:
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "OpenRouter"
+ :prefix "r:"
+ :api-key (lambda () (auth-source-pick-first-password :host "ollama-buddy-openrouter" :user "apikey"))
+ :endpoint "https://openrouter.ai/api/v1/chat/completions"
+ :models-endpoint "https://openrouter.ai/api/v1/models"
+ :models-filter (lambda (id) (string-match-p "openai\\|anthropic\\|google" id))
+ :default-model "openai/gpt-4o"
+ :extra-headers '(("HTTP-Referer" . "https://github.com/captainflasmr/ollama-buddy")
+                  ("X-Title" . "ollama-buddy"))
+ :temperature 0.7)
+#+end_src
+
 *** How It Works
 
 OpenRouter is an *aggregator/proxy* providing a single unified API to access 400+ models from all major providers. It passes through provider pricing with a 5.5% fee on credit purchases but no per-token markup.
@@ -362,29 +528,559 @@ Dozens of models available for free:
 - Free models have low rate limits
 - Dependent on OpenRouter uptime in addition to underlying provider
 
+* Generic Providers
+
+These providers can be added with a single =ollama-buddy-provider-create= call in your init file.  No extra =.el= files needed.  All use the OpenAI-compatible API format.
+
+** Groq (=q:=)
+
+Groq runs open models on custom LPU hardware, delivering the fastest inference speeds available for open models.  Generous ongoing free tier makes it ideal for experimentation.
+
+*** Setup
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "Groq"
+ :prefix "q:"
+ :api-key (lambda () (auth-source-pick-first-password :host "ollama-buddy-groq" :user "apikey"))
+ :endpoint "https://api.groq.com/openai/v1/chat/completions"
+ :models-endpoint "https://api.groq.com/openai/v1/models"
+ :models-filter (lambda (id) (not (string-match-p "whisper\\|distil\\|tts\\|guard\\|tool-use\\|versatile\\|playai" id)))
+ :default-model "llama-3.3-70b-versatile"
+ :temperature 0.7)
+#+end_src
+
+Get your API key at https://console.groq.com/keys
+
+*** Models
+
+- Llama 3.3 70B, Llama 3.1 8B (Meta)
+- Gemma 2 9B (Google)
+- Mixtral 8x7B (Mistral)
+- Qwen QwQ 32B (reasoning)
+- DeepSeek R1 Distill (reasoning)
+
+*** Pricing (per 1M tokens)
+
+| Model               | Input | Output |
+|---------------------+-------+--------|
+| Llama 3.1 8B        | $0.05 | $0.08  |
+| Llama 3.3 70B       | $0.59 | $0.79  |
+| DeepSeek R1 Distill | $0.75 | $0.99  |
+
+*** Free Tier
+
+- No credit card required
+- 30 requests/minute, 1,000 requests/day on most models
+- 6,000 tokens/minute (varies by model)
+
+*** Why Use Groq Over OpenRouter
+
+- Direct API access, no routing overhead
+- Fastest inference speeds (custom LPU hardware)
+- Very generous free tier for open models
+
+** Mistral (=m:=)
+
+The full Mistral AI platform, not just Codestral.  European company with strong open-weight models and a generous free experiment plan.
+
+*** Setup
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "Mistral"
+ :prefix "m:"
+ :api-key (lambda () (auth-source-pick-first-password :host "ollama-buddy-mistral" :user "apikey"))
+ :endpoint "https://api.mistral.ai/v1/chat/completions"
+ :models-endpoint "https://api.mistral.ai/v1/models"
+ :models-filter (lambda (id) (string-match-p "mistral\\|pixtral\\|ministral\\|devstral" id))
+ :default-model "mistral-large-latest"
+ :temperature 0.7)
+#+end_src
+
+Get your API key at https://console.mistral.ai/api-keys
+
+*** Models
+
+- Mistral Large (flagship, 128K context)
+- Mistral Small 3.2 (efficient, 128K context)
+- Ministral 3B/8B (edge/mobile)
+- Pixtral Large (multimodal/vision)
+- Devstral (coding agent)
+
+*** Pricing (per 1M tokens)
+
+| Model         | Input | Output |
+|---------------+-------+--------|
+| Ministral 3B  | $0.04 | $0.04  |
+| Small 3.2     | $0.10 | $0.30  |
+| Pixtral Large | $0.80 | $2.40  |
+| Mistral Large | $2.00 | $6.00  |
+
+*** Free Tier
+
+Experiment plan (same as Codestral):
+
+- ~1 RPS rate limit
+- Up to 1 billion tokens/month on select models
+- No credit card required
+
+*** Notable Features
+
+- European company (EU data residency)
+- Open-weight models available for self-hosting
+- Function calling, JSON mode
+- Separate from the =s:= Codestral module -- use both for full Mistral access
+
+** Cerebras (=b:=)
+
+Cerebras offers the fastest inference available -- up to ~2,000 tokens/second on their custom wafer-scale hardware.  Excellent free tier.
+
+*** Setup
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "Cerebras"
+ :prefix "b:"
+ :api-key (lambda () (auth-source-pick-first-password :host "ollama-buddy-cerebras" :user "apikey"))
+ :endpoint "https://api.cerebras.ai/v1/chat/completions"
+ :models '("llama-4-scout-17b-16e-instruct" "llama3.3-70b" "llama3.1-8b" "qwen-3-32b")
+ :default-model "llama3.3-70b"
+ :temperature 0.7)
+#+end_src
+
+Get your API key at https://cloud.cerebras.ai
+
+*** Models
+
+- Llama 4 Scout 17B (latest)
+- Llama 3.3 70B, Llama 3.1 8B
+- Qwen 3 32B
+- DeepSeek R1 Distill
+
+*** Pricing (per 1M tokens)
+
+| Model          | Input | Output |
+|----------------+-------+--------|
+| Llama 3.1 8B   | $0.10 | $0.10  |
+| Llama 3.3 70B  | $0.60 | $0.60  |
+| Llama 4 Scout  | $0.60 | $0.60  |
+
+*** Free Tier
+
+- No credit card required
+- Rate limited but functional for development
+- ~30 requests/minute
+
+*** Why Use Cerebras
+
+- Fastest inference available -- responses feel instant
+- Great for interactive/conversational use where latency matters
+- Free tier is generous enough for regular use
+
+** Perplexity (=x:=)
+
+Perplexity is unique: a search-augmented LLM that grounds answers in real-time web results.  Every response includes citations.  Ideal for research and fact-checking.
+
+*** Setup
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "Perplexity"
+ :prefix "x:"
+ :api-key (lambda () (auth-source-pick-first-password :host "ollama-buddy-perplexity" :user "apikey"))
+ :endpoint "https://api.perplexity.ai/chat/completions"
+ :models '("sonar" "sonar-pro" "sonar-reasoning" "sonar-reasoning-pro" "sonar-deep-research")
+ :default-model "sonar-pro"
+ :temperature 0.7)
+#+end_src
+
+Get your API key at https://www.perplexity.ai/settings/api
+
+*** Models
+
+- Sonar (fast, lightweight search)
+- Sonar Pro (comprehensive search, more sources)
+- Sonar Reasoning (multi-step reasoning with search)
+- Sonar Reasoning Pro (most thorough)
+- Sonar Deep Research (long-form research reports)
+
+*** Pricing (per 1M tokens)
+
+| Model              | Input | Output | Search Cost  |
+|--------------------+-------+--------+--------------|
+| Sonar              | $1.00 | $1.00  | $5/1K search |
+| Sonar Pro          | $3.00 | $15.00 | $5/1K search |
+| Sonar Reasoning    | $1.00 | $5.00  | $5/1K search |
+| Sonar Deep Research| $2.00 | $8.00  | $5/1K search |
+
+*** Free Tier
+
+- No ongoing free tier for API
+- New accounts may receive initial credits
+
+*** Notable Features
+
+- Every response is grounded in real-time web search
+- Inline citations with source URLs
+- Unique capability -- no other provider does this natively
+- Complements Ollama Buddy's own =@search()= feature
+
+** Together AI (=t:=)
+
+Together AI hosts the largest catalog of open-source models with OpenAI-compatible APIs.  Good for accessing specific model variants not available elsewhere.
+
+*** Setup
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "Together"
+ :prefix "t:"
+ :api-key (lambda () (auth-source-pick-first-password :host "ollama-buddy-together" :user "apikey"))
+ :endpoint "https://api.together.xyz/v1/chat/completions"
+ :models-endpoint "https://api.together.xyz/v1/models"
+ :models-filter (lambda (id) (string-match-p "Llama\\|Qwen\\|DeepSeek\\|Mistral" id))
+ :default-model "meta-llama/Llama-3.3-70B-Instruct-Turbo"
+ :temperature 0.7)
+#+end_src
+
+Get your API key at https://api.together.ai/settings/api-keys
+
+*** Models
+
+100+ open models including:
+
+- Meta Llama 3.3 70B, Llama 3.1 405B
+- Qwen 2.5 72B, Qwen QwQ 32B
+- DeepSeek V3, DeepSeek R1
+- Mistral, Mixtral variants
+- Many fine-tuned and community models
+
+*** Pricing (per 1M tokens)
+
+| Model               | Input | Output |
+|---------------------+-------+--------|
+| Llama 3.1 8B Turbo  | $0.05 | $0.05  |
+| Llama 3.3 70B Turbo | $0.88 | $0.88  |
+| DeepSeek V3         | $0.50 | $0.50  |
+| Llama 3.1 405B      | $3.50 | $3.50  |
+
+*** Free Tier
+
+- $1 free credits on signup
+- Pay-as-you-go after that
+
+*** Notable Features
+
+- Largest selection of open models
+- Serverless and dedicated endpoints
+- Fine-tuning support
+- Speculative decoding for faster inference
+
+** Fireworks AI (=f:=)
+
+Fireworks specialises in fast, cost-effective inference for open models with an OpenAI-compatible API.
+
+*** Setup
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "Fireworks"
+ :prefix "f:"
+ :api-key (lambda () (auth-source-pick-first-password :host "ollama-buddy-fireworks" :user "apikey"))
+ :endpoint "https://api.fireworks.ai/inference/v1/chat/completions"
+ :models-endpoint "https://api.fireworks.ai/inference/v1/models"
+ :default-model "accounts/fireworks/models/llama-v3p3-70b-instruct"
+ :temperature 0.7)
+#+end_src
+
+Get your API key at https://fireworks.ai/account/api-keys
+
+*** Models
+
+- Llama 3.3 70B, Llama 3.1 405B
+- Mixtral, Mistral variants
+- DeepSeek V3, DeepSeek R1
+- Qwen 2.5 series
+- FireFunction (optimised for function calling)
+
+*** Pricing (per 1M tokens)
+
+| Model          | Input | Output |
+|----------------+-------+--------|
+| Llama 3.1 8B   | $0.10 | $0.10  |
+| Llama 3.3 70B  | $0.90 | $0.90  |
+| DeepSeek V3    | $0.90 | $0.90  |
+| Llama 3.1 405B | $3.00 | $3.00  |
+
+*** Free Tier
+
+- $1 free credits on signup
+- Pay-as-you-go after that
+
+*** Notable Features
+
+- Fast inference with speculative decoding
+- Competitive pricing on large models
+- Function calling support
+- On-demand and serverless deployment options
+
+** SambaNova (=n:=)
+
+SambaNova runs models on custom RDU hardware with very fast inference.  Their free tier is one of the more generous ongoing options.
+
+*** Setup
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "SambaNova"
+ :prefix "n:"
+ :api-key (lambda () (auth-source-pick-first-password :host "ollama-buddy-sambanova" :user "apikey"))
+ :endpoint "https://api.sambanova.ai/v1/chat/completions"
+ :models '("Meta-Llama-3.3-70B-Instruct"
+           "DeepSeek-R1-Distill-Llama-70B"
+           "Qwen2.5-72B-Instruct"
+           "QwQ-32B")
+ :default-model "Meta-Llama-3.3-70B-Instruct"
+ :temperature 0.7)
+#+end_src
+
+Get your API key at https://cloud.sambanova.ai/apis
+
+*** Models
+
+- Llama 3.3 70B, Llama 3.1 405B
+- DeepSeek R1 Distill 70B
+- Qwen 2.5 72B
+- QwQ 32B (reasoning)
+
+*** Pricing
+
+- Free tier available with rate limits
+- Paid plans for higher throughput
+
+*** Free Tier
+
+- No credit card required
+- Rate limited but usable for development
+- Access to large models (70B+) for free
+
+*** Notable Features
+
+- Custom RDU hardware for fast inference
+- Access to large models on the free tier
+- Good for trying 70B+ models without local hardware
+
+** Cohere (=h:=)
+
+Cohere specialises in enterprise NLP with strong RAG capabilities.  Their Command R models are optimised for retrieval-augmented generation.
+
+*** Setup
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "Cohere"
+ :prefix "h:"
+ :api-key (lambda () (auth-source-pick-first-password :host "ollama-buddy-cohere" :user "apikey"))
+ :endpoint "https://api.cohere.com/v2/chat"
+ :models '("command-r-plus" "command-r" "command-a-03-2025")
+ :default-model "command-r-plus"
+ :temperature 0.7)
+#+end_src
+
+Get your API key at https://dashboard.cohere.com/api-keys
+
+*** Models
+
+- Command A (latest flagship)
+- Command R+ (previous flagship, strong RAG)
+- Command R (efficient, good for most tasks)
+
+*** Pricing (per 1M tokens)
+
+| Model      | Input | Output |
+|------------+-------+--------|
+| Command R  | $0.30 | $0.60  |
+| Command R+ | $2.50 | $10.00 |
+| Command A  | $2.50 | $10.00 |
+
+*** Free Tier
+
+- Trial API keys available
+- Rate limited (20 requests/minute)
+
+*** Notable Features
+
+- Best-in-class RAG with built-in citation generation
+- Multilingual support (100+ languages)
+- Enterprise-focused with data privacy commitments
+- Embeddings API for vector search
+
+** NVIDIA NIM (=v:=)
+
+NVIDIA NIM provides optimised inference for models running on NVIDIA hardware.  Free tier gives 1,000 requests/day.
+
+*** Setup
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "NVIDIA"
+ :prefix "v:"
+ :api-key (lambda () (auth-source-pick-first-password :host "ollama-buddy-nvidia" :user "apikey"))
+ :endpoint "https://integrate.api.nvidia.com/v1/chat/completions"
+ :models '("meta/llama-3.3-70b-instruct"
+           "nvidia/llama-3.1-nemotron-70b-instruct"
+           "deepseek-ai/deepseek-r1")
+ :default-model "meta/llama-3.3-70b-instruct"
+ :temperature 0.7)
+#+end_src
+
+Get your API key at https://build.nvidia.com
+
+*** Models
+
+- Llama 3.3 70B (Meta)
+- Nemotron 70B (NVIDIA fine-tune)
+- DeepSeek R1
+- Mistral, Mixtral variants
+- Various NVIDIA-optimised models
+
+*** Pricing
+
+- 1,000 free requests/day
+- Pay-as-you-go for higher volume
+
+*** Free Tier
+
+- 1,000 requests/day (generous)
+- No credit card required
+- Access to all hosted models
+
+*** Notable Features
+
+- NVIDIA TensorRT-LLM optimised inference
+- Good for evaluating models before self-hosting on NVIDIA GPUs
+- Wide selection of optimised open models
+
+** HuggingFace Inference (=e:=)
+
+HuggingFace's serverless inference API lets you run any model hosted on the Hub.  Free tier with rate limiting, or paid for dedicated endpoints.
+
+*** Setup
+
+#+begin_src elisp
+(ollama-buddy-provider-create
+ :name "HuggingFace"
+ :prefix "e:"
+ :api-key (lambda () (auth-source-pick-first-password :host "ollama-buddy-huggingface" :user "apikey"))
+ :endpoint "https://api-inference.huggingface.co/v1/chat/completions"
+ :models '("meta-llama/Llama-3.3-70B-Instruct"
+           "Qwen/Qwen2.5-72B-Instruct"
+           "mistralai/Mistral-7B-Instruct-v0.3"
+           "microsoft/Phi-3-mini-4k-instruct")
+ :default-model "meta-llama/Llama-3.3-70B-Instruct"
+ :temperature 0.7)
+#+end_src
+
+Get your API token at https://huggingface.co/settings/tokens
+
+*** Models
+
+Any chat model hosted on HuggingFace Hub, including:
+
+- Meta Llama 3.3, 3.1 series
+- Qwen 2.5 series
+- Mistral / Mixtral variants
+- Microsoft Phi series
+- Community fine-tunes and experimental models
+
+*** Pricing
+
+- Serverless: free with rate limits, or $0.10-$0.30/1M tokens (PRO)
+- Dedicated endpoints: from $0.60/hour
+
+*** Free Tier
+
+- Serverless inference available for free
+- Rate limited (~5 requests/minute)
+- HuggingFace PRO ($9/mo) gives higher limits
+
+*** Notable Features
+
+- Access to any model on the Hub (thousands of models)
+- Try experimental/community models not available anywhere else
+- Same API format for all models
+- Good for evaluating niche or fine-tuned models
+
 * Recommendations
 
 ** For Free Usage
 
 1. *Google Gemini* -- most generous ongoing free tier (1K req/day)
-2. *Mistral Codestral* -- experiment plan with 1B tokens/month
-3. *OpenRouter* -- many free models available
-4. *GitHub Copilot Free* -- 50 premium requests/month across frontier models
+2. *Groq* -- fast free inference for open models
+3. *Cerebras* -- fastest inference, free tier
+4. *SambaNova* -- free access to 70B+ models
+5. *NVIDIA NIM* -- 1K free requests/day
+6. *Mistral / Codestral* -- experiment plan with 1B tokens/month
+7. *OpenRouter* -- many free models available
+8. *GitHub Copilot Free* -- 50 premium requests/month across frontier models
 
 ** For Cheapest Per-Token
 
 1. *DeepSeek V3* -- $0.14/1M input (as low as $0.07 off-peak)
 2. *Gemini Flash-Lite* -- $0.10/1M input
 3. *Grok 4.1 Fast* -- $0.20/1M input (strong performance for the price)
+4. *Groq / Together / Fireworks* -- competitive pricing on open models
 
 ** For Best Quality
 
 1. *Claude Opus 4.6* -- $5/1M input, 1M context
 2. *GPT-5* -- $1.25/1M input, broad capabilities
 3. *Grok 4* -- $3/1M input, 2M context with live search
+4. *Gemini 2.5 Pro* -- $1.25/1M input, 2M context
+
+** For Fastest Inference
+
+1. *Cerebras* -- ~2,000 tokens/second on custom wafer-scale hardware
+2. *Groq* -- custom LPU hardware, very low latency
+3. *SambaNova* -- custom RDU hardware
+4. *Fireworks* -- speculative decoding for fast open model inference
 
 ** For Coding Tasks
 
 1. *Codestral* -- purpose-built for code, 256K context, free experiment plan
 2. *DeepSeek V3/R1* -- excellent code capabilities at lowest cost
 3. *GitHub Copilot* -- IDE-integrated, multi-model access
+
+** For Research / Fact-Checking
+
+1. *Perplexity Sonar* -- every response grounded in live web search with citations
+2. *Grok* -- native real-time web search
+3. *Gemini* -- grounding with Google Search
+
+** Suggested Prefix Map
+
+For reference, here is the complete prefix allocation:
+
+| Prefix | Provider     | Type      |
+|--------+--------------+-----------|
+| =o:=   | Ollama local | dedicated |
+| =u:=   | Ollama cloud | dedicated |
+| =a:=   | OpenAI       | dedicated |
+| =c:=   | Claude       | dedicated |
+| =g:=   | Gemini       | dedicated |
+| =k:=   | Grok         | dedicated |
+| =p:=   | Copilot      | dedicated |
+| =s:=   | Codestral    | dedicated |
+| =d:=   | DeepSeek     | dedicated |
+| =r:=   | OpenRouter   | dedicated |
+| =q:=   | Groq         | generic   |
+| =m:=   | Mistral      | generic   |
+| =b:=   | Cerebras     | generic   |
+| =x:=   | Perplexity   | generic   |
+| =t:=   | Together AI  | generic   |
+| =f:=   | Fireworks AI | generic   |
+| =n:=   | SambaNova    | generic   |
+| =h:=   | Cohere       | generic   |
+| =v:=   | NVIDIA NIM   | generic   |
+| =e:=   | HuggingFace  | generic   |
