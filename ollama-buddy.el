@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 4.0.1
+;; Version: 4.1.0
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -208,11 +208,14 @@ Returns the position where the response content should start."
                    (invisible-p (1- (point))))
           (insert "\n"))
         (insert "\n")
-        (let ((avg-wait (ollama-buddy--model-average-wait-time model)))
+        (let ((avg-wait (ollama-buddy--model-average-wait-time model))
+              (heading-start (point)))
           (if has-images
               (insert (format "** [%s: RESPONSE with %d image(s)]"
                               model (length (or (bound-and-true-p ollama-buddy--current-attachments) nil))))
             (insert (format "** [%s: RESPONSE]" model)))
+          ;; Save marker for property drawer insertion after response completes
+          (setq ollama-buddy--response-heading-marker (copy-marker heading-start))
           ;; Insert countdown estimate before the closing ]
           (when (and avg-wait (>= avg-wait 1))
             (backward-char 1)  ; before ]
@@ -2319,14 +2322,6 @@ Captures the elapsed wait duration before clearing."
                             (format " ~%ds" remaining)
                           (format " +%ds" (abs remaining))))))))))))
 
-(defun ollama-buddy-toggle-token-display ()
-  "Toggle display of token statistics after each response."
-  (interactive)
-  (setq ollama-buddy-display-token-stats (not ollama-buddy-display-token-stats))
-  (ollama-buddy--update-status (concat "Stats in chat " (if ollama-buddy-display-token-stats "enabled" "disabled")))
-  (message "Ollama token statistics display: %s"
-           (if ollama-buddy-display-token-stats "enabled" "disabled")))
-
 (defun ollama-buddy-toggle-show-history-indicator ()
   "Toggle display of token statistics after each response."
   (interactive)
@@ -3115,31 +3110,15 @@ TCP packets split a JSON object across multiple filter calls."
                                              :wait-time ollama-buddy--response-wait-duration
                                              :timestamp (current-time))))
 
+                      ;; Insert property drawer on the response heading
+                      (ollama-buddy--insert-response-properties
+                       ollama-buddy--current-token-count
+                       elapsed-time token-rate
+                       ollama-buddy--response-wait-duration)
+
                       ;; Add to history
                       (push token-info ollama-buddy--token-usage-history)
                       (ollama-buddy--trim-token-history)
-
-                      ;; Display token info if enabled
-                      (when ollama-buddy-display-token-stats
-                        (insert (format "\n\n*** Token Stats\n[%d tokens in %.1fs, %.1f tokens/sec]"
-                                        ollama-buddy--current-token-count
-                                        elapsed-time
-                                        token-rate))
-                        ;; Add modified parameters to the display
-                        (when ollama-buddy-params-modified
-                          (insert "\n\n*** Modified Parameters: ")
-                          (let ((param-strings
-                                 (mapcar
-                                  (lambda (param)
-                                    (let ((value (alist-get param ollama-buddy-params-active)))
-                                      (format "%s=%s"
-                                              param
-                                              (cond
-                                               ((floatp value) (format "%.2f" value))
-                                               ((vectorp value) (format "[%s]" (mapconcat #'identity value ", ")))
-                                               (t value)))))
-                                  ollama-buddy-params-modified)))
-                            (insert (mapconcat #'identity param-strings ", ")))))
 
                       ;; Reset tracking variables
                       (setq ollama-buddy--current-token-count 0
@@ -5435,7 +5414,8 @@ When the operation completes, CALLBACK is called with no arguments if provided."
       (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
         (let ((inhibit-read-only t))
           (goto-char (point-max))
-          (insert (format "\n\n- Attached: %s (%d bytes)"
+          (insert (format "\n\n- Attached: [[file:%s][%s]] (%d bytes)"
+                          file
                           (file-name-nondirectory file)
                           (plist-get attachment :size)))
           (goto-char start)
@@ -5740,7 +5720,6 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c +") #'ollama-buddy-transient-settings-menu)
     (define-key map (kbd "C-c B") #'ollama-buddy-toggle-debug-mode)
     (define-key map (kbd "C-c >") #'ollama-buddy-toggle-show-history-indicator)
-    (define-key map (kbd "C-c T") #'ollama-buddy-toggle-token-display)
     (define-key map (kbd "C-c #") #'ollama-buddy-display-token-stats)
     (define-key map (kbd "C-c C-o") #'ollama-buddy-toggle-markdown-conversion)
     (define-key map (kbd "C-c <") #'ollama-buddy-toggle-global-system-prompt)

@@ -794,13 +794,6 @@ Next: <a href="#Quick-Start" accesskey="n" rel="next">Quick Start</a>, Previous:
 </pre></div>
 
 </dd>
-<dt><code class="code">ollama-buddy-display-token-stats</code></dt>
-<dd><p>Whether to display token usage statistics after responses (default: nil).
-</p><div class="example">
-<pre class="example-preformatted">(setq ollama-buddy-display-token-stats t)
-</pre></div>
-
-</dd>
 <dt><code class="code">ollama-buddy-streaming-enabled</code></dt>
 <dd><p>Whether to use streaming mode for responses (default: t).
 </p><div class="example">
@@ -4090,7 +4083,6 @@ Works with LM Studio, llama.cpp, vLLM, Jan, and any
 </li><li><code class="code">&lt;</code> - Global system prompt disabled
 </li><li><code class="code">H5/10</code> - History count (when enabled via <code class="code">ollama-buddy-show-history-indicator</code>)
 </li><li><code class="code">V</code> - Reasoning/thinking sections hidden
-</li><li><code class="code">T</code> - Token statistics display enabled
 </li><li>Provider letters: <code class="code">a</code> (OpenAI), <code class="code">c</code> (Claude), <code class="code">g</code> (Gemini), <code class="code">k</code> (Grok), <code class="code">p</code> (Copilot), <code class="code">s</code> (Codestral), <code class="code">d</code> (DeepSeek), <code class="code">r</code> (OpenRouter), <code class="code">l</code> (OpenAI-compat)
 </li></ul>
 
@@ -5709,15 +5701,27 @@ Next: <a href="#API-Reference" accesskey="n" rel="next">API Reference</a>, Previ
 <div class="section-level-extent" id="Managing-Token-Usage">
 <h3 class="section"><span>24.1 Managing Token Usage<a class="copiable-link" href="#Managing-Token-Usage"> &para;</a></span></h3>
 
-<p>Ollama Buddy can track token usage statistics:
+<p>Ollama Buddy tracks token usage on every response via org property drawers.
+Each <code class="code">** [model: RESPONSE]</code> heading receives a <code class="code">:PROPERTIES:</code> drawer
+with <code class="code">:TIMESTAMP:</code>, <code class="code">:TOKENS:</code>, <code class="code">:RATE:</code>, <code class="code">:ELAPSED:</code>, and
+<code class="code">:WAIT:</code> (time to first token).  The drawer is folded by default; press
+<code class="code">TAB</code> on the heading to reveal it.
 </p>
-<p>To toggle token statistics display after responses:
-</p><div class="example">
-<pre class="example-preformatted">M-x ollama-buddy-toggle-token-display
+<div class="example">
+<pre class="example-preformatted">** [qwen3:8b: RESPONSE]
+:PROPERTIES:
+:TIMESTAMP: [2026-03-16 Sun 14:32]
+:TOKENS:   142
+:RATE:     23.4
+:ELAPSED:  6.1s
+:WAIT:     2.1s
+:END:
 </pre></div>
-<p>or press <code class="code">C-c T</code> in the chat buffer.
+
+<p>You can use <code class="code">org-columns</code> to get a tabular overview of all responses in a
+session.  The data survives session save/load since it is in the buffer text.
 </p>
-<p>To view detailed token usage statistics:
+<p>To view aggregate token usage statistics:
 </p><div class="example">
 <pre class="example-preformatted">M-x ollama-buddy-display-token-stats
 </pre></div>
@@ -5953,10 +5957,6 @@ Next: <a href="#FAQ" accesskey="n" rel="next">Frequently Asked Questions</a>, Pr
 </dd>
 <dt><code class="code">ollama-buddy-toggle-params-in-header</code></dt>
 <dd><p>Toggle display of parameters in header.
-</p>
-</dd>
-<dt><code class="code">ollama-buddy-toggle-token-display</code></dt>
-<dd><p>Toggle display of token statistics.
 </p>
 </dd>
 <dt><code class="code">ollama-buddy-display-token-stats</code></dt>

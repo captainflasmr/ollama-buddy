@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 4.0.0
+@subtitle For Ollama Buddy version 4.1.0
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -279,12 +279,6 @@ Customize the appearance and behavior of Ollama Buddy:
 Whether to automatically convert markdown to org-mode format in responses (default: t).
 @example
 (setq ollama-buddy-convert-markdown-to-org t)
-@end example
-
-@item ollama-buddy-display-token-stats
-Whether to display token usage statistics after responses (default: nil).
-@example
-(setq ollama-buddy-display-token-stats t)
 @end example
 
 @item ollama-buddy-streaming-enabled
@@ -2817,7 +2811,6 @@ The header line shows compact status indicators:
 @item @code{<} - Global system prompt disabled
 @item @code{H5/10} - History count (when enabled via @code{ollama-buddy-show-history-indicator})
 @item @code{V} - Reasoning/thinking sections hidden
-@item @code{T} - Token statistics display enabled
 @item Provider letters: @code{a} (OpenAI), @code{c} (Claude), @code{g} (Gemini), @code{k} (Grok), @code{p} (Copilot), @code{s} (Codestral), @code{d} (DeepSeek), @code{r} (OpenRouter), @code{l} (OpenAI-compat)
 @end itemize
 
@@ -4031,15 +4024,27 @@ RAG, it references specific passages from your indexed document.
 
 @section Managing Token Usage
 
-Ollama Buddy can track token usage statistics:
+Ollama Buddy tracks token usage on every response via org property drawers.
+Each @code{** [model: RESPONSE]} heading receives a @code{:PROPERTIES:} drawer
+with @code{:TIMESTAMP:}, @code{:TOKENS:}, @code{:RATE:}, @code{:ELAPSED:}, and
+@code{:WAIT:} (time to first token).  The drawer is folded by default; press
+@code{TAB} on the heading to reveal it.
 
-To toggle token statistics display after responses:
 @example
-M-x ollama-buddy-toggle-token-display
+** [qwen3:8b: RESPONSE]
+:PROPERTIES:
+:TIMESTAMP: [2026-03-16 Sun 14:32]
+:TOKENS:   142
+:RATE:     23.4
+:ELAPSED:  6.1s
+:WAIT:     2.1s
+:END:
 @end example
-or press @code{C-c T} in the chat buffer.
 
-To view detailed token usage statistics:
+You can use @code{org-columns} to get a tabular overview of all responses in a
+session.  The data survives session save/load since it is in the buffer text.
+
+To view aggregate token usage statistics:
 @example
 M-x ollama-buddy-display-token-stats
 @end example
@@ -4209,9 +4214,6 @@ Reset all parameters to defaults.
 
 @item ollama-buddy-toggle-params-in-header
 Toggle display of parameters in header.
-
-@item ollama-buddy-toggle-token-display
-Toggle display of token statistics.
 
 @item ollama-buddy-display-token-stats
 Display token usage statistics with graphs and recent interactions.

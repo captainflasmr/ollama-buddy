@@ -11,11 +11,19 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
-** <2026-03-16 Sun> *4.0.1*
+** <2026-03-16 Sun> *4.1.0*
 
-SVG context bar in the header-line for GUI Emacs.
+Response metadata and SVG context bar.
 
 *** Features
+
+- *Org property drawers on response headings* -- Every =** [model: RESPONSE]=
+  heading now gets a =:PROPERTIES:= drawer with =:TIMESTAMP:=, =:TOKENS:=,
+  =:RATE:=, =:ELAPSED:=, and =:WAIT:=.  Queryable via =org-columns=; survives
+  session save/load.  The drawer is folded by default — press =TAB= to reveal.
+
+- *Org file links for attachments* -- Attached files in the chat buffer are now
+  shown as =[[file:path][name]]= org links, clickable with =C-c C-o=.
 
 - *SVG context bar* -- When =ollama-buddy-context-display-type= is set to =bar=
   and Emacs is running in GUI mode (=display-graphic-p=), the header-line now
@@ -23,6 +31,13 @@ SVG context bar in the header-line for GUI Emacs.
   system prompt (blue), attachments (orange), web search (purple), RAG (cyan),
   current prompt (red), and free space (grey).  Terminal Emacs falls back to the
   existing text-character bar.
+
+*** Removed
+
+- *Token stats toggle (=C-c T=)* -- The =ollama-buddy-display-token-stats=
+  defcustom and =ollama-buddy-toggle-token-display= command have been removed.
+  Token data now lives in the property drawer on each response heading.  The
+  global stats viewer (=C-c #=) is unchanged.
 
 ** <2026-03-14 Fri> *4.0.0*
 

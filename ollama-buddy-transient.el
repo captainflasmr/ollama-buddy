@@ -40,7 +40,6 @@
 (declare-function ollama-buddy-install-extras "ollama-buddy")
 (declare-function ollama-buddy--extras-missing-p "ollama-buddy")
 (declare-function ollama-buddy-toggle-debug-mode "ollama-buddy")
-(declare-function ollama-buddy-toggle-token-display "ollama-buddy")
 (declare-function ollama-buddy-toggle-show-history-indicator "ollama-buddy")
 (declare-function ollama-buddy-display-token-stats "ollama-buddy")
 (declare-function ollama-buddy-toggle-markdown-conversion "ollama-buddy")
@@ -113,7 +112,6 @@
     ("%" "Context Display" ollama-buddy-toggle-context-percentage)
     ("&" "Context Type" ollama-buddy-toggle-context-display-type)
     (">" "History Display" ollama-buddy-toggle-show-history-indicator)
-    ("T" "Token Display" ollama-buddy-toggle-token-display)
     ("<" "Global Prompt" ollama-buddy-toggle-global-system-prompt)
     ("~" "Tone" ollama-buddy-set-tone)]
 

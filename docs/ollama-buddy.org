@@ -718,13 +718,6 @@ Customize the appearance and behavior of Ollama Buddy:
   (setq ollama-buddy-convert-markdown-to-org t)
   #+end_src
 
-- =ollama-buddy-display-token-stats= :: Whether to display token usage
-  statistics after responses (default: nil).
-
-  #+begin_src example-preformatted
-  (setq ollama-buddy-display-token-stats t)
-  #+end_src
-
 - =ollama-buddy-streaming-enabled= :: Whether to use streaming mode for
   responses (default: t).
 
@@ -4131,7 +4124,6 @@ The header line shows compact status indicators:
 - =H5/10= - History count (when enabled via
   =ollama-buddy-show-history-indicator=)
 - =V= - Reasoning/thinking sections hidden
-- =T= - Token statistics display enabled
 - Provider letters: =a= (OpenAI), =c= (Claude), =g= (Gemini), =k=
   (Grok), =p= (Copilot), =s= (Codestral), =d= (DeepSeek), =r=
   (OpenRouter), =l= (OpenAI-compat)
@@ -5822,17 +5814,28 @@ Next: [[#API-Reference][API Reference]], Previous: [[#RAG][RAG
 :CUSTOM_ID: managing-token-usage
 :CLASS: section
 :END:
-Ollama Buddy can track token usage statistics:
-
-To toggle token statistics display after responses:
+Ollama Buddy tracks token usage on every response via org property
+drawers. Each =** [model: RESPONSE]= heading receives a =:PROPERTIES:=
+drawer with =:TIMESTAMP:=, =:TOKENS:=, =:RATE:=, =:ELAPSED:=, and
+=:WAIT:= (time to first token). The drawer is folded by default; press
+=TAB= on the heading to reveal it.
 
 #+begin_src example-preformatted
-M-x ollama-buddy-toggle-token-display
+,** [qwen3:8b: RESPONSE]
+:PROPERTIES:
+:TIMESTAMP: [2026-03-16 Sun 14:32]
+:TOKENS:   142
+:RATE:     23.4
+:ELAPSED:  6.1s
+:WAIT:     2.1s
+:END:
 #+end_src
 
-or press =C-c T= in the chat buffer.
+You can use =org-columns= to get a tabular overview of all responses in
+a session. The data survives session save/load since it is in the buffer
+text.
 
-To view detailed token usage statistics:
+To view aggregate token usage statistics:
 
 #+begin_src example-preformatted
 M-x ollama-buddy-display-token-stats
@@ -6049,9 +6052,6 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 
 - =ollama-buddy-toggle-params-in-header= :: Toggle display of parameters
   in header.
-
-- =ollama-buddy-toggle-token-display= :: Toggle display of token
-  statistics.
 
 - =ollama-buddy-display-token-stats= :: Display token usage statistics
   with graphs and recent interactions.

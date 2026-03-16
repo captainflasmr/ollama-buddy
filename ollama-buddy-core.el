@@ -649,11 +649,6 @@ The \"In-Buffer\" tone is automatically applied when
   :type 'boolean
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-display-token-stats nil
-  "Whether to display token usage statistics in responses."
-  :type 'boolean
-  :group 'ollama-buddy)
-
 (defcustom ollama-buddy-modelfile-directory
   (expand-file-name "ollama-buddy-modelfiles" user-emacs-directory)
   "Directory for storing temporary Modelfiles."
@@ -1115,6 +1110,11 @@ Set to 0 to always show the timer, or nil to disable it."
 
 (defvar ollama-buddy--response-countdown-marker nil
   "Marker pointing to the start of countdown text in the RESPONSE header.")
+
+(defvar ollama-buddy--response-heading-marker nil
+  "Marker at the start of the current `** [model: RESPONSE]` heading.
+Used by `ollama-buddy--insert-response-properties' to add a property
+drawer after the response is complete.")
 
 (defvar ollama-buddy--current-token-count 0
   "Counter for tokens in the current response.")
@@ -2054,7 +2054,7 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
           (concat
            (when (= (buffer-size) 0)
              (concat "#+TITLE: Ollama Buddy Chat"))
-           "\n\n* Ollama Buddy [v4.0.1]\n"
+           "\n\n* Ollama Buddy [v4.1.0]\n"
            (if-let ((logo (ollama-buddy--create-logo-image 140)))
                (concat logo "\n")
              (concat
@@ -2875,6 +2875,36 @@ Used for tool result messages which already have the correct structure."
         history)
     nil))
 
+;; Response property drawers
+
+(defun ollama-buddy--insert-response-properties (tokens elapsed rate wait-time)
+  "Insert an org property drawer on the current response heading.
+TOKENS is the token count, ELAPSED the generation time in seconds,
+RATE the tokens/sec, and WAIT-TIME the time-to-first-token in seconds.
+Uses `ollama-buddy--response-heading-marker' to locate the heading."
+  (when-let ((marker ollama-buddy--response-heading-marker))
+    (when (marker-buffer marker)
+      (save-excursion
+        (goto-char marker)
+        (end-of-line)
+        (let ((drawer-start (1+ (point))))
+          (insert (format "\n:PROPERTIES:\n:TIMESTAMP: %s\n:TOKENS:   %d\n:RATE:     %.1f\n:ELAPSED:  %.1fs%s\n:END:"
+                          (format-time-string "[%Y-%m-%d %a %H:%M]")
+                          tokens
+                          rate
+                          elapsed
+                          (if wait-time
+                              (format "\n:WAIT:     %.1fs" wait-time)
+                            "")))
+          ;; Fold the drawer
+          (goto-char drawer-start)
+          (if (fboundp 'org-fold-hide-drawer-toggle)
+              (org-fold-hide-drawer-toggle 'hide)
+            (when (fboundp 'org-hide-drawer-toggle)
+              (org-hide-drawer-toggle 'hide))))))
+    (set-marker marker nil)
+    (setq ollama-buddy--response-heading-marker nil)))
+
 ;; Status update functions
 
 (defun ollama-buddy--context-bar-svg ()
@@ -3074,7 +3104,7 @@ ACTUAL-MODEL is the model being used instead."
             (replace-regexp-in-string
              "%" "%%"
             (concat
-             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s%s %s%s%s"
+             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s%s %s%s%s"
                      airplane-indicator
                      curl-indicator
                      (if ollama-buddy-streaming-enabled "" "x")
@@ -3092,7 +3122,6 @@ ACTUAL-MODEL is the model being used instead."
                      rag-indicator
                      (if (and ollama-buddy-hide-reasoning
                               (not ollama-buddy-collapse-thinking)) "V" "")
-                     (if ollama-buddy-display-token-stats "T" "")
                      tone-indicator
 
                      (ollama-buddy--update-multishot-status)

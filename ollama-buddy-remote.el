@@ -161,7 +161,10 @@ This must be called within a `let' that binds `inhibit-read-only' to t."
 
     (let ((inhibit-read-only t)
           start-point)
-      (insert (format "\n\n** [%s: RESPONSE]\n\n" ollama-buddy--current-model))
+      (let ((heading-start (point)))
+        (insert (format "\n\n** [%s: RESPONSE]\n\n" ollama-buddy--current-model))
+        (setq ollama-buddy--response-heading-marker
+              (copy-marker (+ heading-start 2))))  ; skip the two newlines
       (setq start-point (point))
       (insert "Loading response...")
       (setq ollama-buddy-remote--request-start-time (float-time))
@@ -226,10 +229,10 @@ TOKEN-COUNT-SYMBOL is the symbol to set with the token count."
               ollama-buddy--token-usage-history)
         (ollama-buddy--trim-token-history)
 
-        ;; Show token stats if enabled
-        (when ollama-buddy-display-token-stats
-          (insert (format "\n\n*** Token Stats\n[%d tokens in %.1fs, %.1f tokens/sec]"
-                          token-count elapsed-time token-rate)))
+        ;; Insert property drawer on the response heading
+        (ollama-buddy--insert-response-properties
+         token-count elapsed-time token-rate
+         ollama-buddy--response-wait-duration)
 
         (ollama-buddy--prepare-prompt-area))
 
@@ -504,11 +507,10 @@ Returns nil to skip the line (e.g. [DONE] or non-content events).")
                       :timestamp (current-time))
                 ollama-buddy--token-usage-history)
           (ollama-buddy--trim-token-history)
-          ;; Show token stats if enabled
-          (when ollama-buddy-display-token-stats
-            (goto-char (point-max))
-            (insert (format "\n\n*** Token Stats\n[%d tokens in %.1fs, %.1f tokens/sec]"
-                            token-count elapsed-time token-rate)))
+          ;; Insert property drawer on the response heading
+          (ollama-buddy--insert-response-properties
+           token-count elapsed-time token-rate
+           ollama-buddy--response-wait-duration)
           (ollama-buddy--prepare-prompt-area)
           (setq ollama-buddy-remote--request-start-time nil)
           (ollama-buddy--maybe-goto-prompt window start-point)

@@ -75,11 +75,14 @@ Submit queries, swap models, view token usage and statistics:
 - *RAG* -- Index local documents and source code; retrieve relevant context via semantic search; inline =@rag(query)= syntax; configurable embedding backend (Ollama =/api/embed= or any OpenAI-compatible =/v1/embeddings= service, e.g. LM Studio)
 - *In-Buffer Replace* -- Stream LLM output directly into the source buffer, replacing the selected region in-place; accept/reject confirmation; inline diff view (=C-c d=) with word-level smerge highlighting; automatic code-fence stripping
 
-* What's New (v4.0.1)
+* What's New (v4.1.0)
 
-SVG context bar in the header-line for GUI Emacs.
+Response metadata and SVG context bar.
 
+- *Org Property Drawers* -- Every response heading now carries a =:PROPERTIES:= drawer with =:TIMESTAMP:=, =:TOKENS:=, =:RATE:=, =:ELAPSED:=, and =:WAIT:=. Queryable with =org-columns=; survives session save/load. Folded by default.
+- *Org File Links* -- Attached files shown as clickable =[[file:...][name]]= org links.
 - *SVG Context Bar* -- In GUI Emacs, the header-line context bar now renders as a colour-coded SVG with segments for history, system prompt, attachments, web search, RAG, prompt, and free space. Terminal Emacs falls back to the existing text bar.
+- *Removed: Token Stats Toggle* -- =C-c T= and =ollama-buddy-display-token-stats= defcustom removed; token data now lives in the property drawer. Global stats viewer (=C-c #=) unchanged.
 
 * What's New (v4.0.0)
 
@@ -95,7 +98,7 @@ Generic provider system — register any OpenAI/Claude/Gemini-compatible API wit
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| *4.0.1* | SVG context bar in header-line for GUI Emacs — colour-coded segments for history, system, attachments, web, RAG, prompt, and free space; terminal fallback unchanged.                                                     |
+| *4.1.0* | Response property drawers (=:TOKENS:=, =:RATE:=, etc.), org file links for attachments, SVG context bar, removed token stats toggle.                                                                                     |
 | *4.0.0* | Generic provider system (=ollama-buddy-provider-create=) — register any OpenAI/Claude/Gemini-compatible API with one call. Existing =require= wrappers still work but are deprecated.                                     |
 | *3.7.1* | Code quality, async model info, error cleanup, =/cd= directory switching, removed Fabric/Awesome.                                                                                                                         |
 | *3.7.0* | RAG pause/resume with periodic checkpointing; new built-in tools (=search_files=, =get_region=, =get_buffer_info=, =describe_symbol=, =eval_elisp=).                                                                     |
