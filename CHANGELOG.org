@@ -11,6 +11,28 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-03-16 Sun> *4.1.1*
+
+Recommended Models browser and model letter ordering.
+
+*** Features
+
+- *Recommended Models buffer* -- A new =ollama-buddy-recommended-models= command
+  (=C-c L=) opens a dedicated =*Ollama Recommended Models*= buffer showing
+  categorised models from the Ollama Hub that are not yet installed locally.
+  Each model has a pull button and capability indicators (⚒⊙✦).  The model
+  management buffer (=C-c M=) no longer includes this section.
+
+- *Model letter ordering* -- Letter assignment now matches the display order in
+  the model management buffer: cloud models get =a, b, c...= first, then local
+  models.
+
+*** Key binding changes
+
+- =C-c L= — Recommended Models (was Session Load)
+- =C-c f= — Session Load (was =C-c L=)
+- Transient menu: =L= → Recommended, =f= → Load session
+
 ** <2026-03-16 Sun> *4.1.0*
 
 Response metadata and SVG context bar.

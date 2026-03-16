@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 4.1.0
+@subtitle For Ollama Buddy version 4.1.1
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -1027,12 +1027,13 @@ From this interface, you can:
 @item View detailed model information
 @item Select models for use
 @item Browse cloud models (@code{u:} prefix) with Select and Pull Manifest actions
-@item Browse and install recommended models organized by category (General Chat, Reasoning, Efficient & Capable, Coding, General Alternatives)
 @end itemize
 
-Each recommended model category includes a description to help new users choose
-the right type of model for their needs.  Categories are displayed as foldable
-org subheadings so you can collapse sections you are not interested in.
+Recommended models are available in a separate buffer via @code{C-c L}
+(@code{ollama-buddy-recommended-models}).  This shows categorised models from
+the Ollama Hub that are not yet installed locally, organised by category
+(General Chat, Reasoning, Coding, etc.) with pull buttons and capability
+indicators.
 
 @section Pulling New Models
 
@@ -1045,7 +1046,9 @@ To pull a new model:
 @item Wait for the model to download
 @end enumerate
 
-You can also select from the ``Recommended Models'' list at the bottom, which shows curated popular models that can be pulled with a single click.
+You can also browse recommended models with @code{C-c L}
+(@code{ollama-buddy-recommended-models}), which shows curated popular models
+that can be pulled with a single click.
 
 @section Importing GGUF Files
 
@@ -1445,7 +1448,7 @@ File attachments are preserved across sessions:
 
 @itemize @bullet
 @item Saving a session (@code{C-c S}) includes all attached files
-@item Loading a session (@code{C-c L}) restores attachments
+@item Loading a session (@code{C-c f}) restores attachments
 @item Session files store both file paths and content
 @item Attachment metadata is preserved (size, type, attachment time)
 @end itemize
@@ -1871,7 +1874,7 @@ To load a previously saved session:
 @example
 M-x ollama-buddy-sessions-load
 @end example
-or press @code{C-c L} in the chat buffer.
+or press @code{C-c f} in the chat buffer.
 
 You'll be presented with a list of saved sessions to choose from.  When the
 session is loaded, any @code{*** Think} headings are automatically folded and
@@ -4365,7 +4368,7 @@ Quantized models (e.g., Q4_K_M variants) require less RAM.
 Press @code{C-c k} in the chat buffer or select "Kill Request" from the menu.
 
 @subsection How can I save my conversations?
-Use @code{C-c S} to save the current session, giving it a name. You can restore it later with @code{C-c L}.
+Use @code{C-c S} to save the current session, giving it a name. You can restore it later with @code{C-c f}.
 
 @subsection Can I use multiple models in the same conversation?
 Yes, you can switch models at any time with @code{C-c m}. Each model maintains its own conversation history.

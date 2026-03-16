@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 4.1.0
+;; Version: 4.1.1
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -4874,7 +4874,7 @@ Modifies the variable in place."
                         (weekly (alist-get 'weekly usage))
                         (session-reset (alist-get 'session-reset usage))
                         (weekly-reset (alist-get 'weekly-reset usage)))
-                    (insert (format "  Session: %s %s" (ollama-buddy--cloud-usage-pie session 36) session))
+                    (insert (format "Session: %s %s" (ollama-buddy--cloud-usage-pie session 36) session))
                     (when session-reset
                       (insert (format " (%s)" (ollama-buddy--cloud-reset-time-string session-reset))))
                     (insert (format "  |  Weekly: %s %s" (ollama-buddy--cloud-usage-pie weekly 36) weekly))
@@ -4991,43 +4991,6 @@ Modifies the variable in place."
 
             (insert "\n")))
 
-        ;; Categorized recommended models section
-        (when models-to-pull
-          (insert "\n* Recommended Models (Select or Pull to Install)\n\n")
-          (dolist (category ollama-buddy-available-models)
-            (let* ((cat-name (plist-get category :name))
-                   (cat-desc (plist-get category :description))
-                   (cat-models (plist-get category :models))
-                   (pullable (cl-remove-if-not
-                              (lambda (m) (member m models-to-pull))
-                              (mapcar (lambda (model)
-                                        (if (ollama-buddy--should-use-marker-prefix)
-                                            (concat ollama-buddy-marker-prefix model)
-                                          model))
-                                      cat-models))))
-              (when pullable
-                (insert (format "** %s\n\n" cat-name))
-                (when cat-desc
-                  (insert (format "%s\n" cat-desc)))
-                (insert "\n")
-                (dolist (model pullable)
-                  (let ((display-model (if (ollama-buddy--should-use-marker-prefix)
-                                           model
-                                         (ollama-buddy--get-real-model-name model))))
-                    (insert "- ")
-                    (insert-text-button
-                     display-model
-                     'action `(lambda (_)
-                                (ollama-buddy-pull-model ,model))
-                     'help-echo (format "Pull %s from Ollama Hub" display-model))
-                    (when (ollama-buddy--model-supports-tools display-model)
-                      (insert " ⚒"))
-                    (when (ollama-buddy--model-supports-vision display-model)
-                      (insert " ⊙"))
-                    (when (ollama-buddy--model-supports-thinking display-model)
-                      (insert " ✦"))
-                    (insert "\n")))
-                (insert "\n")))))
         )
       (goto-char (point-min))
       (view-mode 1)
@@ -5054,6 +5017,78 @@ Modifies the variable in place."
                (goto-char (point-min))
                (forward-line (1- saved-line))
                (set-window-point win (point))))))))))
+
+(defun ollama-buddy-recommended-models ()
+  "Display recommended models from the Ollama Hub in a separate buffer.
+Shows categorized models that are not yet installed locally."
+  (interactive)
+  (let* ((available-models (ollama-buddy--get-models))
+         (models-to-pull
+          (when (ollama-buddy--ollama-running)
+            (let ((available-for-pull
+                   (mapcar (lambda (model)
+                             (if (ollama-buddy--should-use-marker-prefix)
+                                 (concat ollama-buddy-marker-prefix model)
+                               model))
+                           (ollama-buddy--available-models-flat))))
+              (cl-set-difference
+               available-for-pull
+               available-models
+               :test #'string=))))
+         (buf (get-buffer-create "*Ollama Recommended Models*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (org-mode)
+        (setq-local org-hide-emphasis-markers t)
+        (setq-local org-hide-leading-stars t)
+        (setq truncate-lines t)
+        (erase-buffer)
+        (insert "#+title: Recommended Models\n\n")
+        (insert "Press =g= to refresh\n\n")
+        (if (not models-to-pull)
+            (insert "All recommended models are already installed.\n")
+          (dolist (category ollama-buddy-available-models)
+            (let* ((cat-name (plist-get category :name))
+                   (cat-desc (plist-get category :description))
+                   (cat-models (plist-get category :models))
+                   (pullable (cl-remove-if-not
+                              (lambda (m) (member m models-to-pull))
+                              (mapcar (lambda (model)
+                                        (if (ollama-buddy--should-use-marker-prefix)
+                                            (concat ollama-buddy-marker-prefix model)
+                                          model))
+                                      cat-models))))
+              (when pullable
+                (insert (format "* %s\n\n" cat-name))
+                (when cat-desc
+                  (insert (format "%s\n" cat-desc)))
+                (insert "\n")
+                (dolist (model pullable)
+                  (let ((display-model (if (ollama-buddy--should-use-marker-prefix)
+                                           model
+                                         (ollama-buddy--get-real-model-name model))))
+                    (insert "- ")
+                    (insert-text-button
+                     display-model
+                     'action `(lambda (_)
+                                (ollama-buddy-pull-model ,model))
+                     'help-echo (format "Pull %s from Ollama Hub" display-model))
+                    (when (ollama-buddy--model-supports-tools display-model)
+                      (insert " ⚒"))
+                    (when (ollama-buddy--model-supports-vision display-model)
+                      (insert " ⊙"))
+                    (when (ollama-buddy--model-supports-thinking display-model)
+                      (insert " ✦"))
+                    (insert "\n")))
+                (insert "\n"))))))
+      (goto-char (point-min))
+      (view-mode 1)
+      (let ((map (make-sparse-keymap)))
+        (define-key map (kbd "g")
+          (lambda () (interactive) (ollama-buddy-recommended-models)))
+        (setq-local minor-mode-overriding-map-alist
+                    (list (cons 'view-mode map)))))
+    (display-buffer buf)))
 
 (defun ollama-buddy-select-model (model)
   "Set MODEL as the current model."
@@ -5736,8 +5771,9 @@ Returns the text with @file() delimiters removed."
     
     ;; Session keybindings
     (define-key map (kbd "C-c N") #'ollama-buddy-sessions-new)
-    (define-key map (kbd "C-c L") #'ollama-buddy-sessions-load)
+    (define-key map (kbd "C-c f") #'ollama-buddy-sessions-load)
     (define-key map (kbd "C-c S") #'ollama-buddy-sessions-save)
+    (define-key map (kbd "C-c L") #'ollama-buddy-recommended-models)
     (define-key map (kbd "C-c Z") #'ollama-buddy-sessions-directory)
     
     ;; Parameter keybindings

@@ -48,6 +48,7 @@
 (declare-function ollama-buddy-history-edit "ollama-buddy")
 (declare-function ollama-buddy-sessions-new "ollama-buddy")
 (declare-function ollama-buddy-sessions-load "ollama-buddy")
+(declare-function ollama-buddy-recommended-models "ollama-buddy")
 (declare-function ollama-buddy-sessions-save "ollama-buddy")
 (declare-function ollama-buddy-sessions-directory "ollama-buddy")
 (declare-function ollama-buddy-params-display "ollama-buddy")
@@ -165,6 +166,7 @@
    ["Model"
     ("m" "Switch" ollama-buddy--swap-model)
     ("M" "Manage" ollama-buddy-manage-models)
+    ("L" "Recommended" ollama-buddy-recommended-models)
     ("i" "Info" ollama-buddy-show-raw-model-info)
     ("U" "Multishot" ollama-buddy--multishot-prompt)]
 
@@ -188,7 +190,7 @@
    
    ["Sessions"
     ("N" "New" ollama-buddy-sessions-new)
-    ("L" "Load" ollama-buddy-sessions-load)
+    ("f" "Load" ollama-buddy-sessions-load)
     ("S" "Save" ollama-buddy-sessions-save)
     ("Z" "Directory" ollama-buddy-sessions-directory)]
 

@@ -75,6 +75,14 @@ Submit queries, swap models, view token usage and statistics:
 - *RAG* -- Index local documents and source code; retrieve relevant context via semantic search; inline =@rag(query)= syntax; configurable embedding backend (Ollama =/api/embed= or any OpenAI-compatible =/v1/embeddings= service, e.g. LM Studio)
 - *In-Buffer Replace* -- Stream LLM output directly into the source buffer, replacing the selected region in-place; accept/reject confirmation; inline diff view (=C-c d=) with word-level smerge highlighting; automatic code-fence stripping
 
+* What's New (v4.1.1)
+
+Recommended Models browser and model letter ordering.
+
+- *Recommended Models Buffer* -- =C-c L= opens a dedicated buffer showing categorised Ollama Hub models not yet installed, with pull buttons and capability indicators. Removed from the model management buffer.
+- *Model Letter Ordering* -- Cloud models now get =a, b, c...= first, matching the top-to-bottom display order in model management.
+- *Key Binding Change* -- Session Load moved from =C-c L= to =C-c f=.
+
 * What's New (v4.1.0)
 
 Response metadata and SVG context bar.
@@ -98,6 +106,7 @@ Generic provider system — register any OpenAI/Claude/Gemini-compatible API wit
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *4.1.1* | Recommended Models browser (=C-c L=), model letter ordering matches display, session load moved to =C-c f=.                                                                                                              |
 | *4.1.0* | Response property drawers (=:TOKENS:=, =:RATE:=, etc.), org file links for attachments, SVG context bar, removed token stats toggle.                                                                                     |
 | *4.0.0* | Generic provider system (=ollama-buddy-provider-create=) — register any OpenAI/Claude/Gemini-compatible API with one call. Existing =require= wrappers still work but are deprecated.                                     |
 | *3.7.1* | Code quality, async model info, error cleanup, =/cd= directory switching, removed Fabric/Awesome.                                                                                                                         |

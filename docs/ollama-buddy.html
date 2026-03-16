@@ -1754,12 +1754,13 @@ Next: <a href="#Context-Management" accesskey="n" rel="next">Context Management<
 </li><li>View detailed model information
 </li><li>Select models for use
 </li><li>Browse cloud models (<code class="code">u:</code> prefix) with Select and Pull Manifest actions
-</li><li>Browse and install recommended models organized by category (General Chat, Reasoning, Efficient &amp; Capable, Coding, General Alternatives)
 </li></ul>
 
-<p>Each recommended model category includes a description to help new users choose
-the right type of model for their needs.  Categories are displayed as foldable
-org subheadings so you can collapse sections you are not interested in.
+<p>Recommended models are available in a separate buffer via <code class="code">C-c L</code>
+(<code class="code">ollama-buddy-recommended-models</code>).  This shows categorised models from
+the Ollama Hub that are not yet installed locally, organised by category
+(General Chat, Reasoning, Coding, etc.) with pull buttons and capability
+indicators.
 </p>
 </div>
 <div class="section-level-extent" id="Pulling-New-Models">
@@ -1774,7 +1775,9 @@ org subheadings so you can collapse sections you are not interested in.
 </li><li> Wait for the model to download
 </li></ol>
 
-<p>You can also select from the &ldquo;Recommended Models&rdquo; list at the bottom, which shows curated popular models that can be pulled with a single click.
+<p>You can also browse recommended models with <code class="code">C-c L</code>
+(<code class="code">ollama-buddy-recommended-models</code>), which shows curated popular models
+that can be pulled with a single click.
 </p>
 </div>
 <div class="section-level-extent" id="Importing-GGUF-Files">
@@ -2325,7 +2328,7 @@ Next: <a href="#Web-Search" accesskey="n" rel="next">Web Search</a>, Previous: <
 </p>
 <ul class="itemize mark-bullet">
 <li>Saving a session (<code class="code">C-c S</code>) includes all attached files
-</li><li>Loading a session (<code class="code">C-c L</code>) restores attachments
+</li><li>Loading a session (<code class="code">C-c f</code>) restores attachments
 </li><li>Session files store both file paths and content
 </li><li>Attachment metadata is preserved (size, type, attachment time)
 </li></ul>
@@ -2901,7 +2904,7 @@ context, and resets tool calling and auto-execute to disabled.
 </p><div class="example">
 <pre class="example-preformatted">M-x ollama-buddy-sessions-load
 </pre></div>
-<p>or press <code class="code">C-c L</code> in the chat buffer.
+<p>or press <code class="code">C-c f</code> in the chat buffer.
 </p>
 <p>You&rsquo;ll be presented with a list of saved sessions to choose from.  When the
 session is loaded, any <code class="code">*** Think</code> headings are automatically folded and
@@ -6189,7 +6192,7 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 </div>
 <div class="subsection-level-extent" id="How-can-I-save-my-conversations_003f">
 <h4 class="subsection"><span>26.2.2 How can I save my conversations?<a class="copiable-link" href="#How-can-I-save-my-conversations_003f"> &para;</a></span></h4>
-<p>Use <code class="code">C-c S</code> to save the current session, giving it a name. You can restore it later with <code class="code">C-c L</code>.
+<p>Use <code class="code">C-c S</code> to save the current session, giving it a name. You can restore it later with <code class="code">C-c f</code>.
 </p>
 </div>
 <div class="subsection-level-extent" id="Can-I-use-multiple-models-in-the-same-conversation_003f">

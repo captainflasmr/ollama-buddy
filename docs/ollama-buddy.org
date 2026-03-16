@@ -1632,13 +1632,12 @@ From this interface, you can:
 - Select models for use
 - Browse cloud models (=u:= prefix) with Select and Pull Manifest
   actions
-- Browse and install recommended models organized by category (General
-  Chat, Reasoning, Efficient & Capable, Coding, General Alternatives)
 
-Each recommended model category includes a description to help new users
-choose the right type of model for their needs. Categories are displayed
-as foldable org subheadings so you can collapse sections you are not
-interested in.
+Recommended models are available in a separate buffer via =C-c L=
+(=ollama-buddy-recommended-models=). This shows categorised models from
+the Ollama Hub that are not yet installed locally, organised by category
+(General Chat, Reasoning, Coding, etc.) with pull buttons and capability
+indicators.
 
 <<Pulling-New-Models>>
 *** 7.5 Pulling New Models [[#Pulling-New-Models][¶]]
@@ -1653,9 +1652,9 @@ To pull a new model:
 3. Enter the model name (e.g., "phi:latest", "codellama:7b")
 4. Wait for the model to download
 
-You can also select from the “Recommended Models” list at the bottom,
-which shows curated popular models that can be pulled with a single
-click.
+You can also browse recommended models with =C-c L=
+(=ollama-buddy-recommended-models=), which shows curated popular models
+that can be pulled with a single click.
 
 <<Importing-GGUF-Files>>
 *** 7.6 Importing GGUF Files [[#Importing-GGUF-Files][¶]]
@@ -2225,7 +2224,7 @@ When files are attached:
 File attachments are preserved across sessions:
 
 - Saving a session (=C-c S=) includes all attached files
-- Loading a session (=C-c L=) restores attachments
+- Loading a session (=C-c f=) restores attachments
 - Session files store both file paths and content
 - Attachment metadata is preserved (size, type, attachment time)
 
@@ -2832,7 +2831,7 @@ To load a previously saved session:
 M-x ollama-buddy-sessions-load
 #+end_src
 
-or press =C-c L= in the chat buffer.
+or press =C-c f= in the chat buffer.
 
 You'll be presented with a list of saved sessions to choose from. When
 the session is loaded, any =*** Think= headings are automatically folded
@@ -6284,7 +6283,7 @@ Press =C-c k= in the chat buffer or select "Kill Request" from the menu.
 :CLASS: subsection
 :END:
 Use =C-c S= to save the current session, giving it a name. You can
-restore it later with =C-c L=.
+restore it later with =C-c f=.
 
 <<Can-I-use-multiple-models-in-the-same-conversation_003f>>
 **** 26.2.3 Can I use multiple models in the same conversation? [[#Can-I-use-multiple-models-in-the-same-conversation_003f][¶]]
