@@ -2054,7 +2054,7 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
           (concat
            (when (= (buffer-size) 0)
              (concat "#+TITLE: Ollama Buddy Chat"))
-           "\n\n* Ollama Buddy [v4.0.0]\n"
+           "\n\n* Ollama Buddy [v4.0.1]\n"
            (if-let ((logo (ollama-buddy--create-logo-image 140)))
                (concat logo "\n")
              (concat
@@ -2877,6 +2877,55 @@ Used for tool result messages which already have the correct structure."
 
 ;; Status update functions
 
+(defun ollama-buddy--context-bar-svg ()
+  "Generate an SVG horizontal bar showing context breakdown.
+Uses the same colours as the pie chart in the Context Sizes buffer.
+Returns a propertized string with the SVG image."
+  (require 'svg)
+  (let* ((breakdown ollama-buddy--current-context-breakdown)
+         (max-size (or ollama-buddy--current-context-max-size 4096))
+         (total-tokens (or ollama-buddy--current-context-tokens 0))
+         (free-tok (max 0 (- max-size total-tokens)))
+         (bar-w (* ollama-buddy-context-bar-width 8))
+         (bar-h 10)
+         (svg (svg-create bar-w bar-h))
+         (segments
+          (if breakdown
+              (let ((history-tok (plist-get breakdown :history-tokens))
+                    (system-tok (plist-get breakdown :system-tokens))
+                    (attach-tok (plist-get breakdown :attachment-tokens))
+                    (web-tok (or (plist-get breakdown :web-search-tokens) 0))
+                    (rag-tok (or (plist-get breakdown :rag-tokens) 0))
+                    (prompt-tok (plist-get breakdown :prompt-tokens)))
+                (cl-remove-if
+                 (lambda (s) (= (cdr s) 0))
+                 `(("#4CAF50" . ,history-tok)
+                   ("#2196F3" . ,system-tok)
+                   ("#FF9800" . ,attach-tok)
+                   ("#9C27B0" . ,web-tok)
+                   ("#00BCD4" . ,rag-tok)
+                   ("#F44336" . ,prompt-tok)
+                   ("#E0E0E0" . ,free-tok))))
+            ;; No breakdown available — single filled/empty bar
+            `(("#4CAF50" . ,total-tokens)
+              ("#E0E0E0" . ,free-tok))))
+         (total (max 1 max-size))
+         (x 0.0))
+    ;; Background (unfilled)
+    (svg-rectangle svg 0 0 bar-w bar-h :fill "none" :rx 2 :ry 2)
+    ;; Draw segments left to right
+    (dolist (seg segments)
+      (let* ((colour (car seg))
+             (tokens (cdr seg))
+             (w (* bar-w (/ (float tokens) total))))
+        (when (and (> w 0) (not (string= colour "#E0E0E0")))
+          (svg-rectangle svg x 0 w bar-h :fill colour))
+        (setq x (+ x w))))
+    ;; Border
+    (svg-rectangle svg 0 0 bar-w bar-h
+                   :fill "none" :stroke "#a0a0a0" :stroke-width 0.5 :rx 2 :ry 2)
+    (propertize " " 'display (svg-image svg :ascent 'center :scale 1.0))))
+
 (defun ollama-buddy--add-context-to-status-format ()
   "Calculate context percentage and display it according to preference."
   (if (and ollama-buddy-show-context-percentage
@@ -2896,7 +2945,7 @@ Used for tool result messages which already have the correct structure."
                                        :underline t
                                        :weight bold))
                            (t '(:inherit header-line)))))
-        
+
         (cond
          ;; Text display
          ((eq ollama-buddy-context-display-type 'text)
@@ -2909,17 +2958,20 @@ Used for tool result messages which already have the correct structure."
             (format "%s" context-text)))
          ;; Bar display
          ((eq ollama-buddy-context-display-type 'bar)
-          (let* ((bar-width ollama-buddy-context-bar-width)
-                 (filled-chars (round (* percentage bar-width)))
-                 (filled-chars (min filled-chars bar-width))
-                 (empty-chars (- bar-width filled-chars))
-                 (filled-char (car ollama-buddy-context-bar-chars))
-                 (empty-char (cadr ollama-buddy-context-bar-chars))
-                 (bar-text (concat
-                            (make-string filled-chars filled-char)
-                            (make-string empty-chars empty-char))))
-            bar-text
-            ))))
+          (if (display-graphic-p)
+              ;; SVG bar for GUI Emacs
+              (ollama-buddy--context-bar-svg)
+            ;; Terminal fallback: text bar
+            (let* ((bar-width ollama-buddy-context-bar-width)
+                   (filled-chars (round (* percentage bar-width)))
+                   (filled-chars (min filled-chars bar-width))
+                   (empty-chars (- bar-width filled-chars))
+                   (filled-char (car ollama-buddy-context-bar-chars))
+                   (empty-char (cadr ollama-buddy-context-bar-chars))
+                   (bar-text (concat
+                              (make-string filled-chars filled-char)
+                              (make-string empty-chars empty-char))))
+              bar-text)))))
     ""))
 
 (defun ollama-buddy--update-status (status &optional original-model actual-model)

@@ -11,6 +11,19 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-03-16 Sun> *4.0.1*
+
+SVG context bar in the header-line for GUI Emacs.
+
+*** Features
+
+- *SVG context bar* -- When =ollama-buddy-context-display-type= is set to =bar=
+  and Emacs is running in GUI mode (=display-graphic-p=), the header-line now
+  renders a colour-coded SVG bar showing the context breakdown: history (green),
+  system prompt (blue), attachments (orange), web search (purple), RAG (cyan),
+  current prompt (red), and free space (grey).  Terminal Emacs falls back to the
+  existing text-character bar.
+
 ** <2026-03-14 Fri> *4.0.0*
 
 Generic provider registration system for external LLMs.
