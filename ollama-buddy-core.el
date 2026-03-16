@@ -787,7 +787,7 @@ additional models beyond the first 26.
 Updates `ollama-buddy--model-letters'."
   (let* ((cloud-models (mapcar #'ollama-buddy--get-full-cloud-model-name
                                ollama-buddy-cloud-models))
-         (all-models (append local-models cloud-models))
+         (all-models (append cloud-models local-models))
          (model-count (length all-models))
          (alphabet "abcdefghijklmnopqrstuvwxyz")
          (alphabet-length (length alphabet))
