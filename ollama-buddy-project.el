@@ -2,7 +2,7 @@
 
 ;; Author: James Dyer
 ;; Keywords: local, tools, project
-;; Package-Requires: ((emacs "28.1") (ollama-buddy-core "3.3.0"))
+;; Package-Requires: ((emacs "29.1") (ollama-buddy-core "3.3.0"))
 
 ;;; Commentary:
 ;; This module provides project-aware features for Ollama Buddy using the

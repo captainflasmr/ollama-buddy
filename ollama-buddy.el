@@ -2,7 +2,7 @@
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
 ;; Version: 4.1.1
-;; Package-Requires: ((emacs "28.1"))
+;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
 ;;
@@ -586,7 +586,7 @@ Called after loading a session to restore collapsed thinking blocks."
     (goto-char (point-min))
     (while (re-search-forward "^\\*\\*\\* Think$" nil t)
       (beginning-of-line)
-      (outline-hide-subtree)
+      (org-fold-hide-subtree)
       (forward-line 1))))
 
 (defun ollama-buddy--insert-thinking-header ()
@@ -623,14 +623,14 @@ the *** heading nests properly under the ** header."
       ;; user can TAB on the heading to peek at accumulated content.
       (save-excursion
         (goto-char heading-start)
-        (outline-hide-subtree))
+        (org-fold-hide-subtree))
       m)))
 
 (defun ollama-buddy--finalize-thinking-block (heading-marker)
   "Finalise the thinking block: insert content, fold, rename heading.
 Inserts the accumulated thinking content after the heading, appends
 the `*** Response' heading, folds the Think subtree via
-`outline-hide-subtree', renames `Thinking' to `Think', and
+`org-fold-hide-subtree', renames `Thinking' to `Think', and
 registers the heading for toggle-all."
   (when (and heading-marker (marker-buffer heading-marker))
     (let ((inhibit-read-only t))
@@ -660,7 +660,7 @@ registers the heading for toggle-all."
       ;; Fold the Think subtree
       (save-excursion
         (goto-char (marker-position heading-marker))
-        (outline-hide-subtree))
+        (org-fold-hide-subtree))
       ;; Rename "Thinking" -> "Think"
       (save-excursion
         (goto-char (marker-position heading-marker))
@@ -753,24 +753,20 @@ RESPONSE-TEXT (if non-nil/empty) is inserted before the Tools section."
     (when think-marker
       (save-excursion
         (goto-char think-marker)
-        (outline-hide-subtree)))
+        (org-fold-hide-subtree)))
     ;; 4. Fold each **** tool heading in reverse order
     (dolist (pos tool-heading-positions)
       (save-excursion
         (goto-char pos)
-        (outline-hide-subtree)))))
+        (org-fold-hide-subtree)))))
 
 (defun ollama-buddy--extend-thinking-fold (heading-marker)
-  "Extend the fold overlay at HEADING-MARKER to cover new text.
+  "Re-fold the subtree at HEADING-MARKER to cover newly inserted text.
 Called after inserting thinking tokens so appended text stays hidden."
   (when (and heading-marker (marker-buffer heading-marker))
     (save-excursion
       (goto-char (marker-position heading-marker))
-      (end-of-line)
-      (let ((eol (1+ (point))))
-        (dolist (ov (overlays-at eol))
-          (when (eq (overlay-get ov 'invisible) 'outline)
-            (move-overlay ov (overlay-start ov) (point-max))))))))
+      (org-fold-hide-subtree))))
 
 ;; Function to check if text contains a reasoning marker
 (defun ollama-buddy--find-reasoning-marker (text)

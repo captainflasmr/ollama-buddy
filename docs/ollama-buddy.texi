@@ -119,7 +119,7 @@ the power of local LLMs right into your Emacs workflow.
 Before using Ollama Buddy, you need:
 
 @itemize @bullet
-@item Emacs 28.1 or later
+@item Emacs 29.1 or later
 @item Ollama installed and running on your system (see @url{https://ollama.ai})
 @item At least one language model pulled into Ollama
 @item (Optional) API keys for remote providers (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter) if you want to use those services
@@ -190,7 +190,7 @@ git clone https://github.com/captainflasmr/ollama-buddy.git
 Ollama Buddy requires the following:
 
 @itemize @bullet
-@item Emacs 28.1 or later
+@item Emacs 29.1 or later
 @item (Optional) transient 0.4.0+ for advanced menu system
 @end itemize
 
@@ -4583,7 +4583,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 @subsection Required Tools
 
 @itemize @bullet
-@item Emacs 28.1+
+@item Emacs 29.1+
 @item Ollama installed and running
 @item Git
 @end itemize

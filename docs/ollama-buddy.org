@@ -470,7 +470,7 @@ workflow.
 :END:
 Before using Ollama Buddy, you need:
 
-- Emacs 28.1 or later
+- Emacs 29.1 or later
 - Ollama installed and running on your system (see
   [[https://ollama.ai]])
 - At least one language model pulled into Ollama
@@ -586,7 +586,7 @@ To install manually:
 :END:
 Ollama Buddy requires the following:
 
-- Emacs 28.1 or later
+- Emacs 29.1 or later
 - (Optional) transient 0.4.0+ for advanced menu system
 
 Built-in packages used: json, cl-lib, url, subr-x, dired, org, savehist.
@@ -6665,7 +6665,7 @@ Ollama Buddy is an open-source project, and contributions are welcome!
 :CUSTOM_ID: required-tools
 :CLASS: subsection
 :END:
-- Emacs 28.1+
+- Emacs 29.1+
 - Ollama installed and running
 - Git
 

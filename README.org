@@ -11,7 +11,7 @@
 
 * Ollama Buddy
 
-An Emacs package for interacting with local LLMs via [[https://ollama.ai/][Ollama]], with support for remote providers (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter) and Ollama Cloud models. Requires Emacs 28.1+.
+An Emacs package for interacting with local LLMs via [[https://ollama.ai/][Ollama]], with support for remote providers (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter) and Ollama Cloud models. Requires Emacs 29.1+.
 
 #+begin_src elisp
 (use-package ollama-buddy

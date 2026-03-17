@@ -3,7 +3,7 @@
 ;; Author: James Dyer <captainflasmr@gmail.com>
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
-;; Package-Requires: ((emacs "28.1"))
+;; Package-Requires: ((emacs "29.1"))
 
 ;;; Commentary:
 ;;

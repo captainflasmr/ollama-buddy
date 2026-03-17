@@ -2,7 +2,7 @@
 
 ;; Author: James Dyer <captainflasmr@gmail.com>
 ;; Keywords: local, tools
-;; Package-Requires: ((emacs "28.1") (transient "0.4.0"))
+;; Package-Requires: ((emacs "29.1") (transient "0.4.0"))
 
 ;;; Commentary:
 
@@ -2898,10 +2898,7 @@ Uses `ollama-buddy--response-heading-marker' to locate the heading."
                             "")))
           ;; Fold the drawer
           (goto-char drawer-start)
-          (if (fboundp 'org-fold-hide-drawer-toggle)
-              (org-fold-hide-drawer-toggle 'hide)
-            (when (fboundp 'org-hide-drawer-toggle)
-              (org-hide-drawer-toggle 'hide))))))
+          (org-fold-hide-drawer-toggle 'hide))))
     (set-marker marker nil)
     (setq ollama-buddy--response-heading-marker nil)))
 
