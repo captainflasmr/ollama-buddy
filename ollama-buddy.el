@@ -2617,6 +2617,12 @@ are present, otherwise downloads from GitHub."
       (ollama-buddy-mode 1)
       (ollama-buddy--check-status)
       (insert (ollama-buddy--create-intro-message))
+      ;; Fold the "More Commands" heading so it doesn't clutter the welcome screen
+      (save-excursion
+        (goto-char (point-min))
+        (when (re-search-forward "^\\*\\* More Commands$" nil t)
+          (beginning-of-line)
+          (org-fold-hide-subtree)))
       ;; now set up default model if none exist
       (setq ollama-buddy--current-model ollama-buddy-default-model)
       (when (not ollama-buddy-default-model)
@@ -3678,6 +3684,9 @@ buffer the user launched from."
     (skip-chars-backward "\n")
     (delete-region (point) (point-max)))
   (insert (ollama-buddy--create-intro-message))
+  (save-excursion
+    (when (re-search-backward "^\\*\\* More Commands$" nil t)
+      (org-fold-hide-subtree)))
   (ollama-buddy--prepare-prompt-area))
 
 (defun ollama-buddy--menu-custom-prompt ()

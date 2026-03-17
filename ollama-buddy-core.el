@@ -370,10 +370,6 @@ When nil, point stays in its original position regardless of visibility."
   :type 'boolean
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-full-welcome-enabled nil
-  "Showing the full welcome screen."
-  :type 'boolean
-  :group 'ollama-buddy)
 
 (defcustom ollama-buddy-show-params-in-header t
   "Whether to show modified parameters in the header line."
@@ -2063,6 +2059,8 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
               "│  O L L A M A   B U D D Y          │\n"
               "└───────────────────────────────────┘\n"
               "#+end_example\n\n"))
+           (when-let ((tip (ollama-buddy--get-random-tip)))
+             (concat tip "\n\n"))
            (if project-info (concat project-info "\n\n") "")
            (when (not (ollama-buddy--check-status))
              "** *THERE IS NO OLLAMA RUNNING*\n
@@ -2086,14 +2084,18 @@ please run =ollama serve=\n\n")
            "- /Ask me anything!/       *C-c C-c* OR *C-c RET*
 - /Main transient menu/    *C-c O*
 - /Select model/           *C-c m*
-- /Pull new model/         *C-c l*"
-           (when ollama-buddy-full-welcome-enabled
-             "
+- /Pull new model/         *C-c l*
+** More Commands
 - /Browse prompt history/  *M-p/n/r*
 - /Manage models/          *C-c M*
-- /ollama-buddy Manual/    *C-c ?*")
-           (when-let ((tip (ollama-buddy--get-random-tip)))
-             (concat "\n\n" tip))
+- /Recommended models/     *C-c L*
+- /Jump to prompt/         *C-c j*
+- /Load session/           *C-c f*
+- /Save session/           *C-c s*
+- /In-buffer replace/      *C-c W*
+- /Toggle airplane mode/   *C-c !*
+- /Slash commands/         */*
+- /ollama-buddy Manual/    *C-c ?*"
            (when (and project-root
                       (not (file-exists-p
                             (expand-file-name
