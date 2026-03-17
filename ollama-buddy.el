@@ -4866,7 +4866,7 @@ Modifies the variable in place."
         (insert "\n\n")
         (insert "Press =g= to refresh\n\n")
 
-        ;; Show running models count with unload all button
+        ;; Show running models with individual unload buttons
         (when running-models
           (insert (format "* Running Models: %d  " (length running-models)))
           (insert-text-button
@@ -4875,7 +4875,23 @@ Modifies the variable in place."
                      (ollama-buddy-unload-all-models)
                      (run-with-timer 3 nil #'ollama-buddy-manage-models))
            'help-echo "Unload all running models to free up resources")
-          (insert "\n\n"))
+          (insert "\n\n")
+          (dolist (model running-models)
+            (insert "- ")
+            (insert-text-button
+             model
+             'action `(lambda (_)
+                        (ollama-buddy-select-model ,model))
+             'help-echo (format "Select %s" model))
+            (insert "  ")
+            (insert-text-button
+             "Unload"
+             'action `(lambda (_)
+                        (ollama-buddy--unload-single-model ,model)
+                        (run-with-timer 3 nil #'ollama-buddy-manage-models))
+             'help-echo (format "Unload %s to free up resources" model))
+            (insert "\n"))
+          (insert "\n"))
 
         ;; Actions at bottom
         (insert "* Actions:\n\n")
@@ -4923,14 +4939,9 @@ Modifies the variable in place."
                   (insert "  (Set ollama-buddy-cloud-session-token for usage stats)\n\n")))))
           (dolist (model ollama-buddy-cloud-models)
             (let* ((display-model (ollama-buddy--get-full-cloud-model-name model))
-                   (letter (ollama-buddy--get-model-letter display-model))
-                   (is-current (and ollama-buddy--current-model
-                                    (or (string= display-model
-                                                 ollama-buddy--current-model)
-                                        (string= model ollama-buddy--current-model)))))
-              (insert (format "- (%s) [%s] "
-                              (or letter " ")
-                              (if is-current "x" " ")))
+                   (letter (ollama-buddy--get-model-letter display-model)))
+              (insert (format "- (%s) "
+                              (or letter " ")))
               ;; Select button
               (insert-text-button
                display-model
@@ -4960,9 +4971,8 @@ Modifies the variable in place."
           (let* ((is-running (member model running-models))
                  (letter (ollama-buddy--get-model-letter model)))
 
-            (insert (format "- (%s) [%s] "
-                            (or letter " ")
-                            (if is-running "x" " ")))
+            (insert (format "- (%s) "
+                            (or letter " ")))
 
             ;; Select button
             (insert-text-button
@@ -4995,7 +5005,7 @@ Modifies the variable in place."
                    "Unload"
                    'action `(lambda (_)
                               (ollama-buddy--unload-single-model ,model)
-                              (run-with-timer 1 nil #'ollama-buddy-manage-models))
+                              (run-with-timer 3 nil #'ollama-buddy-manage-models))
                    'help-echo "Unload this model to free up resources")
                   (insert "  "))
               ;; Pull button for non-running models
