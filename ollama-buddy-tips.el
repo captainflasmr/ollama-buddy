@@ -82,7 +82,8 @@
     "=C-c != toggles airplane mode, blocking all internet access so every request stays on your local machine."
     "=C-c e= switches between the built-in network-process backend and the external curl backend on the fly."
     "Store API keys in =~/.authinfo.gpg= and retrieve them with =auth-source-pick-first-password= — keep secrets out of your init file."
-    "Use =/init= in a project to generate and cache a project summary — it auto-loads as context in future sessions so the model already knows your codebase.")
+    "Use =/init= in a project to generate and cache a project summary — it auto-loads as context in future sessions so the model already knows your codebase."
+    "=C-c j= jumps to any prompt in the conversation — handy for navigating long chat sessions. Also works via =M-x imenu=.")
   "List of tip strings shown at random on the ollama-buddy welcome screen.
 Each element is a plain string; org-mode markup is supported.")
 

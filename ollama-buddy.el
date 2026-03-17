@@ -141,6 +141,43 @@
 
 (defvar imenu--index-alist)
 
+(defun ollama-buddy--imenu-create-index ()
+  "Create an imenu index for the chat buffer.
+Indexes prompt turns as a numbered list."
+  (let ((index nil)
+        (turn 0))
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "^\\* \\*.+\\*.*>> PROMPT: " nil t)
+        (let ((pos (match-beginning 0))
+              (text (string-trim
+                     (buffer-substring-no-properties
+                      (point) (line-end-position)))))
+          (setq turn (1+ turn))
+          (when (> (length text) 50)
+            (setq text (concat (substring text 0 50) "...")))
+          (push (cons (format "%02d. %s" turn
+                              (if (string-empty-p text) "(empty)" text))
+                      pos)
+                index))))
+    (nreverse index)))
+
+(defun ollama-buddy-jump-to-prompt ()
+  "Jump to a prompt in the chat buffer using `completing-read'."
+  (interactive)
+  (let* ((buf (get-buffer ollama-buddy--chat-buffer))
+         (index (when buf
+                  (with-current-buffer buf
+                    (ollama-buddy--imenu-create-index)))))
+    (if (null index)
+        (message "No prompts found")
+      (let* ((choice (completing-read "Jump to prompt: " index nil t))
+             (pos (cdr (assoc choice index))))
+        (when pos
+          (pop-to-buffer buf)
+          (goto-char pos)
+          (recenter 0))))))
+
 (defvar ollama-buddy--reasoning-skip-newlines nil
   "Whether to skip leading newlines after reasoning section ends.")
 
@@ -5726,6 +5763,7 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c !") #'ollama-buddy-toggle-airplane-mode)
     (define-key map (kbd "C-c W") #'ollama-buddy-toggle-in-buffer-replace)
     ;; Prompts section keybindings
+    (define-key map (kbd "C-c j") #'ollama-buddy-jump-to-prompt)
     (define-key map (kbd "C-c l") #'ollama-buddy-pull-model)
     (define-key map (kbd "C-c s") #'ollama-buddy-transient-user-prompts-menu)
     (define-key map (kbd "C-c C-s") #'ollama-buddy-show-system-prompt-info)
@@ -5811,7 +5849,11 @@ Returns the text with @file() delimiters removed."
 (define-minor-mode ollama-buddy-mode
   "Minor mode for ollama-buddy keybindings."
   :lighter " OB"
-  :keymap ollama-buddy-mode-map)
+  :keymap ollama-buddy-mode-map
+  (when ollama-buddy-mode
+    (setq-local imenu-create-index-function #'ollama-buddy--imenu-create-index)
+    (setq-local imenu-auto-rescan t)
+    (setq-local imenu-sort-function nil)))
 
 (push 'ollama-buddy--prompt-history savehist-additional-variables)
 

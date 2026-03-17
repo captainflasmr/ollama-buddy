@@ -171,6 +171,7 @@
     ("U" "Multishot" ollama-buddy--multishot-prompt)]
 
    ["Actions"
+    ("j" "Jump to Prompt" ollama-buddy-jump-to-prompt)
     ("l" "Pull Model" ollama-buddy-pull-model)
     ("x" "Toggle Stream" ollama-buddy-toggle-streaming)
     ("e" "Switch Backend" ollama-buddy-switch-communication-backend)
