@@ -762,11 +762,17 @@ RESPONSE-TEXT (if non-nil/empty) is inserted before the Tools section."
 
 (defun ollama-buddy--extend-thinking-fold (heading-marker)
   "Re-fold the subtree at HEADING-MARKER to cover newly inserted text.
-Called after inserting thinking tokens so appended text stays hidden."
+Called after inserting thinking tokens so appended text stays hidden.
+If the user has manually unfolded the heading, the subtree is left visible."
   (when (and heading-marker (marker-buffer heading-marker))
     (save-excursion
       (goto-char (marker-position heading-marker))
-      (org-fold-hide-subtree))))
+      (end-of-line)
+      ;; Only re-fold if the subtree is currently folded;
+      ;; if the user has unfolded with TAB, leave it visible.
+      (when (and (< (point) (point-max))
+                 (invisible-p (1+ (point))))
+        (org-fold-hide-subtree)))))
 
 ;; Function to check if text contains a reasoning marker
 (defun ollama-buddy--find-reasoning-marker (text)
