@@ -295,20 +295,28 @@ then splicing the fragment into the corresponding region of the original."
 ;;; Tool Execution
 
 (defun ollama-buddy-tools--format-args-for-display (arguments)
-  "Format ARGUMENTS alist for display, truncating long string values."
-  (mapconcat
-   (lambda (pair)
-     (let* ((key (car pair))
-            (val (cdr pair))
-            (val-str (if (stringp val)
-                         (if (> (length val) 60)
-                             (format "\"%s\"… (%d chars)"
-                                     (substring val 0 60) (length val))
-                           (format "%S" val))
-                       (format "%S" val))))
-       (format "%s: %s" key val-str)))
-   arguments
-   ", "))
+  "Format ARGUMENTS alist for display, truncating long string values.
+ARGUMENTS may be an alist or a JSON string (as returned by remote providers)."
+  (let ((args (if (stringp arguments)
+                  (condition-case nil
+                      (json-read-from-string arguments)
+                    (error nil))
+                arguments)))
+    (if (or (null args) (not (listp args)))
+        (format "%s" (or arguments ""))
+      (mapconcat
+       (lambda (pair)
+         (let* ((key (car pair))
+                (val (cdr pair))
+                (val-str (if (stringp val)
+                             (if (> (length val) 60)
+                                 (format "\"%s\"… (%d chars)"
+                                         (substring val 0 60) (length val))
+                               (format "%S" val))
+                           (format "%S" val))))
+           (format "%s: %s" key val-str)))
+       args
+       ", "))))
 
 (defun ollama-buddy-tools--check-result-size (result tool-name)
   "Check RESULT size from TOOL-NAME and warn if it exceeds the threshold.
@@ -719,8 +727,8 @@ Returns a list of tool result messages to append to the conversation."
     (ollama-buddy-tools-register
      'get_project_info
      "Get information about the current Emacs project using project.el. Returns the project root directory, project name, and top-level files/directories. Useful for understanding what project the user is working in."
-     '((type . "object")
-       (properties . ()))
+     `((type . "object")
+       (properties . ,(make-hash-table)))
      (lambda (_args)
        (if-let ((proj (project-current)))
            (let* ((root (project-root proj))
@@ -743,8 +751,8 @@ Returns a list of tool result messages to append to the conversation."
     (ollama-buddy-tools-register
      'get_region
      "Get the currently selected text (active region) in Emacs. Returns the selected text along with the buffer name and line range. Useful when the user says \"explain this\", \"refactor this\", etc."
-     '((type . "object")
-       (properties . ()))
+     `((type . "object")
+       (properties . ,(make-hash-table)))
      (lambda (_args)
        (let ((buf (or (and (bound-and-true-p ollama-buddy--caller-buffer)
                            (buffer-live-p ollama-buddy--caller-buffer)

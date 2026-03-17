@@ -11,6 +11,20 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-03-17 Mon> *5.0.0*
+
+Tool calling for all providers — OpenAI, Claude, and Gemini API types all
+support function calling through =ollama-buddy-provider-create=.
+
+*** Features
+
+- *Tool calling for external providers* -- Models registered via
+  =ollama-buddy-provider-create= now support tool calling across all three API
+  types: OpenAI-compatible (covers OpenAI, DeepSeek, Grok, OpenRouter, Copilot,
+  Codestral, LM Studio, etc.), Anthropic Claude, and Google Gemini.  Tools are
+  automatically converted from the internal OpenAI format to each provider's
+  native schema at send time.
+
 ** <2026-03-17 Mon> *4.2.0*
 
 Tool-augmented search — LLMs can now autonomously search the web and query

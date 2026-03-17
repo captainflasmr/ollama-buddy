@@ -28,6 +28,15 @@
 (declare-function ollama-buddy-rag-process-inline-async "ollama-buddy-rag")
 ;; Main module forward declarations
 (declare-function ollama-buddy--trim-token-history "ollama-buddy")
+(declare-function ollama-buddy--rebuild-tool-batch "ollama-buddy")
+(declare-function ollama-buddy--model-supports-tools "ollama-buddy")
+(declare-function ollama-buddy--send "ollama-buddy")
+;; Tool module forward declarations
+(declare-function ollama-buddy-tools--generate-schema "ollama-buddy-tools")
+(declare-function ollama-buddy-tools--execute "ollama-buddy-tools")
+(declare-function ollama-buddy-tools--format-args-for-display "ollama-buddy-tools")
+;; Provider module forward declarations
+(declare-function ollama-buddy-provider--model-is-provider-p "ollama-buddy-provider")
 
 (defvar ollama-buddy-remote--request-start-time nil
   "Timestamp when the current remote request was sent.")
@@ -125,20 +134,23 @@ Returns the possibly-modified prompt string."
 
 (defun ollama-buddy-remote--process-inline-features-async (prompt callback)
   "Process inline web search and RAG features in PROMPT asynchronously.
-Calls CALLBACK with the modified prompt when done."
-  ;; Web search (async) → RAG (async) → callback
-  (let ((web-search-next
-         (lambda (p)
-           ;; Process inline @rag() queries asynchronously if RAG module is loaded
-           (if (and (featurep 'ollama-buddy-rag)
-                    (fboundp 'ollama-buddy-rag-process-inline-async))
-               (ollama-buddy-rag-process-inline-async p callback)
-             (funcall callback p)))))
-    ;; Process inline web search asynchronously if module is loaded
-    (if (and (featurep 'ollama-buddy-web-search)
-             (fboundp 'ollama-buddy-web-search-process-inline-async))
-        (ollama-buddy-web-search-process-inline-async prompt web-search-next)
-      (funcall web-search-next prompt))))
+Calls CALLBACK with the modified prompt when done.
+When PROMPT is nil (e.g. tool continuations), skips processing."
+  (if (null prompt)
+      (funcall callback prompt)
+    ;; Web search (async) → RAG (async) → callback
+    (let ((web-search-next
+           (lambda (p)
+             ;; Process inline @rag() queries asynchronously if RAG module is loaded
+             (if (and (featurep 'ollama-buddy-rag)
+                      (fboundp 'ollama-buddy-rag-process-inline-async))
+                 (ollama-buddy-rag-process-inline-async p callback)
+               (funcall callback p)))))
+      ;; Process inline web search asynchronously if module is loaded
+      (if (and (featurep 'ollama-buddy-web-search)
+               (fboundp 'ollama-buddy-web-search-process-inline-async))
+          (ollama-buddy-web-search-process-inline-async prompt web-search-next)
+        (funcall web-search-next prompt)))))
 
 ;;; Chat buffer preparation
 ;; ============================================================================
@@ -447,6 +459,18 @@ Returns nil to skip the line (e.g. [DONE] or non-content events).")
 (defvar ollama-buddy-remote--streaming-temp-file nil
   "Path to the temp file for the current streaming request.")
 
+(defvar ollama-buddy-remote--streaming-tool-call-acc nil
+  "Hash table mapping tool call index to plist during streaming.
+Each value is a plist (:id ID :type TYPE :name NAME :arguments ARGS-STRING).
+Used to accumulate incremental tool_calls from OpenAI SSE chunks.")
+
+(defvar ollama-buddy-remote--streaming-tool-continuation-p nil
+  "Non-nil when the current streaming request is a tool continuation.")
+
+(defvar ollama-buddy-remote--streaming-http-error nil
+  "Non-nil when the streaming response had an HTTP error.
+Contains the error body string for display.")
+
 (defun ollama-buddy-remote--streaming-insert-content (content)
   "Insert CONTENT token into the chat buffer during streaming."
   (when (and content (not (string-empty-p content)))
@@ -473,53 +497,201 @@ Returns nil to skip the line (e.g. [DONE] or non-content events).")
               (set-window-start window old-window-start t)))))))))
 
 (defun ollama-buddy-remote--streaming-finalize ()
-  "Finalize a completed SSE streaming response in the chat buffer."
-  (let* ((content ollama-buddy-remote--streaming-response)
-         (start-point ollama-buddy-remote--streaming-start-point)
-         (prompt ollama-buddy-remote--streaming-prompt)
-         (token-count ollama-buddy-remote--streaming-token-count)
-         (elapsed-time (if ollama-buddy-remote--request-start-time
-                           (- (float-time) ollama-buddy-remote--request-start-time)
-                         0))
-         (token-rate (if (> elapsed-time 0) (/ token-count elapsed-time) 0)))
-    (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
-      (with-current-buffer ollama-buddy--chat-buffer
-        (let* ((inhibit-read-only t)
-               (window (get-buffer-window ollama-buddy--chat-buffer t)))
-          ;; Convert markdown to org in-place if enabled
-          (when (and ollama-buddy-convert-markdown-to-org start-point)
-            (ollama-buddy--md-to-org-convert-region start-point (point-max)))
-          ;; Write to register
-          (let* ((reg-char ollama-buddy-default-register)
-                 (current (get-register reg-char))
-                 (new-content (concat (if (stringp current) current "") content)))
-            (set-register reg-char new-content))
-          ;; Add to history
-          (when ollama-buddy-history-enabled
-            (ollama-buddy--add-to-history "user" prompt)
-            (ollama-buddy--add-to-history "assistant" content))
-          ;; Record token usage
-          (push (list :model ollama-buddy--current-model
-                      :tokens token-count
-                      :elapsed elapsed-time
-                      :rate token-rate
-                      :wait-time ollama-buddy--response-wait-duration
-                      :timestamp (current-time))
-                ollama-buddy--token-usage-history)
-          (ollama-buddy--trim-token-history)
-          ;; Insert property drawer on the response heading
-          (ollama-buddy--insert-response-properties
-           token-count elapsed-time token-rate
-           ollama-buddy--response-wait-duration)
-          (ollama-buddy--prepare-prompt-area)
-          (setq ollama-buddy-remote--request-start-time nil)
-          (ollama-buddy--maybe-goto-prompt window start-point)
-          (ollama-buddy--update-status
-           (format "Finished [%d tokens in %.1fs, %.1f t/s]"
-                   token-count elapsed-time token-rate)))))
-    ;; Auto-save transcript
-    (when (fboundp 'ollama-buddy--autosave-transcript)
-      (ollama-buddy--autosave-transcript))))
+  "Finalize a completed SSE streaming response in the chat buffer.
+If tool calls were accumulated during streaming, executes them and
+sends a continuation request through the same provider."
+  (if ollama-buddy-remote--streaming-http-error
+      ;; === HTTP ERROR PATH ===
+      (let ((error-body ollama-buddy-remote--streaming-http-error))
+        (setq ollama-buddy-remote--streaming-http-error nil
+              ollama-buddy-remote--streaming-tool-call-acc nil
+              ollama-buddy-remote--streaming-tool-continuation-p nil)
+        ;; Try to extract a readable error message from the JSON body
+        (let ((error-msg
+               (condition-case nil
+                   (let* ((json-object-type 'alist)
+                          (json-key-type 'symbol)
+                          (json-data (json-read-from-string
+                                      (string-trim error-body)))
+                          (err-obj (alist-get 'error json-data)))
+                     (if (stringp err-obj)
+                         err-obj
+                       (or (alist-get 'message err-obj)
+                           (format "%s" err-obj))))
+                 (error (string-trim error-body)))))
+          (message "ollama-buddy: API error: %s" error-msg)
+          (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
+            (with-current-buffer ollama-buddy--chat-buffer
+              (let ((inhibit-read-only t))
+                (goto-char (point-max))
+                (insert (format "\n\nAPI Error: %s\n" error-msg))
+                (ollama-buddy--prepare-prompt-area)
+                (ollama-buddy--update-status "API error"))))))
+
+    ;; === NORMAL/TOOL PATH ===
+    (let* ((content ollama-buddy-remote--streaming-response)
+           (start-point ollama-buddy-remote--streaming-start-point)
+           (prompt ollama-buddy-remote--streaming-prompt)
+           (token-count ollama-buddy-remote--streaming-token-count)
+           (elapsed-time (if ollama-buddy-remote--request-start-time
+                             (- (float-time) ollama-buddy-remote--request-start-time)
+                           0))
+           (token-rate (if (> elapsed-time 0) (/ token-count elapsed-time) 0))
+           (tool-calls (ollama-buddy-remote--build-tool-calls-from-acc))
+           (tool-continuation-p ollama-buddy-remote--streaming-tool-continuation-p))
+
+      ;; Branch: tool calls detected vs normal completion
+      (if (and tool-calls
+               (featurep 'ollama-buddy-tools)
+               (bound-and-true-p ollama-buddy-tools-enabled))
+          ;; === TOOL CALL PATH ===
+          ;; Clean up accumulator before the handler starts a new request.
+          ;; Do NOT reset --streaming-tool-continuation-p here because
+          ;; --handle-tool-calls starts a new async request that sets
+          ;; fresh streaming state — resetting after would clobber it.
+          (progn
+            (setq ollama-buddy-remote--streaming-tool-call-acc nil)
+            (ollama-buddy-remote--handle-tool-calls
+             tool-calls content start-point prompt tool-continuation-p))
+
+        ;; === NORMAL COMPLETION PATH ===
+        (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
+          (with-current-buffer ollama-buddy--chat-buffer
+            (let* ((inhibit-read-only t)
+                   (window (get-buffer-window ollama-buddy--chat-buffer t)))
+              ;; Convert markdown to org in-place if enabled
+              (when (and ollama-buddy-convert-markdown-to-org start-point)
+                (ollama-buddy--md-to-org-convert-region start-point (point-max)))
+              ;; Write to register
+              (let* ((reg-char ollama-buddy-default-register)
+                     (current (get-register reg-char))
+                     (new-content (concat (if (stringp current) current "")
+                                          content)))
+                (set-register reg-char new-content))
+              ;; Add to history (skip for tool continuations — already in history)
+              (when (and ollama-buddy-history-enabled (not tool-continuation-p))
+                (ollama-buddy--add-to-history "user" prompt)
+                (ollama-buddy--add-to-history "assistant" content))
+              (when (and ollama-buddy-history-enabled tool-continuation-p)
+                (ollama-buddy--add-to-history "assistant" content))
+              ;; Record token usage
+              (push (list :model ollama-buddy--current-model
+                          :tokens token-count
+                          :elapsed elapsed-time
+                          :rate token-rate
+                          :wait-time ollama-buddy--response-wait-duration
+                          :timestamp (current-time))
+                    ollama-buddy--token-usage-history)
+              (ollama-buddy--trim-token-history)
+              ;; Insert property drawer on the response heading
+              (ollama-buddy--insert-response-properties
+               token-count elapsed-time token-rate
+               ollama-buddy--response-wait-duration)
+              (ollama-buddy--prepare-prompt-area)
+              (setq ollama-buddy-remote--request-start-time nil)
+              (ollama-buddy--maybe-goto-prompt window start-point)
+              (ollama-buddy--update-status
+               (format "Finished [%d tokens in %.1fs, %.1f t/s]"
+                       token-count elapsed-time token-rate)))))
+        ;; Auto-save transcript
+        (when (fboundp 'ollama-buddy--autosave-transcript)
+          (ollama-buddy--autosave-transcript))
+        ;; Clean up — only in normal path, not after tool handler
+        (setq ollama-buddy-remote--streaming-tool-call-acc nil
+              ollama-buddy-remote--streaming-tool-continuation-p nil)))))
+
+(defun ollama-buddy-remote--handle-tool-calls
+    (tool-calls content start-point prompt tool-continuation-p)
+  "Handle tool calls from a remote provider streaming response.
+TOOL-CALLS is the list of accumulated tool call alists.
+CONTENT is any text content from the response.
+START-POINT is the buffer position where the response began.
+PROMPT is the original user prompt.
+TOOL-CONTINUATION-P is non-nil if this is already a continuation."
+  (let* ((model ollama-buddy--current-model)
+         (max-iterations (if (boundp 'ollama-buddy-tools-max-iterations)
+                             ollama-buddy-tools-max-iterations 10))
+         (iteration (or (bound-and-true-p ollama-buddy--tool-call-iteration) 0)))
+
+    (if (>= iteration max-iterations)
+        ;; Iteration limit reached — stop
+        (progn
+          (ollama-buddy--update-status "Tool call iteration limit reached")
+          (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
+            (with-current-buffer ollama-buddy--chat-buffer
+              (let ((inhibit-read-only t))
+                (goto-char (point-max))
+                (insert "\n\n[Tool call iteration limit reached]\n")
+                (ollama-buddy--prepare-prompt-area)))))
+
+      ;; Increment iteration counter
+      (setq ollama-buddy--tool-call-iteration (1+ iteration))
+
+      ;; Add to history: user message (if not continuation) + assistant with tool_calls
+      (when (and ollama-buddy-history-enabled (not tool-continuation-p))
+        (ollama-buddy--add-to-history "user" prompt))
+      (when ollama-buddy-history-enabled
+        (ollama-buddy--add-to-history "assistant" (or content "") tool-calls))
+
+      ;; Execute tool calls and build OpenAI-format result messages
+      (let* ((tool-results
+              (ollama-buddy-remote--execute-tool-calls tool-calls))
+             ;; Convert tool-calls to the format expected by rebuild-tool-batch
+             ;; rebuild-tool-batch expects: ((function . ((name . N) (arguments . A))))
+             (batch-tool-calls
+              (mapcar (lambda (tc)
+                        `((function . ,(alist-get 'function tc))))
+                      tool-calls))
+             ;; Convert results to format for rebuild-tool-batch
+             ;; rebuild-tool-batch expects: ((content . RESULT-STRING))
+             (batch-tool-results
+              (mapcar (lambda (r)
+                        `((content . ,(alist-get 'content r))))
+                      tool-results)))
+
+        ;; Rebuild buffer with structured tool batch display
+        (when (buffer-live-p (get-buffer ollama-buddy--chat-buffer))
+          (with-current-buffer ollama-buddy--chat-buffer
+            (let ((inhibit-read-only t))
+              (ollama-buddy--rebuild-tool-batch
+               start-point model batch-tool-calls batch-tool-results
+               nil  ; thinking-content
+               (when (and content (not (string-empty-p content))) content)))))
+
+        ;; Add tool results to history (OpenAI format with tool_call_id)
+        (when ollama-buddy-history-enabled
+          (dolist (result tool-results)
+            (ollama-buddy--add-to-history-raw result)))
+
+        ;; Reset request start time
+        (setq ollama-buddy-remote--request-start-time nil)
+
+        ;; Send continuation via dispatch (will route to correct provider)
+        (if (and (boundp 'ollama-buddy-tools--stop-after-batch)
+                 ollama-buddy-tools--stop-after-batch)
+            (progn
+              (setq ollama-buddy-tools--stop-after-batch nil)
+              (setq ollama-buddy--suppress-tools-once t)
+              (ollama-buddy--send
+               "continue, I will manually apply the changes using ediff, please just supply a brief summary of what was changed"
+               model nil))
+          (ollama-buddy--send nil model t))))))
+
+(defun ollama-buddy-remote--execute-tool-calls (tool-calls)
+  "Execute TOOL-CALLS and return OpenAI-format tool result messages.
+Each result has `role', `tool_call_id', and `content' keys."
+  (let (results)
+    (dolist (call tool-calls)
+      (let* ((id (alist-get 'id call))
+             (func (alist-get 'function call))
+             (name (alist-get 'name func))
+             (arguments (alist-get 'arguments func))
+             (result (ollama-buddy-tools--execute name arguments)))
+        (push `((role . "tool")
+                (tool_call_id . ,id)
+                (content . ,result))
+              results)))
+    (nreverse results)))
 
 (defun ollama-buddy-remote--streaming-process-filter (proc output)
   "Process filter for SSE streaming curl processes.
@@ -535,20 +707,32 @@ PROC is the curl process, OUTPUT is the new chunk of text."
             (unless ollama-buddy-remote--streaming-headers-done
               (goto-char (point-min))
               (when (re-search-forward "\r?\n\r?\n" nil t)
-                (delete-region (point-min) (point))
-                (setq ollama-buddy-remote--streaming-headers-done t)))
-            ;; Process complete SSE lines
-            (when ollama-buddy-remote--streaming-headers-done
+                (let ((headers (buffer-substring (point-min) (point))))
+                  ;; Check HTTP status code
+                  (when (string-match "^HTTP/[0-9.]+ \\([0-9]+\\)" headers)
+                    (let ((status-code (string-to-number (match-string 1 headers))))
+                      (unless (and (>= status-code 200) (< status-code 300))
+                        (message "ollama-buddy: HTTP %d error from remote API" status-code)
+                        ;; Capture remaining body as error
+                        (setq ollama-buddy-remote--streaming-http-error
+                              (buffer-substring (point) (point-max))))))
+                  (delete-region (point-min) (point))
+                  (setq ollama-buddy-remote--streaming-headers-done t))))
+            ;; Process complete SSE lines (skip if HTTP error detected)
+            (when (and ollama-buddy-remote--streaming-headers-done
+                       (not ollama-buddy-remote--streaming-http-error))
               (goto-char (point-min))
               (while (re-search-forward "^\\(.*\\)\n" nil t)
                 (let ((line (match-string 1)))
                   (delete-region (match-beginning 0) (match-end 0))
                   (when (string-prefix-p "data: " line)
-                    (let* ((data-str (substring line 6))
-                           (content (condition-case nil
+                    (let* ((data-str (string-trim (substring line 6)))
+                           (content (condition-case err
                                         (funcall ollama-buddy-remote--streaming-content-extractor
                                                  data-str)
-                                      (error nil))))
+                                      (error
+                                       (message "ollama-buddy: extractor error: %s" err)
+                                       nil))))
                       (when content
                         (ollama-buddy-remote--streaming-insert-content content))))))))
         (error
@@ -560,6 +744,12 @@ PROC is the curl process, EVENT is the status event string."
   (condition-case err
       (let ((proc-buffer (process-buffer proc))
             (temp-file (process-get proc :temp-file)))
+        ;; Capture full error body before killing buffer
+        (when (and ollama-buddy-remote--streaming-http-error
+                   proc-buffer (buffer-live-p proc-buffer))
+          (with-current-buffer proc-buffer
+            (setq ollama-buddy-remote--streaming-http-error
+                  (buffer-string))))
         ;; Clean up process buffer
         (when (and proc-buffer (buffer-live-p proc-buffer))
           (kill-buffer proc-buffer))
@@ -609,7 +799,9 @@ START-POINT is the buffer position where content should be inserted."
         ollama-buddy-remote--streaming-prompt prompt
         ollama-buddy-remote--streaming-start-point start-point
         ollama-buddy-remote--streaming-content-extractor content-extractor
-        ollama-buddy-remote--streaming-provider-name provider-name)
+        ollama-buddy-remote--streaming-provider-name provider-name
+        ollama-buddy-remote--streaming-tool-call-acc nil
+        ollama-buddy-remote--streaming-http-error nil)
   ;; Kill any existing active process
   (when (and ollama-buddy--active-process
              (process-live-p ollama-buddy--active-process))
@@ -686,6 +878,85 @@ Returns the token string, or nil if the line should be skipped."
             content))
       (error nil))))
 
+(defun ollama-buddy-remote--openai-extract-content-with-tools (data-str)
+  "Extract content and accumulate tool calls from OpenAI SSE DATA-STR.
+Like `ollama-buddy-remote--openai-extract-content' but also detects
+incremental `delta.tool_calls' and accumulates them in
+`ollama-buddy-remote--streaming-tool-call-acc'."
+  (when (and data-str
+             (not (string= data-str "[DONE]"))
+             (not (string-empty-p (string-trim data-str))))
+    (condition-case err
+        (let* ((json-object-type 'alist)
+               (json-array-type 'vector)
+               (json-key-type 'symbol)
+               (json-data (json-read-from-string data-str))
+               (choices (alist-get 'choices json-data))
+               (choice (when (and choices (> (length choices) 0))
+                         (aref choices 0)))
+               (delta (when choice (alist-get 'delta choice)))
+               (content (when delta (alist-get 'content delta)))
+               (tool-calls-delta (when delta
+                                   (alist-get 'tool_calls delta))))
+          ;; Accumulate incremental tool calls
+          (when tool-calls-delta
+            (unless ollama-buddy-remote--streaming-tool-call-acc
+              (setq ollama-buddy-remote--streaming-tool-call-acc
+                    (make-hash-table :test 'eql)))
+            (seq-doseq (tc (if (vectorp tool-calls-delta)
+                               tool-calls-delta
+                             (list tool-calls-delta)))
+              (let* ((index (alist-get 'index tc))
+                     (existing (gethash index
+                                        ollama-buddy-remote--streaming-tool-call-acc))
+                     (id (alist-get 'id tc))
+                     (type (alist-get 'type tc))
+                     (func-delta (alist-get 'function tc))
+                     (name (when func-delta (alist-get 'name func-delta)))
+                     (args (when func-delta
+                             (alist-get 'arguments func-delta))))
+                (if existing
+                    ;; Append to existing arguments buffer
+                    (when (and args (not (string-empty-p args)))
+                      (plist-put existing :arguments
+                                 (concat (or (plist-get existing :arguments)
+                                             "")
+                                         args)))
+                  ;; New tool call entry
+                  (puthash index
+                           (list :id (or id "")
+                                 :type (or type "function")
+                                 :name (or name "")
+                                 :arguments (or args ""))
+                           ollama-buddy-remote--streaming-tool-call-acc)))))
+          ;; Return content token (may be nil for tool-call-only chunks)
+          (when (and content (not (eq content :null)))
+            content))
+      (error
+       (message "ollama-buddy: tools extractor error: %s on data: %.100s"
+                (error-message-string err) data-str)
+       nil))))
+
+(defun ollama-buddy-remote--build-tool-calls-from-acc ()
+  "Build a list of tool call alists from the streaming accumulator.
+Returns a list in OpenAI format suitable for history and processing:
+  ((id . ID) (type . TYPE)
+   (function . ((name . NAME) (arguments . ARGS-JSON-STRING))))"
+  (when ollama-buddy-remote--streaming-tool-call-acc
+    (let (result)
+      (maphash
+       (lambda (_index plist)
+         (push `((id . ,(plist-get plist :id))
+                 (type . ,(plist-get plist :type))
+                 (function . ((name . ,(plist-get plist :name))
+                              (arguments . ,(plist-get plist :arguments)))))
+               result))
+       ollama-buddy-remote--streaming-tool-call-acc)
+      ;; Sort by collected order (hash iteration order is not guaranteed)
+      (sort result (lambda (a b)
+                     (string< (or (alist-get 'id a) "")
+                              (or (alist-get 'id b) "")))))))
+
 (defun ollama-buddy-remote--claude-extract-content (data-str)
   "Extract content token from a Claude SSE DATA-STR.
 Returns the token string, or nil if the line should be skipped."
@@ -703,6 +974,135 @@ Returns the token string, or nil if the line should be skipped."
                      (not (eq text :null)))
             text))
       (error nil))))
+
+(defun ollama-buddy-remote--claude-extract-content-with-tools (data-str)
+  "Extract content and accumulate tool calls from Claude SSE DATA-STR.
+Handles `content_block_start' (tool_use), `content_block_delta'
+\(text_delta and input_json_delta), and other event types.
+Accumulates tool calls in `ollama-buddy-remote--streaming-tool-call-acc'."
+  (when (and data-str
+             (not (string-empty-p (string-trim data-str))))
+    (condition-case err
+        (let* ((json-object-type 'alist)
+               (json-array-type 'vector)
+               (json-key-type 'symbol)
+               (json-data (json-read-from-string data-str))
+               (type (alist-get 'type json-data)))
+          (cond
+           ;; content_block_start with tool_use: register new tool call
+           ((string= type "content_block_start")
+            (let* ((index (alist-get 'index json-data))
+                   (block (alist-get 'content_block json-data))
+                   (block-type (when block (alist-get 'type block))))
+              (when (and block-type (string= block-type "tool_use"))
+                (unless ollama-buddy-remote--streaming-tool-call-acc
+                  (setq ollama-buddy-remote--streaming-tool-call-acc
+                        (make-hash-table :test 'eql)))
+                (puthash index
+                         (list :id (or (alist-get 'id block) "")
+                               :type "function"
+                               :name (or (alist-get 'name block) "")
+                               :arguments "")
+                         ollama-buddy-remote--streaming-tool-call-acc)))
+            nil)
+
+           ;; content_block_delta: text or input_json
+           ((string= type "content_block_delta")
+            (let* ((index (alist-get 'index json-data))
+                   (delta (alist-get 'delta json-data))
+                   (delta-type (when delta (alist-get 'type delta))))
+              (cond
+               ;; Text delta — return for display
+               ((and delta-type (string= delta-type "text_delta"))
+                (let ((text (alist-get 'text delta)))
+                  (when (and text (not (eq text :null)))
+                    text)))
+               ;; Tool input JSON delta — accumulate
+               ((and delta-type (string= delta-type "input_json_delta"))
+                (let ((partial (alist-get 'partial_json delta)))
+                  (when (and partial
+                             ollama-buddy-remote--streaming-tool-call-acc)
+                    (let ((existing (gethash index
+                                            ollama-buddy-remote--streaming-tool-call-acc)))
+                      (when existing
+                        (plist-put existing :arguments
+                                   (concat (plist-get existing :arguments)
+                                           partial)))))
+                  nil))
+               (t nil))))
+
+           ;; All other event types: skip
+           (t nil)))
+      (error
+       (message "ollama-buddy: claude tools extractor error: %s on data: %.100s"
+                (error-message-string err) data-str)
+       nil))))
+
+(defun ollama-buddy-remote--convert-schema-to-claude (openai-schema)
+  "Convert OPENAI-SCHEMA vector to Claude tool format.
+OpenAI: [{type: function, function: {name, description, parameters}}]
+Claude: [{name, description, input_schema}]"
+  (vconcat
+   (mapcar
+    (lambda (tool)
+      (let* ((func (alist-get 'function tool))
+             (name (alist-get 'name func))
+             (desc (alist-get 'description func))
+             (params (alist-get 'parameters func)))
+        `((name . ,name)
+          (description . ,desc)
+          (input_schema . ,params))))
+    (append openai-schema nil))))
+
+(defun ollama-buddy-remote--convert-history-to-claude (history)
+  "Convert OpenAI-format HISTORY entries to Claude Messages API format.
+Handles assistant messages with tool_calls and tool result messages."
+  (let (result)
+    (dolist (msg history)
+      (let ((role (alist-get 'role msg))
+            (content (alist-get 'content msg))
+            (tool-calls (alist-get 'tool_calls msg))
+            (tool-call-id (alist-get 'tool_call_id msg)))
+        (cond
+         ;; Assistant message with tool_calls → Claude content blocks
+         ((and (string= role "assistant") tool-calls)
+          (let ((blocks nil))
+            ;; Add text block if there's content
+            (when (and content (stringp content) (not (string-empty-p content)))
+              (push `((type . "text") (text . ,content)) blocks))
+            ;; Add tool_use blocks
+            (seq-doseq (tc (if (vectorp tool-calls) tool-calls
+                             (vconcat tool-calls)))
+              (let* ((id (alist-get 'id tc))
+                     (func (alist-get 'function tc))
+                     (name (alist-get 'name func))
+                     (args-raw (alist-get 'arguments func))
+                     (input (if (stringp args-raw)
+                                (condition-case nil
+                                    (json-read-from-string args-raw)
+                                  (error args-raw))
+                              (or args-raw (make-hash-table)))))
+                (push `((type . "tool_use")
+                        (id . ,id)
+                        (name . ,name)
+                        (input . ,input))
+                      blocks)))
+            (push `((role . "assistant")
+                    (content . ,(vconcat (nreverse blocks))))
+                  result)))
+
+         ;; Tool result message → Claude tool_result
+         ((and (string= role "tool") tool-call-id)
+          (push `((role . "user")
+                  (content . ,(vector
+                               `((type . "tool_result")
+                                 (tool_use_id . ,tool-call-id)
+                                 (content . ,(or content ""))))))
+                result))
+
+         ;; Regular message — pass through
+         (t (push msg result)))))
+    (nreverse result)))
 
 (defun ollama-buddy-remote--gemini-extract-content (data-str)
   "Extract content token from a Gemini SSE DATA-STR.
@@ -725,6 +1125,151 @@ Returns the token string, or nil if the line should be skipped."
             text))
       (error nil))))
 
+(defun ollama-buddy-remote--gemini-extract-content-with-tools (data-str)
+  "Extract content and accumulate tool calls from Gemini SSE DATA-STR.
+Gemini returns functionCall parts in `candidates[0].content.parts'.
+Each functionCall has `name' and `args' (already a JSON object)."
+  (when (and data-str
+             (not (string-empty-p (string-trim data-str))))
+    (condition-case err
+        (let* ((json-object-type 'alist)
+               (json-array-type 'vector)
+               (json-key-type 'symbol)
+               (json-data (json-read-from-string data-str))
+               (candidates (alist-get 'candidates json-data))
+               (first (when (and candidates (> (length candidates) 0))
+                        (aref candidates 0)))
+               (content (when first (alist-get 'content first)))
+               (parts (when content (alist-get 'parts content)))
+               (text-result nil))
+          ;; Process all parts — may contain text and/or functionCall
+          (when parts
+            (dotimes (i (length parts))
+              (let* ((part (aref parts i))
+                     (text (alist-get 'text part))
+                     (func-call (alist-get 'functionCall part)))
+                ;; Text part
+                (when (and text (not (eq text :null)))
+                  (setq text-result (concat (or text-result "") text)))
+                ;; Function call part — accumulate
+                (when func-call
+                  (unless ollama-buddy-remote--streaming-tool-call-acc
+                    (setq ollama-buddy-remote--streaming-tool-call-acc
+                          (make-hash-table :test 'eql)))
+                  (let* ((name (alist-get 'name func-call))
+                         (args (alist-get 'args func-call))
+                         (args-str (if (and args (not (eq args :null)))
+                                       (json-encode args)
+                                     "{}"))
+                         ;; Generate a synthetic ID (Gemini doesn't provide one)
+                         (id (format "gemini_%s_%d" name
+                                     (hash-table-count
+                                      ollama-buddy-remote--streaming-tool-call-acc))))
+                    (puthash (hash-table-count
+                              ollama-buddy-remote--streaming-tool-call-acc)
+                             (list :id id
+                                   :type "function"
+                                   :name name
+                                   :arguments args-str)
+                             ollama-buddy-remote--streaming-tool-call-acc))))))
+          text-result)
+      (error
+       (message "ollama-buddy: gemini tools extractor error: %s on data: %.100s"
+                (error-message-string err) data-str)
+       nil))))
+
+(defun ollama-buddy-remote--convert-schema-to-gemini (openai-schema)
+  "Convert OPENAI-SCHEMA vector to Gemini tool format.
+OpenAI: [{type: function, function: {name, description, parameters}}]
+Gemini: [{functionDeclarations: [{name, description, parameters}]}]"
+  (vector
+   `((functionDeclarations
+      . ,(vconcat
+          (mapcar
+           (lambda (tool)
+             (let* ((func (alist-get 'function tool))
+                    (name (alist-get 'name func))
+                    (desc (alist-get 'description func))
+                    (params (alist-get 'parameters func)))
+               `((name . ,name)
+                 (description . ,desc)
+                 (parameters . ,params))))
+           (append openai-schema nil)))))))
+
+(defun ollama-buddy-remote--convert-history-to-gemini (history)
+  "Convert OpenAI-format HISTORY entries to Gemini API format.
+Handles assistant messages with tool_calls and tool result messages.
+Gemini uses role `model' for assistant, `user' for function results."
+  (let (result)
+    (dolist (msg history)
+      (let ((role (alist-get 'role msg))
+            (content (alist-get 'content msg))
+            (tool-calls (alist-get 'tool_calls msg))
+            (tool-call-id (alist-get 'tool_call_id msg)))
+        (cond
+         ;; Assistant message with tool_calls → model with functionCall parts
+         ((and (string= role "assistant") tool-calls)
+          (let ((parts nil))
+            ;; Add text part if there's content
+            (when (and content (stringp content) (not (string-empty-p content)))
+              (push `((text . ,content)) parts))
+            ;; Add functionCall parts
+            (seq-doseq (tc (if (vectorp tool-calls) tool-calls
+                             (vconcat tool-calls)))
+              (let* ((func (alist-get 'function tc))
+                     (name (alist-get 'name func))
+                     (args-raw (alist-get 'arguments func))
+                     (args (if (stringp args-raw)
+                               (condition-case nil
+                                   (json-read-from-string args-raw)
+                                 (error (make-hash-table)))
+                             (or args-raw (make-hash-table)))))
+                (push `((functionCall . ((name . ,name)
+                                         (args . ,args))))
+                      parts)))
+            (push `((role . "model")
+                    (parts . ,(vconcat (nreverse parts))))
+                  result)))
+
+         ;; Tool result message → functionResponse
+         ((and (string= role "tool") tool-call-id)
+          ;; Extract tool name from the ID (gemini_NAME_N format)
+          ;; or fall back to "unknown"
+          (let ((name (if (and tool-call-id
+                              (string-match "^gemini_\\(.+\\)_[0-9]+$"
+                                            tool-call-id))
+                          (match-string 1 tool-call-id)
+                        "unknown")))
+            (push `((role . "user")
+                    (parts . ,(vector
+                               `((functionResponse
+                                  . ((name . ,name)
+                                     (response . ((content . ,(or content ""))))))))))
+                  result)))
+
+         ;; System message → user with instruction prefix
+         ((string= role "system")
+          (push `((role . "user")
+                  (parts . ,(vector `((text . ,(format "[System Instruction] %s"
+                                                       content))))))
+                result))
+
+         ;; Regular user message
+         ((string= role "user")
+          (push `((role . "user")
+                  (parts . ,(vector `((text . ,content)))))
+                result))
+
+         ;; Regular assistant message
+         ((string= role "assistant")
+          (push `((role . "model")
+                  (parts . ,(vector `((text . ,(or content ""))))))
+                result))
+
+         ;; Anything else — pass through
+         (t (push msg result)))))
+    (nreverse result)))
+
 ;;; OpenAI-compatible send function
 ;; ============================================================================
 
@@ -739,7 +1284,8 @@ CONFIG is a plist with the following keys:
   :default-model - fallback model name
   :provider-name - display name (\"OpenAI\", \"Grok\", etc.)
   :extra-headers - additional HTTP headers alist (optional)
-  :token-count-var - symbol for the token count variable"
+  :token-count-var - symbol for the token count variable
+  :tools-schema  - tools schema vector (optional, for tool calling)"
   ;; Process inline features asynchronously, then send
   (ollama-buddy-remote--process-inline-features-async
    prompt
@@ -758,7 +1304,12 @@ MODEL and CONFIG are passed through from `ollama-buddy-remote--openai-send'."
          (default-model (plist-get config :default-model))
          (provider-name (plist-get config :provider-name))
          (extra-headers (plist-get config :extra-headers))
-         (token-count-var (plist-get config :token-count-var)))
+         (token-count-var (plist-get config :token-count-var))
+         (tools-schema (plist-get config :tools-schema))
+         (tool-continuation-p (bound-and-true-p
+                                ollama-buddy-remote--tool-continuation-p)))
+
+
 
     ;; Set up the current model
     (setq ollama-buddy--current-model
@@ -769,6 +1320,10 @@ MODEL and CONFIG are passed through from `ollama-buddy-remote--openai-send'."
     ;; Initialize token counter
     (set token-count-var 0)
 
+    ;; Reset tool iteration counter for new requests
+    (unless tool-continuation-p
+      (setq ollama-buddy--tool-call-iteration 0))
+
     ;; Get history and system prompt
     (let* ((history (when ollama-buddy-history-enabled
                       (gethash ollama-buddy--current-model
@@ -776,14 +1331,28 @@ MODEL and CONFIG are passed through from `ollama-buddy-remote--openai-send'."
                                nil)))
            (system-prompt (ollama-buddy--effective-system-prompt))
            (full-context (ollama-buddy-remote--build-context))
-           (messages (ollama-buddy-remote--build-openai-messages
-                      system-prompt history prompt full-context))
+           ;; For tool continuations, use history only (no new user message)
+           (messages (if tool-continuation-p
+                        (vconcat []
+                                 (append
+                                  (when (and system-prompt
+                                             (not (string-empty-p system-prompt)))
+                                    `(((role . "system")
+                                       (content . ,system-prompt))))
+                                  history))
+                      (ollama-buddy-remote--build-openai-messages
+                       system-prompt history prompt full-context)))
            (json-payload
             `((model . ,(ollama-buddy-remote--get-real-model-name
                          prefix ollama-buddy--current-model))
               (messages . ,messages)
               (temperature . ,temperature)
               (max_tokens . ,max-tokens)))
+           ;; Add tools schema if provided
+           (json-payload
+            (if tools-schema
+                (append json-payload `((tools . ,tools-schema)))
+              json-payload))
            (stream-json-payload
             (if ollama-buddy-streaming-enabled
                 (append json-payload '((stream . t)))
@@ -793,7 +1362,14 @@ MODEL and CONFIG are passed through from `ollama-buddy-remote--openai-send'."
            (start-point (ollama-buddy-remote--prepare-chat-buffer provider-name))
            (all-headers (append `(("Content-Type" . "application/json")
                                   ("Authorization" . ,(concat "Bearer " api-key)))
-                                extra-headers)))
+                                extra-headers))
+           ;; Use tools-aware extractor when tools schema is present
+           (extractor (if tools-schema
+                         #'ollama-buddy-remote--openai-extract-content-with-tools
+                       #'ollama-buddy-remote--openai-extract-content)))
+
+      ;; Store continuation state for the streaming finalize
+      (setq ollama-buddy-remote--streaming-tool-continuation-p tool-continuation-p)
 
       (if ollama-buddy-streaming-enabled
           ;; Streaming path: use curl with SSE
@@ -801,7 +1377,7 @@ MODEL and CONFIG are passed through from `ollama-buddy-remote--openai-send'."
            endpoint
            all-headers
            json-str
-           #'ollama-buddy-remote--openai-extract-content
+           extractor
            provider-name
            prompt
            start-point)
@@ -833,18 +1409,31 @@ MODEL and CONFIG are passed through from `ollama-buddy-remote--openai-send'."
                          (let* ((json-response (json-read-from-string json-response-decoded))
                                 (error-message (alist-get 'error json-response))
                                 (content "")
-                                (choices (alist-get 'choices json-response)))
+                                (choices (alist-get 'choices json-response))
+                                (message-obj
+                                 (when (and choices (> (length choices) 0))
+                                   (alist-get 'message (aref choices 0))))
+                                (resp-tool-calls
+                                 (when message-obj
+                                   (let ((tc (alist-get 'tool_calls message-obj)))
+                                     (when tc (append tc nil))))))
                            ;; Extract the message content
                            (if error-message
                                (setq content (format "Error: %s"
                                                      (ollama-buddy-remote--format-api-error
                                                       error-message)))
-                             (when choices
-                               (setq content (alist-get 'content
-                                                        (alist-get 'message (aref choices 0))))))
-                           ;; Finalize the response
-                           (ollama-buddy-remote--finalize-response
-                            start-point content prompt token-count-var))
+                             (when message-obj
+                               (setq content (or (alist-get 'content message-obj) ""))))
+                           ;; Branch: tool calls vs normal
+                           (if (and resp-tool-calls
+                                    tools-schema
+                                    (featurep 'ollama-buddy-tools)
+                                    (bound-and-true-p ollama-buddy-tools-enabled))
+                               (ollama-buddy-remote--handle-tool-calls
+                                resp-tool-calls content start-point
+                                prompt tool-continuation-p)
+                             (ollama-buddy-remote--finalize-response
+                              start-point content prompt token-count-var)))
                        (error
                         (ollama-buddy-remote--handle-error
                          start-point provider-name

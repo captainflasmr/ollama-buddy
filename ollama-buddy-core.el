@@ -1682,6 +1682,11 @@ This is a rough approximation based on word count."
 The handler function should accept the same arguments as `ollama-buddy--send`."
   (puthash prefix handler-function ollama-buddy--model-handlers))
 
+(defvar ollama-buddy-remote--tool-continuation-p nil
+  "Non-nil when the current remote request is a tool-calling continuation.
+Set by the dispatch handler so remote provider send functions can
+skip adding a new user message and use history only.")
+
 (defun ollama-buddy--dispatch-to-handler (orig-fun prompt &optional specified-model tool-continuation-p)
   "Dispatch to appropriate handler based on model prefix.
 ORIG-FUN is the original function being advised.
@@ -1698,7 +1703,8 @@ PROMPT, SPECIFIED-MODEL and TOOL-CONTINUATION-P are passed through."
              ollama-buddy--model-handlers)
     ;; Call the handler or original function
     (if handler
-        (funcall handler prompt model)
+        (let ((ollama-buddy-remote--tool-continuation-p tool-continuation-p))
+          (funcall handler prompt model))
       (funcall orig-fun prompt specified-model tool-continuation-p))))
 
 ;; Apply the advice to ollama-buddy--send (idempotent — safe to reload)
@@ -2050,7 +2056,7 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
           (concat
            (when (= (buffer-size) 0)
              (concat "#+TITLE: Ollama Buddy Chat"))
-           "\n\n* Ollama Buddy [v4.2.0]\n"
+           "\n\n* Ollama Buddy [v5.0.0]\n"
            (if-let ((logo (ollama-buddy--create-logo-image 140)))
                (concat logo "\n")
              (concat

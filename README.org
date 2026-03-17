@@ -75,6 +75,12 @@ Submit queries, swap models, view token usage and statistics:
 - *RAG* -- Index local documents and source code; retrieve relevant context via semantic search; inline =@rag(query)= syntax; configurable embedding backend (Ollama =/api/embed= or any OpenAI-compatible =/v1/embeddings= service, e.g. LM Studio)
 - *In-Buffer Replace* -- Stream LLM output directly into the source buffer, replacing the selected region in-place; accept/reject confirmation; inline diff view (=C-c d=) with word-level smerge highlighting; automatic code-fence stripping
 
+* What's New (v5.0.0)
+
+Tool calling for all providers — OpenAI, Claude, and Gemini API types all support function calling through =ollama-buddy-provider-create=.
+
+- *Tool Calling for External Providers* -- All three API types (OpenAI-compatible, Claude, Gemini) now support tool calling.  Tools are automatically converted from the internal format to each provider's native schema at send time.  This covers OpenAI, DeepSeek, Grok, OpenRouter, Copilot, Codestral, LM Studio, Anthropic Claude, and Google Gemini.
+
 * What's New (v4.2.0)
 
 Tool-augmented search — LLMs can now autonomously search the web and query local documents during tool calling.
@@ -118,6 +124,7 @@ Generic provider system — register any OpenAI/Claude/Gemini-compatible API wit
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *5.0.0* | Tool calling for all providers: OpenAI, Claude, and Gemini API types support function calling; HTTP error detection; Gemini native =systemInstruction=. |
 | *4.2.0* | Tool-augmented search: =web_search= and =rag_search= built-in tools; Emacs 29.1 minimum; thinking fold robustness; welcome screen folded commands; model management running models section. |
 | *4.1.1* | Recommended Models browser (=C-c L=), model letter ordering matches display, session load moved to =C-c f=.                                                                                                              |
 | *4.1.0* | Response property drawers (=:TOKENS:=, =:RATE:=, etc.), org file links for attachments, SVG context bar, removed token stats toggle.                                                                                     |

@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 4.2.0
+;; Version: 5.0.0
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -428,7 +428,9 @@ capabilities are not yet available."
   "Check if MODEL supports tool calling capabilities.
 When /api/show capabilities have been fetched, trusts that data.
 Falls back to the static `ollama-buddy-tools-models' list when
-capabilities are not yet available."
+capabilities are not yet available.
+Models registered via `ollama-buddy-provider-create' are always
+considered tool-capable."
   (when model
     (let* ((real-model (ollama-buddy--get-real-model-name model))
            ;; Strip cloud suffixes for matching
@@ -436,12 +438,19 @@ capabilities are not yet available."
            ;; Also get name without tag (e.g. "qwen3:32b" -> "qwen3")
            (name-only (car (split-string base-model ":")))
            (meta (gethash model ollama-buddy--models-metadata-cache)))
-      (if (and meta (alist-get 'capabilities-fetched meta))
-          ;; Capabilities fetched from /api/show — trust that data
-          (alist-get 'tools meta)
-        ;; Not yet fetched — fall back to static list
+      (cond
+       ;; Generic provider models — always tool-capable
+       ((and (featurep 'ollama-buddy-provider)
+             (fboundp 'ollama-buddy-provider--model-is-provider-p)
+             (ollama-buddy-provider--model-is-provider-p model))
+        t)
+       ;; Capabilities fetched from /api/show — trust that data
+       ((and meta (alist-get 'capabilities-fetched meta))
+        (alist-get 'tools meta))
+       ;; Not yet fetched — fall back to static list
+       (t
         (or (member base-model ollama-buddy-tools-models)
-            (member name-only ollama-buddy-tools-models))))))
+            (member name-only ollama-buddy-tools-models)))))))
 
 (defun ollama-buddy--model-supports-thinking (model)
   "Check if MODEL supports thinking/reasoning capabilities.

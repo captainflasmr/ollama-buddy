@@ -91,6 +91,9 @@
 (require 'ollama-buddy-core)
 (require 'ollama-buddy-remote)
 
+;; Tool module forward declarations
+(declare-function ollama-buddy-tools--generate-schema "ollama-buddy-tools")
+
 ;;; Provider data structure
 ;; ============================================================================
 
@@ -167,17 +170,29 @@ updates to the provider struct are reflected immediately."
 (defun ollama-buddy-provider--openai-send (provider prompt model)
   "Send PROMPT via PROVIDER using the OpenAI-compatible path.
 MODEL is the prefixed model name, or nil for the default."
-  (ollama-buddy-remote--openai-send
-   prompt model
-   (list :prefix (ollama-buddy-provider-prefix provider)
-         :api-key (ollama-buddy-provider--resolve-key provider)
-         :endpoint (ollama-buddy-provider-endpoint provider)
-         :temperature (ollama-buddy-provider-temperature provider)
-         :max-tokens (ollama-buddy-provider-max-tokens provider)
-         :default-model (ollama-buddy-provider-default-model provider)
-         :provider-name (ollama-buddy-provider-name provider)
-         :extra-headers (ollama-buddy-provider-extra-headers provider)
-         :token-count-var (ollama-buddy-provider-token-count-sym provider))))
+  (let* ((tools-schema
+          (when (and (featurep 'ollama-buddy-tools)
+                     (bound-and-true-p ollama-buddy-tools-enabled)
+                     (not (and (boundp 'ollama-buddy--suppress-tools-once)
+                               ollama-buddy--suppress-tools-once))
+                     (fboundp 'ollama-buddy-tools--generate-schema))
+            (when (boundp 'ollama-buddy--suppress-tools-once)
+              (setq ollama-buddy--suppress-tools-once nil))
+            (ollama-buddy-tools--generate-schema))))
+    (ollama-buddy-remote--openai-send
+     prompt model
+     (append
+      (list :prefix (ollama-buddy-provider-prefix provider)
+            :api-key (ollama-buddy-provider--resolve-key provider)
+            :endpoint (ollama-buddy-provider-endpoint provider)
+            :temperature (ollama-buddy-provider-temperature provider)
+            :max-tokens (ollama-buddy-provider-max-tokens provider)
+            :default-model (ollama-buddy-provider-default-model provider)
+            :provider-name (ollama-buddy-provider-name provider)
+            :extra-headers (ollama-buddy-provider-extra-headers provider)
+            :token-count-var (ollama-buddy-provider-token-count-sym provider))
+      (when tools-schema
+        (list :tools-schema tools-schema))))))
 
 ;;; Claude send
 ;; ============================================================================
@@ -185,18 +200,34 @@ MODEL is the prefixed model name, or nil for the default."
 (defun ollama-buddy-provider--claude-send (provider prompt model)
   "Send PROMPT via PROVIDER using the Claude Messages API.
 MODEL is the prefixed model name, or nil for the default."
-  (ollama-buddy-remote--process-inline-features-async
-   prompt
-   (lambda (processed-prompt)
-     (ollama-buddy-provider--claude-send-payload
-      provider processed-prompt model))))
+  (let* ((openai-schema
+          (when (and (featurep 'ollama-buddy-tools)
+                     (bound-and-true-p ollama-buddy-tools-enabled)
+                     (not (and (boundp 'ollama-buddy--suppress-tools-once)
+                               ollama-buddy--suppress-tools-once))
+                     (fboundp 'ollama-buddy-tools--generate-schema))
+            (when (boundp 'ollama-buddy--suppress-tools-once)
+              (setq ollama-buddy--suppress-tools-once nil))
+            (ollama-buddy-tools--generate-schema)))
+         (tools-schema
+          (when openai-schema
+            (ollama-buddy-remote--convert-schema-to-claude openai-schema))))
+    (ollama-buddy-remote--process-inline-features-async
+     prompt
+     (lambda (processed-prompt)
+       (ollama-buddy-provider--claude-send-payload
+        provider processed-prompt model tools-schema)))))
 
-(defun ollama-buddy-provider--claude-send-payload (provider prompt model)
-  "Build and send the Claude payload for PROMPT via PROVIDER with MODEL."
+(defun ollama-buddy-provider--claude-send-payload (provider prompt model
+                                                             &optional tools-schema)
+  "Build and send the Claude payload for PROMPT via PROVIDER with MODEL.
+TOOLS-SCHEMA is an optional Claude-format tools vector."
   (let* ((prefix (ollama-buddy-provider-prefix provider))
          (api-key (ollama-buddy-provider--resolve-key provider))
          (token-sym (ollama-buddy-provider-token-count-sym provider))
-         (provider-name (ollama-buddy-provider-name provider)))
+         (provider-name (ollama-buddy-provider-name provider))
+         (tool-continuation-p (bound-and-true-p
+                                ollama-buddy-remote--tool-continuation-p)))
     ;; Set current model
     (setq ollama-buddy--current-model
           (or model
@@ -205,21 +236,30 @@ MODEL is the prefixed model name, or nil for the default."
                prefix (ollama-buddy-provider-default-model provider))))
     (set token-sym 0)
 
+    ;; Reset tool iteration counter for new requests
+    (unless tool-continuation-p
+      (setq ollama-buddy--tool-call-iteration 0))
+
     (let* ((history (when ollama-buddy-history-enabled
                       (gethash ollama-buddy--current-model
                                ollama-buddy--conversation-history-by-model
                                nil)))
+           ;; Convert OpenAI-format history to Claude format
+           (claude-history (ollama-buddy-remote--convert-history-to-claude history))
            (system-prompt (ollama-buddy--effective-system-prompt))
            (full-context (ollama-buddy-remote--build-context))
            ;; Claude: system prompt is a top-level key, NOT in messages
-           (messages (vconcat []
-                              (append
-                               history
-                               `(((role . "user")
-                                  (content . ,(if full-context
-                                                  (concat prompt "\n\n"
-                                                          full-context)
-                                                prompt)))))))
+           ;; For tool continuations, use history only (no new user message)
+           (messages (if tool-continuation-p
+                        (vconcat [] claude-history)
+                      (vconcat []
+                               (append
+                                claude-history
+                                `(((role . "user")
+                                   (content . ,(if full-context
+                                                   (concat prompt "\n\n"
+                                                           full-context)
+                                                 prompt))))))))
            (max-tokens (or (ollama-buddy-provider-max-tokens provider) 4096))
            (json-payload
             `((model . ,(ollama-buddy-remote--get-real-model-name
@@ -227,9 +267,15 @@ MODEL is the prefixed model name, or nil for the default."
               (messages . ,messages)
               (temperature . ,(ollama-buddy-provider-temperature provider))
               (max_tokens . ,max-tokens)))
+           ;; Add system prompt
            (json-payload
             (if (and system-prompt (not (string-empty-p system-prompt)))
                 (append json-payload `((system . ,system-prompt)))
+              json-payload))
+           ;; Add tools schema
+           (json-payload
+            (if tools-schema
+                (append json-payload `((tools . ,tools-schema)))
               json-payload))
            (stream-json-payload
             (if ollama-buddy-streaming-enabled
@@ -245,14 +291,21 @@ MODEL is the prefixed model name, or nil for the default."
                        ("Authorization" . ,(concat "Bearer " api-key))
                        ("X-API-Key" . ,api-key)
                        ("anthropic-version" . "2023-06-01"))
-                     (ollama-buddy-provider-extra-headers provider))))
+                     (ollama-buddy-provider-extra-headers provider)))
+           ;; Use tools-aware extractor when tools present
+           (extractor (if tools-schema
+                         #'ollama-buddy-remote--claude-extract-content-with-tools
+                       #'ollama-buddy-remote--claude-extract-content)))
+
+      ;; Store continuation state for streaming finalize
+      (setq ollama-buddy-remote--streaming-tool-continuation-p tool-continuation-p)
 
       (if ollama-buddy-streaming-enabled
           ;; Streaming: curl with SSE
           (ollama-buddy-remote--start-streaming-request
            (ollama-buddy-provider-endpoint provider)
            headers json-str
-           #'ollama-buddy-remote--claude-extract-content
+           extractor
            provider-name prompt start-point)
         ;; Non-streaming: url-retrieve
         (let* ((url-request-method "POST")
@@ -325,18 +378,34 @@ MODEL is the prefixed model name, or nil for the default."
 (defun ollama-buddy-provider--gemini-send (provider prompt model)
   "Send PROMPT via PROVIDER using the Gemini API.
 MODEL is the prefixed model name, or nil for the default."
-  (ollama-buddy-remote--process-inline-features-async
-   prompt
-   (lambda (processed-prompt)
-     (ollama-buddy-provider--gemini-send-payload
-      provider processed-prompt model))))
+  (let* ((openai-schema
+          (when (and (featurep 'ollama-buddy-tools)
+                     (bound-and-true-p ollama-buddy-tools-enabled)
+                     (not (and (boundp 'ollama-buddy--suppress-tools-once)
+                               ollama-buddy--suppress-tools-once))
+                     (fboundp 'ollama-buddy-tools--generate-schema))
+            (when (boundp 'ollama-buddy--suppress-tools-once)
+              (setq ollama-buddy--suppress-tools-once nil))
+            (ollama-buddy-tools--generate-schema)))
+         (tools-schema
+          (when openai-schema
+            (ollama-buddy-remote--convert-schema-to-gemini openai-schema))))
+    (ollama-buddy-remote--process-inline-features-async
+     prompt
+     (lambda (processed-prompt)
+       (ollama-buddy-provider--gemini-send-payload
+        provider processed-prompt model tools-schema)))))
 
-(defun ollama-buddy-provider--gemini-send-payload (provider prompt model)
-  "Build and send the Gemini payload for PROMPT via PROVIDER with MODEL."
+(defun ollama-buddy-provider--gemini-send-payload (provider prompt model
+                                                            &optional tools-schema)
+  "Build and send the Gemini payload for PROMPT via PROVIDER with MODEL.
+TOOLS-SCHEMA is an optional Gemini-format tools vector."
   (let* ((prefix (ollama-buddy-provider-prefix provider))
          (api-key (ollama-buddy-provider--resolve-key provider))
          (token-sym (ollama-buddy-provider-token-count-sym provider))
-         (provider-name (ollama-buddy-provider-name provider)))
+         (provider-name (ollama-buddy-provider-name provider))
+         (tool-continuation-p (bound-and-true-p
+                                ollama-buddy-remote--tool-continuation-p)))
     ;; Set current model
     (setq ollama-buddy--current-model
           (or model
@@ -344,6 +413,10 @@ MODEL is the prefixed model name, or nil for the default."
               (ollama-buddy-remote--get-full-model-name
                prefix (ollama-buddy-provider-default-model provider))))
     (set token-sym 0)
+
+    ;; Reset tool iteration counter for new requests
+    (unless tool-continuation-p
+      (setq ollama-buddy--tool-call-iteration 0))
 
     (let* ((model-name (ollama-buddy-remote--get-real-model-name
                         prefix ollama-buddy--current-model))
@@ -353,17 +426,22 @@ MODEL is the prefixed model name, or nil for the default."
                                nil)))
            (system-prompt (ollama-buddy--effective-system-prompt))
            (full-context (ollama-buddy-remote--build-context))
-           (messages-with-system
-            (if (and system-prompt (not (string-empty-p system-prompt)))
-                (append `(((role . "system") (content . ,system-prompt)))
-                        history)
-              history))
-           (messages-all
-            (append messages-with-system
-                    `(((role . "user")
-                       (content . ,(if full-context
-                                       (concat prompt "\n\n" full-context)
-                                     prompt))))))
+           ;; Convert history to Gemini format (no system messages —
+           ;; Gemini uses top-level system_instruction instead)
+           (gemini-history (ollama-buddy-remote--convert-history-to-gemini
+                            history))
+           ;; For tool continuations, use history only
+           (formatted-contents
+            (if tool-continuation-p
+                (vconcat [] gemini-history)
+              (vconcat []
+                       (append gemini-history
+                               `(((role . "user")
+                                  (parts . ,(vector
+                                             `((text . ,(if full-context
+                                                            (concat prompt "\n\n"
+                                                                    full-context)
+                                                          prompt)))))))))))
            ;; Build endpoints — model name in URL
            (api-endpoint
             (format (ollama-buddy-provider-endpoint provider) model-name))
@@ -374,14 +452,20 @@ MODEL is the prefixed model name, or nil for the default."
                      ":generateContent$" ":streamGenerateContent"
                      api-endpoint)
                     "?alt=sse&key=" api-key))
-           ;; Format messages for Gemini
-           (formatted-contents
-            (ollama-buddy-provider--gemini-format-messages messages-all))
            (json-payload
             `((contents . ,formatted-contents)
               (generationConfig
                . ((temperature
                    . ,(ollama-buddy-provider-temperature provider))))))
+           ;; Add system_instruction as top-level field (Gemini native)
+           (json-payload
+            (if (and system-prompt (not (string-empty-p system-prompt)))
+                (append json-payload
+                        `((systemInstruction
+                           . ((parts . ,(vector
+                                         `((text . ,system-prompt))))))))
+              json-payload))
+           ;; Add max tokens
            (json-payload
             (if (ollama-buddy-provider-max-tokens provider)
                 (let ((gen-config
@@ -393,20 +477,36 @@ MODEL is the prefixed model name, or nil for the default."
                                        provider)))))
                   json-payload)
               json-payload))
+           ;; Add tools schema and toolConfig
+           (json-payload
+            (if tools-schema
+                (append json-payload
+                        `((tools . ,tools-schema)
+                          (toolConfig
+                           . ((functionCallingConfig
+                               . ((mode . "AUTO")))))))
+              json-payload))
            (json-str (let ((json-encoding-pretty-print nil))
                        (ollama-buddy-escape-unicode
                         (json-encode json-payload))))
            (start-point
             (ollama-buddy-remote--prepare-chat-buffer provider-name))
            (headers (append '(("Content-Type" . "application/json"))
-                            (ollama-buddy-provider-extra-headers provider))))
+                            (ollama-buddy-provider-extra-headers provider)))
+           ;; Use tools-aware extractor when tools present
+           (extractor (if tools-schema
+                         #'ollama-buddy-remote--gemini-extract-content-with-tools
+                       #'ollama-buddy-remote--gemini-extract-content)))
+
+      ;; Store continuation state for streaming finalize
+      (setq ollama-buddy-remote--streaming-tool-continuation-p tool-continuation-p)
 
       (if ollama-buddy-streaming-enabled
           ;; Streaming: curl with SSE via streamGenerateContent
           (ollama-buddy-remote--start-streaming-request
            stream-api-endpoint
            headers json-str
-           #'ollama-buddy-remote--gemini-extract-content
+           extractor
            provider-name prompt start-point)
         ;; Non-streaming: url-retrieve
         (let* ((url-request-method "POST")
@@ -641,6 +741,27 @@ Returns a list of model name strings (without prefix)."
                            (alist-get 'id entry))
                          (append data nil))))
        ids))))
+
+;;; Provider model queries
+;; ============================================================================
+
+(defun ollama-buddy-provider--model-is-provider-p (model)
+  "Return non-nil if MODEL belongs to a registered generic provider."
+  (catch 'found
+    (maphash (lambda (prefix _provider)
+               (when (string-prefix-p prefix model)
+                 (throw 'found prefix)))
+             ollama-buddy-provider--registry)
+    nil))
+
+(defun ollama-buddy-provider--get-for-model (model)
+  "Return the provider struct for MODEL, or nil if not a provider model."
+  (catch 'found
+    (maphash (lambda (prefix provider)
+               (when (string-prefix-p prefix model)
+                 (throw 'found provider)))
+             ollama-buddy-provider--registry)
+    nil))
 
 ;;; Public API
 ;; ============================================================================
