@@ -202,6 +202,13 @@ embedding <think>...</think> tags inside message.content.")
 Set when the heading is inserted; passed to
 `ollama-buddy--finalize-thinking-block' and then cleared.")
 
+(defvar-local ollama-buddy--last-think-heading-marker nil
+  "Marker at the `*** Think' heading from the most recent finalized block.
+Used to re-fold the heading after all post-streaming buffer modifications
+\(property drawer, md-to-org conversion, prompt area) are complete, since
+those modifications can trigger org-fold's fragility check and reveal the
+fold.  Cleared after re-folding in the normal completion path.")
+
 (defvar-local ollama-buddy--current-original-model nil
   "The original model requested for the current turn.")
 
@@ -657,15 +664,23 @@ registers the heading for toggle-all."
               (insert "\n"))))
         ;; Insert *** Response heading after thinking content
         (insert "\n*** Response\n\n"))
-      ;; Fold the Think subtree
-      (save-excursion
-        (goto-char (marker-position heading-marker))
-        (org-fold-hide-subtree))
-      ;; Rename "Thinking" -> "Think"
+      ;; Rename "Thinking" -> "Think" BEFORE folding so the heading text is
+      ;; stable when org-fold's fragility check runs after the fold is applied.
       (save-excursion
         (goto-char (marker-position heading-marker))
         (when (looking-at "\\*\\*\\* Thinking")
           (replace-match "*** Think")))
+      ;; Fold the Think subtree
+      (save-excursion
+        (goto-char (marker-position heading-marker))
+        (org-fold-hide-subtree))
+      ;; Record heading position so the completion path can re-fold after all
+      ;; post-streaming buffer modifications (property drawer, md-to-org, prompt
+      ;; area) are done.  Those modifications can trigger org-fold's fragility
+      ;; check and inadvertently reveal the fold.
+      (when (marker-buffer heading-marker)
+        (setq ollama-buddy--last-think-heading-marker
+              (copy-marker (marker-position heading-marker))))
       ;; Advance response-start-position past the *** Response heading
       ;; so md-to-org conversion doesn't touch the thinking block
       (when ollama-buddy--response-start-position
@@ -3177,6 +3192,20 @@ TCP packets split a JSON object across multiple filter calls."
                             ollama-buddy--in-reasoning-section nil
                             ollama-buddy--reasoning-status-message nil
                             ollama-buddy--reasoning-skip-newlines nil))
+
+                    ;; Re-fold the Think heading if one was finalized this turn.
+                    ;; Post-streaming modifications (property drawer insertion,
+                    ;; md-to-org conversion) trigger org-fold's fragility check,
+                    ;; which can inadvertently reveal the fold.  Re-applying it
+                    ;; here, after all those changes, ensures it stays collapsed.
+                    (when (and ollama-buddy-collapse-thinking
+                               ollama-buddy--last-think-heading-marker
+                               (marker-buffer ollama-buddy--last-think-heading-marker))
+                      (save-excursion
+                        (goto-char ollama-buddy--last-think-heading-marker)
+                        (org-fold-hide-subtree))
+                      (set-marker ollama-buddy--last-think-heading-marker nil)
+                      (setq ollama-buddy--last-think-heading-marker nil))
 
                     ;; Warn if tool calls were present but iteration limit reached
                     (when (and (featurep 'ollama-buddy-tools)
