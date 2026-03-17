@@ -91,7 +91,7 @@ the current project root."
   (if-let ((root (ollama-buddy-project-current-root)))
       (let* ((proj (project-current))
              (files (project-files proj)))
-        (format "Project: %s (%d files)" (abbreviate-file-name root) (length files)))
+        (format "Project: [[file:%s][%s]] (%d files)" root (abbreviate-file-name root) (length files)))
     "Not in a project"))
 
 (defcustom ollama-buddy-project-summary-file ".ollama-buddy-project.org"
