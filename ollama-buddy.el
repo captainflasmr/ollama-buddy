@@ -5853,12 +5853,22 @@ Returns the text with @file() delimiters removed."
   (when ollama-buddy-mode
     (setq-local imenu-create-index-function #'ollama-buddy--imenu-create-index)
     (setq-local imenu-auto-rescan t)
-    (setq-local imenu-sort-function nil)))
+    (setq-local imenu-sort-function nil)
+    (setq-local org-refile-targets '((nil :maxlevel . 2)))
+    (setq-local org-goto-interface 'outline-path-completion)))
+
+(defun ollama-buddy--file-truename-safe (orig-fun file &rest args)
+  "Advice around `file-truename' to handle nil FILE in non-file buffers.
+`org-goto' calls `file-truename' on nil in buffers without a file name."
+  (if file (apply orig-fun file args) nil))
+
+(advice-add 'file-truename :around #'ollama-buddy--file-truename-safe)
 
 (push 'ollama-buddy--prompt-history savehist-additional-variables)
 
 (defun ollama-buddy-unload-function ()
   "Clean up when `ollama-buddy' is unloaded."
+  (advice-remove 'file-truename #'ollama-buddy--file-truename-safe)
   (setq savehist-additional-variables
         (delq 'ollama-buddy--prompt-history savehist-additional-variables))
   nil)
