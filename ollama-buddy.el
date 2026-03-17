@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 4.1.1
+;; Version: 4.2.0
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -5836,7 +5836,7 @@ Returns the text with @file() delimiters removed."
 
     ;; Roles & Patterns keybindings
     (define-key map (kbd "C-c R") #'ollama-buddy-roles-switch-role)
-    (define-key map (kbd "C-c E") #'ollama-buddy-role-creator-create-new-role)
+    (define-key map (kbd "C-c E") #'ollama-buddy-tools-toggle-auto-execute)
     (define-key map (kbd "C-c D") #'ollama-buddy-roles-open-directory)
     ;; Tools keybindings
     (define-key map (kbd "C-c SPC") #'ollama-buddy-tools-toggle)

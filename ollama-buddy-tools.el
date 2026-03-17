@@ -65,6 +65,18 @@
 (require 'project)
 (require 'ollama-buddy-core)
 
+;; Web search functions (optional, loaded when available)
+(declare-function ollama-buddy-web-search--fetch-sync "ollama-buddy-web-search")
+
+;; RAG functions (optional, loaded when available)
+(declare-function ollama-buddy-rag--list-index-names "ollama-buddy-rag")
+(declare-function ollama-buddy-rag--load-index "ollama-buddy-rag")
+(declare-function ollama-buddy-rag--get-embedding-async "ollama-buddy-rag")
+(declare-function ollama-buddy-rag--search-chunks "ollama-buddy-rag")
+(declare-function ollama-buddy-rag--format-results-for-context "ollama-buddy-rag")
+(defvar ollama-buddy-rag-top-k)
+(defvar ollama-buddy-rag-similarity-threshold)
+
 ;;; Customization
 
 (defgroup ollama-buddy-tools nil
@@ -842,6 +854,90 @@ Returns a list of tool result messages to append to the conversation."
                (format "%S" result))
            (error (format "Error: %s" (error-message-string err))))))
      nil) ; not safe
+
+    ;; web_search - Search the web for current information
+    (when (featurep 'ollama-buddy-web-search)
+      (ollama-buddy-tools-register
+       'web_search
+       "Search the web for current information on a topic. Returns titles and snippets from web results. Use this when the user asks about recent events, current facts, or anything that may require up-to-date information."
+       '((type . "object")
+         (required . ["query"])
+         (properties . ((query . ((type . "string")
+                                  (description . "The search query to look up on the web"))))))
+       (lambda (args)
+         (let* ((query (alist-get 'query args))
+                (result (ollama-buddy-web-search--fetch-sync query)))
+           (if (and result (car result))
+               ;; Format as plain text for LLM consumption — org markup in tool
+               ;; results confuses the model and API content fields may be empty.
+               (let ((results (cdr result)))
+                 (concat
+                  (format "Web search results for: \"%s\"\n\n" query)
+                  (mapconcat
+                   (lambda (r)
+                     (let ((title (or (alist-get 'title r) "Untitled"))
+                           (url (or (alist-get 'url r) (alist-get 'link r) ""))
+                           (snippet (or (alist-get 'content r)
+                                        (alist-get 'snippet r)
+                                        (alist-get 'description r)
+                                        (alist-get 'text r)
+                                        (alist-get 'body r)
+                                        "")))
+                       (format "Title: %s\nURL: %s\n%s" title url snippet)))
+                   results
+                   "\n\n")))
+             (format "Web search failed: %s" (or (cdr result) "unknown error")))))
+       t))  ; safe
+
+    ;; rag_search - Search local RAG indexes for relevant documents
+    (when (featurep 'ollama-buddy-rag)
+      (ollama-buddy-tools-register
+       'rag_search
+       "Search local document indexes (RAG) for relevant content. Returns matching text chunks from previously indexed directories. Use this when the user asks about local codebases, documentation, or files that have been indexed."
+       '((type . "object")
+         (required . ["query"])
+         (properties . ((query . ((type . "string")
+                                  (description . "The search query to find relevant document chunks")))
+                        (index . ((type . "string")
+                                  (description . "Name of the RAG index to search. If omitted, searches all available indexes."))))))
+       (lambda (args)
+         (let* ((query (alist-get 'query args))
+                (index-name (alist-get 'index args))
+                (available (ollama-buddy-rag--list-index-names)))
+           (if (null available)
+               "No RAG indexes found. Index a directory first with M-x ollama-buddy-rag-index-directory."
+             (let ((indexes-to-search
+                    (if (and index-name (member index-name available))
+                        (list index-name)
+                      available))
+                   (all-results nil))
+               ;; Get query embedding synchronously
+               (let ((embedding nil) (done nil))
+                 (ollama-buddy-rag--get-embedding-async
+                  query (lambda (emb) (setq embedding emb done t)))
+                 (let ((deadline (+ (float-time) 30)))
+                   (while (and (not done) (< (float-time) deadline))
+                     (accept-process-output nil 0.1)))
+                 (if (null embedding)
+                     "Error: Failed to generate embedding for query."
+                   ;; Search each index
+                   (dolist (idx indexes-to-search)
+                     (when-let ((index (ollama-buddy-rag--load-index idx)))
+                       (let* ((chunks (plist-get index :chunks))
+                              (results (ollama-buddy-rag--search-chunks
+                                        embedding chunks
+                                        ollama-buddy-rag-top-k
+                                        ollama-buddy-rag-similarity-threshold)))
+                         (when results
+                           (push (ollama-buddy-rag--format-results-for-context
+                                  results query idx)
+                                 all-results)))))
+                   (if all-results
+                       (mapconcat #'identity (nreverse all-results) "\n\n")
+                     (format "No results found for \"%s\" in %s."
+                             query
+                             (mapconcat #'identity indexes-to-search ", ")))))))))
+       t))  ; safe
 
     (message "Initialized %d built-in tools" (hash-table-count ollama-buddy-tools--registry))))
 

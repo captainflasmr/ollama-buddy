@@ -11,6 +11,50 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-03-17 Mon> *4.2.0*
+
+Tool-augmented search — LLMs can now autonomously search the web and query
+local documents during tool calling.
+
+*** Features
+
+- *=web_search= tool* -- When =ollama-buddy-web-search= is loaded and tool
+  calling is enabled, models can autonomously search the web for current
+  information.  The tool uses the existing Ollama web search API and returns
+  plain-text results (titles, URLs, snippets) directly to the model as tool
+  call context.  This lets the model decide when it needs up-to-date
+  information rather than requiring the user to manually attach searches.
+
+- *=rag_search= tool* -- When =ollama-buddy-rag= is loaded and tool calling is
+  enabled, models can autonomously search local RAG indexes for relevant
+  document chunks.  Accepts a =query= and optional =index= name; if no index
+  is specified, all available indexes are searched.  Uses the configured
+  embedding model, =top-k=, and similarity threshold settings.
+
+- *Emacs 29.1 minimum* -- Bumped from 28.1.  All org folding now uses the
+  =org-fold= text-property API directly, removing the overlay-based fallback
+  paths.  This fixes thinking block folding issues on Emacs 29+ where
+  =org-fold='s fragility check could inadvertently reveal folds.
+
+- *Welcome screen improvements* -- Additional commands are now under a folded
+  =** More Commands= org heading, replacing the =ollama-buddy-full-welcome-enabled=
+  defcustom.  Project path is a clickable org file link opening dired.
+
+- *Model Management* -- Running models are now listed individually in the
+  Running Models section with per-model Unload buttons.  The =[x]/[ ]=
+  checkbox indicator is removed from Available Models since running status is
+  shown in its own section.
+
+*** Key binding changes
+
+- =C-c E= -- Toggle tool auto-execute (was: role creator, now removed)
+- =E= in main transient Tools section -- Toggle tool auto-execute
+
+*** Removed
+
+- =ollama-buddy-full-welcome-enabled= defcustom (replaced by folded heading)
+- =ollama-buddy-role-creator-create-new-role= command and =C-c E= binding
+
 ** <2026-03-16 Sun> *4.1.1*
 
 Recommended Models browser and model letter ordering.

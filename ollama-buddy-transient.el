@@ -35,7 +35,6 @@
 (declare-function ollama-buddy-show-raw-model-info "ollama-buddy")
 (declare-function ollama-buddy--multishot-prompt "ollama-buddy")
 (declare-function ollama-buddy-roles-switch-role "ollama-buddy")
-(declare-function ollama-buddy-role-creator-create-new-role "ollama-buddy")
 (declare-function ollama-buddy-roles-open-directory "ollama-buddy")
 (declare-function ollama-buddy-install-extras "ollama-buddy")
 (declare-function ollama-buddy--extras-missing-p "ollama-buddy")
@@ -89,6 +88,13 @@
       (ollama-buddy-tools-info)
     (message "Tool calling requires ollama-buddy-tools: (require 'ollama-buddy-tools)")))
 
+(defun ollama-buddy-transient--tools-auto-execute ()
+  "Toggle tool auto-execute if ollama-buddy-tools is loaded, else prompt to load it."
+  (interactive)
+  (if (fboundp 'ollama-buddy-tools-toggle-auto-execute)
+      (ollama-buddy-tools-toggle-auto-execute)
+    (message "Tool calling requires ollama-buddy-tools: (require 'ollama-buddy-tools)")))
+
 (declare-function ollama-buddy-rag-index-directory "ollama-buddy-rag")
 (declare-function ollama-buddy-rag-search "ollama-buddy-rag")
 (declare-function ollama-buddy-rag-attach "ollama-buddy-rag")
@@ -135,7 +141,6 @@
   "Role management menu for Ollama Buddy."
   ["Roles"
    ("R" "Switch" ollama-buddy-roles-switch-role)
-   ("E" "New" ollama-buddy-role-creator-create-new-role)
    ("D" "Directory" ollama-buddy-roles-open-directory)
    ("q" "Quit" transient-quit-one)])
 
@@ -179,6 +184,7 @@
 
    ["Tools"
     ("SPC" "Toggle" ollama-buddy-transient--tools-toggle)
+    ("E" "Auto-Execute" ollama-buddy-transient--tools-auto-execute)
     ("Q" "List" ollama-buddy-transient--tools-info)
     ("W" "In-Buffer Replace" ollama-buddy-toggle-in-buffer-replace)
     ("c" "Completion Mode" ollama-buddy-transient--completion-toggle)]]

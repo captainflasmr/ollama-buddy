@@ -75,6 +75,18 @@ Submit queries, swap models, view token usage and statistics:
 - *RAG* -- Index local documents and source code; retrieve relevant context via semantic search; inline =@rag(query)= syntax; configurable embedding backend (Ollama =/api/embed= or any OpenAI-compatible =/v1/embeddings= service, e.g. LM Studio)
 - *In-Buffer Replace* -- Stream LLM output directly into the source buffer, replacing the selected region in-place; accept/reject confirmation; inline diff view (=C-c d=) with word-level smerge highlighting; automatic code-fence stripping
 
+* What's New (v4.2.0)
+
+Tool-augmented search — LLMs can now autonomously search the web and query local documents during tool calling.
+
+- *=web_search= Tool* -- Models can autonomously search the web for current information during tool calling conversations.  Uses the Ollama web search API; returns plain-text results (titles, URLs, snippets) directly as tool context.
+- *=rag_search= Tool* -- Models can autonomously search local RAG indexes for relevant document chunks during tool calling.  Searches all indexes by default, or a specific one by name.
+- *Emacs 29.1 Minimum* -- Org folding now uses the =org-fold= text-property API directly, fixing thinking block folding issues on modern Emacs.
+- *Thinking Fold Robustness* -- =TAB= to peek at a thinking block mid-stream now stays open instead of being immediately re-folded.
+- *Welcome Screen* -- Extra commands under a folded =** More Commands= heading; project path is a clickable dired link.
+- *Model Management* -- Running models listed individually with per-model Unload buttons; =[x]/[ ]= checkbox removed.
+- *=C-c E=* -- Toggle tool auto-execute from the chat buffer.
+
 * What's New (v4.1.1)
 
 Recommended Models browser and model letter ordering.
@@ -106,6 +118,7 @@ Generic provider system — register any OpenAI/Claude/Gemini-compatible API wit
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *4.2.0* | Tool-augmented search: =web_search= and =rag_search= built-in tools; Emacs 29.1 minimum; thinking fold robustness; welcome screen folded commands; model management running models section. |
 | *4.1.1* | Recommended Models browser (=C-c L=), model letter ordering matches display, session load moved to =C-c f=.                                                                                                              |
 | *4.1.0* | Response property drawers (=:TOKENS:=, =:RATE:=, etc.), org file links for attachments, SVG context bar, removed token stats toggle.                                                                                     |
 | *4.0.0* | Generic provider system (=ollama-buddy-provider-create=) — register any OpenAI/Claude/Gemini-compatible API with one call. Existing =require= wrappers still work but are deprecated.                                     |
