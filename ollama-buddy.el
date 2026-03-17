@@ -2153,8 +2153,11 @@ Filters stop words and returns up to 5 key words joined by hyphens."
         (erase-buffer)
         (ollama-buddy-mode 1)
         (insert (ollama-buddy--create-intro-message))
+        (save-excursion
+          (when (re-search-backward "^\\*\\* More Commands$" nil t)
+            (org-fold-hide-subtree)))
         (ollama-buddy--prepare-prompt-area)))
-    
+
     ;; Update status and mode line
     (ollama-buddy--update-status "New session started")
     (ollama-buddy-update-mode-line)
@@ -4262,7 +4265,10 @@ TOOL-CONTINUATION-P non-nil means this follows tool execution."
       (goto-char (point-max))
 
       (unless (> (buffer-size) 0)
-        (insert (ollama-buddy--create-intro-message)))
+        (insert (ollama-buddy--create-intro-message))
+        (save-excursion
+          (when (re-search-backward "^\\*\\* More Commands$" nil t)
+            (org-fold-hide-subtree))))
 
       (setq ollama-buddy--current-original-model original-model)
       (setq ollama-buddy--current-has-images has-images)
