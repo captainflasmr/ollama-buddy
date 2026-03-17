@@ -1192,55 +1192,7 @@ New simple basic interface is available.
 
 As this package becomes more advanced, I've been adding more to the intro message, making it increasingly cluttered. This could be off-putting for users who just want a simple interface to a local LLM via Ollama.
 
-Therefore I have decided to add a customization option to simplify the menu.
-
-Note: all functionality will still be available through keybindings, so just like Emacs then! :)
-
-The welcome screen is controlled by =ollama-buddy-full-welcome-enabled= (default: t).  To show only the essential keybindings:
-
-#+begin_src elisp
-(setq ollama-buddy-full-welcome-enabled nil)
-#+end_src
-
-Here is an example of the minimal welcome screen (=full-welcome-enabled= nil):
-
-#+begin_src
-,* Welcome to _OLLAMA BUDDY_
-
-,#+begin_example
-┌───────────────────────────────────┐
-│  O L L A M A B U D D Y  [v2.6.0]  │
-└───────────────────────────────────┘
-,#+end_example
-
-o: Ollama (5)             u: Cloud (2)
-
-- /Ask me anything!/       C-c C-c / C-c RET
-- /Cancel request/         C-c C-k
-- /Select model/           C-c m
-#+end_src
-
-and the full welcome screen (default, =full-welcome-enabled= t):
-
-#+begin_src
-,* Welcome to _OLLAMA BUDDY_
-
-,#+begin_example
-┌───────────────────────────────────┐
-│  O L L A M A B U D D Y  [v2.6.0]  │
-└───────────────────────────────────┘
-,#+end_example
-
-o: Ollama (5)             u: Cloud (2)
-
-- /Ask me anything!/       C-c C-c / C-c RET
-- /Cancel request/         C-c C-k
-- /Select model/           C-c m
-- /Main transient menu/    C-c O
-- /Browse prompt history/  M-p/n/r
-- /Manage models/          C-c M
-- /ollama-buddy Manual/    C-c ?
-#+end_src
+The welcome screen shows essential keybindings at the top, with additional commands under a folded =** More Commands= org heading that can be expanded with =TAB=.
 
 
 

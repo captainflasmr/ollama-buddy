@@ -299,12 +299,6 @@ Whether to pulse/flash the response text when streaming completes (default: t).
 (setq ollama-buddy-pulse-response t)
 @end example
 
-@item ollama-buddy-full-welcome-enabled
-Whether to show the full welcome screen with all keybinding hints (default: t).
-When nil, only the essential keybindings are shown.
-@example
-(setq ollama-buddy-full-welcome-enabled nil)
-@end example
 @end table
 
 @section File Attachment Configuration

@@ -739,14 +739,6 @@ Customize the appearance and behavior of Ollama Buddy:
   (setq ollama-buddy-pulse-response t)
   #+end_src
 
-- =ollama-buddy-full-welcome-enabled= :: Whether to show the full
-  welcome screen with all keybinding hints (default: t). When nil, only
-  the essential keybindings are shown.
-
-  #+begin_src example-preformatted
-  (setq ollama-buddy-full-welcome-enabled nil)
-  #+end_src
-
 <<File-Attachment-Configuration>>
 *** 3.3 File Attachment Configuration [[#File-Attachment-Configuration][¶]]
 :PROPERTIES:

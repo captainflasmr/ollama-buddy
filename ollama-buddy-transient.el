@@ -372,17 +372,15 @@
    ["Index"
     ("i" "Index Directory" ollama-buddy-rag-index-directory)
     ("u" "Update Directory" ollama-buddy-rag-update-directory)
-    ("r" "Resume Paused" ollama-buddy-rag-resume)
     ("w" "List Indexes" ollama-buddy-rag-list-indexes)
     ("d" "Delete Index" ollama-buddy-rag-delete-index)
-    ("c" "Pause/Cancel" ollama-buddy-rag-pause)]
-   ["Search"
+    ("c" "Pause/Cancel" ollama-buddy-rag-pause)
+    ("r" "Resume Paused" ollama-buddy-rag-resume)]
+   ["Search & Context"
     ("s" "Search & Display" ollama-buddy-rag-search)
-    ("a" "Search & Attach" ollama-buddy-rag-attach)]
-   ["Manage"
+    ("a" "Search & Attach" ollama-buddy-rag-attach)
     ("l" "Show Attachments" ollama-buddy-show-attachments)
-    ("0" "Clear RAG Context" ollama-buddy-rag-clear-attached)]
-   ["Navigation"
+    ("0" "Clear RAG Context" ollama-buddy-rag-clear-attached)
     ("q" "Quit" transient-quit-one)]])
 
 (transient-define-prefix ollama-buddy-transient-user-prompts-menu ()
