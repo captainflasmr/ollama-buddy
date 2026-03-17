@@ -4885,18 +4885,6 @@ Modifies the variable in place."
          (_letters (ollama-buddy--assign-model-letters available-models))
          (cloud-display-models (mapcar #'ollama-buddy--get-full-cloud-model-name
                                        ollama-buddy-cloud-models))
-         (models-to-pull
-          (when (ollama-buddy--ollama-running)
-            (let ((available-for-pull
-                   (mapcar (lambda (model)
-                             (if (ollama-buddy--should-use-marker-prefix)
-                                 (concat ollama-buddy-marker-prefix model)
-                               model))
-                           (ollama-buddy--available-models-flat))))
-              (cl-set-difference
-               available-for-pull
-               available-models
-               :test #'string=))))
          (buf (get-buffer-create "*Ollama Models Management*")))
     (with-current-buffer buf
       (let ((inhibit-read-only t))

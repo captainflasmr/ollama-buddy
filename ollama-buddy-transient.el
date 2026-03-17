@@ -89,7 +89,7 @@
     (message "Tool calling requires ollama-buddy-tools: (require 'ollama-buddy-tools)")))
 
 (defun ollama-buddy-transient--tools-auto-execute ()
-  "Toggle tool auto-execute if ollama-buddy-tools is loaded, else prompt to load it."
+  "Toggle tool auto-execute if ollama-buddy-tools is loaded."
   (interactive)
   (if (fboundp 'ollama-buddy-tools-toggle-auto-execute)
       (ollama-buddy-tools-toggle-auto-execute)
