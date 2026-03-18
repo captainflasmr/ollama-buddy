@@ -91,19 +91,53 @@ Submit queries, swap models, view token usage and statistics:
 - *RAG* -- Index local documents and source code; retrieve relevant context via semantic search; inline =@rag(query)= syntax; configurable embedding backend (Ollama =/api/embed= or any OpenAI-compatible =/v1/embeddings= service, e.g. LM Studio)
 - *In-Buffer Replace* -- Stream LLM output directly into the source buffer, replacing the selected region in-place; accept/reject confirmation; inline diff view (=C-c d=) with word-level smerge highlighting; automatic code-fence stripping
 
-* What's New (v5.0.1)
+* Alternative LLM Feature Comparison Matrix
+
+A cross-cutting view of key features across the major chat clients, to the best of my knowledge, I will try and keep up-to-date, but things are moving quickly!
+
+| Feature                     | [[https://github.com/karthink/gptel][gptel]] | [[https://github.com/xenodium/chatgpt-shell][chatgpt-shell]] | [[https://github.com/s-kostyaev/ellama][ellama]] | [[https://github.com/rksm/org-ai][org-ai]] | [[https://github.com/captainflasmr/ollama-buddy][ollama-buddy]] |
+|-----------------------------+-------+---------------+--------+--------+--------------|
+| Zero-config Ollama          | No    | No            | No     | No     | Yes          |
+| Works in any buffer         | Yes   | Yes           | Yes    | Yes    | Yes          |
+| Dedicated chat buffer       | Yes   | Yes           | Yes    | Yes    | Yes          |
+| Org-mode native output      | Yes   | Yes           | Yes    | Yes    | Yes          |
+| Streaming                   | Yes   | Yes           | Yes    | Yes    | Yes          |
+| Vision / image input        | Yes   | Yes           | Yes    | No     | Yes          |
+| Thinking block support      | Yes   | Yes           | Yes    | No     | Yes          |
+| Tool calling                | Yes   | Yes           | Yes    | No     | Yes          |
+| MCP support                 | Yes   | No            | Yes    | No     | No           |
+| RAG / document indexing     | No    | No            | Yes    | No     | Yes          |
+| Web search integration      | No    | No            | No     | No     | Yes          |
+| In-buffer replace / rewrite | Yes   | No            | Yes    | No     | Yes          |
+| Inline code completion      | No    | No            | No     | No     | Yes          |
+| Session save/load           | Yes   | Yes           | Yes    | Yes    | Yes          |
+| Transient menu              | Yes   | No            | Yes    | No     | Yes          |
+| Prompt history              | No    | Yes           | No     | No     | Yes          |
+| Multi-model comparison      | No    | No            | No     | No     | Yes          |
+| Slash commands              | No    | No            | No     | No     | Yes          |
+| Image generation            | No    | Yes           | No     | Yes    | No           |
+| Speech input/output         | No    | No            | No     | Yes    | No           |
+| Project integration         | No    | No            | No     | No     | Yes          |
+| Ollama Cloud models         | No    | No            | No     | No     | Yes          |
+| Curl backend fallback       | No    | No            | No     | No     | Yes          |
+| MELPA                       | Yes   | Yes           | Yes    | Yes    | Yes          |
+| Emacs requirement           | 27.1  | 28.1          | 28.1   | 27.1   | 29.1         |
+
+* Updates
+
+** What's New (v5.0.1)
 
 Auto-scroll toggle for following streaming output.
 
 - *Auto-Scroll Toggle* -- =C-c g= toggles =ollama-buddy-auto-scroll=, jumping to the end of the buffer when enabled.  Header line shows =↓= when active.  Works when toggled mid-stream.
 
-* What's New (v5.0.0)
+** What's New (v5.0.0)
 
 Tool calling for all providers — OpenAI, Claude, and Gemini API types all support function calling through =ollama-buddy-provider-create=.
 
 - *Tool Calling for External Providers* -- All three API types (OpenAI-compatible, Claude, Gemini) now support tool calling.  Tools are automatically converted from the internal format to each provider's native schema at send time.  This covers OpenAI, DeepSeek, Grok, OpenRouter, Copilot, Codestral, LM Studio, Anthropic Claude, and Google Gemini.
 
-* What's New (v4.2.0)
+** What's New (v4.2.0)
 
 Tool-augmented search — LLMs can now autonomously search the web and query local documents during tool calling.
 
@@ -114,33 +148,6 @@ Tool-augmented search — LLMs can now autonomously search the web and query loc
 - *Welcome Screen* -- Extra commands under a folded =** More Commands= heading; project path is a clickable dired link.
 - *Model Management* -- Running models listed individually with per-model Unload buttons; =[x]/[ ]= checkbox removed.
 - *=C-c E=* -- Toggle tool auto-execute from the chat buffer.
-
-* What's New (v4.1.1)
-
-Recommended Models browser and model letter ordering.
-
-- *Recommended Models Buffer* -- =C-c L= opens a dedicated buffer showing categorised Ollama Hub models not yet installed, with pull buttons and capability indicators. Removed from the model management buffer.
-- *Model Letter Ordering* -- Cloud models now get =a, b, c...= first, matching the top-to-bottom display order in model management.
-- *Key Binding Change* -- Session Load moved from =C-c L= to =C-c f=.
-
-* What's New (v4.1.0)
-
-Response metadata and SVG context bar.
-
-- *Org Property Drawers* -- Every response heading now carries a =:PROPERTIES:= drawer with =:TIMESTAMP:=, =:TOKENS:=, =:RATE:=, =:ELAPSED:=, and =:WAIT:=. Queryable with =org-columns=; survives session save/load. Folded by default.
-- *Org File Links* -- Attached files shown as clickable =[[file:...][name]]= org links.
-- *SVG Context Bar* -- In GUI Emacs, the header-line context bar now renders as a colour-coded SVG with segments for history, system prompt, attachments, web search, RAG, prompt, and free space. Terminal Emacs falls back to the existing text bar.
-- *Removed: Token Stats Toggle* -- =C-c T= and =ollama-buddy-display-token-stats= defcustom removed; token data now lives in the property drawer. Global stats viewer (=C-c #=) unchanged.
-
-* What's New (v4.0.0)
-
-Generic provider system — register any OpenAI/Claude/Gemini-compatible API with a single function call.
-
-- *Generic Provider Registration* -- =ollama-buddy-provider-create= is a single factory function for registering any external LLM provider. Supports three API types: =openai= (OpenAI-compatible), =claude= (Anthropic Messages API), and =gemini= (Google generateContent API). No separate elisp file needed per provider.
-- *Backward Compatible* -- Existing =(require 'ollama-buddy-openai)= etc. still work. Each provider file is now a thin wrapper around =ollama-buddy-provider-create=, preserving all =defcustom= variables. These wrappers will be removed in a future release.
-- *Migration Path* -- Replace per-provider =require= calls with =ollama-buddy-provider-create= in your config. See =CHANGELOG.org= for full migration examples.
-- *Dynamic Model Discovery* -- Providers with a =:models-endpoint= automatically fetch available models on registration, with optional =:models-filter= predicates.
-- *~550 lines saved* -- The eight provider files dropped from ~1,346 lines to ~615 lines total, with all shared logic consolidated in =ollama-buddy-provider.el= (~779 lines).
 
 * Recent Changes
 
@@ -569,32 +576,6 @@ Ollama v0.14+ supports local image generation with models like Z-Image Turbo (6B
 - Handle image output (save to file, display in buffer)
 - Support generation parameters (width, height, steps, seed)
 - Integration with org-mode inline images
-
-* Alternative LLM Feature Comparison Matrix
-
-A cross-cutting view of key features across the major chat clients.
-
-| Feature                     | gptel | chatgpt-shell | ellama  | org-ai | ollama-buddy |
-|-----------------------------+-------+---------------+---------+--------+--------------|
-| Zero-config Ollama          | No    | No            | No      | No     | Yes          |
-| Works in any buffer         | Yes   | No            | Yes     | Yes    | No           |
-| Dedicated chat buffer       | Yes   | Yes           | Yes     | Yes    | Yes          |
-| Org-mode native output      | Yes   | Yes           | Yes     | Yes    | Yes          |
-| Vision / image input        | Yes   | Yes           | Yes     | No     | Yes          |
-| Thinking block support      | Yes   | No            | No      | No     | Yes          |
-| Tool calling                | Yes   | No            | Via llm | No     | Yes          |
-| RAG / document indexing     | No    | No            | Yes     | No     | Yes          |
-| Web search integration      | No    | No            | Yes     | No     | Yes          |
-| In-buffer replace / rewrite | Yes   | No            | Yes     | No     | Yes          |
-| Session save/load           | No    | Yes           | Yes     | No     | Yes          |
-| Transient menu              | No    | No            | Yes     | No     | Yes          |
-| Image generation            | No    | Yes           | No      | Yes    | No           |
-| Speech input/output         | No    | No            | No      | Yes    | No           |
-| Project integration         | No    | No            | No      | No     | Yes          |
-| Ollama Cloud models         | No    | No            | No      | No     | Yes          |
-| Curl backend fallback       | No    | No            | No      | No     | Yes          |
-| MELPA                       | Yes   | Yes           | Yes     | Yes    | Yes          |
-| Emacs requirement           | 27.1  | 28.1          | 28.1    | 27.1   | 29.1         |
 
 * Documentation
 
