@@ -2026,27 +2026,93 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
       (dom-append-child svg grp)
       (propertize " " 'display (svg-image svg :ascent 'center :scale 1.0)))))
 
-(defun ollama-buddy--create-intro-message ()
-  "Create minimal welcome message with essential commands in org format."
-  (setq-local org-hide-emphasis-markers t)
-  (setq-local org-hide-leading-stars t)
+(defun ollama-buddy--format-provider-summary ()
+  "Build the provider summary string for the intro screen.
+Returns a formatted string with provider names and model counts
+in two-column layout, or nil if no providers are active."
   (let* ((external-providers (ollama-buddy--get-enabled-external-providers))
          (ollama-count (length (or ollama-buddy--models-cache
                                    (ollama-buddy--get-models))))
          (cloud-count (length ollama-buddy-cloud-models))
          (use-prefixes (ollama-buddy--should-use-marker-prefix))
-         (provider-summary
-          (let ((parts nil))
-            ;; Only show "o: Ollama" with prefix when external providers are loaded
-            (when (and (> ollama-count 0) use-prefixes)
-              (push (format "o: Ollama (%d)" ollama-count) parts))
-            (when external-providers
-              (setq parts (nconc (nreverse parts) external-providers)
-                    parts (nreverse parts)))
-            ;; Only show "u: Cloud" with prefix when external providers are loaded
-            (when (and (> cloud-count 0) use-prefixes)
-              (push (format "u: Cloud (%d)" cloud-count) parts))
-            (nreverse parts)))
+         (parts nil))
+    ;; Only show "o: Ollama" with prefix when external providers are loaded
+    (when (and (> ollama-count 0) use-prefixes)
+      (push (format "o: Ollama (%d)" ollama-count) parts))
+    (when external-providers
+      (setq parts (nconc (nreverse parts) external-providers)
+            parts (nreverse parts)))
+    ;; Only show "u: Cloud" with prefix when external providers are loaded
+    (when (and (> cloud-count 0) use-prefixes)
+      (push (format "u: Cloud (%d)" cloud-count) parts))
+    (setq parts (nreverse parts))
+    (when parts
+      (let* ((items parts)
+             (col-width 24)
+             (lines nil))
+        (while items
+          (let ((left (pop items))
+                (right (pop items)))
+            (push (if right
+                      (format (format "%%-%ds %%s" col-width) left right)
+                    left)
+                  lines)))
+        (mapconcat #'identity (nreverse lines) "\n")))))
+
+(defun ollama-buddy--refresh-intro-provider-summary ()
+  "Update the provider summary section in the chat buffer intro.
+Called after async model fetches complete so counts are accurate."
+  (when-let ((buf (get-buffer ollama-buddy--chat-buffer)))
+    (with-current-buffer buf
+      (save-excursion
+        (goto-char (point-min))
+        ;; The provider summary sits between the intro content and the
+        ;; command list.  Find the command list anchor.
+        (when (re-search-forward "^- /Ask me anything!/" nil t)
+          (beginning-of-line)
+          (let ((commands-start (point))
+                (inhibit-read-only t)
+                ;; Find start of existing provider summary (lines matching
+                ;; "X: Provider (N)" pattern) above the commands
+                (summary-start nil)
+                (summary-end nil))
+            ;; Search backwards for the provider summary block
+            (save-excursion
+              (forward-line -1)
+              ;; Skip blank lines between summary and commands
+              (while (and (not (bobp))
+                          (looking-at-p "^\\s-*$"))
+                (forward-line -1))
+              ;; Now check if we're on a provider summary line
+              (when (looking-at-p "^[a-z]: .+ ([0-9]+)")
+                (setq summary-end (line-end-position))
+                (setq summary-start (line-beginning-position))
+                ;; Walk back to find the start of the summary block
+                (while (and (not (bobp))
+                            (save-excursion
+                              (forward-line -1)
+                              (looking-at-p "^[a-z]: .+ ([0-9]+)")))
+                  (forward-line -1)
+                  (setq summary-start (line-beginning-position)))))
+            (let ((new-summary (ollama-buddy--format-provider-summary)))
+              (cond
+               ;; Update existing summary
+               ((and summary-start summary-end new-summary)
+                (let ((new-text (propertize new-summary 'face '(:inherit bold))))
+                  (goto-char summary-start)
+                  (delete-region summary-start (+ summary-end 1)) ; include trailing newline
+                  (insert new-text "\n")))
+               ;; Insert new summary (none existed before)
+               ((and (not summary-start) new-summary)
+                (goto-char commands-start)
+                (let ((new-text (propertize new-summary 'face '(:inherit bold))))
+                  (insert new-text "\n\n")))))))))))
+
+(defun ollama-buddy--create-intro-message ()
+  "Create minimal welcome message with essential commands in org format."
+  (setq-local org-hide-emphasis-markers t)
+  (setq-local org-hide-leading-stars t)
+  (let* ((provider-summary (ollama-buddy--format-provider-summary))
          (project-root (when (and (featurep 'ollama-buddy-project)
                                   (fboundp 'ollama-buddy-project-current-root))
                          (ollama-buddy-project-current-root)))
@@ -2072,19 +2138,7 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
              "** *THERE IS NO OLLAMA RUNNING*\n
 please run =ollama serve=\n\n")
            (when provider-summary
-             (concat
-              (let* ((items provider-summary)
-                     (col-width 24)
-                     (lines nil))
-                (while items
-                  (let ((left (pop items))
-                        (right (pop items)))
-                    (push (if right
-                              (format (format "%%-%ds %%s" col-width) left right)
-                            left)
-                          lines)))
-                (mapconcat #'identity (nreverse lines) "\n"))
-              "\n\n"))
+             (concat provider-summary "\n\n"))
            ;; (when auth-status
              ;; (concat "Auth: " auth-status "\n\n"))
            "- /Ask me anything!/       *C-c C-c* OR *C-c RET*

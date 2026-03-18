@@ -3,16 +3,15 @@
 #+email: captainflasmr@gmail.com
 #+language: en
 #+options: ':t toc:nil author:nil email:nil num:nil title:nil
-#+todo: TODO DOING | DONE
 #+startup: showall
 
 This document contains the current bugs/improvements, this is just for me mainly but does include any Issues reported.
 
 * Bugs/Improvements
 
-** DOING external LLM usage?
 ** DOING Improve svg
 ** DOING more LLM integrations
+** DOING intro sometimes showing (0) for external providers
 ** TODO more tips
 ** TODO rethink tooling to autorun somehow
 ** TODO tool: once execute shall has accept all then push through for all other shell commands
@@ -21,6 +20,7 @@ This document contains the current bugs/improvements, this is just for me mainly
 ** TODO plan mode
 ** TODO remove i Project Info
 ** TODO maybe a quick save
+** TODO external LLM usage?
 ** TODO think start cutoff
 ** TODO regenerate videos
 ** TODO test Emacs configs under different OS using VSCode and rancher
@@ -28,11 +28,8 @@ This document contains the current bugs/improvements, this is just for me mainly
 ** TODO clean up testing folder
 ** TODO structured outputs
 ** TODO Modifying a parameter internal defaults would flag as not modified
-
 ** TODO No streaming with hiding reasoning corrupts output
-
 ** TODO Pushing hundreds or even thousands of lines to the chat buffer takes a while
-
 ** TODO keybindings in ollama chat buffer are reserved
 
 * Issues

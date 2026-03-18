@@ -422,7 +422,10 @@ Appends prefixed model names to `ollama-buddy-remote-models'."
     (when (fboundp 'ollama-buddy-register-model-handler)
       (ollama-buddy-register-model-handler prefix send-fn))
     (setq ollama-buddy-remote-models
-          (append ollama-buddy-remote-models prefixed-models))))
+          (append ollama-buddy-remote-models prefixed-models))
+    ;; Refresh the intro provider summary now that counts have changed
+    (when (fboundp 'ollama-buddy--refresh-intro-provider-summary)
+      (ollama-buddy--refresh-intro-provider-summary))))
 
 ;;; SSE Streaming infrastructure
 ;; ============================================================================
