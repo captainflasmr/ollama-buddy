@@ -635,7 +635,7 @@ The \"In-Buffer\" tone is automatically applied when
   :type 'boolean
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-max-history-length 10
+(defcustom ollama-buddy-max-history-length 20
   "Maximum number of message pairs to keep in conversation history."
   :type 'integer
   :group 'ollama-buddy)
