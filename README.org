@@ -21,11 +21,13 @@ An Emacs package for interacting with local LLMs via [[https://ollama.ai/][Ollam
   ("C-c O" . ollama-buddy-transient-menu))
 #+end_src
 
-That's it. Start =ollama serve=, open Emacs, press =C-c o=, select =[o]= to open chat, and go, here is what will be presented:
+That's it!, start =ollama serve=, open Emacs, press =C-c o=, select =[o]= to open chat, and go, here is what will be presented:
 
 #+attr_org: :width 300px
 #+attr_html: :width 100%
 [[file:img/ollama-buddy-welcome.jpg]]
+
+There are videos demonstrating functionality:
 
 https://www.youtube.com/@OllamaBuddyforEmacs
 
@@ -216,7 +218,7 @@ On first launch, press =C-c O= → =I= to install the bundled presets and user p
 
 ** With a Local OpenAI-Compatible Server (LM Studio, llama.cpp, vLLM…)
 
-No API key needed for local servers:
+No API key needed for local servers.  Use =ollama-buddy-provider-create= with =:models-endpoint= to auto-discover models:
 
 #+begin_src elisp
 (use-package ollama-buddy
@@ -225,10 +227,12 @@ No API key needed for local servers:
   ("C-c o" . ollama-buddy-role-transient-menu)
   ("C-c O" . ollama-buddy-transient-menu)
   :config
-  (require 'ollama-buddy-openai-compat)
-  ;; point at your server — LM Studio default shown here
-  (setq ollama-buddy-openai-compat-base-url "http://localhost:1234")
-  (setq ollama-buddy-openai-compat-provider-name "LM Studio"))
+  (require 'ollama-buddy-provider)
+  (ollama-buddy-provider-create
+   :name "LM Studio"
+   :prefix "l:"
+   :endpoint "http://localhost:1234/v1/chat/completions"
+   :models-endpoint "http://localhost:1234/v1/models"))
 #+end_src
 
 Optionally also route RAG embeddings through the same server:
@@ -426,10 +430,6 @@ The two directories installed are:
 | C-c / a   | Web search and attach         |
 | C-c d     | Inline diff view              |
 
-* Screenshots & Demos
-
-See the [[file:README-full.org][full README]] for all 30+ demos with descriptions, or browse the [[https://www.youtube.com/@OllamaBuddyforEmacs][YouTube channel]].
-
 * ollama API Support Tables
 
 ** Core API Endpoints
@@ -519,10 +519,6 @@ The =format= parameter supports JSON schema for structured responses.
 - Define output schemas per command
 - Integration with org-mode tables
 - Structured data extraction workflows
-
-*** External LLMs to use tooling
-
-In this case I might not ever do this, I am always mindful of burning through tokens.
 
 *** Anthropic Messages API Compatibility
 
