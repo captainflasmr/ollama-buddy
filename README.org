@@ -31,6 +31,14 @@ There are videos demonstrating functionality:
 
 https://www.youtube.com/@OllamaBuddyforEmacs
 
+* Want More Details?
+
+For a deeper dive have a ganders at:
+
+- [[file:README-full.org][Full README]] -- Detailed README tutorials, transient menu guide, and role setup
+
+* Demos
+
 ** In-buffer replacement demo
 
 Demonstrating in-buffer in-line modification, now we are out of the chat buffer!
@@ -542,7 +550,6 @@ Ollama v0.14+ supports local image generation with models like Z-Image Turbo (6B
 * Documentation
 
 - [[file:docs/ollama-buddy.org][Manual]] -- Full reference manual
-- [[file:README-full.org][Full README]] -- Detailed README with all demos, tutorials, transient menu guide, and role setup
-- [[file:README-features.org][Feature History]] -- Detailed feature descriptions as they were added
+- [[file:README-full.org][Full README]] -- Detailed README, tutorials, transient menu guide, and role setup
 - [[file:CHANGELOG.org][Changelog]] -- Version-by-version changes
 - [[https://www.emacs.dyerdwelling.family/tags/ollama-buddy/][Ollama Buddy Blog]] -- Blog articles for Ollama Buddy
