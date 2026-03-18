@@ -570,6 +570,32 @@ Ollama v0.14+ supports local image generation with models like Z-Image Turbo (6B
 - Support generation parameters (width, height, steps, seed)
 - Integration with org-mode inline images
 
+* Alternative LLM Feature Comparison Matrix
+
+A cross-cutting view of key features across the major chat clients.
+
+| Feature                     | gptel | chatgpt-shell | ellama  | org-ai | ollama-buddy |
+|-----------------------------+-------+---------------+---------+--------+--------------|
+| Zero-config Ollama          | No    | No            | No      | No     | Yes          |
+| Works in any buffer         | Yes   | No            | Yes     | Yes    | No           |
+| Dedicated chat buffer       | Yes   | Yes           | Yes     | Yes    | Yes          |
+| Org-mode native output      | Yes   | Yes           | Yes     | Yes    | Yes          |
+| Vision / image input        | Yes   | Yes           | Yes     | No     | Yes          |
+| Thinking block support      | Yes   | No            | No      | No     | Yes          |
+| Tool calling                | Yes   | No            | Via llm | No     | Yes          |
+| RAG / document indexing     | No    | No            | Yes     | No     | Yes          |
+| Web search integration      | No    | No            | Yes     | No     | Yes          |
+| In-buffer replace / rewrite | Yes   | No            | Yes     | No     | Yes          |
+| Session save/load           | No    | Yes           | Yes     | No     | Yes          |
+| Transient menu              | No    | No            | Yes     | No     | Yes          |
+| Image generation            | No    | Yes           | No      | Yes    | No           |
+| Speech input/output         | No    | No            | No      | Yes    | No           |
+| Project integration         | No    | No            | No      | No     | Yes          |
+| Ollama Cloud models         | No    | No            | No      | No     | Yes          |
+| Curl backend fallback       | No    | No            | No      | No     | Yes          |
+| MELPA                       | Yes   | Yes           | Yes     | Yes    | Yes          |
+| Emacs requirement           | 27.1  | 28.1          | 28.1    | 27.1   | 29.1         |
+
 * Documentation
 
 - [[file:docs/ollama-buddy.org][Manual]] -- Full reference manual
