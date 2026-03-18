@@ -39,6 +39,8 @@ For a deeper dive have a ganders at:
 
 * Demos
 
+See - [[file:README-videos.org][Videos]]
+
 ** In-buffer replacement demo
 
 Demonstrating in-buffer in-line modification, now we are out of the chat buffer!
