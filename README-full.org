@@ -33,28 +33,9 @@ You can install with literally no config, but I would suggest binding to both me
 
 A simple text information screen will be presented on the first opening of the chat (by selecting "o" from any of the menus), its just a bit of fun, but I wanted a quick start tutorial/assistant type of feel, here is what will be presented:
 
-#+begin_src
-,* Welcome to _OLLAMA BUDDY_
-
-,#+begin_example
-┌───────────────────────────────────┐
-│  O L L A M A B U D D Y  [v5.0.1]  │
-└───────────────────────────────────┘
-,#+end_example
-
-o: Ollama (5)             u: Cloud (2)
-
-- /Ask me anything!/       C-c C-c / C-c RET
-- /Cancel request/         C-c C-k
-- /Select model/           C-c m
-- /Pull new model/         C-c l
-- /Main transient menu/    C-c O
-- /Browse prompt history/  M-p/n/r
-- /Manage models/          C-c M
-- /ollama-buddy Manual/    C-c ?
-
-,* *tinyllama:latest >> PROMPT:* <put prompt in here>
-#+end_src
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-welcome.jpg]]
 
 The model counts show how many models are available in each category. If you have external LLM providers configured, you'll also see a line like:
 a: OpenAI | c: Claude | g: Gemini

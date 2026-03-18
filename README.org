@@ -21,7 +21,11 @@ An Emacs package for interacting with local LLMs via [[https://ollama.ai/][Ollam
   ("C-c O" . ollama-buddy-transient-menu))
 #+end_src
 
-That's it. Start =ollama serve=, open Emacs, press =C-c o=, select =[o]= to open chat, and go.
+That's it. Start =ollama serve=, open Emacs, press =C-c o=, select =[o]= to open chat, and go, here is what will be presented:
+
+#+attr_org: :width 300px
+#+attr_html: :width 100%
+[[file:img/ollama-buddy-welcome.jpg]]
 
 https://www.youtube.com/@OllamaBuddyforEmacs
 
