@@ -10,11 +10,14 @@ This document contains the current bugs/improvements, this is just for me mainly
 
 * Bugs/Improvements
 
+** DOING external LLM usage?
 ** DOING Improve svg
 ** DOING tool ediff change not showing full file
 ** DOING more LLM integrations
+** TODO more tips
+** TODO plan mode
+** TODO remove i Project Info
 ** TODO maybe a quick save
-** TODO external LLM usage?
 ** TODO think start cutoff
 ** TODO regenerate videos
 ** TODO test Emacs configs under different OS using VSCode and rancher
