@@ -75,6 +75,12 @@ Submit queries, swap models, view token usage and statistics:
 - *RAG* -- Index local documents and source code; retrieve relevant context via semantic search; inline =@rag(query)= syntax; configurable embedding backend (Ollama =/api/embed= or any OpenAI-compatible =/v1/embeddings= service, e.g. LM Studio)
 - *In-Buffer Replace* -- Stream LLM output directly into the source buffer, replacing the selected region in-place; accept/reject confirmation; inline diff view (=C-c d=) with word-level smerge highlighting; automatic code-fence stripping
 
+* What's New (v5.0.1)
+
+Auto-scroll toggle for following streaming output.
+
+- *Auto-Scroll Toggle* -- =C-c g= toggles =ollama-buddy-auto-scroll=, jumping to the end of the buffer when enabled.  Header line shows =↓= when active.  Works when toggled mid-stream.
+
 * What's New (v5.0.0)
 
 Tool calling for all providers — OpenAI, Claude, and Gemini API types all support function calling through =ollama-buddy-provider-create=.
@@ -124,6 +130,7 @@ Generic provider system — register any OpenAI/Claude/Gemini-compatible API wit
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *5.0.1* | Auto-scroll toggle (=C-c g=, =↓= indicator); works mid-stream. |
 | *5.0.0* | Tool calling for all providers: OpenAI, Claude, and Gemini API types support function calling; HTTP error detection; Gemini native =systemInstruction=. |
 | *4.2.0* | Tool-augmented search: =web_search= and =rag_search= built-in tools; Emacs 29.1 minimum; thinking fold robustness; welcome screen folded commands; model management running models section. |
 | *4.1.1* | Recommended Models browser (=C-c L=), model letter ordering matches display, session load moved to =C-c f=.                                                                                                              |

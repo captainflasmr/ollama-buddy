@@ -2804,6 +2804,7 @@ The header line shows compact status indicators:
 @item @code{✦} - Current model supports thinking/reasoning
 @item @code{≡N} - Number of file attachments (e.g.@: @code{≡3} means 3 files)
 @item @code{♁N} - Number of web search results attached
+@item @code{↓} - Auto-scroll enabled (buffer follows streaming output)
 @item @code{x} - Streaming disabled
 @item @code{<} - Global system prompt disabled
 @item @code{H5/10} - History count (when enabled via @code{ollama-buddy-show-history-indicator})

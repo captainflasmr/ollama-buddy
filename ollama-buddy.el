@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 5.0.0
+;; Version: 5.0.1
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -3274,8 +3274,8 @@ TCP packets split a JSON object across multiple filter calls."
                ;; On completion with visible response, move to prompt
                ((and completed (ollama-buddy--maybe-goto-prompt window response-start))
                 nil)
-               ;; Auto-scroll enabled and was at end, follow output
-               ((and at-end ollama-buddy-auto-scroll)
+               ;; Auto-scroll enabled, follow output
+               (ollama-buddy-auto-scroll
                 (set-window-point window (point-max)))
                ;; Otherwise restore original position
                (t
@@ -5889,6 +5889,7 @@ Returns the text with @file() delimiters removed."
     ;; web search
     (define-key map (kbd "C-c /") #'ollama-buddy-transient-web-search-menu)
 
+    (define-key map (kbd "C-c g") #'ollama-buddy-toggle-auto-scroll)
     (define-key map (kbd "C-c e") #'ollama-buddy-switch-communication-backend)
     (define-key map (kbd "C-c K") #'ollama-buddy-exit)
 

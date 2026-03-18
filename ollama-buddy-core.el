@@ -2056,7 +2056,7 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
           (concat
            (when (= (buffer-size) 0)
              (concat "#+TITLE: Ollama Buddy Chat"))
-           "\n\n* Ollama Buddy [v5.0.0]\n"
+           "\n\n* Ollama Buddy [v5.0.1]\n"
            (if-let ((logo (ollama-buddy--create-logo-image 140)))
                (concat logo "\n")
              (concat
@@ -2200,6 +2200,23 @@ When disabled, responses only appear after completion."
    (if ollama-buddy-streaming-enabled "Streaming enabled" "Streaming disabled"))
   (message "Ollama Buddy streaming mode: %s"
            (if ollama-buddy-streaming-enabled "enabled" "disabled")))
+
+(defun ollama-buddy-toggle-auto-scroll ()
+  "Toggle auto-scrolling of the chat buffer during streaming.
+When enabled, the buffer follows new output.  Also jumps to the
+end of the buffer so you immediately see the latest tokens."
+  (interactive)
+  (setq ollama-buddy-auto-scroll (not ollama-buddy-auto-scroll))
+  (when ollama-buddy-auto-scroll
+    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+      (goto-char (point-max))
+      (let ((window (get-buffer-window (current-buffer) t)))
+        (when window
+          (set-window-point window (point-max))))))
+  (ollama-buddy--update-status
+   (if ollama-buddy-auto-scroll "Auto-scroll enabled" "Auto-scroll disabled"))
+  (message "Ollama Buddy auto-scroll: %s"
+           (if ollama-buddy-auto-scroll "enabled" "disabled")))
 
 (defun ollama-buddy-set-keepalive ()
   "Set how long Ollama keeps the model loaded after a request.
@@ -3081,6 +3098,7 @@ ACTUAL-MODEL is the model being used instead."
                               (propertize (format "⊕%d " (ollama-buddy-rag-count))
                                           'face '(:weight bold))
                             ""))
+           (scroll-indicator (if ollama-buddy-auto-scroll "↓" ""))
            (curl-indicator (if (eq ollama-buddy-communication-backend 'curl) "⇄" ""))
            (in-buffer-indicator (if (bound-and-true-p ollama-buddy-in-buffer-replace) "✎" ""))
            (tone-indicator (let ((tone ollama-buddy--current-tone))
@@ -3109,9 +3127,10 @@ ACTUAL-MODEL is the model being used instead."
             (replace-regexp-in-string
              "%" "%%"
             (concat
-             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s%s %s%s%s"
+             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s%s %s%s%s"
                      airplane-indicator
                      curl-indicator
+                     scroll-indicator
                      (if ollama-buddy-streaming-enabled "" "x")
                      (ollama-buddy--add-context-to-status-format)
                      (if ollama-buddy-global-system-prompt-enabled "" "<")

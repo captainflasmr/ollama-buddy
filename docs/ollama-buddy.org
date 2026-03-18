@@ -4110,6 +4110,7 @@ The header line shows compact status indicators:
 - =✦= - Current model supports thinking/reasoning
 - =≡N= - Number of file attachments (e.g. =≡3= means 3 files)
 - =♁N= - Number of web search results attached
+- =↓= - Auto-scroll enabled (buffer follows streaming output)
 - =x= - Streaming disabled
 - =<= - Global system prompt disabled
 - =H5/10= - History count (when enabled via

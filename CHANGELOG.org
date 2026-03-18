@@ -11,6 +11,17 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-03-18 Tue> *5.0.1*
+
+Auto-scroll toggle for following streaming output.
+
+*** Features
+
+- *Auto-scroll toggle* -- =C-c g= toggles =ollama-buddy-auto-scroll=, jumping to
+  the end of the buffer when enabled so you can immediately follow streaming
+  tokens.  Header line shows =↓= when active.  Auto-scroll now works when
+  toggled mid-stream (no longer requires cursor to already be at end of buffer).
+
 ** <2026-03-17 Mon> *5.0.0*
 
 Tool calling for all providers — OpenAI, Claude, and Gemini API types all

@@ -490,7 +490,7 @@ Contains the error body string for display.")
             (insert content))
           (when window
             (cond
-             ((and was-at-end ollama-buddy-auto-scroll)
+             (ollama-buddy-auto-scroll
               (set-window-point window (point-max)))
              (t
               (set-window-point window old-point)
