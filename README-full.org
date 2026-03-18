@@ -38,7 +38,7 @@ A simple text information screen will be presented on the first opening of the c
 
 ,#+begin_example
 ┌───────────────────────────────────┐
-│  O L L A M A B U D D Y  [v2.6.0]  │
+│  O L L A M A B U D D Y  [v5.0.1]  │
 └───────────────────────────────────┘
 ,#+end_example
 
@@ -81,11 +81,7 @@ PROMPT>> why is emacs so great?
 
 and show the token usage and rate being displayed in the chat buffer.
 
-Open the Token Usage stats from the menu
-
-Open the Token Usage graph
-
-Toggle on =ollama-buddy-toggle-token-display=
+Open the Token Usage stats from the menu (=C-c #=)
 
 #+attr_org: :width 300px
 #+attr_html: :width 100%
@@ -118,7 +114,6 @@ If desired, the following will get you going! (of course, have =ollama= running 
   - Quickly switch between LLM models with no configuration required
   - Send text from any Emacs buffer
   - Comprehensive model management with =C-c M=
-  - Minibuffer fallback menu still available via =M-x ollama-buddy-menu=
 
 - *Role and Session Management*
 
@@ -182,17 +177,21 @@ If desired, the following will get you going! (of course, have =ollama= running 
   - Markdown to Org conversion for better formatting
   - Export conversations in various formats
 
+- *Tool Calling*
+
+  - Built-in tools for file operations, shell commands, buffer access, and more
+  - Custom tool registration API
+  - Auto-execute mode with safety controls for unsafe tools
+  - Works across all providers (Ollama, OpenAI, Claude, Gemini)
+
 - *Lightweight*
-  
-  - Single package file
+
   - A minified version =ollama-buddy-mini= (200 lines) is available
-  - No external dependencies (curl not used)
+  - Curl backend available as fallback (=C-c e= to switch)
 
 * Transient Menu
 
-Ollama Buddy now includes a transient-based menu system to improve usability and streamline interactions. Yes, I originally stated that I would never do it, but I think it compliments my crafted simple textual menu and the fact that I have now defaulted the main chat interface to a simple menu.
-
-This can give the user more options for configuration, they can use the chat in advanced mode where the keybindings are presented in situ, or a more minimal basic setup where the transient menu can be activated.  For my use-package definition I current have the following set up, with the two styles of menus sitting alongside each other :
+Ollama Buddy includes a transient-based menu system to improve usability and streamline interactions.  It complements the in-chat keybindings: you can work entirely with keybindings if you prefer, or use the transient menus for discoverability.
 
   #+begin_src elisp
   :bind
@@ -200,206 +199,137 @@ This can give the user more options for configuration, they can use the chat in 
   ("C-c O" . ollama-buddy-transient-menu)
   #+end_src
 
-The new menu provides an organized interface for accessing the assistant’s core functions, including chat, model management, roles, and Fabric patterns. This post provides an overview of the features available in the Ollama Buddy transient menus.
-
-Yes that's right also =fabric= patterns!, I have decided to add in auto syncing of the patterns directory in https://github.com/danielmiessler/fabric
-
-Simply I pull the patterns directory which contain prompt guidance for a range of different topics and then push them through a completing read to set the =ollama-buddy= system prompt, so a special set of curated prompts can now be applied right in the =ollama-buddy= chat!
-
-Anyways, here is a description of the transient menu system.
-
 ** What is the Transient Menu?
 
-The transient menu in Ollama Buddy leverages Emacs' =transient.el= package (the same technology behind Magit's popular interface) to create a hierarchical, discoverable menu system. This approach transforms the user experience from memorizing numerous keybindings to navigating through logical groups of commands with clear descriptions.
+The transient menu leverages Emacs’ =transient.el= package (the same technology behind Magit’s popular interface) to create a hierarchical, discoverable menu system.  Instead of memorizing keybindings, navigate through logical groups of commands with clear descriptions.
 
 ** Accessing the Menu
 
-The main transient menu can be accessed with the keybinding =C-c O= when in an Ollama Buddy chat buffer. You can also call it via =M-x ollama-buddy-transient-menu= from anywhere in Emacs.
+- =C-c O= (or =C-c .=) in the chat buffer opens the main transient menu
+- =C-c o= (or =C-c b= from inside the chat) opens the dynamic role menu
+- =M-x ollama-buddy-transient-menu= works from anywhere in Emacs
 
-** What the Menu Looks Like
+** Main Menu Layout
 
-When called, the main transient menu appears at the bottom of your Emacs frame, organized into a compact 4x2 grid for efficient access. Here's what you'll see:
+When called, the main transient menu appears at the bottom of your Emacs frame:
 
-#+begin_src 
+#+begin_src
 |o(Y)o| Ollama Buddy
-[Chat]              [Model]                [Actions]              [Tools]
-o  Open Chat        W  Manage Models       r  Refactor Code       f  Fabric Patterns
-O  Commands         m  Switch Model        d  Describe Code       u  Universal Patterns
-RET Send Prompt     c  Cloud Models        g  Git Commit Message  a  Awesome Prompts
-k  Kill/Cancel      i  Show Model Info     l  Lookup Definition   w  Web Search
-x  Toggle Streaming M  Multishot           p  Proofread Text      t  Ollama Tools
-h  Help/Menu        U  Check Status        c  Custom Prompt       r  RAG Integration
+[Chat]                [Model]              [Actions]             [Tools]
+o  Open Chat          m  Switch Model      j  Jump to Prompt     SPC Toggle Tools
+K  Exit               M  Manage            l  Pull Model         E   Auto-Execute
+r  RAG                L  Recommended       x  Toggle Stream      Q   List Tools
+P  Project            i  Info              e  Switch Backend      W   In-Buffer Replace
+A  Auth               U  Multishot         !  Airplane Mode      c   Completion Mode
 
-[History]           [Sessions]             [Sub-menus]            [General]
-H  Toggle History   N  New Session         S  Settings             q  Quit
-X  Clear History    L  Load Session        P  System Prompts       ?  Help
-J  Edit History     S  Save Session        R  Roles Management     B  Intro Screen
-                    Q  List Sessions                              V  Version Info
-                    D  Open Directory                             z  About
+[History]             [Sessions]           [Sub-menus]           [General]
+H  Toggle             N  New               +  Settings            h  Help/Menu
+X  Clear              f  Load              y  System Prompt       b  Dynamic Roles
+J  Edit               S  Save              p  Parameters          q  Quit
+Y  Edit Max           Z  Directory         R  Roles
 #+end_src
-
-This visual layout makes it easy to discover and access the full range of Ollama Buddy's functionality. Let's explore each section in detail.
 
 ** Menu Sections Explained
 
 *** Chat Section
 
-This section contains the core interaction commands:
-
 - *Open Chat (o)*: Opens the Ollama Buddy chat buffer
-- *Commands (O)*: Opens a submenu with specialized commands
-- *Send Prompt (RET)*: Sends the current prompt to the model
-- *Kill/Cancel Request (k)*: Cancels the current ongoing request
-- *Toggle Streaming (x)*: Toggle streaming on and off only for ollama models
-- *Help/Menu (h)*: Displays the help assistant with usage tips
-
-*** Prompts Section
-
-These commands help you manage and send prompts:
-
-- *Send Region (l)*: Sends the selected region as a prompt
-- *Set System Prompt (s)*: Sets the current prompt as a system prompt
-- *Show System Prompt (C-s)*: Displays the current system prompt
-- *Reset System Prompt (r)*: Resets the system prompt to default
-- *Ollama Buddy Menu (b)*: Opens the classic custom menu interface
+- *Exit (K)*: Close the chat session (with confirmation)
+- *RAG (r)*: Opens the RAG sub-menu (requires =ollama-buddy-rag=)
+- *Project (P)*: Opens the project sub-menu (attach files, switch directory)
+- *Auth (A)*: Opens the authentication sub-menu (Ollama Cloud, Copilot)
 
 *** Model Section
 
-Commands for model management:
-
-- *Manage Models (W)*: Info, Pull, Copy, Delete for each model, plus Import GGUF Model and Custom Pull from ollama library
 - *Switch Model (m)*: Changes the active LLM
-- *Cloud Model (c)*: Switch to a cloud model
-- *Show Model Info (i)*: Displays detailed information about the current model
-- *Multishot (M)*: Sends the same prompt to multiple models
-- *Check Status (U)*: Checks the status of the local Ollama server
+- *Manage (M)*: Full model management buffer with Select/Info/Pull/Delete actions
+- *Recommended (L)*: Browse recommended models by category
+- *Info (i)*: Show detailed information about the current model
+- *Multishot (U)*: Send the same prompt to multiple models
 
 *** Actions Section
 
-Quick access to common AI-powered text operations:
-
-- *Refactor Code (r)*: Suggest improvements to selected code
-- *Describe Code (d)*: Explain the selected code snippet
-- *Git Commit Message (g)*: Generate a commit message from changes
-- *Lookup Definition (l)*: Look up a word or concept
-- *Proofread Text (p)*: Check for grammar and style
-- *Custom Prompt (c)*: Enter a one-off custom prompt
+- *Jump to Prompt (j)*: Jump cursor to the prompt area
+- *Pull Model (l)*: Pull a new model from Ollama Hub
+- *Toggle Stream (x)*: Toggle streaming on and off
+- *Switch Backend (e)*: Switch between network-process and curl backends
+- *Airplane Mode (!)*: Toggle local-only mode (blocks all external providers)
 
 *** Tools Section
 
-Integration with external knowledge and advanced features:
-
-- *Fabric Patterns (f)*: Access curated prompt templates from Fabric
-- *Universal Patterns (u)*: Generic patterns applicable to many situations
-- *Awesome Prompts (a)*: Access the Awesome ChatGPT Prompts collection
-- *Web Search (w)*: Search the web and integrate results
-- *Ollama Tools (t)*: Use tool-calling capabilities (if supported)
-- *RAG Integration (r)*: Search your local knowledge base
-
-When you select the Fabric Patterns option, you'll see a submenu like this:
-
-#+begin_src 
-Fabric Patterns (42 available, last synced: 2025-03-18 14:30)
-[Actions]             [Sync]              [Categories]          [Navigation]
-s  Send with Pattern  S  Sync Latest      u  Universal Patterns q  Back to Main Menu
-p  Set as System      P  Populate Cache   c  Code Patterns
-l  List All Patterns  I  Initial Setup    w  Writing Patterns
-v  View Pattern Details                   a  Analysis Patterns
-#+end_src
-
-*** Display Options Section
-
-Commands to customize the display:
-
-- *Toggle Debug Mode (B)*: Enable/disable JSON debug information
-- *Token Stats (#)*: Show detailed token usage statistics with graphs
-- *Context Info (C)*: Display context usage information
-- *Toggle ORG/MD (C-o)*: Enable/disable conversion to Org format
-- *Context Display (%)*: Toggle context percentage display
-- *Context Type (&)*: Toggle context display type
-- *History Display (>)*: Toggle history indicator in header
-- *Token Display (T)*: Show/hide token usage statistics
-- *Reasoning (V)*: Hide/show reasoning/thinking sections
-- *Global Prompt (<)*: Toggle global system prompt
+- *Toggle Tools (SPC)*: Enable/disable tool calling for the current model
+- *Auto-Execute (E)*: Toggle automatic tool execution (unsafe tools still prompt)
+- *List Tools (Q)*: Show all registered tools and their status
+- *In-Buffer Replace (W)*: Stream LLM output directly into the source buffer
+- *Completion Mode (c)*: Toggle inline code completions
 
 *** History Section
 
-Commands for managing conversation history:
-
 - *Toggle History (H)*: Enable/disable conversation history
 - *Clear History (X)*: Clear the current history
-- *Edit History (J)*: Edit the history in a buffer
+- *Edit History (J)*: Edit the conversation history in a buffer
+- *Edit Max (Y)*: Set the maximum history length
 
 *** Sessions Section
 
-Commands for session management:
-
 - *New Session (N)*: Start a new session
-- *Load Session (L)*: Load a saved session
+- *Load Session (f)*: Load a saved session
 - *Save Session (S)*: Save the current session
-- *List Sessions (Q)*: Browse your saved sessions
-- *Open Directory (D)*: Open the sessions directory in Dired
+- *Directory (Z)*: Open the sessions directory in Dired
 
 *** Sub-menus Section
 
-Organized sub-menus for specialized settings:
-
-- *Settings (S)*: Configure buffer behavior, display toggles, and UI options
-- *System Prompts (P)*: Manage your personal library of system prompts
-- *Roles Management (R)*: Create and switch between different AI roles
+- *Settings (+)*: Display toggles, debug mode, context info, tone
+- *System Prompt (y)*: View, set, reset system prompts; user prompt library
+- *Parameters (p)*: Full parameter management (temperature, top_k, etc.)
+- *Roles (R)*: Switch role, open roles directory
 
 *** General Section
 
-Global commands and information:
-
+- *Help/Menu (h)*: Show the help assistant with usage tips
+- *Dynamic Roles (b)*: Open the role-based transient menu
 - *Quit (q)*: Close the transient menu
-- *Help (?)*: Access full documentation
-- *Intro Screen (B)*: Show the welcome tutorial
-- *Version Info (V)*: Display the current package version
-- *About (z)*: Information about Ollama Buddy
 
 ** Specialized Sub-menus
 
 *** Settings Sub-menu
 
-Accessed with *S* from the main menu, this organizes configuration options:
+Accessed with *+* from the main menu:
 
-#+begin_src 
+#+begin_src
 Ollama Buddy Settings
-[Buffer Options]           [Display Toggles]          [Interface]
-C  Clear Buffer            T  Token Display           A  Toggle Level
-o  Toggle Markdown->Org    B  Debug Mode              z  Toggle Full Welcome
-s  Scroll to Bottom        #  Token Stats             r  Reset Display
-w  Wrap Prefix             v  Reasoning Visibility
+[Buffer]                   [Display Toggle]           [Other]
+B  Toggle Debug            %  Context Display          u  Benchmark Models
+#  Token Stats             &  Context Type             v  Keep Alive
+C  Context Info            >  History Display           q  Quit
+C-o  Toggle ORG/MD         <  Global Prompt
+                           ~  Tone
 #+end_src
 
 *** System Prompts Sub-menu
 
-Accessed with *P* from the main menu, this handles your prompt library:
+Accessed with *y* from the main menu:
 
-#+begin_src 
+#+begin_src
 System Prompts
-[Management]               [Active Prompt]            [Actions]
-L  List All Prompts        s  Set Current Prompt      q  Back to Main Menu
-E  Edit Prompt             r  Reset System Prompt
-S  Save Current as New     C-s Show Active Prompt
+[System Prompts]
+u  User Defined            s  Show Current             r  Reset Current
+q  Quit
 #+end_src
 
 *** Roles Management Sub-menu
 
-Accessed with *R* from the main menu, this manages AI roles:
+Accessed with *R* from the main menu:
 
-#+begin_src 
-Roles Management
-[Actions]                  [Organization]             [Navigation]
-s  Switch Role             d  Open Roles Directory    q  Back to Main Menu
-c  Create New Role         r  Refresh Roles
-e  Edit Current Role
+#+begin_src
+Roles
+[Roles]
+R  Switch Role             D  Open Directory           q  Quit
 #+end_src
 
-When you select the Edit Parameter option, you'll see a comprehensive submenu of all available parameters:
+When you select the Parameters option (=p=), you'll see a comprehensive submenu of all available parameters:
 
-#+begin_src 
+#+begin_src
 Parameters
 [Generation]                [More Generation]          [Mirostat]
 t  Temperature              f  Frequency Penalty       M  Mirostat Mode
@@ -420,17 +350,16 @@ K  Num Keep                 o  Vocab Only
 d  Default Profile          D  Display All
 a  Creative Profile         R  Reset All
 e  Precise Profile          H  Help
-A  All Profiles             F  Toggle Display in Header
+                            F  Toggle Display in Header
                             q  Back to Main Menu
 #+end_src
 
 ** Parameter Profiles
 
-Ollama Buddy includes predefined parameter profiles that can be applied with a single command. When you select "Parameter Profiles" from the main menu, you'll see:
+Ollama Buddy includes predefined parameter profiles that can be applied with a single command:
 
-#+begin_src 
+#+begin_src
 Parameter Profiles
-Current modified parameters: temperature, top_k, top_p
 [Available Profiles]
 d  Default
 c  Creative
@@ -440,32 +369,17 @@ p  Precise
 q  Back to Main Menu
 #+end_src
 
-** Commands Submenu
-
-The Commands submenu provides quick access to specialized operations:
-
-#+begin_src 
-Ollama Buddy Commands
-[Code Operations]       [Language Operations]    [Pattern-based]         [Custom]
-r  Refactor Code        l  Dictionary Lookup     f  Fabric Patterns      C  Custom Prompt
-d  Describe Code        s  Synonym Lookup        u  Universal Patterns   m  Minibuffer Prompt
-g  Git Commit Message   p  Proofread Text        c  Code Patterns
-
-[Actions]
-q  Back to Main Menu
-#+end_src
-
 ** Direct Keybindings
 
-For experienced users who prefer direct keybindings, all transient menu functions can also be accessed through keybindings with the prefix of your choice (or =C-c O= when in the chat minibuffer) followed by the key shown in the menu. For example:
+All transient menu functions can also be accessed as prefix sequences.  Press =C-c O= to open the menu, then the key shown.  For example:
 
-- =C-c O s= - Set system prompt
 - =C-c O m= - Switch model
-- =C-c O P= - Open parameter menu
+- =C-c O += - Open settings menu
+- =C-c O p= - Open parameter menu
 
 ** Customization
 
-The transient menu can be customized by modifying the =transient-define-prefix= definitions in the package. You can add, remove, or rearrange commands to suit your workflow.
+The transient menu can be customized by modifying the =transient-define-prefix= definitions in =ollama-buddy-transient.el=.  You can add, remove, or rearrange commands to suit your workflow.
 
 * Screenshots / Demos
 
@@ -956,7 +870,7 @@ https://github.com/captainflasmr/ollama-buddy
 
 Demonstrating GitHub Copilot Chat through ollama-buddy.
 
-- Run =M-x ollama-buddy-copilot-login=
+- Use =C-c A= to open Auth menu and sign in to Copilot
 - Complete the device authentication flow
 - Show the "p" indicator in header when Copilot is loaded
 - Use =C-c m= to select a Copilot model (e.g., =p:gpt-4o=, =p:claude-sonnet-4=)
@@ -989,7 +903,7 @@ https://github.com/captainflasmr/ollama-buddy
 
 Demonstrating the enhanced file attachment workflow.
 
-- Attach multiple files with =C-c a=
+- Attach multiple files with =C-c C-a= (or =C-c a= for the attachment menu)
 - Show the ≡N indicator updating (e.g., ≡3 for 3 files)
 - Use =C-c C-w= to view all attachments
 - Ask a question about the attached files
@@ -1023,7 +937,7 @@ https://github.com/captainflasmr/ollama-buddy
 ** Prerequisites
 
 - [[https://ollama.ai/][Ollama]] installed and running locally
-- Emacs 26.1 or later
+- Emacs 29.1 or later
 
 ** MELPA
 
@@ -1032,7 +946,7 @@ https://github.com/captainflasmr/ollama-buddy
      :ensure t
      :bind
      ("C-c o" . ollama-buddy-role-transient-menu)
-     ("C-c O" . ollama-buddy-transient-menu-wrapper))
+     ("C-c O" . ollama-buddy-transient-menu))
 #+end_src
 
 ** Manual Installation
@@ -1051,7 +965,7 @@ With the option to add your own user keybinding for the role menu:
 (add-to-list 'load-path "path/to/ollama-buddy")
 (require 'ollama-buddy)
 (global-set-key (kbd "C-c o") #'ollama-buddy-role-transient-menu)
-(global-set-key (kbd "C-c O") #'ollama-buddy-transient-menu-wrapper)
+(global-set-key (kbd "C-c O") #'ollama-buddy-transient-menu)
 #+end_src
 
 OR
@@ -1061,7 +975,7 @@ OR
    :load-path "path/to/ollama-buddy"
    :bind
    ("C-c o" . ollama-buddy-role-transient-menu)
-   ("C-c O" . ollama-buddy-transient-menu-wrapper))
+   ("C-c O" . ollama-buddy-transient-menu))
 #+end_src
 
 - Usage
@@ -1076,42 +990,67 @@ OR
 | Key             | Action                                  |
 |-----------------+-----------------------------------------|
 | C-c C-c         | Send prompt                             |
-| C-c k           | Cancel request                          |
+| C-c RET         | Send prompt (alternative)               |
+| C-c C-k         | Cancel request                          |
 | C-c m           | Change model                            |
 | C-c l           | Pull new model                          |
 | C-c h           | Show help                               |
 | C-c i           | Show model info                         |
+| C-c j           | Jump to prompt                          |
 | C-c #           | Show token statistics                   |
-| C-c V           | Toggle reasoning visibility             |
 | C-c C-s         | Show system prompt                      |
+| C-c C-r         | Reset system prompt                     |
 | C-u C-c C-c     | Set system prompt                       |
-| C-u C-u C-c C-c | Clear system prompt                     |
+| C-u C-u C-c C-c | Rewind conversation                     |
 | M-p / M-n       | Browse prompt history                   |
-| C-c n / C-c p   | Navigate between prompts                |
 | C-c N           | New session                             |
-| C-c L           | Load session                            |
+| C-c f           | Load session                            |
 | C-c S           | Save session                            |
 | C-c Z           | Open sessions directory                 |
 | C-c H           | Toggle history                          |
 | C-c X           | Clear history                           |
 | C-c J           | Edit history                            |
+| C-c Y           | Set max history length                  |
 | C-c U           | Multishot (prompt to multiple models)   |
 | C-c M           | Manage models                           |
+| C-c L           | Recommended models                      |
 | C-c P           | Project menu                            |
+| C-c A           | Auth menu (Cloud, Copilot)              |
+| C-c a           | Attachment menu                         |
 | C-c p           | Parameter menu                          |
 | C-c y           | System prompts menu                     |
+| C-c s           | User prompts menu                       |
 | C-c +           | Settings menu                           |
 | C-c G           | Show parameters                         |
-| C-c K           | Reset parameters                        |
+| C-c V           | Reset parameters                        |
+| C-c F           | Toggle params in header                 |
+| C-c I           | Parameter help                          |
 | C-c B           | Toggle JSON debug mode                  |
-| C-c T           | Toggle token display                    |
 | C-c <           | Toggle global system prompt             |
 | C-c >           | Toggle history indicator display        |
 | C-c C-o         | Toggle Markdown/Org format              |
-| C-c W           | Toggle tool calling                     |
+| C-c ~           | Set response tone                       |
+| C-c SPC         | Toggle tool calling                     |
+| C-c E           | Toggle tool auto-execute                |
 | C-c Q           | List registered tools                   |
+| C-c W           | Toggle in-buffer replace                |
 | C-c v           | Set keep-alive duration                 |
+| C-c x           | Toggle streaming                        |
+| C-c e           | Switch backend (network/curl)           |
 | C-c !           | Toggle airplane mode                    |
+| C-c g           | Toggle auto-scroll                      |
+| C-c K           | Exit/kill session                       |
+| C-c R           | Switch role                             |
+| C-c D           | Open roles directory                    |
+| C-c b           | Dynamic role menu                       |
+| C-c r           | RAG menu                                |
+| C-c /           | Web search menu                         |
+| C-c C-a         | Attach file                             |
+| C-c C-d         | Detach file                             |
+| C-c C-w         | Show attachments                        |
+| C-c 0           | Clear all attachments                   |
+| C-c ?           | Open Info manual                        |
+| C-c O           | Main transient menu                     |
 
 ** Default Menu Items
 
@@ -1177,7 +1116,7 @@ The first will add a menu item to the existing menu, and the second will define 
 (use-package ollama-buddy
   :bind
   ("C-c o" . ollama-buddy-role-transient-menu)
-  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  ("C-c O" . ollama-buddy-transient-menu)
   :config
   (setq ollama-buddy-default-model "o:tinyllama:latest")
   (add-to-list 'ollama-buddy-command-definitions
@@ -1547,20 +1486,9 @@ Benefits include:
 
 Toggle Markdown to Org conversion with =C-c C-o=.
 
-** Interface Levels
+** Model Management
 
-You can choose between two interface levels depending on your preference:
-
-- *Basic Interface*: Shows minimal commands for new users
-- *Advanced Interface*: Shows all available commands and features
-
-Set your preferred interface level:
-
-#+begin_src elisp
-(setq ollama-buddy-interface-level 'basic)  ; or 'advanced
-#+end_src
-
-Use =C-c M= to access the model management interface with all available actions.
+Use =C-c M= to access the model management interface with all available actions including Select, Info, Pull, Copy, Delete, and Unload for each model.  Cloud models and recommended models are also shown.
 
 ** Conversation History
 
@@ -1587,7 +1515,7 @@ Control this feature with:
 History-related commands:
 - =C-c H=: Toggle history tracking on/off
 - =C-c X=: Clear the current conversation history
-- =C-c E=: Edit conversation history (universal argument to edit specific model)
+- =C-c J=: Edit conversation history
 
 ** Parameter Management
 
@@ -1598,10 +1526,11 @@ Comprehensive parameter management gives you complete control over your Ollama m
 - *Visual Parameter Interface*: Clear display showing which parameters are active with highlighting
 
 Access parameter management through keyboard shortcuts:
-- =C-c p= - Edit a parameter
+- =C-c p= - Open parameter menu
 - =C-c G= - Display current parameters
 - =C-c I= - Show parameter help
-- =C-c K= - Reset parameters to defaults
+- =C-c V= - Reset parameters to defaults
+- =C-c F= - Toggle params in header
 
 ** Command-Specific Parameters
 
@@ -1628,7 +1557,7 @@ Ollama Buddy supports system prompts, allowing you to set and manage system-leve
 - *Clear system prompt*: Use =C-u C-u C-c C-c= to clear the system prompt
 - *View system prompt*: Use =C-c C-s= to display the current system prompt
 
-System prompts remain active across user queries, providing better control over conversation context. The status bar displays an "S" indicator when a system prompt is active.
+System prompts remain active across user queries, providing better control over conversation context.  The header line shows the system prompt name, and =C-c <= toggles the global system prompt on/off.
 
 You can also define system prompts per command:
 
@@ -1644,8 +1573,8 @@ You can also define system prompts per command:
 Real-time token tracking helps you monitor usage and performance:
 
 - Track token counts, rates, and usage history
-- Display token usage statistics (=C-c t= or menu option)
-- Toggle token stats display after responses
+- Display token usage statistics (=C-c #= or menu option)
+- Response metadata captured in org property drawers (=:TOKENS:=, =:RATE:=, =:ELAPSED:=, =:WAIT:=)
 - Real-time updates via timer
 
 ** Multi-model Comparison
@@ -1687,10 +1616,9 @@ Preconfigured presets available:
 Session management allows you to save conversations and restore them with relevant context:
 
 - *Save session* with =ollama-buddy-sessions-save= or =C-c S=
-- *Load session* with =ollama-buddy-sessions-load= or =C-c L=
-- *List sessions* with =ollama-buddy-sessions-list= or =C-c Y=
-- *Delete session* with =ollama-buddy-sessions-delete= or =C-c K=
-- *New session* with =ollama-buddy-sessions-new= or =C-c E=
+- *Load session* with =ollama-buddy-sessions-load= or =C-c f=
+- *New session* with =ollama-buddy-sessions-new= or =C-c N=
+- *Open sessions directory* with =ollama-buddy-sessions-directory= or =C-c Z=
 
 Sessions preserve model-specific chat history to prevent context contamination across different models.
 
@@ -1744,7 +1672,7 @@ You can add new commands to =ollama-buddy-command-definitions= in your config:
   :load-path "path/to/ollama-buddy"
   :bind
   ("C-c o" . ollama-buddy-role-transient-menu)
-  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  ("C-c O" . ollama-buddy-transient-menu)
   (add-to-list 'ollama-buddy-command-definitions
                '(pirate
                  :key ?i
@@ -1885,14 +1813,10 @@ When a fallback occurs, Ollama Buddy provides clear feedback:
 (use-package ollama-buddy
   :bind
   ("C-c o" . ollama-buddy-role-transient-menu)
-  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  ("C-c O" . ollama-buddy-transient-menu)
   :custom
   ;; Set default model
-  (ollama-buddy-default-model "llama3:latest")
-  ;; Set interface level (basic or advanced)
-  (ollama-buddy-interface-level 'advanced)
-  ;; Set menu columns
-  (ollama-buddy-menu-columns 3))
+  (ollama-buddy-default-model "llama3:latest"))
 #+end_src
 
 ** Remote Ollama Server
@@ -1901,7 +1825,7 @@ When a fallback occurs, Ollama Buddy provides clear feedback:
 (use-package ollama-buddy
   :bind
   ("C-c o" . ollama-buddy-role-transient-menu)
-  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  ("C-c O" . ollama-buddy-transient-menu)
   :custom
   (ollama-buddy-host "http://<remote-server>")
   (ollama-buddy-port 11400))
@@ -1919,10 +1843,10 @@ The authentication is handled by the local Ollama server using SSH keys stored i
 
 *** Selecting Cloud Models
 
-- Use =C-u C-c m= (universal argument + model switch) to select from cloud models
-- Or use the transient menu: "Model > Cloud"
+- Use =C-c m= to switch model — cloud models appear in the same list with a ☁ indicator
 - Cloud models are identified by the =-cloud= suffix (e.g., =minimax-m2.1:cloud=)
-- The status line shows a ☁ indicator when using a cloud model
+- The header line shows a ☁ indicator when using a cloud model
+- Use =C-c M= to open Model Management where cloud models have their own section
 
 *** Available Cloud Models
 
@@ -1941,7 +1865,7 @@ You can customize the list via =ollama-buddy-cloud-models=.
 (use-package ollama-buddy
   :bind
   ("C-c o" . ollama-buddy-role-transient-menu)
-  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  ("C-c O" . ollama-buddy-transient-menu)
   :config
   (ollama-buddy-add-model-to-menu-entry 'dictionary-lookup "tinyllama:latest")
   (ollama-buddy-add-model-to-menu-entry 'synonym "tinyllama:latest"))
@@ -1953,7 +1877,7 @@ You can customize the list via =ollama-buddy-cloud-models=.
 (use-package ollama-buddy
   :bind
   ("C-c o" . ollama-buddy-role-transient-menu)
-  ("C-c O" . ollama-buddy-transient-menu-wrapper)
+  ("C-c O" . ollama-buddy-transient-menu)
   :config
   (ollama-buddy-update-menu-entry
    'refactor-code
@@ -1961,7 +1885,40 @@ You can customize the list via =ollama-buddy-cloud-models=.
    :system "You are an expert software engineer who improves code using Ada principles"))
 #+end_src
 
-** Variables
+** Variables and Commands
+
+The full list of customization variables and interactive commands is best explored live in Emacs:
+
+#+begin_src elisp
+;; Browse all customization options
+M-x customize-group RET ollama-buddy RET
+
+;; List all interactive commands
+M-x apropos-command RET ^ollama-buddy RET
+#+end_src
+
+Key customization variables:
+
+| Variable                               | Description                                                     |
+|----------------------------------------+-----------------------------------------------------------------|
+| ollama-buddy-default-model             | Default Ollama model to use                                     |
+| ollama-buddy-host                      | Host where Ollama server is running                             |
+| ollama-buddy-port                      | Port where Ollama server is running                             |
+| ollama-buddy-history-enabled           | Whether to use conversation history (default: t)                |
+| ollama-buddy-max-history-length        | Maximum message pairs in history (default: 10)                  |
+| ollama-buddy-streaming-enabled         | Whether to use streaming mode (default: t)                      |
+| ollama-buddy-auto-scroll               | Whether to auto-scroll during streaming (default: nil)          |
+| ollama-buddy-convert-markdown-to-org   | Auto-convert markdown to org format (default: t)                |
+| ollama-buddy-collapse-thinking         | Fold thinking blocks under org heading (default: t)             |
+| ollama-buddy-show-context-percentage   | Show context usage in header (default: nil)                     |
+| ollama-buddy-cloud-models              | List of available Ollama cloud models                           |
+| ollama-buddy-command-definitions       | Menu command definitions for the role menu                      |
+| ollama-buddy-roles-directory           | Directory for role preset files                                 |
+| ollama-buddy-sessions-directory        | Directory for session files                                     |
+
+#+begin_comment
+The following org-babel blocks generate live tables but are kept as a comment
+since the results go stale.  Evaluate them in Emacs to get up-to-date listings.
 
 #+begin_src emacs-lisp :results table :colnames '("Custom variable" "Description") :exports results
   (let ((rows))
@@ -2066,6 +2023,7 @@ You can customize the list via =ollama-buddy-cloud-models=.
 | ollama-buddy-hide-reasoning              | When non-nil, hide reasoning/thinking blocks from the stream output.         |
 | ollama-buddy-openai-api-key              | API key for accessing OpenAI services.                                       |
 
+#+begin_comment
 * Interactive functions
 
 #+begin_src emacs-lisp :results table :colnames '("Command" "Description") :exports results
@@ -2107,7 +2065,7 @@ You can customize the list via =ollama-buddy-cloud-models=.
 | ollama-buddy-show-raw-model-info          | Retrieve and display raw JSON information about the current default MODEL.     |
 | ollama-buddy-history-cancel               | Cancel editing the history.                                                    |
 | ollama-buddy-sessions-load                | Load an Ollama Buddy session with improved org file handling.                  |
-| ollama-buddy-transient-menu-wrapper       | Wrapper function for safely loading the Ollama Buddy transient menu.           |
+| ollama-buddy-transient-menu       | Wrapper function for safely loading the Ollama Buddy transient menu.           |
 | ollama-buddy-sessions-list                | Display a list of saved sessions.                                              |
 | ollama-buddy-toggle-context-percentage    | Toggle display of context percentage in the status bar.                        |
 | ollama-buddy-transient-awesome-menu       | Awesome ChatGPT Prompts for ollama-buddy.                                      |
@@ -2163,6 +2121,7 @@ You can customize the list via =ollama-buddy-cloud-models=.
 | ollama-buddy-params-display               | Display the current Ollama parameter settings.                                 |
 | ollama-buddy-fabric-populate-patterns     | Populate the list of available patterns from the local repository.             |
 | ollama-buddy-sessions-save                | Save the current Ollama Buddy session.                                         |
+#+end_comment
 
 * Bugs                                                                 :bugs:
 
