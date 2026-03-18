@@ -5864,6 +5864,7 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c N") #'ollama-buddy-sessions-new)
     (define-key map (kbd "C-c f") #'ollama-buddy-sessions-load)
     (define-key map (kbd "C-c S") #'ollama-buddy-sessions-save)
+    (define-key map (kbd "C-c w") #'ollama-buddy-sessions-rename)
     (define-key map (kbd "C-c L") #'ollama-buddy-recommended-models)
     (define-key map (kbd "C-c Z") #'ollama-buddy-sessions-directory)
     

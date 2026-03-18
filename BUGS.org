@@ -12,10 +12,11 @@ This document contains the current bugs/improvements, this is just for me mainly
 
 ** DOING external LLM usage?
 ** DOING Improve svg
-** DOING tool ediff change not showing full file
 ** DOING more LLM integrations
 ** TODO more tips
 ** TODO rethink tooling to autorun somehow
+** TODO tool: once execute shall has accept all then push through for all other shell commands
+** TODO tool: check multiple ediffs can be added with propose_file_changes
 ** TODO add rename session to transient
 ** TODO plan mode
 ** TODO remove i Project Info
