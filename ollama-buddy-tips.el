@@ -77,6 +77,69 @@
     "=ollama-buddy-openai-compat= lets you connect to LM Studio, llama.cpp, vLLM or any OpenAI-API-compatible server — just set =ollama-buddy-openai-compat-base-url=."
     "=M-x ollama-buddy-openai-compat-refresh-models= re-discovers models from your local server after you load or switch a model in LM Studio or Jan."
 
+    ;; Tool calling
+    "=C-c Q= lists all available tools with descriptions — useful when asking a model to use a specific tool."
+    "=C-c E= toggles tool auto-execute (=⚡=): safe tools run without confirmation, but unsafe tools like =execute_shell= always ask first."
+    "Enable =ollama-buddy-tools-safe-mode= to restrict tool calling to read-only operations only — no file writes or shell commands."
+    "When a tool returns a large result, you get a =(p)roceed/(t)runcate/(c)ancel= prompt — even during auto-execute — so huge outputs never silently flood the context."
+    "Ask a tool-capable model to edit a file and it can use =propose_file_changes= to open an ediff session for interactive review before applying changes."
+
+    ;; Model comparison & benchmarking
+    "=C-c U= sends the same prompt to multiple models one after another — great for comparing how different models handle the same question."
+    "=C-c u= or =/benchmark= runs a performance benchmark across selected models so you can compare speed and quality."
+
+    ;; Web search
+    "=C-c /= opens the web search menu: search and display results, search and attach to context, or clear search attachments."
+
+    ;; Model management
+    "=C-c M= opens the Model Management buffer — view installed models, pull new ones, copy, or delete models in one place."
+    "=C-c L= shows a curated list of recommended models to try — a quick way to discover new models."
+    "=C-c l= pulls a model directly from the Ollama hub without leaving Emacs."
+
+    ;; Parameters
+    "=C-c p= opens the parameter menu where you can tweak temperature, top_k, top_p, repeat_penalty and many more generation settings."
+    "Quick parameter profiles: the parameter menu offers Default, Creative and Precise presets to switch generation style in one step."
+    "=C-c G= displays all current parameter settings at a glance; =C-c V= resets them all to defaults."
+    "=C-c F= toggles showing active parameters in the header line — see at a glance when you have non-default settings."
+
+    ;; Context window
+    "=C-c C= shows detailed context usage: how much of the model's context window is consumed by history, system prompt, and attachments."
+    "=C-c %= toggles a context percentage display in the header — watch it grow as the conversation gets longer."
+    "=C-c $= lets you set the context window size for the current model — useful when the default is too small for long conversations."
+
+    ;; File attachments
+    "=C-c C-a= attaches a file to the conversation context; =C-c C-d= detaches a specific file; =C-c C-w= shows all current attachments."
+    "In Dired, mark files then run =M-x ollama-buddy-dired-attach-marked-files= to attach them all to the chat in one go."
+
+    ;; Sessions
+    "=C-c N= starts a fresh session; =C-c w= or =/rename= lets you give the current session a meaningful name."
+    "=C-c Z= opens the sessions directory in a file manager — useful for browsing or cleaning up old saved conversations."
+
+    ;; Display & settings
+    "=C-c += opens the settings menu — debug mode, token stats, context info, markdown conversion and more, all in one transient."
+    "=C-c #= displays token statistics for the current conversation: total tokens, rate and timing information."
+    "=C-c C-o= toggles markdown-to-org conversion — turn it off to see raw markdown, or on to get proper org formatting."
+    "=C-c g= toggles auto-scroll so the buffer follows streaming output as it arrives."
+    "=C-c <= toggles global system prompt — when on, the same system prompt persists across model switches."
+
+    ;; History
+    "=M-r= searches your prompt history with completing-read — faster than =M-p= when you know what you are looking for."
+    "=C-c H= toggles history tracking on or off; =C-c X= clears all history for the current model."
+
+    ;; Authentication
+    "=C-c A= opens the authentication menu — manage Ollama cloud login, GitHub Copilot tokens and other provider auth from one place."
+    "Use =/login= and =/logout= at the prompt to sign in and out of Ollama cloud without touching the transient menu."
+
+    ;; Project integration
+    "=C-c P= opens the project menu — switch directories, attach project files, or view project info."
+    "Use =/cd= to switch the working directory mid-session and automatically load that project's context."
+
+    ;; Export & misc
+    "Use =/export= to open the org-export dispatcher on the chat buffer — export your conversation to HTML, PDF, LaTeX or plain text."
+    "The chat buffer is a full org-mode buffer — you can use any org commands: =C-c C-e= to export, =C-c C-l= to insert links, =C-c '= to edit source blocks."
+    "=C-c C-s= shows the current system prompt info — useful to check what persona or instructions are active."
+    "=C-c K= exits the chat session with confirmation — a clean way to close when you are done."
+
     ;; Power user
     "=ollama-buddy-command-definitions= is a plain alist — add your own menu entries with =add-to-list= in your config."
     "=C-c != toggles airplane mode, blocking all internet access so every request stays on your local machine."
@@ -84,7 +147,10 @@
     "Store API keys in =~/.authinfo.gpg= and retrieve them with =auth-source-pick-first-password= — keep secrets out of your init file."
     "Use =/init= in a project to generate and cache a project summary — it auto-loads as context in future sessions so the model already knows your codebase."
     "=C-c j= jumps to any prompt in the conversation — handy for navigating long chat sessions. Also works via =M-x imenu=."
-    "=C-c C-j= (=org-goto=) lets you browse and jump to any heading in the chat buffer — prompts, responses, and thinking blocks.")
+    "=C-c C-j= (=org-goto=) lets you browse and jump to any heading in the chat buffer — prompts, responses, and thinking blocks."
+    "=C-c b= opens the role transient menu — switch between character personas with dedicated menus and keybindings."
+    "=C-c v= sets the keep-alive duration — control how long Ollama keeps a model loaded in memory after the last request."
+    "Press =C-c .= as a shortcut for =C-c O= — both open the main transient menu.")
   "List of tip strings shown at random on the ollama-buddy welcome screen.
 Each element is a plain string; org-mode markup is supported.")
 

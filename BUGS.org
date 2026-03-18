@@ -11,8 +11,6 @@ This document contains the current bugs/improvements, this is just for me mainly
 
 ** DOING Improve svg
 ** DOING more LLM integrations
-** DOING intro sometimes showing (0) for external providers
-** TODO more tips
 ** TODO rethink tooling to autorun somehow
 ** TODO tool: once execute shall has accept all then push through for all other shell commands
 ** TODO tool: check multiple ediffs can be added with propose_file_changes
