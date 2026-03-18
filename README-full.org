@@ -462,29 +462,6 @@ OR
 | C-c ?           | Open Info manual                        |
 | C-c O           | Main transient menu                     |
 
-** Default Menu Items
-
-The default menu offers the following menu items:
-
-| Key | Action                      | Description                 |
-|-----+-----------------------------+-----------------------------|
-| o   | Open chat buffer            | Open chat buffer            |
-| m   | Swap model                  | Swap model                  |
-| l   | Send region                 | Send region                 |
-| R   | Switch roles                | Switch roles                |
-| N   | Create new role             | Create new role             |
-| D   | Open roles directory        | Open roles directory        |
-| r   | Refactor code               | Refactor code               |
-| g   | Git commit message          | Git commit message          |
-| c   | Describe code               | Describe code               |
-| d   | Dictionary Lookup           | Dictionary Lookup           |
-| n   | Word synonym                | Word synonym                |
-| p   | Proofread text              | Proofread text              |
-| e   | Custom prompt               | Custom prompt               |
-| i   | Minibuffer Prompt           | Minibuffer Prompt           |
-| K   | Delete session              | Delete session              |
-| q   | Quit                        | Quit                        |
-
 * Tutorial: Quickly Setting Up a Specialized Menu
 
 Lets quickly get started by adding that little command you frequently use on text, lets add it to the ollama buddy menu!
@@ -735,11 +712,13 @@ For more advanced customization, create role files manually:
      :model "codellama:7b"
      :prompt "Refactor this code to improve readability and efficiency:"
      :system "You are an expert software engineer who improves code quality while maintaining functionality."
+     :destination in-buffer  ; replace the selected region directly
      :action (lambda () (ollama-buddy--send-with-command 'refactor-code)))
 
     (explain-code
      :key ?e
      :description "Explain code"
+     :destination chat  ; always goes to chat, even if in-buffer replace is on
      :group "Code"
      :model "deepseek-r1:7b"
      :prompt "Explain what this code does in detail:"
@@ -1053,13 +1032,15 @@ Each menu item is defined using a property list with these key attributes:
  :description "desc"  ; Menu item description
  :group "Group Name"  ; Transient menu column grouping (optional)
  :model "model-name"  ; Specific Ollama model (optional)
- :prompt "prompt"     ; System prompt (optional)
- :system "system"     ; System prompt (optional)
+ :prompt "prompt"     ; Prompt prepended to selected text (optional)
+ :system "system"     ; System prompt for the LLM (optional)
  :parameters ((param . value)) ; Command-specific parameters (optional)
+ :destination chat    ; Response target: chat, in-buffer, or nil (optional)
  :action function)    ; Command implementation
 #+end_src
 
-The =:group= property controls how commands are organized into columns in the transient role menu. Commands sharing the same =:group= string appear together in a named column. Commands without =:group= are placed in a single "Commands" column.
+- The =:group= property controls how commands are organized into columns in the transient role menu.  Commands sharing the same =:group= string appear together in a named column.  Commands without =:group= are placed in a single "Commands" column.
+- The =:destination= property controls where the response goes: =chat= (always chat buffer), =in-buffer= (always replace selected region), or =nil= (honour the global =C-c W= toggle).
 
 ** Examples
 
@@ -1146,15 +1127,24 @@ You can create a minimal configuration by defining only the commands you need:
 
 ** Command Properties Reference
 
-| Property     | Description                              | Required |
-|--------------+------------------------------------------+----------|
-| :key         | Single character for menu selection      | Yes      |
-| :description | Menu item description                    | Yes      |
-| :model       | Specific Ollama model to use             | No       |
-| :prompt      | Static system prompt                     | No       |
-| :system      | System-level instruction                 | No       |
-| :parameters  | Command-specific parameters              | No       |
-| :action      | Function implementing the command        | Yes      |
+| Property     | Description                                              | Required |
+|--------------+----------------------------------------------------------+----------|
+| :key         | Single character for menu selection                      | Yes      |
+| :description | Menu item description                                    | Yes      |
+| :action      | Function implementing the command                        | Yes      |
+| :model       | Specific Ollama model to use                             | No       |
+| :prompt      | Prompt text prepended to selected text                   | No       |
+| :system      | System-level instruction for the LLM                     | No       |
+| :group       | Transient menu column grouping                           | No       |
+| :parameters  | Command-specific parameters alist                        | No       |
+| :destination | Response target: =chat=, =in-buffer=, or =nil= (global toggle) | No       |
+
+The =:destination= property controls where the LLM response goes:
+- =nil= (default) — honours the global =C-c W= in-buffer replace toggle
+- =chat= — always sends to the chat buffer, even if in-buffer replace is on
+- =in-buffer= — always replaces the selected region in the source buffer
+
+This is useful for making certain commands always behave one way.  For example, a "refactor code" command might use =:destination in-buffer= so the refactored code always replaces the selection, while a "describe code" command uses =:destination chat= so the explanation goes to chat.
 
 - Model Selection and Fallback Logic
 
@@ -1327,9 +1317,6 @@ Key customization variables:
 | ollama-buddy-sessions-directory        | Directory for session files                                     |
 
 #+begin_comment
-The following org-babel blocks generate live tables but are kept as a comment
-since the results go stale.  Evaluate them in Emacs to get up-to-date listings.
-
 #+begin_src emacs-lisp :results table :colnames '("Custom variable" "Description") :exports results
   (let ((rows))
     (mapatoms
@@ -1351,87 +1338,127 @@ since the results go stale.  Evaluate them in Emacs to get up-to-date listings.
 #+end_src
 
 #+RESULTS:
-| Custom variable                          | Description                                                                  |
-|------------------------------------------+------------------------------------------------------------------------------|
-| ollama-buddy-awesome-categorize-prompts  | Whether to categorize prompts based on common keywords.                      |
-| ollama-buddy-awesome-prompts-file        | Filename containing the prompts within the repository.                       |
-| ollama-buddy-grok-api-endpoint           | Endpoint for Grok chat completions API.                                      |
-| ollama-buddy-remote-models               | List of available remote models.                                             |
-| ollama-buddy-command-definitions         | Comprehensive command definitions for Ollama Buddy.                          |
-| ollama-buddy-interface-level             | Level of interface complexity to display.                                    |
-| ollama-buddy-show-params-in-header       | Whether to show modified parameters in the header line.                      |
-| ollama-buddy-debug-mode                  | When non-nil, show raw JSON messages in a debug buffer.                      |
-| ollama-buddy-mode                        | Non-nil if Ollama-Buddy mode is enabled.                                     |
-| ollama-buddy-grok-marker-prefix          | Prefix used to identify Grok models in the ollama-buddy interface.           |
-| ollama-buddy-reasoning-markers           | List of marker pairs that encapsulate reasoning/thinking sections.           |
-| ollama-buddy-awesome-update-on-startup   | Whether to automatically update prompts when Emacs starts.                   |
-| ollama-buddy-context-bar-width           | Width of the context progress bar in characters.                             |
-| ollama-buddy-sessions-directory          | Directory containing ollama-buddy session files.                             |
-| ollama-buddy-history-model-view-mode-map | Keymap for model-specific history viewing mode.                              |
-| ollama-buddy-menu-columns                | Number of columns to display in the Ollama Buddy menu.                       |
-| ollama-buddy-gemini-api-endpoint         | Endpoint format for Google Gemini API.                                       |
-| ollama-buddy-fabric-pattern-categories   | List of pattern categories to focus on when listing patterns.                |
-| ollama-buddy-status-update-interval      | Interval in seconds to update the status line with background operations.    |
-| ollama-buddy-fabric-update-on-startup    | Whether to automatically update patterns when Emacs starts.                  |
-| ollama-buddy-available-models            | List of available models to pull from Ollama Hub.                            |
-| ollama-buddy-grok-max-tokens             | Maximum number of tokens to generate in the response.                        |
-| ollama-buddy-claude-max-tokens           | Maximum number of tokens to generate in the response.                        |
-| ollama-buddy-openai-marker-prefix        | Prefix to indicate that a model is from OpenAI rather than Ollama.           |
-| ollama-buddy-history-enabled             | Whether to use conversation history in Ollama requests.                      |
-| ollama-buddy-grok-api-key                | API key for accessing Grok services.                                         |
-| ollama-buddy-grok-default-model          | Default Grok model to use.                                                   |
-| ollama-buddy-claude-marker-prefix        | Prefix used to identify Claude models in the model list.                     |
-| ollama-buddy-roles-directory             | Directory containing ollama-buddy role preset files.                         |
-| ollama-buddy-history-view-mode-map       | Keymap for history viewing mode.                                             |
-| ollama-buddy-fabric-local-dir            | Local directory where Fabric patterns will be stored.                        |
-| ollama-buddy-show-history-indicator      | Whether to show the history indicator in the header line.                    |
-| ollama-buddy-context-size-thresholds     | Thresholds for context usage warnings.                                       |
-| ollama-buddy-mode-map                    | Keymap for ollama-buddy mode.                                                |
-| ollama-buddy-marker-prefix               | Prefix used to identify Ollama models in the ollama-buddy interface.         |
-| ollama-buddy-fabric-patterns-subdir      | Subdirectory within the Fabric repo containing the patterns.                 |
-| ollama-buddy-context-display-type        | How to display context usage in the status bar.                              |
-| ollama-buddy-awesome-repo-url            | URL of the Awesome ChatGPT Prompts GitHub repository.                        |
-| ollama-buddy-openai-api-endpoint         | Endpoint for OpenAI chat completions API.                                    |
-| ollama-buddy-vision-models               | List of models known to support vision capabilities.                         |
-| ollama-buddy-params-active               | Currently active values for Ollama API parameters.                           |
-| ollama-buddy-openai-default-model        | Default OpenAI model to use.                                                 |
-| ollama-buddy-claude-default-model        | Default Claude model to use.                                                 |
-| ollama-buddy-params-modified             | Set of parameters that have been explicitly modified by the user.            |
-| ollama-buddy-gemini-temperature          | Temperature setting for Gemini requests (0.0-1.0).                           |
-| ollama-buddy-current-session-name        | The name of the currently loaded session.                                    |
-| ollama-buddy-host                        | Host where Ollama server is running.                                         |
-| ollama-buddy-image-formats               | List of regular expressions matching supported image file formats.           |
-| ollama-buddy-streaming-enabled           | Whether to use streaming mode for responses.                                 |
-| ollama-buddy-max-history-length          | Maximum number of message pairs to keep in conversation history.             |
-| ollama-buddy-gemini-default-model        | Default Gemini model to use.                                                 |
-| ollama-buddy-default-model               | Default Ollama model to use.                                                 |
-| ollama-buddy-claude-temperature          | Temperature setting for Claude requests (0.0-1.0).                           |
-| ollama-buddy-vision-enabled              | Whether to enable vision support for models that support it.                 |
-| ollama-buddy-awesome-prompt-variable     |                                                                              |
-| ollama-buddy-display-token-stats         | Whether to display token usage statistics in responses.                      |
-| ollama-buddy-show-context-percentage     | Whether to show context percentage in the status bar.                        |
-| ollama-buddy-claude-api-endpoint         | Endpoint for Anthropic Claude API.                                           |
-| ollama-buddy-gemini-api-key              | API key for accessing Google Gemini services.                                |
-| ollama-buddy-openai-max-tokens           | Maximum number of tokens to generate in the response.                        |
-| ollama-buddy-claude-api-key              | API key for accessing Anthropic Claude services.                             |
-| ollama-buddy-params-profiles             | Predefined parameter profiles for different usage scenarios.                 |
-| ollama-buddy-awesome-local-dir           | Local directory where Awesome ChatGPT Prompts will be stored.                |
-| ollama-buddy-params-defaults             | Default values for Ollama API parameters.                                    |
-| ollama-buddy-mode-line-segment           | Mode line segment for Ollama Buddy.                                          |
-| ollama-buddy-grok-temperature            | Temperature setting for Grok requests (0.0-1.0).                             |
-| ollama-buddy-port                        | Port where Ollama server is running.                                         |
-| ollama-buddy-default-register            | Default register to store the current response when not in multishot mode.   |
-| ollama-buddy-fabric-repo-url             | URL of the Fabric GitHub repository.                                         |
-| ollama-buddy-gemini-max-tokens           | Maximum number of tokens to generate in the response.                        |
-| ollama-buddy-modelfile-directory         | Directory for storing temporary Modelfiles.                                  |
-| ollama-buddy-fallback-context-sizes      | Mapping of model names to their default context sizes.                       |
-| ollama-buddy-context-bar-chars           | Characters used to draw the context progress bar.                            |
-| ollama-buddy-openai-temperature          | Temperature setting for OpenAI requests (0.0-2.0).                           |
-| ollama-buddy-convert-markdown-to-org     | Whether to automatically convert markdown to `org-mode' format in responses. |
-| ollama-buddy-mode-hook                   | Hook run after entering or leaving `ollama-buddy-mode'.                      |
-| ollama-buddy-gemini-marker-prefix        | Prefix used to identify Gemini models in the ollama-buddy interface.         |
-| ollama-buddy-hide-reasoning              | When non-nil, hide reasoning/thinking blocks from the stream output.         |
-| ollama-buddy-openai-api-key              | API key for accessing OpenAI services.                                       |
+| Custom variable                                | Description                                                                   |
+|------------------------------------------------+-------------------------------------------------------------------------------|
+| ollama-buddy-completion-mode-hook              | Hook run after entering or leaving `ollama-buddy-completion-mode'.            |
+| ollama-buddy-header-line-height                | Relative height of the header line text.                                      |
+| ollama-buddy-completion-mode-map               | Keymap for `ollama-buddy-completion-mode'.                                    |
+| ollama-buddy-remote-models                     | List of available remote models.                                              |
+| ollama-buddy-web-search-show-token-estimate    | Whether to show estimated token count when attaching search results.          |
+| ollama-buddy-user-prompts-list-mode-map        | Keymap for `ollama-buddy-user-prompts-list-mode'.                             |
+| ollama-buddy-command-definitions               | Comprehensive command definitions for Ollama Buddy.                           |
+| ollama-buddy-project-summary-file              | File name for the cached project summary, relative to project root.           |
+| ollama-buddy-show-params-in-header             | Whether to show modified parameters in the header line.                       |
+| ollama-buddy-user-prompts-default-categories   | List of default categories for user system prompts.                           |
+| ollama-buddy-cloud-models                      | List of available Ollama cloud models.                                        |
+| ollama-buddy-debug-mode                        | When non-nil, show raw JSON messages in a debug buffer.                       |
+| ollama-buddy-mode                              | Non-nil if Ollama-Buddy mode is enabled.                                      |
+| ollama-buddy-reasoning-markers                 | List of marker pairs that encapsulate reasoning/thinking sections.            |
+| ollama-buddy-global-system-prompt              | Global system prompt prepended to all requests for consistent formatting.     |
+| ollama-buddy-context-bar-width                 | Width of the context progress bar in characters.                              |
+| ollama-buddy-completion-mode                   | Non-nil if Ollama-Buddy-Completion mode is enabled.                           |
+| ollama-buddy-completion-context-lines          | Lines of text before point to send as the prompt prefix.                      |
+| ollama-buddy-sessions-directory                | Directory containing ollama-buddy session files.                              |
+| ollama-buddy-tone-alist                        | Alist mapping tone names to system prompt modifier strings.                   |
+| ollama-buddy-history-model-view-mode-map       | Keymap for model-specific history viewing mode.                               |
+| ollama-buddy-menu-columns                      | Number of columns to display in the Ollama Buddy menu.                        |
+| ollama-buddy-token-history-max-size            | Maximum number of entries to keep in `ollama-buddy--token-usage-history'.     |
+| ollama-buddy-status-update-interval            | Interval in seconds to update the status line with background operations.     |
+| ollama-buddy-user-prompts-list-mode            | Non-nil if Ollama-Buddy-User-Prompts-List mode is enabled.                    |
+| ollama-buddy-ollama-executable                 | Path to the ollama executable.                                                |
+| ollama-buddy-cloud-api-key                     |                                                                               |
+| ollama-buddy-web-search-api-endpoint           | Endpoint for Ollama web search API.                                           |
+| ollama-buddy-available-models                  | Categorized list of recommended models from the Ollama Hub.                   |
+| ollama-buddy-completion-suffix-lines           | Lines of text after point to send as the suffix for fill-in-the-middle.       |
+| ollama-buddy-thinking-models                   | List of models known to support thinking/reasoning capabilities.              |
+| ollama-buddy-history-enabled                   | Whether to use conversation history in Ollama requests.                       |
+| ollama-buddy-web-search-max-results            | Maximum number of search results to include in context.                       |
+| ollama-buddy-cloud-marker-prefix               | Prefix used to identify Ollama cloud models in the ollama-buddy interface.    |
+| ollama-buddy-web-search-content-source         | Source for web search result content.                                         |
+| ollama-buddy-roles-directory                   | Directory containing ollama-buddy role preset files.                          |
+| ollama-buddy-tools-large-result-threshold      | Token count threshold for warning about large tool results.                   |
+| ollama-buddy-completion-model                  | Model to use for completions.                                                 |
+| ollama-buddy-cloud-session-token               | Session token for fetching Ollama cloud usage stats.                          |
+| ollama-buddy-show-history-indicator            | Whether to show the history indicator in the header line.                     |
+| ollama-buddy-context-size-thresholds           | Thresholds for context usage warnings.                                        |
+| ollama-buddy-rewrite-mode-hook                 | Hook run after entering or leaving `ollama-buddy-rewrite-mode'.               |
+| ollama-buddy-mode-map                          | Keymap for ollama-buddy mode.                                                 |
+| ollama-buddy-marker-prefix                     | Prefix used to identify Ollama models in the ollama-buddy interface.          |
+| ollama-buddy-tools-models                      | List of models known to support tool calling.                                 |
+| ollama-buddy-goto-prompt-on-visible-completion | Whether to move point to the prompt when the response is wholly visible.      |
+| ollama-buddy-max-file-size                     | Maximum size for attached files in bytes.                                     |
+| ollama-buddy-collapse-thinking                 | When non-nil, wrap thinking blocks in a collapsible overlay after streaming.  |
+| ollama-buddy-context-display-type              | How to display context usage in the status bar.                               |
+| ollama-buddy-tools-auto-execute                | Whether to automatically execute tool calls without confirmation.             |
+| ollama-buddy-thinking-model-patterns           | List of substrings used as a heuristic fallback for thinking model detection. |
+| ollama-buddy-airplane-mode                     | When non-nil, restrict ollama-buddy to local Ollama models only.              |
+| ollama-buddy-user-prompts-directory            | Directory where user system prompts are stored.                               |
+| ollama-buddy-keepalive                         | How long Ollama keeps the model loaded in memory after a request.             |
+| ollama-buddy-pulse-response                    | Whether to pulse/flash the response text when streaming completes.            |
+| ollama-buddy-vision-models                     | List of models known to support vision capabilities.                          |
+| ollama-buddy-rag-file-extensions               | File extensions to include when indexing directories.                         |
+| ollama-buddy-params-active                     | Currently active values for Ollama API parameters.                            |
+| ollama-buddy-rag-exclude-patterns              | Directory and file patterns to exclude from indexing.                         |
+| ollama-buddy-benchmark-prompt                  | Prompt sent to each model during `ollama-buddy-benchmark-models'.             |
+| ollama-buddy-tools-safe-mode                   | When non-nil, restrict tools to safe read-only operations.                    |
+| ollama-buddy-show-tips                         | When non-nil, display a random tip in the welcome screen.                     |
+| ollama-buddy-rag-max-file-size                 | Maximum file size to index in bytes.                                          |
+| ollama-buddy-project-standard-files            | List of standard project files to look for when attaching context.            |
+| ollama-buddy-params-modified                   | Set of parameters that have been explicitly modified by the user.             |
+| ollama-buddy-rag-batch-size                    | Number of chunks to embed in a single API call.                               |
+| ollama-buddy-current-session-name              | The name of the currently loaded session.                                     |
+| ollama-buddy-host                              | Host where Ollama server is running.                                          |
+| ollama-buddy-curl-timeout                      | Timeout in seconds for curl requests.                                         |
+| ollama-buddy-tools-max-iterations              | Maximum number of tool-call iterations per user prompt.                       |
+| ollama-buddy-rag-show-token-estimate           | Whether to show estimated token count when attaching RAG results.             |
+| ollama-buddy-image-formats                     | List of regular expressions matching supported image file formats.            |
+| ollama-buddy-streaming-enabled                 | Whether to use streaming mode for responses.                                  |
+| ollama-buddy-max-history-length                | Maximum number of message pairs to keep in conversation history.              |
+| ollama-buddy-rag-similarity-threshold          | Minimum cosine similarity score (0.0-1.0) for results.                        |
+| ollama-buddy-default-model                     | Default Ollama model to use.                                                  |
+| ollama-buddy-vision-enabled                    | Whether to enable vision support for models that support it.                  |
+| ollama-buddy-show-context-percentage           | Whether to show context percentage in the status bar.                         |
+| ollama-buddy-user-prompts-list-mode-hook       | Hook run after entering or leaving `ollama-buddy-user-prompts-list-mode'.     |
+| ollama-buddy-web-search-snippet-length         | Maximum characters per search result snippet.                                 |
+| ollama-buddy-rag-embedding-api-style           | API style used by the embedding endpoint.                                     |
+| ollama-buddy-response-wait-threshold           | Seconds before showing elapsed time on the "Processing..." status.            |
+| ollama-buddy-auto-scroll                       | Whether to auto-scroll the chat buffer during streaming output.               |
+| ollama-buddy-params-profiles                   | Predefined parameter profiles for different usage scenarios.                  |
+| ollama-buddy-slash-commands                    | Alist of available `/' slash commands.                                        |
+| ollama-buddy-tools-builtin-enabled             | Whether to enable built-in tools.                                             |
+| ollama-buddy-rewrite-mode                      | Non-nil if Ollama-Buddy-Rewrite mode is enabled.                              |
+| ollama-buddy-rag-chunk-size                    | Target chunk size in words.                                                   |
+| ollama-buddy-params-defaults                   | Default values for Ollama API parameters.                                     |
+| ollama-buddy-mode-line-segment                 | Mode line segment for Ollama Buddy.                                           |
+| ollama-buddy-in-buffer-replace                 | When non-nil, commands that operate on a region stream their response         |
+| ollama-buddy-port                              | Port where Ollama server is running.                                          |
+| ollama-buddy-rag-top-k                         | Number of results to return from similarity search.                           |
+| ollama-buddy-tools-enabled                     | Whether to enable tool calling functionality.                                 |
+| ollama-buddy-rag-chunk-overlap                 | Number of words to overlap between consecutive chunks.                        |
+| ollama-buddy-at-commands                       | Alist of inline `@' commands and their syntax templates.                      |
+| ollama-buddy-rag-index-directory               | Directory to store RAG index files.                                           |
+| ollama-buddy-web-search-include-urls           | Whether to include source URLs in the search context.                         |
+| ollama-buddy-default-register                  | Default register to store the current response when not in multishot mode.    |
+| ollama-buddy-web-search-api-key                | API key for Ollama web search API.                                            |
+| ollama-buddy-rewrite-mode-map                  | Keymap for `ollama-buddy-rewrite-mode'.                                       |
+| ollama-buddy-modelfile-directory               | Directory for storing temporary Modelfiles.                                   |
+| ollama-buddy-rag-embedding-api-key             | API key sent as a Bearer token to the embedding service.                      |
+| ollama-buddy-fallback-context-sizes            | Mapping of model names to their default context sizes.                        |
+| ollama-buddy-communication-backend             | Communication backend to use for Ollama API requests.                         |
+| ollama-buddy-curl-executable                   | Path to the curl executable.                                                  |
+| ollama-buddy-context-bar-chars                 | Characters used to draw the context progress bar.                             |
+| ollama-buddy-supported-file-types              | List of regex patterns for supported file types.                              |
+| ollama-buddy-multishot-timeout                 | Per-model timeout in seconds during multishot sequences.                      |
+| ollama-buddy-tips                              | List of tip strings shown at random on the ollama-buddy welcome screen.       |
+| ollama-buddy-global-system-prompt-enabled      | When non-nil, prepend `ollama-buddy-global-system-prompt' to all requests.    |
+| ollama-buddy-rag-embedding-model               | Ollama model to use for generating embeddings.                                |
+| ollama-buddy-cloud-usage-cache-seconds         | Seconds to cache cloud usage data before re-fetching.                         |
+| ollama-buddy-rag-checkpoint-interval           | Save partial progress every N batches during indexing.                        |
+| ollama-buddy-completion-max-tokens             | Maximum tokens to generate per completion.                                    |
+| ollama-buddy-convert-markdown-to-org           | Whether to automatically convert markdown to `org-mode' format in responses.  |
+| ollama-buddy-mode-hook                         | Hook run after entering or leaving `ollama-buddy-mode'.                       |
+| ollama-buddy-rag-embedding-base-url            | Base URL for the embedding service.                                           |
+| ollama-buddy-hide-reasoning                    | When non-nil, hide reasoning/thinking blocks from the stream output.          |
 
 #+begin_comment
 * Interactive functions
@@ -1454,202 +1481,143 @@ since the results go stale.  Evaluate them in Emacs to get up-to-date listings.
 #+end_src
 
 #+RESULTS:
-| Command                                   | Description                                                                    |
-|-------------------------------------------+--------------------------------------------------------------------------------|
-| ollama-buddy-open-info                    | Open the Info manual for the ollama-buddy package.                             |
-| ollama-buddy-dired-import-gguf            | Import the GGUF file at point in Dired into Ollama.                            |
-| ollama-buddy-toggle-markdown-conversion   | Toggle automatic conversion of markdown to ‘org-mode’ format.                  |
-| ollama-buddy-fabric-send                  | Apply a Fabric pattern to the selected text and send to Ollama.                |
-| ollama-buddy-reset-system-prompt          | Reset the system prompt to default (none).                                     |
-| ollama-buddy-beginning-of-prompt          | Move point to the beginning of the current prompt.                             |
-| ollama-buddy-toggle-streaming             | Toggle streaming mode for Ollama responses.                                    |
-| ollama-buddy-toggle-reasoning-visibility  | Toggle visibility of reasoning/thinking sections in responses.                 |
-| ollama-buddy-history-toggle-edit-mode     | Toggle between viewing and editing modes for history.                          |
-| ollama-buddy-mode                         | Minor mode for ollama-buddy keybindings.                                       |
-| ollama-buddy-roles-switch-role            | Switch to a different ollama-buddy role.                                       |
-| ollama-buddy-pull-model                   | Pull or update MODEL from Ollama Hub asynchronously.                           |
-| ollama-buddy-history-edit                 | View and edit the conversation history in a buffer.                            |
-| ollama-buddy-previous-history             | Navigate to previous item in prompt history.                                   |
-| ollama-buddy-toggle-params-in-header      | Toggle display of modified parameters in the header line.                      |
-| ollama-buddy-toggle-token-display         | Toggle display of token statistics after each response.                        |
-| ollama-buddy-show-raw-model-info          | Retrieve and display raw JSON information about the current default MODEL.     |
-| ollama-buddy-history-cancel               | Cancel editing the history.                                                    |
-| ollama-buddy-sessions-load                | Load an Ollama Buddy session with improved org file handling.                  |
-| ollama-buddy-transient-menu       | Wrapper function for safely loading the Ollama Buddy transient menu.           |
-| ollama-buddy-sessions-list                | Display a list of saved sessions.                                              |
-| ollama-buddy-toggle-context-percentage    | Toggle display of context percentage in the status bar.                        |
-| ollama-buddy-transient-awesome-menu       | Awesome ChatGPT Prompts for ollama-buddy.                                      |
-| ollama-buddy-show-context-info            | Show detailed information about context sizes for all models.                  |
-| ollama-buddy-fabric-set-system-prompt     | Set the system prompt to a Fabric pattern without sending a request.           |
-| ollama-buddy-params-help                  | Display help for Ollama parameters.                                            |
-| ollama-buddy-awesome-send                 | Apply an Awesome ChatGPT Prompt to the selected text and send to Ollama.       |
-| ollama-buddy-sessions-new                 | Start a new session by clearing history and buffer.                            |
-| ollama-buddy-show-system-prompt           | Display the current system prompt in a buffer.                                 |
-| ollama-buddy-awesome-show-prompts-menu    | Show a transient menu of Awesome ChatGPT Prompt organized by category.         |
-| ollama-buddy-awesome-populate-prompts     | Populate the list of available prompt from the local repository.               |
-| ollama-buddy-awesome-set-system-prompt    | Set the system prompt to an Awesome ChatGPT Prompt without sending a request.  |
-| ollama-buddy-params-edit                  | Edit a specific parameter PARAM interactively.                                 |
-| ollama-buddy-awesome-list-prompts         | Display a list of available Awesome ChatGPT Prompt.                            |
-| ollama-buddy-transient-parameter-menu     | Parameter menu for Ollama Buddy.                                               |
-| ollama-buddy-toggle-debug-mode            | Toggle display of raw JSON messages in a debug buffer.                         |
-| ollama-buddy-awesome-show-prompt          | Display the full content of a prompt with FORMATTED-NAME.                      |
-| ollama-buddy-awesome-setup                | Set up the ollama-buddy-awesome package.                                       |
-| ollama-buddy-fabric-show-pattern          | Display the full content of a PATTERN.                                         |
-| ollama-buddy-fabric-sync-patterns         | Sync the latest patterns from the Fabric GitHub repository.                    |
-| ollama-buddy-reset-all-prompts            | Reset both system prompt and suffix to default (none).                         |
-| ollama-buddy-fabric-list-patterns         | Display a list of available Fabric patterns with descriptions.                 |
-| ollama-buddy-history-search               | Search through the prompt history using a ‘completing-read’ interface.         |
-| ollama-buddy-toggle-history               | Toggle conversation history on/off.                                            |
-| ollama-buddy-display-token-stats          | Display token usage statistics.                                                |
-| ollama-buddy-role-creator-create-new-role | Create a new role interactively.                                               |
-| ollama-buddy-roles-open-directory         | Open the ollama-buddy roles directory in Dired.                                |
-| ollama-buddy-params-reset                 | Reset all parameters to default values and clear modification tracking.        |
-| ollama-buddy-menu                         | Display Ollama Buddy menu with support for prefixed model references.          |
-| ollama-buddy-unload-all-models            | Unload all currently running Ollama models to free up resources.               |
-| ollama-buddy-history-toggle-edit-model    | Toggle between viewing and editing modes for MODEL history.                    |
-| ollama-buddy-transient-menu               | Ollama Buddy main menu.                                                        |
-| ollama-buddy-fabric-setup                 | Set up the ollama-buddy-fabric package.                                        |
-| ollama-buddy-manage-models                | Update the model management interface to include unload capabilities.          |
-| ollama-buddy-history-edit-model           | Edit the conversation history for a specific MODEL.                            |
-| ollama-buddy-roles-create-directory       | Create the ollama-buddy roles directory if it doesn’t exist.                   |
-| ollama-buddy-history-save-model           | Save the edited history for MODEL back to variable.                            |
-| ollama-buddy-toggle-context-display-type  | Toggle between text and bar display for context usage.                         |
-| ollama-buddy-set-max-history-length       | Set the maximum number of message pairs to keep in conversation history.       |
-| ollama-buddy-reset-suffix                 | Reset the suffix to default (none).                                            |
-| ollama-buddy-next-history                 | Navigate to next item in prompt history.                                       |
-| ollama-buddy-clear-history                | Clear the conversation history.                                                |
-| ollama-buddy-awesome-sync-prompts         | Sync the latest prompt from the Awesome ChatGPT Prompt GitHub repository.      |
-| ollama-buddy-set-model-context-size       | Manually set the context size for MODEL to SIZE.                               |
-| ollama-buddy-sessions-delete              | Delete an Ollama Buddy session.                                                |
-| ollama-buddy-transient-profile-menu       | Parameter profiles menu for Ollama Buddy.                                      |
-| ollama-buddy-set-suffix                   | Set the current prompt as a suffix.                                            |
-| ollama-buddy-set-system-prompt            | Set the current prompt as a system prompt.                                     |
-| ollama-buddy-history-save                 | Save the edited history back to ‘ollama-buddy--conversation-history-by-model’. |
-| ollama-buddy-import-gguf-file             | Import a GGUF file at FILE-PATH into Ollama.                                   |
-| ollama-buddy-transient-commands-menu      | Commands menu for Ollama Buddy.                                                |
-| ollama-buddy-transient-fabric-menu        | Fabric patterns menu for Ollama Buddy.                                         |
-| ollama-buddy-params-display               | Display the current Ollama parameter settings.                                 |
-| ollama-buddy-fabric-populate-patterns     | Populate the list of available patterns from the local repository.             |
-| ollama-buddy-sessions-save                | Save the current Ollama Buddy session.                                         |
+| Command                                      | Description                                                                      |
+|----------------------------------------------+----------------------------------------------------------------------------------|
+| ollama-buddy-open-info                       | Open the Info manual for the ollama-buddy package.                               |
+| ollama-buddy-toggle-markdown-conversion      | Toggle automatic conversion of markdown to ‘org-mode’ format.                    |
+| ollama-buddy-reset-system-prompt             | Reset the system prompt to default (none).                                       |
+| ollama-buddy-toggle-airplane-mode            | Toggle airplane mode on/off.                                                     |
+| ollama-buddy-rag-pause                       | Pause the current RAG indexing operation and save partial progress.              |
+| ollama-buddy-beginning-of-prompt             | Move to the beginning of the prompt, or to the real beginning of line on repeat. |
+| ollama-buddy-transient-auth-menu             | Authentication menu for browser-based providers.                                 |
+| ollama-buddy-sessions-rename                 | Rename the current session.                                                      |
+| ollama-buddy-toggle-streaming                | Toggle streaming mode for Ollama responses.                                      |
+| ollama-buddy-project-attach-context          | Automatically attach standard project meta-files if they exist.                  |
+| ollama-buddy-exit                            | Close the Ollama Buddy chat buffer and clear conversation history.               |
+| ollama-buddy-tools-info                      | Display information about registered tools.                                      |
+| ollama-buddy-transient-attachment-menu       | File attachment menu.                                                            |
+| ollama-buddy-mode                            | Minor mode for ollama-buddy keybindings.                                         |
+| ollama-buddy-rag-update-directory            | Incrementally update the RAG index for DIRECTORY.                                |
+| ollama-buddy-completion-mode                 | Inline ghost-text completions powered by Ollama.                                 |
+| ollama-buddy-user-prompts-set-at-point       | Set the system prompt heading at point as the current system prompt.             |
+| ollama-buddy-user-prompts-list               | Display a list of all saved user system prompt.                                  |
+| ollama-buddy-sessions-directory              | Jump to the session directory.                                                   |
+| ollama-buddy-roles-switch-role               | Switch to a different ollama-buddy role.                                         |
+| ollama-buddy-pull-model                      | Pull or update MODEL from Ollama Hub asynchronously.                             |
+| ollama-buddy-rag-resume                      | Resume a previously paused RAG indexing operation.                               |
+| ollama-buddy-transient-user-prompts-menu     | Transient menu for user system prompts.                                          |
+| ollama-buddy-project-attach-file             | Attach a file from the current project using completion.                         |
+| ollama-buddy-user-prompts-list-mode          | Minor mode for the *User System Prompts* browse buffer.                          |
+| ollama-buddy-tools-clear                     | Clear all registered tools.                                                      |
+| ollama-buddy-previous-history                | Navigate to previous item in prompt history.                                     |
+| ollama-buddy-toggle-in-buffer-replace        | Toggle in-buffer replacement mode on/off.                                        |
+| ollama-buddy-tools-toggle                    | Toggle tool calling on/off.                                                      |
+| ollama-buddy-rag-search                      | Search RAG indexes for QUERY and display results.                                |
+| ollama-buddy-toggle-params-in-header         | Toggle display of modified parameters in the header line.                        |
+| ollama-buddy-show-raw-model-info             | Retrieve and display raw JSON information about the current default MODEL.       |
+| ollama-buddy-set-tone                        | Select a response tone from ‘ollama-buddy-tone-alist’.                           |
+| ollama-buddy-set-system-prompt-with-title    | Set the current prompt as a system prompt, allowing user to specify a title.     |
+| ollama-buddy-web-search                      | Perform a web search for QUERY and display results.                              |
+| ollama-buddy-rag-delete-index                | Delete RAG index INDEX-NAME.                                                     |
+| ollama-buddy-sessions-load                   | Load an Ollama Buddy session including attachments.                              |
+| ollama-buddy-transient-settings-menu         | Settings menu for Ollama Buddy.                                                  |
+| ollama-buddy-transient-menu-wrapper          | Wrapper function for safely loading the Ollama Buddy transient menu.             |
+| ollama-buddy-role-transient-menu             | Dynamic role-specific command menu.                                              |
+| ollama-buddy-retry-last-prompt               | Resend the last user prompt to the current model.                                |
+| ollama-buddy-toggle-context-percentage       | Toggle display of context percentage in the status bar.                          |
+| ollama-buddy-user-prompts-edit               | Edit a user system prompt FILE.                                                  |
+| ollama-buddy-openai-compat-refresh-models    | Re-discover models from the server and update the model list.                    |
+| ollama-buddy-show-context-info               | Show detailed information about context sizes for all models.                    |
+| ollama-buddy-rewrite-reject                  | Reject the pending rewrite, restoring the original selected text.                |
+| ollama-buddy-params-help                     | Display help for Ollama parameters.                                              |
+| ollama-buddy-transient-web-search-menu       | Web search menu for Ollama Buddy.                                                |
+| ollama-buddy-rag-clear-attached              | Clear all attached RAG context.                                                  |
+| ollama-buddy-test-communication-backend      | Test the current communication backend.                                          |
+| ollama-buddy-tools-setup                     | Initialize the ollama-buddy-tools module.                                        |
+| ollama-buddy-project-init                    | Generate or load a project summary for the current project.                      |
+| ollama-buddy-show-context-info-refresh       | Refresh the context sizes buffer.                                                |
+| ollama-buddy-sessions-new                    | Start a new session by clearing history and buffer.                              |
+| ollama-buddy-benchmark-models                | Benchmark models by sending a prompt to each via multishot.                      |
+| ollama-buddy-web-search-debug-last-results   | Display the raw API response structure for debugging.                            |
+| ollama-buddy-user-prompts-create-new         | Create a new system prompt from scratch.                                         |
+| ollama-buddy-jump-to-prompt                  | Jump to a prompt in the chat buffer using ‘completing-read’.                     |
+| ollama-buddy-cloud-signin                    | Sign in to Ollama cloud services.                                                |
+| ollama-buddy-switch-communication-backend    | Interactively switch communication backend.                                      |
+| ollama-buddy-attach-file                     | Attach FILE to the current conversation.                                         |
+| ollama-buddy-params-edit                     | Edit a specific parameter PARAM interactively.                                   |
+| ollama-buddy-manage-models-refresh           | Refresh the model management buffer, clearing all caches.                        |
+| ollama-buddy-transient-rag-menu              | RAG (Retrieval-Augmented Generation) menu for Ollama Buddy.                      |
+| ollama-buddy-reset-token-stats               | Clear all token usage history.                                                   |
+| ollama-buddy-user-prompts-save               | Save the current system prompt to a file.                                        |
+| ollama-buddy-toggle-global-system-prompt     | Toggle the global system prompt on or off.                                       |
+| ollama-buddy-rewrite-show-diff               | Toggle an inline diff view beneath the rewritten text.                           |
+| ollama-buddy-transient-parameter-menu        | Parameter menu for Ollama Buddy.                                                 |
+| ollama-buddy-cloud-refresh-usage             | Clear cached cloud usage and re-fetch.                                           |
+| ollama-buddy-toggle-debug-mode               | Toggle display of raw JSON messages in a debug buffer.                           |
+| ollama-buddy-install-extras                  | Install presets and user prompts to Emacs directory.                             |
+| ollama-buddy-show-attachments                | Display currently attached files and web searches.                               |
+| ollama-buddy-tools-toggle-safe-mode          | Toggle safe mode for tool execution.                                             |
+| ollama-buddy-detach-file                     | Remove FILE from current attachments.                                            |
+| ollama-buddy-rag-attach                      | Search RAG indexes for QUERY and attach results to conversation context.         |
+| ollama-buddy-set-keepalive                   | Set how long Ollama keeps the model loaded after a request.                      |
+| ollama-buddy-toggle-show-history-indicator   | Toggle display of token statistics after each response.                          |
+| ollama-buddy-reset-all-prompts               | Reset the system prompt to default (none).                                       |
+| ollama-buddy-history-search                  | Search through the prompt history using a ‘completing-read’ interface.           |
+| ollama-buddy-toggle-history                  | Toggle conversation history on/off.                                              |
+| ollama-buddy-project-info                    | Show information about the current project in the echo area.                     |
+| ollama-buddy-rag-cancel                      | Alias for ‘ollama-buddy-rag-pause’.                                              |
+| ollama-buddy-display-token-stats             | Display a visual graph and statistics of token usage.                            |
+| ollama-buddy-role-creator-create-new-role    | Create a new role interactively.                                                 |
+| ollama-buddy-roles-open-directory            | Open the ollama-buddy roles directory in Dired.                                  |
+| ollama-buddy-params-reset                    | Reset all parameters to default values and clear modification tracking.          |
+| ollama-buddy-menu                            | Display Ollama Buddy menu with support for prefixed model references.            |
+| ollama-buddy-unload-all-models               | Unload all currently running Ollama models to free up resources.                 |
+| ollama-buddy-history-toggle-edit-model       | Toggle between viewing and editing modes for history.                            |
+| ollama-buddy-transient-menu                  | Ollama Buddy main menu.                                                          |
+| ollama-buddy-copy-last-response              | Copy the last assistant response to the kill ring.                               |
+| ollama-buddy-clear-all-context               | Alias for ‘ollama-buddy-clear-attachments’.                                      |
+| ollama-buddy-rewrite-mode                    | Active while a rewrite is pending acceptance or rejection.                       |
+| ollama-buddy-unload-model                    | Unload running models from memory.                                               |
+| ollama-buddy-manage-models                   | Update the model management interface to include unload capabilities.            |
+| ollama-buddy-tools-toggle-auto-execute       | Toggle auto-execution of tool calls (skip confirmation prompts).                 |
+| ollama-buddy-history-edit-model              | Edit the conversation history for a specific MODEL.                              |
+| ollama-buddy-toggle-auto-scroll              | Toggle auto-scrolling of the chat buffer during streaming.                       |
+| ollama-buddy-roles-create-directory          | Create the ollama-buddy roles directory if it doesn’t exist.                     |
+| ollama-buddy-toggle-context-display-type     | Toggle between text and bar display for context usage.                           |
+| ollama-buddy-set-max-history-length          | Set the LENGTH number of message pairs to keep in conversation history.          |
+| ollama-buddy-clear-attachments               | Clear all current attachments including file attachments, web searches, and RAG. |
+| ollama-buddy-rewrite-accept                  | Accept the pending rewrite, keeping the streamed text in place.                  |
+| ollama-buddy-user-prompts-delete             | Delete a user system prompt FILE.                                                |
+| ollama-buddy-next-history                    | Navigate to next item in prompt history.                                         |
+| ollama-buddy-clear-history                   | Clear the conversation history.                                                  |
+| ollama-buddy-completion-toggle               | Toggle ‘ollama-buddy-completion-mode’ in the current buffer.                     |
+| ollama-buddy-completion-accept-or-tab        | Accept the ghost-text completion, or run ‘indent-for-tab-command’.               |
+| ollama-buddy-project-switch-directory        | Switch the chat buffer’s working directory and load project context.             |
+| ollama-buddy-rag-list-indexes                | List all available RAG indexes with their details.                               |
+| ollama-buddy-set-model-context-size          | Manually set the context size for MODEL to SIZE.                                 |
+| ollama-buddy-rag-index-directory             | Index all matching files in DIRECTORY for RAG retrieval.                         |
+| ollama-buddy-transient-profile-menu          | Parameter profiles menu for Ollama Buddy.                                        |
+| ollama-buddy-set-system-prompt               | Set the current prompt as a system prompt.                                       |
+| ollama-buddy-provider-list                   | Display all registered generic providers.                                        |
+| ollama-buddy-transient-system-prompts-menu   | System prompts menu for Ollama Buddy.                                            |
+| ollama-buddy-dired-attach-marked-files       | Attach all marked files in current Dired buffer to Ollama chat.                  |
+| ollama-buddy-transient-roles-management-menu | Role management menu for Ollama Buddy.                                           |
+| ollama-buddy-provider-remove                 | Remove the provider registered under PREFIX.                                     |
+| ollama-buddy-history-save                    | Save the edited history back to ‘ollama-buddy--conversation-history-by-model’.   |
+| ollama-buddy-transient-project-menu          | Project menu for Ollama Buddy.                                                   |
+| ollama-buddy-import-gguf-file                | Import a GGUF file at FILE-PATH into Ollama.                                     |
+| ollama-buddy-rewind                          | Rewind the conversation to a previous prompt.                                    |
+| ollama-buddy-show-system-prompt-info         | Show detailed information about the current system prompt.                       |
+| ollama-buddy-params-display                  | Display the current Ollama parameter settings.                                   |
+| ollama-buddy-sessions-save                   | Save the current Ollama Buddy session including attachments.                     |
+| ollama-buddy-completion-trigger              | Trigger a completion at point immediately.                                       |
+| ollama-buddy-provider-refresh                | Re-fetch models for the provider registered under PREFIX.                        |
+| ollama-buddy-cloud-signout                   | Sign out from Ollama cloud services.                                             |
+| ollama-buddy-recommended-models              | Display recommended models from the Ollama Hub in a separate buffer.             |
+| ollama-buddy-user-prompts-load               | Load a user system prompt and apply it to the current chat.                      |
+| ollama-buddy-cloud-status                    | Check Ollama cloud authentication status.                                        |
+| ollama-buddy-web-search-attach               | Search for QUERY and attach results to the current conversation context.         |
 #+end_comment
-
-* Bugs                                                                 :bugs:
-
-** TODO GGUF to be asynchronous
-
-** TODO Better attachment signalling
-
-** TODO Modifying a parameter internal defaults would flag as not modified
-
-** TODO No streaming with hiding reasoning corrupts output
-
-** TODO Pushing hundreds or even thousands of lines to the chat buffer takes a while
-
-** TODO Check tags caching
-
-** TODO keybindings in ollama chat buffer are reserved
-
-** DOING Kill online AI process with cancel request
-
-** DONE Claude request and connection can sometimes take time and it blocks!
-
-** DONE allow switch to remote LLMs even when ollama not running
-
-** DONE Vision image with spaces not processed as image
-
-** DONE Save system prompts as part of session
-
-** DONE chat ollama names to include prefix
-
-** DONE Still some encoding issues on returns from online AI
-
-** DONE Conversation history to display with Claude/ChatGPT
-
-** DONE I think some hard coded Claude models currently don't work
-
-** DONE register contents to be converted to org, currently it is in markdown
-
-** DONE =C-a= beginning-of-line to jump to prompt start like comint
-
-** DONE As shell generally C-n to end of list to clear prompt history
-
-** DONE Add Texinfo to MELPA recipe
-
-** DONE System prompt not cleared on new session
-
-** DONE Remove fabric from Commands transient menu
-
-** DONE External AI to copy to register
-
-** DONE First request with no chat buffer fails
-
-* Roadmap                                                           :roadmap:
-
-** Completed Features (v2.0.0)
-
-*** DONE Cloud Models Support
-
-Ollama v0.12+ cloud-hosted models are fully supported:
-- =ollama-buddy-cloud-models= customization for available cloud models
-- =C-u C-c m= to select from cloud models (prefix argument to swap-model)
-- Transient menu "Model > Cloud" option (=c= key)
-- Cloud indicator (☁) in status line when using cloud model
-- =ollama-buddy-cloud-signin= / =ollama-buddy-cloud-signout= / =ollama-buddy-cloud-status=
-- Auto-pull manifest for new cloud models
-- Model management buffer shows cloud models with auth status
-
-*References:* [[https://ollama.com/blog/cloud-models][Ollama Cloud Models Blog]]
-
-*** DONE Tool Calling / Function Calling
-
-Full tool calling support via =ollama-buddy-tools.el= (v2.0.0):
-- Built-in tools: =read_file=, =list_directory=, =get_buffer_content=, =list_buffers=, =calculate=, =search_buffer=, =write_file=, =execute_shell=
-- =ollama-buddy-tools-register= API for custom tool registration with JSON schema parameters
-- Safe mode (default: on) restricts to read-only tools
-- =ollama-buddy-tools-toggle-safe-mode= to enable write/execute tools
-- ⚒ indicator in header line for tool-capable models
-- =ollama-buddy-tools-models= customization for tool-capable model list
-- Automatic multi-turn tool execution with configurable iteration limit
-
-*References:* [[https://ollama.com/blog/tool-support][Ollama Tool Support Blog]]
-
-*** DONE Web Search API Integration
-
-Full implementation in =ollama-buddy-web-search.el=:
-- =ollama-buddy-web-search-api-key= customization
-- Inline search syntax: =@search(query)= in prompts
-- =C-c / s= search and display, =C-c / a= search and attach
-- Status line shows =♁N= indicator for attached web searches
-- Content fetching via eww/shr for clean text extraction
-- Works with all providers (local and remote)
-
-*References:* [[https://ollama.com/blog/web-search][Ollama Web Search Blog]]
-
-*** DONE Enhanced Token Metrics
-
-Token metrics from API responses are fully parsed and displayed:
-- =prompt_eval_count= and =eval_count= tracked per request
-- Token rate (tokens/sec) calculated and displayed
-- =C-c #= shows comprehensive token statistics with graphs
-- Real-time token display during streaming (toggle with =C-c T=)
-- Historical token usage tracking per model
-
-*** DONE Think Parameter for Reasoning Models
-
-Reasoning/thinking model support:
-- =ollama-buddy-hide-reasoning= toggle (=C-c V=) to show/hide thinking blocks
-- =ollama-buddy-reasoning-markers= customization for different model formats
-- Header line shows =V= indicator when reasoning is hidden
-- Works with DeepSeek-R1, QwQ, and other reasoning models
-
-*** DONE Vision/Image Support
-
-Full multimodal support:
-- Base64 image encoding for vision-capable models
-- Auto-detection of image files in prompts (file paths, URLs)
-- ⊙ indicator for vision-capable models
-- =ollama-buddy-vision-models= customization
-- Works with llava, gemma3, and other multimodal models
 
 * Alternative LLM based packages
 
@@ -1740,53 +1708,6 @@ Let's compare ollama-buddy to the existing solutions:
    - Providing a more lightweight, menu-driven interface
    - Focusing on quick, direct interactions from any buffer
    - Having minimal dependencies and configuration requirements
-
-* Issues
-
-Report issues on the [[https://github.com/captainflasmr/ollama-buddy/issues][GitHub Issues page]]
-
-** DONE Error when model numbers is more than alphabet letters #15
-
-If the local ollama server has more than 26 models the create-intro-message function produce an error due to the fact that alphabet letter are just 26.
-
-** DONE Not possible to pass path to image? #14
-
-in the ollama cli when using models with vision support (ex. ollama run gemma3:4b) you can say something like "extract the text from this image: /home/user/Downloads/screenshot.png") then the ollama cli will detect this valid path and pass it to the gemma model as a file parameter somehow and the model will then be able to analize the actual file, when using ollama-buddy this is not possible
-
-** DONE Role stuff is difficult to understand #13
-
-I am simply trying to add a new role which should by default add the missing turkish letters to any of the paragraph of text I send to it. However, ollama-buddy's Role stuff is quite confusing to me. How do I set it up? I see no explanation about what I am doing when I try to add a role like that.
-
-** DONE Getting constant lisp nesting exceeds errors in latest versions #12
-
-I just updated ollama-buddy's source to its latest version, here's my use-package config:
-
-#+begin_src elisp
-(use-package ollama-buddy
-  :if (file-directory-p "/home/user/.local/gits/emacs/ollama-buddy")
-  :vc (:url "file:///home/user/.local/gits/emacs/ollama-buddy"
-			:rev "870233e5d83da133b42fa7e9f57fcd6909f74502")
-  :config
-  (setq ollama-buddy-current-model "gemma3:12b-it-qat")
-  (setq ollama-buddy-menu-columns 4)
-  (setq ollama-buddy-host "localhost")
-  (setq ollama-buddy-port 11434)
-  (setq ollama-buddy-connection-check-interval 1))
-#+end_src
-
-After byte-compiling, I cannot use ollama-buddy. When I send a prompt to my ollama backend, I constantly get Debugger entered--Lisp error: (excessive-lisp-nesting 1601). Older versions of ollama-buddy have been working without such an error.
-
-** DONE stopping the thinking text output #11 #2
-
-As for context size, all I want the model to report it's max size it can handle, what was the context size received, what it considered as input context, what it dropped and output context size for each call. Visually, all I was want is red, green amber colouring to know where it cut off(red), was ok(green) or slightly exceeded the context size(amber). whatever the model reports on the metrics(if at all, it does track that on a per API call)
-
-** DONE stopping the thinking text output #11
-
-Thanks for the package, I'm slowly getting into the grove of using it regularly.
-
-I have a laptop without graphics cards for LLM work. I get about 2-3 tokens/sec. The newer models seem to be doing reasoning/thinking text output that are huge and takes up time. Is there a way to toggle it off during the session or through config on a per model basis. Either as a binary switch or a config parameter.
-
-While at it, how do I set the context length to larger sizes than the default one and how do I check if it's respected? On a per model basis, when you report the token stats, would you consider plugging in info about temp, top-k, context length that was active during the session?
 
 * Contributing
 

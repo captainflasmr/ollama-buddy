@@ -417,28 +417,49 @@ The two directories installed are:
 | C-c C-k   | Cancel request                |
 | C-c m     | Change model                  |
 | C-c l     | Pull new model                |
-| C-c M     | Manage models                 |
-| C-c P     | Project sub-menu              |
-| C-c p     | Parameter sub-menu            |
-| C-c y     | System prompts sub-menu       |
-| C-c +     | Settings menu                 |
-| C-c S     | Save session                  |
 | C-c O     | Main transient menu           |
+| C-c ?     | Open Info manual              |
 | M-p / M-n | Browse prompt history         |
-| C-c a     | Attach file                   |
-| C-c 0     | Clear attachments             |
-| C-c r     | RAG transient menu            |
+| C-c j     | Jump to prompt                |
+| C-c M     | Manage models                 |
+| C-c L     | Recommended models            |
+| C-c i     | Show model info               |
+| C-c U     | Multishot                     |
+| C-c N     | New session                   |
+| C-c f     | Load session                  |
+| C-c S     | Save session                  |
+| C-c Z     | Sessions directory            |
+| C-c H     | Toggle history                |
+| C-c X     | Clear history                 |
+| C-c J     | Edit history                  |
+| C-c C-a   | Attach file                   |
+| C-c C-d   | Detach file                   |
+| C-c C-w   | Show attachments              |
+| C-c a     | Attachment menu               |
+| C-c 0     | Clear all attachments         |
 | C-c C-s   | Show system prompt            |
 | C-c C-r   | Reset system prompt           |
+| C-c y     | System prompts menu           |
+| C-c s     | User prompts menu             |
 | C-c ~     | Select response tone          |
-| C-c v     | Set keep-alive duration       |
-| C-c !     | Toggle airplane mode          |
-| C-c e     | Switch backend (network/curl) |
-| C-c W     | Toggle in-buffer replace mode |
 | C-c SPC   | Toggle tool calling           |
-| C-c / s   | Web search and display        |
-| C-c / a   | Web search and attach         |
-| C-c d     | Inline diff view              |
+| C-c E     | Toggle tool auto-execute      |
+| C-c Q     | List registered tools         |
+| C-c W     | Toggle in-buffer replace mode |
+| C-c P     | Project menu                  |
+| C-c p     | Parameter menu                |
+| C-c +     | Settings menu                 |
+| C-c r     | RAG menu                      |
+| C-c /     | Web search menu               |
+| C-c v     | Set keep-alive duration       |
+| C-c x     | Toggle streaming              |
+| C-c e     | Switch backend (network/curl) |
+| C-c !     | Toggle airplane mode          |
+| C-c g     | Toggle auto-scroll            |
+| C-c R     | Switch role                   |
+| C-c b     | Dynamic role menu             |
+| C-c A     | Auth menu (Cloud, Copilot)    |
+| C-c K     | Exit/kill session             |
 
 * ollama API Support Tables
 
