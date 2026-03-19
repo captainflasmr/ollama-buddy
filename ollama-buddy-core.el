@@ -2129,7 +2129,7 @@ Called after async model fetches complete so counts are accurate."
           (concat
            (when (= (buffer-size) 0)
              (concat "#+TITLE: Ollama Buddy Chat"))
-           "\n\n* Ollama Buddy [v5.0.1]\n"
+           "\n\n* Ollama Buddy [v5.1.0]\n"
            (if-let ((logo (ollama-buddy--create-logo-image 140)))
                (concat logo "\n")
              (concat
