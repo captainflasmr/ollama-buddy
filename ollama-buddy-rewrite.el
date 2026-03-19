@@ -324,14 +324,15 @@ Accepting (\\[ollama-buddy-rewrite-accept]) or rejecting
 (defun ollama-buddy--rewrite-filter (proc data)
   "Process streaming PROC DATA from the rewrite network process."
   (save-match-data
-    (let ((pending (concat (or (process-get proc :pending) "") data)))
+    (let ((pending (concat (or (process-get proc :pending) "") data))
+          (start 0))
       ;; Strip HTTP headers if present (first chunk only)
       (when (string-match "^HTTP/.*?\r?\n\r?\n" pending)
-        (setq pending (substring pending (match-end 0))))
+        (setq start (match-end 0)))
       ;; Process all complete newline-delimited JSON lines
-      (while (string-match "\\([^\n]*\\)\n" pending)
+      (while (string-match "\\([^\n]*\\)\n" pending start)
         (let* ((line (match-string 1 pending)))
-          (setq pending (substring pending (match-end 0)))
+          (setq start (match-end 0))
           (let* ((json-str (replace-regexp-in-string "^[^{]*" "" line))
                  (json-data (when (and (stringp json-str)
                                        (> (length json-str) 0))
@@ -349,7 +350,7 @@ Accepting (\\[ollama-buddy-rewrite-accept]) or rejecting
                   (ollama-buddy--rewrite-insert-content content))
                 (when (eq done t)
                   (ollama-buddy--rewrite-complete)))))))
-      (process-put proc :pending pending))))
+      (process-put proc :pending (substring pending start)))))
 
 ;;; Sentinel
 

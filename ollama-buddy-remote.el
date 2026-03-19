@@ -415,12 +415,17 @@ Handles OpenAI, Claude, Gemini, and generic error formats."
 
 (defun ollama-buddy-remote--register-models (prefix models send-fn)
   "Register MODELS with PREFIX and SEND-FN as the handler.
-Appends prefixed model names to `ollama-buddy-remote-models'."
+Cleans any previously registered models for PREFIX, then appends
+prefixed model names to `ollama-buddy-remote-models'."
   (let ((prefixed-models (mapcar (lambda (model-name)
                                    (concat prefix model-name))
                                  models)))
     (when (fboundp 'ollama-buddy-register-model-handler)
       (ollama-buddy-register-model-handler prefix send-fn))
+    ;; Remove old models for this prefix before adding new ones
+    (setq ollama-buddy-remote-models
+          (cl-remove-if (lambda (m) (string-prefix-p prefix m))
+                        ollama-buddy-remote-models))
     (setq ollama-buddy-remote-models
           (append ollama-buddy-remote-models prefixed-models))
     ;; Refresh the intro provider summary now that counts have changed

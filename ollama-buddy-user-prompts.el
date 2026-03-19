@@ -91,7 +91,7 @@ Returns a plist with :category and :title, or nil if not a valid format."
     (setq ollama-buddy-user-prompts--last-refresh (current-time))))
 
 (defun ollama-buddy-user-prompts--get-prompts ()
-  "Get list of available user prompt with caching."
+  "Get list of available user prompts with caching."
   (let ((current-time (float-time)))
     (when (or (null ollama-buddy-user-prompts--last-refresh)
               (> (- current-time (float-time ollama-buddy-user-prompts--last-refresh))

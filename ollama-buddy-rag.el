@@ -180,10 +180,9 @@ Keys are index names, values are index data plists.")
 
 ;;; Utility Functions
 
-(defun ollama-buddy-rag--estimate-tokens (text)
+(defalias 'ollama-buddy-rag--estimate-tokens #'ollama-buddy--estimate-token-count
   "Estimate token count for TEXT.
-Uses roughly 1.3 tokens per word as approximation."
-  (round (* 1.3 (length (split-string text)))))
+Delegates to the canonical implementation in ollama-buddy-core.")
 
 (defun ollama-buddy-rag--generate-chunk-id ()
   "Generate a unique chunk ID."

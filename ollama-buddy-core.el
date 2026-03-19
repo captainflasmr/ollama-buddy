@@ -2606,14 +2606,10 @@ When complete, CALLBACK is called with the status response and result."
 
 (defun ollama-buddy--get-models-with-others ()
   "Get all available models, including remote and cloud models."
-  (let ((models '()))
-    (dolist (model (ollama-buddy--get-models))
-      (push model models))
-    (setq models (append models ollama-buddy-remote-models))
-    (setq models (append models
-                         (mapcar #'ollama-buddy--get-full-cloud-model-name
-                                 ollama-buddy-cloud-models)))
-    models))
+  (append (ollama-buddy--get-models)
+          ollama-buddy-remote-models
+          (mapcar #'ollama-buddy--get-full-cloud-model-name
+                  ollama-buddy-cloud-models)))
 
 (defun ollama-buddy--get-models ()
   "Get available Ollama models with caching."

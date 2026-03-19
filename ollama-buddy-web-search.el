@@ -108,6 +108,13 @@ Each element is a plist with :query, :content, :results, :size, :timestamp.")
         (user-error "Please set your Ollama web search API key"))
     t))
 
+(defun ollama-buddy-web-search--hash-table-to-alist (table)
+  "Convert hash TABLE to an alist."
+  (when table
+    (let (pairs)
+      (maphash (lambda (k v) (push (cons k v) pairs)) table)
+      pairs)))
+
 (defun ollama-buddy-web-search--org-escape (text)
   "Escape org-mode special characters in TEXT.
 Adds comma before lines starting with * or #+ to prevent org interpretation."
@@ -273,10 +280,9 @@ and content is taken directly from the API results."
           "\n\n")))
     (format "* Web search: \"%s\"\n\n%s" query formatted-results)))
 
-(defun ollama-buddy-web-search--estimate-tokens (text)
-  "Estimate token count for TEXT."
-  ;; Rough estimate: ~1.3 tokens per word for English
-  (round (* 1.3 (length (split-string text)))))
+(defalias 'ollama-buddy-web-search--estimate-tokens #'ollama-buddy--estimate-token-count
+  "Estimate token count for TEXT.
+Delegates to the canonical implementation in ollama-buddy-core.")
 
 (defun ollama-buddy-web-search--fetch (query callback)
   "Fetch web search results for QUERY asynchronously.
@@ -417,11 +423,7 @@ CONTENT-MAP is used when `ollama-buddy-web-search-content-source' is `eww'."
   (let* ((formatted-content (ollama-buddy-web-search--format-results
                              results query content-map))
          (token-estimate (ollama-buddy-web-search--estimate-tokens formatted-content))
-         ;; Convert hash-table to alist for storage (if content-map provided)
-         (content-alist (when content-map
-                          (let (pairs)
-                            (maphash (lambda (k v) (push (cons k v) pairs)) content-map)
-                            pairs)))
+         (content-alist (ollama-buddy-web-search--hash-table-to-alist content-map))
          (search-attachment
           (list :query query
                 :content formatted-content
@@ -553,11 +555,7 @@ Returns the text with search delimiters removed."
                      (formatted-content (ollama-buddy-web-search--format-results
                                          limited-results query content-map))
                      (token-estimate (ollama-buddy-web-search--estimate-tokens formatted-content))
-                     ;; Convert hash-table to alist for storage
-                     (content-alist (when content-map
-                                      (let (pairs)
-                                        (maphash (lambda (k v) (push (cons k v) pairs)) content-map)
-                                        pairs)))
+                     (content-alist (ollama-buddy-web-search--hash-table-to-alist content-map))
                      (search-attachment
                       (list :query query
                             :content formatted-content
@@ -608,10 +606,7 @@ Calls CALLBACK (no args) when done."
   (let* ((formatted-content (ollama-buddy-web-search--format-results
                              results query content-map))
          (token-estimate (ollama-buddy-web-search--estimate-tokens formatted-content))
-         (content-alist (when content-map
-                          (let (pairs)
-                            (maphash (lambda (k v) (push (cons k v) pairs)) content-map)
-                            pairs)))
+         (content-alist (ollama-buddy-web-search--hash-table-to-alist content-map))
          (search-attachment
           (list :query query
                 :content formatted-content

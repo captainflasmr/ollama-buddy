@@ -696,9 +696,11 @@ Returns a list of tool result messages to append to the conversation."
           ((not (file-exists-p file-path))
            (format "Error: file not found: %s" file-path))
           (t
-           (let* ((original-content (with-temp-buffer
-                                      (insert-file-contents file-path)
-                                      (buffer-string)))
+           (require 'ediff)
+           (let* ((original-buf (find-file-noselect file-path))
+                  (original-content (with-current-buffer original-buf
+                                      (buffer-substring-no-properties
+                                       (point-min) (point-max))))
                   (original-lines (length (split-string original-content "\n")))
                   (new-lines (length (split-string new-content "\n")))
                   ;; Detect fragment: new content is less than 40% of original
@@ -713,9 +715,7 @@ Returns a list of tool result messages to append to the conversation."
                   (proposed-tmp (make-temp-file "ob-proposed-" nil ext)))
              (with-temp-file proposed-tmp
                (insert final-content))
-             (require 'ediff)
              (let* ((proposed-buf (find-file-noselect proposed-tmp))
-                    (original-buf (find-file-noselect file-path))
                     (ediff-ok nil))
                (unwind-protect
                    (progn

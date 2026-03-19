@@ -596,12 +596,9 @@ as fallback.  If only :models is set, registers those directly."
          (models-ep (ollama-buddy-provider-models-endpoint provider))
          (send-fn (ollama-buddy-provider--make-send-fn provider))
          (provider-name (ollama-buddy-provider-name provider)))
-    ;; Clean any previously registered models for this prefix
-    (setq ollama-buddy-remote-models
-          (cl-remove-if (lambda (m) (string-prefix-p prefix m))
-                        ollama-buddy-remote-models))
     (cond
      ;; Dynamic discovery (with static as fallback)
+     ;; Note: old models are cleaned inside the response handler before registering new ones
      (models-ep
       (ollama-buddy-provider--fetch-models-dynamic provider send-fn))
      ;; Static list only
@@ -663,14 +660,8 @@ Falls back to the static :models list on failure."
                      (setq models
                            (cl-remove-if-not models-filter models)))
                    (if models
-                       (progn
-                         ;; Clean old models before registering new ones
-                         (setq ollama-buddy-remote-models
-                               (cl-remove-if
-                                (lambda (m) (string-prefix-p prefix m))
-                                ollama-buddy-remote-models))
-                         (ollama-buddy-remote--register-models
-                          prefix models send-fn))
+                       (ollama-buddy-remote--register-models
+                        prefix models send-fn)
                      ;; Empty result — fall back to static
                      (when static-models
                        (ollama-buddy-remote--register-models
