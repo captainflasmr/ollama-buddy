@@ -2853,7 +2853,6 @@ TCP packets split a JSON object across multiple filter calls."
           (let* ((inhibit-read-only t)
                  (window (get-buffer-window ollama-buddy--chat-buffer t))
                  (old-point (and window (window-point window)))
-                 (at-end (and window (>= old-point (point-max))))
                  (old-window-start (and window (window-start window)))
                  (response-start (if (markerp ollama-buddy--response-start-position)
                                      (marker-position ollama-buddy--response-start-position)

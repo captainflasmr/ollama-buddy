@@ -491,7 +491,6 @@ Contains the error body string for display.")
         (let* ((inhibit-read-only t)
                (window (get-buffer-window ollama-buddy--chat-buffer t))
                (old-point (and window (window-point window)))
-               (was-at-end (and window (>= old-point (point-max))))
                (old-window-start (and window (window-start window))))
           (save-excursion
             (goto-char (point-max))

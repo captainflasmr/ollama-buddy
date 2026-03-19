@@ -22,6 +22,8 @@
 (require 'savehist)
 (require 'pulse)
 
+(declare-function face-remap-remove-relative "face-remap")
+
 ;; Core Customization Groups
 (defgroup ollama-buddy nil
   "Customization group for Ollama Buddy."

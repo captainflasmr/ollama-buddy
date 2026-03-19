@@ -72,6 +72,7 @@
 (declare-function ollama-buddy-rag--list-index-names "ollama-buddy-rag")
 (declare-function ollama-buddy-rag--load-index "ollama-buddy-rag")
 (declare-function ollama-buddy-rag--get-embedding-async "ollama-buddy-rag")
+(declare-function ollama-buddy-rag--get-embedding-sync "ollama-buddy-rag")
 (declare-function ollama-buddy-rag--search-chunks "ollama-buddy-rag")
 (declare-function ollama-buddy-rag--format-results-for-context "ollama-buddy-rag")
 (defvar ollama-buddy-rag-top-k)
