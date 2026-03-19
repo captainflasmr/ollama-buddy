@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 5.1.0
+;; Version: 6.0.0
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -1045,7 +1045,8 @@ Typically invoked via `C-u C-u C-c C-c'."
     ("logout"     ollama-buddy-cloud-signout           "Sign out from Ollama cloud")
     ("manual"     ollama-buddy-open-info              "Open the Ollama Buddy Info manual")
     ("export"     org-export-dispatch                 "Open org-export dispatcher for the chat buffer")
-    ("backend"    ollama-buddy-switch-communication-backend "Switch between network-process and curl backends"))
+    ("backend"    ollama-buddy-switch-communication-backend "Switch between network-process and curl backends")
+    ("launch"     ollama-buddy-launch                    "Launch a model in an external terminal with a frontend (e.g. claude)"))
   "Alist of available `/' slash commands.
 Each entry is (NAME FUNCTION DESCRIPTION) where FUNCTION is
 called interactively."
@@ -3540,6 +3541,56 @@ Shows cached status. Use signin/signout to update or try a cloud model request."
                ('not-authenticated "Not signed in (use C-c A to sign in)")
                ('unknown "Unknown (try using a cloud model to verify)")))))
 
+(defun ollama-buddy--launch-model (model)
+  "Launch MODEL in an external terminal with a frontend tool.
+MODEL is the raw model name (without display prefixes).
+Prompts for frontend if more than one is configured."
+  (unless (executable-find ollama-buddy-ollama-executable)
+    (user-error "Cannot find ollama executable. Set `ollama-buddy-ollama-executable'"))
+  (let* ((detected (unless ollama-buddy-launch-terminal
+                     (ollama-buddy--detect-terminal)))
+         (terminal (or ollama-buddy-launch-terminal
+                      (car detected)))
+         (flag (or ollama-buddy-launch-terminal-flag
+                   (cdr detected)
+                   "-e"))
+         (frontends (ollama-buddy--detect-available-frontends)))
+    (unless terminal
+      (user-error "No terminal emulator found. Set `ollama-buddy-launch-terminal'"))
+    (unless (executable-find terminal)
+      (user-error "Cannot find terminal %s. Set `ollama-buddy-launch-terminal'" terminal))
+    (unless frontends
+      (user-error "No launch frontends found on PATH (%s)"
+                  (mapconcat #'identity ollama-buddy-launch-frontends ", ")))
+    (let ((frontend (if (= (length frontends) 1)
+                        (car frontends)
+                      (completing-read "Frontend: " frontends nil t))))
+      (apply #'start-process
+             (format "ollama-launch-%s" frontend)
+             nil
+             terminal
+             (append (split-string flag)
+                     (list ollama-buddy-ollama-executable
+                           "launch" frontend "--model" model)))
+      (message "Launched %s with model %s in %s" frontend model terminal))))
+
+(defun ollama-buddy-launch ()
+  "Launch an Ollama model in an external terminal with a frontend tool.
+Prompts for a model from all available models, then opens an external
+terminal running `ollama launch FRONTEND --model MODEL'.
+Auto-detects the terminal emulator unless `ollama-buddy-launch-terminal'
+is explicitly set."
+  (interactive)
+  (let* ((models (ollama-buddy--get-models-with-others))
+         (model (completing-read "Launch model: "
+                                 (lambda (string pred action)
+                                   (if (eq action 'metadata)
+                                       '(metadata (annotation-function . ollama-buddy--model-annotation))
+                                     (complete-with-action action models string pred)))
+                                 nil t))
+         (real-model (ollama-buddy--get-real-model-name model)))
+    (ollama-buddy--launch-model real-model)))
+
 (defun ollama-buddy--fetch-cloud-usage ()
   "Fetch cloud usage stats from ollama.com/settings.
 Returns an alist ((session . \"N.N%\") (weekly . \"N.N%\")) or nil on failure.
@@ -4894,6 +4945,10 @@ Modifies the variable in place."
          (_letters (ollama-buddy--assign-model-letters available-models))
          (cloud-display-models (mapcar #'ollama-buddy--get-full-cloud-model-name
                                        ollama-buddy-cloud-models))
+         (launch-available (and (executable-find ollama-buddy-ollama-executable)
+                                (ollama-buddy--detect-available-frontends)
+                                (or ollama-buddy-launch-terminal
+                                    (ollama-buddy--detect-terminal))))
          (buf (get-buffer-create "*Ollama Models Management*")))
     (with-current-buffer buf
       (let ((inhibit-read-only t))
@@ -5006,6 +5061,13 @@ Modifies the variable in place."
                           (ollama-buddy--ensure-cloud-model-available ,display-model)
                           (ollama-buddy-manage-models))
                'help-echo (format "Pull manifest for %s (required before first use)" model))
+              (when launch-available
+                (insert "  ")
+                (insert-text-button
+                 "Launch"
+                 'action `(lambda (_)
+                            (ollama-buddy--launch-model ,model))
+                 'help-echo (format "Launch %s in external terminal" model)))
               (insert "\n"))))
 
         (insert "\n** Local\n\n")
@@ -5078,6 +5140,14 @@ Modifies the variable in place."
                           (ollama-buddy-delete-model ,model)
                           (ollama-buddy-manage-models)))
              'help-echo "Delete this model")
+
+            (when launch-available
+              (insert "  ")
+              (insert-text-button
+               "Launch"
+               'action `(lambda (_)
+                          (ollama-buddy--launch-model ,model))
+               'help-echo (format "Launch %s in external terminal" model)))
 
             (insert "\n")))
 

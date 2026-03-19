@@ -125,6 +125,15 @@ A cross-cutting view of key features across the major chat clients, to the best 
 
 * Updates
 
+** What's New (v6.0.0)
+
+Launch external frontends and comprehensive code quality improvements.
+
+- *=/launch= Slash Command* -- Launch any Ollama model in an external terminal with a frontend tool (e.g. Claude Code).  Runs =ollama launch claude --model MODEL= with auto-detected terminal emulator.  Detects via =$TERMINAL=, =$TERM_PROGRAM=, =xdg-terminal-exec=, or PATH scan.
+- *Launch in Model Management* -- Each model in =C-c M= now has a =Launch= button when frontends are detected.
+- *Welcome Screen Indicator* -- Shows =⚡ launch: claude (via kitty)= when launch frontends are available on PATH.
+- *Code Quality* -- Fixed process/buffer leaks, added =vectorp= guards for API responses, replaced busy-waits, consolidated duplicate code, improved error handling across the package.
+
 ** What's New (v5.1.0)
 
 Unguarded tool mode and MiniMax-M2.7 cloud model.
@@ -160,6 +169,7 @@ Tool-augmented search — LLMs can now autonomously search the web and query loc
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *6.0.0* | =/launch= slash command — launch models in external terminals with frontends (e.g. Claude Code); auto-detects terminal; Launch button in Model Management; comprehensive code quality fixes. |
 | *5.1.0* | Unguarded tool mode (=☠= indicator, red header line) — bypass all safety prompts; MiniMax-M2.7 cloud model. |
 | *5.0.1* | Auto-scroll toggle (=C-c g=, =↓= indicator); works mid-stream. |
 | *5.0.0* | Tool calling for all providers: OpenAI, Claude, and Gemini API types support function calling; HTTP error detection; Gemini native =systemInstruction=. |

@@ -11,6 +11,24 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-03-19 Wed> *6.0.0*
+
+Launch external frontends from Ollama Buddy
+
+*** Features
+
+- *=/launch= slash command* -- Launch any Ollama model (local or cloud) in an
+  external terminal with a frontend tool like Claude Code.  Runs
+  =ollama launch claude --model MODEL= in a detected terminal emulator.
+  Auto-detects terminal via =$TERMINAL=, =$TERM_PROGRAM=, =xdg-terminal-exec=,
+  or PATH scan of 16 common emulators.  Supports multiple frontends
+  (=ollama-buddy-launch-frontends=, default: =("claude")=).
+- *Launch button in Model Management* -- Each model (local and cloud) now has a
+  =Launch= button in the =C-c M= Model Management buffer when frontends are
+  detected.
+- *Welcome screen launch indicator* -- Shows =⚡ launch: claude (via kitty)=
+  (or your detected terminal) on the welcome screen when frontends are available.
+
 ** <2026-03-19 Wed> *5.1.0*
 
 Unguarded tool mode.

@@ -900,6 +900,92 @@ go to Application > Cookies > ollama.com, and copy the `__Secure-session' value.
   :type 'string
   :group 'ollama-buddy)
 
+(defvar ollama-buddy--terminal-candidates
+  '(("kitty"          . "-e")
+    ("alacritty"      . "-e")
+    ("foot"           . "-e")
+    ("wezterm"        . "start --")
+    ("ghostty"        . "-e")
+    ("gnome-terminal" . "--")
+    ("kgx"            . "-e")
+    ("konsole"        . "-e")
+    ("xfce4-terminal" . "-e")
+    ("mate-terminal"  . "-e")
+    ("lxterminal"     . "-e")
+    ("tilix"          . "-e")
+    ("terminator"     . "-e")
+    ("st"             . "-e")
+    ("urxvt"          . "-e")
+    ("xterm"          . "-e"))
+  "Alist of (TERMINAL . FLAG) candidates for auto-detection.
+Ordered by preference — modern GPU-accelerated terminals first.")
+
+(defun ollama-buddy--detect-terminal ()
+  "Detect an available terminal emulator.
+Checks in order:
+1. $TERMINAL environment variable
+2. $TERM_PROGRAM environment variable
+3. xdg-terminal-exec (freedesktop standard)
+4. Scan `ollama-buddy--terminal-candidates' on PATH
+Returns (TERMINAL . FLAG) or nil if none found."
+  (let ((env-terminal (getenv "TERMINAL"))
+        (term-program (getenv "TERM_PROGRAM")))
+    (cond
+     ;; $TERMINAL — look up its flag, or default to -e
+     ((and env-terminal (executable-find env-terminal))
+      (let ((known (assoc (file-name-nondirectory env-terminal)
+                          ollama-buddy--terminal-candidates)))
+        (if known known (cons env-terminal "-e"))))
+     ;; $TERM_PROGRAM — usually the bare name (e.g. "kitty", "WezTerm")
+     ((and term-program
+           (let ((name (downcase term-program)))
+             (cl-find-if (lambda (entry)
+                           (and (string= (car entry) name)
+                                (executable-find name)))
+                         ollama-buddy--terminal-candidates))))
+     ;; xdg-terminal-exec (freedesktop.org standard, no flag needed)
+     ((executable-find "xdg-terminal-exec")
+      '("xdg-terminal-exec" . "-e"))
+     ;; Fallback: scan known terminals on PATH
+     (t (cl-find-if (lambda (entry) (executable-find (car entry)))
+                    ollama-buddy--terminal-candidates)))))
+
+(defcustom ollama-buddy-launch-terminal nil
+  "Terminal emulator used by `ollama-buddy-launch'.
+When nil (the default), auto-detects from common terminals on PATH.
+The command is run as: TERMINAL FLAG ollama launch FRONTEND --model MODEL."
+  :type '(choice (const :tag "Auto-detect" nil) string)
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-launch-terminal-flag nil
+  "Flag used to pass a command to the terminal emulator.
+When nil (the default), uses the flag from auto-detection.
+Most terminals use \"-e\".  gnome-terminal uses \"--\"."
+  :type '(choice (const :tag "Auto-detect" nil) string)
+  :group 'ollama-buddy)
+
+(defcustom ollama-buddy-launch-frontends '("claude")
+  "List of available frontends for `ollama launch'.
+Each entry is a frontend name passed to `ollama launch FRONTEND'."
+  :type '(repeat string)
+  :group 'ollama-buddy)
+
+(defun ollama-buddy--detect-available-frontends ()
+  "Return list of frontends from `ollama-buddy-launch-frontends' found on PATH."
+  (cl-remove-if-not #'executable-find ollama-buddy-launch-frontends))
+
+(defun ollama-buddy--format-launch-summary ()
+  "Build a launch-tools summary string for the intro screen.
+Returns a formatted string or nil if no frontends are available."
+  (when (executable-find ollama-buddy-ollama-executable)
+    (let ((frontends (ollama-buddy--detect-available-frontends))
+          (terminal (or ollama-buddy-launch-terminal
+                        (car (ollama-buddy--detect-terminal)))))
+      (when (and frontends terminal)
+        (format "⚡ /launch: %s (via %s)"
+                (mapconcat #'identity frontends ", ")
+                terminal)))))
+
 (defvar ollama-buddy-current-session-name nil
   "The name of the currently loaded session.")
 
@@ -2120,6 +2206,7 @@ Called after async model fetches complete so counts are accurate."
   (setq-local org-hide-emphasis-markers t)
   (setq-local org-hide-leading-stars t)
   (let* ((provider-summary (ollama-buddy--format-provider-summary))
+         (launch-summary (ollama-buddy--format-launch-summary))
          (project-root (when (and (featurep 'ollama-buddy-project)
                                   (fboundp 'ollama-buddy-project-current-root))
                          (ollama-buddy-project-current-root)))
@@ -2129,7 +2216,7 @@ Called after async model fetches complete so counts are accurate."
           (concat
            (when (= (buffer-size) 0)
              (concat "#+TITLE: Ollama Buddy Chat"))
-           "\n\n* Ollama Buddy [v5.1.0]\n"
+           "\n\n* Ollama Buddy [v6.0.0]\n"
            (if-let ((logo (ollama-buddy--create-logo-image 140)))
                (concat logo "\n")
              (concat
@@ -2146,8 +2233,8 @@ Called after async model fetches complete so counts are accurate."
 please run =ollama serve=\n\n")
            (when provider-summary
              (concat provider-summary "\n\n"))
-           ;; (when auth-status
-             ;; (concat "Auth: " auth-status "\n\n"))
+           (when launch-summary
+             (concat launch-summary "\n\n"))
            "- /Ask me anything!/       *C-c C-c* OR *C-c RET*
 - /Main transient menu/    *C-c O*
 - /Select model/           *C-c m*
