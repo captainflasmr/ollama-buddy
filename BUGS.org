@@ -11,12 +11,9 @@ This document contains the current bugs/improvements, this is just for me mainly
 
 ** DOING Improve svg
 ** DOING more LLM integrations
-** TODO rethink tooling to autorun somehow
-** TODO tool: once execute shall has accept all then push through for all other shell commands
 ** TODO tool: check multiple ediffs can be added with propose_file_changes
 ** TODO plan mode
 ** TODO maybe a quick save
-** TODO external LLM usage?
 ** TODO think start cutoff
 ** TODO regenerate videos
 ** TODO test Emacs configs under different OS using VSCode and rancher

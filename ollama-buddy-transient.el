@@ -12,7 +12,6 @@
 (require 'ollama-buddy-rag nil t)
 
 ;; Forward declarations for functions defined in ollama-buddy.el
-(declare-function ollama-buddy-history-edit-model "ollama-buddy-sessions-rename")
 (declare-function ollama-buddy-history-edit-model "ollama-buddy")
 (declare-function ollama-buddy-set-max-history-length "ollama-buddy")
 (declare-function ollama-buddy-set-model-context-size "ollama-buddy")

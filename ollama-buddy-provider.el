@@ -156,7 +156,7 @@ updates to the provider struct are reflected immediately."
     (lambda (prompt &optional model)
       (let ((prov (gethash prefix ollama-buddy-provider--registry)))
         (if (null prov)
-            (error "No provider registered for prefix %s" prefix)
+            (user-error "No provider registered for prefix %s" prefix)
           (pcase (ollama-buddy-provider-api-type prov)
             ('openai (ollama-buddy-provider--openai-send prov prompt model))
             ('claude (ollama-buddy-provider--claude-send prov prompt model))
@@ -542,7 +542,7 @@ TOOLS-SCHEMA is an optional Gemini-format tools vector."
                            (let* ((candidates
                                    (alist-get 'candidates response))
                                   (first
-                                   (when (and candidates
+                                   (when (and (vectorp candidates)
                                               (> (length candidates) 0))
                                      (aref candidates 0)))
                                   (content-obj
@@ -551,7 +551,7 @@ TOOLS-SCHEMA is an optional Gemini-format tools vector."
                                   (parts
                                    (when content-obj
                                      (alist-get 'parts content-obj))))
-                             (when (and parts (> (length parts) 0))
+                             (when (and (vectorp parts) (> (length parts) 0))
                                (setq content
                                      (alist-get 'text (aref parts 0))))))
                          (ollama-buddy-remote--finalize-response
@@ -875,7 +875,7 @@ Unregisters its models and removes it from the registry."
           (ollama-buddy-provider--fetch-models provider)
           (message "Refreshing %s models..."
                    (ollama-buddy-provider-name provider)))
-      (error "No provider registered with prefix %s" prefix))))
+      (user-error "No provider registered with prefix %s" prefix))))
 
 ;;;###autoload
 (defun ollama-buddy-provider-list ()

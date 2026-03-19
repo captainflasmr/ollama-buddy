@@ -419,13 +419,14 @@ The token is cached until expiry."
                      (let* ((json-object-type 'alist)
                             (json-array-type 'vector)
                             (json-key-type 'symbol)
-                            (response (json-read)))
-                       (setq ollama-buddy-copilot--access-token (alist-get 'token response))
-                       (let ((expires-at (alist-get 'expires_at response)))
-                         (when expires-at
-                           (setq ollama-buddy-copilot--token-expiry
-                                 (seconds-to-time expires-at))))
-                       (funcall callback ollama-buddy-copilot--access-token))))
+                            (response (json-read))
+                            (new-token (alist-get 'token response))
+                            (expires-at (alist-get 'expires_at response)))
+                       ;; Update token fields atomically
+                       (setq ollama-buddy-copilot--access-token new-token
+                             ollama-buddy-copilot--token-expiry
+                             (when expires-at (seconds-to-time expires-at)))
+                       (funcall callback new-token))))
                (when (buffer-live-p url-buf)
                  (kill-buffer url-buf)))))))))))
 

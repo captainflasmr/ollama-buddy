@@ -5450,7 +5450,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
   
   ;; Validate the input
   (when (< length 0)
-    (error "History length must be non-negative"))
+    (user-error "History length must be non-negative"))
   
   ;; Set the new value
   (setq ollama-buddy-max-history-length length)
@@ -5493,7 +5493,7 @@ When the operation completes, CALLBACK is called with no arguments if provided."
   (when (file-exists-p file)
     (let ((size (file-attribute-size (file-attributes file))))
       (when (> size ollama-buddy-max-file-size)
-        (error "File too large: %s (max %d bytes)" file ollama-buddy-max-file-size))
+        (user-error "File too large: %s (max %d bytes)" file ollama-buddy-max-file-size))
       (with-temp-buffer
         (let ((coding-system-for-read 'utf-8-unix))
           (condition-case err

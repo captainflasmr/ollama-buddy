@@ -94,18 +94,19 @@ Keys:
              (process-live-p ollama-buddy--rewrite-process))
     (delete-process ollama-buddy--rewrite-process))
   (setq ollama-buddy--rewrite-process nil)
-  (when ollama-buddy--rewrite-state
-    (let ((source-buf  (plist-get ollama-buddy--rewrite-state :source-buffer))
-          (start-m     (plist-get ollama-buddy--rewrite-state :start-marker))
-          (end-m       (plist-get ollama-buddy--rewrite-state :end-marker))
-          (diff-end    (plist-get ollama-buddy--rewrite-state :diff-end-marker)))
-      (when (markerp start-m)  (set-marker start-m nil))
-      (when (markerp end-m)    (set-marker end-m nil))
-      (when (markerp diff-end) (set-marker diff-end nil))
-      (when (buffer-live-p source-buf)
-        (with-current-buffer source-buf
-          (ollama-buddy-rewrite-mode -1)))))
-  (setq ollama-buddy--rewrite-state nil))
+  (unwind-protect
+      (when ollama-buddy--rewrite-state
+        (let ((source-buf  (plist-get ollama-buddy--rewrite-state :source-buffer))
+              (start-m     (plist-get ollama-buddy--rewrite-state :start-marker))
+              (end-m       (plist-get ollama-buddy--rewrite-state :end-marker))
+              (diff-end    (plist-get ollama-buddy--rewrite-state :diff-end-marker)))
+          (when (markerp start-m)  (set-marker start-m nil))
+          (when (markerp end-m)    (set-marker end-m nil))
+          (when (markerp diff-end) (set-marker diff-end nil))
+          (when (buffer-live-p source-buf)
+            (with-current-buffer source-buf
+              (ollama-buddy-rewrite-mode -1)))))
+    (setq ollama-buddy--rewrite-state nil)))
 
 (defun ollama-buddy--rewrite-hide-diff ()
   "Remove the inline diff block and word-level overlays, keeping state intact."

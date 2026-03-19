@@ -367,7 +367,8 @@ Calls CALLBACK with the embedding vector or nil on error."
                (condition-case err
                    (progn
                      (goto-char (point-min))
-                     (re-search-forward "\n\n")
+                     (unless (re-search-forward "\n\n" nil t)
+                       (error "No header/body separator found in response"))
                      (let* ((json-object-type 'alist)
                             (json-array-type 'list)
                             (response (json-read)))
@@ -403,7 +404,8 @@ Calls CALLBACK with list of embedding vectors or nil on error."
                  (condition-case err
                      (progn
                        (goto-char (point-min))
-                       (re-search-forward "\n\n")
+                       (unless (re-search-forward "\n\n" nil t)
+                         (error "No header/body separator found in response"))
                        (let* ((json-object-type 'alist)
                               (json-array-type 'list)
                               (response (json-read)))
@@ -1254,7 +1256,8 @@ Returns the embedding vector or nil on error."
           (unwind-protect
               (with-current-buffer buf
                 (goto-char (point-min))
-                (re-search-forward "\n\n")
+                (unless (re-search-forward "\n\n" nil t)
+                  (error "No header/body separator found in response"))
                 (let* ((json-object-type 'alist)
                        (json-array-type 'list)
                        (response (json-read)))

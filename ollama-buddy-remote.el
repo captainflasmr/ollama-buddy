@@ -68,7 +68,7 @@ PROVIDER-NAME is used in the error message."
   (if (string-empty-p key-value)
       (progn
         (customize-variable key-symbol)
-        (error "Please set your %s API key" provider-name))
+        (user-error "Please set your %s API key" provider-name))
     t))
 
 ;;; Context building
@@ -874,7 +874,7 @@ Returns the token string, or nil if the line should be skipped."
                (json-key-type 'symbol)
                (json-data (json-read-from-string data-str))
                (choices (alist-get 'choices json-data))
-               (delta (when (and choices (> (length choices) 0))
+               (delta (when (and (vectorp choices) (> (length choices) 0))
                         (alist-get 'delta (aref choices 0))))
                (content (when delta (alist-get 'content delta))))
           (when (and content (not (eq content :null)))
@@ -895,7 +895,7 @@ incremental `delta.tool_calls' and accumulates them in
                (json-key-type 'symbol)
                (json-data (json-read-from-string data-str))
                (choices (alist-get 'choices json-data))
-               (choice (when (and choices (> (length choices) 0))
+               (choice (when (and (vectorp choices) (> (length choices) 0))
                          (aref choices 0)))
                (delta (when choice (alist-get 'delta choice)))
                (content (when delta (alist-get 'content delta)))
@@ -1118,11 +1118,11 @@ Returns the token string, or nil if the line should be skipped."
                (json-key-type 'symbol)
                (json-data (json-read-from-string data-str))
                (candidates (alist-get 'candidates json-data))
-               (first (when (and candidates (> (length candidates) 0))
+               (first (when (and (vectorp candidates) (> (length candidates) 0))
                         (aref candidates 0)))
                (content (when first (alist-get 'content first)))
                (parts (when content (alist-get 'parts content)))
-               (text (when (and parts (> (length parts) 0))
+               (text (when (and (vectorp parts) (> (length parts) 0))
                        (alist-get 'text (aref parts 0)))))
           (when (and text (not (eq text :null)))
             text))
@@ -1140,13 +1140,13 @@ Each functionCall has `name' and `args' (already a JSON object)."
                (json-key-type 'symbol)
                (json-data (json-read-from-string data-str))
                (candidates (alist-get 'candidates json-data))
-               (first (when (and candidates (> (length candidates) 0))
+               (first (when (and (vectorp candidates) (> (length candidates) 0))
                         (aref candidates 0)))
                (content (when first (alist-get 'content first)))
                (parts (when content (alist-get 'parts content)))
                (text-result nil))
           ;; Process all parts — may contain text and/or functionCall
-          (when parts
+          (when (vectorp parts)
             (dotimes (i (length parts))
               (let* ((part (aref parts i))
                      (text (alist-get 'text part))
@@ -1414,7 +1414,7 @@ MODEL and CONFIG are passed through from `ollama-buddy-remote--openai-send'."
                                 (content "")
                                 (choices (alist-get 'choices json-response))
                                 (message-obj
-                                 (when (and choices (> (length choices) 0))
+                                 (when (and (vectorp choices) (> (length choices) 0))
                                    (alist-get 'message (aref choices 0))))
                                 (resp-tool-calls
                                  (when message-obj

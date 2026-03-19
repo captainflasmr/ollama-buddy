@@ -2529,13 +2529,17 @@ When SYSTEM-PROMPT is non-nil, mark as a system prompt."
           (url-show-status nil)
           (url (format "http://%s:%d%s"
                        ollama-buddy-host ollama-buddy-port endpoint)))
-      (with-temp-buffer
-        (if payload
-            (let ((url-request-data (encode-coding-string payload 'utf-8)))
+      (condition-case err
+          (with-temp-buffer
+            (if payload
+                (let ((url-request-data (encode-coding-string payload 'utf-8)))
+                  (url-insert-file-contents url))
               (url-insert-file-contents url))
-          (url-insert-file-contents url))
-        (when (not (string-empty-p (buffer-string)))
-          (json-read-from-string (buffer-string)))))))
+            (when (not (string-empty-p (buffer-string)))
+              (json-read-from-string (buffer-string))))
+        (error
+         (message "Ollama request error (%s): %s" endpoint (error-message-string err))
+         nil)))))
 
 (defun ollama-buddy--make-request-async (endpoint method payload callback)
   "Make an asynchronous request to ENDPOINT using METHOD with PAYLOAD.

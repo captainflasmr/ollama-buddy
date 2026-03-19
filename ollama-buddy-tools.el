@@ -721,7 +721,17 @@ Returns a list of tool result messages to append to the conversation."
                    (progn
                      (save-window-excursion
                        (ediff-buffers proposed-buf original-buf))
-                     (setq ediff-ok t))
+                     (setq ediff-ok t)
+                     ;; Clean up proposed buffer and temp file when ediff quits
+                     (let ((pb proposed-buf)
+                           (pt proposed-tmp))
+                       (add-hook 'ediff-quit-hook
+                                 (lambda ()
+                                   (when (buffer-live-p pb)
+                                     (kill-buffer pb))
+                                   (when (file-exists-p pt)
+                                     (delete-file pt)))
+                                 nil t)))
                  (unless ediff-ok
                    (when (buffer-live-p proposed-buf)
                      (kill-buffer proposed-buf))
@@ -932,12 +942,7 @@ Returns a list of tool result messages to append to the conversation."
                       available))
                    (all-results nil))
                ;; Get query embedding synchronously
-               (let ((embedding nil) (done nil))
-                 (ollama-buddy-rag--get-embedding-async
-                  query (lambda (emb) (setq embedding emb done t)))
-                 (let ((deadline (+ (float-time) 30)))
-                   (while (and (not done) (< (float-time) deadline))
-                     (accept-process-output nil 0.1)))
+               (let ((embedding (ollama-buddy-rag--get-embedding-sync query)))
                  (if (null embedding)
                      "Error: Failed to generate embedding for query."
                    ;; Search each index

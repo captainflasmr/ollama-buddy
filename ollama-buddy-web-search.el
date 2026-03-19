@@ -105,7 +105,7 @@ Each element is a plist with :query, :content, :results, :size, :timestamp.")
   (if (string-empty-p ollama-buddy-web-search-api-key)
       (progn
         (customize-variable 'ollama-buddy-web-search-api-key)
-        (error "Please set your Ollama web search API key"))
+        (user-error "Please set your Ollama web search API key"))
     t))
 
 (defun ollama-buddy-web-search--org-escape (text)
