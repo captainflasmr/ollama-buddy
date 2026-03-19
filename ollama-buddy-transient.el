@@ -96,6 +96,13 @@
       (ollama-buddy-tools-toggle-auto-execute)
     (message "Tool calling requires ollama-buddy-tools: (require 'ollama-buddy-tools)")))
 
+(defun ollama-buddy-transient--tools-unguarded ()
+  "Toggle unguarded tool mode if ollama-buddy-tools is loaded."
+  (interactive)
+  (if (fboundp 'ollama-buddy-tools-toggle-unguarded)
+      (ollama-buddy-tools-toggle-unguarded)
+    (message "Tool calling requires ollama-buddy-tools: (require 'ollama-buddy-tools)")))
+
 (declare-function ollama-buddy-rag-index-directory "ollama-buddy-rag")
 (declare-function ollama-buddy-rag-search "ollama-buddy-rag")
 (declare-function ollama-buddy-rag-attach "ollama-buddy-rag")
@@ -185,6 +192,7 @@
    ["Tools"
     ("SPC" "Toggle" ollama-buddy-transient--tools-toggle)
     ("E" "Auto-Execute" ollama-buddy-transient--tools-auto-execute)
+    ("G" "Unguarded" ollama-buddy-transient--tools-unguarded)
     ("Q" "List" ollama-buddy-transient--tools-info)
     ("W" "In-Buffer Replace" ollama-buddy-toggle-in-buffer-replace)
     ("c" "Completion Mode" ollama-buddy-transient--completion-toggle)]]

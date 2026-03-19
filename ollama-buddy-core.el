@@ -1174,6 +1174,10 @@ Cleared automatically after it has been consumed.")
 (defvar-local ollama-buddy--header-line-remapped nil
   "Non-nil if the header-line face has been remapped in this buffer.")
 
+(defvar-local ollama-buddy--unguarded-header-cookie nil
+  "Face-remap cookie for the red unguarded-mode header line.
+Stored so it can be removed when unguarded mode is toggled off.")
+
 (defvar ollama-buddy--model-letters nil
   "Alist mapping letters to model names.")
 
@@ -3089,6 +3093,7 @@ ACTUAL-MODEL is the model being used instead."
   (setq ollama-buddy--status status)
   (when ollama-buddy-show-context-percentage
     (ollama-buddy--calculate-prompt-context-percentage))
+  (ollama-buddy--update-unguarded-header-face)
   (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
     (unless ollama-buddy--header-line-remapped
       (face-remap-add-relative 'header-line :height ollama-buddy-header-line-height)
@@ -3136,6 +3141,13 @@ ACTUAL-MODEL is the model being used instead."
                                          ollama-buddy-tools-enabled
                                          (ollama-buddy--model-supports-tools model))
                                     "⚡" ""))
+           (unguarded-indicator (if (and (boundp 'ollama-buddy-tools-unguarded)
+                                         ollama-buddy-tools-unguarded
+                                         (boundp 'ollama-buddy-tools-enabled)
+                                         ollama-buddy-tools-enabled
+                                         (ollama-buddy--model-supports-tools model))
+                                    (propertize "☠" 'face '(:foreground "red" :weight bold))
+                                  ""))
            (vision-indicator (if (ollama-buddy--model-supports-vision model) "⊙" ""))
            (thinking-indicator (if (ollama-buddy--model-supports-thinking model) "✦" ""))
            (attachment-indicator (if ollama-buddy--current-attachments
@@ -3182,7 +3194,7 @@ ACTUAL-MODEL is the model being used instead."
             (replace-regexp-in-string
              "%" "%%"
             (concat
-             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s%s %s%s%s"
+             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s%s %s%s%s"
                      airplane-indicator
                      curl-indicator
                      scroll-indicator
@@ -3193,6 +3205,7 @@ ACTUAL-MODEL is the model being used instead."
                      cloud-indicator
                      tools-indicator
                      auto-exec-indicator
+                     unguarded-indicator
                      vision-indicator
                      thinking-indicator
                      in-buffer-indicator
@@ -3217,6 +3230,23 @@ ACTUAL-MODEL is the model being used instead."
              (when (and original-model actual-model (not (string= original-model actual-model)))
                (propertize (format " [Using %s instead of %s]" actual-model original-model)
                            'face '(:foreground "orange" :weight bold)))))))))
+
+(defun ollama-buddy--update-unguarded-header-face ()
+  "Apply or remove the red header-line background for unguarded mode."
+  (when-let ((buf (get-buffer ollama-buddy--chat-buffer)))
+    (with-current-buffer buf
+      (if (and (boundp 'ollama-buddy-tools-unguarded)
+               ollama-buddy-tools-unguarded)
+          ;; Apply red background
+          (unless ollama-buddy--unguarded-header-cookie
+            (setq ollama-buddy--unguarded-header-cookie
+                  (face-remap-add-relative 'header-line
+                                           :background "dark red"
+                                           :foreground "white")))
+        ;; Remove red background
+        (when ollama-buddy--unguarded-header-cookie
+          (face-remap-remove-relative ollama-buddy--unguarded-header-cookie)
+          (setq ollama-buddy--unguarded-header-cookie nil))))))
 
 (defun ollama-buddy--update-multishot-status ()
   "Update status line to show multishot progress.

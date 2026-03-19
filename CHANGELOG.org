@@ -11,6 +11,20 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-03-19 Wed> *5.1.0*
+
+Unguarded tool mode.
+
+*** Features
+
+- *Unguarded mode* -- New =/unguarded= slash command, transient =G=, or
+  =ollama-buddy-tools-toggle-unguarded= to bypass ALL safety prompts and let
+  tools run to completion without interruption.  No confirmation for unsafe
+  tools (e.g. =execute_shell=), no large-result threshold warnings, and
+  safe-mode restrictions are overridden.  Header line turns *red* and shows
+  =☠= as a clear visual warning.  Toggle via =/unguarded=, transient menu =G=,
+  or =M-x ollama-buddy-tools-toggle-unguarded=.
+
 ** <2026-03-18 Tue> *5.0.1*
 
 Auto-scroll toggle for following streaming output.

@@ -75,7 +75,7 @@ Submit queries, swap models, view token usage and statistics:
 
 * Features
 
-- *Tool Calling* -- LLMs can invoke registered Emacs functions (file ops, shell commands, buffer search, calculations). Safe mode restricts to read-only tools.
+- *Tool Calling* -- LLMs can invoke registered Emacs functions (file ops, shell commands, buffer search, calculations). Safe mode restricts to read-only tools; unguarded mode (=☠=) bypasses all prompts for uninterrupted execution.
 - *Multiple Providers* -- Local Ollama, Ollama Cloud, OpenAI, Claude, Gemini, Grok, GitHub Copilot, Codestral, DeepSeek, OpenRouter, and any generic OpenAI-compatible server (LM Studio, llama.cpp, vLLM, Jan…)
 - *Web Search* -- Inline =@search(query)= syntax for real-time web search via Ollama's API
 - *Interactive Menus* -- Transient popup menus with role-based command grouping
@@ -125,6 +125,13 @@ A cross-cutting view of key features across the major chat clients, to the best 
 
 * Updates
 
+** What's New (v5.1.0)
+
+Unguarded tool mode and MiniMax-M2.7 cloud model.
+
+- *Unguarded Mode* -- =/unguarded= slash command (or transient =G=) bypasses ALL safety prompts, letting tools run to completion without interruption.  No confirmation for unsafe tools, no large-result warnings, safe-mode overridden.  Header line turns *red* and shows =☠= as a clear visual warning.
+- *MiniMax-M2.7 Cloud Model* -- Added =minimax-m2.7:cloud= to =ollama-buddy-cloud-models=.
+
 ** What's New (v5.0.1)
 
 Auto-scroll toggle for following streaming output.
@@ -153,6 +160,7 @@ Tool-augmented search — LLMs can now autonomously search the web and query loc
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *5.1.0* | Unguarded tool mode (=☠= indicator, red header line) — bypass all safety prompts; MiniMax-M2.7 cloud model. |
 | *5.0.1* | Auto-scroll toggle (=C-c g=, =↓= indicator); works mid-stream. |
 | *5.0.0* | Tool calling for all providers: OpenAI, Claude, and Gemini API types support function calling; HTTP error detection; Gemini native =systemInstruction=. |
 | *4.2.0* | Tool-augmented search: =web_search= and =rag_search= built-in tools; Emacs 29.1 minimum; thinking fold robustness; welcome screen folded commands; model management running models section. |

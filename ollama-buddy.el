@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 5.0.1
+;; Version: 5.1.0
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -1019,6 +1019,7 @@ Typically invoked via `C-u C-u C-c C-c'."
     ("load"       ollama-buddy-sessions-load          "Load a saved chat session")
     ("tools"      ollama-buddy-tools-toggle           "Toggle LLM tool-calling capabilities")
     ("autoexec"   ollama-buddy-tools-toggle-auto-execute "Toggle tool auto-execute (skip confirmation)")
+    ("unguarded"  ollama-buddy-tools-toggle-unguarded  "Toggle unguarded mode — bypass ALL safety prompts ☠")
     ("context"    ollama-buddy-show-attachments       "View and manage attached context/files")
     ("help"       ollama-buddy--menu-help-assistant    "Show chat interface commands and help")
     ("copy"       ollama-buddy-copy-last-response     "Copy the last AI response to kill ring")

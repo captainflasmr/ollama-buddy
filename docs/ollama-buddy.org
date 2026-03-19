@@ -1422,6 +1422,10 @@ Available =/= commands (filtered by loaded modules):
   (=ollama-buddy-tools-toggle-auto-execute=). Requires
   =ollama-buddy-tools=.
 
+- =unguarded= :: Toggle unguarded mode --- bypass ALL safety prompts for
+  tool execution (=ollama-buddy-tools-toggle-unguarded=). Header line
+  turns red and shows =☠=. Requires =ollama-buddy-tools=.
+
 - =skill= :: Load a skill as system prompt
   (=ollama-buddy-user-prompts-load=).
 
@@ -4106,6 +4110,8 @@ The header line shows compact status indicators:
 - =☁= - Currently using an Ollama cloud model
 - =⚒= - Tool calling enabled AND model supports tools
 - =⚡= - Tool auto-execute enabled (unsafe tools still prompt)
+- =☠= - Unguarded mode: ALL safety prompts bypassed (header line turns
+  red)
 - =⊙= - Current model supports vision
 - =✦= - Current model supports thinking/reasoning
 - =≡N= - Number of file attachments (e.g. =≡3= means 3 files)
@@ -5306,6 +5312,12 @@ between models.
   without confirmation prompts (default: =t=). When nil, each tool
   invocation shows a =yes-or-no-p= prompt before executing.
 
+- =ollama-buddy-tools-unguarded= :: When non-nil, bypass ALL safety
+  prompts and let tools run to completion (default: =nil=). This
+  disables confirmation for unsafe tools (e.g. =execute_shell=), large
+  result warnings, and safe-mode restrictions. Auto-execute is implied.
+  The header line turns red and shows =☠= as a visual warning.
+
 - =ollama-buddy-tools-max-iterations= :: Maximum tool-call round-trips
   per user prompt to prevent infinite loops (default: =10=).
 
@@ -5374,6 +5386,12 @@ non-string value, it is formatted with =%S=.
 - =ollama-buddy-tools-toggle-safe-mode= :: Toggle safe mode for tool
   execution.
 
+- =ollama-buddy-tools-toggle-unguarded= :: Toggle unguarded mode ---
+  bypass ALL safety prompts for tool execution. When enabled, no
+  confirmation is asked for any tool (including unsafe ones like
+  =execute_shell=), large-result warnings are suppressed, and safe-mode
+  is overridden. The header line turns red and shows =☠=.
+
 - =ollama-buddy-tools-info (==C-c Q==)= :: Display information about all
   registered tools in a dedicated org-mode buffer, showing status table,
   safe mode settings, and each tool's description with parameters.
@@ -5386,6 +5404,8 @@ These commands are also available from the transient menu (C-c O) under
 the “Tools” section:
 
 - SPC - Toggle Tools
+- E - Auto-Execute
+- G - Unguarded =☠=
 - Q - List Tools
 
 <<Tool-Indicators>>

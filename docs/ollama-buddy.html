@@ -1547,6 +1547,12 @@ Requires <code class="code">ollama-buddy-tools</code>.
 Requires <code class="code">ollama-buddy-tools</code>.
 </p>
 </dd>
+<dt><code class="code">unguarded</code></dt>
+<dd><p>Toggle unguarded mode &mdash; bypass ALL safety prompts for tool execution
+(<code class="code">ollama-buddy-tools-toggle-unguarded</code>).  Header line turns red and shows
+<code class="code">☠</code>.  Requires <code class="code">ollama-buddy-tools</code>.
+</p>
+</dd>
 <dt><code class="code">skill</code></dt>
 <dd><p>Load a skill as system prompt (<code class="code">ollama-buddy-user-prompts-load</code>).
 </p>
@@ -4071,6 +4077,7 @@ Works with LM Studio, llama.cpp, vLLM, Jan, and any
 </li><li><code class="code">☁</code> - Currently using an Ollama cloud model
 </li><li><code class="code">⚒</code> - Tool calling enabled AND model supports tools
 </li><li><code class="code">⚡</code> - Tool auto-execute enabled (unsafe tools still prompt)
+</li><li><code class="code">☠</code> - Unguarded mode: ALL safety prompts bypassed (header line turns red)
 </li><li><code class="code">⊙</code> - Current model supports vision
 </li><li><code class="code">✦</code> - Current model supports thinking/reasoning
 </li><li><code class="code">≡N</code> - Number of file attachments (e.g. <code class="code">≡3</code> means 3 files)
@@ -5182,6 +5189,14 @@ Evaluate (length (buffer-list)) and tell me how many buffers I have.
 When nil, each tool invocation shows a <code class="code">yes-or-no-p</code> prompt before executing.
 </p>
 </dd>
+<dt><code class="code">ollama-buddy-tools-unguarded</code></dt>
+<dd><p>When non-nil, bypass ALL safety prompts and let tools run to completion
+(default: <code class="code">nil</code>).  This disables confirmation for unsafe tools (e.g.
+<code class="code">execute_shell</code>), large result warnings, and safe-mode restrictions.
+Auto-execute is implied.  The header line turns red and shows <code class="code">☠</code> as a
+visual warning.
+</p>
+</dd>
 <dt><code class="code">ollama-buddy-tools-max-iterations</code></dt>
 <dd><p>Maximum tool-call round-trips per user prompt to prevent infinite loops (default: <code class="code">10</code>).
 </p>
@@ -5248,6 +5263,13 @@ options to <code class="code">(p)roceed</code>, <code class="code">(t)runcate</c
 <dd><p>Toggle safe mode for tool execution.
 </p>
 </dd>
+<dt><code class="code">ollama-buddy-tools-toggle-unguarded</code></dt>
+<dd><p>Toggle unguarded mode &mdash; bypass ALL safety prompts for tool execution.  When
+enabled, no confirmation is asked for any tool (including unsafe ones like
+<code class="code">execute_shell</code>), large-result warnings are suppressed, and safe-mode is
+overridden.  The header line turns red and shows <code class="code">☠</code>.
+</p>
+</dd>
 <dt><code class="code">ollama-buddy-tools-info (<kbd class="kbd">C-c Q</kbd>)</code></dt>
 <dd><p>Display information about all registered tools in a dedicated org-mode buffer, showing status table, safe mode settings, and each tool&rsquo;s description with parameters.
 </p>
@@ -5264,6 +5286,8 @@ options to <code class="code">(p)roceed</code>, <code class="code">(t)runcate</c
 <p>These commands are also available from the transient menu (<kbd class="kbd">C-c O</kbd>) under the &ldquo;Tools&rdquo; section:
 </p><ul class="itemize mark-bullet">
 <li><kbd class="kbd">SPC</kbd> - Toggle Tools
+</li><li><kbd class="kbd">E</kbd> - Auto-Execute
+</li><li><kbd class="kbd">G</kbd> - Unguarded <code class="code">☠</code>
 </li><li><kbd class="kbd">Q</kbd> - List Tools
 </li></ul>
 

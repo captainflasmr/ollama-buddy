@@ -1,7 +1,7 @@
 ;;; ollama-buddy-tools.el --- Tool calling support for Ollama Buddy -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 2.0.0
+;; Version: 2.1.0
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -105,6 +105,14 @@ This prevents infinite loops if the LLM keeps calling tools."
 (defcustom ollama-buddy-tools-safe-mode nil
   "When non-nil, restrict tools to safe read-only operations.
 Disables tools that can modify files or execute arbitrary commands."
+  :type 'boolean
+  :group 'ollama-buddy-tools)
+
+(defcustom ollama-buddy-tools-unguarded nil
+  "When non-nil, bypass ALL safety prompts and let tools run to completion.
+This disables confirmation for unsafe tools (e.g. `execute_shell'),
+large result warnings, and safe-mode restrictions.  Auto-execute is
+implied.  The header line turns red as a visual warning."
   :type 'boolean
   :group 'ollama-buddy-tools)
 
@@ -322,7 +330,8 @@ ARGUMENTS may be an alist or a JSON string (as returned by remote providers)."
   "Check RESULT size from TOOL-NAME and warn if it exceeds the threshold.
 Returns the result string, possibly truncated, or signals an error if cancelled."
   (let ((threshold ollama-buddy-tools-large-result-threshold))
-    (if (or (<= threshold 0) (not (stringp result)))
+    (if (or ollama-buddy-tools-unguarded
+            (<= threshold 0) (not (stringp result)))
         result
       (let ((token-estimate (ollama-buddy--estimate-token-count result)))
         (if (<= token-estimate threshold)
@@ -362,22 +371,25 @@ Returns the result as a string, or an error message if execution fails."
           (error "Tool not found: %s" name-str))
         (unless func
           (error "Tool has no function: %s" name-str))
-        ;; Safety check
+        ;; Safety check (skipped in unguarded mode)
         (when (and ollama-buddy-tools-safe-mode
+                   (not ollama-buddy-tools-unguarded)
                    (not (plist-get spec :safe)))
           (error "Tool %s is not safe for execution in safe mode" name-str))
         ;; Confirmation check — unsafe tools always require confirmation
-        (when (or (not ollama-buddy-tools-auto-execute)
-                  (not (plist-get spec :safe)))
-          (let ((answer (read-char-choice
-                         (format "Execute tool %s(%s)? (y)es (n)o (a)ccept all: "
-                                 name-str
-                                 (ollama-buddy-tools--format-args-for-display arguments))
-                         '(?y ?n ?a))))
-            (message nil)
-            (pcase answer
-              (?a (setq ollama-buddy-tools-auto-execute t))
-              (?n (error "Tool execution cancelled by user")))))
+        ;; (skipped entirely in unguarded mode)
+        (unless ollama-buddy-tools-unguarded
+          (when (or (not ollama-buddy-tools-auto-execute)
+                    (not (plist-get spec :safe)))
+            (let ((answer (read-char-choice
+                           (format "Execute tool %s(%s)? (y)es (n)o (a)ccept all: "
+                                   name-str
+                                   (ollama-buddy-tools--format-args-for-display arguments))
+                           '(?y ?n ?a))))
+              (message nil)
+              (pcase answer
+                (?a (setq ollama-buddy-tools-auto-execute t))
+                (?n (error "Tool execution cancelled by user"))))))
         ;; If this tool is marked terminal, flag that auto-continuation should
         ;; stop after this batch — set before calling in case of error.
         (when (plist-get spec :terminal)
@@ -982,6 +994,21 @@ When enabling, warns if the current model does not support tool calling."
   (setq ollama-buddy-tools-safe-mode (not ollama-buddy-tools-safe-mode))
   (message "Tool safe mode %s" (if ollama-buddy-tools-safe-mode "enabled" "disabled")))
 
+(defun ollama-buddy-tools-toggle-unguarded ()
+  "Toggle unguarded mode — bypass ALL safety prompts for tool execution.
+When enabled, no confirmation is asked for any tool (including unsafe
+ones like `execute_shell'), large-result warnings are suppressed, and
+safe-mode is overridden.  The header line turns red as a warning."
+  (interactive)
+  (setq ollama-buddy-tools-unguarded (not ollama-buddy-tools-unguarded))
+  (when (fboundp 'ollama-buddy--update-unguarded-header-face)
+    (ollama-buddy--update-unguarded-header-face))
+  (when (fboundp 'ollama-buddy--update-status)
+    (ollama-buddy--update-status
+     (if ollama-buddy-tools-unguarded
+         "UNGUARDED mode enabled — all safety prompts bypassed"
+       "Unguarded mode disabled"))))
+
 (defun ollama-buddy-tools-info ()
   "Display information about registered tools."
   (interactive)
@@ -995,6 +1022,7 @@ When enabling, warns if the current model does not support tool calling."
         (insert (format "- *Enabled:*      %s\n" (if ollama-buddy-tools-enabled "Yes" "No")))
         (insert (format "- *Safe Mode:*    %s\n" (if ollama-buddy-tools-safe-mode "On" "Off")))
         (insert (format "- *Auto Execute:* %s\n" (if ollama-buddy-tools-auto-execute "Yes" "No")))
+        (insert (format "- *Unguarded:*    %s\n" (if ollama-buddy-tools-unguarded "YES — all prompts bypassed!" "No")))
         (insert (format "- *Total Tools:*  %d\n\n" (length tools)))
         (insert "* Registered Tools\n\n")
         (dolist (name tools)
@@ -1005,14 +1033,29 @@ When enabling, warns if the current model does not support tool calling."
             (insert (format "** %s  [%s]\n\n" name (if safe "safe" "unsafe")))
             (insert (format "%s\n\n" (or desc "")))
             (when params
-              (let ((props (alist-get 'properties params)))
+              (let* ((props-raw (if (hash-table-p params)
+                                    (gethash "properties" params)
+                                  (alist-get 'properties params)))
+                     (props (cond
+                             ((hash-table-p props-raw)
+                              (let (pairs)
+                                (maphash (lambda (k v) (push (cons (intern k) v) pairs))
+                                         props-raw)
+                                pairs))
+                             (t props-raw))))
                 (dolist (prop props)
-                  (let ((prop-name (car prop))
-                        (prop-spec (cdr prop)))
+                  (let* ((prop-name (car prop))
+                         (prop-spec (cdr prop))
+                         (ptype (if (hash-table-p prop-spec)
+                                    (gethash "type" prop-spec)
+                                  (alist-get 'type prop-spec)))
+                         (pdesc (if (hash-table-p prop-spec)
+                                    (gethash "description" prop-spec)
+                                  (alist-get 'description prop-spec))))
                     (insert (format "- *%s* (%s) :: %s\n"
                                     prop-name
-                                    (or (alist-get 'type prop-spec) "any")
-                                    (or (alist-get 'description prop-spec) ""))))))
+                                    (or ptype "any")
+                                    (or pdesc ""))))))
               (insert "\n"))))
         (org-mode)
         (setq-local org-hide-emphasis-markers t)
