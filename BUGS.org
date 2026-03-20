@@ -16,10 +16,46 @@ This document contains the current bugs/improvements, this is just for me mainly
 ** TODO plan mode
 ** TODO regenerate videos
 ** TODO review testing framework
+** TODO split RAG transient
 ** TODO clean up testing folder
 ** TODO structured outputs
 ** TODO No streaming with hiding reasoning corrupts output
 ** TODO keybindings in ollama chat buffer are reserved
+** TODO expand test coverage beyond core, backend, and RAG
+
+Only 3 of 23 modules have tests (~9% coverage). Tools, completion, rewrite, remote/provider, session, and web-search modules are entirely untested. Prioritise tools (safety modes are user-facing) and provider dispatch.
+
+** TODO completion module is Ollama-only and limited
+
+ollama-buddy-completion.el hardcodes /api/generate so no remote provider can power inline completions. Also lacks progress feedback, caching, customisable temperature/system-prompt, and partial-accept. Supporting remote providers (especially Copilot) would add significant value.
+
+** TODO centralised error handling and retry logic
+
+Each backend and provider handles errors differently. Transient network failures just show a message with no retry. A unified error pathway with optional retry for transient failures would improve reliability for remote providers.
+
+** TODO provider constraint validation
+
+Temperature ranges differ across providers (0-2 for OpenAI, 0-1 for Claude/Grok) but there is no validation. The OpenAI model filter regex includes "claude" which looks like a copy-paste artifact. No per-provider vision/tools/thinking capability detection exists.
+
+** TODO session encryption
+
+Sessions are saved as plaintext .el files. If conversations contain sensitive content or API responses with PII there is no encryption or access control.
+
+** TODO stale references in build system
+
+Makefile references ollama-buddy-awesome.el and ollama-buddy-fabric.el which do not exist in the repo.
+
+** TODO rationalise slash command and transient menu overlap
+
+30+ slash commands partially duplicate the transient menu. Some rationalisation of which commands live where would reduce confusion.
+
+** TODO cost and rate-limit awareness for paid providers
+
+For paid providers (Claude, OpenAI, etc.) there is no tracking or warning when approaching API limits. Even a rough token-cost estimate per request would help users avoid surprise bills.
+
+** TODO configurable request timeout
+
+Outside of benchmark mode there is no configurable timeout for long-running requests. A stuck request just hangs.
 
 * Issues
 
