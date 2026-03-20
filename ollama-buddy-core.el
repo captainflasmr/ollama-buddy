@@ -2263,8 +2263,8 @@ Called after async model fetches complete so counts are accurate."
                             (expand-file-name
                              ollama-buddy-project-summary-file
                              project-root))))
-             "Type =/init= to generate a project summary — it will be auto-loaded as context in future sessions.\n")
-           "\n"
+             "\nHint: Type =/init= to generate a project summary — it will be auto-loaded as context in future sessions.\n")
+           (when project-root "\n")
            (when (not (ollama-buddy--check-status))
              "** *THERE IS NO OLLAMA RUNNING*\n
 please run =ollama serve=\n\n")
