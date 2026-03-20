@@ -2659,10 +2659,16 @@ To view all current parameters:
 M-x ollama-buddy-params-display
 #+end_src
 
-or press =C-c G= in the chat buffer.
+or press =D= in the parameter transient menu (C-c p).
 
-Parameters that have been modified from default values are marked with
-an asterisk (*).
+You can also press C-c t in the chat buffer to open the display
+directly.
+
+The display shows each parameter as a foldable org heading. Modified
+parameters are shown in bold with their default value alongside. Press
+TAB on any parameter heading to expand its help text and learn what the
+parameter does. Press g to refresh the display after making changes, or
+0 to reset all parameters to defaults.
 
 <<Editing-Parameters>>
 *** 11.3 Editing Parameters [[#Editing-Parameters][¶]]
@@ -2696,13 +2702,8 @@ cases:
 - Precise :: Lower temperature, higher penalties for more deterministic
   responses
 
-To apply a profile:
-
-#+begin_src example-preformatted
-M-x ollama-buddy-transient-profile-menu
-#+end_src
-
-or press =C-c p= and select “All Profiles” (A).
+To apply a profile, press =C-c p= to open the parameter menu and select
+one of the profile keys (d Default, a Creative, e Precise).
 
 <<Command_002dSpecific-Parameters>>
 *** 11.5 Command-Specific Parameters [[#Command_002dSpecific-Parameters][¶]]
@@ -2732,7 +2733,7 @@ To reset all parameters to default values:
 M-x ollama-buddy-params-reset
 #+end_src
 
-or press =C-c V= in the chat buffer.
+or press =0= in the parameter transient menu (C-c p).
 
 <<Displaying-Parameters-in-Header>>
 *** 11.7 Displaying Parameters in Header [[#Displaying-Parameters-in-Header][¶]]
@@ -2746,7 +2747,7 @@ To toggle whether modified parameters are shown in the header:
 M-x ollama-buddy-toggle-params-in-header
 #+end_src
 
-or press =C-c F= in the chat buffer.
+or press =F= in the parameter transient menu (C-c p).
 
 --------------
 
@@ -6156,9 +6157,11 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 
 - =ollama-buddy-role-creator-create-new-role= :: Create a new role.
 
-- =ollama-buddy-params-display= :: Display current parameter settings.
+- =ollama-buddy-params-display= :: Display current parameter settings
+  with foldable help text for each parameter.
 
-- =ollama-buddy-params-edit= :: Edit a specific parameter.
+- =ollama-buddy-params-edit= :: Edit a specific parameter. Boolean
+  parameters use y-or-n prompts.
 
 - =ollama-buddy-params-reset= :: Reset all parameters to defaults.
 

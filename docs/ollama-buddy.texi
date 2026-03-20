@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 6.0.0
+@subtitle For Ollama Buddy version 6.1.0
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -1770,9 +1770,16 @@ To view all current parameters:
 @example
 M-x ollama-buddy-params-display
 @end example
-or press @code{C-c G} in the chat buffer.
+or press @code{D} in the parameter transient menu (@kbd{C-c p}).
 
-Parameters that have been modified from default values are marked with an asterisk (*).
+You can also press @kbd{C-c t} in the chat buffer to open the display
+directly.
+
+The display shows each parameter as a foldable org heading.  Modified
+parameters are shown in bold with their default value alongside.  Press
+@kbd{TAB} on any parameter heading to expand its help text and learn what
+the parameter does.  Press @kbd{g} to refresh the display after making
+changes, or @kbd{0} to reset all parameters to defaults.
 
 @section Editing Parameters
 
@@ -1801,11 +1808,9 @@ Higher temperature, lower penalties for more creative responses
 Lower temperature, higher penalties for more deterministic responses
 @end table
 
-To apply a profile:
-@example
-M-x ollama-buddy-transient-profile-menu
-@end example
-or press @code{C-c p} and select ``All Profiles'' (@kbd{A}).
+To apply a profile, press @code{C-c p} to open the parameter menu and
+select one of the profile keys (@kbd{d} Default, @kbd{a} Creative,
+@kbd{e} Precise).
 
 @section Command-Specific Parameters
 
@@ -1823,7 +1828,7 @@ To reset all parameters to default values:
 @example
 M-x ollama-buddy-params-reset
 @end example
-or press @code{C-c V} in the chat buffer.
+or press @code{0} in the parameter transient menu (@kbd{C-c p}).
 
 @section Displaying Parameters in Header
 
@@ -1831,7 +1836,7 @@ To toggle whether modified parameters are shown in the header:
 @example
 M-x ollama-buddy-toggle-params-in-header
 @end example
-or press @code{C-c F} in the chat buffer.
+or press @code{F} in the parameter transient menu (@kbd{C-c p}).
 
 @node Session Management
 @chapter Session Management
@@ -4289,10 +4294,10 @@ Switch to a different role.
 Create a new role.
 
 @item ollama-buddy-params-display
-Display current parameter settings.
+Display current parameter settings with foldable help text for each parameter.
 
 @item ollama-buddy-params-edit
-Edit a specific parameter.
+Edit a specific parameter.  Boolean parameters use y-or-n prompts.
 
 @item ollama-buddy-params-reset
 Reset all parameters to defaults.

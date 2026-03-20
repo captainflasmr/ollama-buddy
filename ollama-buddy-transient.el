@@ -300,12 +300,11 @@
     ("e" "Precise Profile" (lambda () (interactive)
                              (ollama-buddy-apply-param-profile "Precise")
                              (message "Applied Precise profile")))
-    ("A" "All Profiles" ollama-buddy-transient-profile-menu)]
+]
    
    ["Actions"
     ("D" "Display All" ollama-buddy-params-display)
-    ("V" "Reset All" ollama-buddy-params-reset)
-    ("H" "Help" ollama-buddy-params-help)
+    ("0" "Reset All" ollama-buddy-params-reset)
     ("F" "Toggle Display in Header" ollama-buddy-toggle-params-in-header)
     ("q" "Quit" transient-quit-one)]
    ])

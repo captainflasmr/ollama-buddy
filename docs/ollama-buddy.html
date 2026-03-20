@@ -2766,9 +2766,16 @@ Next: <a href="#Session-Management" accesskey="n" rel="next">Session Management<
 </p><div class="example">
 <pre class="example-preformatted">M-x ollama-buddy-params-display
 </pre></div>
-<p>or press <code class="code">C-c G</code> in the chat buffer.
+<p>or press <code class="code">D</code> in the parameter transient menu (<kbd class="kbd">C-c p</kbd>).
 </p>
-<p>Parameters that have been modified from default values are marked with an asterisk (*).
+<p>You can also press <kbd class="kbd">C-c t</kbd> in the chat buffer to open the display
+directly.
+</p>
+<p>The display shows each parameter as a foldable org heading.  Modified
+parameters are shown in bold with their default value alongside.  Press
+<kbd class="kbd">TAB</kbd> on any parameter heading to expand its help text and learn what
+the parameter does.  Press <kbd class="kbd">g</kbd> to refresh the display after making
+changes, or <kbd class="kbd">0</kbd> to reset all parameters to defaults.
 </p>
 </div>
 <div class="section-level-extent" id="Editing-Parameters">
@@ -2804,11 +2811,9 @@ Next: <a href="#Session-Management" accesskey="n" rel="next">Session Management<
 </p></dd>
 </dl>
 
-<p>To apply a profile:
-</p><div class="example">
-<pre class="example-preformatted">M-x ollama-buddy-transient-profile-menu
-</pre></div>
-<p>or press <code class="code">C-c p</code> and select &ldquo;All Profiles&rdquo; (<kbd class="kbd">A</kbd>).
+<p>To apply a profile, press <code class="code">C-c p</code> to open the parameter menu and
+select one of the profile keys (<kbd class="kbd">d</kbd> Default, <kbd class="kbd">a</kbd> Creative,
+<kbd class="kbd">e</kbd> Precise).
 </p>
 </div>
 <div class="section-level-extent" id="Command_002dSpecific-Parameters">
@@ -2830,7 +2835,7 @@ Next: <a href="#Session-Management" accesskey="n" rel="next">Session Management<
 </p><div class="example">
 <pre class="example-preformatted">M-x ollama-buddy-params-reset
 </pre></div>
-<p>or press <code class="code">C-c V</code> in the chat buffer.
+<p>or press <code class="code">0</code> in the parameter transient menu (<kbd class="kbd">C-c p</kbd>).
 </p>
 </div>
 <div class="section-level-extent" id="Displaying-Parameters-in-Header">
@@ -2840,7 +2845,7 @@ Next: <a href="#Session-Management" accesskey="n" rel="next">Session Management<
 </p><div class="example">
 <pre class="example-preformatted">M-x ollama-buddy-toggle-params-in-header
 </pre></div>
-<p>or press <code class="code">C-c F</code> in the chat buffer.
+<p>or press <code class="code">F</code> in the parameter transient menu (<kbd class="kbd">C-c p</kbd>).
 </p>
 <hr>
 </div>
@@ -6067,11 +6072,11 @@ Next: <a href="#FAQ" accesskey="n" rel="next">Frequently Asked Questions</a>, Pr
 </p>
 </dd>
 <dt><code class="code">ollama-buddy-params-display</code></dt>
-<dd><p>Display current parameter settings.
+<dd><p>Display current parameter settings with foldable help text for each parameter.
 </p>
 </dd>
 <dt><code class="code">ollama-buddy-params-edit</code></dt>
-<dd><p>Edit a specific parameter.
+<dd><p>Edit a specific parameter.  Boolean parameters use y-or-n prompts.
 </p>
 </dd>
 <dt><code class="code">ollama-buddy-params-reset</code></dt>

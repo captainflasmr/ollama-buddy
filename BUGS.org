@@ -9,20 +9,17 @@ This document contains the current bugs/improvements, this is just for me mainly
 
 * Bugs/Improvements
 
+** DOING refined keybindings in chat and rely more on transients
 ** DOING Improve svg
 ** DOING more LLM integrations
 ** TODO tool: check multiple ediffs can be added with propose_file_changes
 ** TODO plan mode
 ** TODO maybe a quick save
-** TODO think start cutoff
 ** TODO regenerate videos
-** TODO test Emacs configs under different OS using VSCode and rancher
 ** TODO review testing framework
 ** TODO clean up testing folder
 ** TODO structured outputs
-** TODO Modifying a parameter internal defaults would flag as not modified
 ** TODO No streaming with hiding reasoning corrupts output
-** TODO Pushing hundreds or even thousands of lines to the chat buffer takes a while
 ** TODO keybindings in ollama chat buffer are reserved
 
 * Issues

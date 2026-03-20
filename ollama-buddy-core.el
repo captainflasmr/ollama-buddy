@@ -2172,9 +2172,11 @@ Called after async model fetches complete so counts are accurate."
             ;; Search backwards for the provider summary block
             (save-excursion
               (forward-line -1)
-              ;; Skip blank lines between summary and commands
+              ;; Skip blank lines and launch summary between provider
+              ;; summary and commands
               (while (and (not (bobp))
-                          (looking-at-p "^\\s-*$"))
+                          (or (looking-at-p "^\\s-*$")
+                              (looking-at-p "^⚡")))
                 (forward-line -1))
               ;; Now check if we're on a provider summary line
               (when (looking-at-p "^[a-z]: .+ ([0-9]+)")
@@ -2216,7 +2218,7 @@ Called after async model fetches complete so counts are accurate."
           (concat
            (when (= (buffer-size) 0)
              (concat "#+TITLE: Ollama Buddy Chat"))
-           "\n\n* Ollama Buddy [v6.0.0]\n"
+           "\n\n* Ollama Buddy [v6.1.0]\n"
            (if-let ((logo (ollama-buddy--create-logo-image 140)))
                (concat logo "\n")
              (concat
@@ -2243,7 +2245,6 @@ please run =ollama serve=\n\n")
 - /Browse prompt history/  *M-p/n/r*
 - /Manage models/          *C-c M*
 - /Recommended models/     *C-c L*
-- /Jump to prompt/         *C-c j*
 - /Load session/           *C-c f*
 - /Save session/           *C-c s*
 - /In-buffer replace/      *C-c W*

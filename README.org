@@ -445,7 +445,6 @@ The two directories installed are:
 | C-c O     | Main transient menu           |
 | C-c ?     | Open Info manual              |
 | M-p / M-n | Browse prompt history         |
-| C-c j     | Jump to prompt                |
 | C-c M     | Manage models                 |
 | C-c L     | Recommended models            |
 | C-c i     | Show model info               |
@@ -468,11 +467,13 @@ The two directories installed are:
 | C-c s     | User prompts menu             |
 | C-c ~     | Select response tone          |
 | C-c SPC   | Toggle tool calling           |
+| C-c G     | Toggle unguarded mode         |
 | C-c E     | Toggle tool auto-execute      |
 | C-c Q     | List registered tools         |
 | C-c W     | Toggle in-buffer replace mode |
 | C-c P     | Project menu                  |
 | C-c p     | Parameter menu                |
+| C-c t     | Display parameters            |
 | C-c +     | Settings menu                 |
 | C-c r     | RAG menu                      |
 | C-c /     | Web search menu               |

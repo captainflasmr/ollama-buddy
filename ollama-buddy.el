@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 6.0.0
+;; Version: 6.1.0
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -1602,16 +1602,15 @@ PROPS should be a sequence of property-value pairs."
                                   nil t))))
   (let* ((current-value (alist-get param ollama-buddy-params-active))
          (default-value (alist-get param ollama-buddy-params-defaults))
-         (param-type (type-of current-value))
-         (prompt (format "Set %s (%s, default: %s): " param param-type default-value))
+         (prompt (format "Set %s (default: %s): " param default-value))
          (new-value
           (cond
-           ((eq param-type 'integer)
-            (read-number prompt current-value))
-           ((eq param-type 'float)
-            (read-number prompt current-value))
-           ((eq param-type 'boolean)
+           ((or (booleanp current-value) (booleanp default-value))
             (y-or-n-p (format "Enable %s? " param)))
+           ((integerp current-value)
+            (read-number prompt current-value))
+           ((floatp current-value)
+            (read-number prompt current-value))
            ((vectorp current-value)
             (let ((items (split-string
                           (read-string
@@ -1638,6 +1637,62 @@ PROPS should be a sequence of property-value pairs."
                  " (default value)"
                ""))))
 
+(defconst ollama-buddy--params-help-text
+  '((temperature . "Controls randomness of generation (0.0-1.0+). Lower values make output more focused and deterministic, higher values make it more creative and varied.")
+    (top_k . "Limits token selection to the top K most probable tokens. Lower values are more focused, higher values allow more variety.")
+    (top_p . "Nucleus sampling threshold (0.0-1.0). Only tokens whose cumulative probability exceeds this threshold are considered. Works alongside top_k.")
+    (min_p . "Minimum probability threshold for token selection. Tokens below this probability relative to the most likely token are filtered out.")
+    (typical_p . "Controls how 'typical' responses are. Filters tokens based on how much they deviate from the expected information content.")
+    (repeat_last_n . "Number of tokens to look back when applying repetition penalties. Set to 0 to disable, -1 for the full context.")
+    (repeat_penalty . "Penalty applied to tokens that have already appeared (higher = less repetition). A value of 1.0 means no penalty.")
+    (presence_penalty . "Penalises tokens that have appeared at all in the text so far, encouraging the model to explore new topics.")
+    (frequency_penalty . "Penalises tokens proportionally to how often they have appeared, reducing frequent word repetition.")
+    (mirostat . "Enable adaptive sampling to maintain a target perplexity. 0 = off, 1 = Mirostat, 2 = Mirostat 2.0.")
+    (mirostat_tau . "Target entropy (perplexity) for Mirostat sampling. Lower values produce more focused text, higher values more diverse.")
+    (mirostat_eta . "Learning rate for Mirostat. Controls how quickly the algorithm adjusts to maintain the target entropy.")
+    (penalize_newline . "Whether to penalise newline tokens during generation. Disabling can help with structured or multi-line output.")
+    (stop . "Sequences that will stop generation when produced. The model halts as soon as any stop sequence is emitted.")
+    (num_keep . "Number of tokens from the initial prompt to retain when the context window is full and tokens must be discarded.")
+    (seed . "Random seed for deterministic generation. Using the same seed with the same parameters produces identical output.")
+    (num_predict . "Maximum number of tokens to generate in the response. Set to -1 for unlimited, -2 to fill the context window.")
+    (numa . "Enable Non-Uniform Memory Access optimisation. Can improve performance on multi-socket server systems.")
+    (num_ctx . "Context window size in tokens. Larger values allow longer conversations but use more memory.")
+    (num_batch . "Number of tokens to process in parallel during prompt evaluation. Larger values use more memory but can be faster.")
+    (num_gpu . "Number of GPU layers to offload. Set to 0 for CPU-only. Higher values offload more computation to the GPU.")
+    (main_gpu . "Index of the primary GPU to use for computation when multiple GPUs are available.")
+    (low_vram . "Optimise for systems with limited VRAM by reducing GPU memory usage at the cost of speed.")
+    (vocab_only . "Load only the model vocabulary without weights. Useful for tokenisation tasks without generation.")
+    (use_mmap . "Use memory-mapped files to load the model. Faster loading and allows sharing memory between processes.")
+    (use_mlock . "Lock model weights in RAM to prevent swapping to disk. Requires sufficient available memory.")
+    (num_thread . "Number of CPU threads to use for generation. Typically set to the number of physical cores for best performance."))
+  "Help text for each Ollama API parameter.")
+
+(defun ollama-buddy--params-format-value (value)
+  "Format parameter VALUE for display."
+  (cond
+   ((vectorp value) (mapconcat #'identity value ", "))
+   ((eq value t) "yes")
+   ((null value) "no")
+   (t (format "%s" value))))
+
+(defun ollama-buddy--params-insert-section (params)
+  "Insert PARAMS as second-level org headings with help text."
+  (dolist (param params)
+    (let* ((value (alist-get param ollama-buddy-params-active))
+           (default-value (alist-get param ollama-buddy-params-defaults))
+           (modifiedp (memq param ollama-buddy-params-modified))
+           (val-str (ollama-buddy--params-format-value value))
+           (def-str (ollama-buddy--params-format-value default-value))
+           (help (alist-get param ollama-buddy--params-help-text)))
+      (insert (format "** %s %s"
+                      (if modifiedp (format "*%s %s*" param val-str)
+                        (format "%s %s" param val-str))
+                      (if modifiedp (format "(default: %s)" def-str) "")))
+      (insert "\n\n")
+      (when help
+        (insert help)
+        (insert "\n\n")))))
+
 (defun ollama-buddy-params-display ()
   "Display the current Ollama parameter settings."
   (interactive)
@@ -1651,8 +1706,8 @@ PROPS should be a sequence of property-value pairs."
         (erase-buffer)
 
         (insert "#+title: Ollama API Parameters\n\n")
-        
-        ;; Group parameters into categories for better organization
+        (insert "Press =g= to refresh, =0= to reset all, =TAB= to expand for details\n\n")
+
         (let ((generation-params '(temperature top_k top_p min_p typical_p
                                                repeat_last_n repeat_penalty presence_penalty
                                                frequency_penalty mirostat mirostat_tau mirostat_eta
@@ -1660,51 +1715,23 @@ PROPS should be a sequence of property-value pairs."
               (resource-params '(num_keep seed num_predict numa num_ctx num_batch
                                           num_gpu main_gpu low_vram vocab_only use_mmap
                                           use_mlock num_thread)))
-          
-          ;; Display generation parameters
+
           (insert "* Generation Parameters\n\n")
-          (dolist (param generation-params)
-            (when-let ((value (alist-get param ollama-buddy-params-active))
-                       (default-value (alist-get param ollama-buddy-params-defaults)))
-              (let ((modified-marker (if (memq param ollama-buddy-params-modified)
-                                         "* "
-                                       "  "))
-                    (value-display (cond
-                                    ((vectorp value) (format "[%s]"
-                                                             (mapconcat #'identity value ", ")))
-                                    (t value))))
-                (insert (format "%s%-20s: %s%s\n"
-                                modified-marker
-                                param
-                                value-display
-                                (if (equal value default-value)
-                                    ""
-                                  (format " (default: %s)" default-value)))))))
-          
-          ;; Display resource parameters
-          (insert "\n* Resource Parameters\n\n")
-          (dolist (param resource-params)
-            (when-let ((value (alist-get param ollama-buddy-params-active))
-                       (default-value (alist-get param ollama-buddy-params-defaults)))
-              (let ((modified-marker (if (memq param ollama-buddy-params-modified)
-                                         "* "
-                                       "  ")))
-                (insert (format "%s%-20s: %s%s\n"
-                                modified-marker
-                                param
-                                value
-                                (if (equal value default-value)
-                                    ""
-                                  (format " (default: %s)" default-value)))))))))
-      
-      ;; Display modified parameter count
-      (insert (format "\n* %d parameters will be sent to Ollama%s\n"
-                      (length ollama-buddy-params-modified)
-                      (if (zerop (length ollama-buddy-params-modified))
-                          " (all default values)"
-                        (format ": %s" (mapcar #'symbol-name ollama-buddy-params-modified)))))
+          (ollama-buddy--params-insert-section generation-params)
+
+          (insert "* Resource Parameters\n\n")
+          (ollama-buddy--params-insert-section resource-params)))
+
       (goto-char (point-min))
-      (view-mode 1))
+      (org-content 2)
+      (view-mode 1)
+      (let ((map (make-sparse-keymap)))
+        (define-key map (kbd "g") (lambda () (interactive) (ollama-buddy-params-display)))
+        (define-key map (kbd "0") (lambda () (interactive)
+                                    (ollama-buddy-params-reset)
+                                    (ollama-buddy-params-display)))
+        (setq-local minor-mode-overriding-map-alist
+                    (list (cons 'view-mode map)))))
     (display-buffer buf)))
 
 (defun ollama-buddy-toggle-params-in-header ()
@@ -5444,53 +5471,10 @@ When the operation completes, CALLBACK is called with no arguments if provided."
           (format "Successfully deleted model %s" model))))))))
 
 (defun ollama-buddy-params-help ()
-  "Display help for Ollama parameters."
+  "Display help for Ollama parameters.
+This is now merged into `ollama-buddy-params-display'."
   (interactive)
-  (let ((buf (get-buffer-create "*Ollama Parameters Help*")))
-    (with-current-buffer buf
-      (let ((inhibit-read-only t))
-        (org-mode)
-        (setq-local org-hide-emphasis-markers t)
-        (setq-local org-hide-leading-stars t)
-
-        (erase-buffer)
-
-        (insert "#+title: Ollama Parameters Help\n\n")
-        
-        (insert "* Generation Parameters\n\n")
-        (insert "temperature: Controls randomness (0.0-1.0+), higher = more creative\n")
-        (insert "top_k: Limits token selection to top K most probable tokens\n")
-        (insert "top_p: Nucleus sampling threshold (0.0-1.0)\n")
-        (insert "min_p: Minimum probability threshold for token selection\n")
-        (insert "typical_p: Controls how 'typical' responses are\n")
-        (insert "repeat_last_n: Number of tokens to consider for repetition penalties\n")
-        (insert "repeat_penalty: Penalty for repeating tokens (higher = less repetition)\n")
-        (insert "presence_penalty: Penalizes tokens already in the text\n")
-        (insert "frequency_penalty: Penalizes frequent tokens\n")
-        (insert "mirostat: Enable adaptive sampling (0=off, 1=Mirostat, 2=Mirostat 2.0)\n")
-        (insert "mirostat_tau: Target entropy for Mirostat\n")
-        (insert "mirostat_eta: Learning rate for Mirostat\n")
-        (insert "penalize_newline: Whether to penalize newline tokens\n")
-        (insert "stop: Sequences that will stop generation when produced\n\n")
-        
-        (insert "* Resource Parameters:\n\n")
-        (insert "num_keep: Number of tokens to keep from prompt\n")
-        (insert "seed: Random seed for deterministic generation\n")
-        (insert "num_predict: Maximum tokens to generate\n")
-        (insert "numa: Enable Non-Uniform Memory Access optimization\n")
-        (insert "num_ctx: Context window size in tokens\n")
-        (insert "num_batch: Batch size for processing\n")
-        (insert "num_gpu: Number of GPUs to use\n")
-        (insert "main_gpu: Primary GPU for computation\n")
-        (insert "low_vram: Optimize for systems with limited VRAM\n")
-        (insert "vocab_only: Load only vocabulary, not weights\n")
-        (insert "use_mmap: Use memory-mapped files\n")
-        (insert "use_mlock: Lock model weights in memory\n")
-        (insert "num_thread: Number of CPU threads to use\n")
-
-        (goto-char (point-min))
-        (view-mode 1)))
-    (display-buffer buf)))
+  (ollama-buddy-params-display))
 
 (defun ollama-buddy-set-model-context-size (model size)
   "Manually set the context size for MODEL to SIZE."
@@ -5886,7 +5870,6 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c !") #'ollama-buddy-toggle-airplane-mode)
     (define-key map (kbd "C-c W") #'ollama-buddy-toggle-in-buffer-replace)
     ;; Prompts section keybindings
-    (define-key map (kbd "C-c j") #'ollama-buddy-jump-to-prompt)
     (define-key map (kbd "C-c l") #'ollama-buddy-pull-model)
     (define-key map (kbd "C-c s") #'ollama-buddy-transient-user-prompts-menu)
     (define-key map (kbd "C-c C-s") #'ollama-buddy-show-system-prompt-info)
@@ -5907,6 +5890,7 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c D") #'ollama-buddy-roles-open-directory)
     ;; Tools keybindings
     (define-key map (kbd "C-c SPC") #'ollama-buddy-tools-toggle)
+    (define-key map (kbd "C-c G") #'ollama-buddy-tools-toggle-unguarded)
     (define-key map (kbd "C-c Q") #'ollama-buddy-tools-info)
     
     ;; RAG keybindings
@@ -5940,10 +5924,7 @@ Returns the text with @file() delimiters removed."
     
     ;; Parameter keybindings
     (define-key map (kbd "C-c p") #'ollama-buddy-transient-parameter-menu)
-    (define-key map (kbd "C-c G") #'ollama-buddy-params-display)
-    (define-key map (kbd "C-c I") #'ollama-buddy-params-help)
-    (define-key map (kbd "C-c V") #'ollama-buddy-params-reset)
-    (define-key map (kbd "C-c F") #'ollama-buddy-toggle-params-in-header)
+    (define-key map (kbd "C-c t") #'ollama-buddy-params-display)
 
     ;; Context keybindings
     (define-key map (kbd "C-c $") #'ollama-buddy-set-model-context-size)

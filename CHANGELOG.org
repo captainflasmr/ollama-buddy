@@ -11,6 +11,23 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-03-20 Thu> *6.1.0*
+
+Parameter management improvements and keybinding cleanup.
+
+*** Features
+
+- *Unified parameter display* -- =ollama-buddy-params-display= now shows each
+  parameter as a foldable org heading with built-in help text.  Press =TAB= on
+  any parameter to read a detailed description.  The separate
+  =ollama-buddy-params-help= buffer has been merged into this single view.
+- *Direct parameter display* -- =C-c t= opens the Ollama API Parameters buffer
+  directly from the chat.  Press =g= to refresh, =0= to reset all parameters,
+  or =TAB= to expand a parameter for its help text.
+- Modified parameters are shown in *bold* in the parameter display buffer.
+- *Intro display fix* -- Fixed duplicate provider summary when launch frontends
+  are available.
+
 ** <2026-03-19 Wed> *6.0.0*
 
 Launch external frontends from Ollama Buddy
