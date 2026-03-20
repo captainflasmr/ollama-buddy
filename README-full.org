@@ -222,9 +222,9 @@ Y  Edit Max           Z  Directory         R  Roles
 
 *** History Section
 
-- *Toggle History (H)*: Enable/disable conversation history
+- *Toggle History (J)*: Enable/disable conversation history
 - *Clear History (X)*: Clear the current history
-- *Edit History (J)*: Edit the conversation history in a buffer
+- *Edit History (H)*: Edit the conversation history in a buffer
 - *Edit Max (Y)*: Set the maximum history length
 
 *** Sessions Section
@@ -413,9 +413,9 @@ OR
 | C-c f           | Load session                            |
 | C-c S           | Save session                            |
 | C-c Z           | Open sessions directory                 |
-| C-c H           | Toggle history                          |
+| C-c J           | Toggle history                          |
 | C-c X           | Clear history                           |
-| C-c J           | Edit history                            |
+| C-c H           | Edit history                            |
 | C-c Y           | Set max history length                  |
 | C-c U           | Multishot (prompt to multiple models)   |
 | C-c M           | Manage models                           |
@@ -893,9 +893,9 @@ Control this feature with:
 #+end_src
 
 History-related commands:
-- =C-c H=: Toggle history tracking on/off
+- =C-c J=: Toggle history tracking on/off
 - =C-c X=: Clear the current conversation history
-- =C-c J=: Edit conversation history
+- =C-c H=: Edit conversation history
 
 ** Parameter Management
 

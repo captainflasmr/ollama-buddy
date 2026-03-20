@@ -124,7 +124,7 @@
 
     ;; History
     "=M-r= searches your prompt history with completing-read — faster than =M-p= when you know what you are looking for."
-    "=C-c H= toggles history tracking on or off; =C-c X= clears all history for the current model."
+    "=C-c J= toggles history tracking on or off; =C-c X= clears all history for the current model."
 
     ;; Authentication
     "=C-c A= opens the authentication menu — manage Ollama cloud login, GitHub Copilot tokens and other provider auth from one place."

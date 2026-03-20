@@ -2046,7 +2046,7 @@ legend showing token counts and percentages.
 </li><li> If too high:
   <ul class="itemize mark-bullet">
 <li>Trim your current prompt
-  </li><li>Edit conversation history (<kbd class="kbd">C-c J</kbd>)
+  </li><li>Edit conversation history (<kbd class="kbd">C-c H</kbd>)
   </li><li>Switch to a larger context model
   </li><li>Adjust system prompt length
   </li><li>Remove or reduce file attachments
@@ -3008,7 +3008,7 @@ auto-loading, and file-relative commands all work correctly.
 </p><div class="example">
 <pre class="example-preformatted">M-x ollama-buddy-history-edit
 </pre></div>
-<p>or press <code class="code">C-c J</code> in the chat buffer.
+<p>or press <code class="code">C-c H</code> in the chat buffer.
 </p>
 <p>To clear the history:
 </p><div class="example">
@@ -3020,7 +3020,7 @@ auto-loading, and file-relative commands all work correctly.
 </p><div class="example">
 <pre class="example-preformatted">M-x ollama-buddy-toggle-history
 </pre></div>
-<p>or press <code class="code">C-c H</code> in the chat buffer.
+<p>or press <code class="code">C-c J</code> in the chat buffer.
 </p>
 </div>
 <div class="section-level-extent" id="Rewinding-a-Conversation">
@@ -5911,11 +5911,11 @@ session.  The data survives session save/load since it is in the buffer text.
 </p><div class="example">
 <pre class="example-preformatted">M-x ollama-buddy-history-edit
 </pre></div>
-<p>or press <code class="code">C-c J</code> in the chat buffer.
+<p>or press <code class="code">C-c H</code> in the chat buffer.
 </p>
 <p>This opens an editable buffer with the conversation history. You can modify it and press <code class="code">C-c C-c</code> to save or <code class="code">C-c C-k</code> to cancel.
 </p>
-<p>To edit history for a specific model, use <code class="code">C-u C-c J</code>.
+<p>To edit history for a specific model, use <code class="code">C-u C-c H</code>.
 </p>
 </div>
 <div class="section-level-extent" id="Advanced-System-Prompt-Management">

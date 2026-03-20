@@ -5911,9 +5911,9 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c ~") #'ollama-buddy-set-tone)
 
     ;; History keybindings
-    (define-key map (kbd "C-c H") #'ollama-buddy-toggle-history)
+    (define-key map (kbd "C-c J") #'ollama-buddy-toggle-history)
     (define-key map (kbd "C-c X") #'ollama-buddy-clear-history)
-    (define-key map (kbd "C-c J") #'ollama-buddy-history-edit-model)
+    (define-key map (kbd "C-c H") #'ollama-buddy-history-edit-model)
     (define-key map (kbd "C-c Y") #'ollama-buddy-set-max-history-length)
     (define-key map (kbd "M-p") #'ollama-buddy-previous-history)
     (define-key map (kbd "M-n") #'ollama-buddy-next-history)

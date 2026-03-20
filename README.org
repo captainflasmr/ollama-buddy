@@ -453,9 +453,9 @@ The two directories installed are:
 | C-c f     | Load session                  |
 | C-c S     | Save session                  |
 | C-c Z     | Sessions directory            |
-| C-c H     | Toggle history                |
+| C-c J     | Toggle history                |
 | C-c X     | Clear history                 |
-| C-c J     | Edit history                  |
+| C-c H     | Edit history                  |
 | C-c C-a   | Attach file                   |
 | C-c C-d   | Detach file                   |
 | C-c a     | Attachment menu               |

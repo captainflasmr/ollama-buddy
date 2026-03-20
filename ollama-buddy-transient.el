@@ -193,9 +193,9 @@
     ("c" "Completion Mode" ollama-buddy-transient--completion-toggle)]]
   
   [["History"
-    ("H" "Toggle" ollama-buddy-toggle-history)
+    ("J" "Toggle" ollama-buddy-toggle-history)
     ("X" "Clear" ollama-buddy-clear-history)
-    ("J" "Edit" ollama-buddy-history-edit-model)
+    ("H" "Edit" ollama-buddy-history-edit-model)
     ("Y" "Edit Max " ollama-buddy-set-max-history-length)]
    
    ["Sessions"

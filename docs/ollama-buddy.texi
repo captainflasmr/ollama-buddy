@@ -1239,7 +1239,7 @@ Ollama Buddy estimates token counts using a heuristic approach:
 @item If too high:
   @itemize @bullet
   @item Trim your current prompt
-  @item Edit conversation history (@kbd{C-c J})
+  @item Edit conversation history (@kbd{C-c H})
   @item Switch to a larger context model
   @item Adjust system prompt length
   @item Remove or reduce file attachments
@@ -1956,7 +1956,7 @@ To view the current conversation history:
 @example
 M-x ollama-buddy-history-edit
 @end example
-or press @code{C-c J} in the chat buffer.
+or press @code{C-c H} in the chat buffer.
 
 To clear the history:
 @example
@@ -1968,7 +1968,7 @@ To toggle whether history is used in requests:
 @example
 M-x ollama-buddy-toggle-history
 @end example
-or press @code{C-c H} in the chat buffer.
+or press @code{C-c J} in the chat buffer.
 
 @section Rewinding a Conversation
 
@@ -4181,11 +4181,11 @@ To manually edit conversation history:
 @example
 M-x ollama-buddy-history-edit
 @end example
-or press @code{C-c J} in the chat buffer.
+or press @code{C-c H} in the chat buffer.
 
 This opens an editable buffer with the conversation history. You can modify it and press @code{C-c C-c} to save or @code{C-c C-k} to cancel.
 
-To edit history for a specific model, use @code{C-u C-c J}.
+To edit history for a specific model, use @code{C-u C-c H}.
 
 @section Advanced System Prompt Management
 
