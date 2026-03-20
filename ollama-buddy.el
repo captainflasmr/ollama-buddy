@@ -1046,7 +1046,7 @@ Typically invoked via `C-u C-u C-c C-c'."
     ("manual"     ollama-buddy-open-info              "Open the Ollama Buddy Info manual")
     ("export"     org-export-dispatch                 "Open org-export dispatcher for the chat buffer")
     ("backend"    ollama-buddy-switch-communication-backend "Switch between network-process and curl backends")
-    ("launch"     ollama-buddy-launch                    "Launch a model in an external terminal with a frontend (e.g. claude)"))
+    ("launch"     ollama-buddy-launch                    "Launch a model in an external terminal agent (claude, codex, aider, ...)"))
   "Alist of available `/' slash commands.
 Each entry is (NAME FUNCTION DESCRIPTION) where FUNCTION is
 called interactively."
@@ -3569,11 +3569,9 @@ Shows cached status. Use signin/signout to update or try a cloud model request."
                ('unknown "Unknown (try using a cloud model to verify)")))))
 
 (defun ollama-buddy--launch-model (model)
-  "Launch MODEL in an external terminal with a frontend tool.
+  "Launch MODEL in an external terminal via `ollama launch'.
 MODEL is the raw model name (without display prefixes).
-Prompts for frontend if more than one is configured."
-  (unless (executable-find ollama-buddy-ollama-executable)
-    (user-error "Cannot find ollama executable. Set `ollama-buddy-ollama-executable'"))
+Prompts for agent if more than one is available on PATH."
   (let* ((detected (unless ollama-buddy-launch-terminal
                      (ollama-buddy--detect-terminal)))
          (terminal (or ollama-buddy-launch-terminal
@@ -3581,30 +3579,41 @@ Prompts for frontend if more than one is configured."
          (flag (or ollama-buddy-launch-terminal-flag
                    (cdr detected)
                    "-e"))
-         (frontends (ollama-buddy--detect-available-frontends)))
+         (agents (ollama-buddy--detect-available-agents)))
     (unless terminal
       (user-error "No terminal emulator found. Set `ollama-buddy-launch-terminal'"))
     (unless (executable-find terminal)
       (user-error "Cannot find terminal %s. Set `ollama-buddy-launch-terminal'" terminal))
-    (unless frontends
-      (user-error "No launch frontends found on PATH (%s)"
-                  (mapconcat #'identity ollama-buddy-launch-frontends ", ")))
-    (let ((frontend (if (= (length frontends) 1)
-                        (car frontends)
-                      (completing-read "Frontend: " frontends nil t))))
+    (unless agents
+      (user-error "No external agents found on PATH"))
+    (let* ((agent
+            (if (= (length agents) 1)
+                (car agents)
+              (let* ((candidates
+                      (mapcar (lambda (a)
+                                (cons (format "%s  %s"
+                                              (plist-get a :name)
+                                              (propertize (plist-get a :label)
+                                                          'face 'font-lock-comment-face))
+                                      a))
+                              agents))
+                     (choice (completing-read "Agent: "
+                                              (mapcar #'car candidates) nil t)))
+                (cdr (assoc choice candidates))))))
       (apply #'start-process
-             (format "ollama-launch-%s" frontend)
+             (format "ollama-agent-%s" (plist-get agent :name))
              nil
              terminal
              (append (split-string flag)
                      (list ollama-buddy-ollama-executable
-                           "launch" frontend "--model" model)))
-      (message "Launched %s with model %s in %s" frontend model terminal))))
+                           "launch" (plist-get agent :name)
+                           "--model" model)))
+      (message "Launched %s with model %s in %s"
+               (plist-get agent :label) model terminal))))
 
 (defun ollama-buddy-launch ()
-  "Launch an Ollama model in an external terminal with a frontend tool.
-Prompts for a model from all available models, then opens an external
-terminal running `ollama launch FRONTEND --model MODEL'.
+  "Launch an Ollama model in an external terminal with an AI agent.
+Prompts for a model, then for an agent if multiple are available.
 Auto-detects the terminal emulator unless `ollama-buddy-launch-terminal'
 is explicitly set."
   (interactive)
@@ -4972,8 +4981,7 @@ Modifies the variable in place."
          (_letters (ollama-buddy--assign-model-letters available-models))
          (cloud-display-models (mapcar #'ollama-buddy--get-full-cloud-model-name
                                        ollama-buddy-cloud-models))
-         (launch-available (and (executable-find ollama-buddy-ollama-executable)
-                                (ollama-buddy--detect-available-frontends)
+         (launch-available (and (ollama-buddy--detect-available-agents)
                                 (or ollama-buddy-launch-terminal
                                     (ollama-buddy--detect-terminal))))
          (buf (get-buffer-create "*Ollama Models Management*")))

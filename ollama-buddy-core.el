@@ -952,8 +952,7 @@ Returns (TERMINAL . FLAG) or nil if none found."
 
 (defcustom ollama-buddy-launch-terminal nil
   "Terminal emulator used by `ollama-buddy-launch'.
-When nil (the default), auto-detects from common terminals on PATH.
-The command is run as: TERMINAL FLAG ollama launch FRONTEND --model MODEL."
+When nil (the default), auto-detects from common terminals on PATH."
   :type '(choice (const :tag "Auto-detect" nil) string)
   :group 'ollama-buddy)
 
@@ -964,27 +963,56 @@ Most terminals use \"-e\".  gnome-terminal uses \"--\"."
   :type '(choice (const :tag "Auto-detect" nil) string)
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-launch-frontends '("claude")
-  "List of available frontends for `ollama launch'.
-Each entry is a frontend name passed to `ollama launch FRONTEND'."
-  :type '(repeat string)
+(defvar ollama-buddy--agent-registry
+  '((:name "claude"  :executable "claude"  :label "Claude Code")
+    (:name "codex"   :executable "codex"   :label "Codex CLI"))
+  "Registry of known `ollama launch' agents.
+Each entry is a plist with:
+  :name       - Frontend name passed to `ollama launch'
+  :executable - Binary name to check on PATH
+  :label      - Human-readable description")
+
+(defcustom ollama-buddy-launch-extra-agents nil
+  "Additional `ollama launch' agents beyond the built-in registry.
+Each entry is a plist (:name :executable :label).
+Entries here override built-in agents with the same :name.
+
+Example:
+  \\='((:name \"my-tool\" :executable \"my-tool\" :label \"My Tool\"))"
+  :type '(repeat (plist :key-type keyword :value-type string))
   :group 'ollama-buddy)
 
-(defun ollama-buddy--detect-available-frontends ()
-  "Return list of frontends from `ollama-buddy-launch-frontends' found on PATH."
-  (cl-remove-if-not #'executable-find ollama-buddy-launch-frontends))
+(defun ollama-buddy--get-agent-registry ()
+  "Return the merged agent registry (built-in + user-defined).
+User entries in `ollama-buddy-launch-extra-agents' override
+built-in entries with the same :name."
+  (let ((merged (copy-sequence ollama-buddy--agent-registry)))
+    (dolist (agent ollama-buddy-launch-extra-agents)
+      (let ((name (plist-get agent :name)))
+        (setq merged (cl-remove-if
+                      (lambda (a) (string= (plist-get a :name) name))
+                      merged))
+        (push agent merged)))
+    merged))
+
+(defun ollama-buddy--detect-available-agents ()
+  "Return list of agent plists from the registry found on PATH.
+Requires both the agent executable and ollama to be available."
+  (when (executable-find ollama-buddy-ollama-executable)
+    (cl-remove-if-not
+     (lambda (agent) (executable-find (plist-get agent :executable)))
+     (ollama-buddy--get-agent-registry))))
 
 (defun ollama-buddy--format-launch-summary ()
   "Build a launch-tools summary string for the intro screen.
-Returns a formatted string or nil if no frontends are available."
-  (when (executable-find ollama-buddy-ollama-executable)
-    (let ((frontends (ollama-buddy--detect-available-frontends))
-          (terminal (or ollama-buddy-launch-terminal
-                        (car (ollama-buddy--detect-terminal)))))
-      (when (and frontends terminal)
-        (format "⚡ /launch: %s (via %s)"
-                (mapconcat #'identity frontends ", ")
-                terminal)))))
+Returns a formatted string or nil if no agents are available."
+  (let ((agents (ollama-buddy--detect-available-agents))
+        (terminal (or ollama-buddy-launch-terminal
+                      (car (ollama-buddy--detect-terminal)))))
+    (when (and agents terminal)
+      (format "⚡ /launch: %s (via %s)"
+              (mapconcat (lambda (a) (plist-get a :name)) agents ", ")
+              terminal))))
 
 (defvar ollama-buddy-current-session-name nil
   "The name of the currently loaded session.")
