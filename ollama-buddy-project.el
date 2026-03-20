@@ -242,6 +242,9 @@ project.  Conversation history is preserved."
       (erase-buffer)
       (ollama-buddy-mode 1)
       (insert (ollama-buddy--create-intro-message))
+      (save-excursion
+        (when (re-search-backward "^\\*\\* More Commands$" nil t)
+          (org-fold-hide-subtree)))
       (ollama-buddy--prepare-prompt-area))
     (goto-char (point-max))
     (ollama-buddy-update-mode-line)
