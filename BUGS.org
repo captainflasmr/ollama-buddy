@@ -9,9 +9,7 @@ This document contains the current bugs/improvements, this is just for me mainly
 
 * Bugs/Improvements
 
-** DOING refined keybindings in chat and rely more on transients
 ** TODO check deepseek thinking?
-** TODO after /init show and attach project file
 ** TODO shortcut to pulling ollama cloud usage
 ** TODO maybe tidying up tooling output
 ** DOING Improve svg

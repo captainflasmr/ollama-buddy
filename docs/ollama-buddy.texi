@@ -985,7 +985,7 @@ To view detailed model information:
 @example
 M-x ollama-buddy-show-model-status
 @end example
-or press @code{C-c v} in the chat buffer.
+or use the transient menu (@kbd{C-c O} @result{} @kbd{+}).
 
 @section Switching Models
 
@@ -1126,7 +1126,7 @@ Set @code{ollama-buddy-multishot-timeout} to @code{nil} to disable.
 
 @subsection Benchmark All Models
 
-Press @code{C-c u} (or use the transient menu: @samp{u Benchmark All}) to
+Use the transient menu (@kbd{C-c O} @result{} @kbd{+} @result{} @samp{u Benchmark All}) to
 automatically send a prompt to every available model via multishot.  This
 builds persistent token usage statistics for all accessible models in one
 command.  Embedding models are filtered out.
@@ -1386,7 +1386,7 @@ To see currently attached files:
 @example
 M-x ollama-buddy-show-attachments
 @end example
-or press @code{C-c C-w}.
+or use the transient menu.
 
 This opens a dedicated buffer showing:
 @itemize @bullet
@@ -1666,7 +1666,7 @@ Access lower-level sub-menus for more specific tasks:
 
 @section Viewing Web Search Results
 
-Web search results are integrated into the attachment system. Use @code{C-c C-w} to view all attachments, which displays both file attachments and web searches in an org-mode buffer:
+Web search results are integrated into the attachment system. Use @code{M-x ollama-buddy-show-attachments} to view all attachments, which displays both file attachments and web searches in an org-mode buffer:
 
 @example
 * Web Searches (1)
@@ -2528,7 +2528,7 @@ To switch between roles:
 @example
 M-x ollama-buddy-roles-switch-role
 @end example
-or press @code{C-c R} in the chat buffer.
+or use the transient menu (@kbd{C-c O} @result{} @kbd{R}).
 
 You'll be presented with a list of available roles to choose from.
 
@@ -3409,8 +3409,7 @@ Commands without a @code{:destination} property continue to honour the global to
 
 @section Enabling In-Buffer Replace
 
-Toggle via the transient Actions menu (@kbd{C-c O}, key @kbd{W}), the chat buffer
-keybinding @kbd{C-c W}, or:
+Toggle via the transient Actions menu (@kbd{C-c O}, key @kbd{W}) or:
 
 @example
 M-x ollama-buddy-toggle-in-buffer-replace
@@ -3422,7 +3421,7 @@ The custom role menu footer shows a live @samp{In-Buffer Replace [ON] / [OFF]} t
 @section Basic Workflow
 
 @enumerate
-@item Toggle in-buffer replace on (@kbd{W} or @kbd{C-c W}).
+@item Toggle in-buffer replace on (@kbd{C-c O} @result{} @kbd{W}).
 @item In any source buffer, select a region of text (e.g.@: a function body, a paragraph).
 @item Invoke a role command (e.g.@: Refactor from the Developer role).
 @item A dimmed @samp{[Rewriting...]} placeholder replaces the selection while connecting.
@@ -3952,19 +3951,14 @@ brew install poppler
 These commands are available from the RAG transient menu (@kbd{C-c O} then @kbd{r}):
 
 @table @code
-@item ollama-buddy-rag-index-directory (@kbd{i})
-Index a directory.  Prompts for the directory path, reads and chunks all
-matching files, then asynchronously generates embeddings.  Progress is shown in
-the status line.  File modification times are recorded so that future
-incremental updates can detect changes.
-
-@item ollama-buddy-rag-update-directory (@kbd{u})
-Incrementally update an existing index.  Only files that have been added or
-modified since the last indexing are re-chunked and re-embedded; chunks from
-unchanged files are retained.  Chunks for deleted files are removed.  If no
-existing index with metadata is found, a full re-index is performed
-automatically.  If the embedding model has changed since the index was created,
-a full re-index is required and the user is prompted before proceeding.
+@item ollama-buddy-rag-index-or-update-directory (@kbd{i})
+Index or update a directory.  If an index already exists for the directory, it
+is incrementally updated: only files that have been added or modified since the
+last indexing are re-chunked and re-embedded, chunks from unchanged files are
+retained, and chunks for deleted files are removed.  If no existing index is
+found, a full index is created.  If the embedding model has changed since the
+index was created, a full re-index is required and the user is prompted before
+proceeding.
 
 @item ollama-buddy-rag-pause (@kbd{c})
 Pause an in-progress indexing or update operation and save partial progress to
@@ -4021,7 +4015,7 @@ re-index is needed (you will be prompted).
 
 @noindent
 Indexes created before version 3.6.0 do not contain file metadata.  Running
-Update Directory on such an index automatically falls back to a full re-index
+Index/Update Directory on such an index automatically falls back to a full re-index
 and saves the metadata for future incremental updates.
 
 @section Pause and Resume
@@ -4053,9 +4047,9 @@ The next @code{ollama-buddy-rag-resume} picks up from the last checkpoint.
 @code{[partial: N/M chunks]} in the heading and shows a count of pending
 chunks.
 
-@item Update directory
-Running @code{M-x ollama-buddy-rag-update-directory} on a directory with a
-partial index will offer to resume it or start a fresh full re-index.
+@item Partial index handling
+Running @code{M-x ollama-buddy-rag-index-or-update-directory} on a directory
+with a partial index will offer to resume it or start a fresh full re-index.
 @end table
 
 @section Inline @@rag() Syntax

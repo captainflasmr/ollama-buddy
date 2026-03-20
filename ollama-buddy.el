@@ -5874,9 +5874,7 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c h") #'ollama-buddy--menu-help-assistant)
     (define-key map (kbd "C-c C-k") #'ollama-buddy--cancel-request)
     (define-key map (kbd "C-c x") #'ollama-buddy-toggle-streaming)
-    (define-key map (kbd "C-c v") #'ollama-buddy-set-keepalive)
     (define-key map (kbd "C-c !") #'ollama-buddy-toggle-airplane-mode)
-    (define-key map (kbd "C-c W") #'ollama-buddy-toggle-in-buffer-replace)
     ;; Prompts section keybindings
     (define-key map (kbd "C-c l") #'ollama-buddy-pull-model)
     (define-key map (kbd "C-c s") #'ollama-buddy-transient-user-prompts-menu)
@@ -5884,16 +5882,12 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c C-r") #'ollama-buddy-reset-system-prompt)
     (define-key map (kbd "C-c y") #'ollama-buddy-transient-system-prompts-menu)
 
-    (define-key map (kbd "C-c b") #'ollama-buddy-role-transient-menu)
-    
     ;; Model section keybindings
     (define-key map (kbd "C-c m") #'ollama-buddy--swap-model)
     (define-key map (kbd "C-c i") #'ollama-buddy-show-raw-model-info)
     (define-key map (kbd "C-c U") #'ollama-buddy--multishot-prompt)
-    (define-key map (kbd "C-c u") #'ollama-buddy-benchmark-models)
 
     ;; Roles & Patterns keybindings
-    (define-key map (kbd "C-c R") #'ollama-buddy-roles-switch-role)
     (define-key map (kbd "C-c E") #'ollama-buddy-tools-toggle-auto-execute)
     (define-key map (kbd "C-c D") #'ollama-buddy-roles-open-directory)
     ;; Tools keybindings
@@ -5918,7 +5912,7 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c X") #'ollama-buddy-clear-history)
     (define-key map (kbd "C-c J") #'ollama-buddy-history-edit-model)
     (define-key map (kbd "C-c Y") #'ollama-buddy-set-max-history-length)
-    (define-key map (kbd "M-p") #'ollama-buddy-previous-history)  ;; Keep these existing bindings
+    (define-key map (kbd "M-p") #'ollama-buddy-previous-history)
     (define-key map (kbd "M-n") #'ollama-buddy-next-history)
     (define-key map (kbd "M-r") #'ollama-buddy-history-search)
     
@@ -5942,7 +5936,6 @@ Returns the text with @file() delimiters removed."
 
     ;; file attachments
     (define-key map (kbd "C-c C-a") #'ollama-buddy-attach-file)
-    (define-key map (kbd "C-c C-w") #'ollama-buddy-show-attachments)
     (define-key map (kbd "C-c C-d") #'ollama-buddy-detach-file)
     (define-key map (kbd "C-c 0") #'ollama-buddy-clear-attachments)
 

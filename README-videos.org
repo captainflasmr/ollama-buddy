@@ -535,7 +535,7 @@ Demonstrating the enhanced file attachment workflow.
 
 - Attach multiple files with =C-c a=
 - Show the ≡N indicator updating (e.g., ≡3 for 3 files)
-- Use =C-c C-w= to view all attachments
+- View attachments via the transient menu
 - Ask a question about the attached files
 - Clear attachments with =C-c 0=
 - Show the indicator disappearing

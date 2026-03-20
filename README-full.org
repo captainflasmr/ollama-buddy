@@ -163,7 +163,7 @@ The transient menu leverages Emacs’ =transient.el= package (the same technolog
 ** Accessing the Menu
 
 - =C-c O= (or =C-c .=) in the chat buffer opens the main transient menu
-- =C-c o= (or =C-c b= from inside the chat) opens the dynamic role menu
+- =C-c o= opens the dynamic role menu
 - =M-x ollama-buddy-transient-menu= works from anywhere in Emacs
 
 ** Main Menu Layout
@@ -439,21 +439,16 @@ OR
 | C-c SPC         | Toggle tool calling                     |
 | C-c E           | Toggle tool auto-execute                |
 | C-c Q           | List registered tools                   |
-| C-c W           | Toggle in-buffer replace                |
-| C-c v           | Set keep-alive duration                 |
 | C-c x           | Toggle streaming                        |
 | C-c e           | Switch backend (network/curl)           |
 | C-c !           | Toggle airplane mode                    |
 | C-c g           | Toggle auto-scroll                      |
 | C-c K           | Exit/kill session                       |
-| C-c R           | Switch role                             |
 | C-c D           | Open roles directory                    |
-| C-c b           | Dynamic role menu                       |
 | C-c r           | RAG menu                                |
 | C-c /           | Web search menu                         |
 | C-c C-a         | Attach file                             |
 | C-c C-d         | Detach file                             |
-| C-c C-w         | Show attachments                        |
 | C-c 0           | Clear all attachments                   |
 | C-c ?           | Open Info manual                        |
 | C-c O           | Main transient menu                     |
@@ -744,7 +739,7 @@ The =:group= property is optional. Commands with the same =:group= value appear 
 
 To switch between roles:
 
-1. Press =C-c R= or run =M-x ollama-buddy-roles-switch-role=
+1. Run =M-x ollama-buddy-roles-switch-role= or use the transient menu
 2. Select a role from the completion list
 3. The menu will update with the commands defined in that role
 
@@ -1036,7 +1031,7 @@ Each menu item is defined using a property list with these key attributes:
 #+end_src
 
 - The =:group= property controls how commands are organized into columns in the transient role menu.  Commands sharing the same =:group= string appear together in a named column.  Commands without =:group= are placed in a single "Commands" column.
-- The =:destination= property controls where the response goes: =chat= (always chat buffer), =in-buffer= (always replace selected region), or =nil= (honour the global =C-c W= toggle).
+- The =:destination= property controls where the response goes: =chat= (always chat buffer), =in-buffer= (always replace selected region), or =nil= (honour the global in-buffer replace toggle).
 
 ** Examples
 
@@ -1136,7 +1131,7 @@ You can create a minimal configuration by defining only the commands you need:
 | :destination | Response target: =chat=, =in-buffer=, or =nil= (global toggle) | No       |
 
 The =:destination= property controls where the LLM response goes:
-- =nil= (default) — honours the global =C-c W= in-buffer replace toggle
+- =nil= (default) — honours the global in-buffer replace toggle
 - =chat= — always sends to the chat buffer, even if in-buffer replace is on
 - =in-buffer= — always replaces the selected region in the source buffer
 

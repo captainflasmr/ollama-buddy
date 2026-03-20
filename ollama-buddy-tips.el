@@ -86,7 +86,7 @@
 
     ;; Model comparison & benchmarking
     "=C-c U= sends the same prompt to multiple models one after another — great for comparing how different models handle the same question."
-    "=C-c u= or =/benchmark= runs a performance benchmark across selected models so you can compare speed and quality."
+    "=/benchmark= runs a performance benchmark across selected models so you can compare speed and quality."
 
     ;; Web search
     "=C-c /= opens the web search menu: search and display results, search and attach to context, or clear search attachments."
@@ -108,7 +108,7 @@
     "=C-c $= lets you set the context window size for the current model — useful when the default is too small for long conversations."
 
     ;; File attachments
-    "=C-c C-a= attaches a file to the conversation context; =C-c C-d= detaches a specific file; =C-c C-w= shows all current attachments."
+    "=C-c C-a= attaches a file to the conversation context; =C-c C-d= detaches a specific file; =/context= shows all current attachments."
     "In Dired, mark files then run =M-x ollama-buddy-dired-attach-marked-files= to attach them all to the chat in one go."
 
     ;; Sessions
@@ -148,7 +148,7 @@
     "Use =/init= in a project to generate and cache a project summary — it auto-loads as context in future sessions so the model already knows your codebase."
     "=C-c j= jumps to any prompt in the conversation — handy for navigating long chat sessions. Also works via =M-x imenu=."
     "=C-c C-j= (=org-goto=) lets you browse and jump to any heading in the chat buffer — prompts, responses, and thinking blocks."
-    "=C-c b= opens the role transient menu — switch between character personas with dedicated menus and keybindings."
+    "=C-c O= → =b= opens the role transient menu — switch between character personas with dedicated menus and keybindings."
     "=C-c v= sets the keep-alive duration — control how long Ollama keeps a model loaded in memory after the last request."
     "Press =C-c .= as a shortcut for =C-c O= — both open the main transient menu.")
   "List of tip strings shown at random on the ollama-buddy welcome screen.

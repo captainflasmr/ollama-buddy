@@ -458,7 +458,6 @@ The two directories installed are:
 | C-c J     | Edit history                  |
 | C-c C-a   | Attach file                   |
 | C-c C-d   | Detach file                   |
-| C-c C-w   | Show attachments              |
 | C-c a     | Attachment menu               |
 | C-c 0     | Clear all attachments         |
 | C-c C-s   | Show system prompt            |
@@ -470,20 +469,16 @@ The two directories installed are:
 | C-c G     | Toggle unguarded mode         |
 | C-c E     | Toggle tool auto-execute      |
 | C-c Q     | List registered tools         |
-| C-c W     | Toggle in-buffer replace mode |
 | C-c P     | Project menu                  |
 | C-c p     | Parameter menu                |
 | C-c t     | Display parameters            |
 | C-c +     | Settings menu                 |
 | C-c r     | RAG menu                      |
 | C-c /     | Web search menu               |
-| C-c v     | Set keep-alive duration       |
 | C-c x     | Toggle streaming              |
 | C-c e     | Switch backend (network/curl) |
 | C-c !     | Toggle airplane mode          |
 | C-c g     | Toggle auto-scroll            |
-| C-c R     | Switch role                   |
-| C-c b     | Dynamic role menu             |
 | C-c A     | Auth menu (Cloud, Copilot)    |
 | C-c K     | Exit/kill session             |
 

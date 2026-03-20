@@ -1713,7 +1713,7 @@ Next: <a href="#Context-Management" accesskey="n" rel="next">Context Management<
 </p><div class="example">
 <pre class="example-preformatted">M-x ollama-buddy-show-model-status
 </pre></div>
-<p>or press <code class="code">C-c v</code> in the chat buffer.
+<p>or use the transient menu (<kbd class="kbd">C-c O</kbd> &rArr; <kbd class="kbd">+</kbd>).
 </p>
 </div>
 <div class="section-level-extent" id="Switching-Models">
@@ -1883,7 +1883,7 @@ Set <code class="code">ollama-buddy-multishot-timeout</code> to <code class="cod
 <div class="subsection-level-extent" id="Benchmark-All-Models">
 <h4 class="subsection"><span>7.8.1 Benchmark All Models<a class="copiable-link" href="#Benchmark-All-Models"> &para;</a></span></h4>
 
-<p>Press <code class="code">C-c u</code> (or use the transient menu: &lsquo;<samp class="samp">u Benchmark All</samp>&rsquo;) to
+<p>Use the transient menu (<kbd class="kbd">C-c O</kbd> &rArr; <kbd class="kbd">+</kbd> &rArr; &lsquo;<samp class="samp">u Benchmark All</samp>&rsquo;) to
 automatically send a prompt to every available model via multishot.  This
 builds persistent token usage statistics for all accessible models in one
 command.  Embedding models are filtered out.
@@ -2257,7 +2257,7 @@ Next: <a href="#Web-Search" accesskey="n" rel="next">Web Search</a>, Previous: <
 </p><div class="example">
 <pre class="example-preformatted">M-x ollama-buddy-show-attachments
 </pre></div>
-<p>or press <code class="code">C-c C-w</code>.
+<p>or use the transient menu.
 </p>
 <p>This opens a dedicated buffer showing:
 </p><ul class="itemize mark-bullet">
@@ -2623,7 +2623,7 @@ You no longer need to explicitly <code class="code">(require 'ollama-buddy-web-s
 <div class="section-level-extent" id="Viewing-Web-Search-Results">
 <h3 class="section"><span>10.5 Viewing Web Search Results<a class="copiable-link" href="#Viewing-Web-Search-Results"> &para;</a></span></h3>
 
-<p>Web search results are integrated into the attachment system. Use <code class="code">C-c C-w</code> to view all attachments, which displays both file attachments and web searches in an org-mode buffer:
+<p>Web search results are integrated into the attachment system. Use <code class="code">M-x ollama-buddy-show-attachments</code> to view all attachments, which displays both file attachments and web searches in an org-mode buffer:
 </p>
 <div class="example">
 <pre class="example-preformatted">* Web Searches (1)
@@ -3738,7 +3738,7 @@ explanations, commit messages, dictionary lookups).
 </p><div class="example">
 <pre class="example-preformatted">M-x ollama-buddy-roles-switch-role
 </pre></div>
-<p>or press <code class="code">C-c R</code> in the chat buffer.
+<p>or use the transient menu (<kbd class="kbd">C-c O</kbd> &rArr; <kbd class="kbd">R</kbd>).
 </p>
 <p>You&rsquo;ll be presented with a list of available roles to choose from.
 </p>
@@ -4948,8 +4948,7 @@ See <a class="xref" href="#Roles-and-Commands">Per-Command Response Destination<
 <div class="section-level-extent" id="Enabling-In_002dBuffer-Replace">
 <h3 class="section"><span>22.2 Enabling In-Buffer Replace<a class="copiable-link" href="#Enabling-In_002dBuffer-Replace"> &para;</a></span></h3>
 
-<p>Toggle via the transient Actions menu (<kbd class="kbd">C-c O</kbd>, key <kbd class="kbd">W</kbd>), the chat buffer
-keybinding <kbd class="kbd">C-c W</kbd>, or:
+<p>Toggle via the transient Actions menu (<kbd class="kbd">C-c O</kbd>, key <kbd class="kbd">W</kbd>) or:
 </p>
 <div class="example">
 <pre class="example-preformatted">M-x ollama-buddy-toggle-in-buffer-replace
@@ -4963,7 +4962,7 @@ The custom role menu footer shows a live &lsquo;<samp class="samp">In-Buffer Rep
 <h3 class="section"><span>22.3 Basic Workflow<a class="copiable-link" href="#Basic-Workflow"> &para;</a></span></h3>
 
 <ol class="enumerate">
-<li> Toggle in-buffer replace on (<kbd class="kbd">W</kbd> or <kbd class="kbd">C-c W</kbd>).
+<li> Toggle in-buffer replace on (<kbd class="kbd">C-c O</kbd> &rArr; <kbd class="kbd">W</kbd>).
 </li><li> In any source buffer, select a region of text (e.g. a function body, a paragraph).
 </li><li> Invoke a role command (e.g. Refactor from the Developer role).
 </li><li> A dimmed &lsquo;<samp class="samp">[Rewriting...]</samp>&rsquo; placeholder replaces the selection while connecting.
@@ -5633,20 +5632,14 @@ brew install poppler
 <p>These commands are available from the RAG transient menu (<kbd class="kbd">C-c O</kbd> then <kbd class="kbd">r</kbd>):
 </p>
 <dl class="table">
-<dt><code class="code">ollama-buddy-rag-index-directory (<kbd class="kbd">i</kbd>)</code></dt>
-<dd><p>Index a directory.  Prompts for the directory path, reads and chunks all
-matching files, then asynchronously generates embeddings.  Progress is shown in
-the status line.  File modification times are recorded so that future
-incremental updates can detect changes.
-</p>
-</dd>
-<dt><code class="code">ollama-buddy-rag-update-directory (<kbd class="kbd">u</kbd>)</code></dt>
-<dd><p>Incrementally update an existing index.  Only files that have been added or
-modified since the last indexing are re-chunked and re-embedded; chunks from
-unchanged files are retained.  Chunks for deleted files are removed.  If no
-existing index with metadata is found, a full re-index is performed
-automatically.  If the embedding model has changed since the index was created,
-a full re-index is required and the user is prompted before proceeding.
+<dt><code class="code">ollama-buddy-rag-index-or-update-directory (<kbd class="kbd">i</kbd>)</code></dt>
+<dd><p>Index or update a directory.  If an index already exists for the directory, it
+is incrementally updated: only files that have been added or modified since the
+last indexing are re-chunked and re-embedded, chunks from unchanged files are
+retained, and chunks for deleted files are removed.  If no existing index is
+found, a full index is created.  If the embedding model has changed since the
+index was created, a full re-index is required and the user is prompted before
+proceeding.
 </p>
 </dd>
 <dt><code class="code">ollama-buddy-rag-pause (<kbd class="kbd">c</kbd>)</code></dt>
@@ -5710,7 +5703,7 @@ the index.  If you change <code class="code">ollama-buddy-rag-embedding-model</c
 re-index is needed (you will be prompted).
 </p>
 <p>Indexes created before version 3.6.0 do not contain file metadata.  Running
-Update Directory on such an index automatically falls back to a full re-index
+Index/Update Directory on such an index automatically falls back to a full re-index
 and saves the metadata for future incremental updates.
 </p>
 </div>
@@ -5748,9 +5741,9 @@ The next <code class="code">ollama-buddy-rag-resume</code> picks up from the las
 chunks.
 </p>
 </dd>
-<dt><strong class="strong">Update directory</strong></dt>
-<dd><p>Running <code class="code">M-x ollama-buddy-rag-update-directory</code> on a directory with a
-partial index will offer to resume it or start a fresh full re-index.
+<dt><strong class="strong">Partial index handling</strong></dt>
+<dd><p>Running <code class="code">M-x ollama-buddy-rag-index-or-update-directory</code> on a directory
+with a partial index will offer to resume it or start a fresh full re-index.
 </p></dd>
 </dl>
 

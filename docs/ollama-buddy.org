@@ -1578,7 +1578,7 @@ To view detailed model information:
 M-x ollama-buddy-show-model-status
 #+end_src
 
-or press =C-c v= in the chat buffer.
+or use the transient menu (C-c O ⇒ +).
 
 <<Switching-Models>>
 *** 7.2 Switching Models [[#Switching-Models][¶]]
@@ -1762,7 +1762,7 @@ sequence continues with the next model. Set
 :CUSTOM_ID: benchmark-all-models
 :CLASS: subsection
 :END:
-Press =C-c u= (or use the transient menu: ‘=u Benchmark All=') to
+Use the transient menu (C-c O ⇒ + ⇒ ‘=u Benchmark All=') to
 automatically send a prompt to every available model via multishot. This
 builds persistent token usage statistics for all accessible models in
 one command. Embedding models are filtered out.
@@ -2136,7 +2136,7 @@ To see currently attached files:
 M-x ollama-buddy-show-attachments
 #+end_src
 
-or press =C-c C-w=.
+or use the transient menu.
 
 This opens a dedicated buffer showing:
 
@@ -2528,8 +2528,8 @@ Access lower-level sub-menus for more specific tasks:
 :CLASS: section
 :END:
 Web search results are integrated into the attachment system. Use
-=C-c C-w= to view all attachments, which displays both file attachments
-and web searches in an org-mode buffer:
+=M-x ollama-buddy-show-attachments= to view all attachments, which
+displays both file attachments and web searches in an org-mode buffer:
 
 #+begin_src example-preformatted
 ,* Web Searches (1)
@@ -3745,7 +3745,7 @@ To switch between roles:
 M-x ollama-buddy-roles-switch-role
 #+end_src
 
-or press =C-c R= in the chat buffer.
+or use the transient menu (C-c O ⇒ R).
 
 You'll be presented with a list of available roles to choose from.
 
@@ -5055,8 +5055,7 @@ in =ollama-buddy-command-definitions=. A command with
 :CUSTOM_ID: enabling-in-buffer-replace
 :CLASS: section
 :END:
-Toggle via the transient Actions menu (C-c O, key W), the chat buffer
-keybinding C-c W, or:
+Toggle via the transient Actions menu (C-c O, key W) or:
 
 #+begin_src example-preformatted
 M-x ollama-buddy-toggle-in-buffer-replace
@@ -5072,7 +5071,7 @@ is active. The custom role menu footer shows a live
 :CUSTOM_ID: basic-workflow
 :CLASS: section
 :END:
-1. Toggle in-buffer replace on (W or C-c W).
+1. Toggle in-buffer replace on (C-c O ⇒ W).
 2. In any source buffer, select a region of text (e.g. a function body,
    a paragraph).
 3. Invoke a role command (e.g. Refactor from the Developer role).
@@ -5741,11 +5740,11 @@ brew install poppler
 These commands are available from the RAG transient menu (C-c O then r):
 
 - =ollama-buddy-rag-index-or-update-directory (==i==)= :: Index or
-  update a directory.  If an index already exists for the directory, it
+  update a directory. If an index already exists for the directory, it
   is incrementally updated: only files that have been added or modified
   since the last indexing are re-chunked and re-embedded, chunks from
   unchanged files are retained, and chunks for deleted files are
-  removed.  If no existing index is found, a full index is created.  If
+  removed. If no existing index is found, a full index is created. If
   the embedding model has changed since the index was created, a full
   re-index is required and the user is prompted before proceeding.
 
@@ -5803,7 +5802,8 @@ full re-index is needed (you will be prompted).
 
 Indexes created before version 3.6.0 do not contain file metadata.
 Running Index/Update Directory on such an index automatically falls back
-to a full re-index and saves the metadata for future incremental updates.
+to a full re-index and saves the metadata for future incremental
+updates.
 
 <<Pause-and-Resume>>
 *** 24.9 Pause and Resume [[#Pause-and-Resume][¶]]
@@ -5834,9 +5834,9 @@ Emacs or stop the process, you can pause and resume later.
   marks partial indexes with =[partial: N/M chunks]= in the heading and
   shows a count of pending chunks.
 
-- *Partial index handling* :: Running =M-x ollama-buddy-rag-index-or-update-directory=
-  on a directory with a partial index will offer to resume it or start a
-  fresh full re-index.
+- *Partial index handling* :: Running
+  =M-x ollama-buddy-rag-index-or-update-directory= on a directory with a
+  partial index will offer to resume it or start a fresh full re-index.
 
 <<Inline-_0040rag_0028_0029-Syntax>>
 *** 24.10 Inline @rag() Syntax [[#Inline-_0040rag_0028_0029-Syntax][¶]]

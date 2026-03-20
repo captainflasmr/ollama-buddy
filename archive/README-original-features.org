@@ -214,7 +214,6 @@ Your attachments aren't just dumped into the conversation - they're intelligentl
 
 Managing attached files is intuitive with dedicated commands:
 
-- =C-c C-w= - View all current attachments in a nicely formatted org mode buffer, folded to each file
 - =C-c C-d= - Detach specific files when you no longer need them
 - =C-c 0= - Clear all attachments at once
 - =C-c A= - Access the full attachment menu via a transient interface
