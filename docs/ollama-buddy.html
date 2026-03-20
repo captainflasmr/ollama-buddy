@@ -1616,6 +1616,11 @@ with the existing name or an auto-generated one from the first prompt.
 Toggles between <code class="code">network-process</code> and <code class="code">curl</code>.
 </p>
 </dd>
+<dt><code class="code">rewind</code></dt>
+<dd><p>Rewind conversation to a previous prompt (<code class="code">ollama-buddy-rewind</code>).
+Always presents <code class="code">completing-read</code> for prompt selection.
+</p>
+</dd>
 </dl>
 
 <ul class="itemize mark-bullet">
@@ -3021,9 +3026,17 @@ auto-loading, and file-relative commands all work correctly.
 <div class="section-level-extent" id="Rewinding-a-Conversation">
 <h3 class="section"><span>12.12 Rewinding a Conversation<a class="copiable-link" href="#Rewinding-a-Conversation"> &para;</a></span></h3>
 
-<p>To rewind a conversation to a previous prompt, navigate to the desired
-prompt heading in the chat buffer and press <code class="code">C-u C-u C-c C-c</code>.
-You can use standard Org navigation to get there:
+<p>You can rewind a conversation to a previous prompt in several ways:
+</p>
+<ul class="itemize mark-bullet">
+<li><code class="code">C-u C-u C-c C-c</code> &mdash; when point is on a prompt heading, rewinds
+directly to that prompt.  Otherwise falls back to <code class="code">completing-read</code>.
+</li><li><code class="code">/rewind</code> &mdash; slash command that always presents <code class="code">completing-read</code>.
+</li><li><code class="code">C-c O</code> &rArr; <code class="code">u</code> &mdash; transient menu &ldquo;Rewind&rdquo;, always presents
+<code class="code">completing-read</code>.
+</li></ul>
+
+<p>When using <code class="code">C-u C-u C-c C-c</code> on a heading, you can navigate there with:
 </p>
 <ul class="itemize mark-bullet">
 <li>Fold the buffer to show only prompt headings (<code class="code">S-TAB</code> to cycle global visibility).
@@ -3031,9 +3044,6 @@ You can use standard Org navigation to get there:
 </li><li>Simply scroll up and place point on a &lsquo;<samp class="samp">&gt;&gt; PROMPT:</samp>&rsquo; heading.
 </li></ul>
 
-<p>If point is not on a prompt heading, a <code class="code">completing-read</code> fallback
-presents all prompts for selection.
-</p>
 <p>After confirmation, everything from that prompt onward is removed and the
 conversation history is truncated to match.  The prompt text is pre-filled
 in a fresh prompt area so you can edit and resend it.

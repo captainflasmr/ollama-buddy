@@ -915,6 +915,10 @@ Open the org-export dispatcher (@code{org-export-dispatch}) for the chat buffer.
 Switch between communication backends (@code{ollama-buddy-switch-communication-backend}).
 Toggles between @code{network-process} and @code{curl}.
 
+@item rewind
+Rewind conversation to a previous prompt (@code{ollama-buddy-rewind}).
+Always presents @code{completing-read} for prompt selection.
+
 @end table
 
 @itemize @bullet
@@ -1968,18 +1972,23 @@ or press @code{C-c H} in the chat buffer.
 
 @section Rewinding a Conversation
 
-To rewind a conversation to a previous prompt, navigate to the desired
-prompt heading in the chat buffer and press @code{C-u C-u C-c C-c}.
-You can use standard Org navigation to get there:
+You can rewind a conversation to a previous prompt in several ways:
+
+@itemize @bullet
+@item @code{C-u C-u C-c C-c} --- when point is on a prompt heading, rewinds
+directly to that prompt.  Otherwise falls back to @code{completing-read}.
+@item @code{/rewind} --- slash command that always presents @code{completing-read}.
+@item @code{C-c O} @result{} @code{u} --- transient menu ``Rewind'', always presents
+@code{completing-read}.
+@end itemize
+
+When using @code{C-u C-u C-c C-c} on a heading, you can navigate there with:
 
 @itemize @bullet
 @item Fold the buffer to show only prompt headings (@code{S-TAB} to cycle global visibility).
 @item Use @code{imenu} to jump to a specific prompt.
 @item Simply scroll up and place point on a @samp{>> PROMPT:} heading.
 @end itemize
-
-If point is not on a prompt heading, a @code{completing-read} fallback
-presents all prompts for selection.
 
 After confirmation, everything from that prompt onward is removed and the
 conversation history is truncated to match.  The prompt text is pre-filled

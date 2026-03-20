@@ -161,6 +161,7 @@
   ["|o(Y)o| Ollama Buddy"
    ["Chat"
     ("o" "Open Chat" ollama-buddy--open-chat)
+    ("u" "Rewind" (lambda () (interactive) (ollama-buddy-rewind t)))
     ("K" "Exit" ollama-buddy-exit)
     ("r" "RAG" ollama-buddy-transient-rag-menu
      :if (lambda () (featurep 'ollama-buddy-rag)))

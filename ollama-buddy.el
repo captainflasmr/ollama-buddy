@@ -917,27 +917,29 @@ Cancelling with \\[keyboard-quit] does nothing; use \\[quoted-insert] @ for a li
         (ollama-buddy--send-backend last-prompt model))
     (message "No prompt history to retry")))
 
-(defun ollama-buddy-rewind ()
+(defun ollama-buddy-rewind (&optional choose)
   "Rewind the conversation to a previous prompt.
 When point is on or after a prompt heading, rewind to that prompt.
 Otherwise, offer all prompts via `completing-read'.
+With non-nil CHOOSE (or prefix argument), always use `completing-read'.
 Everything from the selected prompt onward is removed, the
 conversation history is truncated, and the prompt text is
 pre-filled so you can edit and resend.
 
 Typically invoked via `C-u C-u C-c C-c'."
-  (interactive)
+  (interactive "P")
   (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
     (let ((prompt-text nil)
           (prompt-pos nil))
-      ;; Try to find prompt heading at or before point
-      (save-excursion
-        (beginning-of-line)
-        (unless (looking-at "^\\* \\*.*\\*.*>> PROMPT: \\(.*\\)")
-          (re-search-backward "^\\* \\*.*\\*.*>> PROMPT: " nil t))
-        (when (looking-at "^\\* \\*.*\\*.*>> PROMPT: \\(.*\\)")
-          (setq prompt-text (string-trim (match-string 1))
-                prompt-pos (match-beginning 0))))
+      ;; Try to find prompt heading at or before point (skip when CHOOSE)
+      (unless choose
+        (save-excursion
+          (beginning-of-line)
+          (unless (looking-at "^\\* \\*.*\\*.*>> PROMPT: \\(.*\\)")
+            (re-search-backward "^\\* \\*.*\\*.*>> PROMPT: " nil t))
+          (when (looking-at "^\\* \\*.*\\*.*>> PROMPT: \\(.*\\)")
+            (setq prompt-text (string-trim (match-string 1))
+                  prompt-pos (match-beginning 0)))))
       ;; Fall back to completing-read if not on a prompt heading
       (unless prompt-pos
         (let ((prompts nil))
@@ -1046,7 +1048,8 @@ Typically invoked via `C-u C-u C-c C-c'."
     ("manual"     ollama-buddy-open-info              "Open the Ollama Buddy Info manual")
     ("export"     org-export-dispatch                 "Open org-export dispatcher for the chat buffer")
     ("backend"    ollama-buddy-switch-communication-backend "Switch between network-process and curl backends")
-    ("launch"     ollama-buddy-launch                    "Launch a model in an external terminal agent (claude, codex, aider, ...)"))
+    ("launch"     ollama-buddy-launch                    "Launch a model in an external terminal agent (claude, codex, aider, ...)")
+    ("rewind"     (lambda () (interactive) (ollama-buddy-rewind t)) "Rewind conversation to a previous prompt"))
   "Alist of available `/' slash commands.
 Each entry is (NAME FUNCTION DESCRIPTION) where FUNCTION is
 called interactively."

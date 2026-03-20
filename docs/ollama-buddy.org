@@ -1474,6 +1474,10 @@ Available =/= commands (filtered by loaded modules):
   (=ollama-buddy-switch-communication-backend=). Toggles between
   =network-process= and =curl=.
 
+- =rewind= :: Rewind conversation to a previous prompt
+  (=ollama-buddy-rewind=). Always presents =completing-read= for prompt
+  selection.
+
 - Outside the prompt area, =/= inserts a literal ‘=/='.
 - Press =C-g= to cancel (nothing inserted); use =C-q /= for a literal
   ‘=/=' in the prompt.
@@ -2972,17 +2976,20 @@ or press =C-c H= in the chat buffer.
 :CUSTOM_ID: rewinding-a-conversation
 :CLASS: section
 :END:
-To rewind a conversation to a previous prompt, navigate to the desired
-prompt heading in the chat buffer and press =C-u C-u C-c C-c=. You can
-use standard Org navigation to get there:
+You can rewind a conversation to a previous prompt in several ways:
+
+- =C-u C-u C-c C-c= --- when point is on a prompt heading, rewinds
+  directly to that prompt. Otherwise falls back to =completing-read=.
+- =/rewind= --- slash command that always presents =completing-read=.
+- =C-c O= ⇒ =u= --- transient menu “Rewind”, always presents
+  =completing-read=.
+
+When using =C-u C-u C-c C-c= on a heading, you can navigate there with:
 
 - Fold the buffer to show only prompt headings (=S-TAB= to cycle global
   visibility).
 - Use =imenu= to jump to a specific prompt.
 - Simply scroll up and place point on a ‘=>> PROMPT:=' heading.
-
-If point is not on a prompt heading, a =completing-read= fallback
-presents all prompts for selection.
 
 After confirmation, everything from that prompt onward is removed and
 the conversation history is truncated to match. The prompt text is
