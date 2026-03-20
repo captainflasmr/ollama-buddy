@@ -10,6 +10,9 @@ This document contains the current bugs/improvements, this is just for me mainly
 * Bugs/Improvements
 
 ** DOING refined keybindings in chat and rely more on transients
+** TODO check deepseek thinking?
+** TODO parameter transient l to list parameters
+** TODO split RAG transient
 ** TODO after /init show and attach project file
 ** TODO shortcut to pulling ollama cloud usage
 ** TODO maybe tidying up tooling output
@@ -20,7 +23,6 @@ This document contains the current bugs/improvements, this is just for me mainly
 ** TODO plan mode
 ** TODO regenerate videos
 ** TODO review testing framework
-** TODO split RAG transient
 ** TODO clean up testing folder
 ** TODO structured outputs
 ** TODO No streaming with hiding reasoning corrupts output
