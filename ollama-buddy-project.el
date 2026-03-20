@@ -198,7 +198,8 @@ completes.  Checks `ollama-buddy-project--pending-save-path'."
           (when (and content (not (string-empty-p content)))
             (with-temp-file summary-path
               (insert content))
-            (message "Project summary saved to %s"
+            (ollama-buddy-attach-file summary-path)
+            (message "Project summary saved and attached from %s"
                      (abbreviate-file-name summary-path))))))))
 
 ;;;###autoload

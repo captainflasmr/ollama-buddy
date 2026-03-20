@@ -2257,7 +2257,14 @@ Called after async model fetches complete so counts are accurate."
               "#+end_example\n\n"))
            (when-let ((tip (ollama-buddy--get-random-tip)))
              (concat tip "\n\n"))
-           (if project-info (concat project-info "\n\n") "")
+           (if project-info (concat project-info "\n") "")
+           (when (and project-root
+                      (not (file-exists-p
+                            (expand-file-name
+                             ollama-buddy-project-summary-file
+                             project-root))))
+             "Type =/init= to generate a project summary — it will be auto-loaded as context in future sessions.\n")
+           "\n"
            (when (not (ollama-buddy--check-status))
              "** *THERE IS NO OLLAMA RUNNING*\n
 please run =ollama serve=\n\n")
@@ -2279,12 +2286,6 @@ please run =ollama serve=\n\n")
 - /Toggle airplane mode/   *C-c !*
 - /Slash commands/         */*
 - /ollama-buddy Manual/    *C-c ?*"
-           (when (and project-root
-                      (not (file-exists-p
-                            (expand-file-name
-                             ollama-buddy-project-summary-file
-                             project-root))))
-             "\n\nType =/init= to generate a project summary — it will be auto-loaded as context in future sessions.")
            (when (or (not (file-directory-p ollama-buddy-roles-directory))
                      (and (boundp 'ollama-buddy-user-prompts-directory)
                           (not (file-directory-p

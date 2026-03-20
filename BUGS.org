@@ -10,7 +10,6 @@ This document contains the current bugs/improvements, this is just for me mainly
 * Bugs/Improvements
 
 ** DOING refined keybindings in chat and rely more on transients
-** TODO index update to have a warning or merge update/create
 ** TODO check deepseek thinking?
 ** TODO after /init show and attach project file
 ** TODO shortcut to pulling ollama cloud usage
