@@ -10,7 +10,6 @@ This document contains the current bugs/improvements, this is just for me mainly
 * Bugs/Improvements
 
 ** TODO check deepseek thinking?
-** TODO shortcut to pulling ollama cloud usage
 ** TODO maybe tidying up tooling output
 ** DOING Improve svg
 ** DOING more LLM integrations

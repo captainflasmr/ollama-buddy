@@ -9,8 +9,6 @@ ELISP_FILES = ollama-buddy.el \
               ollama-buddy-core.el \
               ollama-buddy-curl.el \
               ollama-buddy-transient.el \
-              ollama-buddy-awesome.el \
-              ollama-buddy-fabric.el \
               ollama-buddy-user-prompts.el \
               ollama-buddy-remote.el \
               ollama-buddy-openai.el \
@@ -23,7 +21,13 @@ ELISP_FILES = ollama-buddy.el \
               ollama-buddy-openrouter.el \
               ollama-buddy-openai-compat.el \
               ollama-buddy-rag.el \
-              ollama-buddy-tips.el
+              ollama-buddy-tips.el \
+              ollama-buddy-tools.el \
+              ollama-buddy-project.el \
+              ollama-buddy-provider.el \
+              ollama-buddy-web-search.el \
+              ollama-buddy-completion.el \
+              ollama-buddy-rewrite.el
 
 # Test files
 TEST_DIR = tests
