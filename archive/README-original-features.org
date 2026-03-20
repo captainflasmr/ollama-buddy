@@ -644,7 +644,6 @@ Actions
 [l] List All Prompts
 [c] Category Browser
 [S] Sync Latest Prompts
-[q] Back to Main Menu
 #+end_example
 
 Now available are a vast array of role-based and task-specific prompts, enhancing your =ollama-buddy= interactions in Emacs.
@@ -989,7 +988,7 @@ x  Toggle Streaming M  Multishot           p  Proofread Text      t  Ollama Tool
 h  Help/Menu        U  Check Status        c  Custom Prompt       r  RAG Integration
 
 [History]           [Sessions]             [Sub-menus]            [General]
-H  Toggle History   N  New Session         S  Settings             q  Quit
+H  Toggle History   N  New Session         S  Settings
 X  Clear History    L  Load Session        P  System Prompts       ?  Help
 J  Edit History     S  Save Session        R  Roles Management     B  Intro Screen
                     Q  List Sessions                              V  Version Info
@@ -1043,7 +1042,7 @@ When you select the Fabric Patterns option, you'll see a submenu like this:
 #+begin_src 
 Fabric Patterns (42 available, last synced: 2025-03-18 14:30)
 [Actions]             [Sync]              [Categories]          [Navigation]
-s  Send with Pattern  S  Sync Latest      u  Universal Patterns q  Back to Main Menu
+s  Send with Pattern  S  Sync Latest      u  Universal Patterns
 p  Set as System      P  Populate Cache   c  Code Patterns
 l  List All Patterns  I  Initial Setup    w  Writing Patterns
 v  View Pattern Details                   a  Analysis Patterns
@@ -1099,7 +1098,7 @@ t  Temperature              f  Frequency Penalty       M  Mirostat Mode
 k  Top K                    s  Presence Penalty        T  Mirostat Tau
 p  Top P                    n  Repeat Last N           E  Mirostat Eta
 m  Min P                    x  Stop Sequences
-y  Typical P                l  Penalize Newline
+y  Typical P                w  Penalize Newline
 r  Repeat Penalty
 
 [Resource]                  [More Resource]            [Memory]
@@ -1110,11 +1109,10 @@ G  Main GPU                 V  Low VRAM
 K  Num Keep                 o  Vocab Only
 
 [Profiles]                  [Actions]
-d  Default Profile          D  Display All
+d  Default Profile          l  Display All
 a  Creative Profile         R  Reset All
 e  Precise Profile          H  Help
 A  All Profiles             F  Toggle Display in Header
-                            q  Back to Main Menu
 #+end_src
 
 *** Parameter Profiles
@@ -1129,8 +1127,6 @@ d  Default
 c  Creative
 p  Precise
 
-[Actions]
-q  Back to Main Menu
 #+end_src
 
 *** Commands Submenu
@@ -1144,8 +1140,6 @@ r  Refactor Code        l  Dictionary Lookup     f  Fabric Patterns      C  Cust
 d  Describe Code        s  Synonym Lookup        u  Universal Patterns   m  Minibuffer Prompt
 g  Git Commit Message   p  Proofread Text        c  Code Patterns
 
-[Actions]
-q  Back to Main Menu
 #+end_src
 
 *** Direct Keybindings

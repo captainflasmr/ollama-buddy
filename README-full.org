@@ -182,7 +182,7 @@ A  Auth               U  Multishot         !  Airplane Mode      c   Completion 
 [History]             [Sessions]           [Sub-menus]           [General]
 H  Toggle             N  New               +  Settings            h  Help/Menu
 X  Clear              f  Load              y  System Prompt       b  Dynamic Roles
-J  Edit               S  Save              p  Parameters          q  Quit
+J  Edit               S  Save              p  Parameters
 Y  Edit Max           Z  Directory         R  Roles
 #+end_src
 
@@ -258,7 +258,7 @@ Ollama Buddy Settings
 [Buffer]                   [Display Toggle]           [Other]
 B  Toggle Debug            %  Context Display          u  Benchmark Models
 #  Token Stats             &  Context Type             v  Keep Alive
-C  Context Info            >  History Display          q  Quit
+C  Context Info            >  History Display
 C-o  Toggle ORG/MD         <  Global Prompt
                            ~  Tone
 #+end_src
@@ -271,7 +271,6 @@ Accessed with *y* from the main menu:
 System Prompts
 [System Prompts]
 u  User Defined            s  Show Current             r  Reset Current
-q  Quit
 #+end_src
 
 *** Roles Management Sub-menu
@@ -281,7 +280,7 @@ Accessed with *R* from the main menu:
 #+begin_src
 Roles
 [Roles]
-R  Switch Role             D  Open Directory           q  Quit
+R  Switch Role             D  Open Directory
 #+end_src
 
 When you select the Parameters option (=p=), you'll see a comprehensive submenu of all available parameters:
@@ -293,7 +292,7 @@ t  Temperature              f  Frequency Penalty       M  Mirostat Mode
 k  Top K                    s  Presence Penalty        T  Mirostat Tau
 p  Top P                    n  Repeat Last N           E  Mirostat Eta
 m  Min P                    x  Stop Sequences
-y  Typical P                l  Penalize Newline
+y  Typical P                w  Penalize Newline
 r  Repeat Penalty
 
 [Resource]                  [More Resource]            [Memory]
@@ -304,11 +303,10 @@ G  Main GPU                 V  Low VRAM
 K  Num Keep                 o  Vocab Only
 
 [Profiles]                  [Actions]
-d  Default Profile          D  Display All
+d  Default Profile          l  Display All
 a  Creative Profile         R  Reset All
 e  Precise Profile          H  Help
                             F  Toggle Display in Header
-                            q  Back to Main Menu
 #+end_src
 
 ** Parameter Profiles
@@ -322,8 +320,6 @@ d  Default
 c  Creative
 p  Precise
 
-[Actions]
-q  Back to Main Menu
 #+end_src
 
 ** Direct Keybindings

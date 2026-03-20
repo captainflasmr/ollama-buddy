@@ -132,8 +132,7 @@
    ["Other"
     ("u" "Benchmark Models" ollama-buddy-benchmark-models)
     ("v" "Keep Alive" ollama-buddy-set-keepalive)]
-   ]
-  [("q" "Quit" transient-quit-one)])
+   ])
 
 (transient-define-prefix ollama-buddy-transient-system-prompts-menu ()
   "System prompts menu for Ollama Buddy."
@@ -141,23 +140,20 @@
    ("u" "User Defined" ollama-buddy-transient-user-prompts-menu
     :if (lambda () (featurep 'ollama-buddy-user-prompts)))
    ("s" "Show Current" ollama-buddy-show-system-prompt-info)
-   ("r" "Reset Current" ollama-buddy-reset-system-prompt)
-   ("q" "Quit" transient-quit-one)])
+   ("r" "Reset Current" ollama-buddy-reset-system-prompt)])
 
 (transient-define-prefix ollama-buddy-transient-roles-management-menu ()
   "Role management menu for Ollama Buddy."
   ["Roles"
    ("R" "Switch" ollama-buddy-roles-switch-role)
-   ("D" "Directory" ollama-buddy-roles-open-directory)
-   ("q" "Quit" transient-quit-one)])
+   ("D" "Directory" ollama-buddy-roles-open-directory)])
 
 (transient-define-prefix ollama-buddy-transient-project-menu ()
   "Project menu for Ollama Buddy."
   ["Project"
    ("p" "Attach File" ollama-buddy-project-attach-file)
    ("c" "Attach Context" ollama-buddy-project-attach-context)
-   ("d" "Switch Directory" ollama-buddy-project-switch-directory)]
-  [("q" "Quit" transient-quit-one)])
+   ("d" "Switch Directory" ollama-buddy-project-switch-directory)])
 
 ;;;###autoload
 (transient-define-prefix ollama-buddy-transient-menu ()
@@ -219,8 +215,7 @@
     ("h" "Help/Menu" ollama-buddy--menu-help-assistant)
     ("b" "Dynamic Roles" ollama-buddy-role-transient-menu)
     ("I" "Install Extras" ollama-buddy-install-extras
-     :if (lambda () (ollama-buddy--extras-missing-p)))
-    ("q" "Quit" transient-quit-one)]]
+     :if (lambda () (ollama-buddy--extras-missing-p)))]]
   )
 
 (transient-define-prefix ollama-buddy-transient-profile-menu ()
@@ -242,8 +237,7 @@
                      (ollama-buddy-apply-param-profile "Precise")
                      (message "Applied Precise profile")))]
    
-   ["Actions"
-    ("q" "Quit" transient-quit-one)]]
+   ]
   (interactive)
   (transient-setup 'ollama-buddy-transient-profile-menu))
 
@@ -263,7 +257,7 @@
     ("s" "Presence Penalty" (lambda () (interactive) (ollama-buddy-params-edit 'presence_penalty)))
     ("n" "Repeat Last N" (lambda () (interactive) (ollama-buddy-params-edit 'repeat_last_n)))
     ("x" "Stop Sequences" (lambda () (interactive) (ollama-buddy-params-edit 'stop)))
-    ("l" "Penalize Newline" (lambda () (interactive) (ollama-buddy-params-edit 'penalize_newline)))]
+    ("w" "Penalize Newline" (lambda () (interactive) (ollama-buddy-params-edit 'penalize_newline)))]
    
    ["Mirostat"
     ("M" "Mirostat Mode" (lambda () (interactive) (ollama-buddy-params-edit 'mirostat)))
@@ -303,10 +297,9 @@
 ]
    
    ["Actions"
-    ("D" "Display All" ollama-buddy-params-display)
+    ("l" "Display All" ollama-buddy-params-display)
     ("0" "Reset All" ollama-buddy-params-reset)
-    ("F" "Toggle Display in Header" ollama-buddy-toggle-params-in-header)
-    ("q" "Quit" transient-quit-one)]
+    ("F" "Toggle Display in Header" ollama-buddy-toggle-params-in-header)]
    ])
 
 (defun ollama-buddy--auth-cloud-description ()
@@ -332,8 +325,7 @@
         ("p" "Login" ollama-buddy-copilot-login)
         ("l" "Logout" ollama-buddy-copilot-logout)
         ("t" "Status" ollama-buddy-copilot-status)]
-   ["Navigation"
-    ("q" "Quit" transient-quit-one)]])
+   ])
 
 (transient-define-prefix ollama-buddy-transient-attachment-menu ()
   "File attachment menu."
@@ -341,8 +333,7 @@
    ("j" "Attach file" ollama-buddy-attach-file)
    ("l" "Show attachments" ollama-buddy-show-attachments)
    ("d" "Detach file" ollama-buddy-detach-file)
-   ("0" "Clear all attachments" ollama-buddy-clear-attachments)
-   ("q" "Quit" transient-quit-one)])
+   ("0" "Clear all attachments" ollama-buddy-clear-attachments)])
 
 (defun ollama-buddy--web-search-status ()
   "Return web search status for transient display."
@@ -368,8 +359,7 @@
     :description
     (lambda ()
       "Use @search(query) inline in prompts for automatic search")]
-   ["Navigation"
-    ("q" "Quit" transient-quit-one)]])
+   ])
 
 (defun ollama-buddy--rag-status ()
   "Return RAG status string for transient menu."
@@ -389,12 +379,12 @@
     ("d" "Delete Index" ollama-buddy-rag-delete-index)
     ("c" "Pause/Cancel" ollama-buddy-rag-pause)
     ("r" "Resume Paused" ollama-buddy-rag-resume)]
-   ["Search & Context"
+   ["Search"
     ("s" "Search & Display" ollama-buddy-rag-search)
-    ("a" "Search & Attach" ollama-buddy-rag-attach)
+    ("a" "Search & Attach" ollama-buddy-rag-attach)]
+   ["Context"
     ("l" "Show Attachments" ollama-buddy-show-attachments)
-    ("0" "Clear RAG Context" ollama-buddy-rag-clear-attached)
-    ("q" "Quit" transient-quit-one)]])
+    ("0" "Clear RAG Context" ollama-buddy-rag-clear-attached)]])
 
 (transient-define-prefix ollama-buddy-transient-user-prompts-menu ()
   "Transient menu for user system prompts."
@@ -406,8 +396,7 @@
    [("e" "Edit Prompt" ollama-buddy-user-prompts-edit)
     ("s" "Set with Current Prompt" ollama-buddy-set-system-prompt)
     ("d" "Delete Prompt" ollama-buddy-user-prompts-delete)
-    ("r" "Reset Prompt" ollama-buddy-reset-system-prompt)]
-   [("q" "Quit" transient-quit-one)]])
+    ("r" "Reset Prompt" ollama-buddy-reset-system-prompt)]])
 
 ;;;###autoload
 (defun ollama-buddy-transient-menu-wrapper ()
