@@ -41,10 +41,6 @@ Temperature ranges differ across providers (0-2 for OpenAI, 0-1 for Claude/Grok)
 
 Sessions are saved as plaintext .el files. If conversations contain sensitive content or API responses with PII there is no encryption or access control.
 
-** TODO stale references in build system
-
-Makefile references ollama-buddy-awesome.el and ollama-buddy-fabric.el which do not exist in the repo.
-
 ** TODO rationalise slash command and transient menu overlap
 
 30+ slash commands partially duplicate the transient menu. Some rationalisation of which commands live where would reduce confusion.
