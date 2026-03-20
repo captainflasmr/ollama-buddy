@@ -936,7 +936,7 @@ Returns a list of tool result messages to append to the conversation."
                 (index-name (alist-get 'index args))
                 (available (ollama-buddy-rag--list-index-names)))
            (if (null available)
-               "No RAG indexes found. Index a directory first with M-x ollama-buddy-rag-index-directory."
+               "No RAG indexes found. Index a directory first with M-x ollama-buddy-rag-index-or-update-directory."
              (let ((indexes-to-search
                     (if (and index-name (member index-name available))
                         (list index-name)

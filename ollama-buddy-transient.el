@@ -102,12 +102,11 @@
       (ollama-buddy-tools-toggle-unguarded)
     (message "Tool calling requires ollama-buddy-tools: (require 'ollama-buddy-tools)")))
 
-(declare-function ollama-buddy-rag-index-directory "ollama-buddy-rag")
+(declare-function ollama-buddy-rag-index-or-update-directory "ollama-buddy-rag")
 (declare-function ollama-buddy-rag-search "ollama-buddy-rag")
 (declare-function ollama-buddy-rag-attach "ollama-buddy-rag")
 (declare-function ollama-buddy-rag-list-indexes "ollama-buddy-rag")
 (declare-function ollama-buddy-rag-delete-index "ollama-buddy-rag")
-(declare-function ollama-buddy-rag-update-directory "ollama-buddy-rag")
 (declare-function ollama-buddy-rag-pause "ollama-buddy-rag")
 (declare-function ollama-buddy-rag-resume "ollama-buddy-rag")
 (declare-function ollama-buddy-rag-clear-attached "ollama-buddy-rag")
@@ -373,8 +372,7 @@
   [:description
    (lambda () (concat "RAG - " (ollama-buddy--rag-status)))
    ["Index"
-    ("i" "Index Directory" ollama-buddy-rag-index-directory)
-    ("u" "Update Directory" ollama-buddy-rag-update-directory)
+    ("i" "Index/Update Directory" ollama-buddy-rag-index-or-update-directory)
     ("w" "List Indexes" ollama-buddy-rag-list-indexes)
     ("d" "Delete Index" ollama-buddy-rag-delete-index)
     ("c" "Pause/Cancel" ollama-buddy-rag-pause)

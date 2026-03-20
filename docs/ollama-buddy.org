@@ -5740,20 +5740,14 @@ brew install poppler
 :END:
 These commands are available from the RAG transient menu (C-c O then r):
 
-- =ollama-buddy-rag-index-directory (==i==)= :: Index a directory.
-  Prompts for the directory path, reads and chunks all matching files,
-  then asynchronously generates embeddings. Progress is shown in the
-  status line. File modification times are recorded so that future
-  incremental updates can detect changes.
-
-- =ollama-buddy-rag-update-directory (==u==)= :: Incrementally update an
-  existing index. Only files that have been added or modified since the
-  last indexing are re-chunked and re-embedded; chunks from unchanged
-  files are retained. Chunks for deleted files are removed. If no
-  existing index with metadata is found, a full re-index is performed
-  automatically. If the embedding model has changed since the index was
-  created, a full re-index is required and the user is prompted before
-  proceeding.
+- =ollama-buddy-rag-index-or-update-directory (==i==)= :: Index or
+  update a directory.  If an index already exists for the directory, it
+  is incrementally updated: only files that have been added or modified
+  since the last indexing are re-chunked and re-embedded, chunks from
+  unchanged files are retained, and chunks for deleted files are
+  removed.  If no existing index is found, a full index is created.  If
+  the embedding model has changed since the index was created, a full
+  re-index is required and the user is prompted before proceeding.
 
 - =ollama-buddy-rag-pause (==c==)= :: Pause an in-progress indexing or
   update operation and save partial progress to disk. The pause takes
@@ -5808,8 +5802,8 @@ create the index. If you change =ollama-buddy-rag-embedding-model=, a
 full re-index is needed (you will be prompted).
 
 Indexes created before version 3.6.0 do not contain file metadata.
-Running Update Directory on such an index automatically falls back to a
-full re-index and saves the metadata for future incremental updates.
+Running Index/Update Directory on such an index automatically falls back
+to a full re-index and saves the metadata for future incremental updates.
 
 <<Pause-and-Resume>>
 *** 24.9 Pause and Resume [[#Pause-and-Resume][¶]]
@@ -5840,7 +5834,7 @@ Emacs or stop the process, you can pause and resume later.
   marks partial indexes with =[partial: N/M chunks]= in the heading and
   shows a count of pending chunks.
 
-- *Update directory* :: Running =M-x ollama-buddy-rag-update-directory=
+- *Partial index handling* :: Running =M-x ollama-buddy-rag-index-or-update-directory=
   on a directory with a partial index will offer to resume it or start a
   fresh full re-index.
 

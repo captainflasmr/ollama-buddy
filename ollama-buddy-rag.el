@@ -19,7 +19,7 @@
 ;; - Attach retrieved context to chat conversations
 ;;
 ;; Usage:
-;;   M-x ollama-buddy-rag-index-directory  - Index files in a directory
+;;   M-x ollama-buddy-rag-index-or-update-directory  - Index/update files in a directory
 ;;   M-x ollama-buddy-rag-search           - Search and display results
 ;;   M-x ollama-buddy-rag-attach           - Search and attach to context
 ;;   M-x ollama-buddy-rag-list-indexes     - List available indexes
@@ -938,6 +938,15 @@ embedding model has changed."
                  retained-chunks files-metadata))))))))))
 
 ;;;###autoload
+(defun ollama-buddy-rag-index-or-update-directory (directory)
+  "Index or incrementally update the RAG index for DIRECTORY.
+If an index already exists for DIRECTORY, incrementally update it
+\(only re-indexing added/modified files).  Otherwise create a new
+index.  This is the recommended user-facing entry point."
+  (interactive "DDirectory to index: ")
+  (ollama-buddy-rag-update-directory directory))
+
+;;;###autoload
 (defun ollama-buddy-rag-search (query)
   "Search RAG indexes for QUERY and display results."
   (interactive
@@ -1071,7 +1080,7 @@ embedding model has changed."
   (interactive)
   (let ((index-names (ollama-buddy-rag--list-index-names)))
     (if (null index-names)
-        (message "No RAG indexes found. Use M-x ollama-buddy-rag-index-directory to create one.")
+        (message "No RAG indexes found. Use M-x ollama-buddy-rag-index-or-update-directory to create one.")
       (let ((buf (get-buffer-create "*Ollama RAG Indexes*")))
         (with-current-buffer buf
           (let ((inhibit-read-only t))
@@ -1106,7 +1115,7 @@ embedding model has changed."
                         (insert-text-button
                          "[Update]"
                          'action `(lambda (_)
-                                    (ollama-buddy-rag-update-directory ,source))
+                                    (ollama-buddy-rag-index-or-update-directory ,source))
                          'help-echo (format "Incrementally update index from %s" source)))
                       (insert "  ")
                       (insert-text-button
@@ -1295,7 +1304,7 @@ Returns the text with @rag() delimiters removed."
       (ollama-buddy-rag--ensure-embedding-model)
       (let* ((index-names (ollama-buddy-rag--list-index-names)))
         (unless index-names
-          (user-error "No RAG indexes found.  Index a directory first with M-x ollama-buddy-rag-index-directory"))
+          (user-error "No RAG indexes found.  Index a directory first with M-x ollama-buddy-rag-index-or-update-directory"))
         (let ((index-name (if (= 1 (length index-names))
                               (car index-names)
                             (completing-read "RAG index for inline search: "
@@ -1394,7 +1403,7 @@ If there are no @rag() patterns, calls CALLBACK immediately."
       (ollama-buddy-rag--ensure-embedding-model)
       (let ((index-names (ollama-buddy-rag--list-index-names)))
         (unless index-names
-          (user-error "No RAG indexes found.  Index a directory first with M-x ollama-buddy-rag-index-directory"))
+          (user-error "No RAG indexes found.  Index a directory first with M-x ollama-buddy-rag-index-or-update-directory"))
         (let* ((index-name (if (= 1 (length index-names))
                                (car index-names)
                              (completing-read "RAG index for inline search: "

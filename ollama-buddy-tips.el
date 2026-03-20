@@ -69,7 +69,7 @@
     "Presets (roles) set a full personality via a system prompt — load one from =C-c O= → Roles, or browse with =C-c O= → =P=."
 
     ;; RAG
-    "=M-x ollama-buddy-rag-index-directory= indexes an entire directory of source code or documents for semantic search."
+    "=M-x ollama-buddy-rag-index-or-update-directory= indexes a directory for semantic search, or incrementally updates an existing index."
     "Set =ollama-buddy-rag-embedding-base-url= to point the RAG embedding engine at a separate server like embed-rerank instead of Ollama."
     "Set =ollama-buddy-rag-embedding-api-style= to =openai= to use any =/v1/embeddings=-compatible embedding service."
 

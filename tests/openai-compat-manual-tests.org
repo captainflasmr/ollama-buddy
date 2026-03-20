@@ -113,7 +113,7 @@ chat model.  Options:
 With the embedding backend configured, index a directory:
 
 #+begin_example
-M-x ollama-buddy-rag-index-directory
+M-x ollama-buddy-rag-index-or-update-directory
 Directory to index: ~/my-project
 #+end_example
 
