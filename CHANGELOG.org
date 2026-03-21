@@ -11,6 +11,30 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-03-21 Fri> *7.0.0*
+
+Plan mode — structured task planning with org-mode TODO integration.
+
+*** Features
+
+- *Plan mode* -- A new planning workflow where the LLM generates structured
+  plans as org-mode TODO headings.  Activate with =/plan=, then describe your
+  task.  The LLM produces a plan with =** TODO Step N:= headings that support
+  native org state cycling (=S-<right>=, =C-c C-t=).
+- *Plan TODO states* -- Custom org TODO sequence: =TODO= → =DOING= → =DONE= |
+  =SKIP=, with colour-coded faces (red, orange, green, grey).
+- *=/plan-next= slash command* -- Execute the next =TODO= step.  Marks it
+  =DOING=, switches to a minimal execution system prompt so tool calling works
+  cleanly, and sends the step to the LLM.  A =** ⚒ DOING:= indicator with
+  progress summary is inserted into the buffer.
+- *=/plan-all= slash command* -- Execute all remaining =TODO= steps sequentially.
+- *=/plan-done= slash command* -- Mark the current =DOING= step as =DONE= and
+  restore the planning system prompt.
+- *=/plan-status= slash command* -- Display plan progress summary (e.g.
+  "Plan: 2/6 done, 1 doing, 3 remaining, 0 skipped").
+- *=/plan-stop= slash command* -- Deactivate plan mode, restore previous system
+  prompt and org TODO keywords.
+
 ** <2026-03-20 Thu> *6.1.0*
 
 Parameter management improvements and keybinding cleanup.

@@ -75,6 +75,7 @@ Submit queries, swap models, view token usage and statistics:
 
 * Features
 
+- *Plan Mode* -- Structured task planning with org-mode TODO integration.  =/plan= generates a step-by-step plan as TODO headings; cycle states with =S-<right>=; execute steps with =/plan-next= (with full tool calling support)
 - *Tool Calling* -- LLMs can invoke registered Emacs functions (file ops, shell commands, buffer search, calculations). Safe mode restricts to read-only tools; unguarded mode (=☠=) bypasses all prompts for uninterrupted execution.
 - *Multiple Providers* -- Local Ollama, Ollama Cloud, OpenAI, Claude, Gemini, Grok, GitHub Copilot, Codestral, DeepSeek, OpenRouter, and any generic OpenAI-compatible server (LM Studio, llama.cpp, vLLM, Jan…)
 - *Web Search* -- Inline =@search(query)= syntax for real-time web search via Ollama's API

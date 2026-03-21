@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 6.1.0
+@subtitle For Ollama Buddy version 7.0.0
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -67,6 +67,7 @@ allowing you to leverage powerful large language models (LLMs) directly within y
 * Project Integration::         Smart context awareness with project.el
 * In-Buffer Replace::           Stream rewrites directly into source buffers with inline diff
 * Tool Calling::                Enabling LLMs to invoke Emacs functions
+* Plan Mode::                   Structured task planning with org-mode TODO integration
 * RAG::                         Retrieval-Augmented Generation with local documents
 * Advanced Usage::              Tips and techniques for power users
 * API Reference::               Comprehensive function documentation
@@ -918,6 +919,29 @@ Toggles between @code{network-process} and @code{curl}.
 @item rewind
 Rewind conversation to a previous prompt (@code{ollama-buddy-rewind}).
 Always presents @code{completing-read} for prompt selection.
+
+@item plan
+Start plan mode (@code{ollama-buddy-plan-start}).  Sets a planning system
+prompt and configures org TODO states.  @xref{Plan Mode}.
+
+@item plan-next
+Execute the next @code{TODO} step in the plan (@code{ollama-buddy-plan-execute-next}).
+Marks it @code{DOING} and sends it to the LLM.
+
+@item plan-all
+Execute all remaining @code{TODO} steps sequentially
+(@code{ollama-buddy-plan-execute-all}).
+
+@item plan-done
+Mark the current @code{DOING} step as @code{DONE}
+(@code{ollama-buddy-plan-mark-done}).
+
+@item plan-status
+Display plan progress summary (@code{ollama-buddy-plan-status}).
+
+@item plan-stop
+Deactivate plan mode and restore the previous system prompt
+(@code{ollama-buddy-plan-stop}).
 
 @end table
 
@@ -3802,6 +3826,123 @@ Additional places showing tool capability:
 @end itemize
 
 The list of tool-capable models is configured via @code{ollama-buddy-tools-models}. Cloud model variants (e.g.@: @code{u:qwen3-coder:480b-cloud}) are automatically matched against their base names.
+
+@node Plan Mode
+@chapter Plan Mode
+
+@section Overview
+
+Plan mode provides a structured task planning workflow using org-mode TODO
+headings.  Instead of asking the LLM to do everything at once, you describe a
+task and the LLM generates a multi-step plan.  You can then review, edit, skip,
+or execute steps individually --- with full tool calling support.
+
+The plan module is provided by @code{ollama-buddy-plan.el} and is loaded
+automatically.
+
+@section Workflow
+
+@enumerate
+@item
+Type @code{/plan} in the prompt area to activate plan mode.
+
+@item
+Describe your task and send (@code{C-c C-c}).  The LLM generates a plan:
+
+@example
+** TODO Step 1: Create user model
+Define the schema with email, password hash, and timestamps.
+
+** TODO Step 2: Add registration endpoint
+Implement POST /register with input validation.
+
+** Notes
+Consider rate-limiting login attempts.
+@end example
+
+@item
+Review the plan.  Use @code{S-<right>}/@code{S-<left>} or @code{C-c C-t} on
+any step heading to cycle its TODO state.
+
+@item
+Execute steps with @code{/plan-next} (one at a time) or @code{/plan-all}
+(all remaining).  The current step is marked @code{DOING} and a progress
+indicator is inserted in the buffer.
+
+@item
+After a step completes, use @code{/plan-done} to mark it @code{DONE}.
+
+@item
+When finished, use @code{/plan-stop} to deactivate plan mode and restore your
+previous system prompt.
+@end enumerate
+
+@section TODO States
+
+Plan mode configures a custom org TODO sequence:
+
+@table @code
+@item TODO
+Step has not started (red).
+
+@item DOING
+Step is currently being executed (orange).
+
+@item DONE
+Step completed successfully (green).  This is a ``done'' state in org terms.
+
+@item SKIP
+Step was skipped by the user (grey).  This is also a ``done'' state.
+@end table
+
+States cycle with @code{S-<right>}: @code{TODO} @arrow{} @code{DOING}
+@arrow{} @code{DONE} @arrow{} @code{SKIP}.
+
+@section Slash Commands
+
+@table @code
+@item /plan
+Activate plan mode.  Sets the planning system prompt and configures TODO states.
+
+@item /plan-next
+Execute the next @code{TODO} step.  Marks it @code{DOING}, inserts a progress
+indicator, switches to a minimal execution prompt, and sends the step to the
+LLM.  If tools are enabled, the LLM can use them to carry out the work.
+
+@item /plan-all
+Execute all remaining @code{TODO} steps in sequence.
+
+@item /plan-done
+Mark the current @code{DOING} step as @code{DONE} and restore the planning
+prompt.
+
+@item /plan-status
+Show a progress summary in the echo area (e.g.@: ``Plan: 2/6 done, 1 doing,
+3 remaining, 0 skipped'').
+
+@item /plan-stop
+Deactivate plan mode.  Restores the previous system prompt and org TODO
+keywords.
+@end table
+
+@section Tool Calling Integration
+
+When tools are enabled (@code{/tools}), plan step execution uses the LLM's
+native tool calling mechanism.  During execution, the system prompt is
+temporarily switched to a minimal one-line prompt to avoid interfering with
+tool invocation.  The planning prompt is restored when you mark the step done
+with @code{/plan-done}.
+
+@section Customization
+
+@table @code
+@item ollama-buddy-plan-todo-states
+List of TODO states for plan steps.  Default:
+@code{("TODO" "DOING" "DONE" "SKIP")}.
+
+@item ollama-buddy-plan-auto-advance
+When non-nil (default @code{t}), report progress after marking a step done.
+@end table
 
 @node RAG
 @chapter RAG (Retrieval-Augmented Generation)

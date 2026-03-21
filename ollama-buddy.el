@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 6.1.0
+;; Version: 7.0.0
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -105,6 +105,7 @@
 (require 'ollama-buddy-rag)
 (require 'ollama-buddy-tools)
 (require 'ollama-buddy-rewrite nil t)
+(require 'ollama-buddy-plan)
 
 (declare-function ollama-buddy-curl--validate-executable "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--test-connection "ollama-buddy-curl")
@@ -1049,7 +1050,13 @@ Typically invoked via `C-u C-u C-c C-c'."
     ("export"     org-export-dispatch                 "Open org-export dispatcher for the chat buffer")
     ("backend"    ollama-buddy-switch-communication-backend "Switch between network-process and curl backends")
     ("launch"     ollama-buddy-launch                    "Launch a model in an external terminal agent (claude, codex, aider, ...)")
-    ("rewind"     (lambda () (interactive) (ollama-buddy-rewind t)) "Rewind conversation to a previous prompt"))
+    ("rewind"     (lambda () (interactive) (ollama-buddy-rewind t)) "Rewind conversation to a previous prompt")
+    ("plan"       ollama-buddy-plan-start               "Start plan mode — LLM generates a structured plan")
+    ("plan-next"  ollama-buddy-plan-execute-next         "Execute the next TODO step in the plan")
+    ("plan-all"   ollama-buddy-plan-execute-all          "Execute all remaining plan steps")
+    ("plan-done"  ollama-buddy-plan-mark-done            "Mark the current IN-PROGRESS step as DONE")
+    ("plan-status" ollama-buddy-plan-status              "Show plan progress summary")
+    ("plan-stop"  ollama-buddy-plan-stop                 "Deactivate plan mode"))
   "Alist of available `/' slash commands.
 Each entry is (NAME FUNCTION DESCRIPTION) where FUNCTION is
 called interactively."
@@ -3015,6 +3022,14 @@ TCP packets split a JSON object across multiple filter calls."
 
               ;; Accumulate tool calls from streaming chunks
               (when tool-calls
+                (let* ((func (alist-get 'function (car tool-calls)))
+                       (tool-name (when func (alist-get 'name func)))
+                       (msg (if tool-name
+                                (format "⚒ Preparing %s…" tool-name)
+                              "⚒ Preparing tool call…")))
+                  (ollama-buddy--update-status msg)
+                  (unless ollama-buddy--current-tool-calls
+                    (message "%s" msg)))
                 (setq ollama-buddy--current-tool-calls
                       (nconc ollama-buddy--current-tool-calls
                              (copy-sequence tool-calls))))

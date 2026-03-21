@@ -414,16 +414,26 @@ Returns the result as a string, or an error message if execution fails."
 (defun ollama-buddy-tools--process-tool-calls (tool-calls)
   "Process TOOL-CALLS from the LLM response.
 Returns a list of tool result messages to append to the conversation."
-  (let (results)
+  (let ((total (length tool-calls))
+        (idx 0)
+        results)
     (dolist (call tool-calls)
       (let* ((function (alist-get 'function call))
              (name (alist-get 'name function))
-             (arguments (alist-get 'arguments function))
-             (result (ollama-buddy-tools--execute name arguments)))
-        (push `((role . "tool")
-                (tool_name . ,name)
-                (content . ,result))
-              results)))
+             (arguments (alist-get 'arguments function)))
+        (setq idx (1+ idx))
+        (let ((status-msg (if (> total 1)
+                              (format "⚒ Running %s (%d/%d)…" name idx total)
+                            (format "⚒ Running %s…" name))))
+          (ollama-buddy--update-status status-msg)
+          (message "%s" status-msg))
+        (let ((result (ollama-buddy-tools--execute name arguments)))
+          (push `((role . "tool")
+                  (tool_name . ,name)
+                  (content . ,result))
+                results))))
+    (ollama-buddy--update-status "⚒ Tools complete")
+    (message "⚒ Tools complete")
     (nreverse results)))
 
 ;;; Built-in Tools
@@ -463,10 +473,17 @@ Returns a list of tool result messages to append to the conversation."
        (let ((path (alist-get 'path args))
              (content (alist-get 'content args)))
          (condition-case err
-             (progn
+             (let ((lines (with-temp-buffer
+                            (insert content)
+                            (count-lines (point-min) (point-max)))))
+               (message "⚒ Writing %s (%d lines)…" (file-name-nondirectory path) lines)
                (with-temp-file path
                  (insert content))
-               (format "Successfully wrote to %s" path))
+               (let ((size (file-attribute-size (file-attributes path))))
+                 (message "⚒ Wrote %s (%s)" (file-name-nondirectory path)
+                          (file-size-human-readable size))
+                 (format "Successfully wrote %d lines (%s) to %s"
+                         lines (file-size-human-readable size) path)))
            (error (format "Error writing file: %s" (error-message-string err))))))
      nil) ; not safe
     
