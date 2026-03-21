@@ -29,6 +29,7 @@
 (declare-function ollama-buddy-manage-models "ollama-buddy")
 (declare-function ollama-buddy-pull-model "ollama-buddy")
 (declare-function ollama-buddy--swap-model "ollama-buddy")
+(declare-function ollama-buddy-rewind "ollama-buddy")
 (declare-function ollama-buddy-cloud-signin "ollama-buddy")
 (declare-function ollama-buddy-cloud-signout "ollama-buddy")
 (declare-function ollama-buddy-cloud-status "ollama-buddy")
