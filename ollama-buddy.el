@@ -4846,9 +4846,9 @@ Modifies the variable in place."
 
         ;; Handle prefix arguments
         (cond
-         ;; C-u (4) - Set system prompt
+         ;; C-u (4) - Continue (send "continue" without needing to type it)
          ((= current-prefix-arg-val 4)
-          (ollama-buddy-set-system-prompt))
+          (ollama-buddy--send-backend "continue" model))
 
          ;; C-u C-u (16) - Rewind conversation
          ((= current-prefix-arg-val 16)

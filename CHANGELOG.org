@@ -34,6 +34,20 @@ Plan mode — structured task planning with org-mode TODO integration.
   "Plan: 2/6 done, 1 doing, 3 remaining, 0 skipped").
 - *=/plan-stop= slash command* -- Deactivate plan mode, restore previous system
   prompt and org TODO keywords.
+- *Quick continue* -- =C-u C-c C-c= (or =C-u C-c RET=) sends "continue" to
+  the LLM without needing to type anything.  Useful when a model stops
+  mid-response or after tool results.
+- *Tool calling progress* -- Status line and echo area now show live feedback
+  during tool execution: =⚒ Preparing write_file…= during streaming,
+  =⚒ Running write_file…= during execution, =⚒ Tools complete= when finished.
+- *Enhanced =write_file= tool* -- Now reports file size and line count in both
+  the echo area and tool results (e.g. "Successfully wrote 142 lines (4.2k)
+  to /path/to/file").
+
+*** Key binding changes
+
+- =C-u C-c C-c= / =C-u C-c RET= now sends "continue" (was: set system prompt).
+  System prompt can still be set via =/system= or the transient menu.
 
 ** <2026-03-20 Thu> *6.1.0*
 

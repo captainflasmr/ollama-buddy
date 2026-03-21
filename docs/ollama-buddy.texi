@@ -740,6 +740,9 @@ To send a prompt to the AI:
 
 You can also:
 @itemize @bullet
+@item Use @code{C-u C-c C-c} (or @code{C-u C-c RET}) to send ``continue'' without
+typing anything --- useful when a model stops mid-response or after tool results
+@item Use @code{C-u C-u C-c C-c} to rewind the conversation to a previous prompt
 @item Use @code{M-p} and @code{M-n} to navigate through prompt history
 @item Press @code{C-c k} to cancel a request if it's taking too long
 @item Press @code{C-a} for smart beginning-of-line: first press jumps to the start of the prompt text (after ``>> PROMPT:''), second press goes to column 0

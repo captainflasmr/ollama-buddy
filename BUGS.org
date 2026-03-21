@@ -14,7 +14,7 @@ This document contains the current bugs/improvements, this is just for me mainly
 ** DOING Improve svg
 ** DOING more LLM integrations
 ** TODO tool: check multiple ediffs can be added with propose_file_changes
-** TODO plan mode
+** DOING plan mode
 ** TODO regenerate videos
 ** TODO review testing framework
 ** TODO clean up testing folder

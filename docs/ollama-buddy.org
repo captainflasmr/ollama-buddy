@@ -1307,6 +1307,10 @@ To send a prompt to the AI:
 
 You can also:
 
+- Use =C-u C-c C-c= (or =C-u C-c RET=) to send “continue” without typing
+  anything --- useful when a model stops mid-response or after tool
+  results
+- Use =C-u C-u C-c C-c= to rewind the conversation to a previous prompt
 - Use =M-p= and =M-n= to navigate through prompt history
 - Press =C-c k= to cancel a request if it's taking too long
 - Press =C-a= for smart beginning-of-line: first press jumps to the

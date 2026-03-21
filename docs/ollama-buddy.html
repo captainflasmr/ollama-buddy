@@ -1401,7 +1401,10 @@ Next: <a href="#Working-with-Models" accesskey="n" rel="next">Working with Model
 
 <p>You can also:
 </p><ul class="itemize mark-bullet">
-<li>Use <code class="code">M-p</code> and <code class="code">M-n</code> to navigate through prompt history
+<li>Use <code class="code">C-u C-c C-c</code> (or <code class="code">C-u C-c RET</code>) to send &ldquo;continue&rdquo; without
+typing anything &mdash; useful when a model stops mid-response or after tool results
+</li><li>Use <code class="code">C-u C-u C-c C-c</code> to rewind the conversation to a previous prompt
+</li><li>Use <code class="code">M-p</code> and <code class="code">M-n</code> to navigate through prompt history
 </li><li>Press <code class="code">C-c k</code> to cancel a request if it&rsquo;s taking too long
 </li><li>Press <code class="code">C-a</code> for smart beginning-of-line: first press jumps to the start of the prompt text (after &ldquo;&gt;&gt; PROMPT:&rdquo;), second press goes to column 0
 </li></ul>
