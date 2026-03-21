@@ -126,6 +126,14 @@ A cross-cutting view of key features across the major chat clients, to the best 
 
 * Updates
 
+** What's New (v7.0.0)
+
+Plan mode — structured task planning with org-mode TODO integration.
+
+- *Plan Mode* -- =/plan= activates a planning workflow where the LLM generates structured plans as org-mode =TODO= headings.  Cycle states with =S-<right>= (=TODO= → =DOING= → =DONE= | =SKIP=).  Execute steps with =/plan-next= (one at a time, with full tool calling) or =/plan-all= (all remaining).  =/plan-done= marks a step complete; =/plan-status= shows progress; =/plan-stop= deactivates.
+- *Tool Calling Progress* -- Status line and echo area now show live feedback: =⚒ Preparing write_file…= during streaming, =⚒ Running write_file…= during execution, =⚒ Tools complete= when finished.
+- *Enhanced =write_file= Tool* -- Reports file size and line count in both the echo area and tool results.
+
 ** What's New (v6.0.0)
 
 Launch external frontends and comprehensive code quality improvements.
@@ -170,6 +178,7 @@ Tool-augmented search — LLMs can now autonomously search the web and query loc
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *7.0.0* | Plan mode — structured task planning with org-mode TODO integration; tool calling progress feedback; enhanced =write_file= tool output. |
 | *6.0.0* | =/launch= slash command — launch models in external terminals with frontends (e.g. Claude Code); auto-detects terminal; Launch button in Model Management; comprehensive code quality fixes. |
 | *5.1.0* | Unguarded tool mode (=☠= indicator, red header line) — bypass all safety prompts; MiniMax-M2.7 cloud model. |
 | *5.0.1* | Auto-scroll toggle (=C-c g=, =↓= indicator); works mid-stream. |
