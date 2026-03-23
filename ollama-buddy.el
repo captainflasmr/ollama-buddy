@@ -2694,15 +2694,18 @@ are present, otherwise downloads from GitHub."
       (when (not ollama-buddy-default-model)
         ;; just get the first model
         (let ((model (car (ollama-buddy--get-models))))
-          (setq ollama-buddy--current-model model)
-          (setq ollama-buddy-default-model model)
-          (insert (format "\n\n* NO DEFAULT MODEL : Using best guess : %s" model))))
+          (if model
+              (progn
+                (setq ollama-buddy--current-model model)
+                (setq ollama-buddy-default-model model)
+                (insert (format "\n\n* NO DEFAULT MODEL : Using best guess : %s" model)))
+            (insert "\n\n* OFFLINE : Ollama server is not running — start it with =ollama serve="))))
       ;; Auto-load project summary if available (before prompt area setup)
       (when (featurep 'ollama-buddy-project)
         (ollama-buddy-project-auto-load-summary))
       (ollama-buddy--prepare-prompt-area)
       (put 'ollama-buddy--cycle-prompt-history 'history-position -1))
-    (ollama-buddy--update-status "Idle")
+    (ollama-buddy--update-status (if ollama-buddy--current-model "Idle" "OFFLINE"))
     (ollama-buddy-update-mode-line)
     ;; Fetch capabilities asynchronously so Emacs doesn't block
     (when (and ollama-buddy--current-model
@@ -4497,8 +4500,15 @@ from `ollama-buddy--send'."
                :filter #'ollama-buddy--stream-filter
                :sentinel #'ollama-buddy--stream-sentinel))
       (error
-       (ollama-buddy--update-status "OFFLINE - Connection failed")
-       (error "Failed to connect to Ollama: %s" (error-message-string err))))
+       ;; Invalidate status cache so next check re-probes
+       (setq ollama-buddy--last-status-check nil
+             ollama-buddy--status-cache nil)
+       (ollama-buddy--update-status "OFFLINE")
+       (let ((msg (error-message-string err)))
+         (if (string-match-p "Connection refused\\|connection refused\\|make client process failed" msg)
+             (user-error "Ollama server is not running (%s:%d) — start it with `ollama serve'"
+                         ollama-buddy-host ollama-buddy-port)
+           (user-error "Failed to connect to Ollama: %s" msg)))))
 
     (condition-case err
         (process-send-string

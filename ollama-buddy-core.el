@@ -2657,7 +2657,15 @@ When SYSTEM-PROMPT is non-nil, mark as a system prompt."
             (when (not (string-empty-p (buffer-string)))
               (json-read-from-string (buffer-string))))
         (error
-         (message "Ollama request error (%s): %s" endpoint (error-message-string err))
+         (let ((msg (error-message-string err)))
+           (if (string-match-p "Connection refused\\|connection refused\\|make client process failed" msg)
+               (progn
+                 ;; Invalidate status cache so next check re-probes
+                 (setq ollama-buddy--last-status-check nil
+                       ollama-buddy--status-cache nil)
+                 (message "Ollama server is not running (%s:%d) — start it with `ollama serve'"
+                          ollama-buddy-host ollama-buddy-port))
+             (message "Ollama request error (%s): %s" endpoint msg)))
          nil)))))
 
 (defun ollama-buddy--make-request-async (endpoint method payload callback)
@@ -2703,13 +2711,18 @@ When complete, CALLBACK is called with the status response and result."
            (fboundp 'ollama-buddy-curl--test-connection))
       (ollama-buddy-curl--test-connection))
      (t
+      ;; Use a direct TCP connection test — more reliable than
+      ;; url-retrieve-synchronously which can return a buffer even on
+      ;; connection refused without signaling an error.
       (condition-case nil
-          (let* ((url-show-status nil)
-                 (buf (url-retrieve-synchronously
-                       (format "http://%s:%s/api/tags" ollama-buddy-host ollama-buddy-port)
-                       nil nil 2)))
-            (when (buffer-live-p buf)
-              (kill-buffer buf))
+          (let ((proc (make-network-process
+                       :name "ollama-buddy-probe"
+                       :host ollama-buddy-host
+                       :service ollama-buddy-port
+                       :nowait nil
+                       :noquery t)))
+            (when (process-live-p proc)
+              (delete-process proc))
             t)
         (error nil))))))
 
