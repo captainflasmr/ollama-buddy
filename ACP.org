@@ -1,0 +1,63 @@
+#+TITLE: ACP (Agent Client Protocol) Integration Notes
+#+AUTHOR: James Dyer
+#+DATE: 2026-03-23
+
+* Overview
+
+ACP (Agent Client Protocol) is a standardized communication protocol between code editors/IDEs and AI coding agents, analogous to what LSP did for language servers. Developed by Coder (with involvement from Zed Industries and JetBrains).
+
+[[https://github.com/fritzgrabo/acp2ollama][acp2ollama]] is a Go bridge that wraps any ACP-compatible agent and exposes it as an Ollama-compatible HTTP server. This means ollama-buddy can talk to any ACP agent with zero code changes.
+
+- Blog post: https://fritzgrabo.com/posts/acp2ollama-in-emacs-for-fun-and-profit/
+- Repository: https://github.com/fritzgrabo/acp2ollama
+
+* Setup
+
+** Install acp2ollama
+
+#+begin_src bash
+git clone https://github.com/fritzgrabo/acp2ollama.git
+cd acp2ollama
+go build
+#+end_src
+
+** Make sure ollama isn't running
+
+As ollama-buddy by default connects to ollama and doesn't have a make provider request to hook into acp2ollama so I will just change the base ollama host and port for now.
+
+** Run with Gemini CLI (tested, working)
+
+#+begin_src bash
+GEMINI_API_KEY=<your-key> ./acp2ollama \
+  --model gemini-2.5-flash --host localhost --port 12345 \
+  --log-level debug -- npx @google/gemini-cli --acp
+#+end_src
+
+** Configure ollama-buddy
+
+#+begin_src elisp
+(setq ollama-buddy-host "localhost")
+(setq ollama-buddy-port 12345)
+#+end_src
+
+The model appears in =C-c m= and chat works through the normal buffer interface.
+
+* Known ACP-Compatible Agents
+
+** Tested
+
+| Agent      | Command                        | Auth Required  | Status  |
+|------------+--------------------------------+----------------+---------|
+| Gemini CLI | =npx @google/gemini-cli --acp= | Google API key | Working |
+
+** Untested (from ACP registry)
+
+| Agent                   | Command                                | License     | Auth              |
+|-------------------------+----------------------------------------+-------------+-------------------|
+| Claude (Zed wrapper)    | =npx @zed-industries/claude-agent-acp= | Proprietary | Anthropic API key |
+| GitHub Copilot          | =npx @github/copilot --acp=            | Proprietary | GitHub auth       |
+| Codex CLI (Zed wrapper) | =npx @zed-industries/codex-acp=        | Apache-2.0  | OpenAI API key    |
+| Cline                   | =npx cline --acp=                      | Apache-2.0  | BYO API key       |
+| Goose (Block)           | =goose acp=                            | Apache-2.0  | BYO API key       |
+| OpenCode                | =opencode acp=                         | MIT         | BYO API key       |
+| Kilo                    | =npx @kilocode/cli acp=                | MIT         | BYO API key       |
