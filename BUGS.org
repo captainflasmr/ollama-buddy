@@ -9,10 +9,11 @@ This document contains the current bugs/improvements, this is just for me mainly
 
 * Bugs/Improvements
 
-** TODO check deepseek thinking?
-** TODO with ollama not running :
-Ollama request error (/api/tags): make client process failed: Connection refused, :name, localhost, :buffer, #<killed buffer>, :host, localhost, :service, 11434, :nowait, nil, :noquery, nil, :tls-parameters, nil, :coding, nil [3 times]
-** TODO acp? with maybe  [[https://fritzgrabo.com/posts/acp2ollama-in-emacs-for-fun-and-profit/][~acp2ollama~ in Emacs
+** TODO completion module is Ollama-only and limited
+
+ollama-buddy-completion.el hardcodes /api/generate so no remote provider can power inline completions. Also lacks progress feedback, caching, customisable temperature/system-prompt, and partial-accept. Supporting remote providers (especially Copilot) would add significant value.
+
+** DOING acp? with maybe  [[https://fritzgrabo.com/posts/acp2ollama-in-emacs-for-fun-and-profit/][~acp2ollama~ in Emacs
 ** TODO maybe tidying up tooling output
 ** DOING Improve svg
 ** DOING more LLM integrations
@@ -27,10 +28,6 @@ Ollama request error (/api/tags): make client process failed: Connection refused
 ** TODO expand test coverage beyond core, backend, and RAG
 
 Only 3 of 23 modules have tests (~9% coverage). Tools, completion, rewrite, remote/provider, session, and web-search modules are entirely untested. Prioritise tools (safety modes are user-facing) and provider dispatch.
-
-** TODO completion module is Ollama-only and limited
-
-ollama-buddy-completion.el hardcodes /api/generate so no remote provider can power inline completions. Also lacks progress feedback, caching, customisable temperature/system-prompt, and partial-accept. Supporting remote providers (especially Copilot) would add significant value.
 
 ** TODO centralised error handling and retry logic
 

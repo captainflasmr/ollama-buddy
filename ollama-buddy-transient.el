@@ -182,6 +182,7 @@
     ("j" "Jump to Prompt" ollama-buddy-jump-to-prompt)
     ("l" "Pull Model" ollama-buddy-pull-model)
     ("x" "Toggle Stream" ollama-buddy-toggle-streaming)
+    ("T" "Toggle Think" ollama-buddy-toggle-thinking)
     ("e" "Switch Backend" ollama-buddy-switch-communication-backend)
     ("!" "Airplane Mode" ollama-buddy-toggle-airplane-mode)]
 

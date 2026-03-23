@@ -285,6 +285,14 @@ Has no effect when `ollama-buddy-collapse-thinking' is non-nil."
   :type 'boolean
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-thinking-enabled t
+  "When non-nil, request thinking/reasoning output from models that support it.
+When nil, thinking-capable models respond without emitting a thinking block.
+Toggle interactively with `ollama-buddy-toggle-thinking' or the `/think'
+slash command."
+  :type 'boolean
+  :group 'ollama-buddy)
+
 
 (defcustom ollama-buddy-reasoning-markers
   '(("<think>" . "</think>")
@@ -2246,7 +2254,7 @@ Called after async model fetches complete so counts are accurate."
           (concat
            (when (= (buffer-size) 0)
              (concat "#+TITLE: Ollama Buddy Chat"))
-           "\n\n* Ollama Buddy [v6.1.0]\n"
+           "\n\n* Ollama Buddy [v7.1.0]\n"
            (if-let ((logo (ollama-buddy--create-logo-image 140)))
                (concat logo "\n")
              (concat
@@ -2367,6 +2375,18 @@ please run =ollama serve=\n\n")
       ;; Call the original update status function with our combined status
       (let ((ollama-buddy--status combined-status))
         (ollama-buddy--update-status combined-status)))))
+
+(defun ollama-buddy-toggle-thinking ()
+  "Toggle thinking/reasoning output for models that support it.
+When enabled, thinking-capable models emit a reasoning block before
+responding.  When disabled, they respond directly without thinking."
+  (interactive)
+  (setq ollama-buddy-thinking-enabled (not ollama-buddy-thinking-enabled))
+  (ollama-buddy--update-status
+   (if ollama-buddy-thinking-enabled "Thinking enabled" "Thinking disabled"))
+  (ollama-buddy-update-mode-line)
+  (message "Ollama Buddy thinking mode: %s"
+           (if ollama-buddy-thinking-enabled "enabled" "disabled")))
 
 (defun ollama-buddy-toggle-streaming ()
   "Toggle streaming mode for Ollama responses.
@@ -2596,7 +2616,9 @@ When SYSTEM-PROMPT is non-nil, mark as a system prompt."
          (cloud-indicator (if (ollama-buddy--cloud-model-p model) "☁" ""))
          (tools-indicator (if (ollama-buddy--model-supports-tools model) "⚒" ""))
          (vision-indicator (if (ollama-buddy--model-supports-vision model) "⊙" ""))
-         (thinking-indicator (if (ollama-buddy--model-supports-thinking model) "✦" ""))
+         (thinking-indicator (if (ollama-buddy--model-supports-thinking model)
+                                (if ollama-buddy-thinking-enabled "✦" "✧")
+                              ""))
          (in-buffer-indicator (if (bound-and-true-p ollama-buddy-in-buffer-replace) "✎" ""))
          (indicators (string-trim (concat cloud-indicator tools-indicator
                                           vision-indicator thinking-indicator
@@ -3281,7 +3303,9 @@ ACTUAL-MODEL is the model being used instead."
                                     (propertize "☠" 'face '(:foreground "red" :weight bold))
                                   ""))
            (vision-indicator (if (ollama-buddy--model-supports-vision model) "⊙" ""))
-           (thinking-indicator (if (ollama-buddy--model-supports-thinking model) "✦" ""))
+           (thinking-indicator (if (ollama-buddy--model-supports-thinking model)
+                                    (if ollama-buddy-thinking-enabled "✦" "✧")
+                                  ""))
            (attachment-indicator (if ollama-buddy--current-attachments
                                      (propertize (format "≡%d" (length ollama-buddy--current-attachments))
                                                  'face '(:weight bold))

@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 7.0.0
+;; Version: 7.1.0
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -1029,6 +1029,7 @@ Typically invoked via `C-u C-u C-c C-c'."
     ("retry"      ollama-buddy-retry-last-prompt      "Resend the last prompt to the model")
     ("tone"       ollama-buddy-set-tone               "Set the response tone/style")
     ("streaming"  ollama-buddy-toggle-streaming       "Toggle real-time response streaming")
+    ("think"      ollama-buddy-toggle-thinking        "Toggle thinking/reasoning output")
     ("skill"      ollama-buddy-user-prompts-load      "Load a skill as system prompt")
     ("reset"      ollama-buddy-reset-system-prompt    "Clear the current system prompt")
     ("completion" ollama-buddy-completion-toggle      "Toggle inline code completions")
@@ -4350,6 +4351,9 @@ Returns a plist with keys:
                         `((model . ,(ollama-buddy--get-real-model-name model))
                           (messages . ,(vconcat [] messages-all))
                           (stream . ,(if ollama-buddy-streaming-enabled t :json-false)))
+                        (when (and ollama-buddy-thinking-enabled
+                                   (ollama-buddy--model-supports-thinking model))
+                          '((think . t)))
                         (when ollama-buddy-keepalive
                           `((keep_alive . ,ollama-buddy-keepalive)))))
          ;; Add tools schema if applicable

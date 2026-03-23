@@ -126,6 +126,12 @@ A cross-cutting view of key features across the major chat clients, to the best 
 
 * Updates
 
+** What's New (v7.1.0)
+
+Thinking toggle and Ollama offline detection.
+
+- *Thinking Toggle* -- =/think= slash command (or transient =T=) controls whether reasoning models emit a thinking block.  When disabled, models skip reasoning for faster, cheaper responses.  Header shows =✦= (enabled) or =✧= (disabled).
+
 ** What's New (v7.0.0)
 
 Plan mode — structured task planning with org-mode TODO integration.
@@ -178,21 +184,22 @@ Tool-augmented search — LLMs can now autonomously search the web and query loc
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| *7.0.0* | Plan mode — structured task planning with org-mode TODO integration; tool calling progress feedback; enhanced =write_file= tool output. |
-| *6.0.0* | =/launch= slash command — launch models in external terminals with frontends (e.g. Claude Code); auto-detects terminal; Launch button in Model Management; comprehensive code quality fixes. |
-| *5.1.0* | Unguarded tool mode (=☠= indicator, red header line) — bypass all safety prompts; MiniMax-M2.7 cloud model. |
-| *5.0.1* | Auto-scroll toggle (=C-c g=, =↓= indicator); works mid-stream. |
-| *5.0.0* | Tool calling for all providers: OpenAI, Claude, and Gemini API types support function calling; HTTP error detection; Gemini native =systemInstruction=. |
-| *4.2.0* | Tool-augmented search: =web_search= and =rag_search= built-in tools; Emacs 29.1 minimum; thinking fold robustness; welcome screen folded commands; model management running models section. |
-| *4.1.1* | Recommended Models browser (=C-c L=), model letter ordering matches display, session load moved to =C-c f=.                                                                                                              |
-| *4.1.0* | Response property drawers (=:TOKENS:=, =:RATE:=, etc.), org file links for attachments, SVG context bar, removed token stats toggle.                                                                                     |
+| *7.1.0* | Thinking toggle (=/think=, =✦=/=✧= indicator) — control reasoning output; Ollama offline detection with clear messages.                                                                                                  |
+| *7.0.0* | Plan mode — structured task planning with org-mode TODO integration; tool calling progress feedback; enhanced =write_file= tool output.                                                                                   |
+| *6.0.0* | =/launch= slash command — launch models in external terminals with frontends (e.g. Claude Code); auto-detects terminal; Launch button in Model Management; comprehensive code quality fixes.                              |
+| *5.1.0* | Unguarded tool mode (=☠= indicator, red header line) — bypass all safety prompts; MiniMax-M2.7 cloud model.                                                                                                              |
+| *5.0.1* | Auto-scroll toggle (=C-c g=, =↓= indicator); works mid-stream.                                                                                                                                                            |
+| *5.0.0* | Tool calling for all providers: OpenAI, Claude, and Gemini API types support function calling; HTTP error detection; Gemini native =systemInstruction=.                                                                   |
+| *4.2.0* | Tool-augmented search: =web_search= and =rag_search= built-in tools; Emacs 29.1 minimum; thinking fold robustness; welcome screen folded commands; model management running models section.                               |
+| *4.1.1* | Recommended Models browser (=C-c L=), model letter ordering matches display, session load moved to =C-c f=.                                                                                                               |
+| *4.1.0* | Response property drawers (=:TOKENS:=, =:RATE:=, etc.), org file links for attachments, SVG context bar, removed token stats toggle.                                                                                      |
 | *4.0.0* | Generic provider system (=ollama-buddy-provider-create=) — register any OpenAI/Claude/Gemini-compatible API with one call. Existing =require= wrappers still work but are deprecated.                                     |
 | *3.7.1* | Code quality, async model info, error cleanup, =/cd= directory switching, removed Fabric/Awesome.                                                                                                                         |
-| *3.7.0* | RAG pause/resume with periodic checkpointing; new built-in tools (=search_files=, =get_region=, =get_buffer_info=, =describe_symbol=, =eval_elisp=).                                                                     |
+| *3.7.0* | RAG pause/resume with periodic checkpointing; new built-in tools (=search_files=, =get_region=, =get_buffer_info=, =describe_symbol=, =eval_elisp=).                                                                      |
 | *3.6.0* | RAG incremental updates (re-index only changed files) and cancellation support.                                                                                                                                           |
 | *3.5.1* | Curl backend refactor — unified request pipeline, shared stream processor, full feature parity with network-process backend (46% code reduction).                                                                         |
-| *3.5.0* | Project Init (experimental) — =/init= generates a cached project summary that auto-loads in future sessions; a step towards code-oriented LLM workflows.                                                                 |
-| *3.4.1* | Thinking Peek and Rewind — =TAB= peek at thinking mid-stream; =C-u C-u C-c C-c= to rewind conversation from any prompt heading.                                                                                          |
+| *3.5.0* | Project Init (experimental) — =/init= generates a cached project summary that auto-loads in future sessions; a step towards code-oriented LLM workflows.                                                                  |
+| *3.4.1* | Thinking Peek and Rewind — =TAB= peek at thinking mid-stream; =C-u C-u C-c C-c= to rewind conversation from any prompt heading.                                                                                           |
 | *3.4.0* | Skills — Local Org-mode based AI personas and task-specific instructions; `/skill` slash command and `@skill(name)` inline syntax.                                                                                        |
 | *3.3.0* | Smart Project Integration — `project.el` support for contextual file attachment and `/project` slash command.                                                                                                             |
 | *3.2.2* | Main transient menu reorganization (=C-c O=) — 4x2 compact grid with streamlined sub-menus and top-level History/Sessions.                                                                                                |

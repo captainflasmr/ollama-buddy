@@ -1530,6 +1530,12 @@ Requires <code class="code">ollama-buddy-tools</code>.
 <dd><p>Toggle streaming mode on/off (<code class="code">ollama-buddy-toggle-streaming</code>).
 </p>
 </dd>
+<dt><code class="code">think</code></dt>
+<dd><p>Toggle thinking/reasoning output (<code class="code">ollama-buddy-toggle-thinking</code>).
+When disabled, reasoning-capable models skip their thinking phase entirely
+for faster responses.  Header shows <code class="code">✦</code> (enabled) or <code class="code">✧</code> (disabled).
+</p>
+</dd>
 <dt><code class="code">reset</code></dt>
 <dd><p>Reset system prompt to default (<code class="code">ollama-buddy-reset-system-prompt</code>).
 </p>
@@ -4143,7 +4149,8 @@ Works with LM Studio, llama.cpp, vLLM, Jan, and any
 </li><li><code class="code">⚡</code> - Tool auto-execute enabled (unsafe tools still prompt)
 </li><li><code class="code">☠</code> - Unguarded mode: ALL safety prompts bypassed (header line turns red)
 </li><li><code class="code">⊙</code> - Current model supports vision
-</li><li><code class="code">✦</code> - Current model supports thinking/reasoning
+</li><li><code class="code">✦</code> - Thinking enabled and model supports reasoning
+</li><li><code class="code">✧</code> - Thinking disabled (model supports reasoning but <code class="code">think</code> is off)
 </li><li><code class="code">≡N</code> - Number of file attachments (e.g. <code class="code">≡3</code> means 3 files)
 </li><li><code class="code">♁N</code> - Number of web search results attached
 </li><li><code class="code">↓</code> - Auto-scroll enabled (buffer follows streaming output)
@@ -4809,7 +4816,7 @@ Next: <a href="#Project-Integration" accesskey="n" rel="next">Project Integratio
 </li><li> When reasoning ends, folds the heading with <code class="code">outline-hide-subtree</code> and inserts a <code class="code">*** ✦ Response</code> heading to mark the start of the actual answer.
 </li></ol>
 
-<p>The <code class="code">✦</code> symbol appears in the header line and prompt line whenever the active model supports thinking/reasoning.
+<p>The <code class="code">✦</code> symbol appears in the header line and prompt line when thinking is enabled for the active model.  When thinking is disabled (via <code class="code">/think</code>), the symbol changes to <code class="code">✧</code>.
 </p>
 </div>
 <div class="section-level-extent" id="Key-Bindings">
@@ -4826,6 +4833,14 @@ Next: <a href="#Project-Integration" accesskey="n" rel="next">Project Integratio
 <h3 class="section"><span>20.4 Configuration<a class="copiable-link" href="#Configuration-7"> &para;</a></span></h3>
 
 <dl class="table">
+<dt><code class="code">ollama-buddy-thinking-enabled</code></dt>
+<dd><p>When non-nil (default <code class="code">t</code>), the Ollama API <code class="code">think</code> parameter is sent
+to reasoning-capable models so they produce a thinking block.  When nil, models
+skip reasoning entirely for faster, cheaper responses.  Toggle with <code class="code">/think</code>,
+transient <kbd class="kbd">T</kbd>, or <code class="code">M-x ollama-buddy-toggle-thinking</code>.  The header line
+shows <code class="code">✦</code> when enabled or <code class="code">✧</code> when disabled.
+</p>
+</dd>
 <dt><code class="code">ollama-buddy-collapse-thinking</code></dt>
 <dd><p>When non-nil (default <code class="code">t</code>), thinking content is automatically collapsed to the <code class="code">*** ✦ Think</code> heading after the reasoning block ends.
 </p>

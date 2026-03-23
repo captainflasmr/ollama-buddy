@@ -1414,6 +1414,11 @@ Available =/= commands (filtered by loaded modules):
 - =streaming= :: Toggle streaming mode on/off
   (=ollama-buddy-toggle-streaming=).
 
+- =think= :: Toggle thinking/reasoning output
+  (=ollama-buddy-toggle-thinking=). When disabled, reasoning-capable
+  models skip their thinking phase entirely for faster responses. Header
+  shows =✦= (enabled) or =✧= (disabled).
+
 - =reset= :: Reset system prompt to default
   (=ollama-buddy-reset-system-prompt=).
 
@@ -4158,7 +4163,8 @@ The header line shows compact status indicators:
 - =☠= - Unguarded mode: ALL safety prompts bypassed (header line turns
   red)
 - =⊙= - Current model supports vision
-- =✦= - Current model supports thinking/reasoning
+- =✦= - Thinking enabled and model supports reasoning
+- =✧= - Thinking disabled (model supports reasoning but =think= is off)
 - =≡N= - Number of file attachments (e.g. =≡3= means 3 files)
 - =♁N= - Number of web search results attached
 - =↓= - Auto-scroll enabled (buffer follows streaming output)
@@ -4873,8 +4879,9 @@ When a model emits =<think>= tags or uses the DeepSeek
    and inserts a =*** ✦ Response= heading to mark the start of the
    actual answer.
 
-The =✦= symbol appears in the header line and prompt line whenever the
-active model supports thinking/reasoning.
+The =✦= symbol appears in the header line and prompt line when thinking
+is enabled for the active model. When thinking is disabled (via
+=/think=), the symbol changes to =✧=.
 
 <<Key-Bindings>>
 *** 20.3 Key Bindings [[#Key-Bindings][¶]]
@@ -4892,6 +4899,13 @@ active model supports thinking/reasoning.
 :CUSTOM_ID: configuration-5
 :CLASS: section
 :END:
+- =ollama-buddy-thinking-enabled= :: When non-nil (default =t=), the
+  Ollama API =think= parameter is sent to reasoning-capable models so
+  they produce a thinking block. When nil, models skip reasoning
+  entirely for faster, cheaper responses. Toggle with =/think=,
+  transient T, or =M-x ollama-buddy-toggle-thinking=. The header line
+  shows =✦= when enabled or =✧= when disabled.
+
 - =ollama-buddy-collapse-thinking= :: When non-nil (default =t=),
   thinking content is automatically collapsed to the =*** ✦ Think=
   heading after the reasoning block ends.

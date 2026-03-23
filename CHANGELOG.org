@@ -11,6 +11,21 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-03-23 Sun> *7.1.0*
+
+Thinking toggle and Ollama offline detection.
+
+*** Features
+
+- *Thinking toggle* -- New =ollama-buddy-thinking-enabled= variable controls
+  whether the Ollama API =think= parameter is sent to reasoning-capable models.
+  When enabled (default), models like DeepSeek-R1, QwQ, and Qwen3 emit a
+  thinking block before responding.  When disabled, they skip reasoning entirely
+  for faster, cheaper responses.  Toggle with =/think= slash command, =T= in the
+  transient menu, or =M-x ollama-buddy-toggle-thinking=.
+- *Header indicator* -- =✦= (thinking enabled) / =✧= (thinking disabled) on
+  both the header line and prompt line, shown only for thinking-capable models.
+
 ** <2026-03-21 Fri> *7.0.0*
 
 Plan mode — structured task planning with org-mode TODO integration.
