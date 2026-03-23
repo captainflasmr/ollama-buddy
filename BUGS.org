@@ -10,6 +10,9 @@ This document contains the current bugs/improvements, this is just for me mainly
 * Bugs/Improvements
 
 ** TODO check deepseek thinking?
+** TODO with ollama not running :
+Ollama request error (/api/tags): make client process failed: Connection refused, :name, localhost, :buffer, #<killed buffer>, :host, localhost, :service, 11434, :nowait, nil, :noquery, nil, :tls-parameters, nil, :coding, nil [3 times]
+** TODO acp? with maybe  [[https://fritzgrabo.com/posts/acp2ollama-in-emacs-for-fun-and-profit/][~acp2ollama~ in Emacs
 ** TODO maybe tidying up tooling output
 ** DOING Improve svg
 ** DOING more LLM integrations
