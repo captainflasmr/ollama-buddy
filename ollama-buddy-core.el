@@ -40,6 +40,7 @@
 (declare-function ollama-buddy--model-supports-vision "ollama-buddy")
 (declare-function ollama-buddy--model-supports-tools "ollama-buddy")
 (declare-function ollama-buddy--model-supports-thinking "ollama-buddy")
+(declare-function ollama-buddy-update-mode-line "ollama-buddy")
 (declare-function ollama-buddy--check-context-before-send "ollama-buddy")
 (declare-function ollama-buddy-curl--validate-executable "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--test-connection "ollama-buddy-curl")
