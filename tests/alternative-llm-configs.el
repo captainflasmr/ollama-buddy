@@ -573,3 +573,38 @@ clarity. Return only the corrected text."))
 
   ;; Name chat sessions automatically via the LLM
   (setopt ellama-naming-scheme 'ellama-generate-name-by-llm))
+
+;;; ============================================================
+;;; agent-shell
+;;; ============================================================
+
+;; Using ACP so maybe I can use claude code in Emacs!
+
+(use-package agent-shell
+  :ensure t
+  :config
+  ;; Use login-based auth (uses your Claude Code Pro subscription)
+  (setq agent-shell-anthropic-authentication
+        (agent-shell-anthropic-make-authentication :login t))
+
+  ;; Inherit environment from Emacs (picks up PATH etc.)
+  (setq agent-shell-anthropic-claude-environment
+        (agent-shell-make-environment-variables :inherit-env t))
+
+  ;; Make Claude Code the default agent
+  (setq agent-shell-preferred-agent-config
+        (agent-shell-anthropic-make-claude-code-config))
+
+  ;; Show usage info at end of each turn
+  (setq agent-shell-show-usage-at-turn-end t)
+
+  :bind (:map agent-shell-mode-map
+              ;; Match ollama-buddy: RET for newline, C-c RET to send
+              ("RET"     . newline)
+              ("C-c m" . agent-shell-set-session-model)
+              ("C-c RET" . shell-maker-submit)
+              ("C-c C-c" . shell-maker-submit)          ; ollama-buddy also uses C-c C-c
+              ("C-c C-k" . agent-shell-interrupt)        ; same as ollama-buddy cancel
+              ;; History navigation (same as ollama-buddy M-p/M-n)
+              ("M-p"     . comint-previous-input)
+              ("M-n"     . comint-next-input)))
