@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 7.1.0
+;; Version: 7.1.1
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -232,6 +232,7 @@ Unlike `ollama-buddy--response-start-position' (which is advanced by
 is set once per turn in `ollama-buddy--send' and never modified during
 streaming.  Used by `ollama-buddy--rebuild-tool-batch' to delete all
 artifacts for the turn.")
+
 
 (defun ollama-buddy--insert-response-header (model original-model &optional has-images)
   "Insert the response header for MODEL in the chat buffer.

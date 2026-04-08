@@ -207,7 +207,9 @@ Second value (1.0) is the red threshold (at or exceeding limit)."
   :type 'boolean
   :group 'ollama-buddy)
 
-(defcustom ollama-buddy-vision-models '("gemma3:4b" "llama3.2:3b" "llama3.2:8b")
+(defcustom ollama-buddy-vision-models '("gemma3:4b" "llama3.2:3b" "llama3.2:8b"
+                                         "gemma4:e2b" "gemma4:e4b" "gemma4:latest"
+                                         "gemma4:26b" "gemma4:31b" "gemma4:31b-cloud")
   "List of models known to support vision capabilities."
   :type '(repeat string)
   :group 'ollama-buddy)
@@ -671,7 +673,8 @@ The \"In-Buffer\" tone is automatically applied when
            :models ("qwen3.5:0.8b" "qwen3.5:2b" "qwen3.5:4b" "qwen3.5:9b" "qwen3.5:27b" "qwen3.5:35b" "deepseek-r1:1.5b" "deepseek-r1:7b" "deepseek-r1:14b" "deepseek-r1:32b"))
     (:name "Efficient & Capable"
            :description "Balanced speed and quality from Google Gemma"
-           :models ("gemma2:2b" "gemma2:9b" "gemma2:27b"))
+           :models ("gemma2:2b" "gemma2:9b"
+                    "gemma4:e2b" "gemma4:e4b" "gemma4:latest"))
     (:name "Coding"
            :description "Code generation, review and debugging"
            :models ("qwen2.5-coder:1.5b" "qwen2.5-coder:7b" "qwen2.5-coder:14b" "qwen2.5-coder:32b" "starcoder2:3b" "starcoder2:7b"))
@@ -893,7 +896,8 @@ Values are `api' (from Ollama API), `fallback' (static), or `manual'.")
     "glm-4.7:cloud"
     "glm-5:cloud"
     "minimax-m2.1:cloud"
-    "minimax-m2.7:cloud")
+    "minimax-m2.7:cloud"
+    "gemma4:31b-cloud")
   "List of available Ollama cloud models.
 These models run on ollama.com infrastructure and require authentication
 via `ollama signin`.  Use \\[universal-argument] with `ollama-buddy--swap-model'
@@ -2255,7 +2259,7 @@ Called after async model fetches complete so counts are accurate."
           (concat
            (when (= (buffer-size) 0)
              (concat "#+TITLE: Ollama Buddy Chat"))
-           "\n\n* Ollama Buddy [v7.1.0]\n"
+           "\n\n* Ollama Buddy [v7.1.1]\n"
            (if-let ((logo (ollama-buddy--create-logo-image 140)))
                (concat logo "\n")
              (concat

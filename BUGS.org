@@ -9,6 +9,8 @@ This document contains the current bugs/improvements, this is just for me mainly
 
 * Bugs/Improvements
 
+** TODO Add pi
+
 ** TODO completion module is Ollama-only and limited
 
 ollama-buddy-completion.el hardcodes /api/generate so no remote provider can power inline completions. Also lacks progress feedback, caching, customisable temperature/system-prompt, and partial-accept. Supporting remote providers (especially Copilot) would add significant value.
