@@ -126,6 +126,12 @@ A cross-cutting view of key features across the major chat clients, to the best 
 
 * Updates
 
+** What's New (v7.1.2)
+
+GLM 5.1 cloud model support.
+
+- *GLM 5.1 Cloud Model* -- Added =glm-5.1:cloud= to =ollama-buddy-cloud-models= (appears in =C-c m= with the =☁= indicator).  GLM-5.1 is Z.ai's next-generation flagship model for agentic engineering, with significantly stronger coding capabilities and support for tools and thinking.
+
 ** What's New (v7.1.1)
 
 Gemma 4 model support.

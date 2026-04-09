@@ -11,6 +11,18 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-04-09 Thu> *7.1.2*
+
+GLM 5.1 cloud model support.
+
+*** Features
+
+- *GLM 5.1 Cloud Model* -- Added =glm-5.1:cloud= to
+  =ollama-buddy-cloud-models=, so it appears in the =C-c m= model picker
+  with the =☁= indicator.  GLM-5.1 is Z.ai's next-generation flagship
+  model for agentic engineering, with significantly stronger coding
+  capabilities and support for tools and thinking.
+
 ** <2026-04-08 Wed> *7.1.1*
 
 Gemma 4 model support.

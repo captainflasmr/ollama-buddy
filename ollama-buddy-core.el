@@ -895,6 +895,7 @@ Values are `api' (from Ollama API), `fallback' (static), or `manual'.")
     "gpt-oss:20b-cloud"
     "glm-4.7:cloud"
     "glm-5:cloud"
+    "glm-5.1:cloud"
     "minimax-m2.1:cloud"
     "minimax-m2.7:cloud"
     "gemma4:31b-cloud")
@@ -2259,7 +2260,7 @@ Called after async model fetches complete so counts are accurate."
           (concat
            (when (= (buffer-size) 0)
              (concat "#+TITLE: Ollama Buddy Chat"))
-           "\n\n* Ollama Buddy [v7.1.1]\n"
+           "\n\n* Ollama Buddy [v7.1.2]\n"
            (if-let ((logo (ollama-buddy--create-logo-image 140)))
                (concat logo "\n")
              (concat
