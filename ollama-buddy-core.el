@@ -24,6 +24,14 @@
 
 (declare-function face-remap-remove-relative "face-remap")
 
+;; Emacs 28 compatibility — org-fold API was introduced in Org 9.6 (Emacs 29.1)
+(unless (fboundp 'org-fold-hide-subtree)
+  (defalias 'org-fold-hide-subtree #'outline-hide-subtree))
+(unless (fboundp 'org-fold-show-entry)
+  (defalias 'org-fold-show-entry #'outline-show-entry))
+(unless (fboundp 'org-fold-hide-drawer-toggle)
+  (defalias 'org-fold-hide-drawer-toggle #'org-hide-drawer-toggle))
+
 ;; Core Customization Groups
 (defgroup ollama-buddy nil
   "Customization group for Ollama Buddy."

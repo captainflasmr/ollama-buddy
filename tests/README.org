@@ -25,6 +25,7 @@ This file contains a description of my testing strategy for the =ollama-buddy= E
 
 # List of elisp files to compile
 elisp_files=(
+  "ollama-buddy-annotate.el"
   "ollama-buddy-claude.el"
   "ollama-buddy-codestral.el"
   "ollama-buddy-completion.el"
