@@ -5213,8 +5213,14 @@ Modifies the variable in place."
              "Delete"
              'action `(lambda (_)
                         (when (yes-or-no-p (format "Really delete model '%s'? " ,model))
-                          (ollama-buddy-delete-model ,model)
-                          (ollama-buddy-manage-models)))
+                          ;; Refresh only after the async DELETE confirms,
+                          ;; otherwise the list re-fetches before Ollama
+                          ;; has actually removed the model.
+                          (ollama-buddy-delete-model
+                           ,model
+                           (lambda ()
+                             (when (get-buffer "*Ollama Models Management*")
+                               (ollama-buddy-manage-models-refresh))))))
              'help-echo "Delete this model")
 
             (when launch-available
@@ -5488,15 +5494,19 @@ When the operation completes, CALLBACK is called with no arguments if provided."
           operation-id
           (format "Successfully copied model %s" model))))))))
 
-(defun ollama-buddy-delete-model (model)
-  "Delete MODEL from Ollama."
+(defun ollama-buddy-delete-model (model &optional on-success)
+  "Delete MODEL from Ollama.
+If ON-SUCCESS is non-nil, call it (with no arguments) once the deletion
+has been confirmed by the server.  This lets callers such as the Model
+Management buffer refresh themselves only after the async DELETE has
+actually completed, rather than racing it."
   (let ((payload (json-encode `((model . ,(ollama-buddy--get-real-model-name model)))))
         (operation-id (gensym "delete-")))
 
     (ollama-buddy--register-background-operation
      operation-id
      (format "Deleting %s" model))
-    
+
     (ollama-buddy--make-request-async-backend
      "/api/delete"
      "DELETE"
@@ -5515,9 +5525,15 @@ When the operation completes, CALLBACK is called with no arguments if provided."
           (format "Error deleting %s" model)))
         (t
          (message "Model %s successfully deleted" model)
+         ;; Invalidate the models cache so the next listing actually
+         ;; reflects the deletion rather than returning stale data.
+         (setq ollama-buddy--models-cache-timestamp nil
+               ollama-buddy--running-models-cache-timestamp nil)
          (ollama-buddy--complete-background-operation
           operation-id
-          (format "Successfully deleted model %s" model))))))))
+          (format "Successfully deleted model %s" model))
+         (when on-success
+           (funcall on-success))))))))
 
 (defun ollama-buddy-params-help ()
   "Display help for Ollama parameters.
