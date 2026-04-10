@@ -205,7 +205,8 @@ Example:
                    :terminal (or terminal nil))
              ollama-buddy-tools--registry)
     (setq ollama-buddy-tools--schema-cache nil)
-    (message "Registered tool: %s" name-str)))
+    (unless noninteractive
+      (message "Registered tool: %s" name-str))))
 
 (defun ollama-buddy-tools-unregister (name)
   "Unregister tool NAME from the registry."
@@ -982,7 +983,8 @@ Returns a list of tool result messages to append to the conversation."
                              (mapconcat #'identity indexes-to-search ", ")))))))))
        t))  ; safe
 
-    (message "Initialized %d built-in tools" (hash-table-count ollama-buddy-tools--registry))))
+    (unless noninteractive
+      (message "Initialized %d built-in tools" (hash-table-count ollama-buddy-tools--registry)))))
 
 ;;; Interactive Commands
 

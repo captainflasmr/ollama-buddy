@@ -2683,9 +2683,10 @@ are present, otherwise downloads from GitHub."
       (org-mode)
       (setq-local org-hide-emphasis-markers t)
       (setq-local org-hide-leading-stars t)
-      (if (boundp 'org-fold-catch-invisible-edits)
-          (setq-local org-fold-catch-invisible-edits nil)
-        (setq-local org-catch-invisible-edits nil))
+      (with-no-warnings
+        (if (boundp 'org-fold-catch-invisible-edits)
+            (setq-local org-fold-catch-invisible-edits nil)
+          (setq-local org-catch-invisible-edits nil)))
       (visual-line-mode 1)
       (ollama-buddy-mode 1)
       (ollama-buddy--check-status)

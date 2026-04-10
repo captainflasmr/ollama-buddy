@@ -30,7 +30,8 @@
 (unless (fboundp 'org-fold-show-entry)
   (defalias 'org-fold-show-entry #'outline-show-entry))
 (unless (fboundp 'org-fold-hide-drawer-toggle)
-  (defalias 'org-fold-hide-drawer-toggle #'org-hide-drawer-toggle))
+  (defalias 'org-fold-hide-drawer-toggle
+    (with-no-warnings (symbol-function 'org-hide-drawer-toggle))))
 
 ;; Core Customization Groups
 (defgroup ollama-buddy nil
