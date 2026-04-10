@@ -143,7 +143,7 @@ GLM 5.1 cloud model support.
 Gemma 4 model support.
 
 - *Gemma 4 Cloud Model* -- Added =gemma4:31b-cloud= to =ollama-buddy-cloud-models= (appears in =C-c m= with the =☁= indicator).
-- *Gemma 4 Recommended Models* -- Added =gemma4:e2b=, =gemma4:e4b= and =gemma4:latest= to the "Efficient & Capable" category shown via =C-c L=.  The larger 26b/31b variants are left out — the recommended list targets models that fit on a regular consumer PC.
+- *Gemma 4 Recommended Models* -- Added =gemma4:e2b=, =gemma4:e4b=, =gemma4:latest= and =gemma4:26b= to the "Efficient & Capable" category shown via =C-c L=.  =gemma4:26b= is a Mixture-of-Experts model with only 4B active parameters, so it runs comfortably on 16GB GPUs (with partial CPU offload) and on Apple Silicon with shared memory.  The dense =gemma4:31b= is still left off the recommended list.
 - *Gemma 4 Vision Support* -- All Gemma 4 variants are registered as vision models, so the =⊙= indicator lights up and image attachment works with them.
 
 ** What's New (v7.1.0)

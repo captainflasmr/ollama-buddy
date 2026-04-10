@@ -52,12 +52,15 @@ Gemma 4 model support.
 - *Gemma 4 Cloud Model* -- Added =gemma4:31b-cloud= to
   =ollama-buddy-cloud-models=, so it appears in the =C-c m= model picker
   with the =☁= indicator.
-- *Gemma 4 Recommended Models* -- Added =gemma4:e2b=, =gemma4:e4b= and
-  =gemma4:latest= to the "Efficient & Capable" category of
-  =ollama-buddy-available-models= (shown via =C-c L=).  The larger
-  =gemma4:26b= / =gemma4:31b= variants are intentionally left out since
-  the recommended list targets models that fit on a regular consumer
-  PC.  =gemma2:27b= was dropped from the same list for consistency.
+- *Gemma 4 Recommended Models* -- Added =gemma4:e2b=, =gemma4:e4b=,
+  =gemma4:latest= and =gemma4:26b= to the "Efficient & Capable"
+  category of =ollama-buddy-available-models= (shown via =C-c L=).
+  =gemma4:26b= is a Mixture-of-Experts model with only 4B active
+  parameters, so the Q4 quant runs on 16GB GPUs (with partial CPU
+  offload) and on Apple Silicon shared-memory systems, despite its
+  total weight size.  The dense =gemma4:31b= is still left off the
+  recommended list.  =gemma2:27b= was dropped from the same list for
+  consistency.
 - *Gemma 4 Vision Support* -- All Gemma 4 variants (=e2b=, =e4b=,
   =latest=, =26b=, =31b=, =31b-cloud=) are registered as vision models,
   so the =⊙= indicator lights up and image attachment works with them.

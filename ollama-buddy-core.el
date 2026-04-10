@@ -674,7 +674,7 @@ The \"In-Buffer\" tone is automatically applied when
     (:name "Efficient & Capable"
            :description "Balanced speed and quality from Google Gemma"
            :models ("gemma2:2b" "gemma2:9b"
-                    "gemma4:e2b" "gemma4:e4b" "gemma4:latest"))
+                    "gemma4:e2b" "gemma4:e4b" "gemma4:latest" "gemma4:26b"))
     (:name "Coding"
            :description "Code generation, review and debugging"
            :models ("qwen2.5-coder:1.5b" "qwen2.5-coder:7b" "qwen2.5-coder:14b" "qwen2.5-coder:32b" "starcoder2:3b" "starcoder2:7b"))
