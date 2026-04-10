@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 7.1.2
+;; Version: 7.1.3
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -2764,10 +2764,18 @@ TCP packets split a JSON object across multiple filter calls."
     ;; newline-delimited.  Try to parse the whole body at once; ignore-errors
     ;; handles the case where the body has not fully arrived yet (next chunk
     ;; retries).  On success, display the error and tear down the process.
+    ;;
+    ;; Strip any leading non-`{' bytes first so a chunked-transfer chunk size
+    ;; (e.g. `82\r\n') doesn't get parsed as the integer 82 and crash
+    ;; downstream alist-get calls.  We also require the parse to yield a
+    ;; cons (alist) so a stray scalar can't masquerade as an error object.
     (when ollama-buddy--stream-http-status
-      (let ((error-json (ignore-errors
-                          (json-read-from-string ollama-buddy--stream-pending))))
-        (when error-json
+      (let* ((body (replace-regexp-in-string
+                    "\\`[^{]*" "" ollama-buddy--stream-pending))
+             (error-json (and (> (length body) 0)
+                              (ignore-errors
+                                (json-read-from-string body)))))
+        (when (consp error-json)
           (let ((status-str (ollama-buddy--handle-http-error
                              ollama-buddy--stream-http-status error-json)))
             (ollama-buddy--update-status status-str))

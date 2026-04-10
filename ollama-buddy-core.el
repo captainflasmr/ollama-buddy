@@ -2260,7 +2260,7 @@ Called after async model fetches complete so counts are accurate."
           (concat
            (when (= (buffer-size) 0)
              (concat "#+TITLE: Ollama Buddy Chat"))
-           "\n\n* Ollama Buddy [v7.1.2]\n"
+           "\n\n* Ollama Buddy [v7.1.3]\n"
            (if-let ((logo (ollama-buddy--create-logo-image 140)))
                (concat logo "\n")
              (concat
@@ -3023,11 +3023,18 @@ Cloud models are always considered valid if Ollama is running."
   "Handle an HTTP error with STATUS-CODE and parsed ERROR-JSON.
 Inserts the error into the chat buffer, updates cloud auth status
 if needed, and prepares the prompt area.  Returns the status string
-for `ollama-buddy--update-status'."
-  (let* ((error-msg (or (alist-get 'error error-json)
-                        (alist-get 'Status error-json)
+for `ollama-buddy--update-status'.
+
+ERROR-JSON may be any Lisp value — when it isn't an alist (e.g. the
+body parsed as a bare integer or string because of chunked-transfer
+prefixes), fall back to a generic message instead of crashing on
+`alist-get'."
+  (let* ((alist (and (listp error-json) error-json))
+         (error-msg (or (alist-get 'error alist)
+                        (alist-get 'Status alist)
+                        (and (stringp error-json) error-json)
                         (format "HTTP %d" status-code)))
-         (signin-url (alist-get 'signin_url error-json))
+         (signin-url (alist-get 'signin_url alist))
          (is-auth-error (or (= status-code 401) (= status-code 403)
                             (string-match-p
                              "unauthorized\\|authentication\\|sign.?in"

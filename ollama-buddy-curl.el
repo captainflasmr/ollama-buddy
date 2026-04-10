@@ -226,13 +226,17 @@ When complete, CALLBACK is called with the status response and result."
             ;; The body may arrive across multiple chunks so ignore-errors
             ;; lets us retry on the next chunk.  On success, display the
             ;; error and kill the process (matching network-process behaviour).
+            ;; Require a cons so a stray scalar (e.g. an integer parsed from
+            ;; a chunk-size prefix) can't crash `handle-http-error'.
             (when (ollama-buddy-curl--get proc :http-error-status)
-              (let* ((body (string-trim
-                            (buffer-substring-no-properties (point-min) (point-max))))
+              (let* ((body (replace-regexp-in-string
+                            "\\`[^{]*" ""
+                            (string-trim
+                             (buffer-substring-no-properties (point-min) (point-max)))))
                      (error-json (when (> (length body) 0)
                                    (ignore-errors
                                      (json-read-from-string body)))))
-                (when error-json
+                (when (consp error-json)
                   (let ((status-str (ollama-buddy--handle-http-error
                                      (ollama-buddy-curl--get proc :http-error-status)
                                      error-json)))

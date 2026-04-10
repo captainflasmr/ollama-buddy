@@ -126,6 +126,12 @@ A cross-cutting view of key features across the major chat clients, to the best 
 
 * Updates
 
+** What's New (v7.1.3)
+
+Fix process-filter crash on cloud usage limit responses.
+
+- *Cloud limit crash fix* -- Sending a prompt to an Ollama cloud model when the session was at 100% used to spam =error in process filter: Wrong type argument: listp, 82= and never surface a real message.  The non-2xx response body's chunked-transfer chunk-size prefix (e.g. =82\r\n{...}=) was being parsed as an integer and crashing =alist-get= downstream.  The streaming filter now strips leading non-={= bytes before parsing and requires the parsed value to be a cons; =handle-http-error= is also defensive against non-alist input.  Cloud usage limits now produce a clean error in the chat buffer.
+
 ** What's New (v7.1.2)
 
 GLM 5.1 cloud model support.

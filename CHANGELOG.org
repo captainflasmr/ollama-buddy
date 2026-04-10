@@ -11,6 +11,26 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-04-09 Thu> *7.1.3*
+
+Fix process-filter crash on cloud usage limit responses.
+
+*** Bug Fixes
+
+- *Cloud limit crash* -- When an Ollama cloud model session was at 100%
+  usage, the non-2xx error response from =/api/chat= could begin with a
+  chunked-transfer-encoding chunk-size prefix (e.g. =82\r\n{...}=).
+  =json-read-from-string= happily parsed the leading =82= as the integer
+  =82=, which then crashed =ollama-buddy--handle-http-error= with =Wrong
+  type argument: listp, 82= inside the network-process filter, repeating
+  for every subsequent chunk.  The streaming filter now strips any
+  leading non-={= bytes before parsing and requires the parsed value to
+  be a cons before treating it as an alist.  =handle-http-error= itself
+  is also defensive against non-alist input, falling back to a generic
+  =HTTP NNN= message (or the raw string body) so a future caller can't
+  reintroduce the crash.  The same =consp= guard is mirrored in the
+  curl backend filter for symmetry.
+
 ** <2026-04-09 Thu> *7.1.2*
 
 GLM 5.1 cloud model support.
