@@ -11,6 +11,29 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-04-10 Thu> *7.2.0*
+
+Small model warning for agent launch.
+
+*** Features
+
+- *Small Model Launch Warning* -- When launching a local model below 7B
+  parameters via =/launch= or the Model Management =Launch= button,
+  Ollama Buddy now displays a confirmation warning explaining that coding
+  agents prepend 20,000+ tokens of system prompt to every request, which
+  can cause small models to appear frozen or take many minutes to
+  respond.  The threshold is configurable via
+  =ollama-buddy-launch-small-model-threshold= (default 7; set to =nil=
+  to disable).  Cloud models skip the warning since they run on remote
+  infrastructure.
+
+*** Documentation
+
+- *Small Model Warning section* -- New section in the Texinfo manual
+  covering why small models struggle with agentic workflows, hardware
+  recommendations, and how to diagnose unresponsive launches with
+  =ollama ps=.
+
 ** <2026-04-10 Thu> *7.1.4*
 
 Expanded launch agent registry.

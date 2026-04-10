@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 7.1.3
+;; Version: 7.2.0
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -3636,6 +3636,15 @@ Prompts for agent if more than one is available on PATH."
                      (choice (completing-read "Agent: "
                                               (mapcar #'car candidates) nil t)))
                 (cdr (assoc choice candidates))))))
+      ;; Warn about small models that may struggle with agent system prompts
+      (let ((param-size (ollama-buddy--extract-model-param-size model))
+            (threshold ollama-buddy-launch-small-model-threshold))
+        (when (and param-size threshold (< param-size threshold)
+                   (not (ollama-buddy--cloud-model-p model)))
+          (unless (yes-or-no-p
+                   (format "%s is a %.0fB parameter model.  Coding agents prepend 20K+ tokens of system prompt to every request — small models may appear frozen or take many minutes to respond, especially without a dedicated GPU.  Continue anyway? "
+                           model param-size))
+            (user-error "Launch cancelled"))))
       (apply #'start-process
              (format "ollama-agent-%s" (plist-get agent :name))
              nil

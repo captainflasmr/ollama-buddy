@@ -346,6 +346,7 @@ allowing you to leverage powerful large language models (LLMs) directly within y
     <li><a id="toc-Terminal-Auto_002dDetection" href="#Terminal-Auto_002dDetection">17.3 Terminal Auto-Detection</a></li>
     <li><a id="toc-Welcome-Screen" href="#Welcome-Screen">17.4 Welcome Screen</a></li>
     <li><a id="toc-Configuration-3" href="#Configuration-4">17.5 Configuration</a></li>
+    <li><a id="toc-Small-Model-Warning" href="#Small-Model-Warning">17.6 Small Model Warning</a></li>
   </ul></li>
   <li><a id="toc-Global-System-Prompt" href="#Global-System-Prompt">18 Global System Prompt</a>
   <ul class="toc-numbered-mark">
@@ -4556,6 +4557,7 @@ Next: <a href="#Global-System-Prompt" accesskey="n" rel="next">Global System Pro
 <li><a href="#Terminal-Auto_002dDetection" accesskey="3">Terminal Auto-Detection</a></li>
 <li><a href="#Welcome-Screen" accesskey="4">Welcome Screen</a></li>
 <li><a href="#Configuration-4" accesskey="5">Configuration</a></li>
+<li><a href="#Small-Model-Warning" accesskey="6">Small Model Warning</a></li>
 </ul>
 <div class="section-level-extent" id="Overview-5">
 <h3 class="section"><span>17.1 Overview<a class="copiable-link" href="#Overview-5"> &para;</a></span></h3>
@@ -4631,9 +4633,59 @@ Most terminals use <code class="code">-e</code>; gnome-terminal uses <code class
 <dt><code class="code">ollama-buddy-launch-frontends</code></dt>
 <dd><p>List of frontend names for <code class="code">ollama launch</code> (default: <code class="code">(&quot;claude&quot;)</code>).
 Add <code class="code">&quot;codex&quot;</code> or others as they become available.
+</p>
+</dd>
+<dt><code class="code">ollama-buddy-launch-small-model-threshold</code></dt>
+<dd><p>Minimum recommended parameter count (in billions) for agent launch
+(default: <code class="code">7</code>).  Models below this threshold trigger a confirmation
+warning.  Set to <code class="code">nil</code> to disable the warning.
 </p></dd>
 </dl>
 
+</div>
+<div class="section-level-extent" id="Small-Model-Warning">
+<h3 class="section"><span>17.6 Small Model Warning<a class="copiable-link" href="#Small-Model-Warning"> &para;</a></span></h3>
+
+<p>Coding agents such as Claude Code, OpenCode, Codex, and others prepend
+<strong class="strong">large system prompts</strong> (20,000+ tokens) to every request.  These
+prompts contain tool definitions, safety guardrails, formatting
+instructions, and other context that the agent needs to function.
+</p>
+<p>This means that even a simple message like &ldquo;hello&rdquo; actually requires the
+model to process over 20,000 tokens before it can generate a single word
+of output.  On small models (below <em class="math">\sim</em>7B parameters), especially
+without a dedicated GPU, this can cause:
+</p>
+<ul class="itemize mark-bullet">
+<li>The model appearing <strong class="strong">completely frozen</strong> for minutes at a time
+</li><li><strong class="strong">No visible output</strong> while the model slowly encodes the system prompt
+</li><li><strong class="strong">Extremely slow responses</strong> once generation finally begins
+</li><li><strong class="strong">Token counts showing zero</strong> in the agent UI while prompt
+encoding is still in progress
+</li></ul>
+
+<h4 class="subheading" id="Recommendations"><span>Recommendations<a class="copiable-link" href="#Recommendations"> &para;</a></span></h4>
+
+<ul class="itemize mark-bullet">
+<li>Use models with <strong class="strong">7B+ parameters</strong> for agent workflows (14B+
+preferred)
+</li><li>A <strong class="strong">dedicated GPU with sufficient VRAM</strong> is strongly
+recommended &mdash; CPU inference with large agent contexts is impractical
+for interactive use
+</li><li>Consider <strong class="strong">Ollama cloud models</strong> (e.g.
+<code class="code">qwen3-coder:480b-cloud</code>) which offload compute to Ollama&rsquo;s
+infrastructure
+</li><li>If a model appears frozen after launch, run <code class="code">ollama ps</code> in a
+terminal to see whether the model is loaded and how much is offloaded to
+CPU
+</li></ul>
+
+<p>When you launch a model below the threshold set in
+<code class="code">ollama-buddy-launch-small-model-threshold</code> (default 7B), Ollama
+Buddy will display a confirmation warning explaining the potential
+performance impact.  This warning is skipped for cloud models, which run
+on remote infrastructure.
+</p>
 <hr>
 </div>
 </div>

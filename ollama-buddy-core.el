@@ -1030,6 +1030,24 @@ Example:
   :type '(repeat (plist :key-type keyword :value-type string))
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-launch-small-model-threshold 7
+  "Minimum parameter count (in billions) recommended for agent launch.
+Coding agents like Claude Code, OpenCode, and Codex prepend large system
+prompts (20,000+ tokens of tool definitions and instructions) to every
+request.  Models below this threshold may appear unresponsive as they
+struggle to process the context, especially without a dedicated GPU.
+Set to nil to disable the warning."
+  :type '(choice (const :tag "No warning" nil) integer)
+  :group 'ollama-buddy)
+
+(defun ollama-buddy--extract-model-param-size (model)
+  "Extract the parameter size in billions from MODEL name.
+Parses the tag portion after the colon, looking for patterns like
+\"4b\", \"27b\", \"480b\".  Returns the number as a float, or nil
+if the size cannot be determined."
+  (when (and model (string-match ":\\([0-9.]+\\)b" model))
+    (string-to-number (match-string 1 model))))
+
 (defun ollama-buddy--get-agent-registry ()
   "Return the merged agent registry (built-in + user-defined).
 User entries in `ollama-buddy-launch-extra-agents' override

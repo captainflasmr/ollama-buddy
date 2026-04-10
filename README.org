@@ -126,6 +126,12 @@ A cross-cutting view of key features across the major chat clients, to the best 
 
 * Updates
 
+** What's New (v7.2.0)
+
+Small model warning for agent launch.
+
+- *Small Model Launch Warning* -- When launching a local model below 7B parameters via =/launch= or the Model Management =Launch= button, a confirmation warning now explains that coding agents prepend 20,000+ tokens of system prompt to every request, which can cause small models to appear frozen or take many minutes to respond.  Configurable via =ollama-buddy-launch-small-model-threshold= (default 7; set to =nil= to disable).  Cloud models skip the warning.
+
 ** What's New (v7.1.4)
 
 Expanded launch agent registry.
@@ -210,6 +216,7 @@ Tool-augmented search — LLMs can now autonomously search the web and query loc
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *7.2.0* | Small model launch warning — agents prepend 20K+ tokens of system prompt; models below 7B now trigger a confirmation warning explaining potential performance impact.                                                     |
 | *7.1.4* | Expanded =ollama launch= agent registry — Cline, Droid, OpenCode, OpenClaw, Pi now detected alongside Claude Code and Codex.                                                                                             |
 | *7.1.0* | Thinking toggle (=/think=, =✦=/=✧= indicator) — control reasoning output; Ollama offline detection with clear messages.                                                                                                  |
 | *7.0.0* | Plan mode — structured task planning with org-mode TODO integration; tool calling progress feedback; enhanced =write_file= tool output.                                                                                   |

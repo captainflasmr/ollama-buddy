@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 7.1.0
+@subtitle For Ollama Buddy version 7.2.0
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -3214,7 +3214,54 @@ Most terminals use @code{-e}; gnome-terminal uses @code{--}.
 @item ollama-buddy-launch-frontends
 List of frontend names for @code{ollama launch} (default: @code{("claude")}).
 Add @code{"codex"} or others as they become available.
+
+@item ollama-buddy-launch-small-model-threshold
+Minimum recommended parameter count (in billions) for agent launch
+(default: @code{7}).  Models below this threshold trigger a confirmation
+warning.  Set to @code{nil} to disable the warning.
 @end table
+
+@section Small Model Warning
+
+Coding agents such as Claude Code, OpenCode, Codex, and others prepend
+@strong{large system prompts} (20,000+ tokens) to every request.  These
+prompts contain tool definitions, safety guardrails, formatting
+instructions, and other context that the agent needs to function.
+
+This means that even a simple message like ``hello'' actually requires the
+model to process over 20,000 tokens before it can generate a single word
+of output.  On small models (below @math{\sim}7B parameters), especially
+without a dedicated GPU, this can cause:
+
+@itemize @bullet
+@item The model appearing @strong{completely frozen} for minutes at a time
+@item @strong{No visible output} while the model slowly encodes the system prompt
+@item @strong{Extremely slow responses} once generation finally begins
+@item @strong{Token counts showing zero} in the agent UI while prompt
+encoding is still in progress
+@end itemize
+
+@subheading Recommendations
+
+@itemize @bullet
+@item Use models with @strong{7B+ parameters} for agent workflows (14B+
+preferred)
+@item A @strong{dedicated GPU with sufficient VRAM} is strongly
+recommended --- CPU inference with large agent contexts is impractical
+for interactive use
+@item Consider @strong{Ollama cloud models} (e.g.@:
+@code{qwen3-coder:480b-cloud}) which offload compute to Ollama's
+infrastructure
+@item If a model appears frozen after launch, run @code{ollama ps} in a
+terminal to see whether the model is loaded and how much is offloaded to
+CPU
+@end itemize
+
+When you launch a model below the threshold set in
+@code{ollama-buddy-launch-small-model-threshold} (default 7B), Ollama
+Buddy will display a confirmation warning explaining the potential
+performance impact.  This warning is skipped for cloud models, which run
+on remote infrastructure.
 
 @node Global System Prompt
 @chapter Global System Prompt

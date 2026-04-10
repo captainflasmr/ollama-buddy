@@ -254,6 +254,7 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Terminal-Auto_002dDetection][17.3 Terminal Auto-Detection]]
   - [[#Welcome-Screen][17.4 Welcome Screen]]
   - [[#Configuration-4][17.5 Configuration]]
+  - [[#Small-Model-Warning][17.6 Small Model Warning]]
 - [[#Global-System-Prompt][18 Global System Prompt]]
   - [[#Overview-6][18.1 Overview]]
   - [[#Configuration-5][18.2 Configuration]]
@@ -4579,6 +4580,7 @@ Buddy]]   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 - [[#Terminal-Auto_002dDetection][Terminal Auto-Detection]]
 - [[#Welcome-Screen][Welcome Screen]]
 - [[#Configuration-4][Configuration]]
+- [[#Small-Model-Warning][Small Model Warning]]
 
 <<Overview-5>>
 *** 17.1 Overview [[#Overview-5][¶]]
@@ -4653,6 +4655,52 @@ When frontends are detected, the welcome screen shows an indicator:
 - =ollama-buddy-launch-frontends= :: List of frontend names for
   =ollama launch= (default: =("claude")=). Add ="codex"= or others as
   they become available.
+
+- =ollama-buddy-launch-small-model-threshold= :: Minimum recommended
+  parameter count (in billions) for agent launch (default: =7=). Models
+  below this threshold trigger a confirmation warning. Set to =nil= to
+  disable the warning.
+
+<<Small-Model-Warning>>
+*** 17.6 Small Model Warning [[#Small-Model-Warning][¶]]
+:PROPERTIES:
+:CUSTOM_ID: small-model-warning
+:CLASS: section
+:END:
+Coding agents such as Claude Code, OpenCode, Codex, and others prepend
+*large system prompts* (20,000+ tokens) to every request. These prompts
+contain tool definitions, safety guardrails, formatting instructions,
+and other context that the agent needs to function.
+
+This means that even a simple message like “hello” actually requires the
+model to process over 20,000 tokens before it can generate a single word
+of output. On small models (below /\sim/7B parameters), especially
+without a dedicated GPU, this can cause:
+
+- The model appearing *completely frozen* for minutes at a time
+- *No visible output* while the model slowly encodes the system prompt
+- *Extremely slow responses* once generation finally begins
+- *Token counts showing zero* in the agent UI while prompt encoding is
+  still in progress
+
+**** Recommendations [[#Recommendations][¶]]
+:PROPERTIES:
+:CUSTOM_ID: Recommendations
+:CLASS: subheading
+:END:
+- Use models with *7B+ parameters* for agent workflows (14B+ preferred)
+- A *dedicated GPU with sufficient VRAM* is strongly recommended --- CPU
+  inference with large agent contexts is impractical for interactive use
+- Consider *Ollama cloud models* (e.g. =qwen3-coder:480b-cloud=) which
+  offload compute to Ollama's infrastructure
+- If a model appears frozen after launch, run =ollama ps= in a terminal
+  to see whether the model is loaded and how much is offloaded to CPU
+
+When you launch a model below the threshold set in
+=ollama-buddy-launch-small-model-threshold= (default 7B), Ollama Buddy
+will display a confirmation warning explaining the potential performance
+impact. This warning is skipped for cloud models, which run on remote
+infrastructure.
 
 --------------
 
