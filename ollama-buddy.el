@@ -5289,6 +5289,36 @@ Shows categorized models that are not yet installed locally."
         (insert "Press =g= to refresh\n\n")
         (if (not models-to-pull)
             (insert "All recommended models are already installed.\n")
+          ;; New models section
+          (let ((new-pullable (cl-remove-if-not
+                               (lambda (m) (member m models-to-pull))
+                               (mapcar (lambda (model)
+                                         (if (ollama-buddy--should-use-marker-prefix)
+                                             (concat ollama-buddy-marker-prefix model)
+                                           model))
+                                       ollama-buddy-new-models))))
+            (when new-pullable
+              (insert "* New\n\n")
+              (insert "Recently released models\n\n")
+              (dolist (model new-pullable)
+                (let ((display-model (if (ollama-buddy--should-use-marker-prefix)
+                                         model
+                                       (ollama-buddy--get-real-model-name model))))
+                  (insert "- ")
+                  (insert-text-button
+                   display-model
+                   'action `(lambda (_)
+                              (ollama-buddy-pull-model ,model))
+                   'help-echo (format "Pull %s from Ollama Hub" display-model))
+                  (when (ollama-buddy--model-supports-tools display-model)
+                    (insert " ⚒"))
+                  (when (ollama-buddy--model-supports-vision display-model)
+                    (insert " ⊙"))
+                  (when (ollama-buddy--model-supports-thinking display-model)
+                    (insert " ✦"))
+                  (insert "\n")))
+              (insert "\n")))
+          ;; Category sections
           (dolist (category ollama-buddy-available-models)
             (let* ((cat-name (plist-get category :name))
                    (cat-desc (plist-get category :description))

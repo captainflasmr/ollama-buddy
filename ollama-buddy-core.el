@@ -664,6 +664,13 @@ The \"In-Buffer\" tone is automatically applied when
   :type 'directory
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-new-models
+  '("devstral:24b" "qwen3.5:0.8b" "qwen3.5:2b" "qwen3.5:4b" "qwen3.5:9b" "qwen3.5:27b" "qwen3.5:35b" "gemma4:e2b" "gemma4:e4b" "gemma4:latest" "gemma4:26b")
+  "List of newly released models to highlight in the Recommended Models buffer.
+These appear in a dedicated \"New\" section at the top of the buffer."
+  :type '(repeat (string :tag "Model name"))
+  :group 'ollama-buddy)
+
 (defcustom ollama-buddy-available-models
   '((:name "General Chat"
            :description "Everyday conversation, Q&A and general tasks"
@@ -696,9 +703,12 @@ Each entry is a plist with :name, :description and :models keys."
   :group 'ollama-buddy)
 
 (defun ollama-buddy--available-models-flat ()
-  "Return a flat list of all model names from `ollama-buddy-available-models'."
-  (mapcan (lambda (cat) (copy-sequence (plist-get cat :models)))
-          ollama-buddy-available-models))
+  "Return a flat list of all model names from `ollama-buddy-available-models'.
+Also includes models from `ollama-buddy-new-models'."
+  (delete-dups
+   (append (copy-sequence ollama-buddy-new-models)
+           (mapcan (lambda (cat) (copy-sequence (plist-get cat :models)))
+                   ollama-buddy-available-models))))
 
 (defun ollama-buddy--pull-model-annotation (model)
   "Return annotation for MODEL in pull selection.
@@ -707,13 +717,18 @@ MODEL can be a plain name or prefixed with `ollama-buddy-marker-prefix'."
                              (string-prefix-p ollama-buddy-marker-prefix model))
                        (substring model (length ollama-buddy-marker-prefix))
                      model))
+         (is-new (member real-name ollama-buddy-new-models))
          (cat (cl-find-if (lambda (c) (member real-name (plist-get c :models)))
                           ollama-buddy-available-models)))
-    (when cat
+    (when (or is-new cat)
       (concat (propertize " " 'display '(space :align-to 35))
-              (propertize (format "[%s] %s" 
-                                  (plist-get cat :name)
-                                  (plist-get cat :description))
+              (propertize (format "%s%s"
+                                  (if is-new "★ New  " "")
+                                  (if cat
+                                      (format "[%s] %s"
+                                              (plist-get cat :name)
+                                              (plist-get cat :description))
+                                    ""))
                           'face 'completions-annotations)))))
 
 (defun ollama-buddy--pull-model-completion-table (string pred action)
