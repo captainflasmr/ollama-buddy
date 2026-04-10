@@ -1052,6 +1052,8 @@ Typically invoked via `C-u C-u C-c C-c'."
     ("export"     org-export-dispatch                 "Open org-export dispatcher for the chat buffer")
     ("backend"    ollama-buddy-switch-communication-backend "Switch between network-process and curl backends")
     ("launch"     ollama-buddy-launch                    "Launch a model in an external terminal agent (claude, codex, aider, ...)")
+    ("format"     ollama-buddy-set-response-format   "Set response format (json/schema/off)")
+    ("annotate"   ollama-buddy-annotate-apply-last-response "Apply annotations from last response to database")
     ("rewind"     (lambda () (interactive) (ollama-buddy-rewind t)) "Rewind conversation to a previous prompt")
     ("plan"       ollama-buddy-plan-start               "Start plan mode — LLM generates a structured plan")
     ("plan-next"  ollama-buddy-plan-execute-next         "Execute the next TODO step in the plan")
@@ -1093,6 +1095,7 @@ is ever needed."
                  (pcase (car entry)
                    ("system" (featurep 'ollama-buddy-user-prompts))
                    ("tools" (featurep 'ollama-buddy-tools))
+                   ("annotate" (featurep 'ollama-buddy-annotate))
                    (_ t)))
                ollama-buddy-slash-commands))
              (names (mapcar #'car candidates))
@@ -4364,7 +4367,9 @@ Returns a plist with keys:
                                    (ollama-buddy--model-supports-thinking model))
                           '((think . t)))
                         (when ollama-buddy-keepalive
-                          `((keep_alive . ,ollama-buddy-keepalive)))))
+                          `((keep_alive . ,ollama-buddy-keepalive)))
+                        (when ollama-buddy--response-format
+                          `((format . ,ollama-buddy--response-format)))))
          ;; Add tools schema if applicable
          (with-tools (let* ((suppress (and (boundp 'ollama-buddy--suppress-tools-once)
                                            ollama-buddy--suppress-tools-once))

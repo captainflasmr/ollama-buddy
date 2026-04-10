@@ -349,6 +349,12 @@ own default of five minutes."
                  (string :tag "Duration (e.g. \"5m\", \"1h\", \"0\", \"-1\")"))
   :group 'ollama-buddy)
 
+(defvar ollama-buddy--response-format nil
+  "When non-nil, the value to send as the `format' parameter in API requests.
+Can be the string \"json\" for plain JSON mode, or an alist representing
+a JSON schema for structured output.  Set via `ollama-buddy-set-response-format'
+and cleared with `ollama-buddy-clear-response-format'.")
+
 (defcustom ollama-buddy-auto-scroll nil
   "Whether to auto-scroll the chat buffer during streaming output.
 When non-nil, the buffer scrolls to follow new output if the
@@ -993,8 +999,13 @@ Most terminals use \"-e\".  gnome-terminal uses \"--\"."
   :group 'ollama-buddy)
 
 (defvar ollama-buddy--agent-registry
-  '((:name "claude"  :executable "claude"  :label "Claude Code")
-    (:name "codex"   :executable "codex"   :label "Codex CLI"))
+  '((:name "claude"    :executable "claude"    :label "Claude Code")
+    (:name "cline"     :executable "cline"     :label "Cline")
+    (:name "codex"     :executable "codex"     :label "Codex")
+    (:name "droid"     :executable "droid"     :label "Droid")
+    (:name "opencode"  :executable "opencode"  :label "OpenCode")
+    (:name "openclaw"  :executable "openclaw"  :label "OpenClaw")
+    (:name "pi"        :executable "pi"        :label "Pi"))
   "Registry of known `ollama launch' agents.
 Each entry is a plist with:
   :name       - Frontend name passed to `ollama launch'
@@ -2458,6 +2469,45 @@ Choose a preset or enter a custom duration string accepted by Ollama:
     (message "Ollama keep-alive set to: %s"
              (or value "default (5m)"))))
 
+(defun ollama-buddy-set-response-format ()
+  "Set the response format for subsequent API requests.
+Choose \"json\" for free-form JSON output, \"schema\" to enter a JSON
+schema for structured output, or \"off\" to clear the format constraint."
+  (interactive)
+  (let ((choice (completing-read
+                 (format "Response format [current: %s]: "
+                         (cond ((null ollama-buddy--response-format) "off")
+                               ((stringp ollama-buddy--response-format)
+                                ollama-buddy--response-format)
+                               (t "schema")))
+                 '("json" "schema" "off") nil t)))
+    (pcase choice
+      ("json"
+       (setq ollama-buddy--response-format "json")
+       (ollama-buddy--update-status "Format: json")
+       (message "Response format set to JSON"))
+      ("schema"
+       (let* ((input (read-string "JSON schema: "))
+              (schema (condition-case err
+                          (json-read-from-string input)
+                        (error
+                         (user-error "Invalid JSON schema: %s"
+                                     (error-message-string err))))))
+         (setq ollama-buddy--response-format schema)
+         (ollama-buddy--update-status "Format: schema")
+         (message "Response format set to JSON schema")))
+      ("off"
+       (setq ollama-buddy--response-format nil)
+       (ollama-buddy--update-status "Format: off")
+       (message "Response format cleared")))))
+
+(defun ollama-buddy-clear-response-format ()
+  "Clear any response format constraint."
+  (interactive)
+  (setq ollama-buddy--response-format nil)
+  (ollama-buddy--update-status "Format: off")
+  (message "Response format cleared"))
+
 (defun ollama-buddy--md-to-org-convert-region (start end &optional heading-offset)
   "Convert the region from START to END from Markdown to Org-mode format.
 HEADING-OFFSET controls how many extra `*' are added to markdown
@@ -3350,6 +3400,9 @@ ACTUAL-MODEL is the model being used instead."
                                           'face '(:weight bold))
                             ""))
            (scroll-indicator (if ollama-buddy-auto-scroll "↓" ""))
+           (format-indicator (if ollama-buddy--response-format
+                                (propertize "⚙" 'face '(:weight bold))
+                              ""))
            (curl-indicator (if (eq ollama-buddy-communication-backend 'curl) "⇄" ""))
            (in-buffer-indicator (if (bound-and-true-p ollama-buddy-in-buffer-replace) "✎" ""))
            (tone-indicator (let ((tone ollama-buddy--current-tone))
@@ -3378,7 +3431,7 @@ ACTUAL-MODEL is the model being used instead."
             (replace-regexp-in-string
              "%" "%%"
             (concat
-             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s%s %s%s%s"
+             (format "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s %s%s%s%s %s%s%s"
                      airplane-indicator
                      curl-indicator
                      scroll-indicator
@@ -3399,6 +3452,7 @@ ACTUAL-MODEL is the model being used instead."
                      (if (and ollama-buddy-hide-reasoning
                               (not ollama-buddy-collapse-thinking)) "V" "")
                      tone-indicator
+                     format-indicator
 
                      (ollama-buddy--update-multishot-status)
                      (propertize (if (ollama-buddy--check-status) "" " OFFLINE")

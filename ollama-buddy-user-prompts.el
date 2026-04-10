@@ -131,6 +131,19 @@ Returns a plist with :category and :title, or nil if not a valid format."
       (forward-line 1))
     (if (eobp) "" (string-trim (buffer-substring-no-properties (point) (point-max))))))
 
+(defun ollama-buddy-user-prompts--extract-format (content)
+  "Extract the #+FORMAT: header value from CONTENT.
+Returns the parsed JSON value (string or alist), or nil if not present."
+  (when (string-match "^#\\+FORMAT:\\s-*\\(.+\\)" content)
+    (let ((value (string-trim (match-string 1 content))))
+      (if (string= value "json")
+          "json"
+        (condition-case nil
+            (json-read-from-string value)
+          (error
+           (message "Warning: could not parse #+FORMAT: value as JSON")
+           nil))))))
+
 ;;;###autoload
 (defun ollama-buddy-user-prompts-save ()
   "Save the current system prompt to a file."
@@ -183,28 +196,41 @@ Returns a plist with :category and :title, or nil if not a valid format."
            (content (ollama-buddy-user-prompts--read-prompt-content file)))
       
       (when content
-        ;; Extract just the content without org headers
-        (setq content (ollama-buddy-user-prompts--strip-org-headers content))
-        
-        ;; Check if we actually have content after stripping headers
-        (if (string-empty-p content)
-            (progn
-              (message "Warning: User prompt '%s' contains no content after headers" title)
-              (when (yes-or-no-p "The selected prompt file appears to be empty. Continue anyway? ")
-                ;; Set empty system prompt to effectively clear it
-                (setq ollama-buddy--current-system-prompt nil
-                      ollama-buddy--current-system-prompt-title nil
-                      ollama-buddy--current-system-prompt-source nil)
-                (ollama-buddy--update-status "Empty prompt loaded (system prompt cleared)")
-                (message "System prompt cleared due to empty file")))
-          
-          ;; We have actual content, proceed normally
-          (ollama-buddy--set-system-prompt-with-metadata content title "user")
-          
-          ;; Ensure chat buffer is ready
-          (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
-            (ollama-buddy--open-chat))
-          (message "Loaded user prompt: %s" title))))))
+        ;; Extract format header before stripping
+        (let ((format-spec (ollama-buddy-user-prompts--extract-format content)))
+          ;; Extract just the content without org headers
+          (setq content (ollama-buddy-user-prompts--strip-org-headers content))
+
+          ;; Check if we actually have content after stripping headers
+          (if (string-empty-p content)
+              (progn
+                (message "Warning: User prompt '%s' contains no content after headers" title)
+                (when (yes-or-no-p "The selected prompt file appears to be empty. Continue anyway? ")
+                  ;; Set empty system prompt to effectively clear it
+                  (setq ollama-buddy--current-system-prompt nil
+                        ollama-buddy--current-system-prompt-title nil
+                        ollama-buddy--current-system-prompt-source nil)
+                  (ollama-buddy--update-status "Empty prompt loaded (system prompt cleared)")
+                  (message "System prompt cleared due to empty file")))
+
+            ;; We have actual content, proceed normally
+            (ollama-buddy--set-system-prompt-with-metadata content title "user")
+
+            ;; Apply response format if specified
+            (if format-spec
+                (progn
+                  (setq ollama-buddy--response-format format-spec)
+                  (message "Loaded user prompt: %s (format: %s)" title
+                           (if (stringp format-spec) format-spec "schema")))
+              ;; Clear format when loading a prompt without #+FORMAT:
+              (when ollama-buddy--response-format
+                (setq ollama-buddy--response-format nil)
+                (message "Loaded user prompt: %s (format cleared)" title))
+              (message "Loaded user prompt: %s" title))
+
+            ;; Ensure chat buffer is ready
+            (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+              (ollama-buddy--open-chat))))))))
 
 (defvar ollama-buddy-user-prompts-list-mode-map
   (let ((map (make-sparse-keymap)))
