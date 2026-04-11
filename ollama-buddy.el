@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 7.2.0
+;; Version: 7.3.0
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -3606,9 +3606,11 @@ Shows cached status. Use signin/signout to update or try a cloud model request."
                ('unknown "Unknown (try using a cloud model to verify)")))))
 
 (defun ollama-buddy--launch-model (model)
-  "Launch MODEL in an external terminal via `ollama launch'.
+  "Launch MODEL in an external terminal with an AI agent.
 MODEL is the raw model name (without display prefixes).
-Prompts for agent if more than one is available on PATH."
+Prompts for agent if more than one is available on PATH.
+Standard agents use `ollama launch'; direct agents (:direct t)
+are invoked as standalone executables."
   (let* ((detected (unless ollama-buddy-launch-terminal
                      (ollama-buddy--detect-terminal)))
          (terminal (or ollama-buddy-launch-terminal
@@ -3646,16 +3648,26 @@ Prompts for agent if more than one is available on PATH."
                    (format "%s is a %.0fB parameter model.  Coding agents prepend 20K+ tokens of system prompt to every request — small models may appear frozen or take many minutes to respond, especially without a dedicated GPU.  Continue anyway? "
                            model param-size))
             (user-error "Launch cancelled"))))
-      (apply #'start-process
-             (format "ollama-agent-%s" (plist-get agent :name))
-             nil
-             terminal
-             (append (split-string flag)
-                     (list ollama-buddy-ollama-executable
-                           "launch" (plist-get agent :name)
-                           "--model" model)))
-      (message "Launched %s with model %s in %s"
-               (plist-get agent :label) model terminal))))
+      (let* ((direct (plist-get agent :direct))
+             (model-flag (if (plist-member agent :model-flag)
+                             (plist-get agent :model-flag)
+                           "--model"))
+             (cmd (if direct
+                      (append (split-string flag)
+                              (list (plist-get agent :executable))
+                              (when model-flag
+                                (list model-flag model)))
+                    (append (split-string flag)
+                            (list ollama-buddy-ollama-executable
+                                  "launch" (plist-get agent :name)
+                                  "--model" model)))))
+        (apply #'start-process
+               (format "ollama-agent-%s" (plist-get agent :name))
+               nil
+               terminal
+               cmd)
+        (message "Launched %s with model %s in %s"
+                 (plist-get agent :label) model terminal)))))
 
 (defun ollama-buddy-launch ()
   "Launch an Ollama model in an external terminal with an AI agent.

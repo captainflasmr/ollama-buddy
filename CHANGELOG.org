@@ -11,6 +11,32 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-04-11 Fri> *7.3.0*
+
+Direct launch support for external agents.
+
+*** Features
+
+- *Direct Agent Launch* -- The =/launch= system now supports external
+  tools that are not built-in =ollama launch= integrations.  Agent
+  registry entries with =:direct t= are invoked as standalone executables
+  in a terminal, bypassing =ollama launch= entirely.  This allows tools
+  like Oh My Pi (=omp=) to participate in the launch workflow alongside
+  standard agents like Claude Code and Codex.
+- *Oh My Pi (omp)* -- Added to the built-in agent registry as the first
+  direct agent.
+- *Flexible Model Passing* -- Direct agents receive =--model MODEL= by
+  default.  The new =:model-flag= property lets registry entries
+  customise or disable model passing (set to =nil= to skip).
+- *Independent Detection* -- Direct agents only require their own
+  executable on PATH; they no longer depend on =ollama= being installed.
+
+*** Documentation
+
+- *Direct Agents section* -- New section in the Texinfo manual covering
+  direct vs standard agents, the =:direct= and =:model-flag= properties,
+  and how to register custom direct agents.
+
 ** <2026-04-10 Thu> *7.2.0*
 
 Small model warning for agent launch.

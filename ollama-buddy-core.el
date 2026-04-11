@@ -1014,20 +1014,34 @@ Most terminals use \"-e\".  gnome-terminal uses \"--\"."
     (:name "droid"     :executable "droid"     :label "Droid")
     (:name "opencode"  :executable "opencode"  :label "OpenCode")
     (:name "openclaw"  :executable "openclaw"  :label "OpenClaw")
+    (:name "omp"       :executable "omp"       :label "Oh My Pi"  :direct t)
     (:name "pi"        :executable "pi"        :label "Pi"))
-  "Registry of known `ollama launch' agents.
+  "Registry of known launch agents.
 Each entry is a plist with:
-  :name       - Frontend name passed to `ollama launch'
+  :name       - Agent identifier (also the `ollama launch' frontend name
+                for non-direct agents)
   :executable - Binary name to check on PATH
-  :label      - Human-readable description")
+  :label      - Human-readable description
+  :direct     - When non-nil, launch the executable directly in a terminal
+                instead of going through `ollama launch'.  This allows
+                external tools that are not built-in ollama integrations
+                to participate in the launch workflow.
+  :model-flag - CLI flag for passing the model (default \"--model\").
+                Set to nil to skip passing a model entirely.")
 
 (defcustom ollama-buddy-launch-extra-agents nil
-  "Additional `ollama launch' agents beyond the built-in registry.
-Each entry is a plist (:name :executable :label).
+  "Additional launch agents beyond the built-in registry.
+Each entry is a plist (:name :executable :label) plus optional keys.
 Entries here override built-in agents with the same :name.
 
-Example:
-  \\='((:name \"my-tool\" :executable \"my-tool\" :label \"My Tool\"))"
+Use :direct t for tools that are not `ollama launch' integrations:
+
+  \\='((:name \"my-tool\" :executable \"my-tool\" :label \"My Tool\" :direct t))
+
+Optional keys:
+  :direct     - Non-nil to launch the executable directly (not via
+                `ollama launch')
+  :model-flag - CLI flag for model (default \"--model\", nil to skip)"
   :type '(repeat (plist :key-type keyword :value-type string))
   :group 'ollama-buddy)
 
@@ -1064,10 +1078,13 @@ built-in entries with the same :name."
 
 (defun ollama-buddy--detect-available-agents ()
   "Return list of agent plists from the registry found on PATH.
-Requires both the agent executable and ollama to be available."
-  (when (executable-find ollama-buddy-ollama-executable)
+Non-direct agents require both their executable and ollama.
+Direct agents only require their own executable."
+  (let ((ollama-available (executable-find ollama-buddy-ollama-executable)))
     (cl-remove-if-not
-     (lambda (agent) (executable-find (plist-get agent :executable)))
+     (lambda (agent)
+       (and (executable-find (plist-get agent :executable))
+            (or (plist-get agent :direct) ollama-available)))
      (ollama-buddy--get-agent-registry))))
 
 (defun ollama-buddy--format-launch-summary ()
@@ -1078,7 +1095,11 @@ Returns a formatted string or nil if no agents are available."
                       (car (ollama-buddy--detect-terminal)))))
     (when (and agents terminal)
       (format "⚡ /launch: %s (via %s)"
-              (mapconcat (lambda (a) (plist-get a :name)) agents ", ")
+              (mapconcat (lambda (a)
+                           (if (plist-get a :direct)
+                               (format "%s*" (plist-get a :name))
+                             (plist-get a :name)))
+                         agents ", ")
               terminal))))
 
 (defvar ollama-buddy-current-session-name nil

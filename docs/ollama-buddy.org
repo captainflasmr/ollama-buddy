@@ -255,6 +255,8 @@ language models (LLMs) directly within your Emacs workflow.
   - [[#Welcome-Screen][17.4 Welcome Screen]]
   - [[#Configuration-4][17.5 Configuration]]
   - [[#Small-Model-Warning][17.6 Small Model Warning]]
+  - [[#Supported-Agents][17.7 Supported Agents]]
+  - [[#Troubleshooting-2][17.8 Troubleshooting]]
 - [[#Global-System-Prompt][18 Global System Prompt]]
   - [[#Overview-6][18.1 Overview]]
   - [[#Configuration-5][18.2 Configuration]]
@@ -372,7 +374,7 @@ language models (LLMs) directly within your Emacs workflow.
       create effective system prompts?]]
     - [[#Where-are-my-system-prompts-stored_003f][28.2.9 Where are my
       system prompts stored?]]
-  - [[#Troubleshooting-2][28.3 Troubleshooting]]
+  - [[#Troubleshooting-3][28.3 Troubleshooting]]
     - [[#Ollama-Buddy-shows-_0022OFFLINE_0022-status][28.3.1 Ollama
       Buddy shows "OFFLINE" status]]
     - [[#Responses-are-slow-or-the-model-seems-to-hang][28.3.2 Responses
@@ -4581,6 +4583,8 @@ Buddy]]   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 - [[#Welcome-Screen][Welcome Screen]]
 - [[#Configuration-4][Configuration]]
 - [[#Small-Model-Warning][Small Model Warning]]
+- [[#Supported-Agents][Supported Agents]]
+- [[#Troubleshooting-2][Troubleshooting]]
 
 <<Overview-5>>
 *** 17.1 Overview [[#Overview-5][¶]]
@@ -4590,8 +4594,17 @@ Buddy]]   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 :END:
 The =/launch= slash command lets you launch any Ollama model (local or
 cloud) in an external terminal with a frontend tool such as Claude Code.
-This runs =ollama launch FRONTEND --model MODEL= in a native terminal
-window outside Emacs.
+
+There are two types of agents:
+
+- *Standard agents* :: Use =ollama launch FRONTEND --model MODEL=. These
+  are built-in Ollama integrations (Claude Code, Codex, Pi, etc.).
+
+- *Direct agents* :: Invoked as standalone executables in a terminal,
+  bypassing =ollama launch= entirely. This allows external tools that
+  are not built-in Ollama integrations to participate in the launch
+  workflow. Direct agents only require their own executable on PATH ---
+  they do not depend on =ollama= being installed.
 
 <<Usage-1>>
 *** 17.2 Usage [[#Usage-1][¶]]
@@ -4636,8 +4649,11 @@ most, =--= for gnome-terminal, =start --= for wezterm).
 When frontends are detected, the welcome screen shows an indicator:
 
 #+begin_src example-preformatted
-⚡ launch: claude (via kitty)
+⚡ launch: claude, omp* (via kitty)
 #+end_src
+
+Direct agents are marked with =*= to distinguish them from standard
+=ollama launch= integrations.
 
 <<Configuration-4>>
 *** 17.5 Configuration [[#Configuration-4][¶]]
@@ -4652,9 +4668,11 @@ When frontends are detected, the welcome screen shows an indicator:
   terminal. When =nil=, auto-detects. Most terminals use =-e=;
   gnome-terminal uses =--=.
 
-- =ollama-buddy-launch-frontends= :: List of frontend names for
-  =ollama launch= (default: =("claude")=). Add ="codex"= or others as
-  they become available.
+- =ollama-buddy-launch-extra-agents= :: Additional agents beyond the
+  built-in registry. Each entry is a plist =(:name :executable :label)=
+  plus optional keys =:direct= and =:model-flag=. Entries here override
+  built-in agents with the same =:name=. Use =:direct t= for tools that
+  are not =ollama launch= integrations.
 
 - =ollama-buddy-launch-small-model-threshold= :: Minimum recommended
   parameter count (in billions) for agent launch (default: =7=). Models
@@ -4701,6 +4719,113 @@ When you launch a model below the threshold set in
 will display a confirmation warning explaining the potential performance
 impact. This warning is skipped for cloud models, which run on remote
 infrastructure.
+
+<<Supported-Agents>>
+*** 17.7 Supported Agents [[#Supported-Agents][¶]]
+:PROPERTIES:
+:CUSTOM_ID: supported-agents
+:CLASS: section
+:END:
+Ollama Buddy auto-detects the following agents on your =PATH=:
+
+**** Standard Agents (via =ollama launch=) [[#Standard-Agents-_0028via-ollama-launch_0029][¶]]
+:PROPERTIES:
+:CUSTOM_ID: Standard-Agents-_0028via-ollama-launch_0029
+:CLASS: subheading
+:END:
+- =claude= :: Claude Code
+  ([[https://docs.anthropic.com/en/docs/claude-code]])
+
+- =cline= :: Cline ([[https://cline.bot]])
+
+- =codex= :: Codex ([[https://github.com/openai/codex]])
+
+- =droid= :: Droid ([[https://github.com/nicobailey/droid]])
+
+- =opencode= :: OpenCode ([[https://github.com/opencode-ai/opencode]])
+
+- =openclaw= :: OpenClaw ([[https://github.com/ArcadeLabsInc/openclaw]])
+
+- =pi= :: Pi --- a minimal and extensible coding agent
+  ([[https://docs.ollama.com/integrations/pi]]). Installed via
+  =npm install -g @mariozechner/pi-coding-agent=.
+
+**** Direct Agents (standalone executables) [[#Direct-Agents-_0028standalone-executables_0029][¶]]
+:PROPERTIES:
+:CUSTOM_ID: Direct-Agents-_0028standalone-executables_0029
+:CLASS: subheading
+:END:
+Direct agents are invoked as standalone executables in a terminal,
+bypassing =ollama launch=. They do not require =ollama= to be installed
+--- only their own executable on PATH.
+
+- =omp= :: Oh My Pi ([[https://github.com/ohmypi/omp]]) --- invoked
+  directly as =omp --model MODEL=.
+
+**** Custom Agents [[#Custom-Agents][¶]]
+:PROPERTIES:
+:CUSTOM_ID: Custom-Agents
+:CLASS: subheading
+:END:
+Add your own agents via =ollama-buddy-launch-extra-agents=. For standard
+=ollama launch= integrations:
+
+#+begin_src lisp-preformatted
+(add-to-list 'ollama-buddy-launch-extra-agents
+             '(:name "my-tool" :executable "my-tool" :label "My Tool"))
+#+end_src
+
+For external tools not supported by =ollama launch=, use =:direct t=:
+
+#+begin_src lisp-preformatted
+(add-to-list 'ollama-buddy-launch-extra-agents
+             '(:name "my-tool" :executable "my-tool"
+               :label "My Tool" :direct t))
+#+end_src
+
+Optional properties for direct agents:
+
+- =:model-flag= :: CLI flag for passing the model name (default
+  ="--model"=). Set to =nil= to skip passing a model entirely.
+
+<<Troubleshooting-2>>
+*** 17.8 Troubleshooting [[#Troubleshooting-2][¶]]
+:PROPERTIES:
+:CUSTOM_ID: troubleshooting-1
+:CLASS: section
+:END:
+**** npm permission errors (Pi and other npm-based agents) [[#npm-permission-errors-_0028Pi-and-other-npm_002dbased-agents_0029][¶]]
+:PROPERTIES:
+:CUSTOM_ID: npm-permission-errors-_0028Pi-and-other-npm_002dbased-agents_0029
+:CLASS: subheading
+:END:
+Some agents (e.g. Pi) are installed via =npm install -g=. On Linux, the
+default global prefix is =/usr/lib/node_modules/=, which requires root
+access. If =ollama launch pi= fails with =EACCES: permission denied=,
+configure npm to use a user-local directory:
+
+#+begin_src example-preformatted
+mkdir -p ~/.npm-global/bin
+npm config set prefix ~/.npm-global
+#+end_src
+
+Then add =~/.npm-global/bin= to your =PATH=.
+
+For *fish shell*:
+
+#+begin_src example-preformatted
+fish_add_path ~/.npm-global/bin
+echo 'fish_add_path ~/.npm-global/bin' >> ~/.config/fish/config.fish
+#+end_src
+
+For *bash/zsh*, add to =~/.bashrc= or =~/.zshrc=:
+
+#+begin_src example-preformatted
+export PATH="$HOME/.npm-global/bin:$PATH"
+#+end_src
+
+After this, re-run =ollama launch pi= and the web search plugin will
+install correctly.
 
 --------------
 
@@ -6505,7 +6630,7 @@ Next: [[#Troubleshooting][Troubleshooting]], Previous:
 :END:
 - [[#General-Questions][General Questions]]
 - [[#Usage-Questions][Usage Questions]]
-- [[#Troubleshooting-2][Troubleshooting]]
+- [[#Troubleshooting-3][Troubleshooting]]
 
 <<General-Questions>>
 *** 28.1 General Questions [[#General-Questions][¶]]
@@ -6707,10 +6832,10 @@ System prompts are stored as .org files in the directory specified by
 ‘ollama-buddy-user-prompts-directory‘, which defaults to
 ‘~/.emacs.d/ollama-buddy-user-prompts/‘.
 
-<<Troubleshooting-2>>
-*** 28.3 Troubleshooting [[#Troubleshooting-2][¶]]
+<<Troubleshooting-3>>
+*** 28.3 Troubleshooting [[#Troubleshooting-3][¶]]
 :PROPERTIES:
-:CUSTOM_ID: troubleshooting-1
+:CUSTOM_ID: troubleshooting-2
 :CLASS: section
 :END:
 - [[#Ollama-Buddy-shows-_0022OFFLINE_0022-status][Ollama Buddy shows
@@ -6833,9 +6958,9 @@ Next: [[#Contributing][Contributing]], Previous: [[#FAQ][Frequently
 Asked Questions]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
-** 29 Troubleshooting [[#Troubleshooting-3][¶]]
+** 29 Troubleshooting [[#Troubleshooting-4][¶]]
 :PROPERTIES:
-:CUSTOM_ID: Troubleshooting-3
+:CUSTOM_ID: Troubleshooting-4
 :CLASS: chapter
 :END:
 - [[#Common-Issues][Common Issues]]

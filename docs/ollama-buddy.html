@@ -347,6 +347,8 @@ allowing you to leverage powerful large language models (LLMs) directly within y
     <li><a id="toc-Welcome-Screen" href="#Welcome-Screen">17.4 Welcome Screen</a></li>
     <li><a id="toc-Configuration-3" href="#Configuration-4">17.5 Configuration</a></li>
     <li><a id="toc-Small-Model-Warning" href="#Small-Model-Warning">17.6 Small Model Warning</a></li>
+    <li><a id="toc-Supported-Agents" href="#Supported-Agents">17.7 Supported Agents</a></li>
+    <li><a id="toc-Troubleshooting-1" href="#Troubleshooting-2">17.8 Troubleshooting</a></li>
   </ul></li>
   <li><a id="toc-Global-System-Prompt" href="#Global-System-Prompt">18 Global System Prompt</a>
   <ul class="toc-numbered-mark">
@@ -480,7 +482,7 @@ allowing you to leverage powerful large language models (LLMs) directly within y
       <li><a id="toc-How-do-I-create-effective-system-prompts_003f" href="#How-do-I-create-effective-system-prompts_003f">28.2.8 How do I create effective system prompts?</a></li>
       <li><a id="toc-Where-are-my-system-prompts-stored_003f" href="#Where-are-my-system-prompts-stored_003f">28.2.9 Where are my system prompts stored?</a></li>
     </ul></li>
-    <li><a id="toc-Troubleshooting-1" href="#Troubleshooting-2">28.3 Troubleshooting</a>
+    <li><a id="toc-Troubleshooting-2" href="#Troubleshooting-3">28.3 Troubleshooting</a>
     <ul class="toc-numbered-mark">
       <li><a id="toc-Ollama-Buddy-shows-_0022OFFLINE_0022-status" href="#Ollama-Buddy-shows-_0022OFFLINE_0022-status">28.3.1 Ollama Buddy shows &quot;OFFLINE&quot; status</a></li>
       <li><a id="toc-Responses-are-slow-or-the-model-seems-to-hang" href="#Responses-are-slow-or-the-model-seems-to-hang">28.3.2 Responses are slow or the model seems to hang</a></li>
@@ -492,7 +494,7 @@ allowing you to leverage powerful large language models (LLMs) directly within y
       <li><a id="toc-Can-I-share-system-prompts-between-different-installations_003f" href="#Can-I-share-system-prompts-between-different-installations_003f">28.3.8 Can I share system prompts between different installations?</a></li>
     </ul></li>
   </ul></li>
-  <li><a id="toc-Troubleshooting-2" href="#Troubleshooting">29 Troubleshooting</a>
+  <li><a id="toc-Troubleshooting-3" href="#Troubleshooting">29 Troubleshooting</a>
   <ul class="toc-numbered-mark">
     <li><a id="toc-Common-Issues" href="#Common-Issues">29.1 Common Issues</a>
     <ul class="toc-numbered-mark">
@@ -4558,15 +4560,32 @@ Next: <a href="#Global-System-Prompt" accesskey="n" rel="next">Global System Pro
 <li><a href="#Welcome-Screen" accesskey="4">Welcome Screen</a></li>
 <li><a href="#Configuration-4" accesskey="5">Configuration</a></li>
 <li><a href="#Small-Model-Warning" accesskey="6">Small Model Warning</a></li>
+<li><a href="#Supported-Agents" accesskey="7">Supported Agents</a></li>
+<li><a href="#Troubleshooting-2" accesskey="8">Troubleshooting</a></li>
 </ul>
 <div class="section-level-extent" id="Overview-5">
 <h3 class="section"><span>17.1 Overview<a class="copiable-link" href="#Overview-5"> &para;</a></span></h3>
 
 <p>The <code class="code">/launch</code> slash command lets you launch any Ollama model (local or
 cloud) in an external terminal with a frontend tool such as Claude Code.
-This runs <code class="code">ollama launch FRONTEND --model MODEL</code> in a native terminal
-window outside Emacs.
 </p>
+<p>There are two types of agents:
+</p>
+<dl class="table">
+<dt><strong class="strong">Standard agents</strong></dt>
+<dd><p>Use <code class="code">ollama launch FRONTEND --model MODEL</code>.  These are built-in
+Ollama integrations (Claude Code, Codex, Pi, etc.).
+</p>
+</dd>
+<dt><strong class="strong">Direct agents</strong></dt>
+<dd><p>Invoked as standalone executables in a terminal, bypassing
+<code class="code">ollama launch</code> entirely.  This allows external tools that are
+not built-in Ollama integrations to participate in the launch workflow.
+Direct agents only require their own executable on PATH &mdash; they do not
+depend on <code class="code">ollama</code> being installed.
+</p></dd>
+</dl>
+
 </div>
 <div class="section-level-extent" id="Usage-1">
 <h3 class="section"><span>17.2 Usage<a class="copiable-link" href="#Usage-1"> &para;</a></span></h3>
@@ -4613,9 +4632,12 @@ most, <code class="code">--</code> for gnome-terminal, <code class="code">start 
 <p>When frontends are detected, the welcome screen shows an indicator:
 </p>
 <div class="example">
-<pre class="example-preformatted">⚡ launch: claude (via kitty)
+<pre class="example-preformatted">⚡ launch: claude, omp* (via kitty)
 </pre></div>
 
+<p>Direct agents are marked with <code class="code">*</code> to distinguish them from standard
+<code class="code">ollama launch</code> integrations.
+</p>
 </div>
 <div class="section-level-extent" id="Configuration-4">
 <h3 class="section"><span>17.5 Configuration<a class="copiable-link" href="#Configuration-4"> &para;</a></span></h3>
@@ -4630,9 +4652,12 @@ most, <code class="code">--</code> for gnome-terminal, <code class="code">start 
 Most terminals use <code class="code">-e</code>; gnome-terminal uses <code class="code">--</code>.
 </p>
 </dd>
-<dt><code class="code">ollama-buddy-launch-frontends</code></dt>
-<dd><p>List of frontend names for <code class="code">ollama launch</code> (default: <code class="code">(&quot;claude&quot;)</code>).
-Add <code class="code">&quot;codex&quot;</code> or others as they become available.
+<dt><code class="code">ollama-buddy-launch-extra-agents</code></dt>
+<dd><p>Additional agents beyond the built-in registry.  Each entry is a plist
+<code class="code">(:name :executable :label)</code> plus optional keys <code class="code">:direct</code> and
+<code class="code">:model-flag</code>.  Entries here override built-in agents with the same
+<code class="code">:name</code>.  Use <code class="code">:direct t</code> for tools that are not <code class="code">ollama
+launch</code> integrations.
 </p>
 </dd>
 <dt><code class="code">ollama-buddy-launch-small-model-threshold</code></dt>
@@ -4685,6 +4710,116 @@ CPU
 Buddy will display a confirmation warning explaining the potential
 performance impact.  This warning is skipped for cloud models, which run
 on remote infrastructure.
+</p>
+</div>
+<div class="section-level-extent" id="Supported-Agents">
+<h3 class="section"><span>17.7 Supported Agents<a class="copiable-link" href="#Supported-Agents"> &para;</a></span></h3>
+
+<p>Ollama Buddy auto-detects the following agents on your <code class="env">PATH</code>:
+</p>
+<h4 class="subheading" id="Standard-Agents-_0028via-ollama-launch_0029"><span>Standard Agents (via <code class="code">ollama launch</code>)<a class="copiable-link" href="#Standard-Agents-_0028via-ollama-launch_0029"> &para;</a></span></h4>
+
+<dl class="table">
+<dt><code class="code">claude</code></dt>
+<dd><p>Claude Code (<a class="url" href="https://docs.anthropic.com/en/docs/claude-code">https://docs.anthropic.com/en/docs/claude-code</a>)
+</p></dd>
+<dt><code class="code">cline</code></dt>
+<dd><p>Cline (<a class="url" href="https://cline.bot">https://cline.bot</a>)
+</p></dd>
+<dt><code class="code">codex</code></dt>
+<dd><p>Codex (<a class="url" href="https://github.com/openai/codex">https://github.com/openai/codex</a>)
+</p></dd>
+<dt><code class="code">droid</code></dt>
+<dd><p>Droid (<a class="url" href="https://github.com/nicobailey/droid">https://github.com/nicobailey/droid</a>)
+</p></dd>
+<dt><code class="code">opencode</code></dt>
+<dd><p>OpenCode (<a class="url" href="https://github.com/opencode-ai/opencode">https://github.com/opencode-ai/opencode</a>)
+</p></dd>
+<dt><code class="code">openclaw</code></dt>
+<dd><p>OpenClaw (<a class="url" href="https://github.com/ArcadeLabsInc/openclaw">https://github.com/ArcadeLabsInc/openclaw</a>)
+</p></dd>
+<dt><code class="code">pi</code></dt>
+<dd><p>Pi &mdash; a minimal and extensible coding agent
+(<a class="url" href="https://docs.ollama.com/integrations/pi">https://docs.ollama.com/integrations/pi</a>).  Installed via
+<code class="code">npm install -g @mariozechner/pi-coding-agent</code>.
+</p></dd>
+</dl>
+
+<h4 class="subheading" id="Direct-Agents-_0028standalone-executables_0029"><span>Direct Agents (standalone executables)<a class="copiable-link" href="#Direct-Agents-_0028standalone-executables_0029"> &para;</a></span></h4>
+
+<p>Direct agents are invoked as standalone executables in a terminal,
+bypassing <code class="code">ollama launch</code>.  They do not require <code class="code">ollama</code> to be
+installed &mdash; only their own executable on PATH.
+</p>
+<dl class="table">
+<dt><code class="code">omp</code></dt>
+<dd><p>Oh My Pi (<a class="url" href="https://github.com/ohmypi/omp">https://github.com/ohmypi/omp</a>) &mdash; invoked directly as
+<code class="code">omp --model MODEL</code>.
+</p></dd>
+</dl>
+
+<h4 class="subheading" id="Custom-Agents"><span>Custom Agents<a class="copiable-link" href="#Custom-Agents"> &para;</a></span></h4>
+
+<p>Add your own agents via <code class="code">ollama-buddy-launch-extra-agents</code>.  For
+standard <code class="code">ollama launch</code> integrations:
+</p>
+<div class="example lisp">
+<pre class="lisp-preformatted">(add-to-list 'ollama-buddy-launch-extra-agents
+             '(:name &quot;my-tool&quot; :executable &quot;my-tool&quot; :label &quot;My Tool&quot;))
+</pre></div>
+
+<p>For external tools not supported by <code class="code">ollama launch</code>, use
+<code class="code">:direct t</code>:
+</p>
+<div class="example lisp">
+<pre class="lisp-preformatted">(add-to-list 'ollama-buddy-launch-extra-agents
+             '(:name &quot;my-tool&quot; :executable &quot;my-tool&quot;
+               :label &quot;My Tool&quot; :direct t))
+</pre></div>
+
+<p>Optional properties for direct agents:
+</p>
+<dl class="table">
+<dt><code class="code">:model-flag</code></dt>
+<dd><p>CLI flag for passing the model name (default <code class="code">&quot;--model&quot;</code>).
+Set to <code class="code">nil</code> to skip passing a model entirely.
+</p></dd>
+</dl>
+
+</div>
+<div class="section-level-extent" id="Troubleshooting-2">
+<h3 class="section"><span>17.8 Troubleshooting<a class="copiable-link" href="#Troubleshooting-2"> &para;</a></span></h3>
+
+<h4 class="subheading" id="npm-permission-errors-_0028Pi-and-other-npm_002dbased-agents_0029"><span>npm permission errors (Pi and other npm-based agents)<a class="copiable-link" href="#npm-permission-errors-_0028Pi-and-other-npm_002dbased-agents_0029"> &para;</a></span></h4>
+
+<p>Some agents (e.g. Pi) are installed via <code class="code">npm install -g</code>.  On
+Linux, the default global prefix is <samp class="file">/usr/lib/node_modules/</samp>,
+which requires root access.  If <code class="code">ollama launch pi</code> fails with
+<code class="code">EACCES: permission denied</code>, configure npm to use a user-local
+directory:
+</p>
+<div class="example">
+<pre class="example-preformatted">mkdir -p ~/.npm-global/bin
+npm config set prefix ~/.npm-global
+</pre></div>
+
+<p>Then add <samp class="file">~/.npm-global/bin</samp> to your <code class="env">PATH</code>.
+</p>
+<p>For <strong class="strong">fish shell</strong>:
+</p>
+<div class="example">
+<pre class="example-preformatted">fish_add_path ~/.npm-global/bin
+echo 'fish_add_path ~/.npm-global/bin' &gt;&gt; ~/.config/fish/config.fish
+</pre></div>
+
+<p>For <strong class="strong">bash/zsh</strong>, add to <samp class="file">~/.bashrc</samp> or <samp class="file">~/.zshrc</samp>:
+</p>
+<div class="example">
+<pre class="example-preformatted">export PATH=&quot;$HOME/.npm-global/bin:$PATH&quot;
+</pre></div>
+
+<p>After this, re-run <code class="code">ollama launch pi</code> and the web search plugin
+will install correctly.
 </p>
 <hr>
 </div>
@@ -6494,7 +6629,7 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 <ul class="mini-toc">
 <li><a href="#General-Questions" accesskey="1">General Questions</a></li>
 <li><a href="#Usage-Questions" accesskey="2">Usage Questions</a></li>
-<li><a href="#Troubleshooting-2" accesskey="3">Troubleshooting</a></li>
+<li><a href="#Troubleshooting-3" accesskey="3">Troubleshooting</a></li>
 </ul>
 <div class="section-level-extent" id="General-Questions">
 <h3 class="section"><span>28.1 General Questions<a class="copiable-link" href="#General-Questions"> &para;</a></span></h3>
@@ -6634,8 +6769,8 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 </p>
 </div>
 </div>
-<div class="section-level-extent" id="Troubleshooting-2">
-<h3 class="section"><span>28.3 Troubleshooting<a class="copiable-link" href="#Troubleshooting-2"> &para;</a></span></h3>
+<div class="section-level-extent" id="Troubleshooting-3">
+<h3 class="section"><span>28.3 Troubleshooting<a class="copiable-link" href="#Troubleshooting-3"> &para;</a></span></h3>
 
 <ul class="mini-toc">
 <li><a href="#Ollama-Buddy-shows-_0022OFFLINE_0022-status" accesskey="1">Ollama Buddy shows &quot;OFFLINE&quot; status</a></li>
@@ -6723,7 +6858,7 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 <p>
 Next: <a href="#Contributing" accesskey="n" rel="next">Contributing</a>, Previous: <a href="#FAQ" accesskey="p" rel="prev">Frequently Asked Questions</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
 </div>
-<h2 class="chapter" id="Troubleshooting-3"><span>29 Troubleshooting<a class="copiable-link" href="#Troubleshooting-3"> &para;</a></span></h2>
+<h2 class="chapter" id="Troubleshooting-4"><span>29 Troubleshooting<a class="copiable-link" href="#Troubleshooting-4"> &para;</a></span></h2>
 
 <ul class="mini-toc">
 <li><a href="#Common-Issues" accesskey="1">Common Issues</a></li>

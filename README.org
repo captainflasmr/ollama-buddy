@@ -126,6 +126,14 @@ A cross-cutting view of key features across the major chat clients, to the best 
 
 * Updates
 
+** What's New (v7.3.0)
+
+Direct launch support for external agents.
+
+- *Direct Agent Launch* -- The =/launch= system now supports external tools that are not built-in =ollama launch= integrations.  Registry entries with =:direct t= are invoked as standalone executables in a terminal, bypassing =ollama launch= entirely.  Direct agents only require their own executable on PATH (no =ollama= dependency).
+- *Oh My Pi (omp)* -- Added to the built-in agent registry as the first direct agent.
+- *Flexible Model Passing* -- Direct agents receive =--model MODEL= by default.  The =:model-flag= property lets entries customise or disable model passing.
+
 ** What's New (v7.2.0)
 
 Small model warning for agent launch.
@@ -216,6 +224,7 @@ Tool-augmented search — LLMs can now autonomously search the web and query loc
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *7.3.0* | Direct agent launch — external tools not in =ollama launch= can now be invoked as standalone executables; Oh My Pi (=omp=) added as first direct agent; =:model-flag= for flexible model passing.                         |
 | *7.2.0* | Small model launch warning — agents prepend 20K+ tokens of system prompt; models below 7B now trigger a confirmation warning explaining potential performance impact.                                                     |
 | *7.1.4* | Expanded =ollama launch= agent registry — Cline, Droid, OpenCode, OpenClaw, Pi now detected alongside Claude Code and Codex.                                                                                             |
 | *7.1.0* | Thinking toggle (=/think=, =✦=/=✧= indicator) — control reasoning output; Ollama offline detection with clear messages.                                                                                                  |
