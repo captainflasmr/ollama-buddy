@@ -3185,9 +3185,19 @@ a model, then a frontend (if more than one is configured).
 Each model in the @code{C-c M} Model Management buffer has a @code{Launch}
 button (when frontends are detected on PATH).
 
-@item Interactive
+@item Interactive (from chat)
 @code{M-x ollama-buddy-launch}
+
+@item Standalone (from anywhere)
+@code{M-x ollama-buddy-launch-external} or press @kbd{v} in the main
+transient menu (@kbd{C-c O}).  This does not require the Ollama Buddy
+chat buffer --- it launches an agent directly from the current directory.
+In Dired, the terminal opens in the displayed directory.  The model
+prompt shows the target directory for confirmation.
 @end table
+
+All launch methods produce fully detached terminal sessions that survive
+closing Emacs.
 
 @section Terminal Auto-Detection
 

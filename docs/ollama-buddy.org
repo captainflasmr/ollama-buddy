@@ -4619,7 +4619,17 @@ There are two types of agents:
 - Model Management :: Each model in the =C-c M= Model Management buffer
   has a =Launch= button (when frontends are detected on PATH).
 
-- Interactive :: =M-x ollama-buddy-launch=
+- Interactive (from chat) :: =M-x ollama-buddy-launch=
+
+- Standalone (from anywhere) :: =M-x ollama-buddy-launch-external= or
+  press v in the main transient menu (C-c O). This does not require the
+  Ollama Buddy chat buffer --- it launches an agent directly from the
+  current directory. In Dired, the terminal opens in the displayed
+  directory. The model prompt shows the target directory for
+  confirmation.
+
+All launch methods produce fully detached terminal sessions that survive
+closing Emacs.
 
 <<Terminal-Auto_002dDetection>>
 *** 17.3 Terminal Auto-Detection [[#Terminal-Auto_002dDetection][¶]]

@@ -3605,12 +3605,13 @@ Shows cached status. Use signin/signout to update or try a cloud model request."
                ('not-authenticated "Not signed in (use C-c A to sign in)")
                ('unknown "Unknown (try using a cloud model to verify)")))))
 
-(defun ollama-buddy--launch-model (model)
+(defun ollama-buddy--launch-model (model &optional directory)
   "Launch MODEL in an external terminal with an AI agent.
 MODEL is the raw model name (without display prefixes).
 Prompts for agent if more than one is available on PATH.
 Standard agents use `ollama launch'; direct agents (:direct t)
-are invoked as standalone executables."
+are invoked as standalone executables.
+When DIRECTORY is non-nil, the terminal starts in that directory."
   (let* ((detected (unless ollama-buddy-launch-terminal
                      (ollama-buddy--detect-terminal)))
          (terminal (or ollama-buddy-launch-terminal
@@ -3660,13 +3661,15 @@ are invoked as standalone executables."
                     (append (split-string flag)
                             (list ollama-buddy-ollama-executable
                                   "launch" (plist-get agent :name)
-                                  "--model" model)))))
+                                  "--model" model))))
+             (default-directory (or directory default-directory)))
         (call-process-shell-command
          (concat (mapconcat #'shell-quote-argument (cons terminal cmd) " ")
                  " &")
          nil 0)
-        (message "Launched %s with model %s in %s"
-                 (plist-get agent :label) model terminal)))))
+        (message "Launched %s with model %s in %s (dir: %s)"
+                 (plist-get agent :label) model terminal
+                 default-directory)))))
 
 (defun ollama-buddy-launch ()
   "Launch an Ollama model in an external terminal with an AI agent.
@@ -3683,6 +3686,24 @@ is explicitly set."
                                  nil t))
          (real-model (ollama-buddy--get-real-model-name model)))
     (ollama-buddy--launch-model real-model)))
+
+(defun ollama-buddy-launch-external ()
+  "Launch an AI agent in an external terminal from the current directory.
+Does not require the Ollama Buddy chat buffer.  Uses `default-directory'
+as the working directory (in Dired this is the displayed directory).
+Prompts for a model, then for an agent if multiple are available."
+  (interactive)
+  (let* ((dir default-directory)
+         (models (ollama-buddy--get-models-with-others))
+         (model (completing-read (format "Launch model (in %s): "
+                                         (abbreviate-file-name dir))
+                                 (lambda (string pred action)
+                                   (if (eq action 'metadata)
+                                       '(metadata (annotation-function . ollama-buddy--model-annotation))
+                                     (complete-with-action action models string pred)))
+                                 nil t))
+         (real-model (ollama-buddy--get-real-model-name model)))
+    (ollama-buddy--launch-model real-model dir)))
 
 (defun ollama-buddy--fetch-cloud-usage ()
   "Fetch cloud usage stats from ollama.com/settings.

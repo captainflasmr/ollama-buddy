@@ -4601,11 +4601,22 @@ a model, then a frontend (if more than one is configured).
 button (when frontends are detected on PATH).
 </p>
 </dd>
-<dt>Interactive</dt>
+<dt>Interactive (from chat)</dt>
 <dd><p><code class="code">M-x ollama-buddy-launch</code>
+</p>
+</dd>
+<dt>Standalone (from anywhere)</dt>
+<dd><p><code class="code">M-x ollama-buddy-launch-external</code> or press <kbd class="kbd">v</kbd> in the main
+transient menu (<kbd class="kbd">C-c O</kbd>).  This does not require the Ollama Buddy
+chat buffer &mdash; it launches an agent directly from the current directory.
+In Dired, the terminal opens in the displayed directory.  The model
+prompt shows the target directory for confirmation.
 </p></dd>
 </dl>
 
+<p>All launch methods produce fully detached terminal sessions that survive
+closing Emacs.
+</p>
 </div>
 <div class="section-level-extent" id="Terminal-Auto_002dDetection">
 <h3 class="section"><span>17.3 Terminal Auto-Detection<a class="copiable-link" href="#Terminal-Auto_002dDetection"> &para;</a></span></h3>

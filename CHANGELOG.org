@@ -33,6 +33,11 @@ Direct launch support for external agents.
 - *Detached Terminal Sessions* -- Launched terminal sessions are now
   fully decoupled from Emacs.  Closing Emacs no longer kills running
   agent sessions.
+- *Standalone Launch Command* -- New =ollama-buddy-launch-external=
+  command (=M-x= or transient menu =v=) launches an agent directly from
+  the current directory without requiring the Ollama Buddy chat buffer.
+  In Dired, the terminal opens in the displayed directory.  The model
+  prompt shows the target directory for confirmation.
 
 *** Documentation
 

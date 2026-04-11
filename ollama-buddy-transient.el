@@ -39,6 +39,7 @@
 (declare-function ollama-buddy-roles-open-directory "ollama-buddy")
 (declare-function ollama-buddy-install-extras "ollama-buddy")
 (declare-function ollama-buddy--extras-missing-p "ollama-buddy")
+(declare-function ollama-buddy-launch-external "ollama-buddy")
 (declare-function ollama-buddy-toggle-debug-mode "ollama-buddy")
 (declare-function ollama-buddy-toggle-show-history-indicator "ollama-buddy")
 (declare-function ollama-buddy-display-token-stats "ollama-buddy")
@@ -164,6 +165,8 @@
     ("o" "Open Chat" ollama-buddy--open-chat)
     ("u" "Rewind" (lambda () (interactive) (ollama-buddy-rewind t)))
     ("K" "Exit" ollama-buddy-exit)
+    ("v" "Launch" ollama-buddy-launch-external
+     :if (lambda () (ollama-buddy--detect-available-agents)))
     ("r" "RAG" ollama-buddy-transient-rag-menu
      :if (lambda () (featurep 'ollama-buddy-rag)))
     ("P" "Project" ollama-buddy-transient-project-menu
