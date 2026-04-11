@@ -3661,11 +3661,10 @@ are invoked as standalone executables."
                             (list ollama-buddy-ollama-executable
                                   "launch" (plist-get agent :name)
                                   "--model" model)))))
-        (apply #'start-process
-               (format "ollama-agent-%s" (plist-get agent :name))
-               nil
-               terminal
-               cmd)
+        (call-process-shell-command
+         (concat (mapconcat #'shell-quote-argument (cons terminal cmd) " ")
+                 " &")
+         nil 0)
         (message "Launched %s with model %s in %s"
                  (plist-get agent :label) model terminal)))))
 

@@ -30,6 +30,9 @@ Direct launch support for external agents.
   customise or disable model passing (set to =nil= to skip).
 - *Independent Detection* -- Direct agents only require their own
   executable on PATH; they no longer depend on =ollama= being installed.
+- *Detached Terminal Sessions* -- Launched terminal sessions are now
+  fully decoupled from Emacs.  Closing Emacs no longer kills running
+  agent sessions.
 
 *** Documentation
 
