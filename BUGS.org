@@ -9,7 +9,7 @@ This document contains the current bugs/improvements, this is just for me mainly
 
 * Bugs/Improvements
 
-** TODO Add pi
+** TODO tidy up welcome screen
 
 ** TODO completion module is Ollama-only and limited
 
@@ -24,7 +24,7 @@ ollama-buddy-completion.el hardcodes /api/generate so no remote provider can pow
 ** TODO regenerate videos
 ** TODO review testing framework
 ** TODO clean up testing folder
-** TODO structured outputs
+** DOING structured outputs
 ** TODO No streaming with hiding reasoning corrupts output
 ** TODO keybindings in ollama chat buffer are reserved
 ** TODO expand test coverage beyond core, backend, and RAG
