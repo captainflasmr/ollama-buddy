@@ -11,6 +11,40 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-04-13 Mon> *7.4.0*
+
+Directory-scale project annotation via structured output.
+
+*** Features
+
+- *=/annotate-dir=* -- New slash command and =ollama-buddy-annotate-directory=
+  iterate every source file under a directory, send one annotation
+  request per file, and auto-apply the returned JSON to
+  =.simply-annotations.el= without manual intervention.  Prefix arg
+  descends recursively.  Cancel an in-flight batch with
+  =/annotate-cancel= or =ollama-buddy-annotate-directory-cancel=.
+- *Context-aware batching* -- Each queued file's estimated token cost
+  (characters / 4) is checked against the current model's context
+  window.  Oversized files are skipped with a message.  The reserve
+  fraction is configurable via =ollama-buddy-annotate-context-reserve=
+  (default 0.5, leaving half the window for the response).
+- *Structured-output skill auto-load* -- The batch installs the
+  =Annotate Project= skill (and its =#+FORMAT:= JSON schema) before
+  starting, so the model is guaranteed to emit machine-readable output.
+  The schema now allows the =file= tag alongside =defun= and =line=.
+- *Post-response hook* -- New =ollama-buddy-post-response-hook=, fired
+  from the normal (non-multishot, non-tool) stream-completion path.
+  Used by =annotate-directory= to chain successive requests and
+  available for other automations that need to react when a response
+  lands.
+- *=C-c A=* -- New chat-buffer binding for
+  =ollama-buddy-annotate-apply-last-response=, so applying a
+  one-off annotation response no longer requires typing the slash
+  command.
+- *New cloud models* -- Added =deepseek-v3.2:cloud=,
+  =gemini-3-flash-preview:cloud=, =qwen3-next:80b-cloud=, and
+  =nemotron-3-super:cloud= to =ollama-buddy-cloud-models=.
+
 ** <2026-04-11 Fri> *7.3.0*
 
 Direct launch support for external agents.

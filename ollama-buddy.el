@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 7.3.0
+;; Version: 7.4.0
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -118,6 +118,9 @@
 (declare-function ollama-buddy-tools-toggle "ollama-buddy-tools")
 (declare-function ollama-buddy-tools-toggle-auto-execute "ollama-buddy-tools")
 (declare-function ollama-buddy-tools-info "ollama-buddy-tools")
+(declare-function ollama-buddy-annotate-apply-last-response "ollama-buddy-annotate")
+(declare-function ollama-buddy-annotate-directory "ollama-buddy-annotate")
+(declare-function ollama-buddy-annotate-directory-cancel "ollama-buddy-annotate")
 (declare-function ollama-buddy-curl--process-filter "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--process-json-line "ollama-buddy-curl")
 (declare-function ollama-buddy-curl--handle-content "ollama-buddy-curl")
@@ -1054,6 +1057,8 @@ Typically invoked via `C-u C-u C-c C-c'."
     ("launch"     ollama-buddy-launch                    "Launch a model in an external terminal agent (claude, codex, aider, ...)")
     ("format"     ollama-buddy-set-response-format   "Set response format (json/schema/off)")
     ("annotate"   ollama-buddy-annotate-apply-last-response "Apply annotations from last response to database")
+    ("annotate-dir" ollama-buddy-annotate-directory         "Batch-annotate every source file in a directory")
+    ("annotate-cancel" ollama-buddy-annotate-directory-cancel "Cancel a running annotate-directory batch")
     ("rewind"     (lambda () (interactive) (ollama-buddy-rewind t)) "Rewind conversation to a previous prompt")
     ("plan"       ollama-buddy-plan-start               "Start plan mode — LLM generates a structured plan")
     ("plan-next"  ollama-buddy-plan-execute-next         "Execute the next TODO step in the plan")
@@ -1096,6 +1101,8 @@ is ever needed."
                    ("system" (featurep 'ollama-buddy-user-prompts))
                    ("tools" (featurep 'ollama-buddy-tools))
                    ("annotate" (featurep 'ollama-buddy-annotate))
+                   ("annotate-dir" (featurep 'ollama-buddy-annotate))
+                   ("annotate-cancel" (featurep 'ollama-buddy-annotate))
                    (_ t)))
                ollama-buddy-slash-commands))
              (names (mapcar #'car candidates))
@@ -3331,7 +3338,10 @@ TCP packets split a JSON object across multiple filter calls."
                              (lambda ()
                                (when (buffer-live-p buf)
                                  (with-current-buffer buf
-                                   (ollama-buddy-project--maybe-save-summary)))))))))))
+                                   (ollama-buddy-project--maybe-save-summary)))))))
+                        ;; Fire post-response hook (annotate-directory, etc.)
+                        (run-hook-with-args 'ollama-buddy-post-response-hook
+                                            ollama-buddy--current-model)))))
                 (setq completed t))) ; closes when-done AND save-excursion
             ;; Window state management (must be outside save-excursion)
             (when window
@@ -6074,6 +6084,9 @@ Returns the text with @file() delimiters removed."
     (define-key map (kbd "C-c C-a") #'ollama-buddy-attach-file)
     (define-key map (kbd "C-c C-d") #'ollama-buddy-detach-file)
     (define-key map (kbd "C-c 0") #'ollama-buddy-clear-attachments)
+
+    ;; annotate project
+    (define-key map (kbd "C-c A") #'ollama-buddy-annotate-apply-last-response)
 
     ;; web search
     (define-key map (kbd "C-c /") #'ollama-buddy-transient-web-search-menu)

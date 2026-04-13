@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 7.3.0
+@subtitle For Ollama Buddy version 7.4.0
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -3388,6 +3388,103 @@ export PATH="$HOME/.npm-global/bin:$PATH"
 
 After this, re-run @code{ollama launch pi} and the web search plugin
 will install correctly.
+
+@node Project Annotation
+@chapter Project Annotation
+
+@section Overview
+
+Ollama Buddy can drive structured LLM output to generate
+@code{simply-annotate} annotation databases across whole directories
+of source code.  The batch workflow attaches one file at a time,
+forces the model into a JSON schema via the ``Annotate Project''
+skill, and applies the returned JSON to a
+@file{.simply-annotations.el} database at the project root.
+
+@section Commands
+
+@table @code
+@item M-x ollama-buddy-annotate-directory
+Or @code{/annotate-dir}.  Prompts for a directory, queues every
+matching source file (see
+@code{ollama-buddy-annotate-directory-extensions}), and sends one
+annotation request per file.  A post-response hook auto-applies the
+returned JSON and dequeues the next file.  With a prefix argument,
+descends recursively.
+
+@item M-x ollama-buddy-annotate-directory-cancel
+Or @code{/annotate-cancel}.  Stops an in-flight batch, removes the
+post-response hook, and clears the queue.
+
+@item M-x ollama-buddy-annotate-apply-last-response
+Or @kbd{C-c A} in the chat buffer, or @code{/annotate}.  Applies
+the JSON from the last response in the chat buffer to the
+annotation database for a file you pick.  Used both manually and
+internally by the batch loop.
+@end table
+
+@section Context-aware batching
+
+Each queued file's estimated token cost (characters / 4) is checked
+against the current model's context window.  Files whose estimate
+exceeds the budget are skipped with a message.  The reserve for the
+response is configurable:
+
+@table @code
+@item ollama-buddy-annotate-context-reserve
+Fraction of the context window reserved for the response and
+overhead (default 0.5).  A file is allowed when
+@code{estimated-tokens <= context-size * (1 - reserve)}.
+@end table
+
+@section Structured output schema
+
+The batch loads the ``Annotate Project'' user-prompt skill
+(configurable via @code{ollama-buddy-annotate-directory-skill}),
+which sets the active system prompt and installs a JSON schema via
+its @code{#+FORMAT:} header.  The schema requires one annotations
+array whose items have @code{sl}, @code{el}, @code{text}, and
+@code{tag} (one of @code{file}, @code{defun}, or @code{line}).
+Structured output guarantees the model returns exactly this shape,
+which makes unattended batching reliable.
+
+You can inspect the active schema at any time with
+@kbd{C-c C-s} (@code{ollama-buddy-show-system-prompt-info}) --
+the system-prompt buffer now shows the loaded @code{#+FORMAT:}
+schema alongside the prompt content when structured output is
+armed.
+
+@section Database shape
+
+Annotations are written as full @code{simply-annotate} thread
+structures (@code{id}, @code{created}, @code{status},
+@code{priority}, @code{tags}, @code{comments}) rather than plain
+strings, so the @code{tag} from the schema lands in the thread's
+@code{tags} list directly.  When the database strategy is
+@code{project} (default), file keys are stored relative to the
+project root to keep the database portable between clones.
+
+@table @code
+@item ollama-buddy-annotate-db-strategy
+Where to write the database.  @code{project} (default) writes to
+@file{.simply-annotations.el} at the project root; @code{global}
+writes to @file{simply-annotations.el} in
+@code{user-emacs-directory} and stores absolute paths.
+
+@item ollama-buddy-annotate-directory-extensions
+List of file-name extensions considered by
+@code{ollama-buddy-annotate-directory}.  Covers common compiled
+and scripting languages; extend it for project-specific file
+types.
+@end table
+
+@section Post-response hook
+
+The batch loop is built on @code{ollama-buddy-post-response-hook},
+fired from the normal (non-multishot, non-tool) stream-completion
+path.  Each hook function receives the model name as its argument.
+The hook is available to other automations that need to react when
+a response lands.
 
 @node Global System Prompt
 @chapter Global System Prompt

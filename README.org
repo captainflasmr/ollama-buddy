@@ -126,6 +126,16 @@ A cross-cutting view of key features across the major chat clients, to the best 
 
 * Updates
 
+** What's New (v7.4.0)
+
+Directory-scale project annotation via structured output.
+
+- *=/annotate-dir=* -- Batch-annotate every source file in a directory.  Each file is attached, sent as its own request, and the returned JSON is auto-applied to =.simply-annotations.el= when the response finishes.  Prefix arg recurses.  Cancel with =/annotate-cancel=.
+- *Context-aware batching* -- Estimated token cost (chars / 4) is checked against the current model's context window; oversized files are skipped.  Configurable via =ollama-buddy-annotate-context-reserve= (default 0.5).
+- *Structured-output skill auto-load* -- The batch installs the =Annotate Project= skill and its =#+FORMAT:= JSON schema before starting, so structured output is guaranteed.  The schema now allows =file=, =defun=, and =line= tags.
+- *=C-c A=* -- New chat-buffer binding for =ollama-buddy-annotate-apply-last-response=.
+- *New cloud models* -- Added =deepseek-v3.2:cloud=, =gemini-3-flash-preview:cloud=, =qwen3-next:80b-cloud=, and =nemotron-3-super:cloud=.
+
 ** What's New (v7.3.0)
 
 Direct launch support for external agents.
@@ -226,6 +236,7 @@ Tool-augmented search — LLMs can now autonomously search the web and query loc
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *7.4.0* | Directory-scale project annotation — =/annotate-dir= batches source files through a structured-output schema, auto-applies thread-shaped annotations to =.simply-annotations.el=, context-aware, project-relative keys.   |
 | *7.3.0* | Direct agent launch — external tools invoked as standalone executables; standalone launch from transient/dired; detached terminal sessions; Oh My Pi (=omp=) as first direct agent.                                       |
 | *7.2.0* | Small model launch warning — agents prepend 20K+ tokens of system prompt; models below 7B now trigger a confirmation warning explaining potential performance impact.                                                     |
 | *7.1.4* | Expanded =ollama launch= agent registry — Cline, Droid, OpenCode, OpenClaw, Pi now detected alongside Claude Code and Codex.                                                                                             |

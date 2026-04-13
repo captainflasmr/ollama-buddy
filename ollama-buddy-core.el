@@ -364,6 +364,12 @@ Can be the string \"json\" for plain JSON mode, or an alist representing
 a JSON schema for structured output.  Set via `ollama-buddy-set-response-format'
 and cleared with `ollama-buddy-clear-response-format'.")
 
+(defvar ollama-buddy-post-response-hook nil
+  "Hook run after a normal (non-multishot, non-tool) response completes.
+Each function is called with one argument: the model name string that
+produced the response.  Used by automation such as
+`ollama-buddy-annotate-directory' to chain successive requests.")
+
 (defcustom ollama-buddy-auto-scroll nil
   "Whether to auto-scroll the chat buffer during streaming output.
 When non-nil, the buffer scrolls to follow new output if the
