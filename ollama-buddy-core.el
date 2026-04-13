@@ -921,6 +921,7 @@ Values are `api' (from Ollama API), `fallback' (static), or `manual'.")
     "qwen3.5:cloud"
     "kimi-k2.5:cloud"
     "deepseek-v3.1:671b-cloud"
+    "deepseek-v3.2:cloud"
     "gpt-oss:120b-cloud"
     "gpt-oss:20b-cloud"
     "glm-4.7:cloud"
@@ -928,7 +929,10 @@ Values are `api' (from Ollama API), `fallback' (static), or `manual'.")
     "glm-5.1:cloud"
     "minimax-m2.1:cloud"
     "minimax-m2.7:cloud"
-    "gemma4:31b-cloud")
+    "gemma4:31b-cloud"
+    "gemini-3-flash-preview:cloud"
+    "qwen3-next:80b-cloud"
+    "nemotron-3-super:cloud")
   "List of available Ollama cloud models.
 These models run on ollama.com infrastructure and require authentication
 via `ollama signin`.  Use \\[universal-argument] with `ollama-buddy--swap-model'
