@@ -1722,6 +1722,14 @@ separated by two newlines when combined."
             (when timestamp
               (insert (format "* Set at: %s\n\n" 
                               (format-time-string "%Y-%m-%d %H:%M:%S" timestamp))))
+            (when ollama-buddy--response-format
+              (insert "* Response Format:\n\n")
+              (insert "#+begin_src json\n")
+              (insert (if (stringp ollama-buddy--response-format)
+                          ollama-buddy--response-format
+                        (let ((json-encoding-pretty-print t))
+                          (json-encode ollama-buddy--response-format))))
+              (insert "\n#+end_src\n\n"))
             (insert "* Content:\n\n")
             (insert "#+begin_example\n")
             (insert ollama-buddy--current-system-prompt)
