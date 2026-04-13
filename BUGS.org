@@ -9,24 +9,38 @@ This document contains the current bugs/improvements, this is just for me mainly
 
 * Bugs/Improvements
 
+** DOING acp? with maybe  [[https://fritzgrabo.com/posts/acp2ollama-in-emacs-for-fun-and-profit/][~acp2ollama~ in Emacs]]
+
+** DOING Improve svg
+
+** DOING more LLM integrations
+
+** DOING plan mode
+
+** DOING structured outputs
+
+** TODO annotate code prompt
+
 ** TODO tidy up welcome screen
 
 ** TODO completion module is Ollama-only and limited
 
 ollama-buddy-completion.el hardcodes /api/generate so no remote provider can power inline completions. Also lacks progress feedback, caching, customisable temperature/system-prompt, and partial-accept. Supporting remote providers (especially Copilot) would add significant value.
 
-** DOING acp? with maybe  [[https://fritzgrabo.com/posts/acp2ollama-in-emacs-for-fun-and-profit/][~acp2ollama~ in Emacs
 ** TODO maybe tidying up tooling output
-** DOING Improve svg
-** DOING more LLM integrations
+
 ** TODO tool: check multiple ediffs can be added with propose_file_changes
-** DOING plan mode
+
 ** TODO regenerate videos
+
 ** TODO review testing framework
+
 ** TODO clean up testing folder
-** DOING structured outputs
+
 ** TODO No streaming with hiding reasoning corrupts output
+
 ** TODO keybindings in ollama chat buffer are reserved
+
 ** TODO expand test coverage beyond core, backend, and RAG
 
 Only 3 of 23 modules have tests (~9% coverage). Tools, completion, rewrite, remote/provider, session, and web-search modules are entirely untested. Prioritise tools (safety modes are user-facing) and provider dispatch.
