@@ -9,6 +9,8 @@ This document contains the current bugs/improvements, this is just for me mainly
 
 * Bugs/Improvements
 
+** TODO multiple chat session?
+
 ** DOING acp? with maybe  [[https://fritzgrabo.com/posts/acp2ollama-in-emacs-for-fun-and-profit/][~acp2ollama~ in Emacs]]
 
 ** DOING Improve svg
