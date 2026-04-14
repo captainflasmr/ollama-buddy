@@ -11,39 +11,32 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-04-14 Tue> *7.4.1*
+
+Response post-processing hook and a thinking-block point-anchor fix.
+
+*** Features
+
+- *=ollama-buddy-response-post-process-functions=* -- New hook run on the streamed response region just before markdown-to-org conversion.  Each function is called with =(START END)= buffer positions and may edit the region freely.  Useful for normalising output from models that concatenate structured content into a single line.
+- *=ollama-buddy--normalize-numbered-lists=* -- Default entry on the new hook.  Splits glued numbered-list items of the form =N. [CATEGORY] ...= onto their own lines when the model emits them as one paragraph (notably cloud gemma).  Regex is deliberately narrow -- it only fires when a bracketed uppercase tag follows the number, so prose like "see rule 1.  Then rule 2." is left alone.  Idempotent on already-clean input.
+- *Emacs Blog Reviewer prompt* -- New =writing__Emacs-Blog-Reviewer__system.org= user prompt.  Reviews an Emacs blog post for grammar and technical accuracy (function and variable name spelling, key-binding notation, elisp syntax, deprecated APIs, version claims, core vs third-party assertions).  Output format is a numbered one-line-per-issue list so dense cloud models cannot collapse fields into a paragraph.
+
+*** Bug Fixes
+
+- *Thinking-block point anchor* -- Fixed the first response token being inserted at the top of the folded thinking block instead of after =*** Response=.  =ollama-buddy--finalize-thinking-block= deletes the raw streamed thinking region and reinserts clean content plus the response heading, which collapses the outer =save-excursion= marker into the new content and leaves =(point)= inside the fold.  Both the API-style (=message.thinking=) and tag-style (=</think>=) paths now re-anchor to =(point-max)= immediately after finalize returns.
+
 ** <2026-04-13 Mon> *7.4.0*
 
 Directory-scale project annotation via structured output.
 
 *** Features
 
-- *=/annotate-dir=* -- New slash command and =ollama-buddy-annotate-directory=
-  iterate every source file under a directory, send one annotation
-  request per file, and auto-apply the returned JSON to
-  =.simply-annotations.el= without manual intervention.  Prefix arg
-  descends recursively.  Cancel an in-flight batch with
-  =/annotate-cancel= or =ollama-buddy-annotate-directory-cancel=.
-- *Context-aware batching* -- Each queued file's estimated token cost
-  (characters / 4) is checked against the current model's context
-  window.  Oversized files are skipped with a message.  The reserve
-  fraction is configurable via =ollama-buddy-annotate-context-reserve=
-  (default 0.5, leaving half the window for the response).
-- *Structured-output skill auto-load* -- The batch installs the
-  =Annotate Project= skill (and its =#+FORMAT:= JSON schema) before
-  starting, so the model is guaranteed to emit machine-readable output.
-  The schema now allows the =file= tag alongside =defun= and =line=.
-- *Post-response hook* -- New =ollama-buddy-post-response-hook=, fired
-  from the normal (non-multishot, non-tool) stream-completion path.
-  Used by =annotate-directory= to chain successive requests and
-  available for other automations that need to react when a response
-  lands.
-- *=C-c A=* -- New chat-buffer binding for
-  =ollama-buddy-annotate-apply-last-response=, so applying a
-  one-off annotation response no longer requires typing the slash
-  command.
-- *New cloud models* -- Added =deepseek-v3.2:cloud=,
-  =gemini-3-flash-preview:cloud=, =qwen3-next:80b-cloud=, and
-  =nemotron-3-super:cloud= to =ollama-buddy-cloud-models=.
+- *=/annotate-dir=* -- New slash command and =ollama-buddy-annotate-directory= iterate every source file under a directory, send one annotation request per file, and auto-apply the returned JSON to =.simply-annotations.el= without manual intervention.  Prefix arg descends recursively.  Cancel an in-flight batch with =/annotate-cancel= or =ollama-buddy-annotate-directory-cancel=.
+- *Context-aware batching* -- Each queued file's estimated token cost (characters / 4) is checked against the current model's context window.  Oversized files are skipped with a message.  The reserve fraction is configurable via =ollama-buddy-annotate-context-reserve= (default 0.5, leaving half the window for the response).
+- *Structured-output skill auto-load* -- The batch installs the =Annotate Project= skill (and its =#+FORMAT:= JSON schema) before starting, so the model is guaranteed to emit machine-readable output.  The schema now allows the =file= tag alongside =defun= and =line=.
+- *Post-response hook* -- New =ollama-buddy-post-response-hook=, fired from the normal (non-multishot, non-tool) stream-completion path.  Used by =annotate-directory= to chain successive requests and available for other automations that need to react when a response lands.
+- *=C-c A=* -- New chat-buffer binding for =ollama-buddy-annotate-apply-last-response=, so applying a one-off annotation response no longer requires typing the slash command.
+- *New cloud models* -- Added =deepseek-v3.2:cloud=, =gemini-3-flash-preview:cloud=, =qwen3-next:80b-cloud=, and =nemotron-3-super:cloud= to =ollama-buddy-cloud-models=.
 
 ** <2026-04-11 Fri> *7.3.0*
 
@@ -51,33 +44,16 @@ Direct launch support for external agents.
 
 *** Features
 
-- *Direct Agent Launch* -- The =/launch= system now supports external
-  tools that are not built-in =ollama launch= integrations.  Agent
-  registry entries with =:direct t= are invoked as standalone executables
-  in a terminal, bypassing =ollama launch= entirely.  This allows tools
-  like Oh My Pi (=omp=) to participate in the launch workflow alongside
-  standard agents like Claude Code and Codex.
-- *Oh My Pi (omp)* -- Added to the built-in agent registry as the first
-  direct agent.
-- *Flexible Model Passing* -- Direct agents receive =--model MODEL= by
-  default.  The new =:model-flag= property lets registry entries
-  customise or disable model passing (set to =nil= to skip).
-- *Independent Detection* -- Direct agents only require their own
-  executable on PATH; they no longer depend on =ollama= being installed.
-- *Detached Terminal Sessions* -- Launched terminal sessions are now
-  fully decoupled from Emacs.  Closing Emacs no longer kills running
-  agent sessions.
-- *Standalone Launch Command* -- New =ollama-buddy-launch-external=
-  command (=M-x= or transient menu =v=) launches an agent directly from
-  the current directory without requiring the Ollama Buddy chat buffer.
-  In Dired, the terminal opens in the displayed directory.  The model
-  prompt shows the target directory for confirmation.
+- *Direct Agent Launch* -- The =/launch= system now supports external tools that are not built-in =ollama launch= integrations.  Agent registry entries with =:direct t= are invoked as standalone executables in a terminal, bypassing =ollama launch= entirely.  This allows tools like Oh My Pi (=omp=) to participate in the launch workflow alongside standard agents like Claude Code and Codex.
+- *Oh My Pi (omp)* -- Added to the built-in agent registry as the first direct agent.
+- *Flexible Model Passing* -- Direct agents receive =--model MODEL= by default.  The new =:model-flag= property lets registry entries customise or disable model passing (set to =nil= to skip).
+- *Independent Detection* -- Direct agents only require their own executable on PATH; they no longer depend on =ollama= being installed.
+- *Detached Terminal Sessions* -- Launched terminal sessions are now fully decoupled from Emacs.  Closing Emacs no longer kills running agent sessions.
+- *Standalone Launch Command* -- New =ollama-buddy-launch-external= command (=M-x= or transient menu =v=) launches an agent directly from the current directory without requiring the Ollama Buddy chat buffer.  In Dired, the terminal opens in the displayed directory.  The model prompt shows the target directory for confirmation.
 
 *** Documentation
 
-- *Direct Agents section* -- New section in the Texinfo manual covering
-  direct vs standard agents, the =:direct= and =:model-flag= properties,
-  and how to register custom direct agents.
+- *Direct Agents section* -- New section in the Texinfo manual covering direct vs standard agents, the =:direct= and =:model-flag= properties, and how to register custom direct agents.
 
 ** <2026-04-10 Thu> *7.2.0*
 
@@ -85,22 +61,11 @@ Small model warning for agent launch.
 
 *** Features
 
-- *Small Model Launch Warning* -- When launching a local model below 7B
-  parameters via =/launch= or the Model Management =Launch= button,
-  Ollama Buddy now displays a confirmation warning explaining that coding
-  agents prepend 20,000+ tokens of system prompt to every request, which
-  can cause small models to appear frozen or take many minutes to
-  respond.  The threshold is configurable via
-  =ollama-buddy-launch-small-model-threshold= (default 7; set to =nil=
-  to disable).  Cloud models skip the warning since they run on remote
-  infrastructure.
+- *Small Model Launch Warning* -- When launching a local model below 7B parameters via =/launch= or the Model Management =Launch= button, Ollama Buddy now displays a confirmation warning explaining that coding agents prepend 20,000+ tokens of system prompt to every request, which can cause small models to appear frozen or take many minutes to respond.  The threshold is configurable via =ollama-buddy-launch-small-model-threshold= (default 7; set to =nil= to disable).  Cloud models skip the warning since they run on remote infrastructure.
 
 *** Documentation
 
-- *Small Model Warning section* -- New section in the Texinfo manual
-  covering why small models struggle with agentic workflows, hardware
-  recommendations, and how to diagnose unresponsive launches with
-  =ollama ps=.
+- *Small Model Warning section* -- New section in the Texinfo manual covering why small models struggle with agentic workflows, hardware recommendations, and how to diagnose unresponsive launches with =ollama ps=.
 
 ** <2026-04-10 Thu> *7.1.4*
 
@@ -108,11 +73,7 @@ Expanded launch agent registry.
 
 *** Features
 
-- *Full =ollama launch= Agent Registry* -- The built-in agent registry
-  now includes all frontends supported by =ollama launch=: Cline, Droid,
-  OpenCode, OpenClaw, and Pi, in addition to the existing Claude Code and
-  Codex entries.  Each agent only appears in the =/launch= picker and
-  Model Management =Launch= button when its executable is found on PATH.
+- *Full =ollama launch= Agent Registry* -- The built-in agent registry now includes all frontends supported by =ollama launch=: Cline, Droid, OpenCode, OpenClaw, and Pi, in addition to the existing Claude Code and Codex entries.  Each agent only appears in the =/launch= picker and Model Management =Launch= button when its executable is found on PATH.
 
 ** <2026-04-09 Thu> *7.1.3*
 
@@ -120,19 +81,7 @@ Fix process-filter crash on cloud usage limit responses.
 
 *** Bug Fixes
 
-- *Cloud limit crash* -- When an Ollama cloud model session was at 100%
-  usage, the non-2xx error response from =/api/chat= could begin with a
-  chunked-transfer-encoding chunk-size prefix (e.g. =82\r\n{...}=).
-  =json-read-from-string= happily parsed the leading =82= as the integer
-  =82=, which then crashed =ollama-buddy--handle-http-error= with =Wrong
-  type argument: listp, 82= inside the network-process filter, repeating
-  for every subsequent chunk.  The streaming filter now strips any
-  leading non-={= bytes before parsing and requires the parsed value to
-  be a cons before treating it as an alist.  =handle-http-error= itself
-  is also defensive against non-alist input, falling back to a generic
-  =HTTP NNN= message (or the raw string body) so a future caller can't
-  reintroduce the crash.  The same =consp= guard is mirrored in the
-  curl backend filter for symmetry.
+- *Cloud limit crash* -- When an Ollama cloud model session was at 100% usage, the non-2xx error response from =/api/chat= could begin with a chunked-transfer-encoding chunk-size prefix (e.g. =82\r\n{...}=).  =json-read-from-string= happily parsed the leading =82= as the integer =82=, which then crashed =ollama-buddy--handle-http-error= with =Wrong type argument: listp, 82= inside the network-process filter, repeating for every subsequent chunk.  The streaming filter now strips any leading non-={= bytes before parsing and requires the parsed value to be a cons before treating it as an alist.  =handle-http-error= itself is also defensive against non-alist input, falling back to a generic =HTTP NNN= message (or the raw string body) so a future caller can't reintroduce the crash.  The same =consp= guard is mirrored in the curl backend filter for symmetry.
 
 ** <2026-04-09 Thu> *7.1.2*
 
@@ -140,11 +89,7 @@ GLM 5.1 cloud model support.
 
 *** Features
 
-- *GLM 5.1 Cloud Model* -- Added =glm-5.1:cloud= to
-  =ollama-buddy-cloud-models=, so it appears in the =C-c m= model picker
-  with the =☁= indicator.  GLM-5.1 is Z.ai's next-generation flagship
-  model for agentic engineering, with significantly stronger coding
-  capabilities and support for tools and thinking.
+- *GLM 5.1 Cloud Model* -- Added =glm-5.1:cloud= to =ollama-buddy-cloud-models=, so it appears in the =C-c m= model picker with the =☁= indicator.  GLM-5.1 is Z.ai's next-generation flagship model for agentic engineering, with significantly stronger coding capabilities and support for tools and thinking.
 
 ** <2026-04-08 Wed> *7.1.1*
 
@@ -152,21 +97,9 @@ Gemma 4 model support.
 
 *** Features
 
-- *Gemma 4 Cloud Model* -- Added =gemma4:31b-cloud= to
-  =ollama-buddy-cloud-models=, so it appears in the =C-c m= model picker
-  with the =☁= indicator.
-- *Gemma 4 Recommended Models* -- Added =gemma4:e2b=, =gemma4:e4b=,
-  =gemma4:latest= and =gemma4:26b= to the "Efficient & Capable"
-  category of =ollama-buddy-available-models= (shown via =C-c L=).
-  =gemma4:26b= is a Mixture-of-Experts model with only 4B active
-  parameters, so the Q4 quant runs on 16GB GPUs (with partial CPU
-  offload) and on Apple Silicon shared-memory systems, despite its
-  total weight size.  The dense =gemma4:31b= is still left off the
-  recommended list.  =gemma2:27b= was dropped from the same list for
-  consistency.
-- *Gemma 4 Vision Support* -- All Gemma 4 variants (=e2b=, =e4b=,
-  =latest=, =26b=, =31b=, =31b-cloud=) are registered as vision models,
-  so the =⊙= indicator lights up and image attachment works with them.
+- *Gemma 4 Cloud Model* -- Added =gemma4:31b-cloud= to =ollama-buddy-cloud-models=, so it appears in the =C-c m= model picker with the =☁= indicator.
+- *Gemma 4 Recommended Models* -- Added =gemma4:e2b=, =gemma4:e4b=, =gemma4:latest= and =gemma4:26b= to the "Efficient & Capable" category of =ollama-buddy-available-models= (shown via =C-c L=).  =gemma4:26b= is a Mixture-of-Experts model with only 4B active parameters, so the Q4 quant runs on 16GB GPUs (with partial CPU offload) and on Apple Silicon shared-memory systems, despite its total weight size.  The dense =gemma4:31b= is still left off the recommended list.  =gemma2:27b= was dropped from the same list for consistency.
+- *Gemma 4 Vision Support* -- All Gemma 4 variants (=e2b=, =e4b=, =latest=, =26b=, =31b=, =31b-cloud=) are registered as vision models, so the =⊙= indicator lights up and image attachment works with them.
 
 ** <2026-03-23 Sun> *7.1.0*
 
@@ -174,14 +107,8 @@ Thinking toggle and Ollama offline detection.
 
 *** Features
 
-- *Thinking toggle* -- New =ollama-buddy-thinking-enabled= variable controls
-  whether the Ollama API =think= parameter is sent to reasoning-capable models.
-  When enabled (default), models like DeepSeek-R1, QwQ, and Qwen3 emit a
-  thinking block before responding.  When disabled, they skip reasoning entirely
-  for faster, cheaper responses.  Toggle with =/think= slash command, =T= in the
-  transient menu, or =M-x ollama-buddy-toggle-thinking=.
-- *Header indicator* -- =✦= (thinking enabled) / =✧= (thinking disabled) on
-  both the header line and prompt line, shown only for thinking-capable models.
+- *Thinking toggle* -- New =ollama-buddy-thinking-enabled= variable controls whether the Ollama API =think= parameter is sent to reasoning-capable models.  When enabled (default), models like DeepSeek-R1, QwQ, and Qwen3 emit a thinking block before responding.  When disabled, they skip reasoning entirely for faster, cheaper responses.  Toggle with =/think= slash command, =T= in the transient menu, or =M-x ollama-buddy-toggle-thinking=.
+- *Header indicator* -- =✦= (thinking enabled) / =✧= (thinking disabled) on both the header line and prompt line, shown only for thinking-capable models.
 
 ** <2026-03-21 Fri> *7.0.0*
 
@@ -189,37 +116,20 @@ Plan mode — structured task planning with org-mode TODO integration.
 
 *** Features
 
-- *Plan mode* -- A new planning workflow where the LLM generates structured
-  plans as org-mode TODO headings.  Activate with =/plan=, then describe your
-  task.  The LLM produces a plan with =** TODO Step N:= headings that support
-  native org state cycling (=S-<right>=, =C-c C-t=).
-- *Plan TODO states* -- Custom org TODO sequence: =TODO= → =DOING= → =DONE= |
-  =SKIP=, with colour-coded faces (red, orange, green, grey).
-- *=/plan-next= slash command* -- Execute the next =TODO= step.  Marks it
-  =DOING=, switches to a minimal execution system prompt so tool calling works
-  cleanly, and sends the step to the LLM.  A =** ⚒ DOING:= indicator with
-  progress summary is inserted into the buffer.
+- *Plan mode* -- A new planning workflow where the LLM generates structured plans as org-mode TODO headings.  Activate with =/plan=, then describe your task.  The LLM produces a plan with =** TODO Step N:= headings that support native org state cycling (=S-<right>=, =C-c C-t=).
+- *Plan TODO states* -- Custom org TODO sequence: =TODO= → =DOING= → =DONE= | =SKIP=, with colour-coded faces (red, orange, green, grey).
+- *=/plan-next= slash command* -- Execute the next =TODO= step.  Marks it =DOING=, switches to a minimal execution system prompt so tool calling works cleanly, and sends the step to the LLM.  A =** ⚒ DOING:= indicator with progress summary is inserted into the buffer.
 - *=/plan-all= slash command* -- Execute all remaining =TODO= steps sequentially.
-- *=/plan-done= slash command* -- Mark the current =DOING= step as =DONE= and
-  restore the planning system prompt.
-- *=/plan-status= slash command* -- Display plan progress summary (e.g.
-  "Plan: 2/6 done, 1 doing, 3 remaining, 0 skipped").
-- *=/plan-stop= slash command* -- Deactivate plan mode, restore previous system
-  prompt and org TODO keywords.
-- *Quick continue* -- =C-u C-c C-c= (or =C-u C-c RET=) sends "continue" to
-  the LLM without needing to type anything.  Useful when a model stops
-  mid-response or after tool results.
-- *Tool calling progress* -- Status line and echo area now show live feedback
-  during tool execution: =⚒ Preparing write_file…= during streaming,
-  =⚒ Running write_file…= during execution, =⚒ Tools complete= when finished.
-- *Enhanced =write_file= tool* -- Now reports file size and line count in both
-  the echo area and tool results (e.g. "Successfully wrote 142 lines (4.2k)
-  to /path/to/file").
+- *=/plan-done= slash command* -- Mark the current =DOING= step as =DONE= and restore the planning system prompt.
+- *=/plan-status= slash command* -- Display plan progress summary (e.g.  "Plan: 2/6 done, 1 doing, 3 remaining, 0 skipped").
+- *=/plan-stop= slash command* -- Deactivate plan mode, restore previous system prompt and org TODO keywords.
+- *Quick continue* -- =C-u C-c C-c= (or =C-u C-c RET=) sends "continue" to the LLM without needing to type anything.  Useful when a model stops mid-response or after tool results.
+- *Tool calling progress* -- Status line and echo area now show live feedback during tool execution: =⚒ Preparing write_file…= during streaming, =⚒ Running write_file…= during execution, =⚒ Tools complete= when finished.
+- *Enhanced =write_file= tool* -- Now reports file size and line count in both the echo area and tool results (e.g. "Successfully wrote 142 lines (4.2k) to /path/to/file").
 
 *** Key binding changes
 
-- =C-u C-c C-c= / =C-u C-c RET= now sends "continue" (was: set system prompt).
-  System prompt can still be set via =/system= or the transient menu.
+- =C-u C-c C-c= / =C-u C-c RET= now sends "continue" (was: set system prompt).  System prompt can still be set via =/system= or the transient menu.
 
 ** <2026-03-20 Thu> *6.1.0*
 
@@ -227,16 +137,10 @@ Parameter management improvements and keybinding cleanup.
 
 *** Features
 
-- *Unified parameter display* -- =ollama-buddy-params-display= now shows each
-  parameter as a foldable org heading with built-in help text.  Press =TAB= on
-  any parameter to read a detailed description.  The separate
-  =ollama-buddy-params-help= buffer has been merged into this single view.
-- *Direct parameter display* -- =C-c t= opens the Ollama API Parameters buffer
-  directly from the chat.  Press =g= to refresh, =0= to reset all parameters,
-  or =TAB= to expand a parameter for its help text.
+- *Unified parameter display* -- =ollama-buddy-params-display= now shows each parameter as a foldable org heading with built-in help text.  Press =TAB= on any parameter to read a detailed description.  The separate =ollama-buddy-params-help= buffer has been merged into this single view.
+- *Direct parameter display* -- =C-c t= opens the Ollama API Parameters buffer directly from the chat.  Press =g= to refresh, =0= to reset all parameters, or =TAB= to expand a parameter for its help text.
 - Modified parameters are shown in *bold* in the parameter display buffer.
-- *Intro display fix* -- Fixed duplicate provider summary when launch frontends
-  are available.
+- *Intro display fix* -- Fixed duplicate provider summary when launch frontends are available.
 
 ** <2026-03-19 Wed> *6.0.0*
 
@@ -244,17 +148,9 @@ Launch external frontends from Ollama Buddy
 
 *** Features
 
-- *=/launch= slash command* -- Launch any Ollama model (local or cloud) in an
-  external terminal with a frontend tool like Claude Code.  Runs
-  =ollama launch claude --model MODEL= in a detected terminal emulator.
-  Auto-detects terminal via =$TERMINAL=, =$TERM_PROGRAM=, =xdg-terminal-exec=,
-  or PATH scan of 16 common emulators.  Supports multiple frontends
-  (=ollama-buddy-launch-frontends=, default: =("claude")=).
-- *Launch button in Model Management* -- Each model (local and cloud) now has a
-  =Launch= button in the =C-c M= Model Management buffer when frontends are
-  detected.
-- *Welcome screen launch indicator* -- Shows =⚡ launch: claude (via kitty)=
-  (or your detected terminal) on the welcome screen when frontends are available.
+- *=/launch= slash command* -- Launch any Ollama model (local or cloud) in an external terminal with a frontend tool like Claude Code.  Runs =ollama launch claude --model MODEL= in a detected terminal emulator.  Auto-detects terminal via =$TERMINAL=, =$TERM_PROGRAM=, =xdg-terminal-exec=, or PATH scan of 16 common emulators.  Supports multiple frontends (=ollama-buddy-launch-frontends=, default: =("claude")=).
+- *Launch button in Model Management* -- Each model (local and cloud) now has a =Launch= button in the =C-c M= Model Management buffer when frontends are detected.
+- *Welcome screen launch indicator* -- Shows =⚡ launch: claude (via kitty)= (or your detected terminal) on the welcome screen when frontends are available.
 
 ** <2026-03-19 Wed> *5.1.0*
 
@@ -262,13 +158,7 @@ Unguarded tool mode.
 
 *** Features
 
-- *Unguarded mode* -- New =/unguarded= slash command, transient =G=, or
-  =ollama-buddy-tools-toggle-unguarded= to bypass ALL safety prompts and let
-  tools run to completion without interruption.  No confirmation for unsafe
-  tools (e.g. =execute_shell=), no large-result threshold warnings, and
-  safe-mode restrictions are overridden.  Header line turns *red* and shows
-  =☠= as a clear visual warning.  Toggle via =/unguarded=, transient menu =G=,
-  or =M-x ollama-buddy-tools-toggle-unguarded=.
+- *Unguarded mode* -- New =/unguarded= slash command, transient =G=, or =ollama-buddy-tools-toggle-unguarded= to bypass ALL safety prompts and let tools run to completion without interruption.  No confirmation for unsafe tools (e.g. =execute_shell=), no large-result threshold warnings, and safe-mode restrictions are overridden.  Header line turns *red* and shows =☠= as a clear visual warning.  Toggle via =/unguarded=, transient menu =G=, or =M-x ollama-buddy-tools-toggle-unguarded=.
 
 ** <2026-03-18 Tue> *5.0.1*
 
@@ -276,58 +166,31 @@ Auto-scroll toggle for following streaming output.
 
 *** Features
 
-- *Auto-scroll toggle* -- =C-c g= toggles =ollama-buddy-auto-scroll=, jumping to
-  the end of the buffer when enabled so you can immediately follow streaming
-  tokens.  Header line shows =↓= when active.  Auto-scroll now works when
-  toggled mid-stream (no longer requires cursor to already be at end of buffer).
+- *Auto-scroll toggle* -- =C-c g= toggles =ollama-buddy-auto-scroll=, jumping to the end of the buffer when enabled so you can immediately follow streaming tokens.  Header line shows =↓= when active.  Auto-scroll now works when toggled mid-stream (no longer requires cursor to already be at end of buffer).
 
 ** <2026-03-17 Mon> *5.0.0*
 
-Tool calling for all providers — OpenAI, Claude, and Gemini API types all
-support function calling through =ollama-buddy-provider-create=.
+Tool calling for all providers — OpenAI, Claude, and Gemini API types all support function calling through =ollama-buddy-provider-create=.
 
 *** Features
 
-- *Tool calling for external providers* -- Models registered via
-  =ollama-buddy-provider-create= now support tool calling across all three API
-  types: OpenAI-compatible (covers OpenAI, DeepSeek, Grok, OpenRouter, Copilot,
-  Codestral, LM Studio, etc.), Anthropic Claude, and Google Gemini.  Tools are
-  automatically converted from the internal OpenAI format to each provider's
-  native schema at send time.
+- *Tool calling for external providers* -- Models registered via =ollama-buddy-provider-create= now support tool calling across all three API types: OpenAI-compatible (covers OpenAI, DeepSeek, Grok, OpenRouter, Copilot, Codestral, LM Studio, etc.), Anthropic Claude, and Google Gemini.  Tools are automatically converted from the internal OpenAI format to each provider's native schema at send time.
 
 ** <2026-03-17 Mon> *4.2.0*
 
-Tool-augmented search — LLMs can now autonomously search the web and query
-local documents during tool calling.
+Tool-augmented search — LLMs can now autonomously search the web and query local documents during tool calling.
 
 *** Features
 
-- *=web_search= tool* -- When =ollama-buddy-web-search= is loaded and tool
-  calling is enabled, models can autonomously search the web for current
-  information.  The tool uses the existing Ollama web search API and returns
-  plain-text results (titles, URLs, snippets) directly to the model as tool
-  call context.  This lets the model decide when it needs up-to-date
-  information rather than requiring the user to manually attach searches.
+- *=web_search= tool* -- When =ollama-buddy-web-search= is loaded and tool calling is enabled, models can autonomously search the web for current information.  The tool uses the existing Ollama web search API and returns plain-text results (titles, URLs, snippets) directly to the model as tool call context.  This lets the model decide when it needs up-to-date information rather than requiring the user to manually attach searches.
 
-- *=rag_search= tool* -- When =ollama-buddy-rag= is loaded and tool calling is
-  enabled, models can autonomously search local RAG indexes for relevant
-  document chunks.  Accepts a =query= and optional =index= name; if no index
-  is specified, all available indexes are searched.  Uses the configured
-  embedding model, =top-k=, and similarity threshold settings.
+- *=rag_search= tool* -- When =ollama-buddy-rag= is loaded and tool calling is enabled, models can autonomously search local RAG indexes for relevant document chunks.  Accepts a =query= and optional =index= name; if no index is specified, all available indexes are searched.  Uses the configured embedding model, =top-k=, and similarity threshold settings.
 
-- *Emacs 29.1 minimum* -- Bumped from 28.1.  All org folding now uses the
-  =org-fold= text-property API directly, removing the overlay-based fallback
-  paths.  This fixes thinking block folding issues on Emacs 29+ where
-  =org-fold='s fragility check could inadvertently reveal folds.
+- *Emacs 29.1 minimum* -- Bumped from 28.1.  All org folding now uses the =org-fold= text-property API directly, removing the overlay-based fallback paths.  This fixes thinking block folding issues on Emacs 29+ where =org-fold='s fragility check could inadvertently reveal folds.
 
-- *Welcome screen improvements* -- Additional commands are now under a folded
-  =** More Commands= org heading, replacing the =ollama-buddy-full-welcome-enabled=
-  defcustom.  Project path is a clickable org file link opening dired.
+- *Welcome screen improvements* -- Additional commands are now under a folded =** More Commands= org heading, replacing the =ollama-buddy-full-welcome-enabled= defcustom.  Project path is a clickable org file link opening dired.
 
-- *Model Management* -- Running models are now listed individually in the
-  Running Models section with per-model Unload buttons.  The =[x]/[ ]=
-  checkbox indicator is removed from Available Models since running status is
-  shown in its own section.
+- *Model Management* -- Running models are now listed individually in the Running Models section with per-model Unload buttons.  The =[x]/[ ]= checkbox indicator is removed from Available Models since running status is shown in its own section.
 
 *** Key binding changes
 
@@ -345,15 +208,9 @@ Recommended Models browser and model letter ordering.
 
 *** Features
 
-- *Recommended Models buffer* -- A new =ollama-buddy-recommended-models= command
-  (=C-c L=) opens a dedicated =*Ollama Recommended Models*= buffer showing
-  categorised models from the Ollama Hub that are not yet installed locally.
-  Each model has a pull button and capability indicators (⚒⊙✦).  The model
-  management buffer (=C-c M=) no longer includes this section.
+- *Recommended Models buffer* -- A new =ollama-buddy-recommended-models= command (=C-c L=) opens a dedicated =*Ollama Recommended Models*= buffer showing categorised models from the Ollama Hub that are not yet installed locally.  Each model has a pull button and capability indicators (⚒⊙✦).  The model management buffer (=C-c M=) no longer includes this section.
 
-- *Model letter ordering* -- Letter assignment now matches the display order in
-  the model management buffer: cloud models get =a, b, c...= first, then local
-  models.
+- *Model letter ordering* -- Letter assignment now matches the display order in the model management buffer: cloud models get =a, b, c...= first, then local models.
 
 *** Key binding changes
 
@@ -367,27 +224,15 @@ Response metadata and SVG context bar.
 
 *** Features
 
-- *Org property drawers on response headings* -- Every =** [model: RESPONSE]=
-  heading now gets a =:PROPERTIES:= drawer with =:TIMESTAMP:=, =:TOKENS:=,
-  =:RATE:=, =:ELAPSED:=, and =:WAIT:=.  Queryable via =org-columns=; survives
-  session save/load.  The drawer is folded by default — press =TAB= to reveal.
+- *Org property drawers on response headings* -- Every =** [model: RESPONSE]= heading now gets a =:PROPERTIES:= drawer with =:TIMESTAMP:=, =:TOKENS:=, =:RATE:=, =:ELAPSED:=, and =:WAIT:=.  Queryable via =org-columns=; survives session save/load.  The drawer is folded by default — press =TAB= to reveal.
 
-- *Org file links for attachments* -- Attached files in the chat buffer are now
-  shown as =[[file:path][name]]= org links, clickable with =C-c C-o=.
+- *Org file links for attachments* -- Attached files in the chat buffer are now shown as =[[file:path][name]]= org links, clickable with =C-c C-o=.
 
-- *SVG context bar* -- When =ollama-buddy-context-display-type= is set to =bar=
-  and Emacs is running in GUI mode (=display-graphic-p=), the header-line now
-  renders a colour-coded SVG bar showing the context breakdown: history (green),
-  system prompt (blue), attachments (orange), web search (purple), RAG (cyan),
-  current prompt (red), and free space (grey).  Terminal Emacs falls back to the
-  existing text-character bar.
+- *SVG context bar* -- When =ollama-buddy-context-display-type= is set to =bar= and Emacs is running in GUI mode (=display-graphic-p=), the header-line now renders a colour-coded SVG bar showing the context breakdown: history (green), system prompt (blue), attachments (orange), web search (purple), RAG (cyan), current prompt (red), and free space (grey).  Terminal Emacs falls back to the existing text-character bar.
 
 *** Removed
 
-- *Token stats toggle (=C-c T=)* -- The =ollama-buddy-display-token-stats=
-  defcustom and =ollama-buddy-toggle-token-display= command have been removed.
-  Token data now lives in the property drawer on each response heading.  The
-  global stats viewer (=C-c #=) is unchanged.
+- *Token stats toggle (=C-c T=)* -- The =ollama-buddy-display-token-stats= defcustom and =ollama-buddy-toggle-token-display= command have been removed.  Token data now lives in the property drawer on each response heading.  The global stats viewer (=C-c #=) is unchanged.
 
 ** <2026-03-14 Fri> *4.0.0*
 
@@ -395,17 +240,9 @@ Generic provider registration system for external LLMs.
 
 *** Breaking Changes
 
-- *External LLM providers now use a generic registration system* -- A new
-  =ollama-buddy-provider.el= module provides =ollama-buddy-provider-create=, a
-  single factory function for registering any external LLM provider.  Three API
-  types are supported: =openai= (default), =claude=, and =gemini=.
+- *External LLM providers now use a generic registration system* -- A new =ollama-buddy-provider.el= module provides =ollama-buddy-provider-create=, a single factory function for registering any external LLM provider.  Three API types are supported: =openai= (default), =claude=, and =gemini=.
 
-  *Migration:* The existing individual provider files (=ollama-buddy-openai.el=,
-  =ollama-buddy-claude.el=, etc.) have been rewritten as thin wrappers around
-  the new system.  *Your current configuration with =(require
-  'ollama-buddy-openai)= and =(setq ollama-buddy-openai-api-key ...)= will
-  continue to work unchanged.*  However, these wrapper files are deprecated and
-  will be removed in a future release.
+  *Migration:* The existing individual provider files (=ollama-buddy-openai.el=, =ollama-buddy-claude.el=, etc.) have been rewritten as thin wrappers around the new system.  *Your current configuration with =(require 'ollama-buddy-openai)= and =(setq ollama-buddy-openai-api-key ...)= will continue to work unchanged.* However, these wrapper files are deprecated and will be removed in a future release.
 
   *New approach (recommended):*
 
@@ -441,23 +278,13 @@ Generic provider registration system for external LLMs.
 
 *** New Features
 
-- *=ollama-buddy-provider-create=* -- Register any LLM provider with one
-  function call.  Supports static model lists, dynamic model discovery with
-  optional filters, and lazy API key resolution via function values.
-- *=ollama-buddy-provider-remove=* / *=ollama-buddy-provider-refresh=* /
-  *=ollama-buddy-provider-list=* -- Manage registered providers at runtime.
-- *Welcome screen shows generic providers* -- Providers registered via
-  =ollama-buddy-provider-create= now appear in the welcome screen alongside
-  those loaded via the legacy =require= approach.
+- *=ollama-buddy-provider-create=* -- Register any LLM provider with one function call.  Supports static model lists, dynamic model discovery with optional filters, and lazy API key resolution via function values.
+- *=ollama-buddy-provider-remove=* / *=ollama-buddy-provider-refresh=* / *=ollama-buddy-provider-list=* -- Manage registered providers at runtime.
+- *Welcome screen shows generic providers* -- Providers registered via =ollama-buddy-provider-create= now appear in the welcome screen alongside those loaded via the legacy =require= approach.
 
 *** Deprecated
 
-- *Individual provider files* -- =ollama-buddy-openai.el=,
-  =ollama-buddy-claude.el=, =ollama-buddy-gemini.el=, =ollama-buddy-grok.el=,
-  =ollama-buddy-codestral.el=, =ollama-buddy-openrouter.el=, and
-  =ollama-buddy-deepseek.el= are now thin wrappers.  They still work but will
-  be removed in a future release.  =ollama-buddy-copilot.el= and
-  =ollama-buddy-openai-compat.el= are unaffected.
+- *Individual provider files* -- =ollama-buddy-openai.el=, =ollama-buddy-claude.el=, =ollama-buddy-gemini.el=, =ollama-buddy-grok.el=, =ollama-buddy-codestral.el=, =ollama-buddy-openrouter.el=, and =ollama-buddy-deepseek.el= are now thin wrappers.  They still work but will be removed in a future release.  =ollama-buddy-copilot.el= and =ollama-buddy-openai-compat.el= are unaffected.
 
 ** <2026-03-13 Thu> *3.7.1*
 
@@ -465,27 +292,16 @@ Code quality, error handling, non-blocking async, and project directory switchin
 
 *** New Features
 
-- *Switch directory from chat* -- =/cd= slash command (or =C-c O= → =P= → =d=)
-  switches the chat buffer's working directory without leaving the chat.  If the
-  new directory is a project, the welcome screen is re-displayed with project
-  info and the cached project summary is automatically attached as context.
+- *Switch directory from chat* -- =/cd= slash command (or =C-c O= → =P= → =d=) switches the chat buffer's working directory without leaving the chat.  If the new directory is a project, the welcome screen is re-displayed with project info and the cached project summary is automatically attached as context.
 
 *** Improvements
 
-- *Non-blocking model info* -- Fetching model capabilities (=/api/show=) is now
-  fully asynchronous.  Switching models or opening the chat no longer freezes
-  Emacs, especially with cloud models like =qwen3-coder-next:cloud=.
-- *Tool call heading shows arguments* -- The =****= org heading for each tool
-  call now includes the JSON arguments inline (e.g.
-  =**** execute_shell {"command":"git status"}=), visible at a glance when the
-  subtree is folded.
+- *Non-blocking model info* -- Fetching model capabilities (=/api/show=) is now fully asynchronous.  Switching models or opening the chat no longer freezes Emacs, especially with cloud models like =qwen3-coder-next:cloud=.
+- *Tool call heading shows arguments* -- The =****= org heading for each tool call now includes the JSON arguments inline (e.g.  =**** execute_shell {"command":"git status"}=), visible at a glance when the subtree is folded.
 
 *** Removed
 
-- *Fabric and Awesome ChatGPT Prompts* -- Removed =ollama-buddy-fabric.el= and
-  =ollama-buddy-awesome.el= modules, along with all transient menu entries,
-  keybindings, slash commands, texinfo chapters, and configuration variables.
-  These external prompt collections were too maintenance-heavy.
+- *Fabric and Awesome ChatGPT Prompts* -- Removed =ollama-buddy-fabric.el= and =ollama-buddy-awesome.el= modules, along with all transient menu entries, keybindings, slash commands, texinfo chapters, and configuration variables.  These external prompt collections were too maintenance-heavy.
 
 ** <2026-03-13 Thu> *3.7.0*
 
@@ -493,24 +309,11 @@ RAG pause/resume, periodic checkpointing, and new built-in tools.
 
 *** New Features
 
-- *RAG pause/resume* -- =M-x ollama-buddy-rag-pause= (or =c= in the RAG
-  transient menu) pauses an in-progress indexing operation and saves all
-  progress to disk.  =M-x ollama-buddy-rag-resume= (or =r= in the RAG
-  transient menu) continues from where it left off.  Partial indexes are
-  searchable immediately for already-embedded chunks.
-- *RAG periodic checkpointing* -- Progress is automatically saved every N
-  batches (controlled by =ollama-buddy-rag-checkpoint-interval=, default 5).
-  Even if Emacs crashes mid-indexing, partial progress is preserved and can be
-  resumed.
-- *Partial index display* -- =M-x ollama-buddy-rag-list-indexes= shows partial
-  indexes with a =[partial: N/M chunks]= indicator and pending chunk count.
-- *Update directory handles partial indexes* -- =M-x
-  ollama-buddy-rag-update-directory= detects partial indexes and offers to
-  resume or start fresh.
-- *New built-in tools* -- =search_files= (grep across files in a directory
-  tree), =get_region= (active selection text), =get_buffer_info= (buffer
-  metadata without full contents), =describe_symbol= (Emacs Lisp
-  documentation lookup), =eval_elisp= (evaluate arbitrary elisp expressions).
+- *RAG pause/resume* -- =M-x ollama-buddy-rag-pause= (or =c= in the RAG transient menu) pauses an in-progress indexing operation and saves all progress to disk.  =M-x ollama-buddy-rag-resume= (or =r= in the RAG transient menu) continues from where it left off.  Partial indexes are searchable immediately for already-embedded chunks.
+- *RAG periodic checkpointing* -- Progress is automatically saved every N batches (controlled by =ollama-buddy-rag-checkpoint-interval=, default 5).  Even if Emacs crashes mid-indexing, partial progress is preserved and can be resumed.
+- *Partial index display* -- =M-x ollama-buddy-rag-list-indexes= shows partial indexes with a =[partial: N/M chunks]= indicator and pending chunk count.
+- *Update directory handles partial indexes* -- =M-x ollama-buddy-rag-update-directory= detects partial indexes and offers to resume or start fresh.
+- *New built-in tools* -- =search_files= (grep across files in a directory tree), =get_region= (active selection text), =get_buffer_info= (buffer metadata without full contents), =describe_symbol= (Emacs Lisp documentation lookup), =eval_elisp= (evaluate arbitrary elisp expressions).
 
 ** <2026-03-12 Wed> *3.6.0*
 
@@ -518,15 +321,8 @@ RAG incremental updates and cancellation.
 
 *** New Features
 
-- *Incremental RAG updates* -- =M-x ollama-buddy-rag-update-directory= (or
-  =u= in the RAG transient menu) re-indexes only files that have been added or
-  modified since the last indexing, and removes chunks for deleted files.  File
-  modification times are now stored in the index to enable change detection.
-  Falls back to a full re-index when no prior metadata exists or when the
-  embedding model has changed.
-- *Cancel RAG indexing* -- =M-x ollama-buddy-rag-cancel= (or =c= in the RAG
-  transient menu) stops an in-progress indexing or update operation.  The
-  cancellation takes effect cleanly before the next embedding batch.
+- *Incremental RAG updates* -- =M-x ollama-buddy-rag-update-directory= (or =u= in the RAG transient menu) re-indexes only files that have been added or modified since the last indexing, and removes chunks for deleted files.  File modification times are now stored in the index to enable change detection.  Falls back to a full re-index when no prior metadata exists or when the embedding model has changed.
+- *Cancel RAG indexing* -- =M-x ollama-buddy-rag-cancel= (or =c= in the RAG transient menu) stops an in-progress indexing or update operation.  The cancellation takes effect cleanly before the next embedding batch.
 
 ** <2026-03-08 Sat> *3.5.1*
 
@@ -534,27 +330,14 @@ Curl backend refactor — unified request pipeline and HTTP error handling.
 
 *** Improvements
 
-- *Shared request pipeline* -- Extracted four shared functions
-  (=validate-send-request=, =process-inline-prompt=, =build-chat-payload=,
-  =setup-chat-send=) used by both network-process and curl backends.  The curl
-  backend now has full feature parity: tool calling, =@search()=, =@file()=,
-  =@rag()= inline processing, web search context, RAG context, effective system
-  prompts, and eager response headers.
-- *Shared stream processor* -- Both backends now use
-  =ollama-buddy--stream-process-json= for all response handling, eliminating
-  duplicated thinking block, content insertion, tool call, and completion logic.
-  The curl backend shrank from 918 to ~500 lines (46% reduction).
-- *Curl header indicator* -- =⇄= shown in the header line when the curl backend
-  is active.
-- *CANCELLED heading* -- Both backends now insert =*** CANCELLED= in the chat
-  buffer when a request is cancelled (curl already did; network-process
-  previously showed =[Stream Interrupted]=).
+- *Shared request pipeline* -- Extracted four shared functions (=validate-send-request=, =process-inline-prompt=, =build-chat-payload=, =setup-chat-send=) used by both network-process and curl backends.  The curl backend now has full feature parity: tool calling, =@search()=, =@file()=, =@rag()= inline processing, web search context, RAG context, effective system prompts, and eager response headers.
+- *Shared stream processor* -- Both backends now use =ollama-buddy--stream-process-json= for all response handling, eliminating duplicated thinking block, content insertion, tool call, and completion logic.  The curl backend shrank from 918 to ~500 lines (46% reduction).
+- *Curl header indicator* -- =⇄= shown in the header line when the curl backend is active.
+- *CANCELLED heading* -- Both backends now insert =*** CANCELLED= in the chat buffer when a request is cancelled (curl already did; network-process previously showed =[Stream Interrupted]=).
 
 *** Tests
 
-- Added 25 backend parity tests covering dispatcher routing, effective backend
-  fallback, request validation, inline processing, JSON delegation, cancellation
-  flag behaviour, function signature parity, and HTTP error handling (429/401).
+- Added 25 backend parity tests covering dispatcher routing, effective backend fallback, request validation, inline processing, JSON delegation, cancellation flag behaviour, function signature parity, and HTTP error handling (429/401).
 
 ** <2026-03-07 Fri> *3.5.0*
 
@@ -562,21 +345,11 @@ Project Init (experimental) — a step towards a more code-oriented LLM workflow
 
 *** New Features
 
-- *Project Init* -- =/init= generates and caches a project summary file
-  (=.ollama-buddy-project.org=) at the project root.  On future sessions the
-  summary auto-loads as context, giving the model immediate awareness of your
-  codebase without manual attachment.  This is an experimental feature exploring
-  tighter integration between project context and LLM conversations.
-- *Auto-load project context* -- Opening a chat buffer inside a project that
-  has a cached summary automatically attaches it.
-- *Session directory persistence* -- Sessions now save and restore
-  =default-directory=, so loading a project session restores the correct
-  project context and =project.el= integration.
-- *Session rename* -- =/rename= sets a display name for the current session.
-  =/save= uses it as the description suffix with a fresh timestamp prefix.
-- *New slash commands* -- =/login= and =/logout= for Ollama cloud
-  authentication, =/manual= to open the Info manual, =/export= for
-  =org-export-dispatch= on the chat buffer.
+- *Project Init* -- =/init= generates and caches a project summary file (=.ollama-buddy-project.org=) at the project root.  On future sessions the summary auto-loads as context, giving the model immediate awareness of your codebase without manual attachment.  This is an experimental feature exploring tighter integration between project context and LLM conversations.
+- *Auto-load project context* -- Opening a chat buffer inside a project that has a cached summary automatically attaches it.
+- *Session directory persistence* -- Sessions now save and restore =default-directory=, so loading a project session restores the correct project context and =project.el= integration.
+- *Session rename* -- =/rename= sets a display name for the current session.  =/save= uses it as the description suffix with a fresh timestamp prefix.
+- *New slash commands* -- =/login= and =/logout= for Ollama cloud authentication, =/manual= to open the Info manual, =/export= for =org-export-dispatch= on the chat buffer.
 
 ** <2026-03-05 Wed> *3.4.1*
 
@@ -584,14 +357,8 @@ Thinking Peek and Conversation Rewind.
 
 *** New Features
 
-- *Thinking Peek* -- Thinking tokens now stream into the buffer under a folded
-  =*** Thinking= heading.  Press =TAB= on the heading to peek at accumulated
-  content mid-stream; press =TAB= again to re-fold.  On completion the raw text
-  is replaced with converted org content and the heading is renamed to =*** Think=.
-- *Rewind* -- Press =C-u C-u C-c C-c= on a prompt heading to rewind the
-  conversation to that point.  Falls back to =completing-read= when not on a
-  heading.  Buffer content and conversation history are truncated and the
-  prompt text is pre-filled for editing and resending.
+- *Thinking Peek* -- Thinking tokens now stream into the buffer under a folded =*** Thinking= heading.  Press =TAB= on the heading to peek at accumulated content mid-stream; press =TAB= again to re-fold.  On completion the raw text is replaced with converted org content and the heading is renamed to =*** Think=.
+- *Rewind* -- Press =C-u C-u C-c C-c= on a prompt heading to rewind the conversation to that point.  Falls back to =completing-read= when not on a heading.  Buffer content and conversation history are truncated and the prompt text is pre-filled for editing and resending.
 
 ** <2026-03-04 Wed> *3.4.0*
 
@@ -599,15 +366,10 @@ Unified Skills and User Prompts.
 
 *** New Features
 
-- *Unified Skills & Prompts* -- Integrated the "Skills" concept directly into 
-  `ollama-buddy-user-prompts.el`. Specialized personas are now managed as standard
-  user prompts within the new =skills= category.
-- *Interactive @skill Selection* -- Typing `@skill` in the prompt now triggers
-  a `completing-read` selection of available prompts from your library.
-- *Interactive @file Selection* -- Typing `@file` now triggers a `read-file-name`
-  prompt for quick inline attachment.
-- *Slash Command Integration* -- The `/skill` slash command now pulls from the 
-  unified user prompts library.
+- *Unified Skills & Prompts* -- Integrated the "Skills" concept directly into `ollama-buddy-user-prompts.el`. Specialized personas are now managed as standard user prompts within the new =skills= category.
+- *Interactive @skill Selection* -- Typing `@skill` in the prompt now triggers a `completing-read` selection of available prompts from your library.
+- *Interactive @file Selection* -- Typing `@file` now triggers a `read-file-name` prompt for quick inline attachment.
+- *Slash Command Integration* -- The `/skill` slash command now pulls from the unified user prompts library.
 
 ** <2026-03-03 Tue> *3.3.0*
 
@@ -615,14 +377,10 @@ Smart Project Integration.
 
 *** New Features
 
-- *Smart Project Integration* -- Introduced `ollama-buddy-project.el` which leverages
-  the built-in `project.el` library for deep context awareness.
-- *Project Slash Command* -- Added `/project` slash command to the chat buffer for
-  quick file attachment from the current project.
-- *Project Meta-Context* -- New command `ollama-buddy-project-attach-context` to
-  instantly attach standard project files like README, TODO, and CHANGELOG.
-- *Transient Menu Integration* -- Enhanced the "Attachments" menu (=C-c O a=) with
-  a dynamic "Project" section that appears only when a project is detected.
+- *Smart Project Integration* -- Introduced `ollama-buddy-project.el` which leverages the built-in `project.el` library for deep context awareness.
+- *Project Slash Command* -- Added `/project` slash command to the chat buffer for quick file attachment from the current project.
+- *Project Meta-Context* -- New command `ollama-buddy-project-attach-context` to instantly attach standard project files like README, TODO, and CHANGELOG.
+- *Transient Menu Integration* -- Enhanced the "Attachments" menu (=C-c O a=) with a dynamic "Project" section that appears only when a project is detected.
 
 ** <2026-03-03 Tue> *3.2.2*
 
@@ -630,13 +388,8 @@ Main transient menu reorganization.
 
 *** New Features
 
-- *Transient Menu Reorganization* -- Reorganized the main transient menu (=C-c O=) into
-  a compact 4x2 grid.  Moved "History" and "Sessions" to the top level for
-  faster access.  Introduced specialized sub-menus for "Settings", "System
-  Prompts", and "Roles Management" to keep the interface clean and efficient.
-- *Documentation Update* -- Updated all project documentation (READMEs, main manual,
-  Texinfo, and docstrings) to reflect the new transient menu structure and
-  logical groupings.
+- *Transient Menu Reorganization* -- Reorganized the main transient menu (=C-c O=) into a compact 4x2 grid.  Moved "History" and "Sessions" to the top level for faster access.  Introduced specialized sub-menus for "Settings", "System Prompts", and "Roles Management" to keep the interface clean and efficient.
+- *Documentation Update* -- Updated all project documentation (READMEs, main manual, Texinfo, and docstrings) to reflect the new transient menu structure and logical groupings.
 
 ** <2026-03-02 Sun> *3.2.1*
 
@@ -644,30 +397,15 @@ Benchmark all models and multishot timeout.
 
 *** New Features
 
-- *Benchmark All Models* (=C-c u=) -- Send a configurable prompt to every available
-  model via multishot, automatically building token usage statistics for all
-  accessible models in one command.  Embedding models are filtered out.  Also
-  available from the transient menu (=u Benchmark All=).
-- *Multishot Per-Model Timeout* -- Each model in a multishot or benchmark sequence
-  gets a configurable timeout (default 120 seconds).  If a model exceeds the limit
-  its request is cancelled, a =*** TIMED OUT= marker is inserted, and the sequence
-  continues with the next model.
-- *Model Rankings* on Token Stats page (=C-c #=) -- A composite ranking section
-  appears at the top when multiple models have data, scoring each model across
-  speed (40%), responsiveness (30%), and throughput (30%).  Medals (🥇🥈🥉) mark
-  the top 3 and are propagated into the Token Count, Token Rate, and TTFT charts
-  for at-a-glance cross-referencing.  Does not measure response accuracy or quality.
-- *New slash commands* -- =/new= starts a fresh session (same as =/clear=), =/exit=
-  and =/bye= close the chat buffer, =/unload= lets you pick a running model to
-  unload from memory (or unload all at once via =[All]=), =/set= edits a model
-  parameter, =/show= displays current model info.
+- *Benchmark All Models* (=C-c u=) -- Send a configurable prompt to every available model via multishot, automatically building token usage statistics for all accessible models in one command.  Embedding models are filtered out.  Also available from the transient menu (=u Benchmark All=).
+- *Multishot Per-Model Timeout* -- Each model in a multishot or benchmark sequence gets a configurable timeout (default 120 seconds).  If a model exceeds the limit its request is cancelled, a =*** TIMED OUT= marker is inserted, and the sequence continues with the next model.
+- *Model Rankings* on Token Stats page (=C-c #=) -- A composite ranking section appears at the top when multiple models have data, scoring each model across speed (40%), responsiveness (30%), and throughput (30%).  Medals (🥇🥈🥉) mark the top 3 and are propagated into the Token Count, Token Rate, and TTFT charts for at-a-glance cross-referencing.  Does not measure response accuracy or quality.
+- *New slash commands* -- =/new= starts a fresh session (same as =/clear=), =/exit= and =/bye= close the chat buffer, =/unload= lets you pick a running model to unload from memory (or unload all at once via =[All]=), =/set= edits a model parameter, =/show= displays current model info.
 
 *** New Customizations
 
-- =ollama-buddy-benchmark-prompt= -- Prompt sent to each model during benchmark
-  (default: ="Explain what a binary tree is in 2-3 sentences."=)
-- =ollama-buddy-multishot-timeout= -- Per-model timeout in seconds for multishot
-  sequences (default: 120, set to =nil= to disable)
+- =ollama-buddy-benchmark-prompt= -- Prompt sent to each model during benchmark (default: ="Explain what a binary tree is in 2-3 sentences."=)
+- =ollama-buddy-multishot-timeout= -- Per-model timeout in seconds for multishot sequences (default: 120, set to =nil= to disable)
 
 ** <2026-02-28 Fri> *3.2.0*
 
@@ -675,11 +413,8 @@ Cloud usage statistics on the Model Management page.
 
 *** New Features
 
-- *Cloud usage stats* -- The Model Management page (=C-c M=) now displays session and weekly
-  usage percentages for Ollama cloud models, shown as visual progress bars in the =☁ Cloud
-  Models= section.
-  - Requires setting =ollama-buddy-cloud-session-token= to the =__Secure-session= cookie
-    value from ollama.com (sign in via browser, then copy from DevTools > Cookies)
+- *Cloud usage stats* -- The Model Management page (=C-c M=) now displays session and weekly usage percentages for Ollama cloud models, shown as visual progress bars in the =☁ Cloud Models= section.
+  - Requires setting =ollama-buddy-cloud-session-token= to the =__Secure-session= cookie value from ollama.com (sign in via browser, then copy from DevTools > Cookies)
   - Results are cached for 5 minutes (configurable via =ollama-buddy-cloud-usage-cache-seconds=)
   - =M-x ollama-buddy-cloud-refresh-usage= clears cache and re-fetches
   - "Refresh" button available directly on the Model Management page
@@ -692,55 +427,36 @@ Cloud usage statistics on the Model Management page.
 
 ** <2026-02-27 Thu> *3.1.0*
 
-Inline ghost-text code completions — a first, simple implementation of Copilot-style
-completions powered by Ollama's =/api/generate= endpoint.
+Inline ghost-text code completions — a first, simple implementation of Copilot-style completions powered by Ollama's =/api/generate= endpoint.
 
 *** New Features
 
-- *Inline ghost-text completions* (=ollama-buddy-completion=) -- A new module providing
-  manual code completions that appear as dimmed ghost text at point.  This is a first effort
-  and intentionally simple; results will vary depending on the model used — dedicated code
-  models (e.g. =codellama=, =qwen2.5-coder=) work best, while general-purpose and thinking
-  models may produce verbose or less useful suggestions.
+- *Inline ghost-text completions* (=ollama-buddy-completion=) -- A new module providing manual code completions that appear as dimmed ghost text at point.  This is a first effort and intentionally simple; results will vary depending on the model used — dedicated code models (e.g. =codellama=, =qwen2.5-coder=) work best, while general-purpose and thinking models may produce verbose or less useful suggestions.
   - =C-c TAB= triggers a completion at point
   - =TAB= accepts the ghost text into the buffer
   - Any other key dismisses the suggestion
-  - *Fill-in-the-middle* (FIM) — sends both prefix (50 lines) and suffix (20 lines) context
-    to the model, enabling better contextual completions for models that support FIM
-  - *Thinking model support* — handles models that use =thinking= tokens (e.g. cloud thinking
-    models); falls back to thinking output when =response= is empty
+  - *Fill-in-the-middle* (FIM) — sends both prefix (50 lines) and suffix (20 lines) context to the model, enabling better contextual completions for models that support FIM
+  - *Thinking model support* — handles models that use =thinking= tokens (e.g. cloud thinking models); falls back to thinking output when =response= is empty
   - *Fence stripping* — automatically removes markdown code fences from model output
   - Multi-line ghost text display
-  - Configurable via =ollama-buddy-completion-model=, =ollama-buddy-completion-max-tokens= (default 80),
-    =ollama-buddy-completion-context-lines= (default 50), =ollama-buddy-completion-suffix-lines= (default 20)
+  - Configurable via =ollama-buddy-completion-model=, =ollama-buddy-completion-max-tokens= (default 80), =ollama-buddy-completion-context-lines= (default 50), =ollama-buddy-completion-suffix-lines= (default 20)
   - Toggle with =M-x ollama-buddy-completion-mode= or =M-x ollama-buddy-completion-toggle=
 
 ** <2026-02-26 Thu> *3.0.0*
 
-Generic OpenAI-compatible chat provider — connect to LM Studio, llama.cpp, vLLM, Jan, or
-any OpenAI-API-compatible server.
+Generic OpenAI-compatible chat provider — connect to LM Studio, llama.cpp, vLLM, Jan, or any OpenAI-API-compatible server.
 
 *** New Features
 
-- *Generic OpenAI-compatible chat provider* (=ollama-buddy-openai-compat=) -- A new
-  provider module that works with any server speaking the OpenAI chat-completions API.
-  Unlike the dedicated =ollama-buddy-openai= module (hardwired to =api.openai.com=), this
-  module is fully configurable:
-  - =ollama-buddy-openai-compat-base-url= -- server base URL (default:
-    =http://localhost:1234= for LM Studio)
-  - =ollama-buddy-openai-compat-api-key= -- optional Bearer token; leave empty for
-    unauthenticated local servers
-  - =ollama-buddy-openai-compat-models= -- fallback model list when auto-discovery is
-    unavailable
+- *Generic OpenAI-compatible chat provider* (=ollama-buddy-openai-compat=) -- A new provider module that works with any server speaking the OpenAI chat-completions API.  Unlike the dedicated =ollama-buddy-openai= module (hardwired to =api.openai.com=), this module is fully configurable:
+  - =ollama-buddy-openai-compat-base-url= -- server base URL (default: =http://localhost:1234= for LM Studio)
+  - =ollama-buddy-openai-compat-api-key= -- optional Bearer token; leave empty for unauthenticated local servers
+  - =ollama-buddy-openai-compat-models= -- fallback model list when auto-discovery is unavailable
   - =ollama-buddy-openai-compat-default-model= -- default model name
-  - =ollama-buddy-openai-compat-provider-name= -- display name shown in the UI (default:
-    =LocalAI=)
-  - =ollama-buddy-openai-compat-fetch-models= -- whether to auto-discover models via
-    =GET /v1/models= on load (default: =t=)
-  - =M-x ollama-buddy-openai-compat-refresh-models= -- re-discover models at runtime
-    after changing the base URL or loading a new model in LM Studio / Jan
-  - Models are registered under a configurable prefix (default =l:=) and appear
-    alongside all other providers in the model list
+  - =ollama-buddy-openai-compat-provider-name= -- display name shown in the UI (default: =LocalAI=)
+  - =ollama-buddy-openai-compat-fetch-models= -- whether to auto-discover models via =GET /v1/models= on load (default: =t=)
+  - =M-x ollama-buddy-openai-compat-refresh-models= -- re-discover models at runtime after changing the base URL or loading a new model in LM Studio / Jan
+  - Models are registered under a configurable prefix (default =l:=) and appear alongside all other providers in the model list
   - Status line shows =l= indicator when the module is loaded
 
 ** <2026-02-26 Thu> *2.9.2*
@@ -749,18 +465,11 @@ Per-command response destination routing for command definitions.
 
 *** New Features
 
-- *=:destination= property for command definitions* -- Each entry in
-  =ollama-buddy-command-definitions= now accepts an optional =:destination=
-  keyword that overrides the global =ollama-buddy-in-buffer-replace= toggle:
-  - =in-buffer= -- always stream the response back into the buffer, replacing
-    the selected region (requires =ollama-buddy-rewrite=).
+- *=:destination= property for command definitions* -- Each entry in =ollama-buddy-command-definitions= now accepts an optional =:destination= keyword that overrides the global =ollama-buddy-in-buffer-replace= toggle:
+  - =in-buffer= -- always stream the response back into the buffer, replacing the selected region (requires =ollama-buddy-rewrite=).
   - =chat= -- always open the chat buffer, regardless of the global toggle.
   - =nil= / absent -- honour =ollama-buddy-in-buffer-replace= as before.
-- *Preset =:destination= annotations* -- All built-in presets and the default
-  =ollama-buddy-command-definitions= have been annotated: transformation
-  commands (=refactor-code=, =proofread=, translations, style rewrites, etc.)
-  default to =in-buffer=; analytical and generative commands (=git-commit=,
-  =describe-code=, =explain-code=, etc.) default to =chat=.
+- *Preset =:destination= annotations* -- All built-in presets and the default =ollama-buddy-command-definitions= have been annotated: transformation commands (=refactor-code=, =proofread=, translations, style rewrites, etc.)  default to =in-buffer=; analytical and generative commands (=git-commit=, =describe-code=, =explain-code=, etc.) default to =chat=.
 
 ** <2026-02-25 Tue> *2.9.1*
 
@@ -768,30 +477,19 @@ Random tips shown on the welcome screen to help users discover features.
 
 *** New Features
 
-- *Welcome screen tips* -- =ollama-buddy-tips.el= ships a curated list of tips
-  shown at random on the welcome screen.  Set =ollama-buddy-show-tips= to =nil=
-  to disable, or extend the list with
-  =(add-to-list 'ollama-buddy-tips "My tip" t)=.
+- *Welcome screen tips* -- =ollama-buddy-tips.el= ships a curated list of tips shown at random on the welcome screen.  Set =ollama-buddy-show-tips= to =nil= to disable, or extend the list with =(add-to-list 'ollama-buddy-tips "My tip" t)=.
 
 ** <2026-02-24 Mon> *2.9*
 
-Configurable embedding endpoint for RAG — point the RAG module at any
-OpenAI-compatible embedding service independently of your Ollama instance.
+Configurable embedding endpoint for RAG — point the RAG module at any OpenAI-compatible embedding service independently of your Ollama instance.
 
 *** New Features
 
-- *Configurable RAG embedding endpoint* -- Three new customization variables give
-  full control over where embeddings are generated:
-  - =ollama-buddy-rag-embedding-base-url= -- set to e.g.@: ="http://localhost:9000"=
-    to use a separate embedding server; =nil= (default) keeps the existing
-    behaviour of using the main Ollama host and port.
-  - =ollama-buddy-rag-embedding-api-style= -- choose between =ollama= (default,
-    POST =/api/embed=) and =openai= (POST =/v1/embeddings=) to match the API
-    shape of the target server.
-  - =ollama-buddy-rag-embedding-api-key= -- optional Bearer token for
-    authenticated embedding services; leave =nil= for local servers.
-- *OpenAI-compatible embedding services* -- RAG can now use dedicated embedding
-  backends!
+- *Configurable RAG embedding endpoint* -- Three new customization variables give full control over where embeddings are generated:
+  - =ollama-buddy-rag-embedding-base-url= -- set to e.g.@: ="http://localhost:9000"= to use a separate embedding server; =nil= (default) keeps the existing behaviour of using the main Ollama host and port.
+  - =ollama-buddy-rag-embedding-api-style= -- choose between =ollama= (default, POST =/api/embed=) and =openai= (POST =/v1/embeddings=) to match the API shape of the target server.
+  - =ollama-buddy-rag-embedding-api-key= -- optional Bearer token for authenticated embedding services; leave =nil= for local servers.
+- *OpenAI-compatible embedding services* -- RAG can now use dedicated embedding backends!
 
 ** <2026-02-24 Mon> *2.8.1*
 

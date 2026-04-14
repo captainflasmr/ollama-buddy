@@ -601,6 +601,30 @@ Each command is defined with:
   :type 'boolean
   :group 'ollama-buddy)
 
+(defcustom ollama-buddy-response-post-process-functions
+  '(ollama-buddy--normalize-numbered-lists)
+  "Functions to run on a streamed response before markdown-to-org conversion.
+Each function is called with two arguments START and END delimiting the
+response region in the current buffer, and may edit that region freely.
+Useful for normalising whitespace and layout coming back from models that
+concatenate structured output into a single line.  Set to nil to disable."
+  :type 'hook
+  :group 'ollama-buddy)
+
+(defun ollama-buddy--normalize-numbered-lists (start end)
+  "Insert a newline before each numbered-list item in the region START..END.
+Matches patterns like `1. [CATEGORY]' or `12. ' that are not already at
+the start of a line, and breaks them onto their own line.  Handles the
+case of models (notably cloud gemma) that emit numbered lists as a single
+paragraph without separating newlines between items."
+  (save-excursion
+    (save-match-data
+      (save-restriction
+        (narrow-to-region start end)
+        (goto-char (point-min))
+        (while (re-search-forward "\\([^[:space:]]\\) *\\([0-9]+\\.\\) \\(\\[[A-Z]+\\]\\)" nil t)
+          (replace-match "\\1\n\\2 \\3" t nil))))))
+
 (defcustom ollama-buddy-global-system-prompt
   "Format responses in plain prose. Never use markdown tables. Use clear paragraphs and bullet points for structured information."
   "Global system prompt prepended to all requests for consistent formatting.

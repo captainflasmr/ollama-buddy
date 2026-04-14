@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 7.4.0
+@subtitle For Ollama Buddy version 7.4.1
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -61,6 +61,7 @@ allowing you to leverage powerful large language models (LLMs) directly within y
 * Remote Providers::            Using commercial LLM APIs (OpenAI, Claude, Gemini, Grok, Codestral)
 * Ollama Cloud Models::         Using Ollama's cloud-hosted models
 * Launching External Frontends:: Launch models in external terminals (e.g. Claude Code)
+* Project Annotation::          Batch annotate directories via structured output
 * Global System Prompt::        Configuring a persistent global system prompt
 * Tone Selector::               Quickly switch response style
 * Thinking Blocks::             Collapsible reasoning output for thinking models

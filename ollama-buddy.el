@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 7.4.0
+;; Version: 7.4.1
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -2939,7 +2939,13 @@ TCP packets split a JSON object across multiple filter calls."
                    ollama-buddy--thinking-arrow-marker)
                   (set-marker ollama-buddy--thinking-block-start nil)
                   (setq ollama-buddy--thinking-block-start  nil
-                        ollama-buddy--thinking-arrow-marker nil)))
+                        ollama-buddy--thinking-arrow-marker nil)
+                  ;; Re-anchor point to the real end of buffer: finalize
+                  ;; deleted the raw thinking region and re-inserted content
+                  ;; + `*** Response', which collapses the outer goto-char
+                  ;; marker into the new content.  Without this, the first
+                  ;; response token is inserted inside the thinking block.
+                  (goto-char (point-max))))
 
               (cond
                ;; --- Collapse mode: stream content visibly, then fold heading ---
@@ -2964,7 +2970,10 @@ TCP packets split a JSON object across multiple filter calls."
                      ollama-buddy--thinking-arrow-marker)
                     (set-marker ollama-buddy--thinking-block-start nil)
                     (setq ollama-buddy--thinking-block-start  nil
-                          ollama-buddy--thinking-arrow-marker nil)))))
+                          ollama-buddy--thinking-arrow-marker nil)
+                    ;; Re-anchor point to the real end of buffer (see
+                    ;; matching comment in the API-style path above).
+                    (goto-char (point-max))))))
 
                ;; --- Hide mode: show status message then delete block ---
                (ollama-buddy-hide-reasoning
@@ -3205,6 +3214,20 @@ TCP packets split a JSON object across multiple filter calls."
                       (ignore-errors
                         (pulse-momentary-highlight-region
                          ollama-buddy--response-start-position (point))))
+
+                    ;; Run post-processing hooks on the streamed response region
+                    ;; (runs BEFORE md-to-org conversion so downstream passes see
+                    ;; normalised whitespace).  Used to fix models that emit
+                    ;; numbered lists with no newlines between items.
+                    (when (and ollama-buddy-response-post-process-functions
+                               ollama-buddy--response-start-position)
+                      (save-excursion
+                        (let ((region-start (marker-position
+                                             ollama-buddy--response-start-position))
+                              (region-end (point-max)))
+                          (run-hook-with-args
+                           'ollama-buddy-response-post-process-functions
+                           region-start region-end))))
 
                     ;; Convert the response from markdown to org format if enabled
                     (when ollama-buddy-convert-markdown-to-org

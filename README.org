@@ -126,6 +126,15 @@ A cross-cutting view of key features across the major chat clients, to the best 
 
 * Updates
 
+** What's New (v7.4.1)
+
+Response post-processing hook and a thinking-block point-anchor fix.
+
+- *=ollama-buddy-response-post-process-functions=* -- New hook run on the streamed response region just before markdown-to-org conversion.  Each function is called with =(START END)= buffer positions and may edit the region freely.
+- *=ollama-buddy--normalize-numbered-lists=* -- Default hook entry that splits glued numbered-list items of the form =N. [CATEGORY] ...= onto their own lines when dense models (notably cloud gemma) emit them as a single paragraph.  Idempotent on already-clean input.
+- *Thinking-block point anchor fix* -- Fixed the first response token being inserted at the top of the folded thinking block instead of after =*** Response=.  Both the API-style (=message.thinking=) and tag-style (=</think>=) paths now re-anchor to =(point-max)= after =finalize-thinking-block= returns.
+- *Emacs Blog Reviewer prompt* -- New user prompt that reviews an Emacs blog post for grammar and technical accuracy (function/variable names, key bindings, elisp syntax, deprecated APIs, version claims).  One-line-per-issue output format.
+
 ** What's New (v7.4.0)
 
 Directory-scale project annotation via structured output.
@@ -236,6 +245,7 @@ Tool-augmented search — LLMs can now autonomously search the web and query loc
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *7.4.1* | Response post-processing hook (=ollama-buddy-response-post-process-functions=) with numbered-list normaliser for dense cloud models; thinking-block point-anchor fix; Emacs Blog Reviewer user prompt.                   |
 | *7.4.0* | Directory-scale project annotation — =/annotate-dir= batches source files through a structured-output schema, auto-applies thread-shaped annotations to =.simply-annotations.el=, context-aware, project-relative keys.   |
 | *7.3.0* | Direct agent launch — external tools invoked as standalone executables; standalone launch from transient/dired; detached terminal sessions; Oh My Pi (=omp=) as first direct agent.                                       |
 | *7.2.0* | Small model launch warning — agents prepend 20K+ tokens of system prompt; models below 7B now trigger a confirmation warning explaining potential performance impact.                                                     |
