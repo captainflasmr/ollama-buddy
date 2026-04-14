@@ -9,6 +9,33 @@ This document contains the current bugs/improvements, this is just for me mainly
 
 * Bugs/Improvements
 
+** TODO cancel a request C-c C-k opens up
+
+These default coding systems were tried to safely encode the following
+problematic characters in the buffer â€˜*Ollama Buddy Chat*â€™:
+  Coding System           Pos  Codepoint  Char
+  utf-8-unix             5366  #x3FFF86   †
+                         5371  #x3FFFE2   â
+                         5372  #x3FFFC7   Ç
+                         5377  #x3FFFDE   Þ
+                         5378  #x3FFF93   “
+                          ...             
+
+However, each of them encountered characters it couldnâ€™t encode safely:
+  utf-8-unix cannot safely encode these: † â Ç Þ “ ‚ å á • — ...
+
+Click on a character (or switch to this window by â€˜C-w wâ€™
+and select the characters by RET) to jump to the place it appears,
+where â€˜C-u C-x =â€™ will give information about it.
+
+Select one of the safe coding systems listed below,
+or cancel the writing with C-g and edit the buffer
+   to remove or modify the problematic characters,
+or specify any other coding system (and risk losing
+   the problematic characters).
+
+  raw-text no-conversion
+
 ** TODO - Attached merges with the More Commands...
 
 ** TODO multiple chat session?
