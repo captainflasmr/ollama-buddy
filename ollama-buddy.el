@@ -1393,7 +1393,7 @@ is ever needed."
                       (wait (plist-get info :wait-time))
                       (time (format-time-string "%Y-%m-%d %H:%M:%S"
                                                 (plist-get info :timestamp))))
-                  (insert (format "  *%s*: %d tokens (%.2f t/s)%s at %s\n"
+                  (insert (format "  *%s*: %d tokens (%.2f)%s at %s\n"
                                   model tokens rate
                                   (if wait (format " [wait %.1fs]" wait) "")
                                   time))))))))
@@ -2316,12 +2316,12 @@ With prefix argument ALL-MODELS, clear history for all models."
             (and ollama-buddy-collapse-thinking
                  ollama-buddy--in-reasoning-section))
         (ollama-buddy--update-status
-         (format "Thinking... [%d %.1f t/s]"
+         (format "Thinking... [%d %.1f]"
                  ollama-buddy--current-token-count total-rate)))
        ;; Normal working
        (t
         (ollama-buddy--update-status
-         (format "Working... [%d %.1f t/s]"
+         (format "Working... [%d %.1f]"
                  ollama-buddy--current-token-count total-rate))))
       
       ;; Update tracking variables
@@ -3348,7 +3348,7 @@ TCP packets split a JSON object across multiple filter calls."
                       ;; Not in multishot mode, just show the prompt
                       (progn
                         (ollama-buddy--prepare-prompt-area)
-                        (ollama-buddy--update-status (format "Finished [%d %.1f t/s]"
+                        (ollama-buddy--update-status (format "Finished [%d %.1f]"
                                                              (plist-get (car ollama-buddy--token-usage-history) :tokens)
                                                              (plist-get (car ollama-buddy--token-usage-history) :rate)))
                         ;; Auto-save transcript
@@ -3453,7 +3453,7 @@ TCP packets split a JSON object across multiple filter calls."
         (let ((last-info (car ollama-buddy--token-usage-history)))
           (if last-info
               (ollama-buddy--update-status
-               (format "Stream %s [%d tokens, %.1f t/s]"
+               (format "Stream %s [%d tokens, %.1f]"
                        status
                        (plist-get last-info :tokens)
                        (plist-get last-info :rate)))

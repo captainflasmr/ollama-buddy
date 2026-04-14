@@ -254,7 +254,7 @@ TOKEN-COUNT-SYMBOL is the symbol to set with the token count."
       ;; Move to prompt only if response fits in window
       (ollama-buddy--maybe-goto-prompt window start-point)
       (ollama-buddy--update-status
-       (format "Finished [%d tokens in %.1fs, %.1f t/s]"
+       (format "Finished [%d tokens in %.1fs, %.1f]"
                (symbol-value token-count-symbol)
                elapsed-time token-rate)))))
 
@@ -598,7 +598,7 @@ sends a continuation request through the same provider."
               (setq ollama-buddy-remote--request-start-time nil)
               (ollama-buddy--maybe-goto-prompt window start-point)
               (ollama-buddy--update-status
-               (format "Finished [%d tokens in %.1fs, %.1f t/s]"
+               (format "Finished [%d tokens in %.1fs, %.1f]"
                        token-count elapsed-time token-rate)))))
         ;; Auto-save transcript
         (when (fboundp 'ollama-buddy--autosave-transcript)

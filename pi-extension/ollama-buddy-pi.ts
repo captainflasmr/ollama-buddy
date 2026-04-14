@@ -31,8 +31,8 @@ const USER_PROMPTS_DIR = join(REPO_ROOT, "ollama-buddy-user-prompts");
  * Everything else — always prompts for confirmation (e.g. bash, eval)
  */
 const SAFE_TOOLS = new Set(["read", "list_directory", "search_files", "glob"]);
-// const STANDARD_TOOLS = new Set(["write", "edit"]);
-const STANDARD_TOOLS = new Set([]);
+const STANDARD_TOOLS = new Set(["write", "edit"]);
+// const STANDARD_TOOLS = new Set([]);
 
 /**
  * Maximum characters allowed in a single tool result before it gets trimmed.

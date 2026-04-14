@@ -3468,7 +3468,7 @@ ACTUAL-MODEL is the model being used instead."
                                          (boundp 'ollama-buddy-tools-enabled)
                                          ollama-buddy-tools-enabled
                                          (ollama-buddy--model-supports-tools model))
-                                    (propertize "☠" 'face '(:foreground "red" :weight bold))
+                                    (propertize "X" 'face '(:foreground "red"))
                                   ""))
            (vision-indicator (if (ollama-buddy--model-supports-vision model) "⊙" ""))
            (thinking-indicator (if (ollama-buddy--model-supports-thinking model)
