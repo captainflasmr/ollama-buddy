@@ -11,6 +11,14 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-04-21 Tue> *7.4.2*
+
+Kimi K2.6 cloud model support.
+
+*** Features
+
+- *Kimi K2.6 Cloud Model* -- Added =kimi-k2.6:cloud= to =ollama-buddy-cloud-models= (appears in =C-c m= with the =☁= indicator).  Kimi K2.6 is Moonshot AI's native multimodal agentic model, running on Ollama's cloud (Blackwell hardware) with capabilities in long-horizon coding, coding-driven design, proactive autonomous execution, and swarm-based task orchestration.  *Requires a paid Ollama cloud subscription* ([[https://ollama.com/upgrade]]); sending a prompt without one returns an authentication error directing you to upgrade.  Most other entries in =ollama-buddy-cloud-models= run on the free tier.
+
 ** <2026-04-14 Tue> *7.4.1*
 
 Response post-processing hook and a thinking-block point-anchor fix.

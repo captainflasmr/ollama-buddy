@@ -126,6 +126,12 @@ A cross-cutting view of key features across the major chat clients, to the best 
 
 * Updates
 
+** What's New (v7.4.2)
+
+Kimi K2.6 cloud model support.
+
+- *Kimi K2.6 Cloud Model* -- Added =kimi-k2.6:cloud= to =ollama-buddy-cloud-models= (appears in =C-c m= with the =☁= indicator).  Moonshot AI's native multimodal agentic model, running on Ollama's cloud (NVIDIA Blackwell hardware) with long-horizon coding, coding-driven design, autonomous execution, and swarm orchestration capabilities.  *Requires a paid Ollama cloud subscription* ([[https://ollama.com/upgrade]]) -- without one, prompts return an authentication error pointing to the upgrade page.  Most other entries in =ollama-buddy-cloud-models= still run on the free tier.
+
 ** What's New (v7.4.1)
 
 Response post-processing hook and a thinking-block point-anchor fix.

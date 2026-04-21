@@ -950,6 +950,7 @@ Values are `api' (from Ollama API), `fallback' (static), or `manual'.")
     "qwen3-coder:480b-cloud"
     "qwen3.5:cloud"
     "kimi-k2.5:cloud"
+    "kimi-k2.6:cloud"
     "deepseek-v3.1:671b-cloud"
     "deepseek-v3.2:cloud"
     "gpt-oss:120b-cloud"
