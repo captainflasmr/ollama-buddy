@@ -952,6 +952,7 @@ Values are `api' (from Ollama API), `fallback' (static), or `manual'.")
     "kimi-k2.5:cloud"
     "kimi-k2.6:cloud"
     "deepseek-v3.1:671b-cloud"
+    "deepseek-v4-flash:cloud"
     "deepseek-v3.2:cloud"
     "gpt-oss:120b-cloud"
     "gpt-oss:20b-cloud"
