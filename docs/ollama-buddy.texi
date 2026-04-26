@@ -24,7 +24,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 
 @titlepage
 @title Ollama Buddy User Manual
-@subtitle For Ollama Buddy version 7.4.1
+@subtitle For Ollama Buddy version 7.5.0
 @author James Dyer
 @page
 @vskip 0pt plus 1filll
@@ -96,7 +96,7 @@ interact with AI models directly from within Emacs for various tasks such as:
 @item Generating Git commit messages
 @item Dictionary lookups and language assistance
 @item Custom AI-powered workflows via roles
-@item Integrating with commercial APIs (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter)
+@item Integrating with commercial APIs (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter, OpenCode Go)
 @item Using Ollama cloud models
 @item Including files as context in conversations
 @item Real-time web search to provide current information to LLMs
@@ -125,7 +125,7 @@ Before using Ollama Buddy, you need:
 @item Emacs 29.1 or later
 @item Ollama installed and running on your system (see @url{https://ollama.ai})
 @item At least one language model pulled into Ollama
-@item (Optional) API keys for remote providers (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter) if you want to use those services
+@item (Optional) API keys for remote providers (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter, OpenCode Go) if you want to use those services
 @end itemize
 
 @node Installation
@@ -2836,6 +2836,15 @@ Load with @code{(require 'ollama-buddy-deepseek nil t)}
 @item OpenRouter (prefix: @code{r:})
 Load with @code{(require 'ollama-buddy-openrouter nil t)}
 
+@item OpenCode Go (prefix: @code{n:})
+Load with @code{(require 'ollama-buddy-opencode nil t)}.  All 14
+subscription models register under one prefix with one shared API key;
+per-model dispatch routes OpenAI-shape models (GLM, Kimi, MiMo, Qwen)
+through @code{/chat/completions} and Anthropic-shape models
+(DeepSeek V4, MiniMax) through @code{/messages}.  Note: this is the
+flat-rate Go subscription, distinct from OpenCode's pay-as-you-go
+Zen API.
+
 @item Generic OpenAI-compatible server (prefix: @code{l:}, configurable)
 Load with @code{(require 'ollama-buddy-openai-compat nil t)}.
 Works with LM Studio, llama.cpp, vLLM, Jan, and any
@@ -2864,10 +2873,10 @@ The header line shows compact status indicators:
 @item @code{<} - Global system prompt disabled
 @item @code{H5/10} - History count (when enabled via @code{ollama-buddy-show-history-indicator})
 @item @code{V} - Reasoning/thinking sections hidden
-@item Provider letters: @code{a} (OpenAI), @code{c} (Claude), @code{g} (Gemini), @code{k} (Grok), @code{p} (Copilot), @code{s} (Codestral), @code{d} (DeepSeek), @code{r} (OpenRouter), @code{l} (OpenAI-compat)
+@item Provider letters: @code{a} (OpenAI), @code{c} (Claude), @code{g} (Gemini), @code{k} (Grok), @code{p} (Copilot), @code{s} (Codestral), @code{d} (DeepSeek), @code{r} (OpenRouter), @code{n} (OpenCode Go), @code{l} (OpenAI-compat)
 @end itemize
 
-Example: @code{☁⚒⊙✦≡2♁1acgkpsdr} means cloud model with tools enabled, vision support, thinking support, 2 file attachments, 1 web search, and all eight external providers loaded.
+Example: @code{☁⚒⊙✦≡2♁1acgkpsdrn} means cloud model with tools enabled, vision support, thinking support, 2 file attachments, 1 web search, and all nine external providers loaded.
 
 @section Setting Up API Access
 

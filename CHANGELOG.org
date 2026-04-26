@@ -11,6 +11,15 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-04-26 Sun> *7.5.0*
+
+OpenCode Go subscription integration.
+
+*** Features
+
+- *OpenCode Go provider* -- New =ollama-buddy-opencode.el= integrating the OpenCode Go flat-rate subscription ([[https://opencode.ai/docs/go]]).  All 14 models register under a single prefix (=n:=) with one API key shared via =auth-source=, and the usage budget ($12 / 5h, $30 / week, $60 / month) is shared across the whole subscription.  Per-model dispatch routes the OpenAI-shape models (GLM-5.x, Kimi K2.x, MiMo-V2.x, Qwen3.x) through =/chat/completions= and the Anthropic-shape models (DeepSeek V4, MiniMax M2.x) through =/messages=.  Note: this is the flat-rate Go subscription, distinct from OpenCode's pay-as-you-go Zen API.
+- *Per-model api-type/endpoint dispatch* -- =ollama-buddy-provider-create= now accepts a function =(MODEL) -> value= for both =:api-type= and =:endpoint=, in addition to the existing static forms.  This lets a single provider entry route different models to different API shapes / URLs while sharing one prefix, one API key, and one usage budget — the building block behind the OpenCode Go integration.  All eight existing providers continue to use the static form unchanged.
+
 ** <2026-04-24 Thu> *7.4.3*
 
 DeepSeek V4 Flash cloud model support.

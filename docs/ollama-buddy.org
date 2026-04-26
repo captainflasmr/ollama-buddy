@@ -1,5 +1,4 @@
 <<Top>>
-
 Next: [[#Introduction][Introduction]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 
@@ -424,7 +423,6 @@ language models (LLMs) directly within your Emacs workflow.
 --------------
 
 <<Introduction>>
-
 Next: [[#Installation][Installation]], Previous: [[#Top][Ollama Buddy]],
 Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -456,7 +454,7 @@ directly from within Emacs for various tasks such as:
 - Dictionary lookups and language assistance
 - Custom AI-powered workflows via roles
 - Integrating with commercial APIs (OpenAI, Claude, Gemini, Grok,
-  Copilot, Codestral, DeepSeek, OpenRouter)
+  Copilot, Codestral, DeepSeek, OpenRouter, OpenCode Go)
 - Using Ollama cloud models
 - Including files as context in conversations
 - Real-time web search to provide current information to LLMs
@@ -498,13 +496,12 @@ Before using Ollama Buddy, you need:
   [[https://ollama.ai]])
 - At least one language model pulled into Ollama
 - (Optional) API keys for remote providers (OpenAI, Claude, Gemini,
-  Grok, Copilot, Codestral, DeepSeek, OpenRouter) if you want to use
-  those services
+  Grok, Copilot, Codestral, DeepSeek, OpenRouter, OpenCode Go) if you
+  want to use those services
 
 --------------
 
 <<Installation>>
-
 Next: [[#Configuration][Configuration]], Previous:
 [[#Introduction][Introduction]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -674,7 +671,6 @@ API keys securely:
 --------------
 
 <<Configuration>>
-
 Next: [[#Quick-Start][Quick Start]], Previous:
 [[#Installation][Installation]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -998,7 +994,6 @@ Configure Ollama cloud models:
 --------------
 
 <<Quick-Start>>
-
 Next: [[#Core-Features][Core Features]], Previous:
 [[#Configuration][Configuration]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -1081,7 +1076,6 @@ Next: [[#Core-Features][Core Features]], Previous:
 --------------
 
 <<Core-Features>>
-
 Next: [[#Chat-Interface][Chat Interface]], Previous:
 [[#Quick-Start][Quick Start]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -1240,7 +1234,6 @@ switching roles immediately changes the menu.
 --------------
 
 <<Chat-Interface>>
-
 Next: [[#Working-with-Models][Working with Models]], Previous:
 [[#Core-Features][Core Features]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -1594,7 +1587,6 @@ view the full reasoning process.
 --------------
 
 <<Working-with-Models>>
-
 Next: [[#Context-Management][Context Management]], Previous:
 [[#Chat-Interface][Chat Interface]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -1823,7 +1815,6 @@ The benchmark prompt is configurable via =ollama-buddy-benchmark-prompt=
 --------------
 
 <<Context-Management>>
-
 Next: [[#File-Attachments][File Attachments]], Previous:
 [[#Working-with-Models][Working with Models]], Up: [[#Top][Ollama
 Buddy]]   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -2067,7 +2058,6 @@ can customize these via:
 --------------
 
 <<File-Attachments>>
-
 Next: [[#Web-Search][Web Search]], Previous:
 [[#Context-Management][Context Management]], Up: [[#Top][Ollama Buddy]]
   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -2371,7 +2361,6 @@ File attachments impact context usage:
 --------------
 
 <<Web-Search>>
-
 Next: [[#Parameter-Control][Parameter Control]], Previous:
 [[#File-Attachments][File Attachments]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -2661,7 +2650,6 @@ Web search works with all configured LLM providers:
 --------------
 
 <<Parameter-Control>>
-
 Next: [[#Session-Management][Session Management]], Previous:
 [[#Web-Search][Web Search]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -2802,7 +2790,6 @@ or press =F= in the parameter transient menu (C-c p).
 --------------
 
 <<Session-Management>>
-
 Next: [[#User-System-Prompts][User System Prompts]], Previous:
 [[#Parameter-Control][Parameter Control]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -3044,7 +3031,6 @@ pre-filled in a fresh prompt area so you can edit and resend it.
 --------------
 
 <<User-System-Prompts>>
-
 Next: [[#Roles-and-Commands][Roles and Commands]], Previous:
 [[#Session-Management][Session Management]], Up: [[#Top][Ollama Buddy]]
   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -3493,7 +3479,6 @@ and improved over time.
 --------------
 
 <<Roles-and-Commands>>
-
 Next: [[#Remote-Providers][Remote Providers]], Previous:
 [[#User-System-Prompts][User System Prompts]], Up: [[#Top][Ollama
 Buddy]]   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -4099,7 +4084,6 @@ menu.
 --------------
 
 <<Remote-Providers>>
-
 Next: [[#Ollama-Cloud-Models][Ollama Cloud Models]], Previous:
 [[#Roles-and-Commands][Roles and Commands]], Up: [[#Top][Ollama Buddy]]
   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -4149,6 +4133,14 @@ loaded on-demand:
 - OpenRouter (prefix: =r:=) :: Load with
   =(require 'ollama-buddy-openrouter nil t)=
 
+- OpenCode Go (prefix: =n:=) :: Load with
+  =(require 'ollama-buddy-opencode nil t)=. All 14 subscription models
+  register under one prefix with one shared API key; per-model dispatch
+  routes OpenAI-shape models (GLM, Kimi, MiMo, Qwen) through
+  =/chat/completions= and Anthropic-shape models (DeepSeek V4, MiniMax)
+  through =/messages=. Note: this is the flat-rate Go subscription,
+  distinct from OpenCode's pay-as-you-go Zen API.
+
 - Generic OpenAI-compatible server (prefix: =l:=, configurable) :: Load
   with =(require 'ollama-buddy-openai-compat nil t)=. Works with LM
   Studio, llama.cpp, vLLM, Jan, and any
@@ -4185,11 +4177,11 @@ The header line shows compact status indicators:
 - =V= - Reasoning/thinking sections hidden
 - Provider letters: =a= (OpenAI), =c= (Claude), =g= (Gemini), =k=
   (Grok), =p= (Copilot), =s= (Codestral), =d= (DeepSeek), =r=
-  (OpenRouter), =l= (OpenAI-compat)
+  (OpenRouter), =n= (OpenCode Go), =l= (OpenAI-compat)
 
-Example: =☁⚒⊙✦≡2♁1acgkpsdr= means cloud model with tools enabled, vision
-support, thinking support, 2 file attachments, 1 web search, and all
-eight external providers loaded.
+Example: =☁⚒⊙✦≡2♁1acgkpsdrn= means cloud model with tools enabled,
+vision support, thinking support, 2 file attachments, 1 web search, and
+all nine external providers loaded.
 
 <<Setting-Up-API-Access>>
 *** 15.3 Setting Up API Access [[#Setting-Up-API-Access][¶]]
@@ -4404,7 +4396,6 @@ is preserved appropriately per service.
 --------------
 
 <<Ollama-Cloud-Models>>
-
 Next: [[#Launching-External-Frontends][Launching External Frontends]],
 Previous: [[#Remote-Providers][Remote Providers]], Up: [[#Top][Ollama
 Buddy]]   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -4574,7 +4565,6 @@ Model Management page to re-fetch.
 --------------
 
 <<Launching-External-Frontends>>
-
 Next: [[#Project-Annotation][Project Annotation]], Previous:
 [[#Ollama-Cloud-Models][Ollama Cloud Models]], Up: [[#Top][Ollama
 Buddy]]   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -4847,7 +4837,6 @@ install correctly.
 --------------
 
 <<Project-Annotation>>
-
 Next: [[#Global-System-Prompt][Global System Prompt]], Previous:
 [[#Launching-External-Frontends][Launching External Frontends]], Up:
 [[#Top][Ollama Buddy]]  
@@ -4971,7 +4960,6 @@ to other automations that need to react when a response lands.
 --------------
 
 <<Global-System-Prompt>>
-
 Next: [[#Tone-Selector][Tone Selector]], Previous:
 [[#Project-Annotation][Project Annotation]], Up: [[#Top][Ollama Buddy]]
   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -5056,7 +5044,6 @@ specialized prompts for specific tasks.
 --------------
 
 <<Tone-Selector>>
-
 Next: [[#Thinking-Blocks][Thinking Blocks]], Previous:
 [[#Global-System-Prompt][Global System Prompt]], Up: [[#Top][Ollama
 Buddy]]   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -5150,7 +5137,6 @@ where =X= is the first letter of the tone name (e.g. =~C= for Concise,
 --------------
 
 <<Thinking-Blocks>>
-
 Next: [[#Project-Integration][Project Integration]], Previous:
 [[#Tone-Selector][Tone Selector]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -5234,7 +5220,6 @@ is enabled for the active model. When thinking is disabled (via
 --------------
 
 <<Project-Integration>>
-
 Next: [[#In_002dBuffer-Replace][In-Buffer Replace]], Previous:
 [[#Thinking-Blocks][Thinking Blocks]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -5368,7 +5353,6 @@ again.
 --------------
 
 <<In_002dBuffer-Replace>>
-
 Next: [[#Tool-Calling][Tool Calling]], Previous:
 [[#Project-Integration][Project Integration]], Up: [[#Top][Ollama
 Buddy]]   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -5555,7 +5539,6 @@ manipulation is required.
 --------------
 
 <<Tool-Calling>>
-
 Next: [[#Plan-Mode][Plan Mode]], Previous:
 [[#In_002dBuffer-Replace][In-Buffer Replace]], Up: [[#Top][Ollama
 Buddy]]   [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -5909,7 +5892,6 @@ names.
 --------------
 
 <<Plan-Mode>>
-
 Next: [[#RAG][RAG (Retrieval-Augmented Generation)]], Previous:
 [[#Tool-Calling][Tool Calling]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -6042,7 +6024,6 @@ step done with =/plan-done=.
 --------------
 
 <<RAG>>
-
 Next: [[#Advanced-Usage][Advanced Usage]], Previous: [[#Plan-Mode][Plan
 Mode]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -6396,7 +6377,6 @@ With RAG, it references specific passages from your indexed document.
 --------------
 
 <<Advanced-Usage>>
-
 Next: [[#API-Reference][API Reference]], Previous: [[#RAG][RAG
 (Retrieval-Augmented Generation)]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -6563,7 +6543,6 @@ Or with a payload:
 --------------
 
 <<API-Reference>>
-
 Next: [[#FAQ][Frequently Asked Questions]], Previous:
 [[#Advanced-Usage][Advanced Usage]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -6758,7 +6737,6 @@ Next: [[#FAQ][Frequently Asked Questions]], Previous:
 --------------
 
 <<FAQ>>
-
 Next: [[#Troubleshooting][Troubleshooting]], Previous:
 [[#API-Reference][API Reference]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -7093,7 +7071,6 @@ them with colleagues or between different machines.
 --------------
 
 <<Troubleshooting>>
-
 Next: [[#Contributing][Contributing]], Previous: [[#FAQ][Frequently
 Asked Questions]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -7222,7 +7199,6 @@ If you encounter a bug:
 --------------
 
 <<Contributing>>
-
 Next: [[#Index][Index]], Previous:
 [[#Troubleshooting][Troubleshooting]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
@@ -7367,7 +7343,6 @@ When adding features, please also add tests:
 --------------
 
 <<Index>>
-
 Previous: [[#Contributing][Contributing]], Up: [[#Top][Ollama Buddy]]  
 [[[#SEC_Contents][Contents]]][[[#Index][Index]]]
 

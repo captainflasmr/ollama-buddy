@@ -11,7 +11,7 @@
 
 * Ollama Buddy
 
-An Emacs package for interacting with local LLMs via [[https://ollama.ai/][Ollama]], with support for remote providers (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter) and Ollama Cloud models. Requires Emacs 29.1+.
+An Emacs package for interacting with local LLMs via [[https://ollama.ai/][Ollama]], with support for remote providers (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter, OpenCode Go) and Ollama Cloud models. Requires Emacs 29.1+.
 
 #+begin_src elisp
 (use-package ollama-buddy
@@ -77,7 +77,7 @@ Submit queries, swap models, view token usage and statistics:
 
 - *Plan Mode* -- Structured task planning with org-mode TODO integration.  =/plan= generates a step-by-step plan as TODO headings; cycle states with =S-<right>=; execute steps with =/plan-next= (with full tool calling support)
 - *Tool Calling* -- LLMs can invoke registered Emacs functions (file ops, shell commands, buffer search, calculations). Safe mode restricts to read-only tools; unguarded mode (=☠=) bypasses all prompts for uninterrupted execution.
-- *Multiple Providers* -- Local Ollama, Ollama Cloud, OpenAI, Claude, Gemini, Grok, GitHub Copilot, Codestral, DeepSeek, OpenRouter, and any generic OpenAI-compatible server (LM Studio, llama.cpp, vLLM, Jan…)
+- *Multiple Providers* -- Local Ollama, Ollama Cloud, OpenAI, Claude, Gemini, Grok, GitHub Copilot, Codestral, DeepSeek, OpenRouter, OpenCode Go, and any generic OpenAI-compatible server (LM Studio, llama.cpp, vLLM, Jan…)
 - *Web Search* -- Inline =@search(query)= syntax for real-time web search via Ollama's API
 - *Interactive Menus* -- Transient popup menus with role-based command grouping
 - *Roles & Presets* -- Switchable command configurations (developer, writer, tutor, documenter, custom); each command carries a =:destination= hint (=chat= or =in-buffer=) so rewrites go to the right place automatically
@@ -251,6 +251,7 @@ Tool-augmented search — LLMs can now autonomously search the web and query loc
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *7.5.0* | OpenCode Go subscription integration — single =n:= prefix exposes all 14 models with one shared API key; =ollama-buddy-provider-create= now accepts function forms for =:api-type= / =:endpoint= for per-model dispatch. |
 | *7.4.1* | Response post-processing hook (=ollama-buddy-response-post-process-functions=) with numbered-list normaliser for dense cloud models; thinking-block point-anchor fix; Emacs Blog Reviewer user prompt.                   |
 | *7.4.0* | Directory-scale project annotation — =/annotate-dir= batches source files through a structured-output schema, auto-applies thread-shaped annotations to =.simply-annotations.el=, context-aware, project-relative keys.   |
 | *7.3.0* | Direct agent launch — external tools invoked as standalone executables; standalone launch from transient/dired; detached terminal sessions; Oh My Pi (=omp=) as first direct agent.                                       |

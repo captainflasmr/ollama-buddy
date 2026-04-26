@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<!-- Created by GNU Texinfo 7.2, https://www.gnu.org/software/texinfo/ -->
+<!-- Created by GNU Texinfo 7.3, https://www.gnu.org/software/texinfo/ -->
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <!-- Copyright © 2024-2026 James Dyer
@@ -23,7 +23,6 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts. -->
 <link href="#SEC_Contents" rel="contents" title="Table of Contents">
 <link href="#Introduction" rel="next" title="Introduction">
 <style type="text/css">
-<!--
 a.copiable-link {visibility: hidden; text-decoration: none; line-height: 0em}
 div.example {margin-left: 3.2em}
 kbd.kbd {font-style: oblique}
@@ -31,23 +30,20 @@ span:hover a.copiable-link {visibility: visible}
 ul.mark-bullet {list-style-type: disc}
 ul.mark-minus {list-style-type: "\2212"}
 ul.toc-numbered-mark {list-style: none}
--->
 </style>
 
 
 </head>
 
-<body lang="en">
+<body>
 
 
 
 
 
 <div class="top-level-extent" id="Top">
-<div class="nav-panel">
-<p>
-Next: <a href="#Introduction" accesskey="n" rel="next">Introduction</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Introduction" rel="next">Introduction</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h1 class="top" id="Ollama-Buddy"><span>Ollama Buddy<a class="copiable-link" href="#Ollama-Buddy"> &para;</a></span></h1>
 
 <p>Ollama Buddy is a comprehensive Emacs package that provides seamless integration with Ollama, 
@@ -543,18 +539,16 @@ allowing you to leverage powerful large language models (LLMs) directly within y
 </div>
 <hr>
 <div class="chapter-level-extent" id="Introduction">
-<div class="nav-panel">
-<p>
-Next: <a href="#Installation" accesskey="n" rel="next">Installation</a>, Previous: <a href="#Top" accesskey="p" rel="prev">Ollama Buddy</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Installation" rel="next">Installation</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Top" rel="prev">Ollama Buddy</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Introduction-1"><span>1 Introduction<a class="copiable-link" href="#Introduction-1"> &para;</a></span></h2>
 
 <img class="image" src="../img/ollama-buddy-logo.svg" alt="Ollama Buddy Logo">
 
 <ul class="mini-toc">
-<li><a href="#What-is-Ollama-Buddy_003f" accesskey="1">What is Ollama Buddy?</a></li>
-<li><a href="#Why-Use-Ollama-Buddy_003f" accesskey="2">Why Use Ollama Buddy?</a></li>
-<li><a href="#Prerequisites" accesskey="3">Prerequisites</a></li>
+<li><a href="#What-is-Ollama-Buddy_003f">What is Ollama Buddy?</a></li>
+<li><a href="#Why-Use-Ollama-Buddy_003f">Why Use Ollama Buddy?</a></li>
+<li><a href="#Prerequisites">Prerequisites</a></li>
 </ul>
 <div class="section-level-extent" id="What-is-Ollama-Buddy_003f">
 <h3 class="section"><span>1.1 What is Ollama Buddy?<a class="copiable-link" href="#What-is-Ollama-Buddy_003f"> &para;</a></span></h3>
@@ -569,7 +563,7 @@ interact with AI models directly from within Emacs for various tasks such as:
 </li><li>Generating Git commit messages
 </li><li>Dictionary lookups and language assistance
 </li><li>Custom AI-powered workflows via roles
-</li><li>Integrating with commercial APIs (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter)
+</li><li>Integrating with commercial APIs (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter, OpenCode Go)
 </li><li>Using Ollama cloud models
 </li><li>Including files as context in conversations
 </li><li>Real-time web search to provide current information to LLMs
@@ -602,25 +596,23 @@ the power of local LLMs right into your Emacs workflow.
 <li>Emacs 29.1 or later
 </li><li>Ollama installed and running on your system (see <a class="url" href="https://ollama.ai">https://ollama.ai</a>)
 </li><li>At least one language model pulled into Ollama
-</li><li>(Optional) API keys for remote providers (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter) if you want to use those services
+</li><li>(Optional) API keys for remote providers (OpenAI, Claude, Gemini, Grok, Copilot, Codestral, DeepSeek, OpenRouter, OpenCode Go) if you want to use those services
 </li></ul>
 
 <hr>
 </div>
 </div>
 <div class="chapter-level-extent" id="Installation">
-<div class="nav-panel">
-<p>
-Next: <a href="#Configuration" accesskey="n" rel="next">Configuration</a>, Previous: <a href="#Introduction" accesskey="p" rel="prev">Introduction</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Configuration" rel="next">Configuration</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Introduction" rel="prev">Introduction</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Installation-1"><span>2 Installation<a class="copiable-link" href="#Installation-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Installing-Ollama" accesskey="1">Installing Ollama</a></li>
-<li><a href="#Package-Installation" accesskey="2">Package Installation</a></li>
-<li><a href="#Dependencies" accesskey="3">Dependencies</a></li>
-<li><a href="#Communication-Backends" accesskey="4">Communication Backends</a></li>
-<li><a href="#API-Key-Setup" accesskey="5">API Key Setup</a></li>
+<li><a href="#Installing-Ollama">Installing Ollama</a></li>
+<li><a href="#Package-Installation">Package Installation</a></li>
+<li><a href="#Dependencies">Dependencies</a></li>
+<li><a href="#Communication-Backends">Communication Backends</a></li>
+<li><a href="#API-Key-Setup">API Key Setup</a></li>
 </ul>
 <div class="section-level-extent" id="Installing-Ollama">
 <h3 class="section"><span>2.1 Installing Ollama<a class="copiable-link" href="#Installing-Ollama"> &para;</a></span></h3>
@@ -638,9 +630,9 @@ Next: <a href="#Configuration" accesskey="n" rel="next">Configuration</a>, Previ
 <h3 class="section"><span>2.2 Package Installation<a class="copiable-link" href="#Package-Installation"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#Using-package_002eel" accesskey="1">Using package.el</a></li>
-<li><a href="#Using-use_002dpackage" accesskey="2">Using use-package</a></li>
-<li><a href="#Manual-Installation" accesskey="3">Manual Installation</a></li>
+<li><a href="#Using-package_002eel">Using package.el</a></li>
+<li><a href="#Using-use_002dpackage">Using use-package</a></li>
+<li><a href="#Manual-Installation">Manual Installation</a></li>
 </ul>
 <div class="subsection-level-extent" id="Using-package_002eel">
 <h4 class="subsection"><span>2.2.1 Using package.el<a class="copiable-link" href="#Using-package_002eel"> &para;</a></span></h4>
@@ -763,22 +755,20 @@ machine api.anthropic.com login apikey password YOUR_CLAUDE_API_KEY_HERE
 </div>
 </div>
 <div class="chapter-level-extent" id="Configuration">
-<div class="nav-panel">
-<p>
-Next: <a href="#Quick-Start" accesskey="n" rel="next">Quick Start</a>, Previous: <a href="#Installation" accesskey="p" rel="prev">Installation</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Quick-Start" rel="next">Quick Start</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Installation" rel="prev">Installation</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Configuration-1"><span>3 Configuration<a class="copiable-link" href="#Configuration-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Basic-Configuration" accesskey="1">Basic Configuration</a></li>
-<li><a href="#Display-Options" accesskey="2">Display Options</a></li>
-<li><a href="#File-Attachment-Configuration" accesskey="3">File Attachment Configuration</a></li>
-<li><a href="#Directory-Configuration" accesskey="4">Directory Configuration</a></li>
-<li><a href="#History-and-Session-Configuration" accesskey="5">History and Session Configuration</a></li>
-<li><a href="#Context-Management-Configuration" accesskey="6">Context Management Configuration</a></li>
-<li><a href="#External-API-Configuration" accesskey="7">External API Configuration</a></li>
-<li><a href="#Global-System-Prompt-Configuration" accesskey="8">Global System Prompt Configuration</a></li>
-<li><a href="#Vision-Configuration" accesskey="9">Vision Configuration</a></li>
+<li><a href="#Basic-Configuration">Basic Configuration</a></li>
+<li><a href="#Display-Options">Display Options</a></li>
+<li><a href="#File-Attachment-Configuration">File Attachment Configuration</a></li>
+<li><a href="#Directory-Configuration">Directory Configuration</a></li>
+<li><a href="#History-and-Session-Configuration">History and Session Configuration</a></li>
+<li><a href="#Context-Management-Configuration">Context Management Configuration</a></li>
+<li><a href="#External-API-Configuration">External API Configuration</a></li>
+<li><a href="#Global-System-Prompt-Configuration">Global System Prompt Configuration</a></li>
+<li><a href="#Vision-Configuration">Vision Configuration</a></li>
 <li><a href="#Cloud-Model-Configuration">Cloud Model Configuration</a></li>
 </ul>
 <div class="section-level-extent" id="Basic-Configuration">
@@ -985,7 +975,7 @@ machine ollama-buddy-codestral login apikey password YOUR_KEY
 </pre></div>
 
 <ul class="mini-toc">
-<li><a href="#Provider-Prefixes" accesskey="1">Provider Prefixes</a></li>
+<li><a href="#Provider-Prefixes">Provider Prefixes</a></li>
 </ul>
 <div class="subsection-level-extent" id="Provider-Prefixes">
 <h4 class="subsection"><span>3.7.1 Provider Prefixes<a class="copiable-link" href="#Provider-Prefixes"> &para;</a></span></h4>
@@ -1088,15 +1078,13 @@ machine ollama-buddy-codestral login apikey password YOUR_KEY
 </div>
 </div>
 <div class="chapter-level-extent" id="Quick-Start">
-<div class="nav-panel">
-<p>
-Next: <a href="#Core-Features" accesskey="n" rel="next">Core Features</a>, Previous: <a href="#Configuration" accesskey="p" rel="prev">Configuration</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Core-Features" rel="next">Core Features</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Configuration" rel="prev">Configuration</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Quick-Start-1"><span>4 Quick Start<a class="copiable-link" href="#Quick-Start-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Basic-Usage" accesskey="1">Basic Usage</a></li>
-<li><a href="#Common-Operations" accesskey="2">Common Operations</a></li>
+<li><a href="#Basic-Usage">Basic Usage</a></li>
+<li><a href="#Common-Operations">Common Operations</a></li>
 </ul>
 <div class="section-level-extent" id="Basic-Usage">
 <h3 class="section"><span>4.1 Basic Usage<a class="copiable-link" href="#Basic-Usage"> &para;</a></span></h3>
@@ -1177,22 +1165,20 @@ with <code class="code">☁</code>.
 </div>
 </div>
 <div class="chapter-level-extent" id="Core-Features">
-<div class="nav-panel">
-<p>
-Next: <a href="#Chat-Interface" accesskey="n" rel="next">Chat Interface</a>, Previous: <a href="#Quick-Start" accesskey="p" rel="prev">Quick Start</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Chat-Interface" rel="next">Chat Interface</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Quick-Start" rel="prev">Quick Start</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Core-Features-1"><span>5 Core Features<a class="copiable-link" href="#Core-Features-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Chat-Interface-1" accesskey="1">Chat Interface</a></li>
-<li><a href="#Pre_002dbuilt-Commands" accesskey="2">Pre-built Commands</a></li>
-<li><a href="#Model-Management" accesskey="3">Model Management</a></li>
-<li><a href="#Parameter-Control-1" accesskey="4">Parameter Control</a></li>
-<li><a href="#Role-Transient-Menu" accesskey="5">Role Transient Menu</a></li>
-<li><a href="#Roles-and-Custom-Commands" accesskey="6">Roles and Custom Commands</a></li>
-<li><a href="#External-API-Integration" accesskey="7">External API Integration</a></li>
-<li><a href="#Vision-Support" accesskey="8">Vision Support</a></li>
-<li><a href="#File-Attachments-1" accesskey="9">File Attachments</a></li>
+<li><a href="#Chat-Interface-1">Chat Interface</a></li>
+<li><a href="#Pre_002dbuilt-Commands">Pre-built Commands</a></li>
+<li><a href="#Model-Management">Model Management</a></li>
+<li><a href="#Parameter-Control-1">Parameter Control</a></li>
+<li><a href="#Role-Transient-Menu">Role Transient Menu</a></li>
+<li><a href="#Roles-and-Custom-Commands">Roles and Custom Commands</a></li>
+<li><a href="#External-API-Integration">External API Integration</a></li>
+<li><a href="#Vision-Support">Vision Support</a></li>
+<li><a href="#File-Attachments-1">File Attachments</a></li>
 </ul>
 <div class="section-level-extent" id="Chat-Interface-1">
 <h3 class="section"><span>5.1 Chat Interface<a class="copiable-link" href="#Chat-Interface-1"> &para;</a></span></h3>
@@ -1339,21 +1325,19 @@ Next: <a href="#Chat-Interface" accesskey="n" rel="next">Chat Interface</a>, Pre
 </div>
 </div>
 <div class="chapter-level-extent" id="Chat-Interface">
-<div class="nav-panel">
-<p>
-Next: <a href="#Working-with-Models" accesskey="n" rel="next">Working with Models</a>, Previous: <a href="#Core-Features" accesskey="p" rel="prev">Core Features</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Working-with-Models" rel="next">Working with Models</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Core-Features" rel="prev">Core Features</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Chat-Interface-2"><span>6 Chat Interface<a class="copiable-link" href="#Chat-Interface-2"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Opening-the-Chat" accesskey="1">Opening the Chat</a></li>
-<li><a href="#Interface-Overview" accesskey="2">Interface Overview</a></li>
-<li><a href="#Sending-Prompts" accesskey="3">Sending Prompts</a></li>
-<li><a href="#Inline-_0040-Commands" accesskey="4">Inline @ Commands</a></li>
-<li><a href="#Slash-Commands" accesskey="5">Slash Commands</a></li>
-<li><a href="#System-Prompts" accesskey="6">System Prompts</a></li>
-<li><a href="#Markdown-to-Org-Conversion" accesskey="7">Markdown to Org Conversion</a></li>
-<li><a href="#Reasoning-Visibility-Control" accesskey="8">Reasoning Visibility Control</a></li>
+<li><a href="#Opening-the-Chat">Opening the Chat</a></li>
+<li><a href="#Interface-Overview">Interface Overview</a></li>
+<li><a href="#Sending-Prompts">Sending Prompts</a></li>
+<li><a href="#Inline-_0040-Commands">Inline @ Commands</a></li>
+<li><a href="#Slash-Commands">Slash Commands</a></li>
+<li><a href="#System-Prompts">System Prompts</a></li>
+<li><a href="#Markdown-to-Org-Conversion">Markdown to Org Conversion</a></li>
+<li><a href="#Reasoning-Visibility-Control">Reasoning Visibility Control</a></li>
 </ul>
 <div class="section-level-extent" id="Opening-the-Chat">
 <h3 class="section"><span>6.1 Opening the Chat<a class="copiable-link" href="#Opening-the-Chat"> &para;</a></span></h3>
@@ -1459,7 +1443,7 @@ menu of available inline commands.  These insert syntax templates into the promp
 </li></ul>
 
 <ul class="mini-toc">
-<li><a href="#Inline-_0040file_0028path_0029-Syntax" accesskey="1">Inline @file(path) Syntax</a></li>
+<li><a href="#Inline-_0040file_0028path_0029-Syntax">Inline @file(path) Syntax</a></li>
 </ul>
 <div class="subsection-level-extent" id="Inline-_0040file_0028path_0029-Syntax">
 <h4 class="subsection"><span>6.4.1 Inline @file(path) Syntax<a class="copiable-link" href="#Inline-_0040file_0028path_0029-Syntax"> &para;</a></span></h4>
@@ -1752,21 +1736,19 @@ Provide concise, efficient solutions with explanations.
 </div>
 </div>
 <div class="chapter-level-extent" id="Working-with-Models">
-<div class="nav-panel">
-<p>
-Next: <a href="#Context-Management" accesskey="n" rel="next">Context Management</a>, Previous: <a href="#Chat-Interface" accesskey="p" rel="prev">Chat Interface</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Context-Management" rel="next">Context Management</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Chat-Interface" rel="prev">Chat Interface</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Working-with-Models-1"><span>7 Working with Models<a class="copiable-link" href="#Working-with-Models-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Available-Models" accesskey="1">Available Models</a></li>
-<li><a href="#Switching-Models" accesskey="2">Switching Models</a></li>
-<li><a href="#Local-vs_002e-Cloud-Models" accesskey="3">Local vs. Cloud Models</a></li>
-<li><a href="#Managing-Models" accesskey="4">Managing Models</a></li>
-<li><a href="#Pulling-New-Models" accesskey="5">Pulling New Models</a></li>
-<li><a href="#Importing-GGUF-Files" accesskey="6">Importing GGUF Files</a></li>
-<li><a href="#Vision-Models" accesskey="7">Vision Models</a></li>
-<li><a href="#Multishot-Mode" accesskey="8">Multishot Mode</a></li>
+<li><a href="#Available-Models">Available Models</a></li>
+<li><a href="#Switching-Models">Switching Models</a></li>
+<li><a href="#Local-vs_002e-Cloud-Models">Local vs. Cloud Models</a></li>
+<li><a href="#Managing-Models">Managing Models</a></li>
+<li><a href="#Pulling-New-Models">Pulling New Models</a></li>
+<li><a href="#Importing-GGUF-Files">Importing GGUF Files</a></li>
+<li><a href="#Vision-Models">Vision Models</a></li>
+<li><a href="#Multishot-Mode">Multishot Mode</a></li>
 </ul>
 <div class="section-level-extent" id="Available-Models">
 <h3 class="section"><span>7.1 Available Models<a class="copiable-link" href="#Available-Models"> &para;</a></span></h3>
@@ -1872,8 +1854,8 @@ that can be pulled with a single click.
 <p>Some models support vision capabilities for image analysis.
 </p>
 <ul class="mini-toc">
-<li><a href="#Configuring-Vision-Support" accesskey="1">Configuring Vision Support</a></li>
-<li><a href="#Using-Vision-Models" accesskey="2">Using Vision Models</a></li>
+<li><a href="#Configuring-Vision-Support">Configuring Vision Support</a></li>
+<li><a href="#Using-Vision-Models">Using Vision Models</a></li>
 </ul>
 <div class="subsection-level-extent" id="Configuring-Vision-Support">
 <h4 class="subsection"><span>7.7.1 Configuring Vision Support<a class="copiable-link" href="#Configuring-Vision-Support"> &para;</a></span></h4>
@@ -1942,7 +1924,7 @@ marker is inserted, and the sequence continues with the next model.
 Set <code class="code">ollama-buddy-multishot-timeout</code> to <code class="code">nil</code> to disable.
 </p>
 <ul class="mini-toc">
-<li><a href="#Benchmark-All-Models" accesskey="1">Benchmark All Models</a></li>
+<li><a href="#Benchmark-All-Models">Benchmark All Models</a></li>
 </ul>
 <div class="subsection-level-extent" id="Benchmark-All-Models">
 <h4 class="subsection"><span>7.8.1 Benchmark All Models<a class="copiable-link" href="#Benchmark-All-Models"> &para;</a></span></h4>
@@ -1960,22 +1942,20 @@ command.  Embedding models are filtered out.
 </div>
 </div>
 <div class="chapter-level-extent" id="Context-Management">
-<div class="nav-panel">
-<p>
-Next: <a href="#File-Attachments" accesskey="n" rel="next">File Attachments</a>, Previous: <a href="#Working-with-Models" accesskey="p" rel="prev">Working with Models</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#File-Attachments" rel="next">File Attachments</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Working-with-Models" rel="prev">Working with Models</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Context-Management-1"><span>8 Context Management<a class="copiable-link" href="#Context-Management-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Understanding-Context-Windows" accesskey="1">Understanding Context Windows</a></li>
-<li><a href="#Context-Size-Detection" accesskey="2">Context Size Detection</a></li>
-<li><a href="#Enabling-Context-Monitoring" accesskey="3">Enabling Context Monitoring</a></li>
-<li><a href="#Context-with-File-Attachments" accesskey="4">Context with File Attachments</a></li>
-<li><a href="#Context-Management-Commands" accesskey="5">Context Management Commands</a></li>
-<li><a href="#Token-Estimation" accesskey="6">Token Estimation</a></li>
-<li><a href="#Managing-Context-in-Practice" accesskey="7">Managing Context in Practice</a></li>
-<li><a href="#Context-Display-Configuration" accesskey="8">Context Display Configuration</a></li>
-<li><a href="#Fallback-Context-Sizes" accesskey="9">Fallback Context Sizes</a></li>
+<li><a href="#Understanding-Context-Windows">Understanding Context Windows</a></li>
+<li><a href="#Context-Size-Detection">Context Size Detection</a></li>
+<li><a href="#Enabling-Context-Monitoring">Enabling Context Monitoring</a></li>
+<li><a href="#Context-with-File-Attachments">Context with File Attachments</a></li>
+<li><a href="#Context-Management-Commands">Context Management Commands</a></li>
+<li><a href="#Token-Estimation">Token Estimation</a></li>
+<li><a href="#Managing-Context-in-Practice">Managing Context in Practice</a></li>
+<li><a href="#Context-Display-Configuration">Context Display Configuration</a></li>
+<li><a href="#Fallback-Context-Sizes">Fallback Context Sizes</a></li>
 <li><a href="#Troubleshooting-Context-Issues">Troubleshooting Context Issues</a></li>
 </ul>
 <div class="section-level-extent" id="Understanding-Context-Windows">
@@ -2076,16 +2056,16 @@ legend showing token counts and percentages.
 <h3 class="section"><span>8.7 Managing Context in Practice<a class="copiable-link" href="#Managing-Context-in-Practice"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#Workflow-Strategies" accesskey="1">Workflow Strategies</a></li>
-<li><a href="#Using-num_005fctx-Parameter" accesskey="2">Using num_ctx Parameter</a></li>
+<li><a href="#Workflow-Strategies">Workflow Strategies</a></li>
+<li><a href="#Using-num_005fctx-Parameter">Using num_ctx Parameter</a></li>
 </ul>
 <div class="subsection-level-extent" id="Workflow-Strategies">
 <h4 class="subsection"><span>8.7.1 Workflow Strategies<a class="copiable-link" href="#Workflow-Strategies"> &para;</a></span></h4>
 
 <ul class="mini-toc">
-<li><a href="#Paste_002dand_002dSend-Approach" accesskey="1">Paste-and-Send Approach</a></li>
-<li><a href="#Preemptive-Checking" accesskey="2">Preemptive Checking</a></li>
-<li><a href="#History-Length-Management" accesskey="3">History Length Management</a></li>
+<li><a href="#Paste_002dand_002dSend-Approach">Paste-and-Send Approach</a></li>
+<li><a href="#Preemptive-Checking">Preemptive Checking</a></li>
+<li><a href="#History-Length-Management">History Length Management</a></li>
 </ul>
 <div class="subsubsection-level-extent" id="Paste_002dand_002dSend-Approach">
 <h4 class="subsubsection"><span>8.7.1.1 Paste-and-Send Approach<a class="copiable-link" href="#Paste_002dand_002dSend-Approach"> &para;</a></span></h4>
@@ -2205,22 +2185,20 @@ legend showing token counts and percentages.
 </div>
 </div>
 <div class="chapter-level-extent" id="File-Attachments">
-<div class="nav-panel">
-<p>
-Next: <a href="#Web-Search" accesskey="n" rel="next">Web Search</a>, Previous: <a href="#Context-Management" accesskey="p" rel="prev">Context Management</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Web-Search" rel="next">Web Search</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Context-Management" rel="prev">Context Management</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="File-Attachments-2"><span>9 File Attachments<a class="copiable-link" href="#File-Attachments-2"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Overview" accesskey="1">Overview</a></li>
-<li><a href="#Supported-File-Types" accesskey="2">Supported File Types</a></li>
-<li><a href="#Attaching-Files" accesskey="3">Attaching Files</a></li>
-<li><a href="#Managing-Attachments" accesskey="4">Managing Attachments</a></li>
-<li><a href="#File-Size-Limits" accesskey="5">File Size Limits</a></li>
-<li><a href="#How-Attachments-Work" accesskey="6">How Attachments Work</a></li>
-<li><a href="#File-Attachment-Workflow-Examples" accesskey="7">File Attachment Workflow Examples</a></li>
-<li><a href="#Context-Considerations" accesskey="8">Context Considerations</a></li>
-<li><a href="#Best-Practices" accesskey="9">Best Practices</a></li>
+<li><a href="#Overview">Overview</a></li>
+<li><a href="#Supported-File-Types">Supported File Types</a></li>
+<li><a href="#Attaching-Files">Attaching Files</a></li>
+<li><a href="#Managing-Attachments">Managing Attachments</a></li>
+<li><a href="#File-Size-Limits">File Size Limits</a></li>
+<li><a href="#How-Attachments-Work">How Attachments Work</a></li>
+<li><a href="#File-Attachment-Workflow-Examples">File Attachment Workflow Examples</a></li>
+<li><a href="#Context-Considerations">Context Considerations</a></li>
+<li><a href="#Best-Practices">Best Practices</a></li>
 <li><a href="#Troubleshooting-Attachments">Troubleshooting Attachments</a></li>
 </ul>
 <div class="section-level-extent" id="Overview">
@@ -2271,8 +2249,8 @@ Next: <a href="#Web-Search" accesskey="n" rel="next">Web Search</a>, Previous: <
 <h3 class="section"><span>9.3 Attaching Files<a class="copiable-link" href="#Attaching-Files"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#Basic-File-Attachment" accesskey="1">Basic File Attachment</a></li>
-<li><a href="#Dired-Integration" accesskey="2">Dired Integration</a></li>
+<li><a href="#Basic-File-Attachment">Basic File Attachment</a></li>
+<li><a href="#Dired-Integration">Dired Integration</a></li>
 </ul>
 <div class="subsection-level-extent" id="Basic-File-Attachment">
 <h4 class="subsection"><span>9.3.1 Basic File Attachment<a class="copiable-link" href="#Basic-File-Attachment"> &para;</a></span></h4>
@@ -2310,9 +2288,9 @@ Next: <a href="#Web-Search" accesskey="n" rel="next">Web Search</a>, Previous: <
 <h3 class="section"><span>9.4 Managing Attachments<a class="copiable-link" href="#Managing-Attachments"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#Viewing-Attachments" accesskey="1">Viewing Attachments</a></li>
-<li><a href="#Detaching-Files" accesskey="2">Detaching Files</a></li>
-<li><a href="#Clearing-All-Attachments" accesskey="3">Clearing All Attachments</a></li>
+<li><a href="#Viewing-Attachments">Viewing Attachments</a></li>
+<li><a href="#Detaching-Files">Detaching Files</a></li>
+<li><a href="#Clearing-All-Attachments">Clearing All Attachments</a></li>
 </ul>
 <div class="subsection-level-extent" id="Viewing-Attachments">
 <h4 class="subsection"><span>9.4.1 Viewing Attachments<a class="copiable-link" href="#Viewing-Attachments"> &para;</a></span></h4>
@@ -2376,8 +2354,8 @@ Next: <a href="#Web-Search" accesskey="n" rel="next">Web Search</a>, Previous: <
 <h3 class="section"><span>9.6 How Attachments Work<a class="copiable-link" href="#How-Attachments-Work"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#Context-Integration" accesskey="1">Context Integration</a></li>
-<li><a href="#Session-Persistence" accesskey="2">Session Persistence</a></li>
+<li><a href="#Context-Integration">Context Integration</a></li>
+<li><a href="#Session-Persistence">Session Persistence</a></li>
 </ul>
 <div class="subsection-level-extent" id="Context-Integration">
 <h4 class="subsection"><span>9.6.1 Context Integration<a class="copiable-link" href="#Context-Integration"> &para;</a></span></h4>
@@ -2410,9 +2388,9 @@ Next: <a href="#Web-Search" accesskey="n" rel="next">Web Search</a>, Previous: <
 <h3 class="section"><span>9.7 File Attachment Workflow Examples<a class="copiable-link" href="#File-Attachment-Workflow-Examples"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#Code-Review-Workflow" accesskey="1">Code Review Workflow</a></li>
-<li><a href="#Multi_002dFile-Analysis" accesskey="2">Multi-File Analysis</a></li>
-<li><a href="#Configuration-Troubleshooting" accesskey="3">Configuration Troubleshooting</a></li>
+<li><a href="#Code-Review-Workflow">Code Review Workflow</a></li>
+<li><a href="#Multi_002dFile-Analysis">Multi-File Analysis</a></li>
+<li><a href="#Configuration-Troubleshooting">Configuration Troubleshooting</a></li>
 </ul>
 <div class="subsection-level-extent" id="Code-Review-Workflow">
 <h4 class="subsection"><span>9.7.1 Code Review Workflow<a class="copiable-link" href="#Code-Review-Workflow"> &para;</a></span></h4>
@@ -2505,21 +2483,19 @@ Next: <a href="#Web-Search" accesskey="n" rel="next">Web Search</a>, Previous: <
 </div>
 </div>
 <div class="chapter-level-extent" id="Web-Search">
-<div class="nav-panel">
-<p>
-Next: <a href="#Parameter-Control" accesskey="n" rel="next">Parameter Control</a>, Previous: <a href="#File-Attachments" accesskey="p" rel="prev">File Attachments</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Parameter-Control" rel="next">Parameter Control</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#File-Attachments" rel="prev">File Attachments</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Web-Search-1"><span>10 Web Search<a class="copiable-link" href="#Web-Search-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Overview-1" accesskey="1">Overview</a></li>
-<li><a href="#How-It-Works" accesskey="2">How It Works</a></li>
-<li><a href="#Configuration-2" accesskey="3">Configuration</a></li>
-<li><a href="#Usage" accesskey="4">Usage</a></li>
-<li><a href="#Viewing-Web-Search-Results" accesskey="5">Viewing Web Search Results</a></li>
-<li><a href="#Managing-Web-Searches" accesskey="6">Managing Web Searches</a></li>
-<li><a href="#Provider-Support" accesskey="7">Provider Support</a></li>
-<li><a href="#Troubleshooting-1" accesskey="8">Troubleshooting</a></li>
+<li><a href="#Overview-1">Overview</a></li>
+<li><a href="#How-It-Works">How It Works</a></li>
+<li><a href="#Configuration-2">Configuration</a></li>
+<li><a href="#Usage">Usage</a></li>
+<li><a href="#Viewing-Web-Search-Results">Viewing Web Search Results</a></li>
+<li><a href="#Managing-Web-Searches">Managing Web Searches</a></li>
+<li><a href="#Provider-Support">Provider Support</a></li>
+<li><a href="#Troubleshooting-1">Troubleshooting</a></li>
 </ul>
 <div class="section-level-extent" id="Overview-1">
 <h3 class="section"><span>10.1 Overview<a class="copiable-link" href="#Overview-1"> &para;</a></span></h3>
@@ -2540,8 +2516,8 @@ Next: <a href="#Parameter-Control" accesskey="n" rel="next">Parameter Control</a
 <p>The web search feature implements a multi-stage pipeline. Content can be retrieved using two methods, controlled by <code class="code">ollama-buddy-web-search-content-source</code>:
 </p>
 <ul class="mini-toc">
-<li><a href="#eww-Mode-_0028Default_002c-Recommended_0029" accesskey="1">eww Mode (Default, Recommended)</a></li>
-<li><a href="#API-Mode-_0028Experimental_0029" accesskey="2">API Mode (Experimental)</a></li>
+<li><a href="#eww-Mode-_0028Default_002c-Recommended_0029">eww Mode (Default, Recommended)</a></li>
+<li><a href="#API-Mode-_0028Experimental_0029">API Mode (Experimental)</a></li>
 </ul>
 <div class="subsection-level-extent" id="eww-Mode-_0028Default_002c-Recommended_0029">
 <h4 class="subsection"><span>10.2.1 eww Mode (Default, Recommended)<a class="copiable-link" href="#eww-Mode-_0028Default_002c-Recommended_0029"> &para;</a></span></h4>
@@ -2616,9 +2592,9 @@ You no longer need to explicitly <code class="code">(require 'ollama-buddy-web-s
 <h3 class="section"><span>10.4 Usage<a class="copiable-link" href="#Usage"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#Inline-Search-Syntax" accesskey="1">Inline Search Syntax</a></li>
-<li><a href="#Manual-Search-Commands" accesskey="2">Manual Search Commands</a></li>
-<li><a href="#Transient-Menu" accesskey="3">Transient Menu</a></li>
+<li><a href="#Inline-Search-Syntax">Inline Search Syntax</a></li>
+<li><a href="#Manual-Search-Commands">Manual Search Commands</a></li>
+<li><a href="#Transient-Menu">Transient Menu</a></li>
 </ul>
 <div class="subsection-level-extent" id="Inline-Search-Syntax">
 <h4 class="subsection"><span>10.4.1 Inline Search Syntax<a class="copiable-link" href="#Inline-Search-Syntax"> &para;</a></span></h4>
@@ -2784,20 +2760,18 @@ Full content from this URL...
 </div>
 </div>
 <div class="chapter-level-extent" id="Parameter-Control">
-<div class="nav-panel">
-<p>
-Next: <a href="#Session-Management" accesskey="n" rel="next">Session Management</a>, Previous: <a href="#Web-Search" accesskey="p" rel="prev">Web Search</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Session-Management" rel="next">Session Management</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Web-Search" rel="prev">Web Search</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Parameter-Control-2"><span>11 Parameter Control<a class="copiable-link" href="#Parameter-Control-2"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Understanding-Parameters" accesskey="1">Understanding Parameters</a></li>
-<li><a href="#Viewing-Current-Parameters" accesskey="2">Viewing Current Parameters</a></li>
-<li><a href="#Editing-Parameters" accesskey="3">Editing Parameters</a></li>
-<li><a href="#Parameter-Profiles" accesskey="4">Parameter Profiles</a></li>
-<li><a href="#Command_002dSpecific-Parameters" accesskey="5">Command-Specific Parameters</a></li>
-<li><a href="#Reset-Parameters" accesskey="6">Reset Parameters</a></li>
-<li><a href="#Displaying-Parameters-in-Header" accesskey="7">Displaying Parameters in Header</a></li>
+<li><a href="#Understanding-Parameters">Understanding Parameters</a></li>
+<li><a href="#Viewing-Current-Parameters">Viewing Current Parameters</a></li>
+<li><a href="#Editing-Parameters">Editing Parameters</a></li>
+<li><a href="#Parameter-Profiles">Parameter Profiles</a></li>
+<li><a href="#Command_002dSpecific-Parameters">Command-Specific Parameters</a></li>
+<li><a href="#Reset-Parameters">Reset Parameters</a></li>
+<li><a href="#Displaying-Parameters-in-Header">Displaying Parameters in Header</a></li>
 </ul>
 <div class="section-level-extent" id="Understanding-Parameters">
 <h3 class="section"><span>11.1 Understanding Parameters<a class="copiable-link" href="#Understanding-Parameters"> &para;</a></span></h3>
@@ -2915,22 +2889,20 @@ select one of the profile keys (<kbd class="kbd">d</kbd> Default, <kbd class="kb
 </div>
 </div>
 <div class="chapter-level-extent" id="Session-Management">
-<div class="nav-panel">
-<p>
-Next: <a href="#User-System-Prompts" accesskey="n" rel="next">User System Prompts</a>, Previous: <a href="#Parameter-Control" accesskey="p" rel="prev">Parameter Control</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#User-System-Prompts" rel="next">User System Prompts</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Parameter-Control" rel="prev">Parameter Control</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Session-Management-1"><span>12 Session Management<a class="copiable-link" href="#Session-Management-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Understanding-Sessions" accesskey="1">Understanding Sessions</a></li>
-<li><a href="#Creating-a-New-Session" accesskey="2">Creating a New Session</a></li>
-<li><a href="#Saving-a-Session" accesskey="3">Saving a Session</a></li>
-<li><a href="#Loading-a-Session" accesskey="4">Loading a Session</a></li>
-<li><a href="#Exiting-a-Session" accesskey="5">Exiting a Session</a></li>
-<li><a href="#Managing-Sessions" accesskey="6">Managing Sessions</a></li>
-<li><a href="#Session-Naming" accesskey="7">Session Naming</a></li>
-<li><a href="#Renaming-a-Session" accesskey="8">Renaming a Session</a></li>
-<li><a href="#Session-Directory-Persistence" accesskey="9">Session Directory Persistence</a></li>
+<li><a href="#Understanding-Sessions">Understanding Sessions</a></li>
+<li><a href="#Creating-a-New-Session">Creating a New Session</a></li>
+<li><a href="#Saving-a-Session">Saving a Session</a></li>
+<li><a href="#Loading-a-Session">Loading a Session</a></li>
+<li><a href="#Exiting-a-Session">Exiting a Session</a></li>
+<li><a href="#Managing-Sessions">Managing Sessions</a></li>
+<li><a href="#Session-Naming">Session Naming</a></li>
+<li><a href="#Renaming-a-Session">Renaming a Session</a></li>
+<li><a href="#Session-Directory-Persistence">Session Directory Persistence</a></li>
 <li><a href="#Autosave-Transcript">Autosave Transcript</a></li>
 <li><a href="#Conversation-History">Conversation History</a></li>
 <li><a href="#Rewinding-a-Conversation">Rewinding a Conversation</a></li>
@@ -3111,22 +3083,20 @@ in a fresh prompt area so you can edit and resend it.
 </div>
 </div>
 <div class="chapter-level-extent" id="User-System-Prompts">
-<div class="nav-panel">
-<p>
-Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands</a>, Previous: <a href="#Session-Management" accesskey="p" rel="prev">Session Management</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Roles-and-Commands" rel="next">Roles and Commands</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Session-Management" rel="prev">Session Management</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="User-System-Prompts-1"><span>13 User System Prompts<a class="copiable-link" href="#User-System-Prompts-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Overview-2" accesskey="1">Overview</a></li>
-<li><a href="#Accessing-the-System-Prompts-Menu" accesskey="2">Accessing the System Prompts Menu</a></li>
-<li><a href="#Saving-System-Prompts" accesskey="3">Saving System Prompts</a></li>
-<li><a href="#Loading-Saved-Prompts" accesskey="4">Loading Saved Prompts</a></li>
-<li><a href="#Managing-Your-Prompt-Library" accesskey="5">Managing Your Prompt Library</a></li>
-<li><a href="#Unified-Skills" accesskey="6">Unified Skills</a></li>
-<li><a href="#Categories-and-Organization" accesskey="7">Categories and Organization</a></li>
-<li><a href="#Prompt-Storage-Format" accesskey="8">Prompt Storage Format</a></li>
-<li><a href="#Best-Practices-for-System-Prompts" accesskey="9">Best Practices for System Prompts</a></li>
+<li><a href="#Overview-2">Overview</a></li>
+<li><a href="#Accessing-the-System-Prompts-Menu">Accessing the System Prompts Menu</a></li>
+<li><a href="#Saving-System-Prompts">Saving System Prompts</a></li>
+<li><a href="#Loading-Saved-Prompts">Loading Saved Prompts</a></li>
+<li><a href="#Managing-Your-Prompt-Library">Managing Your Prompt Library</a></li>
+<li><a href="#Unified-Skills">Unified Skills</a></li>
+<li><a href="#Categories-and-Organization">Categories and Organization</a></li>
+<li><a href="#Prompt-Storage-Format">Prompt Storage Format</a></li>
+<li><a href="#Best-Practices-for-System-Prompts">Best Practices for System Prompts</a></li>
 <li><a href="#Example-System-Prompts">Example System Prompts</a></li>
 <li><a href="#Workflow-Examples">Workflow Examples</a></li>
 <li><a href="#Integration-with-Roles">Integration with Roles</a></li>
@@ -3227,7 +3197,7 @@ Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands<
 <h3 class="section"><span>13.5 Managing Your Prompt Library<a class="copiable-link" href="#Managing-Your-Prompt-Library"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#Viewing-All-Prompts" accesskey="1">Viewing All Prompts</a></li>
+<li><a href="#Viewing-All-Prompts">Viewing All Prompts</a></li>
 </ul>
 <div class="subsection-level-extent" id="Viewing-All-Prompts">
 <h4 class="subsection"><span>13.5.1 Viewing All Prompts<a class="copiable-link" href="#Viewing-All-Prompts"> &para;</a></span></h4>
@@ -3246,12 +3216,12 @@ Next: <a href="#Roles-and-Commands" accesskey="n" rel="next">Roles and Commands<
 <p>The <em class="dfn">Skills</em> system is an extension of the User System Prompts library. By categorizing a prompt under the <code class="code">skills</code> category, it becomes available for specialized interactive workflows.
 </p>
 <ul class="mini-toc">
-<li><a href="#Categorizing-as-a-Skill" accesskey="1">Categorizing as a Skill</a></li>
-<li><a href="#Using-_0040skill-Inline" accesskey="2">Using @skill Inline</a></li>
-<li><a href="#The-_002fskill-Command" accesskey="3">The /skill Command</a></li>
-<li><a href="#Editing-Prompts" accesskey="4">Editing Prompts</a></li>
-<li><a href="#Creating-New-Prompts" accesskey="5">Creating New Prompts</a></li>
-<li><a href="#Deleting-Prompts" accesskey="6">Deleting Prompts</a></li>
+<li><a href="#Categorizing-as-a-Skill">Categorizing as a Skill</a></li>
+<li><a href="#Using-_0040skill-Inline">Using @skill Inline</a></li>
+<li><a href="#The-_002fskill-Command">The /skill Command</a></li>
+<li><a href="#Editing-Prompts">Editing Prompts</a></li>
+<li><a href="#Creating-New-Prompts">Creating New Prompts</a></li>
+<li><a href="#Deleting-Prompts">Deleting Prompts</a></li>
 </ul>
 <div class="subsection-level-extent" id="Categorizing-as-a-Skill">
 <h4 class="subsection"><span>13.6.1 Categorizing as a Skill<a class="copiable-link" href="#Categorizing-as-a-Skill"> &para;</a></span></h4>
@@ -3384,8 +3354,8 @@ When asked to debug, first identify the likely cause before suggesting fixes.
 <h3 class="section"><span>13.9 Best Practices for System Prompts<a class="copiable-link" href="#Best-Practices-for-System-Prompts"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#Components-of-Effective-Prompts" accesskey="1">Components of Effective Prompts</a></li>
-<li><a href="#Example-Patterns" accesskey="2">Example Patterns</a></li>
+<li><a href="#Components-of-Effective-Prompts">Components of Effective Prompts</a></li>
+<li><a href="#Example-Patterns">Example Patterns</a></li>
 </ul>
 <div class="subsection-level-extent" id="Components-of-Effective-Prompts">
 <h4 class="subsection"><span>13.9.1 Components of Effective Prompts<a class="copiable-link" href="#Components-of-Effective-Prompts"> &para;</a></span></h4>
@@ -3428,8 +3398,8 @@ When asked to debug, first identify the likely cause before suggesting fixes.
 <h3 class="section"><span>13.10 Example System Prompts<a class="copiable-link" href="#Example-System-Prompts"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#Technical-Writing-Assistant" accesskey="1">Technical Writing Assistant</a></li>
-<li><a href="#Code-Reviewer" accesskey="2">Code Reviewer</a></li>
+<li><a href="#Technical-Writing-Assistant">Technical Writing Assistant</a></li>
+<li><a href="#Code-Reviewer">Code Reviewer</a></li>
 </ul>
 <div class="subsection-level-extent" id="Technical-Writing-Assistant">
 <h4 class="subsection"><span>13.10.1 Technical Writing Assistant<a class="copiable-link" href="#Technical-Writing-Assistant"> &para;</a></span></h4>
@@ -3471,8 +3441,8 @@ Balance constructive criticism with acknowledgment of well-written code.
 <h3 class="section"><span>13.11 Workflow Examples<a class="copiable-link" href="#Workflow-Examples"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#Python-Code-Assistance" accesskey="1">Python Code Assistance</a></li>
-<li><a href="#Technical-Writing-Help" accesskey="2">Technical Writing Help</a></li>
+<li><a href="#Python-Code-Assistance">Python Code Assistance</a></li>
+<li><a href="#Technical-Writing-Help">Technical Writing Help</a></li>
 </ul>
 <div class="subsection-level-extent" id="Python-Code-Assistance">
 <h4 class="subsection"><span>13.11.1 Python Code Assistance<a class="copiable-link" href="#Python-Code-Assistance"> &para;</a></span></h4>
@@ -3516,22 +3486,20 @@ Balance constructive criticism with acknowledgment of well-written code.
 </div>
 </div>
 <div class="chapter-level-extent" id="Roles-and-Commands">
-<div class="nav-panel">
-<p>
-Next: <a href="#Remote-Providers" accesskey="n" rel="next">Remote Providers</a>, Previous: <a href="#User-System-Prompts" accesskey="p" rel="prev">User System Prompts</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Remote-Providers" rel="next">Remote Providers</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#User-System-Prompts" rel="prev">User System Prompts</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Roles-and-Commands-1"><span>14 Roles and Commands<a class="copiable-link" href="#Roles-and-Commands-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Understanding-Roles" accesskey="1">Understanding Roles</a></li>
-<li><a href="#Role-File-Naming-Convention" accesskey="2">Role File Naming Convention</a></li>
-<li><a href="#Built_002din-Commands" accesskey="3">Built-in Commands</a></li>
-<li><a href="#Creating-Custom-Roles" accesskey="4">Creating Custom Roles</a></li>
-<li><a href="#Command-Grouping" accesskey="5">Command Grouping</a></li>
-<li><a href="#Per_002dCommand-Response-Destination" accesskey="6">Per-Command Response Destination</a></li>
-<li><a href="#Switching-Roles" accesskey="7">Switching Roles</a></li>
-<li><a href="#Managing-Role-Files" accesskey="8">Managing Role Files</a></li>
-<li><a href="#Advanced-Role-Customization" accesskey="9">Advanced Role Customization</a></li>
+<li><a href="#Understanding-Roles">Understanding Roles</a></li>
+<li><a href="#Role-File-Naming-Convention">Role File Naming Convention</a></li>
+<li><a href="#Built_002din-Commands">Built-in Commands</a></li>
+<li><a href="#Creating-Custom-Roles">Creating Custom Roles</a></li>
+<li><a href="#Command-Grouping">Command Grouping</a></li>
+<li><a href="#Per_002dCommand-Response-Destination">Per-Command Response Destination</a></li>
+<li><a href="#Switching-Roles">Switching Roles</a></li>
+<li><a href="#Managing-Role-Files">Managing Role Files</a></li>
+<li><a href="#Advanced-Role-Customization">Advanced Role Customization</a></li>
 <li><a href="#Role-Examples">Role Examples</a></li>
 <li><a href="#Tips-for-Effective-Role-Usage">Tips for Effective Role Usage</a></li>
 <li><a href="#Built_002din-Role-Presets">Built-in Role Presets</a></li>
@@ -3622,8 +3590,8 @@ Next: <a href="#Remote-Providers" accesskey="n" rel="next">Remote Providers</a>,
 <p>There are two ways to create custom roles:
 </p>
 <ul class="mini-toc">
-<li><a href="#Interactive-Role-Creator" accesskey="1">Interactive Role Creator</a></li>
-<li><a href="#Manual-Role-Creation" accesskey="2">Manual Role Creation</a></li>
+<li><a href="#Interactive-Role-Creator">Interactive Role Creator</a></li>
+<li><a href="#Manual-Role-Creation">Manual Role Creation</a></li>
 </ul>
 <div class="subsection-level-extent" id="Interactive-Role-Creator">
 <h4 class="subsection"><span>14.4.1 Interactive Role Creator<a class="copiable-link" href="#Interactive-Role-Creator"> &para;</a></span></h4>
@@ -3839,10 +3807,10 @@ explanations, commit messages, dictionary lookups).
 <h3 class="section"><span>14.9 Advanced Role Customization<a class="copiable-link" href="#Advanced-Role-Customization"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#Per_002dRole-Menu-Columns" accesskey="1">Per-Role Menu Columns</a></li>
-<li><a href="#Command_002dSpecific-Models" accesskey="2">Command-Specific Models</a></li>
-<li><a href="#Command_002dSpecific-Parameters-1" accesskey="3">Command-Specific Parameters</a></li>
-<li><a href="#Creating-New-Commands" accesskey="4">Creating New Commands</a></li>
+<li><a href="#Per_002dRole-Menu-Columns">Per-Role Menu Columns</a></li>
+<li><a href="#Command_002dSpecific-Models">Command-Specific Models</a></li>
+<li><a href="#Command_002dSpecific-Parameters-1">Command-Specific Parameters</a></li>
+<li><a href="#Creating-New-Commands">Creating New Commands</a></li>
 </ul>
 <div class="subsection-level-extent" id="Per_002dRole-Menu-Columns">
 <h4 class="subsection"><span>14.9.1 Per-Role Menu Columns<a class="copiable-link" href="#Per_002dRole-Menu-Columns"> &para;</a></span></h4>
@@ -3900,8 +3868,8 @@ explanations, commit messages, dictionary lookups).
 <h3 class="section"><span>14.10 Role Examples<a class="copiable-link" href="#Role-Examples"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#Programming-Role" accesskey="1">Programming Role</a></li>
-<li><a href="#Writing-Role" accesskey="2">Writing Role</a></li>
+<li><a href="#Programming-Role">Programming Role</a></li>
+<li><a href="#Writing-Role">Writing Role</a></li>
 </ul>
 <div class="subsection-level-extent" id="Programming-Role">
 <h4 class="subsection"><span>14.10.1 Programming Role<a class="copiable-link" href="#Programming-Role"> &para;</a></span></h4>
@@ -4087,19 +4055,17 @@ explanations, commit messages, dictionary lookups).
 </div>
 </div>
 <div class="chapter-level-extent" id="Remote-Providers">
-<div class="nav-panel">
-<p>
-Next: <a href="#Ollama-Cloud-Models" accesskey="n" rel="next">Ollama Cloud Models</a>, Previous: <a href="#Roles-and-Commands" accesskey="p" rel="prev">Roles and Commands</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Ollama-Cloud-Models" rel="next">Ollama Cloud Models</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Roles-and-Commands" rel="prev">Roles and Commands</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Remote-Providers-1"><span>15 Remote Providers<a class="copiable-link" href="#Remote-Providers-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Overview-3" accesskey="1">Overview</a></li>
-<li><a href="#Status-Line-Indicators" accesskey="2">Status Line Indicators</a></li>
-<li><a href="#Setting-Up-API-Access" accesskey="3">Setting Up API Access</a></li>
-<li><a href="#Selecting-Remote-Models" accesskey="4">Selecting Remote Models</a></li>
-<li><a href="#Provider-Configuration" accesskey="5">Provider Configuration</a></li>
-<li><a href="#History-Management" accesskey="6">History Management</a></li>
+<li><a href="#Overview-3">Overview</a></li>
+<li><a href="#Status-Line-Indicators">Status Line Indicators</a></li>
+<li><a href="#Setting-Up-API-Access">Setting Up API Access</a></li>
+<li><a href="#Selecting-Remote-Models">Selecting Remote Models</a></li>
+<li><a href="#Provider-Configuration">Provider Configuration</a></li>
+<li><a href="#History-Management">History Management</a></li>
 </ul>
 <div class="section-level-extent" id="Overview-3">
 <h3 class="section"><span>15.1 Overview<a class="copiable-link" href="#Overview-3"> &para;</a></span></h3>
@@ -4139,6 +4105,16 @@ Next: <a href="#Ollama-Cloud-Models" accesskey="n" rel="next">Ollama Cloud Model
 <dd><p>Load with <code class="code">(require 'ollama-buddy-openrouter nil t)</code>
 </p>
 </dd>
+<dt>OpenCode Go (prefix: <code class="code">n:</code>)</dt>
+<dd><p>Load with <code class="code">(require 'ollama-buddy-opencode nil t)</code>.  All 14
+subscription models register under one prefix with one shared API key;
+per-model dispatch routes OpenAI-shape models (GLM, Kimi, MiMo, Qwen)
+through <code class="code">/chat/completions</code> and Anthropic-shape models
+(DeepSeek V4, MiniMax) through <code class="code">/messages</code>.  Note: this is the
+flat-rate Go subscription, distinct from OpenCode&rsquo;s pay-as-you-go
+Zen API.
+</p>
+</dd>
 <dt>Generic OpenAI-compatible server (prefix: <code class="code">l:</code>, configurable)</dt>
 <dd><p>Load with <code class="code">(require 'ollama-buddy-openai-compat nil t)</code>.
 Works with LM Studio, llama.cpp, vLLM, Jan, and any
@@ -4170,10 +4146,10 @@ Works with LM Studio, llama.cpp, vLLM, Jan, and any
 </li><li><code class="code">&lt;</code> - Global system prompt disabled
 </li><li><code class="code">H5/10</code> - History count (when enabled via <code class="code">ollama-buddy-show-history-indicator</code>)
 </li><li><code class="code">V</code> - Reasoning/thinking sections hidden
-</li><li>Provider letters: <code class="code">a</code> (OpenAI), <code class="code">c</code> (Claude), <code class="code">g</code> (Gemini), <code class="code">k</code> (Grok), <code class="code">p</code> (Copilot), <code class="code">s</code> (Codestral), <code class="code">d</code> (DeepSeek), <code class="code">r</code> (OpenRouter), <code class="code">l</code> (OpenAI-compat)
+</li><li>Provider letters: <code class="code">a</code> (OpenAI), <code class="code">c</code> (Claude), <code class="code">g</code> (Gemini), <code class="code">k</code> (Grok), <code class="code">p</code> (Copilot), <code class="code">s</code> (Codestral), <code class="code">d</code> (DeepSeek), <code class="code">r</code> (OpenRouter), <code class="code">n</code> (OpenCode Go), <code class="code">l</code> (OpenAI-compat)
 </li></ul>
 
-<p>Example: <code class="code">☁⚒⊙✦≡2♁1acgkpsdr</code> means cloud model with tools enabled, vision support, thinking support, 2 file attachments, 1 web search, and all eight external providers loaded.
+<p>Example: <code class="code">☁⚒⊙✦≡2♁1acgkpsdrn</code> means cloud model with tools enabled, vision support, thinking support, 2 file attachments, 1 web search, and all nine external providers loaded.
 </p>
 </div>
 <div class="section-level-extent" id="Setting-Up-API-Access">
@@ -4216,13 +4192,13 @@ machine ollama-buddy-openrouter login apikey password YOUR_OPENROUTER_API_KEY
 <h3 class="section"><span>15.5 Provider Configuration<a class="copiable-link" href="#Provider-Configuration"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#OpenAI-Configuration" accesskey="1">OpenAI Configuration</a></li>
-<li><a href="#Claude-Configuration" accesskey="2">Claude Configuration</a></li>
-<li><a href="#Gemini-Configuration" accesskey="3">Gemini Configuration</a></li>
-<li><a href="#Grok-Configuration" accesskey="4">Grok Configuration</a></li>
-<li><a href="#GitHub-Copilot-Configuration" accesskey="5">GitHub Copilot Configuration</a></li>
-<li><a href="#Codestral-Configuration" accesskey="6">Codestral Configuration</a></li>
-<li><a href="#Generic-OpenAI_002dCompatible-Server-Configuration" accesskey="7">Generic OpenAI-Compatible Server Configuration</a></li>
+<li><a href="#OpenAI-Configuration">OpenAI Configuration</a></li>
+<li><a href="#Claude-Configuration">Claude Configuration</a></li>
+<li><a href="#Gemini-Configuration">Gemini Configuration</a></li>
+<li><a href="#Grok-Configuration">Grok Configuration</a></li>
+<li><a href="#GitHub-Copilot-Configuration">GitHub Copilot Configuration</a></li>
+<li><a href="#Codestral-Configuration">Codestral Configuration</a></li>
+<li><a href="#Generic-OpenAI_002dCompatible-Server-Configuration">Generic OpenAI-Compatible Server Configuration</a></li>
 </ul>
 <div class="subsection-level-extent" id="OpenAI-Configuration">
 <h4 class="subsection"><span>15.5.1 OpenAI Configuration<a class="copiable-link" href="#OpenAI-Configuration"> &para;</a></span></h4>
@@ -4399,21 +4375,19 @@ server UI:
 </div>
 </div>
 <div class="chapter-level-extent" id="Ollama-Cloud-Models">
-<div class="nav-panel">
-<p>
-Next: <a href="#Launching-External-Frontends" accesskey="n" rel="next">Launching External Frontends</a>, Previous: <a href="#Remote-Providers" accesskey="p" rel="prev">Remote Providers</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Launching-External-Frontends" rel="next">Launching External Frontends</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Remote-Providers" rel="prev">Remote Providers</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Ollama-Cloud-Models-1"><span>16 Ollama Cloud Models<a class="copiable-link" href="#Ollama-Cloud-Models-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Overview-4" accesskey="1">Overview</a></li>
-<li><a href="#Available-Cloud-Models" accesskey="2">Available Cloud Models</a></li>
-<li><a href="#Selecting-Cloud-Models" accesskey="3">Selecting Cloud Models</a></li>
-<li><a href="#Cloud-Authentication" accesskey="4">Cloud Authentication</a></li>
-<li><a href="#Automatic-Manifest-Pulling" accesskey="5">Automatic Manifest Pulling</a></li>
-<li><a href="#Cloud-Model-Indicator" accesskey="6">Cloud Model Indicator</a></li>
-<li><a href="#Cloud-Usage-Stats" accesskey="7">Cloud Usage Stats</a></li>
-<li><a href="#Configuration-3" accesskey="8">Configuration</a></li>
+<li><a href="#Overview-4">Overview</a></li>
+<li><a href="#Available-Cloud-Models">Available Cloud Models</a></li>
+<li><a href="#Selecting-Cloud-Models">Selecting Cloud Models</a></li>
+<li><a href="#Cloud-Authentication">Cloud Authentication</a></li>
+<li><a href="#Automatic-Manifest-Pulling">Automatic Manifest Pulling</a></li>
+<li><a href="#Cloud-Model-Indicator">Cloud Model Indicator</a></li>
+<li><a href="#Cloud-Usage-Stats">Cloud Usage Stats</a></li>
+<li><a href="#Configuration-3">Configuration</a></li>
 </ul>
 <div class="section-level-extent" id="Overview-4">
 <h3 class="section"><span>16.1 Overview<a class="copiable-link" href="#Overview-4"> &para;</a></span></h3>
@@ -4556,21 +4530,19 @@ Management page to re-fetch.
 </div>
 </div>
 <div class="chapter-level-extent" id="Launching-External-Frontends">
-<div class="nav-panel">
-<p>
-Next: <a href="#Project-Annotation" accesskey="n" rel="next">Project Annotation</a>, Previous: <a href="#Ollama-Cloud-Models" accesskey="p" rel="prev">Ollama Cloud Models</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Project-Annotation" rel="next">Project Annotation</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Ollama-Cloud-Models" rel="prev">Ollama Cloud Models</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Launching-External-Frontends-1"><span>17 Launching External Frontends<a class="copiable-link" href="#Launching-External-Frontends-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Overview-5" accesskey="1">Overview</a></li>
-<li><a href="#Usage-1" accesskey="2">Usage</a></li>
-<li><a href="#Terminal-Auto_002dDetection" accesskey="3">Terminal Auto-Detection</a></li>
-<li><a href="#Welcome-Screen" accesskey="4">Welcome Screen</a></li>
-<li><a href="#Configuration-4" accesskey="5">Configuration</a></li>
-<li><a href="#Small-Model-Warning" accesskey="6">Small Model Warning</a></li>
-<li><a href="#Supported-Agents" accesskey="7">Supported Agents</a></li>
-<li><a href="#Troubleshooting-2" accesskey="8">Troubleshooting</a></li>
+<li><a href="#Overview-5">Overview</a></li>
+<li><a href="#Usage-1">Usage</a></li>
+<li><a href="#Terminal-Auto_002dDetection">Terminal Auto-Detection</a></li>
+<li><a href="#Welcome-Screen">Welcome Screen</a></li>
+<li><a href="#Configuration-4">Configuration</a></li>
+<li><a href="#Small-Model-Warning">Small Model Warning</a></li>
+<li><a href="#Supported-Agents">Supported Agents</a></li>
+<li><a href="#Troubleshooting-2">Troubleshooting</a></li>
 </ul>
 <div class="section-level-extent" id="Overview-5">
 <h3 class="section"><span>17.1 Overview<a class="copiable-link" href="#Overview-5"> &para;</a></span></h3>
@@ -4845,19 +4817,17 @@ will install correctly.
 </div>
 </div>
 <div class="chapter-level-extent" id="Project-Annotation">
-<div class="nav-panel">
-<p>
-Next: <a href="#Global-System-Prompt" accesskey="n" rel="next">Global System Prompt</a>, Previous: <a href="#Launching-External-Frontends" accesskey="p" rel="prev">Launching External Frontends</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Global-System-Prompt" rel="next">Global System Prompt</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Launching-External-Frontends" rel="prev">Launching External Frontends</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Project-Annotation-1"><span>18 Project Annotation<a class="copiable-link" href="#Project-Annotation-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Overview-6" accesskey="1">Overview</a></li>
-<li><a href="#Commands" accesskey="2">Commands</a></li>
-<li><a href="#Context_002daware-batching" accesskey="3">Context-aware batching</a></li>
-<li><a href="#Structured-output-schema" accesskey="4">Structured output schema</a></li>
-<li><a href="#Database-shape" accesskey="5">Database shape</a></li>
-<li><a href="#Post_002dresponse-hook" accesskey="6">Post-response hook</a></li>
+<li><a href="#Overview-6">Overview</a></li>
+<li><a href="#Commands">Commands</a></li>
+<li><a href="#Context_002daware-batching">Context-aware batching</a></li>
+<li><a href="#Structured-output-schema">Structured output schema</a></li>
+<li><a href="#Database-shape">Database shape</a></li>
+<li><a href="#Post_002dresponse-hook">Post-response hook</a></li>
 </ul>
 <div class="section-level-extent" id="Overview-6">
 <h3 class="section"><span>18.1 Overview<a class="copiable-link" href="#Overview-6"> &para;</a></span></h3>
@@ -4974,17 +4944,15 @@ a response lands.
 </div>
 </div>
 <div class="chapter-level-extent" id="Global-System-Prompt">
-<div class="nav-panel">
-<p>
-Next: <a href="#Tone-Selector" accesskey="n" rel="next">Tone Selector</a>, Previous: <a href="#Project-Annotation" accesskey="p" rel="prev">Project Annotation</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Tone-Selector" rel="next">Tone Selector</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Project-Annotation" rel="prev">Project Annotation</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Global-System-Prompt-1"><span>19 Global System Prompt<a class="copiable-link" href="#Global-System-Prompt-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Overview-7" accesskey="1">Overview</a></li>
-<li><a href="#Configuration-5" accesskey="2">Configuration</a></li>
-<li><a href="#Toggling-Global-Prompt" accesskey="3">Toggling Global Prompt</a></li>
-<li><a href="#How-It-Works-1" accesskey="4">How It Works</a></li>
+<li><a href="#Overview-7">Overview</a></li>
+<li><a href="#Configuration-5">Configuration</a></li>
+<li><a href="#Toggling-Global-Prompt">Toggling Global Prompt</a></li>
+<li><a href="#How-It-Works-1">How It Works</a></li>
 </ul>
 <div class="section-level-extent" id="Overview-7">
 <h3 class="section"><span>19.1 Overview<a class="copiable-link" href="#Overview-7"> &para;</a></span></h3>
@@ -5043,18 +5011,16 @@ for structured information.&quot;)
 </div>
 </div>
 <div class="chapter-level-extent" id="Tone-Selector">
-<div class="nav-panel">
-<p>
-Next: <a href="#Thinking-Blocks" accesskey="n" rel="next">Thinking Blocks</a>, Previous: <a href="#Global-System-Prompt" accesskey="p" rel="prev">Global System Prompt</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Thinking-Blocks" rel="next">Thinking Blocks</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Global-System-Prompt" rel="prev">Global System Prompt</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Tone-Selector-1"><span>20 Tone Selector<a class="copiable-link" href="#Tone-Selector-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Overview-8" accesskey="1">Overview</a></li>
-<li><a href="#Usage-2" accesskey="2">Usage</a></li>
-<li><a href="#Built_002din-Tones" accesskey="3">Built-in Tones</a></li>
-<li><a href="#Configuration-6" accesskey="4">Configuration</a></li>
-<li><a href="#How-It-Works-2" accesskey="5">How It Works</a></li>
+<li><a href="#Overview-8">Overview</a></li>
+<li><a href="#Usage-2">Usage</a></li>
+<li><a href="#Built_002din-Tones">Built-in Tones</a></li>
+<li><a href="#Configuration-6">Configuration</a></li>
+<li><a href="#How-It-Works-2">How It Works</a></li>
 </ul>
 <div class="section-level-extent" id="Overview-8">
 <h3 class="section"><span>20.1 Overview<a class="copiable-link" href="#Overview-8"> &para;</a></span></h3>
@@ -5123,17 +5089,15 @@ Next: <a href="#Thinking-Blocks" accesskey="n" rel="next">Thinking Blocks</a>, P
 </div>
 </div>
 <div class="chapter-level-extent" id="Thinking-Blocks">
-<div class="nav-panel">
-<p>
-Next: <a href="#Project-Integration" accesskey="n" rel="next">Project Integration</a>, Previous: <a href="#Tone-Selector" accesskey="p" rel="prev">Tone Selector</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Project-Integration" rel="next">Project Integration</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Tone-Selector" rel="prev">Tone Selector</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Thinking-Blocks-1"><span>21 Thinking Blocks<a class="copiable-link" href="#Thinking-Blocks-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Overview-9" accesskey="1">Overview</a></li>
-<li><a href="#How-It-Works-3" accesskey="2">How It Works</a></li>
-<li><a href="#Key-Bindings" accesskey="3">Key Bindings</a></li>
-<li><a href="#Configuration-7" accesskey="4">Configuration</a></li>
+<li><a href="#Overview-9">Overview</a></li>
+<li><a href="#How-It-Works-3">How It Works</a></li>
+<li><a href="#Key-Bindings">Key Bindings</a></li>
+<li><a href="#Configuration-7">Configuration</a></li>
 </ul>
 <div class="section-level-extent" id="Overview-9">
 <h3 class="section"><span>21.1 Overview<a class="copiable-link" href="#Overview-9"> &para;</a></span></h3>
@@ -5195,20 +5159,18 @@ shows <code class="code">✦</code> when enabled or <code class="code">✧</code
 </div>
 </div>
 <div class="chapter-level-extent" id="Project-Integration">
-<div class="nav-panel">
-<p>
-Next: <a href="#In_002dBuffer-Replace" accesskey="n" rel="next">In-Buffer Replace</a>, Previous: <a href="#Thinking-Blocks" accesskey="p" rel="prev">Thinking Blocks</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#In_002dBuffer-Replace" rel="next">In-Buffer Replace</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Thinking-Blocks" rel="prev">Thinking Blocks</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Project-Integration-1"><span>22 Project Integration<a class="copiable-link" href="#Project-Integration-1"> &para;</a></span></h2>
 
 <p>Ollama Buddy provides deep integration with Emacs&rsquo; built-in <code class="code">project.el</code> to
 provide context-aware assistance when working within a coding project.
 </p>
 <ul class="mini-toc">
-<li><a href="#Project-Awareness" accesskey="1">Project Awareness</a></li>
-<li><a href="#Project-Commands" accesskey="2">Project Commands</a></li>
-<li><a href="#Inline-Project-Command" accesskey="3">Inline Project Command</a></li>
-<li><a href="#Project-Init-_0028experimental_0029" accesskey="4">Project Init (experimental)</a></li>
+<li><a href="#Project-Awareness">Project Awareness</a></li>
+<li><a href="#Project-Commands">Project Commands</a></li>
+<li><a href="#Inline-Project-Command">Inline Project Command</a></li>
+<li><a href="#Project-Init-_0028experimental_0029">Project Init (experimental)</a></li>
 </ul>
 <div class="section-level-extent" id="Project-Awareness">
 <h3 class="section"><span>22.1 Project Awareness<a class="copiable-link" href="#Project-Awareness"> &para;</a></span></h3>
@@ -5252,11 +5214,11 @@ towards a more code-oriented workflow where the model has immediate awareness
 of your codebase structure.
 </p>
 <ul class="mini-toc">
-<li><a href="#Generating-a-summary" accesskey="1">Generating a summary</a></li>
-<li><a href="#Auto_002dloading" accesskey="2">Auto-loading</a></li>
-<li><a href="#Clean-project-switching" accesskey="3">Clean project switching</a></li>
-<li><a href="#Regenerating" accesskey="4">Regenerating</a></li>
-<li><a href="#Customization" accesskey="5">Customization</a></li>
+<li><a href="#Generating-a-summary">Generating a summary</a></li>
+<li><a href="#Auto_002dloading">Auto-loading</a></li>
+<li><a href="#Clean-project-switching">Clean project switching</a></li>
+<li><a href="#Regenerating">Regenerating</a></li>
+<li><a href="#Customization">Customization</a></li>
 </ul>
 <div class="subsection-level-extent" id="Generating-a-summary">
 <h4 class="subsection"><span>22.4.1 Generating a summary<a class="copiable-link" href="#Generating-a-summary"> &para;</a></span></h4>
@@ -5310,21 +5272,19 @@ Default: <samp class="file">.ollama-buddy-project.org</samp>.
 </div>
 </div>
 <div class="chapter-level-extent" id="In_002dBuffer-Replace">
-<div class="nav-panel">
-<p>
-Next: <a href="#Tool-Calling" accesskey="n" rel="next">Tool Calling</a>, Previous: <a href="#Project-Integration" accesskey="p" rel="prev">Project Integration</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Tool-Calling" rel="next">Tool Calling</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Project-Integration" rel="prev">Project Integration</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="In_002dBuffer-Replace-1"><span>23 In-Buffer Replace<a class="copiable-link" href="#In_002dBuffer-Replace-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Overview-10" accesskey="1">Overview</a></li>
-<li><a href="#Enabling-In_002dBuffer-Replace" accesskey="2">Enabling In-Buffer Replace</a></li>
-<li><a href="#Basic-Workflow" accesskey="3">Basic Workflow</a></li>
-<li><a href="#Inline-Diff-View" accesskey="4">Inline Diff View</a></li>
-<li><a href="#Key-Bindings-_0028while-rewrite-is-pending_0029" accesskey="5">Key Bindings (while rewrite is pending)</a></li>
-<li><a href="#Automatic-Output-Polishing" accesskey="6">Automatic Output Polishing</a></li>
-<li><a href="#Implementation-Notes" accesskey="7">Implementation Notes</a></li>
-<li><a href="#Limitations" accesskey="8">Limitations</a></li>
+<li><a href="#Overview-10">Overview</a></li>
+<li><a href="#Enabling-In_002dBuffer-Replace">Enabling In-Buffer Replace</a></li>
+<li><a href="#Basic-Workflow">Basic Workflow</a></li>
+<li><a href="#Inline-Diff-View">Inline Diff View</a></li>
+<li><a href="#Key-Bindings-_0028while-rewrite-is-pending_0029">Key Bindings (while rewrite is pending)</a></li>
+<li><a href="#Automatic-Output-Polishing">Automatic Output Polishing</a></li>
+<li><a href="#Implementation-Notes">Implementation Notes</a></li>
+<li><a href="#Limitations">Limitations</a></li>
 </ul>
 <div class="section-level-extent" id="Overview-10">
 <h3 class="section"><span>23.1 Overview<a class="copiable-link" href="#Overview-10"> &para;</a></span></h3>
@@ -5481,22 +5441,20 @@ code-block case.
 </div>
 </div>
 <div class="chapter-level-extent" id="Tool-Calling">
-<div class="nav-panel">
-<p>
-Next: <a href="#Plan-Mode" accesskey="n" rel="next">Plan Mode</a>, Previous: <a href="#In_002dBuffer-Replace" accesskey="p" rel="prev">In-Buffer Replace</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Plan-Mode" rel="next">Plan Mode</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#In_002dBuffer-Replace" rel="prev">In-Buffer Replace</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Tool-Calling-1"><span>24 Tool Calling<a class="copiable-link" href="#Tool-Calling-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Overview-11" accesskey="1">Overview</a></li>
-<li><a href="#Setup" accesskey="2">Setup</a></li>
-<li><a href="#Built_002din-Tools" accesskey="3">Built-in Tools</a></li>
-<li><a href="#Example-Prompts" accesskey="4">Example Prompts</a></li>
-<li><a href="#How-It-Works-4" accesskey="5">How It Works</a></li>
-<li><a href="#Configuration-8" accesskey="6">Configuration</a></li>
-<li><a href="#Registering-Custom-Tools" accesskey="7">Registering Custom Tools</a></li>
-<li><a href="#Interactive-Commands" accesskey="8">Interactive Commands</a></li>
-<li><a href="#Tool-Indicators" accesskey="9">Tool Indicators</a></li>
+<li><a href="#Overview-11">Overview</a></li>
+<li><a href="#Setup">Setup</a></li>
+<li><a href="#Built_002din-Tools">Built-in Tools</a></li>
+<li><a href="#Example-Prompts">Example Prompts</a></li>
+<li><a href="#How-It-Works-4">How It Works</a></li>
+<li><a href="#Configuration-8">Configuration</a></li>
+<li><a href="#Registering-Custom-Tools">Registering Custom Tools</a></li>
+<li><a href="#Interactive-Commands">Interactive Commands</a></li>
+<li><a href="#Tool-Indicators">Tool Indicators</a></li>
 </ul>
 <div class="section-level-extent" id="Overview-11">
 <h3 class="section"><span>24.1 Overview<a class="copiable-link" href="#Overview-11"> &para;</a></span></h3>
@@ -5524,8 +5482,8 @@ Next: <a href="#Plan-Mode" accesskey="n" rel="next">Plan Mode</a>, Previous: <a 
 <h3 class="section"><span>24.3 Built-in Tools<a class="copiable-link" href="#Built_002din-Tools"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#Safe-Tools-_0028available-in-safe-mode_0029" accesskey="1">Safe Tools (available in safe mode)</a></li>
-<li><a href="#Unsafe-Tools-_0028require-safe-mode-off_0029" accesskey="2">Unsafe Tools (require safe mode off)</a></li>
+<li><a href="#Safe-Tools-_0028available-in-safe-mode_0029">Safe Tools (available in safe mode)</a></li>
+<li><a href="#Unsafe-Tools-_0028require-safe-mode-off_0029">Unsafe Tools (require safe mode off)</a></li>
 </ul>
 <div class="subsection-level-extent" id="Safe-Tools-_0028available-in-safe-mode_0029">
 <h4 class="subsection"><span>24.3.1 Safe Tools (available in safe mode)<a class="copiable-link" href="#Safe-Tools-_0028available-in-safe-mode_0029"> &para;</a></span></h4>
@@ -5662,7 +5620,7 @@ Evaluate (length (buffer-list)) and tell me how many buffers I have.
 <p>This loop is transparent to the user &mdash; you see the final response in the chat buffer.
 </p>
 <ul class="mini-toc">
-<li><a href="#Model-Compatibility" accesskey="1">Model Compatibility</a></li>
+<li><a href="#Model-Compatibility">Model Compatibility</a></li>
 </ul>
 <div class="subsection-level-extent" id="Model-Compatibility">
 <h4 class="subsection"><span>24.5.1 Model Compatibility<a class="copiable-link" href="#Model-Compatibility"> &para;</a></span></h4>
@@ -5833,19 +5791,17 @@ overridden.  The header line turns red and shows <code class="code">☠</code>.
 </div>
 </div>
 <div class="chapter-level-extent" id="Plan-Mode">
-<div class="nav-panel">
-<p>
-Next: <a href="#RAG" accesskey="n" rel="next">RAG (Retrieval-Augmented Generation)</a>, Previous: <a href="#Tool-Calling" accesskey="p" rel="prev">Tool Calling</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#RAG" rel="next">RAG (Retrieval-Augmented Generation)</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Tool-Calling" rel="prev">Tool Calling</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Plan-Mode-1"><span>25 Plan Mode<a class="copiable-link" href="#Plan-Mode-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Overview-12" accesskey="1">Overview</a></li>
-<li><a href="#Workflow" accesskey="2">Workflow</a></li>
-<li><a href="#TODO-States" accesskey="3">TODO States</a></li>
-<li><a href="#Slash-Commands-1" accesskey="4">Slash Commands</a></li>
-<li><a href="#Tool-Calling-Integration" accesskey="5">Tool Calling Integration</a></li>
-<li><a href="#Customization-1" accesskey="6">Customization</a></li>
+<li><a href="#Overview-12">Overview</a></li>
+<li><a href="#Workflow">Workflow</a></li>
+<li><a href="#TODO-States">TODO States</a></li>
+<li><a href="#Slash-Commands-1">Slash Commands</a></li>
+<li><a href="#Tool-Calling-Integration">Tool Calling Integration</a></li>
+<li><a href="#Customization-1">Customization</a></li>
 </ul>
 <div class="section-level-extent" id="Overview-12">
 <h3 class="section"><span>25.1 Overview<a class="copiable-link" href="#Overview-12"> &para;</a></span></h3>
@@ -5982,22 +5938,20 @@ with <code class="code">/plan-done</code>.
 </div>
 </div>
 <div class="chapter-level-extent" id="RAG">
-<div class="nav-panel">
-<p>
-Next: <a href="#Advanced-Usage" accesskey="n" rel="next">Advanced Usage</a>, Previous: <a href="#Plan-Mode" accesskey="p" rel="prev">Plan Mode</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Advanced-Usage" rel="next">Advanced Usage</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Plan-Mode" rel="prev">Plan Mode</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="RAG-_0028Retrieval_002dAugmented-Generation_0029"><span>26 RAG (Retrieval-Augmented Generation)<a class="copiable-link" href="#RAG-_0028Retrieval_002dAugmented-Generation_0029"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Overview-13" accesskey="1">Overview</a></li>
-<li><a href="#Requirements" accesskey="2">Requirements</a></li>
-<li><a href="#Quick-Start-2" accesskey="3">Quick Start</a></li>
-<li><a href="#How-It-Works-5" accesskey="4">How It Works</a></li>
-<li><a href="#Configuration-9" accesskey="5">Configuration</a></li>
-<li><a href="#PDF-Support" accesskey="6">PDF Support</a></li>
-<li><a href="#Interactive-Commands-1" accesskey="7">Interactive Commands</a></li>
-<li><a href="#Incremental-Updates" accesskey="8">Incremental Updates</a></li>
-<li><a href="#Pause-and-Resume" accesskey="9">Pause and Resume</a></li>
+<li><a href="#Overview-13">Overview</a></li>
+<li><a href="#Requirements">Requirements</a></li>
+<li><a href="#Quick-Start-2">Quick Start</a></li>
+<li><a href="#How-It-Works-5">How It Works</a></li>
+<li><a href="#Configuration-9">Configuration</a></li>
+<li><a href="#PDF-Support">PDF Support</a></li>
+<li><a href="#Interactive-Commands-1">Interactive Commands</a></li>
+<li><a href="#Incremental-Updates">Incremental Updates</a></li>
+<li><a href="#Pause-and-Resume">Pause and Resume</a></li>
 <li><a href="#Inline-_0040rag_0028_0029-Syntax">Inline @rag() Syntax</a></li>
 <li><a href="#Example-Workflow">Example Workflow</a></li>
 </ul>
@@ -6357,18 +6311,16 @@ RAG, it references specific passages from your indexed document.
 </div>
 </div>
 <div class="chapter-level-extent" id="Advanced-Usage">
-<div class="nav-panel">
-<p>
-Next: <a href="#API-Reference" accesskey="n" rel="next">API Reference</a>, Previous: <a href="#RAG" accesskey="p" rel="prev">RAG (Retrieval-Augmented Generation)</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#API-Reference" rel="next">API Reference</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#RAG" rel="prev">RAG (Retrieval-Augmented Generation)</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Advanced-Usage-1"><span>27 Advanced Usage<a class="copiable-link" href="#Advanced-Usage-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Managing-Token-Usage" accesskey="1">Managing Token Usage</a></li>
-<li><a href="#Customizing-the-Interface" accesskey="2">Customizing the Interface</a></li>
-<li><a href="#Editing-Conversation-History" accesskey="3">Editing Conversation History</a></li>
-<li><a href="#Advanced-System-Prompt-Management" accesskey="4">Advanced System Prompt Management</a></li>
-<li><a href="#Using-Direct-API-Access" accesskey="5">Using Direct API Access</a></li>
+<li><a href="#Managing-Token-Usage">Managing Token Usage</a></li>
+<li><a href="#Customizing-the-Interface">Customizing the Interface</a></li>
+<li><a href="#Editing-Conversation-History">Editing Conversation History</a></li>
+<li><a href="#Advanced-System-Prompt-Management">Advanced System Prompt Management</a></li>
+<li><a href="#Using-Direct-API-Access">Using Direct API Access</a></li>
 </ul>
 <div class="section-level-extent" id="Managing-Token-Usage">
 <h3 class="section"><span>27.1 Managing Token Usage<a class="copiable-link" href="#Managing-Token-Usage"> &para;</a></span></h3>
@@ -6406,8 +6358,8 @@ session.  The data survives session save/load since it is in the buffer text.
 <h3 class="section"><span>27.2 Customizing the Interface<a class="copiable-link" href="#Customizing-the-Interface"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#Streaming-Options" accesskey="1">Streaming Options</a></li>
-<li><a href="#Debug-Mode" accesskey="2">Debug Mode</a></li>
+<li><a href="#Streaming-Options">Streaming Options</a></li>
+<li><a href="#Debug-Mode">Debug Mode</a></li>
 </ul>
 <div class="subsection-level-extent" id="Streaming-Options">
 <h4 class="subsection"><span>27.2.1 Streaming Options<a class="copiable-link" href="#Streaming-Options"> &para;</a></span></h4>
@@ -6465,7 +6417,7 @@ session.  The data survives session save/load since it is in the buffer text.
 <p>For more control over system prompts:
 </p>
 <ul class="mini-toc">
-<li><a href="#Setting-a-system-prompt-without-sending" accesskey="1">Setting a system prompt without sending</a></li>
+<li><a href="#Setting-a-system-prompt-without-sending">Setting a system prompt without sending</a></li>
 </ul>
 <div class="subsection-level-extent" id="Setting-a-system-prompt-without-sending">
 <h4 class="subsection"><span>27.4.1 Setting a system prompt without sending<a class="copiable-link" href="#Setting-a-system-prompt-without-sending"> &para;</a></span></h4>
@@ -6496,16 +6448,14 @@ session.  The data survives session save/load since it is in the buffer text.
 </div>
 </div>
 <div class="chapter-level-extent" id="API-Reference">
-<div class="nav-panel">
-<p>
-Next: <a href="#FAQ" accesskey="n" rel="next">Frequently Asked Questions</a>, Previous: <a href="#Advanced-Usage" accesskey="p" rel="prev">Advanced Usage</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#FAQ" rel="next">Frequently Asked Questions</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Advanced-Usage" rel="prev">Advanced Usage</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="API-Reference-1"><span>28 API Reference<a class="copiable-link" href="#API-Reference-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Interactive-Functions" accesskey="1">Interactive Functions</a></li>
-<li><a href="#Core-Functions" accesskey="2">Core Functions</a></li>
-<li><a href="#Customization-Functions" accesskey="3">Customization Functions</a></li>
+<li><a href="#Interactive-Functions">Interactive Functions</a></li>
+<li><a href="#Core-Functions">Core Functions</a></li>
+<li><a href="#Customization-Functions">Customization Functions</a></li>
 </ul>
 <div class="section-level-extent" id="Interactive-Functions">
 <h3 class="section"><span>28.1 Interactive Functions<a class="copiable-link" href="#Interactive-Functions"> &para;</a></span></h3>
@@ -6769,26 +6719,24 @@ Next: <a href="#FAQ" accesskey="n" rel="next">Frequently Asked Questions</a>, Pr
 </div>
 </div>
 <div class="chapter-level-extent" id="FAQ">
-<div class="nav-panel">
-<p>
-Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, Previous: <a href="#API-Reference" accesskey="p" rel="prev">API Reference</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Troubleshooting" rel="next">Troubleshooting</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#API-Reference" rel="prev">API Reference</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Frequently-Asked-Questions"><span>29 Frequently Asked Questions<a class="copiable-link" href="#Frequently-Asked-Questions"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#General-Questions" accesskey="1">General Questions</a></li>
-<li><a href="#Usage-Questions" accesskey="2">Usage Questions</a></li>
-<li><a href="#Troubleshooting-3" accesskey="3">Troubleshooting</a></li>
+<li><a href="#General-Questions">General Questions</a></li>
+<li><a href="#Usage-Questions">Usage Questions</a></li>
+<li><a href="#Troubleshooting-3">Troubleshooting</a></li>
 </ul>
 <div class="section-level-extent" id="General-Questions">
 <h3 class="section"><span>29.1 General Questions<a class="copiable-link" href="#General-Questions"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f" accesskey="1">What is the difference between Ollama Buddy and other AI assistants?</a></li>
-<li><a href="#Does-Ollama-Buddy-require-an-internet-connection_003f" accesskey="2">Does Ollama Buddy require an internet connection?</a></li>
-<li><a href="#How-do-I-use-Ollama-cloud-models_003f" accesskey="3">How do I use Ollama cloud models?</a></li>
-<li><a href="#Which-models-work-best-with-Ollama-Buddy_003f" accesskey="4">Which models work best with Ollama Buddy?</a></li>
-<li><a href="#How-much-RAM-do-I-need_003f" accesskey="5">How much RAM do I need?</a></li>
+<li><a href="#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f">What is the difference between Ollama Buddy and other AI assistants?</a></li>
+<li><a href="#Does-Ollama-Buddy-require-an-internet-connection_003f">Does Ollama Buddy require an internet connection?</a></li>
+<li><a href="#How-do-I-use-Ollama-cloud-models_003f">How do I use Ollama cloud models?</a></li>
+<li><a href="#Which-models-work-best-with-Ollama-Buddy_003f">Which models work best with Ollama Buddy?</a></li>
+<li><a href="#How-much-RAM-do-I-need_003f">How much RAM do I need?</a></li>
 </ul>
 <div class="subsection-level-extent" id="What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f">
 <h4 class="subsection"><span>29.1.1 What is the difference between Ollama Buddy and other AI assistants?<a class="copiable-link" href="#What-is-the-difference-between-Ollama-Buddy-and-other-AI-assistants_003f"> &para;</a></span></h4>
@@ -6844,15 +6792,15 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 <h3 class="section"><span>29.2 Usage Questions<a class="copiable-link" href="#Usage-Questions"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f" accesskey="1">How do I cancel a request that&rsquo;s taking too long?</a></li>
-<li><a href="#How-can-I-save-my-conversations_003f" accesskey="2">How can I save my conversations?</a></li>
-<li><a href="#Can-I-use-multiple-models-in-the-same-conversation_003f" accesskey="3">Can I use multiple models in the same conversation?</a></li>
-<li><a href="#How-do-I-clear-the-conversation-history_003f" accesskey="4">How do I clear the conversation history?</a></li>
-<li><a href="#How-can-I-create-a-custom-command_003f" accesskey="5">How can I create a custom command?</a></li>
-<li><a href="#How-can-I-manage-context-windows_003f" accesskey="6">How can I manage context windows?</a></li>
-<li><a href="#What-happens-when-I-exceed-the-context-limit_003f" accesskey="7">What happens when I exceed the context limit?</a></li>
-<li><a href="#How-do-I-create-effective-system-prompts_003f" accesskey="8">How do I create effective system prompts?</a></li>
-<li><a href="#Where-are-my-system-prompts-stored_003f" accesskey="9">Where are my system prompts stored?</a></li>
+<li><a href="#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f">How do I cancel a request that&rsquo;s taking too long?</a></li>
+<li><a href="#How-can-I-save-my-conversations_003f">How can I save my conversations?</a></li>
+<li><a href="#Can-I-use-multiple-models-in-the-same-conversation_003f">Can I use multiple models in the same conversation?</a></li>
+<li><a href="#How-do-I-clear-the-conversation-history_003f">How do I clear the conversation history?</a></li>
+<li><a href="#How-can-I-create-a-custom-command_003f">How can I create a custom command?</a></li>
+<li><a href="#How-can-I-manage-context-windows_003f">How can I manage context windows?</a></li>
+<li><a href="#What-happens-when-I-exceed-the-context-limit_003f">What happens when I exceed the context limit?</a></li>
+<li><a href="#How-do-I-create-effective-system-prompts_003f">How do I create effective system prompts?</a></li>
+<li><a href="#Where-are-my-system-prompts-stored_003f">Where are my system prompts stored?</a></li>
 </ul>
 <div class="subsection-level-extent" id="How-do-I-cancel-a-request-that_0027s-taking-too-long_003f">
 <h4 class="subsection"><span>29.2.1 How do I cancel a request that&rsquo;s taking too long?<a class="copiable-link" href="#How-do-I-cancel-a-request-that_0027s-taking-too-long_003f"> &para;</a></span></h4>
@@ -6922,14 +6870,14 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 <h3 class="section"><span>29.3 Troubleshooting<a class="copiable-link" href="#Troubleshooting-3"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#Ollama-Buddy-shows-_0022OFFLINE_0022-status" accesskey="1">Ollama Buddy shows &quot;OFFLINE&quot; status</a></li>
-<li><a href="#Responses-are-slow-or-the-model-seems-to-hang" accesskey="2">Responses are slow or the model seems to hang</a></li>
-<li><a href="#Getting-_0022error-parsing-model_0022-when-pulling-a-model" accesskey="3">Getting &quot;error parsing model&quot; when pulling a model</a></li>
-<li><a href="#Model-responses-are-low-quality-or-truncated" accesskey="4">Model responses are low quality or truncated</a></li>
-<li><a href="#How-do-system-prompts-differ-from-regular-prompts_003f" accesskey="5">How do system prompts differ from regular prompts?</a></li>
-<li><a href="#What-is-the-global-system-prompt_003f" accesskey="6">What is the global system prompt?</a></li>
-<li><a href="#How-do-I-use-image-analysis_002fvision-features_003f" accesskey="7">How do I use image analysis/vision features?</a></li>
-<li><a href="#Can-I-share-system-prompts-between-different-installations_003f" accesskey="8">Can I share system prompts between different installations?</a></li>
+<li><a href="#Ollama-Buddy-shows-_0022OFFLINE_0022-status">Ollama Buddy shows &quot;OFFLINE&quot; status</a></li>
+<li><a href="#Responses-are-slow-or-the-model-seems-to-hang">Responses are slow or the model seems to hang</a></li>
+<li><a href="#Getting-_0022error-parsing-model_0022-when-pulling-a-model">Getting &quot;error parsing model&quot; when pulling a model</a></li>
+<li><a href="#Model-responses-are-low-quality-or-truncated">Model responses are low quality or truncated</a></li>
+<li><a href="#How-do-system-prompts-differ-from-regular-prompts_003f">How do system prompts differ from regular prompts?</a></li>
+<li><a href="#What-is-the-global-system-prompt_003f">What is the global system prompt?</a></li>
+<li><a href="#How-do-I-use-image-analysis_002fvision-features_003f">How do I use image analysis/vision features?</a></li>
+<li><a href="#Can-I-share-system-prompts-between-different-installations_003f">Can I share system prompts between different installations?</a></li>
 </ul>
 <div class="subsection-level-extent" id="Ollama-Buddy-shows-_0022OFFLINE_0022-status">
 <h4 class="subsection"><span>29.3.1 Ollama Buddy shows &quot;OFFLINE&quot; status<a class="copiable-link" href="#Ollama-Buddy-shows-_0022OFFLINE_0022-status"> &para;</a></span></h4>
@@ -7003,23 +6951,21 @@ Next: <a href="#Troubleshooting" accesskey="n" rel="next">Troubleshooting</a>, P
 </div>
 </div>
 <div class="chapter-level-extent" id="Troubleshooting">
-<div class="nav-panel">
-<p>
-Next: <a href="#Contributing" accesskey="n" rel="next">Contributing</a>, Previous: <a href="#FAQ" accesskey="p" rel="prev">Frequently Asked Questions</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Contributing" rel="next">Contributing</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#FAQ" rel="prev">Frequently Asked Questions</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Troubleshooting-4"><span>30 Troubleshooting<a class="copiable-link" href="#Troubleshooting-4"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Common-Issues" accesskey="1">Common Issues</a></li>
-<li><a href="#Debugging" accesskey="2">Debugging</a></li>
+<li><a href="#Common-Issues">Common Issues</a></li>
+<li><a href="#Debugging">Debugging</a></li>
 </ul>
 <div class="section-level-extent" id="Common-Issues">
 <h3 class="section"><span>30.1 Common Issues<a class="copiable-link" href="#Common-Issues"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#Connection-Problems" accesskey="1">Connection Problems</a></li>
-<li><a href="#Model-Problems" accesskey="2">Model Problems</a></li>
-<li><a href="#Interface-Issues" accesskey="3">Interface Issues</a></li>
+<li><a href="#Connection-Problems">Connection Problems</a></li>
+<li><a href="#Model-Problems">Model Problems</a></li>
+<li><a href="#Interface-Issues">Interface Issues</a></li>
 </ul>
 <div class="subsection-level-extent" id="Connection-Problems">
 <h4 class="subsection"><span>30.1.1 Connection Problems<a class="copiable-link" href="#Connection-Problems"> &para;</a></span></h4>
@@ -7095,9 +7041,9 @@ Next: <a href="#Contributing" accesskey="n" rel="next">Contributing</a>, Previou
 <h3 class="section"><span>30.2 Debugging<a class="copiable-link" href="#Debugging"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#Enable-Debug-Mode" accesskey="1">Enable Debug Mode</a></li>
-<li><a href="#Check-Logs" accesskey="2">Check Logs</a></li>
-<li><a href="#Report-Issues" accesskey="3">Report Issues</a></li>
+<li><a href="#Enable-Debug-Mode">Enable Debug Mode</a></li>
+<li><a href="#Check-Logs">Check Logs</a></li>
+<li><a href="#Report-Issues">Report Issues</a></li>
 </ul>
 <div class="subsection-level-extent" id="Enable-Debug-Mode">
 <h4 class="subsection"><span>30.2.1 Enable Debug Mode<a class="copiable-link" href="#Enable-Debug-Mode"> &para;</a></span></h4>
@@ -7142,18 +7088,16 @@ Next: <a href="#Contributing" accesskey="n" rel="next">Contributing</a>, Previou
 </div>
 </div>
 <div class="chapter-level-extent" id="Contributing">
-<div class="nav-panel">
-<p>
-Next: <a href="#Index" accesskey="n" rel="next">Index</a>, Previous: <a href="#Troubleshooting" accesskey="p" rel="prev">Troubleshooting</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Next: </span><span class="nav-link"><a href="#Index" rel="next">Index</a></span></span>, <span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Troubleshooting" rel="prev">Troubleshooting</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="chapter" id="Contributing-1"><span>31 Contributing<a class="copiable-link" href="#Contributing-1"> &para;</a></span></h2>
 
 <ul class="mini-toc">
-<li><a href="#Getting-Started" accesskey="1">Getting Started</a></li>
-<li><a href="#Development-Setup" accesskey="2">Development Setup</a></li>
-<li><a href="#Coding-Guidelines" accesskey="3">Coding Guidelines</a></li>
-<li><a href="#Testing" accesskey="4">Testing</a></li>
-<li><a href="#Feature-Requests-and-Bug-Reports" accesskey="5">Feature Requests and Bug Reports</a></li>
+<li><a href="#Getting-Started">Getting Started</a></li>
+<li><a href="#Development-Setup">Development Setup</a></li>
+<li><a href="#Coding-Guidelines">Coding Guidelines</a></li>
+<li><a href="#Testing">Testing</a></li>
+<li><a href="#Feature-Requests-and-Bug-Reports">Feature Requests and Bug Reports</a></li>
 </ul>
 <div class="section-level-extent" id="Getting-Started">
 <h3 class="section"><span>31.1 Getting Started<a class="copiable-link" href="#Getting-Started"> &para;</a></span></h3>
@@ -7176,8 +7120,8 @@ Next: <a href="#Index" accesskey="n" rel="next">Index</a>, Previous: <a href="#T
 <h3 class="section"><span>31.2 Development Setup<a class="copiable-link" href="#Development-Setup"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#Required-Tools" accesskey="1">Required Tools</a></li>
-<li><a href="#Recommended-Packages" accesskey="2">Recommended Packages</a></li>
+<li><a href="#Required-Tools">Required Tools</a></li>
+<li><a href="#Recommended-Packages">Recommended Packages</a></li>
 </ul>
 <div class="subsection-level-extent" id="Required-Tools">
 <h4 class="subsection"><span>31.2.1 Required Tools<a class="copiable-link" href="#Required-Tools"> &para;</a></span></h4>
@@ -7217,8 +7161,8 @@ Next: <a href="#Index" accesskey="n" rel="next">Index</a>, Previous: <a href="#T
 <h3 class="section"><span>31.4 Testing<a class="copiable-link" href="#Testing"> &para;</a></span></h3>
 
 <ul class="mini-toc">
-<li><a href="#Run-Existing-Tests" accesskey="1">Run Existing Tests</a></li>
-<li><a href="#Adding-New-Tests" accesskey="2">Adding New Tests</a></li>
+<li><a href="#Run-Existing-Tests">Run Existing Tests</a></li>
+<li><a href="#Adding-New-Tests">Adding New Tests</a></li>
 </ul>
 <div class="subsection-level-extent" id="Run-Existing-Tests">
 <h4 class="subsection"><span>31.4.1 Run Existing Tests<a class="copiable-link" href="#Run-Existing-Tests"> &para;</a></span></h4>
@@ -7254,7 +7198,7 @@ M-x ollama-buddy-parameter-run-tests
 </li></ul>
 
 <ul class="mini-toc">
-<li><a href="#User-System-Prompts-Issues" accesskey="1">User System Prompts Issues</a></li>
+<li><a href="#User-System-Prompts-Issues">User System Prompts Issues</a></li>
 </ul>
 <div class="subsection-level-extent" id="User-System-Prompts-Issues">
 <h4 class="subsection"><span>31.5.1 User System Prompts Issues<a class="copiable-link" href="#User-System-Prompts-Issues"> &para;</a></span></h4>
@@ -7282,10 +7226,8 @@ M-x ollama-buddy-parameter-run-tests
 </div>
 </div>
 <div class="unnumbered-level-extent" id="Index">
-<div class="nav-panel">
-<p>
-Previous: <a href="#Contributing" accesskey="p" rel="prev">Contributing</a>, Up: <a href="#Top" accesskey="u" rel="up">Ollama Buddy</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>][<a href="#Index" title="Index" rel="index">Index</a>]</p>
-</div>
+<p class="nav-panel">
+<span class="nav-button"><span class="nav-label">Previous: </span><span class="nav-link"><a href="#Contributing" rel="prev">Contributing</a></span></span>, <span class="nav-button"><span class="nav-label">Up: </span><span class="nav-link"><a href="#Top" rel="up">Ollama Buddy</a></span></span><span class="nav-button"> &nbsp; </span><span class="nav-button">[<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</span><span class="nav-button">[<a href="#Index" title="Index" rel="index">Index</a>]</span></p>
 <h2 class="unnumbered" id="Index-1"><span>Index<a class="copiable-link" href="#Index-1"> &para;</a></span></h2>
 
 

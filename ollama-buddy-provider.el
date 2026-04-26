@@ -145,6 +145,40 @@ If the stored key is a function, call it.  Returns \"\" when nil."
      ((stringp key) key)
      (t ""))))
 
+;;; Per-model dispatch resolvers
+;; ============================================================================
+;; `:api-type' and `:endpoint' may be a static value (symbol/string) OR a
+;; function of MODEL.  The function form lets a single provider entry
+;; route different models through different API shapes / endpoints —
+;; e.g. one OpenCode Go subscription whose chat models go to
+;; /chat/completions while message models go to /messages.
+
+(defun ollama-buddy-provider--effective-model (provider model)
+  "Return a non-nil model name for dispatch under PROVIDER.
+Falls back to the current model or the provider's default model when
+the caller passes nil."
+  (or model
+      ollama-buddy--current-model
+      (let ((default (ollama-buddy-provider-default-model provider)))
+        (and default (concat (ollama-buddy-provider-prefix provider)
+                             default)))))
+
+(defun ollama-buddy-provider--resolve-api-type (provider model)
+  "Return the API type symbol for PROVIDER and MODEL.
+If api-type is a function, call it with the effective model name."
+  (let ((at (ollama-buddy-provider-api-type provider)))
+    (if (functionp at)
+        (funcall at (ollama-buddy-provider--effective-model provider model))
+      at)))
+
+(defun ollama-buddy-provider--resolve-endpoint (provider model)
+  "Return the endpoint URL for PROVIDER and MODEL.
+If endpoint is a function, call it with the effective model name."
+  (let ((ep (ollama-buddy-provider-endpoint provider)))
+    (if (functionp ep)
+        (funcall ep (ollama-buddy-provider--effective-model provider model))
+      ep)))
+
 ;;; Send function factory
 ;; ============================================================================
 
@@ -157,12 +191,12 @@ updates to the provider struct are reflected immediately."
       (let ((prov (gethash prefix ollama-buddy-provider--registry)))
         (if (null prov)
             (user-error "No provider registered for prefix %s" prefix)
-          (pcase (ollama-buddy-provider-api-type prov)
+          (pcase (ollama-buddy-provider--resolve-api-type prov model)
             ('openai (ollama-buddy-provider--openai-send prov prompt model))
             ('claude (ollama-buddy-provider--claude-send prov prompt model))
             ('gemini (ollama-buddy-provider--gemini-send prov prompt model))
             (_ (error "Unknown api-type: %s"
-                      (ollama-buddy-provider-api-type prov)))))))))
+                      (ollama-buddy-provider--resolve-api-type prov model)))))))))
 
 ;;; OpenAI-compatible send
 ;; ============================================================================
@@ -184,7 +218,7 @@ MODEL is the prefixed model name, or nil for the default."
      (append
       (list :prefix (ollama-buddy-provider-prefix provider)
             :api-key (ollama-buddy-provider--resolve-key provider)
-            :endpoint (ollama-buddy-provider-endpoint provider)
+            :endpoint (ollama-buddy-provider--resolve-endpoint provider model)
             :temperature (ollama-buddy-provider-temperature provider)
             :max-tokens (ollama-buddy-provider-max-tokens provider)
             :default-model (ollama-buddy-provider-default-model provider)
@@ -303,7 +337,8 @@ TOOLS-SCHEMA is an optional Claude-format tools vector."
       (if ollama-buddy-streaming-enabled
           ;; Streaming: curl with SSE
           (ollama-buddy-remote--start-streaming-request
-           (ollama-buddy-provider-endpoint provider)
+           (ollama-buddy-provider--resolve-endpoint
+            provider ollama-buddy--current-model)
            headers json-str
            extractor
            provider-name prompt start-point)
@@ -316,7 +351,8 @@ TOOLS-SCHEMA is an optional Claude-format tools vector."
                (url-mime-encoding-string nil)
                (url-mime-accept-string "application/json"))
           (url-retrieve
-           (ollama-buddy-provider-endpoint provider)
+           (ollama-buddy-provider--resolve-endpoint
+            provider ollama-buddy--current-model)
            (lambda (status)
              (if (plist-get status :error)
                  (ollama-buddy-remote--handle-http-error
@@ -442,9 +478,13 @@ TOOLS-SCHEMA is an optional Gemini-format tools vector."
                                                             (concat prompt "\n\n"
                                                                     full-context)
                                                           prompt)))))))))))
-           ;; Build endpoints — model name in URL
+           ;; Build endpoints — model name in URL.  When :endpoint is a
+           ;; function it may return either a %s template or a pre-
+           ;; substituted URL; format handles both safely.
            (api-endpoint
-            (format (ollama-buddy-provider-endpoint provider) model-name))
+            (format (ollama-buddy-provider--resolve-endpoint
+                     provider ollama-buddy--current-model)
+                    model-name))
            (api-endpoint-with-key
             (concat api-endpoint "?key=" api-key))
            (stream-api-endpoint
@@ -614,7 +654,10 @@ SEND-FN is the send function to register with the models.
 Falls back to the static :models list on failure."
   (let* ((models-ep (ollama-buddy-provider-models-endpoint provider))
          (api-key (ollama-buddy-provider--resolve-key provider))
-         (api-type (ollama-buddy-provider-api-type provider))
+         ;; Resolve api-type with a nil model — falls back to default
+         ;; model.  For static api-type this is identical to the raw
+         ;; field; for function api-type it picks the default's shape.
+         (api-type (ollama-buddy-provider--resolve-api-type provider nil))
          (prefix (ollama-buddy-provider-prefix provider))
          (provider-name (ollama-buddy-provider-name provider))
          (static-models (ollama-buddy-provider-models provider))
@@ -766,11 +809,15 @@ ARGS is a plist with the following keys:
 Required:
   :name           - Display name (e.g., \"DeepSeek\")
   :prefix         - Model prefix (e.g., \"d:\")
-  :endpoint       - API endpoint URL
+  :endpoint       - API endpoint URL string, OR a function (MODEL) -> URL
+                    string when a single provider routes different models
+                    to different endpoints
 
 Optional:
   :api-key        - API key: string, function, or nil
-  :api-type       - Symbol: `openai' (default), `claude', or `gemini'
+  :api-type       - Symbol `openai' (default), `claude', or `gemini',
+                    OR a function (MODEL) -> symbol for per-model
+                    dispatch (one provider serving multiple shapes)
   :models         - Static list of model names (without prefix)
   :models-endpoint - URL for dynamic model discovery
   :models-filter  - Predicate to filter discovered model IDs
@@ -875,12 +922,14 @@ Unregisters its models and removes it from the registry."
   (let ((providers '()))
     (maphash
      (lambda (_prefix provider)
-       (push (format "  %-6s %-15s %-8s %s"
-                     (ollama-buddy-provider-prefix provider)
-                     (ollama-buddy-provider-name provider)
-                     (ollama-buddy-provider-api-type provider)
-                     (ollama-buddy-provider-endpoint provider))
-             providers))
+       (let ((at (ollama-buddy-provider-api-type provider))
+             (ep (ollama-buddy-provider-endpoint provider)))
+         (push (format "  %-6s %-15s %-8s %s"
+                       (ollama-buddy-provider-prefix provider)
+                       (ollama-buddy-provider-name provider)
+                       (if (functionp at) "<dispatch>" at)
+                       (if (functionp ep) "<dispatch>" ep))
+               providers)))
      ollama-buddy-provider--registry)
     (if providers
         (message "Registered providers:\n%s"

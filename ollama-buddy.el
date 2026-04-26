@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Ollama LLM AI Assistant ChatGPT Claude Gemini Grok Codestral DeepSeek OpenRouter Support -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 7.4.3
+;; Version: 7.5.0
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -73,6 +73,7 @@
 ;;   (require 'ollama-buddy-codestral)     ; s: Mistral Codestral
 ;;   (require 'ollama-buddy-deepseek)      ; d: DeepSeek
 ;;   (require 'ollama-buddy-openrouter)    ; r: OpenRouter (400+ models)
+;;   (require 'ollama-buddy-opencode)      ; n: OpenCode Go subscription
 ;;   (require 'ollama-buddy-openai-compat) ; l: any OpenAI-compatible server
 ;;
 ;; Each provider needs an API key (see PROVIDERS.org for setup details).
@@ -1779,19 +1780,52 @@ PROPS should be a sequence of property-value pairs."
   (message "System prompt has been reset"))
 
 (defun ollama-buddy-show-raw-model-info (&optional model)
-  "Retrieve and display raw JSON information about the current default MODEL."
+  "Retrieve and display raw JSON information about the current default MODEL.
+For remote models, /api/show is not available — instead, render any
+cached metadata (provider, context window, capabilities) plus a note."
   (interactive)
   (let* ((model (or model
                     ollama-buddy--current-model
                     ollama-buddy-default-model
-                    (error "No default model set")))
-         (endpoint "/api/show")
+                    (error "No default model set"))))
+    (if (and (boundp 'ollama-buddy-remote-models)
+             (member model ollama-buddy-remote-models))
+        (ollama-buddy--show-remote-model-info model)
+      (ollama-buddy--show-local-model-info model))))
+
+(defun ollama-buddy--show-remote-model-info (model)
+  "Render cached metadata for a remote MODEL into the chat buffer."
+  (let* ((meta (gethash model ollama-buddy--models-metadata-cache))
+         (provider-label (ollama-buddy--get-provider-label model))
+         (ctx (ollama-buddy--get-context-window model))
+         (display-name (and meta (alist-get 'display-name meta)))
+         (caps (delq nil
+                     (list (when (ollama-buddy--model-supports-tools model)    "tools")
+                           (when (ollama-buddy--model-supports-vision model)   "vision")
+                           (when (ollama-buddy--model-supports-thinking model) "thinking")))))
+    (with-current-buffer (get-buffer-create ollama-buddy--chat-buffer)
+      (pop-to-buffer (current-buffer))
+      (goto-char (point-max))
+      (insert (format "\n\n** [MODEL INFO: %s]\n\n" model))
+      (insert "/api/show is local-Ollama only; below is cached provider metadata.\n\n")
+      (when provider-label (insert (format "- Provider: %s\n" provider-label)))
+      (when display-name   (insert (format "- Display name: %s\n" display-name)))
+      (when ctx            (insert (format "- Context window: %s\n"
+                                           (or (ollama-buddy--format-context-window ctx)
+                                               (format "%d tokens" ctx)))))
+      (when caps           (insert (format "- Capabilities: %s\n"
+                                           (string-join caps ", "))))
+      (unless (or provider-label display-name ctx caps)
+        (insert "(No cached metadata for this model.)\n"))
+      (insert "\n")
+      (ollama-buddy--prepare-prompt-area)
+      (ollama-buddy--update-status "Remote model info displayed"))))
+
+(defun ollama-buddy--show-local-model-info (model)
+  "Fetch /api/show for a local Ollama MODEL and render the response."
+  (let* ((endpoint "/api/show")
          (payload (json-encode `((model . ,(ollama-buddy--get-real-model-name model))))))
-    
-    ;; Update status to show operation in progress
     (ollama-buddy--update-status (format "Fetching info for %s..." model))
-    
-    ;; Make API request asynchronously to get model info
     (ollama-buddy--make-request-async-backend
      endpoint
      "POST"

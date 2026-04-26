@@ -1176,7 +1176,8 @@ For remote models keys are the full prefixed name with fields:
     ("p:" . "Copilot")
     ("s:" . "Mistral")
     ("d:" . "DeepSeek")
-    ("r:" . "OpenRouter"))
+    ("r:" . "OpenRouter")
+    ("n:" . "OpenCode Go"))
   "Alist mapping model prefix string to provider display name.")
 
 (defvar ollama-buddy--context-window-table
@@ -2004,6 +2005,9 @@ PROMPT, SPECIFIED-MODEL and TOOL-CONTINUATION-P are passed through."
     (when (featurep 'ollama-buddy-openrouter)
       (push "r:" seen-prefixes)
       (push (format "r: OpenRouter (%d)" (ollama-buddy--count-models-with-prefix "r:")) providers))
+    (when (featurep 'ollama-buddy-opencode)
+      (push "n:" seen-prefixes)
+      (push (format "n: OpenCode Go (%d)" (ollama-buddy--count-models-with-prefix "n:")) providers))
     (when (featurep 'ollama-buddy-openai-compat)
       (let ((prefix (if (boundp 'ollama-buddy-openai-compat-marker-prefix)
                         ollama-buddy-openai-compat-marker-prefix
