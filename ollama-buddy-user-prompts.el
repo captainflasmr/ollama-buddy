@@ -392,5 +392,204 @@ Returns the parsed JSON value (string or alist), or nil if not present."
 
     (message "Created new system prompt: %s" filename)))
 
+(defcustom ollama-buddy-skills-export-directory
+  (expand-file-name "~/.claude/skills/")
+  "Directory where exported SKILL.md files are written.
+These are read by Claude Code, opencode, and compatible agents."
+  :type 'directory
+  :group 'ollama-buddy-user-prompts)
+
+(defcustom ollama-buddy-skills-export-agents-directory
+  nil
+  "Secondary directory for skill exports, e.g. a project `.agents/skills/`.
+When non-nil, skills are also written to this location."
+  :type '(choice (const nil) directory)
+  :group 'ollama-buddy-user-prompts)
+
+(defun ollama-buddy-user-prompts--title-to-skill-name (title &optional category)
+  "Convert TITLE to kebab-case skill name.
+When CATEGORY is given and not \"general\" or \"skills\",
+prepend it as a namespace prefix to avoid collisions."
+  (let ((name (downcase
+               (replace-regexp-in-string
+                "-\\{2,\\}" "-"
+                (replace-regexp-in-string
+                 "[^a-z0-9-]" ""
+                 (replace-regexp-in-string
+                  "[[:space:]]+" "-"
+                  (downcase title)))))))
+    (if (and category (not (member category '("general" "skills")))
+             (not (string-prefix-p (concat category "-") name)))
+        (format "%s-%s" category name)
+      name)))
+
+(defun ollama-buddy-user-prompts--org-to-md (text)
+  "Convert org =code= and *bold* markup in TEXT to markdown."
+  (let ((result text))
+    (setq result (replace-regexp-in-string "=\\([^=]+\\)=" "`\\1`" result))
+    (setq result (replace-regexp-in-string "\\*\\([^*\n]+\\)\\*" "**\\1**" result))
+    result))
+
+(defun ollama-buddy-user-prompts--generate-trigger-phrases (title category body)
+  "Generate trigger phrases from TITLE, CATEGORY, and first line of BODY."
+  (let* ((title-lower (downcase title))
+         (words (split-string title-lower))
+         (first-line (car (split-string body "\n" t)))
+         (first-action
+          (when first-line
+            (let ((cleaned (replace-regexp-in-string
+                            "^[0-9. ]+\\|^[-*]+ " "" first-line)))
+              (when cleaned
+                (mapconcat #'identity
+                           (cl-subseq (split-string cleaned nil t)
+                                      0 (min 3 (length (split-string cleaned nil t))))
+                           " ")))))
+         (phrases
+          (delq nil
+                (list
+                 title-lower
+                 (when first-action (downcase first-action))
+                 (when (and category (not (member category '("general" "skills"))))
+                   (format "%s %s %s" category (car words) (or (cadr words) "")))
+                 (when (and (car words) (cadr words))
+                   (format "%s %s" (car words) (cadr words)))
+                 (format "%s %s" title-lower "help")))))
+    (string-join (cl-subseq phrases 0 (min 5 (length phrases))) "\", \"")))
+
+(defun ollama-buddy-user-prompts--skill-frontmatter (name description trigger-phrases)
+  "Generate SKILL.md YAML frontmatter."
+  (format "---
+name: %s
+description: >
+  %s
+  Trigger on phrases like \"%s\" .
+---
+" name description trigger-phrases))
+
+;;;###autoload
+(defun ollama-buddy-user-prompts--write-skill-file (name frontmatter content target-dir)
+  "Write a SKILL.md file for skill NAME in TARGET-DIR.
+FRONTMATTER is the YAML string, CONTENT is the markdown body."
+  (let ((skill-dir (expand-file-name name target-dir))
+        (file (expand-file-name (format "%s/SKILL.md" name) target-dir)))
+    (unless (file-directory-p skill-dir)
+      (make-directory skill-dir t))
+    (with-temp-file file
+      (insert frontmatter)
+      (insert content))
+    file))
+
+;;;###autoload
+(defun ollama-buddy-user-prompts-export-skills (&optional claude-dir agents-dir no-confirm)
+  "Export all user prompts as SKILL.md skills.
+
+Prompts are read from `ollama-buddy-user-prompts-directory',
+converted to the SKILL.md format used by Claude Code, opencode,
+and compatible AI agent tools.
+
+Each skill is written to CLAUDE-DIR (default
+`ollama-buddy-skills-export-directory').  When AGENTS-DIR is
+given (or `ollama-buddy-skills-export-agents-directory' is set),
+skills are also written there.
+
+When NO-CONFIRM is non-nil (or called with a prefix argument),
+skip the confirmation prompt.
+
+Interactively, with \\[universal-argument], also prompt for both
+target directories."
+  (interactive
+   (let* ((claude (if current-prefix-arg
+                      (read-directory-name "Claude skills dir: "
+                                           ollama-buddy-skills-export-directory)
+                    ollama-buddy-skills-export-directory))
+          (agents (when (or current-prefix-arg
+                            ollama-buddy-skills-export-agents-directory)
+                    (if current-prefix-arg
+                        (read-directory-name "Agents skills dir: "
+                                             (or ollama-buddy-skills-export-agents-directory
+                                                 default-directory))
+                      ollama-buddy-skills-export-agents-directory)))
+          (no-confirm current-prefix-arg))
+     (list claude agents no-confirm)))
+  (let* ((claude-dir (or claude-dir ollama-buddy-skills-export-directory))
+         (agents-dir (or agents-dir ollama-buddy-skills-export-agents-directory))
+         (prompts (ollama-buddy-user-prompts--get-prompts))
+         (targets (delq nil (list claude-dir agents-dir)))
+         (count 0)
+         (errors 0))
+    (unless prompts
+      (user-error "No user prompts found to export"))
+    (unless targets
+      (user-error "No target directories specified"))
+    (unless no-confirm
+      (unless (y-or-n-p
+               (format "Export %d prompts as skills to %s? "
+                       (length prompts)
+                       (mapconcat (lambda (d) (abbreviate-file-name d)) targets " and ")))
+        (user-error "Export cancelled")))
+    (dolist (prompt prompts)
+      (condition-case err
+          (let* ((title (plist-get prompt :title))
+                 (category (plist-get prompt :category))
+                 (file (plist-get prompt :file))
+                 (raw (ollama-buddy-user-prompts--read-prompt-content file))
+                 (body (ollama-buddy-user-prompts--strip-org-headers raw))
+                  (name (ollama-buddy-user-prompts--title-to-skill-name title category))
+                  (desc (car (split-string body "\n" t)))
+                  (triggers (ollama-buddy-user-prompts--generate-trigger-phrases
+                             title category body))
+                 (content (ollama-buddy-user-prompts--org-to-md body))
+                 (frontmatter (ollama-buddy-user-prompts--skill-frontmatter
+                               name desc triggers)))
+            (dolist (target targets)
+              (ollama-buddy-user-prompts--write-skill-file
+               name frontmatter (format "# %s\n\n%s" title content) target))
+            (cl-incf count))
+        (error
+         (message "Failed to export '%s': %s"
+                  (or (plist-get prompt :title) (plist-get prompt :file))
+                  (error-message-string err))
+         (cl-incf errors))))
+    (message "Exported %d skills to %s%s"
+             count
+             (mapconcat (lambda (d) (abbreviate-file-name d)) targets " and ")
+             (if (> errors 0)
+                 (format " (%d errors)" errors)
+               ""))))
+
+;;;###autoload
+(defun ollama-buddy-user-prompts-export-skill (prompt-info &optional claude-dir agents-dir)
+  "Export a single prompt PROMPT-INFO as a SKILL.md skill.
+See `ollama-buddy-user-prompts-export-skills' for target dir behavior."
+  (interactive
+   (let ((prompts (ollama-buddy-user-prompts--get-prompts)))
+     (unless prompts
+       (user-error "No user prompts found"))
+     (let* ((formatted (mapcar #'ollama-buddy-user-prompts--format-for-completion prompts))
+            (alist (cl-mapcar #'cons formatted prompts))
+            (selected (completing-read "Export prompt as skill: " formatted nil t)))
+       (list (cdr (assoc selected alist))
+             ollama-buddy-skills-export-directory
+             ollama-buddy-skills-export-agents-directory))))
+  (let* ((title (plist-get prompt-info :title))
+         (file (plist-get prompt-info :file))
+         (category (plist-get prompt-info :category))
+         (raw (ollama-buddy-user-prompts--read-prompt-content file))
+         (body (ollama-buddy-user-prompts--strip-org-headers raw))
+         (name (ollama-buddy-user-prompts--title-to-skill-name title category))
+         (desc (car (split-string body "\n" t)))
+         (triggers (ollama-buddy-user-prompts--generate-trigger-phrases
+                    title category body))
+         (content (ollama-buddy-user-prompts--org-to-md body))
+         (frontmatter (ollama-buddy-user-prompts--skill-frontmatter
+                       name desc triggers))
+         (targets (delq nil (list claude-dir agents-dir))))
+    (unless targets
+      (user-error "No target directories specified"))
+    (dolist (target targets)
+      (ollama-buddy-user-prompts--write-skill-file
+       name frontmatter (format "# %s\n\n%s" title content) target))
+    (message "Exported '%s' as skill '%s'" title name)))
+
 (provide 'ollama-buddy-user-prompts)
 ;;; ollama-buddy-user-prompts.el ends here

@@ -11,6 +11,14 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-05-19 Tue> *7.5.3*
+
+Skill export command for Claude Code / opencode integration.
+
+*** Features
+
+- *Skill export* -- New =ollama-buddy-user-prompts-export-skills= and =ollama-buddy-user-prompts-export-skill= commands convert user prompts to the =SKILL.md= format used by Claude Code, opencode, and compatible AI agent tools.  Each prompt becomes a named skill directory under =~/.claude/skills/= (configurable via =ollama-buddy-skills-export-directory=) with YAML frontmatter description, trigger phrases, and markdown body content.  A secondary target directory (=ollama-buddy-skills-export-agents-directory=) is supported for project-local =.agents/skills/= copies.
+
 ** <2026-04-30 Thu> *7.5.2*
 
 OpenCode Go usage tracking and Model Management reorganization.

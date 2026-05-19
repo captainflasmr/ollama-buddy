@@ -407,6 +407,24 @@ The two directories installed are:
 1. *=ollama-buddy-presets=* – Pre-defined role presets (developer, writer, tutor, etc.) as =.el= files.
 2. *=ollama-buddy-user-prompts=* – Bundled system prompts organized by category (coding, writing, emacs, skills, etc.).
 
+*** Exporting Skills for AI Agent Tools
+
+User prompts can be exported as named skills for Claude Code, opencode, and other compatible agent tools.  Each skill becomes a directory under =~/.claude/skills/= with a =SKILL.md= file containing YAML frontmatter, description, trigger phrases, and the prompt body as markdown.
+
+- =M-x ollama-buddy-user-prompts-export-skills= – Export all prompts as skills (with confirmation).  With =C-u= prefix, prompts for custom directories.
+- =M-x ollama-buddy-user-prompts-export-skill= – Export a single prompt selected via completion.
+
+Configure targets:
+
+#+begin_src elisp
+;; Primary target (default ~/.claude/skills/)
+(setq ollama-buddy-skills-export-directory "~/.claude/skills/")
+
+;; Optional secondary target (e.g. project-local .agents/skills/)
+(setq ollama-buddy-skills-export-agents-directory
+      (expand-file-name ".agents/skills/" (project-root (project-current t))))
+#+end_src
+
 * My current configuration
 
 #+begin_src elisp
