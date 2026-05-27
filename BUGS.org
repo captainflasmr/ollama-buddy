@@ -9,6 +9,8 @@ This document contains the current bugs/improvements, this is just for me mainly
 
 * Bugs/Improvements
 
+** TODO what models are available on a cloud prescription?
+
 ** TODO cancel a request C-c C-k opens up
 
 These default coding systems were tried to safely encode the following
