@@ -9,6 +9,8 @@ This document contains the current bugs/improvements, this is just for me mainly
 
 * Bugs/Improvements
 
+** TODO add minimax-m3
+
 ** TODO what models are available on a cloud prescription?
 
 ** TODO cancel a request C-c C-k opens up
@@ -91,10 +93,12 @@ Outside of benchmark mode there is no configurable timeout for long-running requ
 Issues on the [[https://github.com/captainflasmr/ollama-buddy/issues][GitHub Issues page]]
 
 ** DONE Error when model numbers is more than alphabet letters #15
+CLOSED: [2026-05-31 Sun 17:23]
 
 If the local ollama server has more than 26 models the create-intro-message function produce an error due to the fact that alphabet letter are just 26.
 
 ** DONE Not possible to pass path to image? #14
+CLOSED: [2026-05-31 Sun 17:23]
 
 in the ollama cli when using models with vision support (ex. ollama run gemma3:4b) you can say something like "extract the text from this image: /home/user/Downloads/screenshot.png") then the ollama cli will detect this valid path and pass it to the gemma model as a file parameter somehow and the model will then be able to analize the actual file, when using ollama-buddy this is not possible
 
