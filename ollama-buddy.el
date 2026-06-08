@@ -3072,15 +3072,7 @@ TCP packets split a JSON object across multiple filter calls."
                       (insert text)
                       (ollama-buddy--extend-thinking-fold
                        ollama-buddy--thinking-arrow-marker))
-                  ;; Skip leading newlines immediately after a thinking block ends
-                  (if (and ollama-buddy--reasoning-skip-newlines
-                           (not ollama-buddy--in-reasoning-section)
-                           (string-match "^[\n\r]+" text))
-                      (let ((cleaned-text (replace-regexp-in-string "^[\n\r]+" "" text)))
-                        (unless (string-empty-p cleaned-text)
-                          (insert cleaned-text)
-                          (setq ollama-buddy--reasoning-skip-newlines nil)))
-                    (insert text))))
+                  (insert text)))
               
               ;; Track the complete response for history
               (when (boundp 'ollama-buddy--current-response)
