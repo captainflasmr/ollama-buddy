@@ -2,7 +2,6 @@
 
 ;; Author: James Dyer <captainflasmr@gmail.com>
 ;; Keywords: local, tools
-;; Package-Requires: ((emacs "29.1") (transient "0.4.0"))
 
 ;;; Commentary:
 
@@ -23,15 +22,6 @@
 (require 'pulse)
 
 (declare-function face-remap-remove-relative "face-remap")
-
-;; Emacs 28 compatibility — org-fold API was introduced in Org 9.6 (Emacs 29.1)
-(unless (fboundp 'org-fold-hide-subtree)
-  (defalias 'org-fold-hide-subtree #'outline-hide-subtree))
-(unless (fboundp 'org-fold-show-entry)
-  (defalias 'org-fold-show-entry #'outline-show-entry))
-(unless (fboundp 'org-fold-hide-drawer-toggle)
-  (defalias 'org-fold-hide-drawer-toggle
-    (with-no-warnings (symbol-function 'org-hide-drawer-toggle))))
 
 ;; Core Customization Groups
 (defgroup ollama-buddy nil
@@ -1314,8 +1304,8 @@ Bound dynamically by callers that embed raw file contents in prompts.")
 (defvar ollama-buddy--token-usage-history nil
   "History of token usage for ollama-buddy interactions.")
 
-(with-eval-after-load 'savehist
-  (add-to-list 'savehist-additional-variables 'ollama-buddy--token-usage-history))
+;; savehist is required above, so register the variable directly.
+(add-to-list 'savehist-additional-variables 'ollama-buddy--token-usage-history)
 
 (defcustom ollama-buddy-token-history-max-size 500
   "Maximum number of entries to keep in `ollama-buddy--token-usage-history'.

@@ -1,7 +1,6 @@
 ;;; ollama-buddy-curl.el --- Curl backend for ollama-buddy -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Package-Requires: ((emacs "29.1"))
 ;; URL: https://github.com/captainflasmr/ollama-buddy
 ;;
 ;;; Commentary:
