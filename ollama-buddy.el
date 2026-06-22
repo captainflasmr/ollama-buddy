@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Friendly AI assistant for Ollama and cloud LLMs -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 7.5.3
+;; Version: 7.5.4
 ;; Package-Requires: ((emacs "29.1") (transient "0.4.0"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy

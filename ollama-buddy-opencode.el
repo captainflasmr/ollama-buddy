@@ -21,21 +21,29 @@
 ;; (The /zen/ segment is part of OpenCode's URL routing — these are the
 ;; Go subscription endpoints, not the Zen pay-as-you-go API.)
 ;;
-;; All 14 models are exposed under a single prefix (`n:' by default) and
-;; one provider entry labelled \"OpenCode Go\".  Per-model dispatch sends
-;; the request to the correct endpoint and uses the matching API shape.
+;; Models are exposed under a single prefix (`n:' by default) and one
+;; provider entry labelled \"OpenCode Go\".  Per-model dispatch sends the
+;; request to the correct endpoint and uses the matching API shape.
 ;; Usage budget ($12/5h, $30/wk, $60/mo as of April 2026) is shared
 ;; across the whole subscription.
+;;
+;; Model discovery: the Go surface exposes an OpenAI-style listing at
+;; https://opencode.ai/zen/go/v1/models, so the model list is fetched
+;; dynamically (see `ollama-buddy-opencode-models-endpoint'), falling back
+;; to the static `ollama-buddy-opencode-chat-models' list when discovery
+;; is unavailable.
+;;
+;; All OpenCode Go models are OpenAI-native, so by default every model is
+;; routed to the chat/completions endpoint.  The Anthropic-compatible
+;; /messages endpoint mis-proxies these models (it drops the request body
+;; and the upstream reports \"Empty input messages\"), so it is opt-in only
+;; via `ollama-buddy-opencode-msg-models' /
+;; `ollama-buddy-opencode-msg-model-families'.
 ;;
 ;; Usage:
 ;;   (require 'ollama-buddy-opencode)
 ;;   ;; with auth-source (~/.authinfo):
 ;;   ;; machine ollama-buddy-opencode login apikey password <YOUR_KEY>
-;;
-;; NOTE: model identifiers below are best-effort based on the published
-;; OpenCode Go documentation.  If the API rejects a name, adjust the
-;; relevant `ollama-buddy-opencode-chat-models' or
-;; `ollama-buddy-opencode-msg-models' entry.
 
 ;;; Code:
 
@@ -76,6 +84,17 @@ this directly, e.g.:
   :type 'string
   :group 'ollama-buddy-opencode)
 
+(defcustom ollama-buddy-opencode-models-endpoint
+  "https://opencode.ai/zen/go/v1/models"
+  "OpenAI-style model-discovery endpoint for OpenCode Go.
+When non-nil, the model list is fetched from here at registration time
+instead of using the static `ollama-buddy-opencode-chat-models' /
+`ollama-buddy-opencode-msg-models' lists (which become the fallback if
+discovery fails).  Set to nil to disable discovery and use only the
+static lists."
+  :type '(choice (const :tag "Disable discovery" nil) string)
+  :group 'ollama-buddy-opencode)
+
 (defcustom ollama-buddy-opencode-chat-models
   '("glm-5.1"
     "glm-5"
@@ -86,19 +105,35 @@ this directly, e.g.:
     "mimo-v2-pro"
     "mimo-v2-omni"
     "qwen3.6-plus"
-    "qwen3.5-plus")
-  "OpenCode Go models served by the OpenAI-compatible chat endpoint.
-Adjust if OpenCode adds/renames models — there is no public model
-discovery endpoint at the time of writing."
-  :type '(repeat string)
-  :group 'ollama-buddy-opencode)
-
-(defcustom ollama-buddy-opencode-msg-models
-  '("deepseek-v4-pro"
+    "qwen3.5-plus"
+    "deepseek-v4-pro"
     "deepseek-v4-flash"
     "minimax-m2.7"
     "minimax-m2.5")
-  "OpenCode Go models served by the Anthropic-compatible messages endpoint."
+  "OpenCode Go models served by the OpenAI-compatible chat endpoint.
+Used as the offline fallback when `ollama-buddy-opencode-models-endpoint'
+discovery is unavailable; otherwise the live model list takes precedence.
+Every OpenCode Go model is OpenAI-native, so the chat endpoint is the
+correct surface for all of them by default."
+  :type '(repeat string)
+  :group 'ollama-buddy-opencode)
+
+(defcustom ollama-buddy-opencode-msg-models nil
+  "OpenCode Go models forced onto the Anthropic-compatible messages endpoint.
+Empty by default: every OpenCode Go model is OpenAI-native and works on
+the chat endpoint, while the messages endpoint mis-proxies OpenAI-native
+models (it drops the request body, yielding \"Empty input messages\").
+This is an explicit per-model override consulted by
+`ollama-buddy-opencode--shape'; only add a model here if OpenCode later
+serves one that genuinely requires the Anthropic shape."
+  :type '(repeat string)
+  :group 'ollama-buddy-opencode)
+
+(defcustom ollama-buddy-opencode-msg-model-families nil
+  "Model-name prefixes routed to the Anthropic-compatible messages API.
+Empty by default (see `ollama-buddy-opencode-msg-models' for why).  When
+non-nil, a discovered model whose bare name begins with one of these
+prefixes is routed to the messages endpoint instead of the chat endpoint."
   :type '(repeat string)
   :group 'ollama-buddy-opencode)
 
@@ -198,12 +233,19 @@ reflected immediately."
       (or model ""))))
 
 (defun ollama-buddy-opencode--shape (model)
-  "Return `chat' or `msg' for MODEL based on the configured model lists.
-Falls back to `chat' for unknown models — the OpenAI-compatible
-endpoint is the more common surface and a clearer error from the API
-than a silent shape mismatch."
+  "Return `chat' or `msg' for MODEL.
+A model takes the Anthropic-compatible `msg' shape when its bare name
+matches one of `ollama-buddy-opencode-msg-model-families' or is listed
+explicitly in `ollama-buddy-opencode-msg-models'.  Otherwise it falls
+back to `chat' — the OpenAI-compatible endpoint is the more common
+surface and yields a clearer error from the API than a silent shape
+mismatch."
   (let ((bare (ollama-buddy-opencode--bare-name model)))
-    (if (member bare ollama-buddy-opencode-msg-models) 'msg 'chat)))
+    (if (or (member bare ollama-buddy-opencode-msg-models)
+            (seq-some (lambda (family) (string-prefix-p family bare))
+                      ollama-buddy-opencode-msg-model-families))
+        'msg
+      'chat)))
 
 (defun ollama-buddy-opencode--api-type (model)
   "Return the api-type symbol (`openai' or `claude') for MODEL."
@@ -226,6 +268,8 @@ than a silent shape mismatch."
  :default-model ollama-buddy-opencode-default-model
  :temperature ollama-buddy-opencode-temperature
  :max-tokens ollama-buddy-opencode-max-tokens
+ :models-endpoint ollama-buddy-opencode-models-endpoint
+ ;; Static fallback when discovery is unavailable.
  :models (append ollama-buddy-opencode-chat-models
                  ollama-buddy-opencode-msg-models))
 

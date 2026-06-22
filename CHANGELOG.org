@@ -11,6 +11,22 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-06-22 Mon> *7.5.4*
+
+OpenCode Go dynamic model discovery and chat-endpoint routing fix.
+
+*** Features
+
+- *OpenCode Go model discovery* -- =ollama-buddy-opencode.el= now fetches its model list dynamically from the Go subscription's OpenAI-style listing endpoint (=ollama-buddy-opencode-models-endpoint=, https://opencode.ai/zen/go/v1/models) instead of a hand-maintained list, so newly released models (e.g. =minimax-m3=, =glm-5.2=, =qwen3.7-max=, =kimi-k2.7-code=, =hy3-preview=) appear automatically.  The static =ollama-buddy-opencode-chat-models= list remains as an offline fallback when discovery is unavailable.
+
+*** Bug Fixes
+
+- *OpenCode Go "Empty input messages" error* -- All OpenCode Go models are OpenAI-native, but DeepSeek V4 and MiniMax M2.x were previously routed through the Anthropic-compatible =/messages= endpoint, which mis-proxies them so the upstream reports =Empty input messages=.  Every OpenCode Go model now routes through =/chat/completions= by default.  The Anthropic shape is retained as an opt-in override via the (now empty by default) =ollama-buddy-opencode-msg-models= and =ollama-buddy-opencode-msg-model-families= options.
+
+*** Maintenance
+
+- *Packaging conventions* -- Declared the =transient= dependency in the main package header, shortened the package summary line, added =ollama-buddy-annotate.el=, =ollama-buddy-opencode.el=, and =ollama-buddy-plan.el= to the build/CI file list, added a missing =cl-lib= require, removed a dead Emacs-28 =org-fold= compatibility shim, replaced an unnecessary =with-eval-after-load= for savehist with a direct registration, and dropped ineffective per-file =Package-Requires= / =Version= headers from secondary files (a multi-file package is built from the main file's header).
+
 ** <2026-05-19 Tue> *7.5.3*
 
 Skill export command for Claude Code / opencode integration.
