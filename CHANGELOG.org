@@ -11,6 +11,14 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-06-22 Mon> *7.5.5*
+
+Preserve newlines in streamed responses after a thinking block.
+
+*** Bug Fixes
+
+- *Reasoning newline stripping* -- Fixed a bug where the leading-newline trim applied after a thinking/reasoning block could stay active for the rest of the response, swallowing every subsequent newline and collapsing paragraphs and lists into one unbroken run of text.  This was most visible with models that stream newlines as their own chunks combined with markdown-to-org conversion (e.g. gemma).  Leading blank lines immediately after the thinking block are still trimmed, but once real response text begins newlines are now left intact.  Thanks to Shintaro KATAYAMA (=@shintaro-katayama=) for reporting and diagnosing this in [[https://github.com/captainflasmr/ollama-buddy/pull/23][#23]].
+
 ** <2026-06-22 Mon> *7.5.4*
 
 OpenCode Go dynamic model discovery and chat-endpoint routing fix.

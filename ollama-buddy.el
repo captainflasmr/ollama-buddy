@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Friendly AI assistant for Ollama and cloud LLMs -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 7.5.4
+;; Version: 7.5.5
 ;; Package-Requires: ((emacs "29.1") (transient "0.4.0"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -3072,13 +3072,17 @@ TCP packets split a JSON object across multiple filter calls."
                       (insert text)
                       (ollama-buddy--extend-thinking-fold
                        ollama-buddy--thinking-arrow-marker))
-                  ;; Skip leading newlines immediately after a thinking block ends
+                  ;; Skip leading newlines immediately after a thinking block
+                  ;; ends, but only until the first real content arrives.  Once
+                  ;; any non-newline text appears, stop — otherwise the flag
+                  ;; stays set and swallows newlines mid-response, destroying
+                  ;; paragraph/list structure when the backend streams newlines
+                  ;; as their own chunks (e.g. gemma with markdown-to-org).
                   (if (and ollama-buddy--reasoning-skip-newlines
-                           (not ollama-buddy--in-reasoning-section)
-                           (string-match "^[\n\r]+" text))
-                      (let ((cleaned-text (replace-regexp-in-string "^[\n\r]+" "" text)))
+                           (not ollama-buddy--in-reasoning-section))
+                      (let ((cleaned-text (replace-regexp-in-string "\\`[\n\r]+" "" text)))
+                        (insert cleaned-text)
                         (unless (string-empty-p cleaned-text)
-                          (insert cleaned-text)
                           (setq ollama-buddy--reasoning-skip-newlines nil)))
                     (insert text))))
               
