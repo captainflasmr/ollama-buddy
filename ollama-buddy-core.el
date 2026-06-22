@@ -845,6 +845,7 @@ only when external providers are loaded.
 Supports more than 26 models by using `@a', `@b', etc. for
 additional models beyond the first 26.
 Updates `ollama-buddy--model-letters'."
+  (ollama-buddy--ensure-cloud-models)
   (let* ((cloud-models (mapcar #'ollama-buddy--get-full-cloud-model-name
                                ollama-buddy-cloud-models))
          (all-models (append cloud-models local-models))
@@ -935,33 +936,71 @@ Values are `api' (from Ollama API), `fallback' (static), or `manual'.")
 (defvar ollama-buddy-remote-models nil
   "List of available remote models.")
 
-(defcustom ollama-buddy-cloud-models
-  '("qwen3-coder-next:cloud"
-    "qwen3-coder:480b-cloud"
-    "qwen3.5:cloud"
-    "kimi-k2.5:cloud"
-    "kimi-k2.6:cloud"
-    "deepseek-v3.1:671b-cloud"
-    "deepseek-v4-flash:cloud"
-    "deepseek-v4-pro:cloud"
-    "deepseek-v3.2:cloud"
-    "gpt-oss:120b-cloud"
-    "gpt-oss:20b-cloud"
-    "glm-4.7:cloud"
-    "glm-5:cloud"
-    "glm-5.1:cloud"
-    "minimax-m2.1:cloud"
-    "minimax-m2.7:cloud"
-    "gemma4:31b-cloud"
-    "gemini-3-flash-preview:cloud"
-    "qwen3-next:80b-cloud"
-    "nemotron-3-super:cloud")
+(defvar ollama-buddy-cloud-models nil
   "List of available Ollama cloud models.
-These models run on ollama.com infrastructure and require authentication
-via `ollama signin`.  Use \\[universal-argument] with `ollama-buddy--swap-model'
-to select from this list."
-  :type '(repeat string)
+Populated dynamically from `ollama-buddy-cloud-models-url' via
+`ollama-buddy--ensure-cloud-models'.  Cloud models require internet
+access, so no static fallback is maintained.")
+
+(defvar ollama-buddy--cloud-models-fetched nil
+  "Non-nil if a cloud model fetch has been attempted this session.
+Prevents repeated network attempts when offline.")
+
+(defcustom ollama-buddy-cloud-models-url "https://ollama.com/api/tags"
+  "URL for fetching available Ollama cloud models.
+The endpoint returns JSON in the same format as the local
+`/api/tags' endpoint.  Use `ollama-buddy-cloud-sync-models' to
+force a refresh from this URL."
+  :type 'string
   :group 'ollama-buddy)
+
+(defun ollama-buddy--cloud-model-suffix (base-name)
+  "Return the cloud model name for BASE-NAME.
+If BASE-NAME already contains a colon-tag (e.g. `model:7b'),
+append `-cloud'; otherwise append `:cloud'.  Names that already
+end in `-cloud' or `:cloud' are returned unchanged."
+  (cond
+   ((string-suffix-p "-cloud" base-name) base-name)
+   ((string-suffix-p ":cloud" base-name) base-name)
+   ((string-match-p ":" base-name) (concat base-name "-cloud"))
+   (t (concat base-name ":cloud"))))
+
+(defun ollama-buddy--fetch-cloud-models ()
+  "Fetch available cloud models from `ollama-buddy-cloud-models-url'.
+Returns a list of model name strings with `-cloud' or `:cloud'
+suffixes appended, sorted alphabetically, or nil on failure."
+  (condition-case err
+      (let ((buf (generate-new-buffer " *ollama-cloud-models*")))
+        (unwind-protect
+            (let ((exit-code
+                   (call-process ollama-buddy-curl-executable nil buf nil
+                                 "-s" ollama-buddy-cloud-models-url)))
+              (when (zerop exit-code)
+                (let* ((json (json-read-from-string
+                              (with-current-buffer buf (buffer-string))))
+                       (raw-models (append (alist-get 'models json) nil)))
+                  (sort
+                   (mapcar
+                    (lambda (entry)
+                      (ollama-buddy--cloud-model-suffix
+                       (alist-get 'model entry)))
+                    raw-models)
+                   #'string<))))
+          (kill-buffer buf)))
+    (error
+     (message "Failed to fetch cloud models: %s" (error-message-string err))
+     nil)))
+
+(defun ollama-buddy--ensure-cloud-models ()
+  "Ensure `ollama-buddy-cloud-models' is populated.
+Fetches from `ollama-buddy-cloud-models-url' on first access.
+Does nothing if already fetched or if airplane mode is active."
+  (unless (or ollama-buddy--cloud-models-fetched
+              ollama-buddy-airplane-mode)
+    (setq ollama-buddy--cloud-models-fetched t)
+    (let ((fetched (ollama-buddy--fetch-cloud-models)))
+      (when fetched
+        (setq ollama-buddy-cloud-models fetched)))))
 
 (defcustom ollama-buddy-cloud-session-token ""
   "Session token for fetching Ollama cloud usage stats.
@@ -2280,6 +2319,7 @@ SIZE is the pixel width (default 80).  Returns nil in terminal Emacs."
   "Build the provider summary string for the intro screen.
 Returns a formatted string with provider names and model counts
 in two-column layout, or nil if no providers are active."
+  (ollama-buddy--ensure-cloud-models)
   (let* ((external-providers (ollama-buddy--get-enabled-external-providers))
          (ollama-count (length (or ollama-buddy--models-cache
                                    (ollama-buddy--get-models))))
@@ -2375,7 +2415,7 @@ Called after async model fetches complete so counts are accurate."
           (concat
            (when (= (buffer-size) 0)
              (concat "#+TITLE: Ollama Buddy Chat"))
-           "\n\n* Ollama Buddy [v7.1.3]\n"
+           "\n\n* Ollama Buddy [v7.6.0]\n"
            (if-let ((logo (ollama-buddy--create-logo-image 140)))
                (concat logo "\n")
              (concat
@@ -2920,6 +2960,7 @@ When complete, CALLBACK is called with the status response and result."
 
 (defun ollama-buddy--get-models-with-others ()
   "Get all available models, including remote and cloud models."
+  (ollama-buddy--ensure-cloud-models)
   (append (ollama-buddy--get-models)
           ollama-buddy-remote-models
           (mapcar #'ollama-buddy--get-full-cloud-model-name

@@ -33,6 +33,7 @@
 (declare-function ollama-buddy-cloud-signin "ollama-buddy")
 (declare-function ollama-buddy-cloud-signout "ollama-buddy")
 (declare-function ollama-buddy-cloud-status "ollama-buddy")
+(declare-function ollama-buddy-cloud-sync-models "ollama-buddy")
 (declare-function ollama-buddy-show-raw-model-info "ollama-buddy")
 (declare-function ollama-buddy--multishot-prompt "ollama-buddy")
 (declare-function ollama-buddy-roles-switch-role "ollama-buddy")
@@ -324,7 +325,8 @@
    ["Ollama Cloud"
     ("c" "Sign In" ollama-buddy-cloud-signin)
     ("x" "Sign Out" ollama-buddy-cloud-signout)
-    ("s" "Status" ollama-buddy-cloud-status)]
+    ("s" "Status" ollama-buddy-cloud-status)
+    ("y" "Sync Models" ollama-buddy-cloud-sync-models)]
    [:if (lambda () (featurep 'ollama-buddy-copilot))
         "GitHub Copilot"
         ("p" "Login" ollama-buddy-copilot-login)

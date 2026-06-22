@@ -1,7 +1,7 @@
 ;;; ollama-buddy.el --- Friendly AI assistant for Ollama and cloud LLMs -*- lexical-binding: t; -*-
 ;;
 ;; Author: James Dyer <captainflasmr@gmail.com>
-;; Version: 7.5.5
+;; Version: 7.6.0
 ;; Package-Requires: ((emacs "29.1") (transient "0.4.0"))
 ;; Keywords: applications, tools, convenience
 ;; URL: https://github.com/captainflasmr/ollama-buddy
@@ -1053,6 +1053,7 @@ Typically invoked via `C-u C-u C-c C-c'."
     ("rename"     ollama-buddy-sessions-rename        "Rename the current session")
     ("login"      ollama-buddy-cloud-signin            "Sign in to Ollama cloud")
     ("logout"     ollama-buddy-cloud-signout           "Sign out from Ollama cloud")
+    ("sync"       ollama-buddy-cloud-sync-models       "Sync cloud models from ollama.com")
     ("manual"     ollama-buddy-open-info              "Open the Ollama Buddy Info manual")
     ("export"     org-export-dispatch                 "Open org-export dispatcher for the chat buffer")
     ("backend"    ollama-buddy-switch-communication-backend "Switch between network-process and curl backends")
@@ -3677,6 +3678,20 @@ Shows cached status. Use signin/signout to update or try a cloud model request."
                ('not-authenticated "Not signed in (use C-c A to sign in)")
                ('unknown "Unknown (try using a cloud model to verify)")))))
 
+(defun ollama-buddy-cloud-sync-models ()
+  "Force-refresh the cloud model catalog from ollama.com.
+Fetches from `ollama-buddy-cloud-models-url' and replaces
+`ollama-buddy-cloud-models' with the result.  Use this to pick up
+newly released cloud models without restarting Emacs."
+  (interactive)
+  (message "Fetching cloud model catalog from ollama.com...")
+  (let ((fetched (ollama-buddy--fetch-cloud-models)))
+    (if (not fetched)
+        (message "Could not fetch cloud models (check network connection)")
+      (setq ollama-buddy-cloud-models fetched
+            ollama-buddy--cloud-models-fetched t)
+      (message "Cloud models refreshed (%d models)" (length fetched)))))
+
 (defun ollama-buddy--launch-model (model &optional directory)
   "Launch MODEL in an external terminal with an AI agent.
 MODEL is the raw model name (without display prefixes).
@@ -5138,6 +5153,7 @@ Modifies the variable in place."
 (defun ollama-buddy-manage-models ()
   "Update the model management interface to include unload capabilities."
   (interactive)
+  (ollama-buddy--ensure-cloud-models)
   (let* ((available-models (ollama-buddy--get-models))
          (running-models (ollama-buddy--get-running-models))
          (_letters (ollama-buddy--assign-model-letters available-models))
@@ -6091,9 +6107,8 @@ Returns the text with @file() delimiters removed."
   (let ((map (make-sparse-keymap)))
     
     ;; Primary Transient Menu access
+    (define-key map (kbd "?") #'ollama-buddy-transient-menu)
     (define-key map (kbd "C-c O") #'ollama-buddy-transient-menu)
-    ;; Convenient access to transient menu from chat buffer
-    (define-key map (kbd "C-c .") #'ollama-buddy-transient-menu)
     (define-key map (kbd "C-c M") #'ollama-buddy-manage-models)
     (define-key map (kbd "C-c ?") #'ollama-buddy-open-info)
     (define-key map (kbd "C-c C-u") #'ollama-buddy-unload-all-models)

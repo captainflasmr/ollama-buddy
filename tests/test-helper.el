@@ -51,6 +51,7 @@
 Saves and restores relevant variables."
   (declare (indent 0) (debug t))
   `(let ((ollama-buddy-cloud-models test-helper--sample-cloud-models)
+         (ollama-buddy--cloud-models-fetched t)
          (ollama-buddy-marker-prefix "o:")
          (ollama-buddy-cloud-marker-prefix "u:")
          (ollama-buddy-remote-models nil)

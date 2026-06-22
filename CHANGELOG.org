@@ -11,6 +11,20 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-06-22 Mon> *7.6.0*
+
+Dynamic cloud model discovery — the static =ollama-buddy-cloud-models= list is replaced with automatic fetching from ollama.com.
+
+*** Features
+
+- *Dynamic cloud model discovery* -- =ollama-buddy-cloud-models= is now populated automatically from the =https://ollama.com/api/tags= endpoint on first access (model picker, Model Management buffer, provider summary), so newly released cloud models appear without a package update.  No static fallback list is maintained: cloud models require internet access, so a hardcoded offline list added no value.  The fetch is session-cached (one attempt per Emacs session) and skipped in airplane mode.  =ollama-buddy-cloud-models-url= (a defcustom) controls the endpoint.
+- *=/sync= command* -- New slash command and =M-x ollama-buddy-cloud-sync-models= force-refresh the cloud model catalog on demand.  Also bound to =y= in the auth transient menu.
+- *=?* transient binding* -- Pressing =?= in the chat buffer now opens the transient menu, matching the convention used by other Emacs packages.  =C-c O= remains as an alternative.
+
+*** Breaking Changes
+
+- * =ollama-buddy-cloud-models= is now a defvar, not a defcustom* -- The variable is populated dynamically and no longer appears in the Customize interface.  Users who customised the old defcustom should remove the saved value; the dynamic fetch supersedes it.
+
 ** <2026-06-22 Mon> *7.5.5*
 
 Preserve newlines in streamed responses after a thinking block.

@@ -982,13 +982,10 @@ Configure vision support for image analysis:
 :END:
 Configure Ollama cloud models:
 
-- =ollama-buddy-cloud-models= :: List of available cloud models.
-
-  #+begin_src example-preformatted
-  (setq ollama-buddy-cloud-models
-    '("qwen3-coder:480b-cloud"
-      "deepseek-v3.1:671b-cloud"))
-  #+end_src
+- =ollama-buddy-cloud-models-url= :: URL for fetching available cloud
+  models (default: =https://ollama.com/api/tags=).  The model list is
+  populated automatically on first access; use =M-x
+  ollama-buddy-cloud-sync-models= or =/sync= to force a refresh.
 
 - =ollama-buddy-ollama-executable= :: Path to the ollama CLI (default:
   "ollama").
@@ -4433,17 +4430,10 @@ require authentication via the Ollama CLI.
 :CUSTOM_ID: available-cloud-models
 :CLASS: section
 :END:
-Cloud models are configured via =ollama-buddy-cloud-models=:
+Cloud models are discovered automatically from =ollama-buddy-cloud-models-url= on first access.  The list is session-cached; use =M-x ollama-buddy-cloud-sync-models= or =/sync= to force a refresh.
 
 #+begin_src example-preformatted
-(setq ollama-buddy-cloud-models
-  '("qwen3-coder:480b-cloud"
-    "kimi-k2.5:cloud"
-    "deepseek-v3.1:671b-cloud"
-    "gpt-oss:120b-cloud"
-    "gpt-oss:20b-cloud"
-    "glm-4.7:cloud"
-    "minimax-m2.1:cloud"))
+M-x ollama-buddy-cloud-sync-models
 #+end_src
 
 Cloud models have a =-cloud= suffix in their names.
@@ -4594,7 +4584,8 @@ value from your browser.
 :CUSTOM_ID: configuration-1
 :CLASS: section
 :END:
-- =ollama-buddy-cloud-models= :: List of available Ollama cloud models.
+- =ollama-buddy-cloud-models-url= :: URL for fetching available Ollama
+  cloud models (default: =https://ollama.com/api/tags=).
 
 - =ollama-buddy-ollama-executable= :: Path to the ollama CLI executable
   (default: "ollama"). Used for signin/signout commands.

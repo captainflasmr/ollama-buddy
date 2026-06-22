@@ -251,5 +251,99 @@ are loaded, so the real model name is returned without the prefix."
         (should pull-called)
         (should (equal "deepseek-v3.1:671b-cloud" pulled-model))))))
 
+;;; Cloud Model Suffix Tests
+;; ============================================================================
+
+(ert-deftest ollama-buddy-test-cloud-model-suffix-no-tag ()
+  "Test that a base name without a colon tag gets `:cloud'."
+  :tags '(core)
+  (should (equal "glm-5.2:cloud"
+                 (ollama-buddy--cloud-model-suffix "glm-5.2")))
+  (should (equal "kimi-k2.6:cloud"
+                 (ollama-buddy--cloud-model-suffix "kimi-k2.6")))
+  (should (equal "nemotron-3-super:cloud"
+                 (ollama-buddy--cloud-model-suffix "nemotron-3-super"))))
+
+(ert-deftest ollama-buddy-test-cloud-model-suffix-with-tag ()
+  "Test that a base name with a colon tag gets `-cloud'."
+  :tags '(core)
+  (should (equal "deepseek-v3.1:671b-cloud"
+                 (ollama-buddy--cloud-model-suffix "deepseek-v3.1:671b")))
+  (should (equal "gpt-oss:120b-cloud"
+                 (ollama-buddy--cloud-model-suffix "gpt-oss:120b")))
+  (should (equal "qwen3.5:397b-cloud"
+                 (ollama-buddy--cloud-model-suffix "qwen3.5:397b"))))
+
+(ert-deftest ollama-buddy-test-cloud-model-suffix-already-cloud ()
+  "Test that names already ending in `-cloud' or `:cloud' are unchanged."
+  :tags '(core)
+  (should (equal "glm-5.2:cloud"
+                 (ollama-buddy--cloud-model-suffix "glm-5.2:cloud")))
+  (should (equal "deepseek-v3.1:671b-cloud"
+                 (ollama-buddy--cloud-model-suffix "deepseek-v3.1:671b-cloud"))))
+
+;;; Cloud Model Fetch Tests
+;; ============================================================================
+
+(ert-deftest ollama-buddy-test-fetch-cloud-models-parses-response ()
+  "Test that `ollama-buddy--fetch-cloud-models' parses JSON and appends suffixes."
+  :tags '(core)
+  (with-ollama-buddy-test-env
+    (let ((fake-json
+           "{\"models\":[{\"model\":\"glm-5.2\"},{\"model\":\"deepseek-v3.1:671b\"},{\"model\":\"gpt-oss:120b\"}]}"))
+      (cl-letf (((symbol-function 'call-process)
+                 (lambda (_prog _in out _err &rest _args)
+                   (with-current-buffer out
+                     (erase-buffer)
+                     (insert fake-json))
+                   0)))
+        (let ((result (ollama-buddy--fetch-cloud-models)))
+          (should result)
+          (should (member "glm-5.2:cloud" result))
+          (should (member "deepseek-v3.1:671b-cloud" result))
+          (should (member "gpt-oss:120b-cloud" result)))))))
+
+(ert-deftest ollama-buddy-test-fetch-cloud-models-failure ()
+  "Test that `ollama-buddy--fetch-cloud-models' returns nil on curl failure."
+  :tags '(core)
+  (with-ollama-buddy-test-env
+    (cl-letf (((symbol-function 'call-process)
+               (lambda (&rest _) 1)))
+      (should-not (ollama-buddy--fetch-cloud-models)))))
+
+(ert-deftest ollama-buddy-test-ensure-cloud-models-fetches-once ()
+  "Test that `ensure-cloud-models' fetches when not yet fetched."
+  :tags '(core)
+  (let ((ollama-buddy-cloud-models nil)
+        (ollama-buddy--cloud-models-fetched nil)
+        (ollama-buddy-airplane-mode nil)
+        (fetch-called nil))
+    (cl-letf (((symbol-function 'ollama-buddy--fetch-cloud-models)
+               (lambda ()
+                 (setq fetch-called t)
+                 '("glm-5.2:cloud" "kimi-k2.6:cloud"))))
+      (ollama-buddy--ensure-cloud-models)
+      (should fetch-called)
+      (should (equal '("glm-5.2:cloud" "kimi-k2.6:cloud")
+                     ollama-buddy-cloud-models))
+      (should ollama-buddy--cloud-models-fetched)
+      ;; Second call should not fetch again
+      (setq fetch-called nil)
+      (ollama-buddy--ensure-cloud-models)
+      (should-not fetch-called))))
+
+(ert-deftest ollama-buddy-test-ensure-cloud-models-skips-airplane ()
+  "Test that `ensure-cloud-models' does nothing in airplane mode."
+  :tags '(core)
+  (let ((ollama-buddy-cloud-models nil)
+        (ollama-buddy--cloud-models-fetched nil)
+        (ollama-buddy-airplane-mode t)
+        (fetch-called nil))
+    (cl-letf (((symbol-function 'ollama-buddy--fetch-cloud-models)
+               (lambda () (setq fetch-called t) '("should-not-appear:cloud"))))
+      (ollama-buddy--ensure-cloud-models)
+      (should-not fetch-called)
+      (should-not ollama-buddy-cloud-models))))
+
 (provide 'ollama-buddy-core-test)
 ;;; ollama-buddy-core-test.el ends here
