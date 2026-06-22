@@ -27,7 +27,10 @@ ELISP_FILES = ollama-buddy.el \
               ollama-buddy-provider.el \
               ollama-buddy-web-search.el \
               ollama-buddy-completion.el \
-              ollama-buddy-rewrite.el
+              ollama-buddy-rewrite.el \
+              ollama-buddy-annotate.el \
+              ollama-buddy-opencode.el \
+              ollama-buddy-plan.el
 
 # Test files
 TEST_DIR = tests
