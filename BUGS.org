@@ -9,9 +9,12 @@ This document contains the current bugs/improvements, this is just for me mainly
 
 * Bugs/Improvements
 
-** TODO add minimax-m3
+** TODO keybindings in ollama chat buffer are reserved
 
-** TODO what models are available on a cloud prescription?
+
+** TODO completion module is Ollama-only and limited
+
+ollama-buddy-completion.el hardcodes /api/generate so no remote provider can power inline completions. Also lacks progress feedback, caching, customisable temperature/system-prompt, and partial-accept. Supporting remote providers (especially Copilot) would add significant value.
 
 ** TODO cancel a request C-c C-k opens up
 
@@ -40,15 +43,9 @@ or specify any other coding system (and risk losing
 
   raw-text no-conversion
 
-** TODO - Attached merges with the More Commands...
-
-** TODO multiple chat session?
-
-** DOING acp? with maybe  [[https://fritzgrabo.com/posts/acp2ollama-in-emacs-for-fun-and-profit/][~acp2ollama~ in Emacs]]
+** TODO multiple chat sessions?
 
 ** DOING Improve svg
-
-** DOING more LLM integrations
 
 ** DOING plan mode
 
@@ -57,10 +54,6 @@ or specify any other coding system (and risk losing
 ** TODO annotate code prompt
 
 ** TODO tidy up welcome screen
-
-** TODO completion module is Ollama-only and limited
-
-ollama-buddy-completion.el hardcodes /api/generate so no remote provider can power inline completions. Also lacks progress feedback, caching, customisable temperature/system-prompt, and partial-accept. Supporting remote providers (especially Copilot) would add significant value.
 
 ** TODO maybe tidying up tooling output
 
@@ -73,8 +66,6 @@ ollama-buddy-completion.el hardcodes /api/generate so no remote provider can pow
 ** TODO clean up testing folder
 
 ** TODO No streaming with hiding reasoning corrupts output
-
-** TODO keybindings in ollama chat buffer are reserved
 
 ** TODO session encryption
 
