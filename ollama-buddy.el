@@ -411,6 +411,10 @@ Returns the position where the response content should start."
     (base64-encode-region (point-min) (point-max) t)
     (buffer-string)))
 
+(defun ollama-buddy--get-provider-model-name (base-model)
+  "Filter out provider prefix from BASE-MODEL"
+  (cadr (split-string base-model ":")))
+
 ;; Function to check if the current model supports vision
 (defun ollama-buddy--model-supports-vision (model)
   "Check if MODEL supports vision capabilities.
@@ -422,7 +426,7 @@ capabilities are not yet available."
            ;; Strip cloud suffixes for matching
            (base-model (replace-regexp-in-string "[-:]cloud$" "" real-model))
            ;; Also get name without tag (e.g. "gemma3:4b" -> "gemma3")
-           (name-only (car (split-string base-model ":")))
+           (name-only (ollama-buddy--get-provider-model-name base-model))
            (meta (gethash model ollama-buddy--models-metadata-cache)))
       (if (and meta (alist-get 'capabilities-fetched meta))
           ;; Capabilities fetched from /api/show — trust that data
@@ -443,7 +447,7 @@ considered tool-capable."
            ;; Strip cloud suffixes for matching
            (base-model (replace-regexp-in-string "[-:]cloud$" "" real-model))
            ;; Also get name without tag (e.g. "qwen3:32b" -> "qwen3")
-           (name-only (car (split-string base-model ":")))
+           (name-only (ollama-buddy--get-provider-model-name base-model))
            (meta (gethash model ollama-buddy--models-metadata-cache)))
       (cond
        ;; Generic provider models — always tool-capable
@@ -469,7 +473,7 @@ are not yet available."
            ;; Strip cloud suffixes for matching
            (base-model (replace-regexp-in-string "[-:]cloud$" "" real-model))
            ;; Also get name without tag (e.g. "deepseek-r1:7b" -> "deepseek-r1")
-           (name-only (car (split-string base-model ":")))
+           (name-only (ollama-buddy--get-provider-model-name base-model))
            (base-lower (downcase base-model))
            (meta (gethash model ollama-buddy--models-metadata-cache)))
       (if (and meta (alist-get 'capabilities-fetched meta))

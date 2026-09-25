@@ -83,9 +83,11 @@ Returns nil if there is no context to include."
                      (lambda (attachment)
                        (let ((file (plist-get attachment :file))
                              (content (plist-get attachment :content)))
-                         (format "### File: %s\n\n#+end_src%s\n%s\n#+begin_src \n\n"
+                         (format "### File: %s\n\n#+begin_src%s\n%s\n#+end_src \n\n"
                                  (file-name-nondirectory file)
-                                 (or (plist-get attachment :type) "")
+                                 (if-let ((code-type (plist-get attachment :type)))
+                                     (format " %s" code-type)
+                                   "")
                                  content)))
                      ollama-buddy--current-attachments
                      ""))))
