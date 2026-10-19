@@ -251,6 +251,7 @@ Tool-augmented search — LLMs can now autonomously search the web and query loc
 
 | Version | Summary                                                                                                                                                                                                                   |
 |---------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| *7.6.2* | OpenCode Go requests send the required =x-opencode-session= header (stable UUID plus identifying User-Agent); model discovery clears its "Fetching ... models..." status; in-buffer rewrite supports provider-prefixed models (e.g. =n:=). |
 | *7.6.0* | Dynamic cloud model discovery — =ollama-buddy-cloud-models= auto-fetched from =ollama.com/api/tags=; =/sync= force-refresh; =?= opens transient.                                                                       |
 | *7.5.0* | OpenCode Go subscription integration — single =n:= prefix exposes all 14 models with one shared API key; =ollama-buddy-provider-create= now accepts function forms for =:api-type= / =:endpoint= for per-model dispatch. |
 | *7.4.1* | Response post-processing hook (=ollama-buddy-response-post-process-functions=) with numbered-list normaliser for dense cloud models; thinking-block point-anchor fix; Emacs Blog Reviewer user prompt.                   |

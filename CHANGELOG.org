@@ -11,6 +11,18 @@ project's main git repository: [[https://github.com/captainflasmr/ollama-buddy
 
 * Versions
 
+** <2026-10-19 Mon> *7.6.2*
+
+OpenCode Go requests now include the session header required by the API.
+
+*** Bug Fixes
+
+- *OpenCode Go "missing x-opencode-session" error* -- OpenCode Go now requires every inference request to carry an =x-opencode-session= header so it can route requests and optimise prompt caching.  =ollama-buddy-opencode.el= previously sent only the API key, so every chat request failed with =Request is missing x-opencode-session and cannot be routed efficiently= even though model discovery and selection worked.  Requests now send a stable UUID in =x-opencode-session= (generated once per Emacs session) plus an identifying =User-Agent=.  Override the ID with =ollama-buddy-opencode-session-id=, or run =M-x ollama-buddy-opencode-new-session= to rotate it.
+
+- *Stale "Fetching ... models..." status* -- Background model discovery updated the status line but never cleared the message after a successful fetch, so opening Ollama Buddy could leave "Fetching OpenCode Go models..." on screen indefinitely.  The message is now cleared when discovery finishes, and synchronous request errors are handled as well; a newer status (for example an in-progress chat request) is left untouched.
+
+- *In-buffer rewrite with remote provider models* -- In-buffer commands such as =proofread=, =refactor-code=, and the translation commands streamed only through the local Ollama HTTP API, so setting a command's =:model= to a provider-prefixed model like =n:deepseek-v4.1-flash= left the =[Rewriting...]= placeholder on screen with no output.  In-buffer rewrites now detect registered provider models and stream directly from the provider's API, supporting OpenAI-, Claude-, and Gemini-shaped endpoints (including OpenCode Go's session headers).  HTTP or transport errors restore the original text and report the cause instead of leaving the placeholder behind.  Marker creation no longer depends on the source buffer being current.
+
 ** <2026-07-15 Wed> *7.6.1*
 
 Fix =void-function ollama-buddy--open-chat= when the chat is opened from the role transient menu before the main package is loaded.

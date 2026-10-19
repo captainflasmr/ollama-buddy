@@ -3151,6 +3151,12 @@ have changed.  Re-copy the fresh value from your browser and update
 @code{ollama-buddy-opencode.el} provides integration with the OpenCode Go
 flat-rate subscription.
 
+Requests carry a stable @code{x-opencode-session} identifier (required by
+the Go API for routing and prompt caching) and an identifying
+@code{User-Agent}.  The ID is generated once per Emacs session; set
+@code{ollama-buddy-opencode-session-id} to use a fixed value, or run
+@kbd{M-x ollama-buddy-opencode-new-session} to rotate it.
+
 @subsection OpenCode Go Usage Stats
 
 If @code{ollama-buddy-opencode} is loaded, the Model Management page
@@ -3759,6 +3765,14 @@ the global toggle by setting the @code{:destination} property in
 always rewrites in-buffer; one with @code{:destination chat} always opens the chat buffer.
 Commands without a @code{:destination} property continue to honour the global toggle.
 @xref{Roles and Commands, Per-Command Response Destination}, for details.
+
+In-buffer replace works with local Ollama models and with any registered
+remote provider.  When the selected model (or a command's @code{:model}
+property) carries a provider prefix such as @code{n:}, the rewrite streams
+directly from that provider's API instead of the local Ollama server, so
+models like @code{n:deepseek-v4.1-flash} work with Proofread and the other
+transformation commands.  If the provider returns an HTTP or transport
+error, the original text is restored and the error is reported.
 
 @section Enabling In-Buffer Replace
 

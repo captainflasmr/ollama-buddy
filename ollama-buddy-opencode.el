@@ -40,6 +40,11 @@
 ;; via `ollama-buddy-opencode-msg-models' /
 ;; `ollama-buddy-opencode-msg-model-families'.
 ;;
+;; Requests carry an `x-opencode-session' header with a stable per-session
+;; identifier (plus an identifying User-Agent).  OpenCode Go uses this to
+;; route requests and optimise prompt caching; without it the API rejects
+;; the request with "Request is missing x-opencode-session".
+;;
 ;; Usage:
 ;;   (require 'ollama-buddy-opencode)
 ;;   ;; with auth-source (~/.authinfo):
@@ -169,6 +174,71 @@ go to Application > Cookies > opencode.ai, and copy the `auth' value."
   :type 'string
   :group 'ollama-buddy-opencode)
 
+(defcustom ollama-buddy-opencode-session-id nil
+  "Stable session identifier sent in the `x-opencode-session' header.
+OpenCode Go uses this ID to route requests and optimise prompt caching,
+so it must stay stable for the lifetime of a conversation.  When nil, a
+random ID is generated once per Emacs session.  Set this to a string to
+use a fixed value, or call `ollama-buddy-opencode-new-session' to rotate
+the generated ID."
+  :type '(choice (const :tag "Generate automatically" nil) string)
+  :group 'ollama-buddy-opencode)
+
+(defcustom ollama-buddy-opencode-user-agent "ollama-buddy"
+  "User-Agent header sent with OpenCode Go requests.
+OpenCode asks clients to identify themselves with their own user agent
+rather than a generic HTTP-library name.  A version suffix such as
+\"ollama-buddy/7.6.2\" is also fine."
+  :type 'string
+  :group 'ollama-buddy-opencode)
+
+(defvar ollama-buddy-opencode--generated-session-id nil
+  "Automatically generated OpenCode Go session ID.")
+
+(defun ollama-buddy-opencode--new-session-id ()
+  "Return a random UUID-shaped session identifier."
+  (let* ((hex (secure-hash 'md5
+                           (format "%s-%s-%s-%s"
+                                   (float-time)
+                                   (emacs-pid)
+                                   (random most-positive-fixnum)
+                                   (random most-positive-fixnum))))
+         (variant (logand (string-to-number (substring hex 16 17) 16) 3)))
+    (format "%s-%s-4%s-%s%s-%s"
+            (substring hex 0 8)
+            (substring hex 8 12)
+            (substring hex 13 16)
+            (substring "89ab" variant (1+ variant))
+            (substring hex 17 20)
+            (substring hex 20 32))))
+
+(defun ollama-buddy-opencode--session-id ()
+  "Return the session ID used for the `x-opencode-session' header."
+  (or (and (stringp ollama-buddy-opencode-session-id)
+           (not (string-empty-p ollama-buddy-opencode-session-id))
+           ollama-buddy-opencode-session-id)
+      (or ollama-buddy-opencode--generated-session-id
+          (setq ollama-buddy-opencode--generated-session-id
+                (ollama-buddy-opencode--new-session-id)))))
+
+(defun ollama-buddy-opencode-new-session ()
+  "Generate a new OpenCode Go routing session ID.
+OpenCode uses the ID sent in the `x-opencode-session' header to route
+requests and optimise prompt caching.  Call this when you want the next
+conversation to start with a fresh ID."
+  (interactive)
+  (setq ollama-buddy-opencode--generated-session-id
+        (ollama-buddy-opencode--new-session-id))
+  (message "OpenCode Go session ID: %s"
+           ollama-buddy-opencode--generated-session-id))
+
+(defun ollama-buddy-opencode--headers ()
+  "Return extra HTTP headers for OpenCode Go requests.
+OpenCode requires a stable `x-opencode-session' value and asks clients
+to identify themselves with their own User-Agent."
+  `(("x-opencode-session" . ,(ollama-buddy-opencode--session-id))
+    ("User-Agent" . ,ollama-buddy-opencode-user-agent)))
+
 (defvar ollama-buddy-opencode--usage-cache nil
   "Cached OpenCode usage data.")
 
@@ -269,6 +339,7 @@ mismatch."
  :temperature ollama-buddy-opencode-temperature
  :max-tokens ollama-buddy-opencode-max-tokens
  :models-endpoint ollama-buddy-opencode-models-endpoint
+ :extra-headers #'ollama-buddy-opencode--headers
  ;; Static fallback when discovery is unavailable.
  :models (append ollama-buddy-opencode-chat-models
                  ollama-buddy-opencode-msg-models))

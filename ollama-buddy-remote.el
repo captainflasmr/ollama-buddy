@@ -57,6 +57,20 @@
       (string-trim (substring model (length prefix)))
     model))
 
+(defun ollama-buddy-remote--split-user-agent (headers)
+  "Split HEADERS into a cons of (HEADERS-WITHOUT-UA . USER-AGENT).
+USER-AGENT is the value of the first \"User-Agent\" entry, or nil.
+The returned header list omits that entry.  This lets `url-retrieve'
+send a single User-Agent via `url-user-agent' instead of duplicating
+the one it adds itself."
+  (let (user-agent rest)
+    (dolist (header headers)
+      (if (and (null user-agent)
+               (string= (downcase (car header)) "user-agent"))
+          (setq user-agent (cdr header))
+        (push header rest)))
+    (cons (nreverse rest) user-agent)))
+
 ;;; API key verification
 ;; ============================================================================
 
@@ -1388,8 +1402,11 @@ MODEL and CONFIG are passed through from `ollama-buddy-remote--openai-send'."
            prompt
            start-point)
         ;; Non-streaming path: use url-retrieve
-        (let* ((url-request-method "POST")
-               (url-request-extra-headers all-headers)
+        (let* ((header-parts
+                (ollama-buddy-remote--split-user-agent all-headers))
+               (url-user-agent (or (cdr header-parts) url-user-agent))
+               (url-request-method "POST")
+               (url-request-extra-headers (car header-parts))
                (url-request-data json-str)
                (url-mime-charset-string "utf-8")
                (url-mime-language-string nil)

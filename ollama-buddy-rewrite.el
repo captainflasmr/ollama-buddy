@@ -6,6 +6,10 @@
 ;; on a region stream their response back into the source buffer instead of
 ;; the chat buffer, replacing the selection with green-highlighted new text.
 ;;
+;; Both local Ollama models and registered provider models (prefixes such as
+;; `n:' for OpenCode Go) are supported.  Remote providers stream over their
+;; own API shape (OpenAI, Claude, or Gemini) using curl.
+;;
 ;; After streaming completes:
 ;;   C-c C-c  accept  — keep the new text, clear highlight
 ;;   C-c C-k  reject  — restore original text
@@ -22,6 +26,20 @@
 (require 'ollama-buddy-core)
 
 (declare-function ollama-buddy--get-real-model-name "ollama-buddy")
+;; Provider module forward declarations
+(declare-function ollama-buddy-provider--get-for-model "ollama-buddy-provider")
+(declare-function ollama-buddy-provider--resolve-api-type "ollama-buddy-provider")
+(declare-function ollama-buddy-provider--resolve-endpoint "ollama-buddy-provider")
+(declare-function ollama-buddy-provider--resolve-key "ollama-buddy-provider")
+(declare-function ollama-buddy-provider--resolve-extra-headers "ollama-buddy-provider")
+(declare-function ollama-buddy-provider-prefix "ollama-buddy-provider")
+(declare-function ollama-buddy-provider-temperature "ollama-buddy-provider")
+(declare-function ollama-buddy-provider-max-tokens "ollama-buddy-provider")
+;; Remote module forward declarations
+(declare-function ollama-buddy-remote--get-real-model-name "ollama-buddy-remote")
+(declare-function ollama-buddy-remote--openai-extract-content "ollama-buddy-remote")
+(declare-function ollama-buddy-remote--claude-extract-content "ollama-buddy-remote")
+(declare-function ollama-buddy-remote--gemini-extract-content "ollama-buddy-remote")
 
 ;;; Faces
 
@@ -362,14 +380,14 @@ Accepting (\\[ollama-buddy-rewrite-accept]) or rejecting
       (message "Rewrite: unexpected termination (%s). Use C-c C-k to restore original."
                (string-trim event)))))
 
-;;; Entry point
+;;; Local Ollama entry point
 
-;;;###autoload
-(defun ollama-buddy-rewrite-from-command (source-buf r-start r-end original-text
+(defun ollama-buddy-rewrite--start-local (source-buf r-start r-end original-text
                                           system-prompt full-prompt model)
   "Stream a rewrite into SOURCE-BUF replacing R-START..R-END.
-ORIGINAL-TEXT is saved for rejection.  SYSTEM-PROMPT and FULL-PROMPT
-are the message contents.  MODEL is the model name to use."
+Uses the local Ollama server.  ORIGINAL-TEXT is saved for rejection.
+SYSTEM-PROMPT and FULL-PROMPT are the message contents.  MODEL is the
+local Ollama model name to use."
   ;; Guards
   (when ollama-buddy--rewrite-state
     (user-error "Rewrite already pending — accept or reject first (C-c C-c / C-c C-k)"))
@@ -404,9 +422,9 @@ are the message contents.  MODEL is the model name to use."
         (insert "[Rewriting...]")
         (add-text-properties r-start (point)
                              '(face ollama-buddy-rewrite-pending-face))
-        (setq placeholder-end (point))))
-    (setq start-marker (copy-marker r-start nil)
-          end-marker   (copy-marker placeholder-end t))
+        (setq placeholder-end (point)))
+      (setq start-marker (copy-marker r-start nil)
+            end-marker   (copy-marker placeholder-end t)))
     ;; Initialize state
     (setq ollama-buddy--rewrite-state
           (list :source-buffer source-buf
@@ -443,6 +461,320 @@ are the message contents.  MODEL is the model name to use."
     ;; Send the HTTP request
     (process-send-string ollama-buddy--rewrite-process http-request)
     (message "Rewriting with %s... (C-c C-k to cancel)" model)))
+
+;;; Remote provider support
+
+(defun ollama-buddy-rewrite--remote-request-parts
+    (provider model system-prompt full-prompt)
+  "Build the HTTP request pieces for a remote rewrite.
+PROVIDER is the registered provider struct, MODEL is the prefixed
+model name, SYSTEM-PROMPT and FULL-PROMPT are the message contents.
+Returns a list (ENDPOINT HEADERS JSON-STR EXTRACTOR)."
+  (let* ((api-type (ollama-buddy-provider--resolve-api-type provider model))
+         (endpoint (ollama-buddy-provider--resolve-endpoint provider model))
+         (api-key (ollama-buddy-provider--resolve-key provider))
+         (extra-headers (ollama-buddy-provider--resolve-extra-headers provider))
+         (prefix (ollama-buddy-provider-prefix provider))
+         (bare-model (ollama-buddy-remote--get-real-model-name prefix model))
+         (temperature (ollama-buddy-provider-temperature provider))
+         (max-tokens (or (ollama-buddy-provider-max-tokens provider) 4096))
+         (has-system (and system-prompt
+                          (stringp system-prompt)
+                          (not (string-empty-p system-prompt)))))
+    (pcase api-type
+      ('claude
+       (let* ((payload `((model . ,bare-model)
+                         (messages . [((role . "user")
+                                       (content . ,full-prompt))])
+                         (temperature . ,temperature)
+                         (max_tokens . ,max-tokens)
+                         (stream . t)))
+              (payload (if has-system
+                           (append payload `((system . ,system-prompt)))
+                         payload)))
+         (list endpoint
+               (append `(("Content-Type" . "application/json")
+                         ("Authorization" . ,(concat "Bearer " api-key))
+                         ("X-API-Key" . ,api-key)
+                         ("anthropic-version" . "2023-06-01"))
+                       extra-headers)
+               (json-encode payload)
+               #'ollama-buddy-remote--claude-extract-content)))
+      ('gemini
+       (let* ((model-endpoint (format endpoint bare-model))
+              (stream-endpoint
+               (concat (replace-regexp-in-string
+                        ":generateContent$" ":streamGenerateContent"
+                        model-endpoint)
+                       "?alt=sse&key=" api-key))
+              (payload `((contents
+                          . [((role . "user")
+                              (parts . [((text . ,full-prompt))]))])
+                         (generationConfig
+                          . ((temperature . ,temperature)
+                             (maxOutputTokens . ,max-tokens)))))
+              (payload (if has-system
+                           (append payload
+                                   `((systemInstruction
+                                      . ((parts . [((text . ,system-prompt))])))))
+                         payload)))
+         (list stream-endpoint
+               (append '(("Content-Type" . "application/json"))
+                       extra-headers)
+               (json-encode payload)
+               #'ollama-buddy-remote--gemini-extract-content)))
+      (_
+       (let* ((messages (append
+                         (when has-system
+                           (list `((role . "system")
+                                   (content . ,system-prompt))))
+                         (list `((role . "user")
+                                 (content . ,full-prompt)))))
+              (payload `((model . ,bare-model)
+                         (messages . ,(vconcat [] messages))
+                         (temperature . ,temperature)
+                         (max_tokens . ,max-tokens)
+                         (stream . t))))
+         (list endpoint
+               (append `(("Content-Type" . "application/json")
+                         ("Authorization" . ,(concat "Bearer " api-key)))
+                       extra-headers)
+               (json-encode payload)
+               #'ollama-buddy-remote--openai-extract-content))))))
+
+(defun ollama-buddy-rewrite--format-error (body)
+  "Extract a readable message from an API error BODY."
+  (or (condition-case nil
+          (let* ((json-object-type 'alist)
+                 (json-key-type 'symbol)
+                 (data (json-read-from-string body))
+                 (err (alist-get 'error data)))
+            (cond
+             ((stringp err) err)
+             ((listp err) (or (alist-get 'message err)
+                              (alist-get 'type err)
+                              (format "%S" err)))))
+        (error nil))
+      (if (> (length body) 200)
+          (concat (substring body 0 200) "…")
+        body)))
+
+(defun ollama-buddy-rewrite--fail (reason)
+  "Restore the original region after a failed rewrite.
+REASON is a human-readable failure description."
+  (when ollama-buddy--rewrite-state
+    (let ((source-buf (plist-get ollama-buddy--rewrite-state :source-buffer))
+          (start-m    (plist-get ollama-buddy--rewrite-state :start-marker))
+          (end-m      (plist-get ollama-buddy--rewrite-state :end-marker))
+          (original   (plist-get ollama-buddy--rewrite-state :original-text)))
+      (when (buffer-live-p source-buf)
+        (with-current-buffer source-buf
+          (let ((inhibit-read-only t))
+            (delete-region (marker-position start-m) (marker-position end-m))
+            (goto-char (marker-position start-m))
+            (insert original))))))
+  (ollama-buddy--rewrite-cleanup)
+  (message "Rewrite failed: %s" reason))
+
+(defun ollama-buddy-rewrite--remote-process-buffer (proc)
+  "Process any complete output currently in PROC's process buffer.
+Called both from the process filter and once more from the sentinel, so
+output that arrived before the filter was attached is not lost."
+  (let ((buffer (process-buffer proc)))
+    (when (buffer-live-p buffer)
+      (condition-case err
+          (with-current-buffer buffer
+            ;; Strip HTTP headers (and any informational 1xx blocks) once.
+            (unless (process-get proc :headers-done)
+              (goto-char (point-min))
+              (while (and (not (process-get proc :headers-done))
+                          (re-search-forward "\r?\n\r?\n" nil t))
+                (let* ((header-text (buffer-substring (point-min) (point)))
+                       (status (and (string-match
+                                     "^HTTP/[0-9.]+ \\([0-9]+\\)"
+                                     header-text)
+                                    (string-to-number (match-string 1 header-text)))))
+                  (delete-region (point-min) (point))
+                  (when (and status (>= status 200))
+                    (unless (and (>= status 200) (< status 300))
+                      (process-put proc :http-error status))
+                    (process-put proc :headers-done t)))))
+            ;; Process complete SSE data lines.  Leave partial output alone
+            ;; until the HTTP headers have been fully received.
+            (when (and (process-get proc :headers-done)
+                       (not (process-get proc :http-error)))
+              (goto-char (point-min))
+              (while (re-search-forward "^\\(.*\\)\n" nil t)
+                (let ((line (match-string 1)))
+                  (delete-region (match-beginning 0) (match-end 0))
+                  (when (string-prefix-p "data:" line)
+                    (let* ((data-str (string-trim (substring line 5)))
+                           (content (condition-case nil
+                                        (funcall (process-get proc :extractor)
+                                                 data-str)
+                                      (error nil))))
+                      (when (and content (stringp content)
+                                 (not (string-empty-p content)))
+                        (ollama-buddy--rewrite-insert-content content))))))))
+        (error
+         (message "Error in remote rewrite filter: %s"
+                  (error-message-string err)))))))
+
+(defun ollama-buddy-rewrite--remote-filter (proc output)
+  "Process filter for the remote rewrite curl process PROC.
+OUTPUT is the newly received chunk of the response."
+  (let ((buffer (process-buffer proc)))
+    (when (buffer-live-p buffer)
+      (with-current-buffer buffer
+        (goto-char (point-max))
+        (insert output))))
+  (ollama-buddy-rewrite--remote-process-buffer proc))
+
+(defun ollama-buddy-rewrite--remote-sentinel (proc event)
+  "Sentinel for the remote rewrite curl process PROC.
+EVENT is the process state change string."
+  (let ((buffer (process-buffer proc))
+        (temp-file (process-get proc :temp-file)))
+    (unwind-protect
+        (progn
+          ;; Make sure output that arrived before the filter was attached is
+          ;; processed too.
+          (ollama-buddy-rewrite--remote-process-buffer proc)
+          (cond
+           ;; Cancelled by `ollama-buddy-rewrite-reject' — it restores the text.
+           ((string-match-p "\\(?:killed\\|terminated\\)" event)
+            nil)
+           ;; Successful completion — finalise the pending rewrite.
+           ((and (string-match-p "finished" event)
+                 (zerop (or (process-exit-status proc) 0))
+                 (null (process-get proc :http-error)))
+            (when (and ollama-buddy--rewrite-state
+                       (eq proc ollama-buddy--rewrite-process))
+              (setq ollama-buddy--rewrite-process nil)
+              (ollama-buddy--rewrite-complete)))
+           (t
+            (let ((body (and (buffer-live-p buffer)
+                             (with-current-buffer buffer
+                               (string-trim (buffer-string))))))
+              (ollama-buddy-rewrite--fail
+               (cond
+                ((process-get proc :http-error)
+                 (format "HTTP %s: %s"
+                         (process-get proc :http-error)
+                         (if (or (null body) (string-empty-p body))
+                             "request failed"
+                           (ollama-buddy-rewrite--format-error body))))
+                ((not (zerop (or (process-exit-status proc) 0)))
+                 (format "curl exited with status %s"
+                         (process-exit-status proc)))
+                (t (string-trim event))))))))
+      (when (and temp-file (file-exists-p temp-file))
+        (ignore-errors (delete-file temp-file)))
+      (when (buffer-live-p buffer)
+        (kill-buffer buffer)))))
+
+(defun ollama-buddy-rewrite--start-remote (source-buf r-start r-end
+                                                       original-text
+                                                       system-prompt full-prompt
+                                                       model provider)
+  "Start an in-buffer rewrite against remote PROVIDER for MODEL.
+SOURCE-BUF, R-START, R-END and ORIGINAL-TEXT describe the region to
+replace.  SYSTEM-PROMPT and FULL-PROMPT are the message contents."
+  (pcase-let ((`(,endpoint ,headers ,json-str ,extractor)
+               (ollama-buddy-rewrite--remote-request-parts
+                provider model system-prompt full-prompt)))
+    (let* ((temp-file (make-temp-file "ollama-buddy-rewrite-payload"))
+           (process-buffer (generate-new-buffer " *ollama-buddy-rewrite*"))
+           placeholder-end start-marker end-marker)
+      (with-temp-file temp-file
+        (insert json-str))
+      ;; Replace the selection with the pending placeholder.
+      (with-current-buffer source-buf
+        (let ((inhibit-read-only t))
+          (delete-region r-start r-end)
+          (goto-char r-start)
+          (insert "[Rewriting...]")
+          (add-text-properties r-start (point)
+                               '(face ollama-buddy-rewrite-pending-face))
+          (setq placeholder-end (point)))
+        (setq start-marker (copy-marker r-start nil)
+              end-marker (copy-marker placeholder-end t)))
+      (setq ollama-buddy--rewrite-state
+            (list :source-buffer source-buf
+                  :start-marker start-marker
+                  :end-marker end-marker
+                  :original-text original-text
+                  :first-content t))
+      (condition-case err
+          (let* ((header-args
+                  (apply #'append
+                         (mapcar (lambda (h)
+                                   (list "--header"
+                                         (format "%s: %s" (car h) (cdr h))))
+                                 headers)))
+                 (curl-args
+                  (append
+                   (list "--silent" "--no-buffer" "--include"
+                         "--max-time" (number-to-string ollama-buddy-curl-timeout)
+                         "--request" "POST")
+                   header-args
+                   (list "--data-binary" (concat "@" temp-file)
+                         endpoint)))
+                 (proc (make-process
+                        :name "ollama-buddy-rewrite"
+                        :buffer process-buffer
+                        :command (cons ollama-buddy-curl-executable curl-args)
+                        :filter #'ollama-buddy-rewrite--remote-filter
+                        :sentinel #'ollama-buddy-rewrite--remote-sentinel
+                        :coding 'utf-8
+                        :noquery t)))
+            (process-put proc :temp-file temp-file)
+            (process-put proc :extractor extractor)
+            (setq ollama-buddy--rewrite-process proc))
+        (error
+         ;; Restore the original text if the process cannot start.
+         (when (file-exists-p temp-file)
+           (ignore-errors (delete-file temp-file)))
+         (when (buffer-live-p process-buffer)
+           (kill-buffer process-buffer))
+         (with-current-buffer source-buf
+           (let ((inhibit-read-only t))
+             (delete-region (marker-position start-marker)
+                            (marker-position end-marker))
+             (goto-char (marker-position start-marker))
+             (insert original-text)))
+         (set-marker start-marker nil)
+         (set-marker end-marker nil)
+         (setq ollama-buddy--rewrite-state nil)
+         (error "Failed to start remote rewrite: %s"
+                (error-message-string err))))
+      (with-current-buffer source-buf
+        (ollama-buddy-rewrite-mode 1))
+      (message "Rewriting with %s... (C-c C-k to cancel)" model))))
+
+;;; Entry point
+
+;;;###autoload
+(defun ollama-buddy-rewrite-from-command (source-buf r-start r-end original-text
+                                          system-prompt full-prompt model)
+  "Stream a rewrite into SOURCE-BUF replacing R-START..R-END.
+ORIGINAL-TEXT is saved for rejection.  SYSTEM-PROMPT and FULL-PROMPT
+are the message contents.  MODEL is the model name to use — either a
+local Ollama model or a provider-prefixed model such as
+\"n:deepseek-v4.1-flash\"."
+  (when ollama-buddy--rewrite-state
+    (user-error
+     "Rewrite already pending — accept or reject first (C-c C-c / C-c C-k)"))
+  (deactivate-mark)
+  (let ((provider (and (fboundp 'ollama-buddy-provider--get-for-model)
+                       (ollama-buddy-provider--get-for-model model))))
+    (if provider
+        (ollama-buddy-rewrite--start-remote
+         source-buf r-start r-end original-text
+         system-prompt full-prompt model provider)
+      (ollama-buddy-rewrite--start-local
+       source-buf r-start r-end original-text
+       system-prompt full-prompt model))))
 
 (provide 'ollama-buddy-rewrite)
 ;;; ollama-buddy-rewrite.el ends here

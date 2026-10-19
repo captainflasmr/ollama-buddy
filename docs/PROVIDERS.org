@@ -69,7 +69,7 @@ There is also a dedicated module =ollama-buddy-openai-compat= that wraps this pa
 | =:default-model=   | no      | Default model name (without prefix)                      |
 | =:temperature=     | no      | Float, default 0.7                                       |
 | =:max-tokens=      | no      | Integer or nil                                           |
-| =:extra-headers=   | no      | Additional HTTP headers alist                            |
+| =:extra-headers=   | no      | Additional HTTP headers alist, or a function returning one |
 
 ** Quick Comparison
 

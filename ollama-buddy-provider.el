@@ -121,8 +121,10 @@
   (temperature 0.7 :type float)
   (max-tokens nil
               :documentation "Max tokens integer or nil for API default.")
-  (extra-headers nil :type list
-                 :documentation "Additional HTTP headers alist.")
+  (extra-headers nil
+                 :documentation "Additional HTTP headers.
+Either an alist or a function returning one.  The function form lets
+headers change per request, e.g. a per-session routing ID.")
   (token-count-sym nil
                    :documentation "Interned symbol for token count storage."))
 
@@ -178,6 +180,17 @@ If endpoint is a function, call it with the effective model name."
         (funcall ep (ollama-buddy-provider--effective-model provider model))
       ep)))
 
+(defun ollama-buddy-provider--resolve-extra-headers (provider)
+  "Return the extra HTTP headers for PROVIDER.
+The `:extra-headers' slot may hold an alist or a function returning
+one; the latter is called on every request so headers can change over
+time."
+  (let ((headers (ollama-buddy-provider-extra-headers provider)))
+    (cond
+     ((functionp headers) (funcall headers))
+     ((listp headers) headers)
+     (t nil))))
+
 ;;; Send function factory
 ;; ============================================================================
 
@@ -222,7 +235,7 @@ MODEL is the prefixed model name, or nil for the default."
             :max-tokens (ollama-buddy-provider-max-tokens provider)
             :default-model (ollama-buddy-provider-default-model provider)
             :provider-name (ollama-buddy-provider-name provider)
-            :extra-headers (ollama-buddy-provider-extra-headers provider)
+            :extra-headers (ollama-buddy-provider--resolve-extra-headers provider)
             :token-count-var (ollama-buddy-provider-token-count-sym provider))
       (when tools-schema
         (list :tools-schema tools-schema))))))
@@ -324,7 +337,7 @@ TOOLS-SCHEMA is an optional Claude-format tools vector."
                        ("Authorization" . ,(concat "Bearer " api-key))
                        ("X-API-Key" . ,api-key)
                        ("anthropic-version" . "2023-06-01"))
-                     (ollama-buddy-provider-extra-headers provider)))
+                     (ollama-buddy-provider--resolve-extra-headers provider)))
            ;; Use tools-aware extractor when tools present
            (extractor (if tools-schema
                          #'ollama-buddy-remote--claude-extract-content-with-tools
@@ -342,8 +355,11 @@ TOOLS-SCHEMA is an optional Claude-format tools vector."
            extractor
            provider-name prompt start-point)
         ;; Non-streaming: url-retrieve
-        (let* ((url-request-method "POST")
-               (url-request-extra-headers headers)
+        (let* ((header-parts
+                (ollama-buddy-remote--split-user-agent headers))
+               (url-user-agent (or (cdr header-parts) url-user-agent))
+               (url-request-method "POST")
+               (url-request-extra-headers (car header-parts))
                (url-request-data json-str)
                (url-mime-charset-string "utf-8")
                (url-mime-language-string nil)
@@ -531,7 +547,7 @@ TOOLS-SCHEMA is an optional Gemini-format tools vector."
            (start-point
             (ollama-buddy-remote--prepare-chat-buffer provider-name))
            (headers (append '(("Content-Type" . "application/json"))
-                            (ollama-buddy-provider-extra-headers provider)))
+                            (ollama-buddy-provider--resolve-extra-headers provider)))
            ;; Use tools-aware extractor when tools present
            (extractor (if tools-schema
                          #'ollama-buddy-remote--gemini-extract-content-with-tools
@@ -548,8 +564,11 @@ TOOLS-SCHEMA is an optional Gemini-format tools vector."
            extractor
            provider-name prompt start-point)
         ;; Non-streaming: url-retrieve
-        (let* ((url-request-method "POST")
-               (url-request-extra-headers headers)
+        (let* ((header-parts
+                (ollama-buddy-remote--split-user-agent headers))
+               (url-user-agent (or (cdr header-parts) url-user-agent))
+               (url-request-method "POST")
+               (url-request-extra-headers (car header-parts))
                (url-request-data json-str)
                (url-mime-charset-string "utf-8")
                (url-mime-language-string nil)
@@ -647,6 +666,14 @@ as fallback.  If only :models is set, registers those directly."
       (message "ollama-buddy-provider: %s has no models configured"
                provider-name)))))
 
+(defun ollama-buddy-provider--clear-fetch-status (fetching-status)
+  "Clear FETCHING-STATUS if it is still the current status.
+Background model discovery can finish long after the minibuffer or
+header line has moved on, so only replace the message we own."
+  (when (equal ollama-buddy--status fetching-status)
+    (ollama-buddy--update-status
+     (if ollama-buddy--current-model "Idle" "OFFLINE"))))
+
 (defun ollama-buddy-provider--fetch-models-dynamic (provider send-fn)
   "Fetch models from PROVIDER's discovery endpoint and register them.
 SEND-FN is the send function to register with the models.
@@ -661,60 +688,75 @@ Falls back to the static :models list on failure."
          (provider-name (ollama-buddy-provider-name provider))
          (static-models (ollama-buddy-provider-models provider))
          (models-filter (ollama-buddy-provider-models-filter provider))
+         (headers
+          (append
+           (pcase api-type
+             ('claude
+              `(("x-api-key" . ,api-key)
+                ("anthropic-version" . "2023-06-01")))
+             ('gemini
+              `(("x-goog-api-key" . ,api-key)))
+             (_
+              (when (and api-key (not (string-empty-p api-key)))
+                `(("Authorization" . ,(concat "Bearer " api-key))))))
+           (ollama-buddy-provider--resolve-extra-headers provider)))
+         (header-parts (ollama-buddy-remote--split-user-agent headers))
+         (url-user-agent (or (cdr header-parts) url-user-agent))
          (url-request-method "GET")
-         (url-request-extra-headers
-          (pcase api-type
-            ('claude
-             `(("x-api-key" . ,api-key)
-               ("anthropic-version" . "2023-06-01")))
-            ('gemini
-             `(("x-goog-api-key" . ,api-key)))
-            (_
-             (when (and api-key (not (string-empty-p api-key)))
-               `(("Authorization" . ,(concat "Bearer " api-key))))))))
-    (ollama-buddy--update-status
-     (format "Fetching %s models..." provider-name))
-    (url-retrieve
-     models-ep
-     (lambda (status)
-       (if (plist-get status :error)
-           (progn
-             (ollama-buddy-remote--friendly-fetch-error
-              status provider-name)
-             ;; Fall back to static models
-             (when static-models
-               (ollama-buddy-remote--register-models
-                prefix static-models send-fn)))
-         (condition-case err
-             (progn
-               (goto-char (point-min))
-               (when (re-search-forward "\n\n" nil t)
-                 (let* ((json-object-type 'alist)
-                        (json-array-type 'vector)
-                        (json-key-type 'symbol)
-                        (raw (buffer-substring (point) (point-max)))
-                        (response (json-read-from-string raw))
-                        (models
-                         (ollama-buddy-provider--parse-models-response
-                          response api-type prefix)))
-                   ;; Apply filter if provided
-                   (when models-filter
-                     (setq models
-                           (cl-remove-if-not models-filter models)))
-                   (if models
-                       (ollama-buddy-remote--register-models
-                        prefix models send-fn)
-                     ;; Empty result — fall back to static
-                     (when static-models
-                       (ollama-buddy-remote--register-models
-                        prefix static-models send-fn))))))
-           (error
-            (message "ollama-buddy-provider: Error fetching %s models: %s"
-                     provider-name (error-message-string err))
-            (when static-models
-              (ollama-buddy-remote--register-models
-               prefix static-models send-fn))))))
-     nil t)))
+         (url-request-extra-headers (car header-parts)))
+    (let ((fetching-status (format "Fetching %s models..." provider-name)))
+      (ollama-buddy--update-status fetching-status)
+      (condition-case err
+          (url-retrieve
+           models-ep
+           (lambda (status)
+             (if (plist-get status :error)
+                 (progn
+                   (ollama-buddy-remote--friendly-fetch-error
+                    status provider-name)
+                   ;; Fall back to static models
+                   (when static-models
+                     (ollama-buddy-remote--register-models
+                      prefix static-models send-fn)))
+               (condition-case err
+                   (progn
+                     (goto-char (point-min))
+                     (when (re-search-forward "\n\n" nil t)
+                       (let* ((json-object-type 'alist)
+                              (json-array-type 'vector)
+                              (json-key-type 'symbol)
+                              (raw (buffer-substring (point) (point-max)))
+                              (response (json-read-from-string raw))
+                              (models
+                               (ollama-buddy-provider--parse-models-response
+                                response api-type prefix)))
+                         ;; Apply filter if provided
+                         (when models-filter
+                           (setq models
+                                 (cl-remove-if-not models-filter models)))
+                         (if models
+                             (ollama-buddy-remote--register-models
+                              prefix models send-fn)
+                           ;; Empty result — fall back to static
+                           (when static-models
+                             (ollama-buddy-remote--register-models
+                              prefix static-models send-fn))))))
+                 (error
+                  (message "ollama-buddy-provider: Error fetching %s models: %s"
+                           provider-name (error-message-string err))
+                  (when static-models
+                    (ollama-buddy-remote--register-models
+                     prefix static-models send-fn)))))
+             ;; Clear the "Fetching ..." message now that discovery is done.
+             (ollama-buddy-provider--clear-fetch-status fetching-status))
+           nil t)
+        (error
+         (message "ollama-buddy-provider: Error fetching %s models: %s"
+                  provider-name (error-message-string err))
+         (when static-models
+           (ollama-buddy-remote--register-models
+            prefix static-models send-fn))
+         (ollama-buddy-provider--clear-fetch-status fetching-status))))))
 
 (defun ollama-buddy-provider--parse-models-response
     (response api-type prefix)
@@ -823,7 +865,8 @@ Optional:
   :default-model  - Default model name (without prefix)
   :temperature    - Temperature float (default 0.7)
   :max-tokens     - Max tokens integer or nil
-  :extra-headers  - Additional HTTP headers alist
+  :extra-headers  - Additional HTTP headers: an alist, or a function
+                    returning one (evaluated per request)
 
 Either :models or :models-endpoint (or both) should be provided.
 When both are set, :models-endpoint is tried first with :models as
