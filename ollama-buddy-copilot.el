@@ -30,6 +30,7 @@
 (require 'cl-lib)
 (require 'ollama-buddy-core)
 (require 'ollama-buddy-remote)
+(require 'ollama-buddy-provider)
 
 (defgroup ollama-buddy-copilot nil
   "GitHub Copilot Chat integration for Ollama Buddy."
@@ -381,9 +382,9 @@ STATUS is the URL retrieval status."
       (ollama-buddy--prepare-prompt-area)
       (ollama-buddy--update-status "Auth Required"))))
 
-(defun ollama-buddy-copilot--get-access-token (callback)
-  "Get Copilot access token using OAuth token, then call CALLBACK with it.
-The token is cached until expiry."
+(defun ollama-buddy-copilot--get-access-token ()
+  "Get Copilot access token using OAuth token. The token is cached until
+expiry."
   (cl-block ollama-buddy-copilot--get-access-token
     (let ((oauth-token (ollama-buddy-copilot--ensure-oauth-token)))
       (unless oauth-token
@@ -393,204 +394,60 @@ The token is cached until expiry."
       (if (and ollama-buddy-copilot--access-token
              ollama-buddy-copilot--token-expiry
              (time-less-p (current-time) ollama-buddy-copilot--token-expiry))
-        ;; Use cached token
-        (funcall callback ollama-buddy-copilot--access-token)
-      ;; Fetch new token
-      (let* ((url-request-method "GET")
-             (url-request-extra-headers
-              `(("Authorization" . ,(concat "token " oauth-token))
-                ("Accept" . "application/json")
-                ("Editor-Version" . "Emacs/29.0")
-                ("Editor-Plugin-Version" . "ollama-buddy/1.0.0")
-                ("User-Agent" . "ollama-buddy"))))
-        (url-retrieve
-         "https://api.github.com/copilot_internal/v2/token"
-         (lambda (status)
-           (let ((url-buf (current-buffer)))
-             (unwind-protect
-                 (if (plist-get status :error)
-                     (progn
-                       ;; Token might be invalid, clear it
-                       (setq ollama-buddy-copilot--oauth-token nil)
-                       (ollama-buddy-copilot--show-auth-error "Failed to get Copilot access token"))
-                   (goto-char (point-min))
-                   (when (re-search-forward "\n\n" nil t)
-                     (let* ((json-object-type 'alist)
-                            (json-array-type 'vector)
-                            (json-key-type 'symbol)
-                            (response (json-read))
-                            (new-token (alist-get 'token response))
-                            (expires-at (alist-get 'expires_at response)))
-                       ;; Update token fields atomically
-                       (setq ollama-buddy-copilot--access-token new-token
-                             ollama-buddy-copilot--token-expiry
-                             (when expires-at (seconds-to-time expires-at)))
-                       (funcall callback new-token))))
-               (when (buffer-live-p url-buf)
-                 (kill-buffer url-buf)))))))))))
+          ;; return cached token
+          ollama-buddy-copilot--access-token
 
-(defun ollama-buddy-copilot--send (prompt &optional model)
-  "Send PROMPT to GitHub Copilot API using MODEL or default model asynchronously."
-  ;; Process inline features asynchronously, then send
-  (ollama-buddy-remote--process-inline-features-async
-   prompt
-   (lambda (processed-prompt)
-     ;; Set up the current model
-     (setq ollama-buddy--current-model
-           (or model
-               ollama-buddy--current-model
-               (ollama-buddy-remote--get-full-model-name
-                ollama-buddy-copilot-marker-prefix
-                ollama-buddy-copilot-default-model)))
+        ;; Fetch new token
+        (let* ((url-request-method "GET")
+               (url-request-extra-headers
+                `(("Authorization" . ,(concat "token " oauth-token))
+                  ("Accept" . "application/json")
+                  ("Editor-Version" . "Emacs/29.0")
+                  ("Editor-Plugin-Version" . "ollama-buddy/1.0.0")
+                  ("User-Agent" . "ollama-buddy"))))
+          (url-retrieve
+           "https://api.github.com/copilot_internal/v2/token"
+           (lambda (status)
+             (let ((url-buf (current-buffer)))
+               (unwind-protect
+                   (if (plist-get status :error)
+                       (progn
+                         ;; Token might be invalid, clear it
+                         (setq ollama-buddy-copilot--oauth-token nil)
+                         (ollama-buddy-copilot--show-auth-error "Failed to get Copilot access token"))
+                     (goto-char (point-min))
+                     (when (re-search-forward "\n\n" nil t)
+                       (let* ((json-object-type 'alist)
+                              (json-array-type 'vector)
+                              (json-key-type 'symbol)
+                              (response (json-read))
+                              (new-token (alist-get 'token response))
+                              (expires-at (alist-get 'expires_at response)))
+                         ;; Update token fields atomically
+                         (setq ollama-buddy-copilot--access-token new-token
+                               ollama-buddy-copilot--token-expiry
+                               (when expires-at (seconds-to-time expires-at))))))
+                 (when (buffer-live-p url-buf)
+                   (kill-buffer url-buf))))))
+          ollama-buddy-copilot--access-token)))))
 
-     ;; Initialize token counter
-     (setq ollama-buddy-copilot--current-token-count 0)
-
-     ;; Get access token and then send request
-     (ollama-buddy-copilot--get-access-token
-      (lambda (access-token)
-        (ollama-buddy-copilot--send-with-token processed-prompt access-token))))))
-
-(defun ollama-buddy-copilot--send-with-token (prompt access-token)
-  "Send PROMPT to Copilot API using ACCESS-TOKEN."
-  (let* ((history (when ollama-buddy-history-enabled
-                    (gethash ollama-buddy--current-model
-                             ollama-buddy--conversation-history-by-model
-                             nil)))
-         (system-prompt (ollama-buddy--effective-system-prompt))
-         (full-context (ollama-buddy-remote--build-context))
-         (messages (ollama-buddy-remote--build-openai-messages
-                    system-prompt history prompt full-context))
-         (max-tokens (or ollama-buddy-copilot-max-tokens 4096))
-         (json-payload
-          `((model . ,(ollama-buddy-remote--get-real-model-name
-                       ollama-buddy-copilot-marker-prefix
-                       ollama-buddy--current-model))
-            (messages . ,messages)
-            (temperature . ,ollama-buddy-copilot-temperature)
-            (max_tokens . ,max-tokens)))
-         (json-str (let ((json-encoding-pretty-print nil))
-                     (ollama-buddy-escape-unicode (json-encode json-payload))))
-         (start-point (ollama-buddy-remote--prepare-chat-buffer "GitHub Copilot")))
-
-    ;; Make the HTTP request
-    (let* ((url-request-method "POST")
-           (url-request-extra-headers
-            `(("Content-Type" . "application/json")
-              ("Authorization" . ,(concat "Bearer " access-token))
-              ("Editor-Version" . "vscode/1.85.0")
-              ("Editor-Plugin-Version" . "copilot-chat/0.12.0")
-              ("Openai-Organization" . "github-copilot")
-              ("Openai-Intent" . "conversation-panel")
-              ("User-Agent" . "GitHubCopilotChat/0.12.0")))
-           (url-request-data json-str)
-           (url-mime-charset-string "utf-8")
-           (url-mime-language-string nil)
-           (url-mime-encoding-string nil)
-           (url-mime-accept-string "application/json"))
-
-      (url-retrieve
-       ollama-buddy-copilot-api-endpoint
-       (lambda (status)
-         (let ((url-buf (current-buffer)))
-           (unwind-protect
-               (ollama-buddy-copilot--handle-response status start-point prompt)
-             (when (buffer-live-p url-buf)
-               (kill-buffer url-buf)))))))))
-
-(defun ollama-buddy-copilot--handle-response (status start-point prompt)
-  "Handle the Copilot API response.
-STATUS is the URL retrieval status, START-POINT is where to insert,
-PROMPT is the original prompt for history."
-  (if (plist-get status :error)
-      (let ((error-body "")
-            (error-details (prin1-to-string (plist-get status :error))))
-        ;; Try to get the response body for more details
-        (goto-char (point-min))
-        (when (re-search-forward "\n\n" nil t)
-          (setq error-body (buffer-substring-no-properties (point) (point-max))))
-        ;; Check if this is an auth error
-        (let ((is-auth-error (or (string-match-p "unauthorized\\|authentication\\|401\\|403" error-details)
-                                 (string-match-p "unauthorized\\|authentication\\|401\\|403" error-body))))
-          (with-current-buffer ollama-buddy--chat-buffer
-            (let ((inhibit-read-only t))
-              (goto-char start-point)
-              (delete-region start-point (point-max))
-              (if is-auth-error
-                  (progn
-                    (insert "*Authentication Error:* Copilot API request failed\n\n")
-                    (insert "Please login using =C-c a= or =M-x ollama-buddy-copilot-login=\n"))
-                (let* ((http-code
-                        (let ((err (plist-get status :error)))
-                          (and (listp err)
-                               (eq (car err) 'error)
-                               (eq (cadr err) 'http)
-                               (caddr err))))
-                       (status-msg
-                        (when http-code
-                          (ollama-buddy-remote--http-status-message http-code))))
-                  (if http-code
-                      (progn
-                        (insert (format "Error: HTTP %s\n\n" http-code))
-                        (insert status-msg "\n")
-                        (when (> (length error-body) 0)
-                          (insert "\nProvider message: " error-body "\n"))
-                        (insert "\nRaw: " error-details "\n"))
-                    (insert "Error: URL retrieval failed\n")
-                    (insert "Details: " error-details "\n")
-                    (when (> (length error-body) 0)
-                      (insert "Response: " error-body "\n")))))
-              (insert "\n\n*** FAILED")
-              (ollama-buddy--prepare-prompt-area)
-              (ollama-buddy--update-status (if is-auth-error "Auth Required" "Failed - URL retrieval error"))))))
-    ;; Success - process the response
-    (goto-char (point-min))
-    (when (re-search-forward "\n\n" nil t)
-      (let* ((json-response-raw (buffer-substring (point) (point-max)))
-             (json-response-decoded (decode-coding-string json-response-raw 'utf-8))
-             (json-object-type 'alist)
-             (json-array-type 'vector)
-             (json-key-type 'symbol))
-
-        (condition-case err
-            (let* ((json-response (json-read-from-string json-response-decoded))
-                   (error-message (alist-get 'error json-response))
-                   (content "")
-                   (choices (alist-get 'choices json-response)))
-
-              ;; Extract the message content
-              (if error-message
-                  (let* ((err-msg (alist-get 'message error-message))
-                         (is-auth-error (and err-msg
-                                             (or (string-match-p "unauthorized\\|authentication\\|token\\|credential" err-msg)
-                                                 (string-match-p "401\\|403" err-msg)))))
-                    (if is-auth-error
-                        (setq content (format "*Authentication Error:* %s\n\nPlease login using =C-c a= or =M-x ollama-buddy-copilot-login=" err-msg))
-                      (setq content (format "Error: %s"
-                                            (ollama-buddy-remote--format-api-error
-                                             error-message)))))
-                (when choices
-                  (setq content (alist-get 'content (alist-get 'message (aref choices 0))))))
-
-              ;; Finalize the response
-              (ollama-buddy-remote--finalize-response
-               start-point content prompt
-               'ollama-buddy-copilot--current-token-count))
-          (error
-           (ollama-buddy-remote--handle-error
-            start-point "Copilot"
-            (error-message-string err))))))))
-
-(defun ollama-buddy-copilot--register-models ()
-  "Register Copilot models with ollama-buddy."
-  (ollama-buddy-remote--register-models
-   ollama-buddy-copilot-marker-prefix
-   ollama-buddy-copilot-available-models
-   #'ollama-buddy-copilot--send)
-  (ollama-buddy--update-status "Copilot models registered"))
-
-;; Register models when loaded
-(ollama-buddy-copilot--register-models)
+;; Register via the generic provider system
+(ollama-buddy-provider-create
+ :name "copilot"
+ :prefix ollama-buddy-copilot-marker-prefix
+ :endpoint ollama-buddy-copilot-api-endpoint
+ :api-key  #'ollama-buddy-copilot--get-access-token
+ :api-type 'openai
+ :models ollama-buddy-copilot-available-models ; static model list
+ :models-endpoint nil                          ; copilot does not allow model discovery through API
+ :default-model ollama-buddy-copilot-default-model
+ :temperature ollama-buddy-copilot-temperature
+ :max-tokens ollama-buddy-copilot-max-tokens
+ :extra-headers '(("Editor-Version" . "vscode/1.85.0")
+                  ("Editor-Plugin-Version" . "copilot-chat/0.12.0")
+                  ("Openai-Organization" . "github-copilot")
+                  ("Openai-Intent" . "conversation-panel")
+                  ("User-Agent" . "GitHubCopilotChat/0.12.0")))
 
 (provide 'ollama-buddy-copilot)
 ;;; ollama-buddy-copilot.el ends here
